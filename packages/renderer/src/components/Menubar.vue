@@ -77,7 +77,8 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton v-if="gui.projectStructure" icon="mdi-file-tree" @click="showProjectStructure()" />
+      <ToolbarButton v-if="gui.projectStructure && project" icon="mdi-file-tree" title="show project structure"
+        @click="showProjectStructure()" />
 
       <q-space />
 
@@ -181,7 +182,7 @@ import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
 import { COLOR_JUST_EXPORTED, COLOR_UNSAVED, ConfigurationSummary, CustomStyleInstance, version } from '../common'
 import { useBackend } from '../stores';
 import { setActionNewEmptyDocument, setActionShowProjectStructureDialog } from '../actions';
-import { Figure, currentRepeatableCommandTooltip, editorKeyFromState, getEditorConfiguration } from '../schema';
+import { Figure, currentRepeatableCommandTooltip, editorKeyFromState, getEditorConfiguration, getEditorProject } from '../schema';
 import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween } from '../schema/helpers';
@@ -237,6 +238,9 @@ export default {
     },
     configuration() {
       return getEditorConfiguration(this.editor)
+    },
+    project() {
+      return getEditorProject(this.editor)
     },
     savedExportedColor(): string | undefined {
       const exported = this.exportedChanges
