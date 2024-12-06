@@ -37,7 +37,7 @@ export default {
     dropDownTitle() {
       if (this.defaultInputConverter) {
         const { name, extensions } = this.defaultInputConverter
-        return `import in ${extensions.join(', ')} with "${name}" converter or choose a converter`
+        return `import in ${extensions.join(', ')} with "${name}" converter (or choose a different converter)`
       }
     },
   },

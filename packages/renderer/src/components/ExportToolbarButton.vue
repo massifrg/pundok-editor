@@ -52,7 +52,7 @@ export default {
     dropDownTitle() {
       if (this.defaultOutputConverter) {
         const { name, extension } = this.defaultOutputConverter
-        return `export in ${extension} with "${name}" converter or choose a converter`
+        return `export in ${extension} with "${name}" converter (or choose a different converter)`
       }
     },
   },
