@@ -8,10 +8,10 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-const { configure } = require('quasar/wrappers');
+import { defineConfig } from '#q-app/wrappers';
 const path = require('path');
 
-module.exports = configure(function (/* ctx */) {
+export default defineConfig((ctx) => {
   return {
     eslint: {
       // fix: true,
