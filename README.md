@@ -140,7 +140,6 @@ So, essentially, the editor:
 At first glance Pandoc's Blocks match Prosemirror's Nodes and Inlines match Marks, but it's
 not that simple, because the tree-like nature of Inlines does not perfectly match the flat,
 label-like nature of [Marks in Prosemirror](https://prosemirror.net/docs/guide/#doc.structure).
-See the documentation for more details.
 
 ## How the editor is made
 
@@ -161,7 +160,7 @@ Another possible incarnation would be a VS
 [Code](https://code.visualstudio.com/)/[Codium](https://vscodium.com/) extension,
 but it's not in my roadmap yet (if you are interested and have the skills, you're welcome).
 
-The code base has nearly no tests, and it evolved as a series of experiments
+The code base has no tests, and it evolved as a series of experiments
 I made to see whether, and how I could implement some of the features listed above.
 It also reflects my learning process of the softwares it relies on.
 
