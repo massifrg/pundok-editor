@@ -215,8 +215,7 @@
   ],
   "customCss": [
     "include-doc.css",
-    "indices.css",
-    "default.css"
+    "indices.css"
   ],
   "indices": [
     {
