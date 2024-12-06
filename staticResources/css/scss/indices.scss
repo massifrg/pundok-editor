@@ -1,0 +1,52 @@
+$color-bg-index: #e7d49d;
+$color-bg-term: #fff9e6;
+$color-fg-index: #dc7200;
+
+.pundok-editor {
+  div.index {
+    border: 0.2rem solid $color-fg-index;
+    border-radius: 0.3rem;
+
+    &::before {
+      display: block;
+      background-color: $color-fg-index;
+      color: $color-bg-index;
+      text-align: center;
+      content: 'Index';
+    }
+
+    &[data-index-name]::before {
+      content: 'Index named "' attr(data-index-name) '"';
+    }
+  }
+
+  div.index-term {
+    border: 0.2rem solid $color-fg-index;
+    border-radius: 0.3rem;
+    margin: 0.3rem 0.2rem;
+    background-color: $color-bg-term;
+
+    &::before {
+      display: block;
+      background-color: $color-fg-index;
+      color: $color-bg-term;
+      padding-left: 1rem;
+    }
+
+    &[id]::before {
+      content: 'id: "' attr(id) '"';
+    }
+
+    &[id][data-sort-key]::before {
+      content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
+    }
+
+    &.see-term {
+      border-left: 2rem;
+    }
+  }
+
+  span.index-ref {
+    border-bottom: 3px solid $color-fg-index;
+  }
+}

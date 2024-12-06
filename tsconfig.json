@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
+    "sourceMap": false,
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "strict": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "exclude": ["packages/**/*.spec.ts", "packages/**/*.test.ts"],
+  "include": ["packages/**/*.ts"]
+}

@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "module": "esnext",
+    "target": "esnext",
+    "sourceMap": false,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "preserve",
+
+    "types": ["node"],
+
+    "baseUrl": ".",
+    "paths": {
+      "/@/*": ["./src/*"]
+    },
+    "lib": ["ESNext", "dom", "dom.iterable"]
+  },
+
+  "include": [
+    "src/**/*.vue",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "types/**/*.d.ts",
+    "../../types/**/*.d.ts",
+    "../preload/exposedInMainWorld.d.ts"
+  ],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"],
+  "extends": "./.quasar/tsconfig.json"
+}

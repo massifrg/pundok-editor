@@ -1,0 +1,24 @@
+span.milestone {
+  background-color: orange;
+  color: black;
+  text-decoration: none;
+  border-radius: 0.3rem;
+  padding: 0 0.1rem;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: smaller;
+}
+
+span.milestone.start-of-page {
+  border: 0.2rem solid orangered;
+  border-right: none;
+}
+
+span.milestone.end-of-page {
+  border: 0.2rem solid orangered;
+  border-left: none;
+}
+
+*.index {
+  font-family: inherit !important;
+  font-size: inherit !important;
+}

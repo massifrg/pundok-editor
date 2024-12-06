@@ -1,0 +1,9 @@
+/*
+ * Styles for sub-documents inclusion.
+ * See also include-doc.lua, https://github.com/massifrg/pandoc-include-doc
+ */
+
+div.include-doc, div[data-include-src] {
+  border: .1rem solid blue;
+  margin: .1rem;
+}

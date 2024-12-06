@@ -1,0 +1,289 @@
+{
+  "$schema": "../../schemas/pundok-configuration.schema.json",
+  "name": "default",
+  "version": [
+    0,
+    11
+  ],
+  "description": "the default, hard-coded, configuration",
+  "tiptap": {
+    "options": {
+      "codeBlock": {
+        "defaultLanguage": "latex"
+      }
+    }
+  },
+  "autoDelimiters": {
+    "SingleQuote": [
+      "‘",
+      "’"
+    ],
+    "DoubleQuote": [
+      "“",
+      "”"
+    ]
+  },
+  "noteStyles": [
+    {
+      "noteType": "footnote",
+      "backgroundColor": "#ffc0c0"
+    },
+    {
+      "noteType": "endnote",
+      "backgroundColor": "#d0ffc0"
+    }
+  ],
+  "customStyles": [
+    {
+      "name": "highlight-yellow",
+      "description": "an example yellow highlighter",
+      "appliesTo": [
+        "span"
+      ],
+      "css": [
+        [
+          "background-color",
+          "yellow"
+        ]
+      ]
+    },
+    {
+      "name": "highlight-cyan",
+      "description": "an example cyan highlighter",
+      "appliesTo": [
+        "span"
+      ],
+      "css": [
+        [
+          "background-color",
+          "cyan"
+        ]
+      ]
+    },
+    {
+      "name": "no-indent",
+      "description": "first line of the paragraph is not indented",
+      "appliesTo": [
+        "paragraph"
+      ],
+      "css": [
+        [
+          "text-indent",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "gray",
+      "description": "paragraph with a gray background",
+      "appliesTo": [
+        "paragraph"
+      ],
+      "css": [
+        [
+          "background-color",
+          "lightgray"
+        ]
+      ]
+    },
+    {
+      "name": "red",
+      "description": "red ink",
+      "appliesTo": [
+        "paragraph",
+        "heading",
+        "span"
+      ],
+      "css": [
+        [
+          "color",
+          "red"
+        ]
+      ]
+    },
+    {
+      "name": "section",
+      "description": "a section of the text",
+      "appliesTo": [
+        "div"
+      ],
+      "attributes": [
+        {
+          "name": "toc-title",
+          "description": "title of the section in the table of contents"
+        }
+      ]
+    },
+    {
+      "name": "chapter",
+      "description": "a chapter",
+      "appliesTo": [
+        "div"
+      ],
+      "attributes": [
+        {
+          "name": "toc-title",
+          "description": "title of the chapter in the table of contents"
+        }
+      ],
+      "classes": [
+        {
+          "name": "added",
+          "description": "this chapter has been added"
+        }
+      ]
+    }
+  ],
+  "customClasses": [
+    {
+      "name": "see-term",
+      "description": "this index term is non preferred (see ...)",
+      "appliesTo": [
+        "indexTerm"
+      ]
+    },
+    {
+      "name": "hidden",
+      "appliesTo": [
+        "heading",
+        "div"
+      ],
+      "description": "this element should be hidden"
+    }
+  ],
+  "notesStyles": [
+    {
+      "noteType": "footnote",
+      "backgroundColor": "#ead3d3"
+    },
+    {
+      "noteType": "endnote",
+      "markerBefore": "[",
+      "markerAfter": "]",
+      "backgroundColor": "#ffe9f9"
+    }
+  ],
+  "customCss": [
+    "include-doc.css",
+    "indices.css",
+    "default.css"
+  ],
+  "indices": [
+    {
+      "indexName": "names",
+      "refClass": "ixn-ref",
+      "iconSvg": "M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z",
+      "color": "#00dddd",
+      "allowRanges": false
+    },
+    {
+      "indexName": "subjects",
+      "refClass": "ixs-ref",
+      "iconSvg": "M18,2A2,2 0 0,1 20,4V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V4A2,2 0 0,1 6,2H18M18,4H13V12L10.5,9.75L8,12V4H6V20H18V4Z",
+      "color": "#93005f",
+      "allowRanges": true,
+      "onlyEmpty": true
+    }
+  ],
+  "rawInlines": [
+    {
+      "format": "context",
+      "title": "insert a page break",
+      "content": "\\page"
+    },
+    {
+      "format": "context",
+      "title": "insert vertical material under this line",
+      "content": "\\vadjust{}"
+    },
+    {
+      "format": "context",
+      "title": "put content in a \\hbox",
+      "content": [
+        "\\hbox{",
+        "}"
+      ]
+    },
+    {
+      "format": "html",
+      "title": "insert non breakable space",
+      "content": "&nbsp;"
+    }
+  ],
+  "rawBlocks": [
+    {
+      "format": "html",
+      "title": "an HTML div",
+      "content": [
+        "<div>",
+        "</div>"
+      ]
+    },
+    {
+      "format": "context",
+      "title": "a TeX group",
+      "content": [
+        "\\bgroup",
+        "\\egroup"
+      ]
+    }
+  ],
+  "rawBlockFormats": [
+    "html",
+    "context",
+    "latex",
+    "plain"
+  ],
+  "inputConverters": [],
+  "outputConverters": [
+    {
+      "name": "html",
+      "type": "pandoc",
+      "description": "standard pandoc HTML conversion",
+      "extension": "html",
+      "format": "html",
+      "standalone": true
+    },
+    {
+      "name": "docx",
+      "type": "pandoc",
+      "description": "standard pandoc DOCX conversion",
+      "extension": "docx",
+      "format": "docx",
+      "standalone": true
+    },
+    {
+      "name": "markdown",
+      "type": "pandoc",
+      "default": true,
+      "description": "standard pandoc markdown conversion",
+      "extension": "md",
+      "format": "markdown",
+      "standalone": true
+    },
+    {
+      "name": "icml",
+      "type": "pandoc",
+      "description": "standard pandoc ICML conversion",
+      "extension": "icml",
+      "format": "icml",
+      "standalone": true
+    },
+    {
+      "name": "icml_index",
+      "type": "pandoc",
+      "description": "pandoc ICML conversion with index",
+      "extension": "icml",
+      "format": "icml_with_index.lua",
+      "standalone": true
+    },
+    {
+      "name": "plain",
+      "type": "pandoc",
+      "description": "standard pandoc conversion to plain text",
+      "extension": "txt",
+      "format": "plain",
+      "standalone": false
+    }
+  ]
+}

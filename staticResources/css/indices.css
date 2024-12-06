@@ -1,0 +1,38 @@
+.pundok-editor div.index {
+  border: 0.2rem solid #dc7200;
+  border-radius: 0.3rem;
+}
+.pundok-editor div.index::before {
+  display: block;
+  background-color: #dc7200;
+  color: #e7d49d;
+  text-align: center;
+  content: "Index";
+}
+.pundok-editor div.index[data-index-name]::before {
+  content: 'Index named "' attr(data-index-name) '"';
+}
+.pundok-editor div.index-term {
+  border: 0.2rem solid #dc7200;
+  border-radius: 0.3rem;
+  margin: 0.3rem 0.2rem;
+  background-color: #fff9e6;
+}
+.pundok-editor div.index-term::before {
+  display: block;
+  background-color: #dc7200;
+  color: #fff9e6;
+  padding-left: 1rem;
+}
+.pundok-editor div.index-term[id]::before {
+  content: 'id: "' attr(id) '"';
+}
+.pundok-editor div.index-term[id][data-sort-key]::before {
+  content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
+}
+.pundok-editor div.index-term.see-term {
+  border-left: 2rem;
+}
+.pundok-editor span.index-ref {
+  border-bottom: 3px solid #dc7200;
+}

@@ -1,0 +1,386 @@
+{
+  "$schema": "../../schemas/pundok-configuration.schema.json",
+  "name": "test",
+  "version": [
+    0,
+    11
+  ],
+  "description": "a configuration for testing",
+  "tiptap": {
+    "options": {
+      "codeBlock": {
+        "defaultLanguage": "latex"
+      }
+    }
+  },
+  "autoDelimiters": {
+    "SingleQuote": [
+      "‘",
+      "’"
+    ],
+    "DoubleQuote": [
+      "“",
+      "”"
+    ]
+  },
+  "noteStyles": [
+    {
+      "noteType": "footnote",
+      "backgroundColor": "#ffc0c0"
+    },
+    {
+      "noteType": "endnote",
+      "backgroundColor": "#d0ffc0"
+    }
+  ],
+  "customStyles": [
+    {
+      "name": "highlight-yellow",
+      "description": "an example yellow highlighter",
+      "appliesTo": [
+        "span"
+      ],
+      "css": [
+        [
+          "background-color",
+          "yellow"
+        ]
+      ]
+    },
+    {
+      "name": "highlight-cyan",
+      "description": "an example cyan highlighter",
+      "appliesTo": [
+        "span"
+      ],
+      "css": [
+        [
+          "background-color",
+          "cyan"
+        ]
+      ]
+    },
+    {
+      "name": "no-indent",
+      "description": "first line of the paragraph is not indented",
+      "appliesTo": [
+        "paragraph"
+      ],
+      "css": [
+        [
+          "text-indent",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "gray",
+      "description": "paragraph with a gray background",
+      "appliesTo": [
+        "paragraph"
+      ],
+      "css": [
+        [
+          "background-color",
+          "lightgray"
+        ]
+      ]
+    },
+    {
+      "name": "red",
+      "description": "red ink",
+      "appliesTo": [
+        "paragraph",
+        "heading",
+        "span"
+      ],
+      "css": [
+        [
+          "color",
+          "red"
+        ]
+      ]
+    },
+    {
+      "name": "hide",
+      "description": "hide element",
+      "appliesTo": [
+        "paragraph",
+        "heading",
+        "span"
+      ]
+    },
+    {
+      "name": "section",
+      "description": "a section of the text",
+      "appliesTo": [
+        "div"
+      ],
+      "attributes": [
+        {
+          "name": "toc-title",
+          "description": "title of the section in the table of contents"
+        }
+      ]
+    },
+    {
+      "name": "chapter",
+      "description": "a chapter",
+      "appliesTo": [
+        "div"
+      ],
+      "attributes": [
+        {
+          "name": "toc-title",
+          "description": "title of the chapter in the table of contents"
+        }
+      ],
+      "classes": [
+        {
+          "name": "added",
+          "description": "this chapter has been added"
+        }
+      ]
+    }
+  ],
+  "customClasses": [
+    {
+      "name": "see-term",
+      "description": "this index term is non preferred (see ...)",
+      "appliesTo": [
+        "indexTerm"
+      ]
+    },
+    {
+      "name": "editorial-heading",
+      "appliesTo": [
+        "heading"
+      ],
+      "description": "the heading is editorial and not by the author"
+    },
+    {
+      "name": "float",
+      "appliesTo": [
+        "figure",
+        "table"
+      ],
+      "description": "this element is a float, it may be typeset elsewhere"
+    }
+  ],
+  "customAttributes": [
+    {
+      "name": "block-description",
+      "appliesTo": [
+        "div"
+      ],
+      "description": "a description of this block",
+      "suggestions": [
+        "this block has been added afterwards",
+        "this block still needs editorial approval"
+      ]
+    },
+    {
+      "name": "type",
+      "appliesTo": [
+        "image",
+        "figure"
+      ],
+      "description": "the type of this image/figure",
+      "default": "unknown",
+      "values": [
+        "unknown",
+        "illustration",
+        "photo",
+        "diagram"
+      ]
+    }
+  ],
+  "notesStyles": [
+    {
+      "noteType": "footnote",
+      "backgroundColor": "#ead3d3"
+    },
+    {
+      "noteType": "endnote",
+      "markerBefore": "[",
+      "markerAfter": "]",
+      "backgroundColor": "#ffe9f9"
+    },
+    {
+      "noteType": "marginnote",
+      "markerConversion": "lower-roman",
+      "backgroundColor": "#d4f4ff",
+      "textColor": "blue"
+    }
+  ],
+  "customCss": [
+    "include-doc.css",
+    "indices.css",
+    "default.css"
+  ],
+  "indices": [
+    {
+      "indexName": "names",
+      "refClass": "ixn-ref",
+      "iconSvg": "M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z",
+      "color": "#00dddd",
+      "allowRanges": false
+    },
+    {
+      "indexName": "movies",
+      "refClass": "ixm-ref",
+      "iconSvg": "M18,4L20,8H17L15,4H13L15,8H12L10,4H8L10,8H7L5,4H4A2,2 0 0,0 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V4H18Z",
+      "color": "#dddd00",
+      "putIndexRef": "after",
+      "allowRanges": false
+    },
+    {
+      "indexName": "subjects",
+      "refClass": "ixs-ref",
+      "iconSvg": "M18,2A2,2 0 0,1 20,4V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V4A2,2 0 0,1 6,2H18M18,4H13V12L10.5,9.75L8,12V4H6V20H18V4Z",
+      "color": "#93005f",
+      "allowRanges": true,
+      "onlyEmpty": true
+    }
+  ],
+  "rawInlines": [
+    {
+      "format": "context",
+      "title": "insert a page break",
+      "content": "\\page"
+    },
+    {
+      "format": "context",
+      "title": "insert vertical material under this line",
+      "content": "\\vadjust{}"
+    },
+    {
+      "format": "context",
+      "title": "put content in a \\hbox",
+      "content": [
+        "\\hbox{",
+        "}"
+      ]
+    },
+    {
+      "format": "html",
+      "title": "insert non breakable space",
+      "content": "&nbsp;"
+    }
+  ],
+  "rawBlocks": [
+    {
+      "format": "html",
+      "title": "an HTML div",
+      "content": [
+        "<div>",
+        "</div>"
+      ]
+    },
+    {
+      "format": "context",
+      "title": "a TeX group",
+      "content": [
+        "\\bgroup",
+        "\\egroup"
+      ]
+    },
+    {
+      "format": "context",
+      "title": "a vertical space (blank) that replaces a previous one",
+      "content": "\\blank[back,4pt]"
+    },
+    {
+      "format": "context",
+      "title": "a vertical space (blank) that replaces the following one",
+      "content": "\\blank[4pt]\\blank[disable]"
+    }
+  ],
+  "rawBlockFormats": [
+    "html",
+    "context",
+    "latex",
+    "plain"
+  ],
+  "inputConverters": [],
+  "outputConverters": [
+    {
+      "name": "html",
+      "type": "pandoc",
+      "description": "standard pandoc HTML conversion",
+      "extension": "html",
+      "format": "html",
+      "standalone": true
+    },
+    {
+      "name": "docx",
+      "type": "pandoc",
+      "description": "standard pandoc DOCX conversion",
+      "extension": "docx",
+      "format": "docx",
+      "standalone": true
+    },
+    {
+      "name": "markdown",
+      "type": "pandoc",
+      "default": true,
+      "description": "standard pandoc markdown conversion",
+      "extension": "md",
+      "format": "markdown",
+      "standalone": true
+    },
+    {
+      "name": "icml",
+      "type": "pandoc",
+      "description": "standard pandoc ICML conversion",
+      "extension": "icml",
+      "format": "icml",
+      "standalone": true
+    },
+    {
+      "name": "icml_index",
+      "type": "pandoc",
+      "description": "pandoc ICML conversion with index",
+      "extension": "icml",
+      "format": "icml_with_index.lua",
+      "standalone": true
+    },
+    {
+      "name": "plain",
+      "type": "pandoc",
+      "description": "standard pandoc conversion to plain text",
+      "extension": "txt",
+      "format": "plain",
+      "standalone": false
+    }
+  ],
+  "automations": [
+    {
+      "type": "search-replace",
+      "name": "small caps acronyms",
+      "description": "find acronyms and format as SmallCaps",
+      "search": "([A-Z][0-9A-Z]+)",
+      "replace": "$1",
+      "optionRegex": true,
+      "optionCycle": false,
+      "capitalize": "lower",
+      "addMarks": [
+        "smallcaps"
+      ],
+      "addStyles": []
+    },
+    {
+      "type": "search-replace",
+      "name": "highlight likely names of people",
+      "description": "highlight sequences of words that start with an upper case letter",
+      "search": "(\\p{Lu}\\p{L}+(\\s+(\\p{Lu}\\.|\\p{Lu}\\p{L}+))*)",
+      "replace": "$1",
+      "optionRegex": true,
+      "optionCycle": true,
+      "addMarks": [],
+      "addStyles": [
+        "highlight-yellow"
+      ]
+    }
+  ]
+}

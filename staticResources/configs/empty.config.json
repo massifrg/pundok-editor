@@ -1,0 +1,46 @@
+{
+  "$schema": "../../schemas/pundok-configuration.schema.json",
+  "name": "empty",
+  "version": [
+    0,
+    11
+  ],
+  "description": "a minimal, mostly empty, configuration",
+  "autoDelimiters": {
+    "SingleQuote": [
+      "‘",
+      "’"
+    ],
+    "DoubleQuote": [
+      "“",
+      "”"
+    ]
+  },
+  "customCss": [
+    "include-doc.css",
+    "indices.css"
+  ],
+  "noteStyles": [
+    {
+      "noteType": "footnote",
+      "backgroundColor": "#ffc0c0"
+    }
+  ],
+  "indices": [
+    {
+      "indexName": "index",
+      "refClass": "index-ref",
+      "color": "blue",
+      "allowRanges": false
+    }
+  ],
+  "customClasses": [
+    {
+      "name": "see-term",
+      "description": "this index term is non preferred (see ...)",
+      "appliesTo": [
+        "indexTerm"
+      ]
+    }
+  ]
+}
