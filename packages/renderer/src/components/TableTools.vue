@@ -247,7 +247,10 @@ export default {
       this.visible = true
     },
     newTable() {
-      this.editor?.chain().insertPandocTable({ rows: 3, cols: 3, cellContainer: 'plain' }).initializeTables().focus().run()
+      this.editor?.chain()
+        .insertPandocTable({ rows: 3, cols: 3, cellContainer: 'plain' })
+        .focus()
+        .run()
     },
     deleteTable() {
       this.editor?.chain().deleteTable().focus().run()
