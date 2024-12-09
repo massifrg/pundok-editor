@@ -6,6 +6,10 @@ that can be adapted to different document production workflows.
 
 ## Running the editor
 
+I compile [two binaries](https://github.com/massifrg/pundok-editor/releases),
+a Debian GNU/Linux `.deb` package and a Windows executable (no installation required),
+both for the amd64 architecture.
+
 The editor is coded in Typescript, so you need `npm` to download all the packages
 it depends on, then compile it, and finally run it.
 
