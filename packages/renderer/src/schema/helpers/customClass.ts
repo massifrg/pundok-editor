@@ -4,7 +4,7 @@ import {
   CustomClass,
   hasCustomClass,
   isCustomStyleActive,
-  PandocEditorConfig,
+  PundokEditorConfig,
 } from '../../common';
 import { addClass, removeClasses } from './attributes';
 import {
@@ -21,7 +21,7 @@ import {
 export function setCustomClassAttr(
   el: Node | Mark,
   cc: CustomClass,
-  config?: PandocEditorConfig,
+  config?: PundokEditorConfig,
 ): Attrs {
   if (customClassAppliesTo(cc, el, config)) {
     let newAttrs = addClass(el.attrs, cc.name);
@@ -44,7 +44,7 @@ export function setCustomClassAttr(
 export function unsetCustomClassAttr(
   el: Node | Mark,
   cc: CustomClass,
-  config?: PandocEditorConfig,
+  config?: PundokEditorConfig,
 ): Attrs {
   if (customClassAppliesTo(cc, el, config)) {
     let newAttrs = removeClasses(el.attrs, [cc.name]);
@@ -67,7 +67,7 @@ export function unsetCustomClassAttr(
 export function toggleCustomClassAttr(
   el: Node | Mark,
   cc: CustomClass,
-  config?: PandocEditorConfig,
+  config?: PundokEditorConfig,
 ): Attrs {
   return hasCustomClass(el, cc)
     ? unsetCustomClassAttr(el, cc, config)
@@ -77,7 +77,7 @@ export function toggleCustomClassAttr(
 function customClassAppliesTo(
   cc: CustomClass,
   el: Node | Mark,
-  config?: PandocEditorConfig,
+  config?: PundokEditorConfig,
 ) {
   if (appliesTo(cc, el)) return true;
   const cs = config?.customStylesInstances?.find((cs) =>

@@ -1,8 +1,8 @@
-import { PandocEditorConfig, PandocEditorConfigInit } from '.';
+import { PundokEditorConfig, PundokEditorConfigInit } from '.';
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 
-export interface PandocEditorProject {
+export interface PundokEditorProject {
   name: string;
   path: string;
   /** The root (master) document of the document tree */
@@ -12,9 +12,9 @@ export interface PandocEditorProject {
   /** The names of configurations to inherit */
   configurations?: string[];
   /** A complement to the inherited configurations */
-  editorConfig: Partial<PandocEditorConfig>;
+  editorConfig: Partial<PundokEditorConfig>;
   /** The actual configuration computed from the inherited configurations and complemented with editorConfig  */
-  computedConfig: PandocEditorConfig;
+  computedConfig: PundokEditorConfig;
 }
 
 interface AbstractProjectComponent {
@@ -43,19 +43,19 @@ interface IdProjectComponent extends AbstractProjectComponent {
 export type ProjectComponent = SrcProjectComponent | IdProjectComponent;
 
 export async function computeProjectConfiguration(
-  project: PandocEditorProject,
+  project: PundokEditorProject,
   getConfiguration: (
     configurationName?: string
-  ) => Promise<PandocEditorConfig | undefined>
-): Promise<PandocEditorProject> {
-  let computedConfig: PandocEditorConfig | undefined;
-  const projectConfig = new PandocEditorConfig({
+  ) => Promise<PundokEditorConfig | undefined>
+): Promise<PundokEditorProject> {
+  let computedConfig: PundokEditorConfig | undefined;
+  const projectConfig = new PundokEditorConfig({
     name: project.name,
     description: project.description,
     version: [],
     tiptap: {},
     ...project.editorConfig,
-  } as PandocEditorConfigInit);
+  } as PundokEditorConfigInit);
   const inherited = project.configurations ? [...project.configurations] : [];
   if (inherited.length === 0) {
     computedConfig = projectConfig;

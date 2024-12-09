@@ -2,7 +2,7 @@ import type { Node, Mark, NodeType, MarkType } from '@tiptap/pm/model';
 import {
   CustomStyleDef,
   INDEX_NAME_ATTR,
-  PandocEditorConfig,
+  PundokEditorConfig,
 } from '../../common';
 import { isString } from 'lodash';
 import { Heading, RawBlock, RawInline } from '..';
@@ -74,7 +74,7 @@ function firstToUpperWithClasses(
 export function nodeOrMarkToPandocName(
   nom: Node | Mark | NodeType | MarkType | string,
   nameToCustomStyle?: Record<string, CustomStyleDef>,
-  config?: PandocEditorConfig
+  config?: PundokEditorConfig
 ): string {
   const name: string | undefined = isString(nom)
     ? nom
@@ -114,17 +114,15 @@ export function nodeOrMarkToPandocName(
     case 'pandocNull':
       return 'Null';
     case 'rawInline':
-      return `RawInline(${
-        attrs.format ||
+      return `RawInline(${attrs.format ||
         config?.defaultRawFormat ||
         RawInline.options.defaultFormat
-      })`;
+        })`;
     case 'rawBlock':
-      return `RawBlock(${
-        attrs.format ||
+      return `RawBlock(${attrs.format ||
         config?.defaultRawFormat ||
         RawBlock.options.defaultFormat
-      })`;
+        })`;
     case 'pandocTable':
       return `Table`;
     case 'pandocTableSection':

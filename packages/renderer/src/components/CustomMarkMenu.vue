@@ -14,7 +14,7 @@
 </template>
 
 <script lang="ts">
-import { CustomStyleInstance, PandocEditorConfig, customStylesForType } from '../common';
+import { CustomStyleInstance, PundokEditorConfig, customStylesForType } from '../common';
 import { getEditorConfiguration } from '../schema';
 
 export default {
@@ -22,9 +22,9 @@ export default {
   props: ['editor', 'activeCustomStyles'],
   emits: ['unsetCustomMark', 'setCustomMark'],
   computed: {
-    configuration(): PandocEditorConfig | undefined {
+    configuration(): PundokEditorConfig | undefined {
       const conf = getEditorConfiguration(this.editor)
-      if (conf) return new PandocEditorConfig(conf) // TODO: fix this
+      if (conf) return new PundokEditorConfig(conf) // TODO: fix this
     },
     customStyles(): CustomStyleInstance[] {
       return this.configuration?.customStylesInstances || []

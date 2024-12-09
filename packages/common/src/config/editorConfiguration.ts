@@ -16,9 +16,9 @@ import {
   CustomStyleDef,
   customStylesFromDef,
 } from './customStyles';
-import { PandocEditorConfigInit } from './editorConfigInit';
+import { PundokEditorConfigInit } from './editorConfigInit';
 
-export class PandocEditorConfig {
+export class PundokEditorConfig {
   /** The name of this configuration of the editor. */
   name: string;
   /** The version of this configuration (it's meant for compatibility, but it's not used yet). */
@@ -68,7 +68,7 @@ export class PandocEditorConfig {
    * Creates a new configuration for the editor, with the properties passed in the argument.
    * @param init the options to initialize the configuration.
    */
-  constructor(init: Partial<PandocEditorConfigInit>) {
+  constructor(init: Partial<PundokEditorConfigInit>) {
     this.name = init.name || 'unknown';
     this.version = init.version || [];
     this.description = init.description || '';
@@ -147,7 +147,7 @@ export class PandocEditorConfig {
    * @param onTop the configuration to be merged on top of this one.
    * @returns a new configuration resulting from the merge.
    */
-  addConfiguration(onTop: PandocEditorConfig): PandocEditorConfig {
+  addConfiguration(onTop: PundokEditorConfig): PundokEditorConfig {
     return enrichConfiguration(onTop, this);
   }
 
@@ -190,7 +190,7 @@ export class PandocEditorConfig {
 
 /**
  * An object carrying only the name and optionally the description
- * of a PandocEditorConfig.
+ * of a PundokEditorConfig.
  */
 export interface ConfigurationSummary {
   name: string;
@@ -257,8 +257,8 @@ function mergeNamedObjects(
     .concat(nobj2.filter((nobj) => !nobj1.find((n) => nobj[name] == n[name])));
   return default1 && default2
     ? merged.map((m) =>
-        m[name] === default1[name] ? { ...m, default: false } : m,
-      )
+      m[name] === default1[name] ? { ...m, default: false } : m,
+    )
     : merged;
 }
 
@@ -300,12 +300,12 @@ function mergeInsertableRaws(
  * @returns         the resulting configuration
  */
 export function enrichConfiguration(
-  base: PandocEditorConfig,
-  enriching: PandocEditorConfig,
-): PandocEditorConfig {
+  base: PundokEditorConfig,
+  enriching: PundokEditorConfig,
+): PundokEditorConfig {
   console.log(`inheriting ${enriching.name} into ${base.name}...`);
   try {
-    const ret = new PandocEditorConfig({
+    const ret = new PundokEditorConfig({
       name: base.name,
       version: minSuitableVersion(enriching.version, base.version || []),
       description: base.description,
@@ -365,22 +365,22 @@ export function enrichConfiguration(
   }
 }
 
-export interface PandocEditorConfigWithError {
-  config: PandocEditorConfig;
+export interface PundokEditorConfigWithError {
+  config: PundokEditorConfig;
   error: string;
 }
 
 export async function computeDerivedConfiguration(
-  config: PandocEditorConfig,
+  config: PundokEditorConfig,
   inherited: string[],
-  getConfiguration: (configurationName: string) => Promise<PandocEditorConfig>,
-): Promise<PandocEditorConfig> {
+  getConfiguration: (configurationName: string) => Promise<PundokEditorConfig>,
+): Promise<PundokEditorConfig> {
   const not_inherited: string[] = [];
   const errors: string[] = [];
   let derived = config;
   while (inherited.length > 0) {
     const c = inherited.pop();
-    let from: PandocEditorConfig | undefined = undefined;
+    let from: PundokEditorConfig | undefined = undefined;
     try {
       from = await getConfiguration(c!);
       if (from) {
@@ -400,7 +400,7 @@ export async function computeDerivedConfiguration(
     return Promise.reject({
       config: derived,
       error: errors.join('; '),
-    } as PandocEditorConfigWithError);
+    } as PundokEditorConfigWithError);
   }
   return Promise.resolve(derived);
 }

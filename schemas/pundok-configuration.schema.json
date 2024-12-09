@@ -1,5 +1,5 @@
 {
-  "$ref": "#/definitions/PandocEditorConfigInit",
+  "$ref": "#/definitions/PundokEditorConfigInit",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "Automation": {
@@ -507,140 +507,6 @@
         }
       ]
     },
-    "PandocEditorConfigInit": {
-      "description": "A configuration (customization) of PandocEditor.",
-      "properties": {
-        "autoDelimiters": {
-          "additionalProperties": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "description": "automatic delimiters for Marks like singleQuoted or doubleQuoted, e.g. { doubleQuoted: [ \"“\", \"”\" ], singleQuoted: [ \"‘\", \"’\" ] }",
-          "type": "object"
-        },
-        "automations": {
-          "description": "predefined search&replace, macro, whatever related to automation tools",
-          "items": {
-            "$ref": "#/definitions/Automation"
-          },
-          "type": "array"
-        },
-        "customAttributes": {
-          "description": "custom attributes for Pandoc's elements with an `Attr` data stucture",
-          "items": {
-            "$ref": "#/definitions/CustomAttribute"
-          },
-          "type": "array"
-        },
-        "customClasses": {
-          "description": "custom classes for Pandoc's elements with an `Attr` data stucture",
-          "items": {
-            "$ref": "#/definitions/CustomClass"
-          },
-          "type": "array"
-        },
-        "customCss": {
-          "description": "paths to CSS files that customize the editor's appearance",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "customStyles": {
-          "description": "custom styles for paragraphs, spans, headings, divs, etc.",
-          "items": {
-            "$ref": "#/definitions/CustomStyleDef"
-          },
-          "type": "array"
-        },
-        "description": {
-          "description": "a description of the aim of this configuration of the editor",
-          "type": "string"
-        },
-        "documentTemplate": {
-          "description": "a template for new documents",
-          "type": "string"
-        },
-        "indices": {
-          "description": "indices' definitions",
-          "items": {
-            "$ref": "#/definitions/Index"
-          },
-          "type": "array"
-        },
-        "inherits": {
-          "description": "the names of other configurations to derive this from",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "inputConverters": {
-          "description": "scripts, filters, etc. to import documents",
-          "items": {
-            "$ref": "#/definitions/InputConverter"
-          },
-          "type": "array"
-        },
-        "name": {
-          "description": "the name of the configuration (please only letters, numbers and underscore)",
-          "type": "string"
-        },
-        "noteStyles": {
-          "description": "styling information for different kinds of notes (footnotes, endnotes, etc.)",
-          "items": {
-            "$ref": "#/definitions/NoteStyle"
-          },
-          "type": "array"
-        },
-        "outputConverters": {
-          "description": "scripts, filters, etc. to export documents",
-          "items": {
-            "$ref": "#/definitions/OutputConverter"
-          },
-          "type": "array"
-        },
-        "rawBlocks": {
-          "description": "`RawBlock samples to be made available through the editor interface",
-          "items": {
-            "$ref": "#/definitions/InsertableRaw"
-          },
-          "type": "array"
-        },
-        "rawInlines": {
-          "description": "`RawInline samples to be made available through the editor interface",
-          "items": {
-            "$ref": "#/definitions/InsertableRaw"
-          },
-          "type": "array"
-        },
-        "tiptap": {
-          "additionalProperties": false,
-          "description": "options for TipTap/Prosemirror `Node`s and `Mark`s",
-          "properties": {
-            "options": {
-              "type": "object"
-            }
-          },
-          "type": "object"
-        },
-        "version": {
-          "description": "the minimal suitable version of the editor",
-          "items": {
-            "type": "number"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "name",
-        "version",
-        "description"
-      ],
-      "type": "object"
-    },
     "PandocInputConverter": {
       "additionalProperties": false,
       "description": "An input converter that spawns a pandoc process to import a document.",
@@ -827,6 +693,140 @@
         "format",
         "name",
         "type"
+      ],
+      "type": "object"
+    },
+    "PundokEditorConfigInit": {
+      "description": "A configuration (customization) of PundokEditor.",
+      "properties": {
+        "autoDelimiters": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": "automatic delimiters for Marks like singleQuoted or doubleQuoted, e.g. { doubleQuoted: [ \"“\", \"”\" ], singleQuoted: [ \"‘\", \"’\" ] }",
+          "type": "object"
+        },
+        "automations": {
+          "description": "predefined search&replace, macro, whatever related to automation tools",
+          "items": {
+            "$ref": "#/definitions/Automation"
+          },
+          "type": "array"
+        },
+        "customAttributes": {
+          "description": "custom attributes for Pandoc's elements with an `Attr` data stucture",
+          "items": {
+            "$ref": "#/definitions/CustomAttribute"
+          },
+          "type": "array"
+        },
+        "customClasses": {
+          "description": "custom classes for Pandoc's elements with an `Attr` data stucture",
+          "items": {
+            "$ref": "#/definitions/CustomClass"
+          },
+          "type": "array"
+        },
+        "customCss": {
+          "description": "paths to CSS files that customize the editor's appearance",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "customStyles": {
+          "description": "custom styles for paragraphs, spans, headings, divs, etc.",
+          "items": {
+            "$ref": "#/definitions/CustomStyleDef"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "a description of the aim of this configuration of the editor",
+          "type": "string"
+        },
+        "documentTemplate": {
+          "description": "a template for new documents",
+          "type": "string"
+        },
+        "indices": {
+          "description": "indices' definitions",
+          "items": {
+            "$ref": "#/definitions/Index"
+          },
+          "type": "array"
+        },
+        "inherits": {
+          "description": "the names of other configurations to derive this from",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputConverters": {
+          "description": "scripts, filters, etc. to import documents",
+          "items": {
+            "$ref": "#/definitions/InputConverter"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "the name of the configuration (please only letters, numbers and underscore)",
+          "type": "string"
+        },
+        "noteStyles": {
+          "description": "styling information for different kinds of notes (footnotes, endnotes, etc.)",
+          "items": {
+            "$ref": "#/definitions/NoteStyle"
+          },
+          "type": "array"
+        },
+        "outputConverters": {
+          "description": "scripts, filters, etc. to export documents",
+          "items": {
+            "$ref": "#/definitions/OutputConverter"
+          },
+          "type": "array"
+        },
+        "rawBlocks": {
+          "description": "`RawBlock samples to be made available through the editor interface",
+          "items": {
+            "$ref": "#/definitions/InsertableRaw"
+          },
+          "type": "array"
+        },
+        "rawInlines": {
+          "description": "`RawInline samples to be made available through the editor interface",
+          "items": {
+            "$ref": "#/definitions/InsertableRaw"
+          },
+          "type": "array"
+        },
+        "tiptap": {
+          "additionalProperties": false,
+          "description": "options for TipTap/Prosemirror `Node`s and `Mark`s",
+          "properties": {
+            "options": {
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "version": {
+          "description": "the minimal suitable version of the editor",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "description"
       ],
       "type": "object"
     },

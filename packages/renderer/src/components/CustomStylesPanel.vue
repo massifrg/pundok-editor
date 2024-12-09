@@ -152,7 +152,7 @@ import { NodeWithPos } from '@tiptap/core';
 import {
   CustomClass,
   CustomStyleInstance,
-  PandocEditorConfig,
+  PundokEditorConfig,
   activeCustomStyles,
   compatibleCustomStylesPerTypeName,
   customClassesForNodeOrMark,
@@ -199,7 +199,7 @@ export default {
   computed: {
     configuration() {
       const conf = getEditorConfiguration(this.editor)
-      if (conf) return new PandocEditorConfig(conf) // TODO: fix this
+      if (conf) return new PundokEditorConfig(conf) // TODO: fix this
     },
     customStyles(): CustomStyleInstance[] {
       return this.configuration?.customStylesInstances || []

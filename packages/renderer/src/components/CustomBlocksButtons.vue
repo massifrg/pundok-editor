@@ -22,7 +22,7 @@
 <script lang="ts">
 import { Node } from '@tiptap/pm/model';
 import { NodeWithPos } from '@tiptap/core';
-import { CustomStyleInstance, PandocEditorConfig, activeCustomStyles, compatibleCustomStylesPerTypeName, isCustomStyleActive, labelForStyle } from '../common';
+import { CustomStyleInstance, PundokEditorConfig, activeCustomStyles, compatibleCustomStylesPerTypeName, isCustomStyleActive, labelForStyle } from '../common';
 import ToolbarButton from './ToolbarButton.vue';
 import { getEditorConfiguration } from '../schema';
 
@@ -35,7 +35,7 @@ export default {
   computed: {
     configuration() {
       const conf = getEditorConfiguration(this.editor)
-      if (conf) return new PandocEditorConfig(conf) // TODO: fix this
+      if (conf) return new PundokEditorConfig(conf) // TODO: fix this
     },
     customStyles(): CustomStyleInstance[] {
       return this.configuration?.customStylesInstances || []

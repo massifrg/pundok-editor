@@ -6,9 +6,9 @@ import {
 } from 'path';
 import { isString } from 'lodash';
 import {
-  PandocEditorConfigInit,
+  PundokEditorConfigInit,
   HARDCODED_CONFIG_NAME,
-  PandocEditorProject,
+  PundokEditorProject,
   version,
   FindResourceOptions,
   ResourceType,
@@ -121,7 +121,7 @@ export function checkAndCreateAppDataDir() {
 }
 
 export async function parseConfigurationFiles(): Promise<
-  PandocEditorConfigInit[]
+  PundokEditorConfigInit[]
 > {
   const path = configsDir();
   const filenames = (await readdir(path)).filter((f) =>
@@ -137,7 +137,7 @@ export async function parseConfigurationFiles(): Promise<
         return null;
       }
     });
-  const valid = parsed.filter((p) => !!p) as PandocEditorConfigInit[];
+  const valid = parsed.filter((p) => !!p) as PundokEditorConfigInit[];
   return valid;
 }
 
@@ -158,7 +158,7 @@ export function isReadableFile(filename: string) {
 
 export function validResourcePaths(
   kind?: ResourceType,
-  project?: PandocEditorProject,
+  project?: PundokEditorProject,
   configurationName?: string,
 ): string[] {
   const findValidPaths = (base?: string) =>
@@ -234,9 +234,9 @@ export function findResourceFile(
   console.log('VALID RESOURCE PATHS');
   const projectInstance = (
     project && isString(project)
-      ? (JSON.parse(project) as PandocEditorProject)
+      ? (JSON.parse(project) as PundokEditorProject)
       : project
-  ) as PandocEditorProject | undefined;
+  ) as PundokEditorProject | undefined;
   console.log(validResourcePaths(kind, projectInstance, configurationName));
   resourcePath =
     resourcePath ||

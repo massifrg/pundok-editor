@@ -6,7 +6,7 @@ import {
   CustomizableElement,
   areTypesCompatible,
   isCustomStyleActive,
-  PandocEditorConfig,
+  PundokEditorConfig,
   CustomClass,
   typeNameOfElement,
 } from '../../common';
@@ -21,7 +21,7 @@ import { isArray, isString } from 'lodash';
 import {
   META_UPDATE_DOC_STATE,
   getDocState,
-} from './PandocEditorUtilsExtension';
+} from './PundokEditorUtilsExtension';
 import { setMarkNoAtoms, toggleMarkNoAtoms } from '../../commands';
 import {
   addClass,
@@ -73,17 +73,17 @@ declare module '@tiptap/core' {
       setCustomClass: (
         cc: CustomClass,
         pos?: number,
-        config?: PandocEditorConfig,
+        config?: PundokEditorConfig,
       ) => ReturnType;
       unsetCustomClass: (
         cc: CustomClass,
         pos?: number,
-        config?: PandocEditorConfig,
+        config?: PundokEditorConfig,
       ) => ReturnType;
       toggleCustomClass: (
         cc: CustomClass,
         pos?: number,
-        config?: PandocEditorConfig,
+        config?: PundokEditorConfig,
       ) => ReturnType;
     };
   }
@@ -142,14 +142,14 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
       new Plugin({
         key: customStylePluginKey,
         state: {
-          init(config, state) {},
+          init(config, state) { },
           apply(tr, pluginState, oldState, newState) {
             const updateDocState = tr.getMeta(META_UPDATE_DOC_STATE);
             if (
               !storage.styleAttrForCustomStyle ||
               updateDocState?.configuration
             ) {
-              const configuration: PandocEditorConfig | undefined =
+              const configuration: PundokEditorConfig | undefined =
                 updateDocState?.configuration ||
                 getDocState(newState)?.configuration;
               if (configuration) {
@@ -175,108 +175,108 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
     return {
       setCustomStyle:
         (typeOrNode: TypeOrNode, cs: CustomStyleInstance, pos?: number) =>
-        (cp: CommandProps) => {
-          let { dispatch, state, tr } = cp;
-          if (pos) {
-            const typeName = typeNameOfElement(typeOrNode);
-            if (typeName !== cs.element) return false;
-            const node = state.doc.nodeAt(pos);
-            if (!node) return false;
-            if (typeName !== node?.type.name) return false;
-            if (dispatch)
-              dispatch(
-                tr.setNodeMarkup(pos, null, setCustomStyleAttr(node, cs)),
-              );
-            return true;
-          }
-          const schema = state.schema;
-          const { customStyle } = cs.attrs;
-          let markType: MarkType | undefined =
-            typeOrNode instanceof MarkType
-              ? typeOrNode
-              : (isString(typeOrNode) && schema.marks[typeOrNode]) || undefined;
-          if (markType) {
-            const { from, to } = state.selection;
-            tr = tr.addMark(
-              from,
-              to,
-              markType.create({
-                customStyle,
-                kv: { 'custom-style': customStyle },
-              }),
-            );
-          }
-          return updateAttributesCommand(
-            typeOrNode,
-            setNodeCustomStyleCallback(typeOrNode, cs, schema),
-          )({ ...cp, tr });
-        },
-      unsetCustomStyle:
-        (typeOrNode: TypeOrNode, cs: CustomStyleInstance, pos?: number) =>
-        (cp: CommandProps) => {
-          const { dispatch, state, tr } = cp;
-          if (pos) {
-            const typeName = typeNameOfElement(typeOrNode);
-            if (typeName !== cs.element) return false;
-            const node = state.doc.nodeAt(pos);
-            if (!node) return false;
-            if (typeName !== node?.type.name) return false;
-            if (dispatch)
-              dispatch(
-                tr.setNodeMarkup(pos, null, unsetCustomStyleAttr(node, cs)),
-              );
-            return true;
-          }
-          let markType: MarkType | undefined =
-            typeOrNode instanceof MarkType
-              ? typeOrNode
-              : (isString(typeOrNode) && state.schema.marks[typeOrNode]) ||
-                undefined;
-          if (markType) {
-            const { from, to } = state.selection;
-            if (dispatch) {
-              tr.removeMark(from, to, markType);
+          (cp: CommandProps) => {
+            let { dispatch, state, tr } = cp;
+            if (pos) {
+              const typeName = typeNameOfElement(typeOrNode);
+              if (typeName !== cs.element) return false;
+              const node = state.doc.nodeAt(pos);
+              if (!node) return false;
+              if (typeName !== node?.type.name) return false;
+              if (dispatch)
+                dispatch(
+                  tr.setNodeMarkup(pos, null, setCustomStyleAttr(node, cs)),
+                );
+              return true;
             }
-            return true;
-          } else {
-            const schema = cp.state.schema;
+            const schema = state.schema;
+            const { customStyle } = cs.attrs;
+            let markType: MarkType | undefined =
+              typeOrNode instanceof MarkType
+                ? typeOrNode
+                : (isString(typeOrNode) && schema.marks[typeOrNode]) || undefined;
+            if (markType) {
+              const { from, to } = state.selection;
+              tr = tr.addMark(
+                from,
+                to,
+                markType.create({
+                  customStyle,
+                  kv: { 'custom-style': customStyle },
+                }),
+              );
+            }
             return updateAttributesCommand(
               typeOrNode,
-              unsetNodeCustomStyleCallback(typeOrNode, cs, schema),
-            )(cp);
-          }
-        },
+              setNodeCustomStyleCallback(typeOrNode, cs, schema),
+            )({ ...cp, tr });
+          },
+      unsetCustomStyle:
+        (typeOrNode: TypeOrNode, cs: CustomStyleInstance, pos?: number) =>
+          (cp: CommandProps) => {
+            const { dispatch, state, tr } = cp;
+            if (pos) {
+              const typeName = typeNameOfElement(typeOrNode);
+              if (typeName !== cs.element) return false;
+              const node = state.doc.nodeAt(pos);
+              if (!node) return false;
+              if (typeName !== node?.type.name) return false;
+              if (dispatch)
+                dispatch(
+                  tr.setNodeMarkup(pos, null, unsetCustomStyleAttr(node, cs)),
+                );
+              return true;
+            }
+            let markType: MarkType | undefined =
+              typeOrNode instanceof MarkType
+                ? typeOrNode
+                : (isString(typeOrNode) && state.schema.marks[typeOrNode]) ||
+                undefined;
+            if (markType) {
+              const { from, to } = state.selection;
+              if (dispatch) {
+                tr.removeMark(from, to, markType);
+              }
+              return true;
+            } else {
+              const schema = cp.state.schema;
+              return updateAttributesCommand(
+                typeOrNode,
+                unsetNodeCustomStyleCallback(typeOrNode, cs, schema),
+              )(cp);
+            }
+          },
       toggleCustomStyle:
         (typeOrNode: TypeOrNode, cs: CustomStyleInstance, pos?: number) =>
-        (cp: CommandProps) => {
-          if (pos) {
-            const { dispatch, state, tr } = cp;
-            const typeName = typeNameOfElement(typeOrNode);
-            if (typeName !== cs.element) return false;
-            const node = state.doc.nodeAt(pos);
-            if (!node) return false;
-            if (typeName !== node?.type.name) return false;
-            if (dispatch)
-              dispatch(
-                tr.setNodeMarkup(pos, null, toggleCustomStyleAttr(node, cs)),
-              );
-            return true;
-          }
-          const schema = cp.state.schema;
-          const setCallback = setNodeCustomStyleCallback(
-            typeOrNode,
-            cs,
-            schema,
-          );
-          const unsetCallback = unsetNodeCustomStyleCallback(
-            typeOrNode,
-            cs,
-            schema,
-          );
-          return updateAttributesCommand(typeOrNode, (n) =>
-            isCustomStyleActive(cs, n) ? unsetCallback(n) : setCallback(n),
-          )(cp);
-        },
+          (cp: CommandProps) => {
+            if (pos) {
+              const { dispatch, state, tr } = cp;
+              const typeName = typeNameOfElement(typeOrNode);
+              if (typeName !== cs.element) return false;
+              const node = state.doc.nodeAt(pos);
+              if (!node) return false;
+              if (typeName !== node?.type.name) return false;
+              if (dispatch)
+                dispatch(
+                  tr.setNodeMarkup(pos, null, toggleCustomStyleAttr(node, cs)),
+                );
+              return true;
+            }
+            const schema = cp.state.schema;
+            const setCallback = setNodeCustomStyleCallback(
+              typeOrNode,
+              cs,
+              schema,
+            );
+            const unsetCallback = unsetNodeCustomStyleCallback(
+              typeOrNode,
+              cs,
+              schema,
+            );
+            return updateAttributesCommand(typeOrNode, (n) =>
+              isCustomStyleActive(cs, n) ? unsetCallback(n) : setCallback(n),
+            )(cp);
+          },
       setCustomMark:
         (markName: string, cs: CustomStyleInstance) => (cp: CommandProps) => {
           let { dispatch, state } = cp;
@@ -332,83 +332,83 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
         },
       updateMarkAttributes:
         (markName: string, newAttributes: Record<string, any>) =>
-        (cp: CommandProps) => {
-          let { dispatch, state, tr } = cp;
-          const { empty, from, to } = state.selection;
-          if (empty) return false;
-          const markType = state.schema.marks[markName];
-          if (!markType) return false;
-          const hasMark = state.doc.rangeHasMark(from, to, markType);
-          if (!hasMark) return false;
-          const newMark = markType.create(newAttributes);
-          if (dispatch) {
-            tr.removeMark(from, to, markType);
-            tr.addMark(from, to, newMark);
-            dispatch(tr);
-          }
-          return true;
-        },
+          (cp: CommandProps) => {
+            let { dispatch, state, tr } = cp;
+            const { empty, from, to } = state.selection;
+            if (empty) return false;
+            const markType = state.schema.marks[markName];
+            if (!markType) return false;
+            const hasMark = state.doc.rangeHasMark(from, to, markType);
+            if (!hasMark) return false;
+            const newMark = markType.create(newAttributes);
+            if (dispatch) {
+              tr.removeMark(from, to, markType);
+              tr.addMark(from, to, newMark);
+              dispatch(tr);
+            }
+            return true;
+          },
 
       setCustomClass:
-        (cc: CustomClass, pos?: number, config?: PandocEditorConfig) =>
-        ({ dispatch, state, tr }) => {
-          if (pos) {
-            const node = state.doc.nodeAt(pos);
-            if (!node) return false;
-            if (dispatch) {
-              dispatch(
-                tr.setNodeMarkup(
-                  pos,
-                  null,
-                  setCustomClassAttr(node, cc, config),
-                ),
-              );
+        (cc: CustomClass, pos?: number, config?: PundokEditorConfig) =>
+          ({ dispatch, state, tr }) => {
+            if (pos) {
+              const node = state.doc.nodeAt(pos);
+              if (!node) return false;
+              if (dispatch) {
+                dispatch(
+                  tr.setNodeMarkup(
+                    pos,
+                    null,
+                    setCustomClassAttr(node, cc, config),
+                  ),
+                );
+              }
+              return true;
             }
-            return true;
-          }
-          // TODO:
-          return false;
-        },
+            // TODO:
+            return false;
+          },
       unsetCustomClass:
-        (cc: CustomClass, pos?: number, config?: PandocEditorConfig) =>
-        ({ dispatch, state, tr }) => {
-          if (pos) {
-            const node = state.doc.nodeAt(pos);
-            if (!node) return false;
-            if (dispatch) {
-              dispatch(
-                tr.setNodeMarkup(
-                  pos,
-                  null,
-                  unsetCustomClassAttr(node, cc, config),
-                ),
-              );
+        (cc: CustomClass, pos?: number, config?: PundokEditorConfig) =>
+          ({ dispatch, state, tr }) => {
+            if (pos) {
+              const node = state.doc.nodeAt(pos);
+              if (!node) return false;
+              if (dispatch) {
+                dispatch(
+                  tr.setNodeMarkup(
+                    pos,
+                    null,
+                    unsetCustomClassAttr(node, cc, config),
+                  ),
+                );
+              }
+              return true;
             }
-            return true;
-          }
-          // TODO:
-          return false;
-        },
+            // TODO:
+            return false;
+          },
       toggleCustomClass:
-        (cc: CustomClass, pos?: number, config?: PandocEditorConfig) =>
-        ({ dispatch, state, tr }) => {
-          if (pos) {
-            const node = state.doc.nodeAt(pos);
-            if (!node) return false;
-            if (dispatch) {
-              dispatch(
-                tr.setNodeMarkup(
-                  pos,
-                  null,
-                  toggleCustomClassAttr(node, cc, config),
-                ),
-              );
+        (cc: CustomClass, pos?: number, config?: PundokEditorConfig) =>
+          ({ dispatch, state, tr }) => {
+            if (pos) {
+              const node = state.doc.nodeAt(pos);
+              if (!node) return false;
+              if (dispatch) {
+                dispatch(
+                  tr.setNodeMarkup(
+                    pos,
+                    null,
+                    toggleCustomClassAttr(node, cc, config),
+                  ),
+                );
+              }
+              return true;
             }
-            return true;
-          }
-          // TODO:
-          return false;
-        },
+            // TODO:
+            return false;
+          },
     };
   },
 });

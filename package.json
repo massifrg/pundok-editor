@@ -44,7 +44,7 @@
     "make": "electron-forge make",
     "forge:make:all": "electron-forge make --arch=x64 --targets=@electron-forge/maker-squirrel,@electron-forge/maker-deb,@electron-forge/maker-zip",
     "schema:configuration": "cd schemas; ts-json-schema-generator -p ../packages/common/src/config/editorConfigInit.ts > pundok-configuration.schema.json",
-    "schema:project": "cd schemas; ts-json-schema-generator -p ../packages/common/src/config/project.ts -t PandocEditorProject > pundok-project.schema.json",
+    "schema:project": "cd schemas; ts-json-schema-generator -p ../packages/common/src/config/project.ts -t PundokEditorProject > pundok-project.schema.json",
     "schema": "npm run schema:configuration && npm run schema:project",
     "static:styles": "cd staticResources/css/scss; sass .:.. --no-source-map"
   },

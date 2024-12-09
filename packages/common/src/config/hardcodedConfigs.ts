@@ -2,14 +2,14 @@
 import hardCodedConfigInitJson from '../../../../staticResources/configs/default.config.json?raw';
 // @ts-ignore
 import testingDefaultCSS from '../../../../staticResources/configs/default/default.css?raw';
-import { PandocEditorConfig } from './editorConfiguration';
+import { PundokEditorConfig } from './editorConfiguration';
 
 export const HARDCODED_CONFIG_NAME = 'default';
 export const HARDCODED_CONFIG_DESC = 'the default, hard-coded, configuration';
 
-export function getHardcodedEditorConfig(): PandocEditorConfig {
+export function getHardcodedEditorConfig(): PundokEditorConfig {
   const hardCodedConfigInit = JSON.parse(hardCodedConfigInitJson);
-  return new PandocEditorConfig(hardCodedConfigInit);
+  return new PundokEditorConfig(hardCodedConfigInit);
 }
 
 export function getHardcodedCustomCss(): Promise<string> {

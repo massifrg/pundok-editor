@@ -39,7 +39,7 @@ import {
   INDEX_CLASS,
   INDEX_NAME_ATTR,
   INDEX_TERM_CLASS,
-  PandocEditorConfig,
+  PundokEditorConfig,
 } from '../../common';
 import { createPandocTable, innerNodeDepth } from '.';
 import { isString } from 'lodash';
@@ -94,7 +94,7 @@ interface TemplateNodeContext {
 export function templateNode(
   schema: Schema,
   typename: string,
-  config?: PandocEditorConfig,
+  config?: PundokEditorConfig,
   context?: TemplateNodeContext,
 ): { node: Node; attrs?: Attrs } | null {
   const nodes = schema.nodes;
@@ -334,7 +334,7 @@ export function areCompatible(typename1: string, typename2: string) {
 export function attrsForConversionTo(
   fromNode: Node,
   toType: NodeType | string,
-  config?: PandocEditorConfig,
+  config?: PundokEditorConfig,
 ): Record<string, any> {
   const fromTypeName = fromNode.type.name;
   const toTypeName = isString(toType) ? toType : toType.name;

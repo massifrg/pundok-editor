@@ -79,8 +79,8 @@ import {
   type FeedbackMessage,
   type InputConverter,
   type OutputConverter,
-  type PandocEditorConfig,
-  type PandocEditorProject,
+  type PundokEditorConfig,
+  type PundokEditorProject,
   type SaveResponse,
   StoredDoc,
   ReadDoc,
@@ -217,7 +217,7 @@ export default {
       // complain if the document, in its current state, has just been exported but not saved in JSON
       complainIfJustExported: true,
       pending: undefined as PendingOperation | undefined,
-      configuration: undefined as PandocEditorConfig | undefined,
+      configuration: undefined as PundokEditorConfig | undefined,
       message: null as FeedbackMessage | null,
       // an operation is in progress
       operationInProgress: false,
@@ -522,7 +522,7 @@ export default {
         // }, 2000)
       }
     },
-    async reloadDocumentWithConfiguration(config: string | PandocEditorConfig) {
+    async reloadDocumentWithConfiguration(config: string | PundokEditorConfig) {
       const json = this.getDocAsJsonString()
       try {
         await this.setConfiguration(config)
@@ -783,7 +783,7 @@ export default {
       }
       this.setWindowTitle(title)
     },
-    async setProject(project: PandocEditorProject) {
+    async setProject(project: PundokEditorProject) {
       if (project) {
         console.log("PROJECT:")
         console.log(project)
@@ -793,16 +793,16 @@ export default {
         // this.updateEditorDocState({ configuration: project.computedConfig })
       }
     },
-    async setConfiguration(name_or_config?: string | PandocEditorConfig): Promise<PandocEditorConfig> {
+    async setConfiguration(name_or_config?: string | PundokEditorConfig): Promise<PundokEditorConfig> {
       try {
         if (name_or_config) {
           const config_name = isString(name_or_config) ? name_or_config : name_or_config.name
           console.log(`setting configuration to ${config_name}`)
-          let configuration: PandocEditorConfig
+          let configuration: PundokEditorConfig
           if (isString(name_or_config) && this.backend) {
             configuration = await this.backend.configuration(name_or_config)
           } else {
-            configuration = name_or_config as PandocEditorConfig
+            configuration = name_or_config as PundokEditorConfig
           }
           if (configuration) {
             const prevConfiguration = this.configuration;

@@ -1,5 +1,5 @@
 {
-  "$ref": "#/definitions/PandocEditorProject",
+  "$ref": "#/definitions/PundokEditorProject",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "Automation": {
@@ -547,318 +547,6 @@
         }
       ]
     },
-    "PandocEditorConfig": {
-      "additionalProperties": false,
-      "properties": {
-        "autoDelimiters": {
-          "additionalProperties": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "description": "Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote) in the editor.",
-          "type": "object"
-        },
-        "automations": {
-          "description": "Automations, e.g. pre-defined search-replace values, to speed up transformations of the documents.",
-          "items": {
-            "$ref": "#/definitions/Automation"
-          },
-          "type": "array"
-        },
-        "customAttributes": {
-          "description": "Custom attributes that can be added to Blocks or Inlines with an `Attr`.",
-          "items": {
-            "$ref": "#/definitions/CustomAttribute"
-          },
-          "type": "array"
-        },
-        "customClasses": {
-          "description": "Custom classes that can be added to Blocks or Inlines with an `Attr`.",
-          "items": {
-            "$ref": "#/definitions/CustomClass"
-          },
-          "type": "array"
-        },
-        "customCss": {
-          "description": "Filenames of CSS stylesheets to customize documents with this configuration.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "customStyles": {
-          "description": "Definitions of custom styles available with this configuration. These definitions can encompass multiple elements (e.g. `span`, `paragraph`). See [Pandoc custom styles](https://pandoc.org/MANUAL.html#custom-styles)",
-          "items": {
-            "$ref": "#/definitions/CustomStyleDef"
-          },
-          "type": "array"
-        },
-        "customStylesInstances": {
-          "description": "Custom styles instances for a single element, derived from the definitions of the `CustomStyles` field.",
-          "items": {
-            "$ref": "#/definitions/CustomStyleInstance"
-          },
-          "type": "array"
-        },
-        "defaultRawFormat": {
-          "description": "Default format when creating RawInline and RawBlock elements.",
-          "type": "string"
-        },
-        "description": {
-          "description": "Description of the aim of this configuration.",
-          "type": "string"
-        },
-        "documentTemplate": {
-          "description": "A JSON-stringified document used as a template for new documents.",
-          "type": "string"
-        },
-        "indices": {
-          "description": "The indices available for the documents of this configuration.",
-          "items": {
-            "$ref": "#/definitions/Index"
-          },
-          "type": "array"
-        },
-        "inputConverters": {
-          "description": "Definitions of converters to import documents of different formats.",
-          "items": {
-            "$ref": "#/definitions/InputConverter"
-          },
-          "type": "array"
-        },
-        "name": {
-          "description": "The name of this configuration of the editor.",
-          "type": "string"
-        },
-        "noteStyles": {
-          "description": "Kinds of notes available to the documents in this configuration.",
-          "items": {
-            "$ref": "#/definitions/NoteStyle"
-          },
-          "type": "array"
-        },
-        "outputConverters": {
-          "description": "Definitions of converters to export documents into different formats.",
-          "items": {
-            "$ref": "#/definitions/OutputConverter"
-          },
-          "type": "array"
-        },
-        "rawBlocks": {
-          "description": "`RawBlock` elements that are made available in the GUI.",
-          "items": {
-            "$ref": "#/definitions/InsertableRaw"
-          },
-          "type": "array"
-        },
-        "rawInlines": {
-          "description": "`RawInline` elements that are made available in the GUI.",
-          "items": {
-            "$ref": "#/definitions/InsertableRaw"
-          },
-          "type": "array"
-        },
-        "tiptap": {
-          "additionalProperties": false,
-          "description": "Options to configure [TipTap](https://tiptap.dev) components of the editor.",
-          "properties": {
-            "options": {
-              "type": "object"
-            }
-          },
-          "type": "object"
-        },
-        "version": {
-          "description": "The version of this configuration (it's meant for compatibility, but it's not used yet).",
-          "items": {
-            "type": "number"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "name",
-        "version",
-        "description",
-        "tiptap",
-        "customStylesInstances"
-      ],
-      "type": "object"
-    },
-    "PandocEditorProject": {
-      "additionalProperties": false,
-      "properties": {
-        "computedConfig": {
-          "$ref": "#/definitions/PandocEditorConfig",
-          "description": "The actual configuration computed from the inherited configurations and complemented with editorConfig"
-        },
-        "configurations": {
-          "description": "The names of configurations to inherit",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "description": {
-          "description": "A description of the project",
-          "type": "string"
-        },
-        "editorConfig": {
-          "additionalProperties": false,
-          "description": "A complement to the inherited configurations",
-          "properties": {
-            "autoDelimiters": {
-              "additionalProperties": {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              "description": "Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote) in the editor.",
-              "type": "object"
-            },
-            "automations": {
-              "description": "Automations, e.g. pre-defined search-replace values, to speed up transformations of the documents.",
-              "items": {
-                "$ref": "#/definitions/Automation"
-              },
-              "type": "array"
-            },
-            "customAttributes": {
-              "description": "Custom attributes that can be added to Blocks or Inlines with an `Attr`.",
-              "items": {
-                "$ref": "#/definitions/CustomAttribute"
-              },
-              "type": "array"
-            },
-            "customClasses": {
-              "description": "Custom classes that can be added to Blocks or Inlines with an `Attr`.",
-              "items": {
-                "$ref": "#/definitions/CustomClass"
-              },
-              "type": "array"
-            },
-            "customCss": {
-              "description": "Filenames of CSS stylesheets to customize documents with this configuration.",
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "customStyles": {
-              "description": "Definitions of custom styles available with this configuration. These definitions can encompass multiple elements (e.g. `span`, `paragraph`). See [Pandoc custom styles](https://pandoc.org/MANUAL.html#custom-styles)",
-              "items": {
-                "$ref": "#/definitions/CustomStyleDef"
-              },
-              "type": "array"
-            },
-            "customStylesInstances": {
-              "description": "Custom styles instances for a single element, derived from the definitions of the `CustomStyles` field.",
-              "items": {
-                "$ref": "#/definitions/CustomStyleInstance"
-              },
-              "type": "array"
-            },
-            "defaultRawFormat": {
-              "description": "Default format when creating RawInline and RawBlock elements.",
-              "type": "string"
-            },
-            "description": {
-              "description": "Description of the aim of this configuration.",
-              "type": "string"
-            },
-            "documentTemplate": {
-              "description": "A JSON-stringified document used as a template for new documents.",
-              "type": "string"
-            },
-            "indices": {
-              "description": "The indices available for the documents of this configuration.",
-              "items": {
-                "$ref": "#/definitions/Index"
-              },
-              "type": "array"
-            },
-            "inputConverters": {
-              "description": "Definitions of converters to import documents of different formats.",
-              "items": {
-                "$ref": "#/definitions/InputConverter"
-              },
-              "type": "array"
-            },
-            "name": {
-              "description": "The name of this configuration of the editor.",
-              "type": "string"
-            },
-            "noteStyles": {
-              "description": "Kinds of notes available to the documents in this configuration.",
-              "items": {
-                "$ref": "#/definitions/NoteStyle"
-              },
-              "type": "array"
-            },
-            "outputConverters": {
-              "description": "Definitions of converters to export documents into different formats.",
-              "items": {
-                "$ref": "#/definitions/OutputConverter"
-              },
-              "type": "array"
-            },
-            "rawBlocks": {
-              "description": "`RawBlock` elements that are made available in the GUI.",
-              "items": {
-                "$ref": "#/definitions/InsertableRaw"
-              },
-              "type": "array"
-            },
-            "rawInlines": {
-              "description": "`RawInline` elements that are made available in the GUI.",
-              "items": {
-                "$ref": "#/definitions/InsertableRaw"
-              },
-              "type": "array"
-            },
-            "tiptap": {
-              "additionalProperties": false,
-              "description": "Options to configure [TipTap](https://tiptap.dev) components of the editor.",
-              "properties": {
-                "options": {
-                  "type": "object"
-                }
-              },
-              "type": "object"
-            },
-            "version": {
-              "description": "The version of this configuration (it's meant for compatibility, but it's not used yet).",
-              "items": {
-                "type": "number"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
-        },
-        "name": {
-          "type": "string"
-        },
-        "path": {
-          "type": "string"
-        },
-        "rootDocument": {
-          "description": "The root (master) document of the document tree",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "path",
-        "rootDocument",
-        "editorConfig",
-        "computedConfig"
-      ],
-      "type": "object"
-    },
     "PandocInputConverter": {
       "additionalProperties": false,
       "description": "An input converter that spawns a pandoc process to import a document.",
@@ -1045,6 +733,318 @@
         "format",
         "name",
         "type"
+      ],
+      "type": "object"
+    },
+    "PundokEditorConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "autoDelimiters": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": "Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote) in the editor.",
+          "type": "object"
+        },
+        "automations": {
+          "description": "Automations, e.g. pre-defined search-replace values, to speed up transformations of the documents.",
+          "items": {
+            "$ref": "#/definitions/Automation"
+          },
+          "type": "array"
+        },
+        "customAttributes": {
+          "description": "Custom attributes that can be added to Blocks or Inlines with an `Attr`.",
+          "items": {
+            "$ref": "#/definitions/CustomAttribute"
+          },
+          "type": "array"
+        },
+        "customClasses": {
+          "description": "Custom classes that can be added to Blocks or Inlines with an `Attr`.",
+          "items": {
+            "$ref": "#/definitions/CustomClass"
+          },
+          "type": "array"
+        },
+        "customCss": {
+          "description": "Filenames of CSS stylesheets to customize documents with this configuration.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "customStyles": {
+          "description": "Definitions of custom styles available with this configuration. These definitions can encompass multiple elements (e.g. `span`, `paragraph`). See [Pandoc custom styles](https://pandoc.org/MANUAL.html#custom-styles)",
+          "items": {
+            "$ref": "#/definitions/CustomStyleDef"
+          },
+          "type": "array"
+        },
+        "customStylesInstances": {
+          "description": "Custom styles instances for a single element, derived from the definitions of the `CustomStyles` field.",
+          "items": {
+            "$ref": "#/definitions/CustomStyleInstance"
+          },
+          "type": "array"
+        },
+        "defaultRawFormat": {
+          "description": "Default format when creating RawInline and RawBlock elements.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Description of the aim of this configuration.",
+          "type": "string"
+        },
+        "documentTemplate": {
+          "description": "A JSON-stringified document used as a template for new documents.",
+          "type": "string"
+        },
+        "indices": {
+          "description": "The indices available for the documents of this configuration.",
+          "items": {
+            "$ref": "#/definitions/Index"
+          },
+          "type": "array"
+        },
+        "inputConverters": {
+          "description": "Definitions of converters to import documents of different formats.",
+          "items": {
+            "$ref": "#/definitions/InputConverter"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "The name of this configuration of the editor.",
+          "type": "string"
+        },
+        "noteStyles": {
+          "description": "Kinds of notes available to the documents in this configuration.",
+          "items": {
+            "$ref": "#/definitions/NoteStyle"
+          },
+          "type": "array"
+        },
+        "outputConverters": {
+          "description": "Definitions of converters to export documents into different formats.",
+          "items": {
+            "$ref": "#/definitions/OutputConverter"
+          },
+          "type": "array"
+        },
+        "rawBlocks": {
+          "description": "`RawBlock` elements that are made available in the GUI.",
+          "items": {
+            "$ref": "#/definitions/InsertableRaw"
+          },
+          "type": "array"
+        },
+        "rawInlines": {
+          "description": "`RawInline` elements that are made available in the GUI.",
+          "items": {
+            "$ref": "#/definitions/InsertableRaw"
+          },
+          "type": "array"
+        },
+        "tiptap": {
+          "additionalProperties": false,
+          "description": "Options to configure [TipTap](https://tiptap.dev) components of the editor.",
+          "properties": {
+            "options": {
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "version": {
+          "description": "The version of this configuration (it's meant for compatibility, but it's not used yet).",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "description",
+        "tiptap",
+        "customStylesInstances"
+      ],
+      "type": "object"
+    },
+    "PundokEditorProject": {
+      "additionalProperties": false,
+      "properties": {
+        "computedConfig": {
+          "$ref": "#/definitions/PundokEditorConfig",
+          "description": "The actual configuration computed from the inherited configurations and complemented with editorConfig"
+        },
+        "configurations": {
+          "description": "The names of configurations to inherit",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "A description of the project",
+          "type": "string"
+        },
+        "editorConfig": {
+          "additionalProperties": false,
+          "description": "A complement to the inherited configurations",
+          "properties": {
+            "autoDelimiters": {
+              "additionalProperties": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "description": "Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote) in the editor.",
+              "type": "object"
+            },
+            "automations": {
+              "description": "Automations, e.g. pre-defined search-replace values, to speed up transformations of the documents.",
+              "items": {
+                "$ref": "#/definitions/Automation"
+              },
+              "type": "array"
+            },
+            "customAttributes": {
+              "description": "Custom attributes that can be added to Blocks or Inlines with an `Attr`.",
+              "items": {
+                "$ref": "#/definitions/CustomAttribute"
+              },
+              "type": "array"
+            },
+            "customClasses": {
+              "description": "Custom classes that can be added to Blocks or Inlines with an `Attr`.",
+              "items": {
+                "$ref": "#/definitions/CustomClass"
+              },
+              "type": "array"
+            },
+            "customCss": {
+              "description": "Filenames of CSS stylesheets to customize documents with this configuration.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "customStyles": {
+              "description": "Definitions of custom styles available with this configuration. These definitions can encompass multiple elements (e.g. `span`, `paragraph`). See [Pandoc custom styles](https://pandoc.org/MANUAL.html#custom-styles)",
+              "items": {
+                "$ref": "#/definitions/CustomStyleDef"
+              },
+              "type": "array"
+            },
+            "customStylesInstances": {
+              "description": "Custom styles instances for a single element, derived from the definitions of the `CustomStyles` field.",
+              "items": {
+                "$ref": "#/definitions/CustomStyleInstance"
+              },
+              "type": "array"
+            },
+            "defaultRawFormat": {
+              "description": "Default format when creating RawInline and RawBlock elements.",
+              "type": "string"
+            },
+            "description": {
+              "description": "Description of the aim of this configuration.",
+              "type": "string"
+            },
+            "documentTemplate": {
+              "description": "A JSON-stringified document used as a template for new documents.",
+              "type": "string"
+            },
+            "indices": {
+              "description": "The indices available for the documents of this configuration.",
+              "items": {
+                "$ref": "#/definitions/Index"
+              },
+              "type": "array"
+            },
+            "inputConverters": {
+              "description": "Definitions of converters to import documents of different formats.",
+              "items": {
+                "$ref": "#/definitions/InputConverter"
+              },
+              "type": "array"
+            },
+            "name": {
+              "description": "The name of this configuration of the editor.",
+              "type": "string"
+            },
+            "noteStyles": {
+              "description": "Kinds of notes available to the documents in this configuration.",
+              "items": {
+                "$ref": "#/definitions/NoteStyle"
+              },
+              "type": "array"
+            },
+            "outputConverters": {
+              "description": "Definitions of converters to export documents into different formats.",
+              "items": {
+                "$ref": "#/definitions/OutputConverter"
+              },
+              "type": "array"
+            },
+            "rawBlocks": {
+              "description": "`RawBlock` elements that are made available in the GUI.",
+              "items": {
+                "$ref": "#/definitions/InsertableRaw"
+              },
+              "type": "array"
+            },
+            "rawInlines": {
+              "description": "`RawInline` elements that are made available in the GUI.",
+              "items": {
+                "$ref": "#/definitions/InsertableRaw"
+              },
+              "type": "array"
+            },
+            "tiptap": {
+              "additionalProperties": false,
+              "description": "Options to configure [TipTap](https://tiptap.dev) components of the editor.",
+              "properties": {
+                "options": {
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "version": {
+              "description": "The version of this configuration (it's meant for compatibility, but it's not used yet).",
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "rootDocument": {
+          "description": "The root (master) document of the document tree",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "path",
+        "rootDocument",
+        "editorConfig",
+        "computedConfig"
       ],
       "type": "object"
     },

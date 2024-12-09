@@ -9,7 +9,7 @@ import {
   InputConverter,
   OutputConverter,
   PandocOutputConverter,
-  PandocEditorProject,
+  PundokEditorProject,
   DEFAULT_IMPORT_PANDOC_OPTIONS,
   PandocFilterTransform,
   FindResourceOptions,
@@ -104,7 +104,7 @@ export interface ExportOptions {
   /** the current working directory of the spawn process (pandoc or a script) */
   cwd: string;
   /** the eventual project */
-  project: PandocEditorProject | string;
+  project: PundokEditorProject | string;
   /** the name of the configuration */
   configurationName: string;
   /** the path(s) where to look for resources */
@@ -200,7 +200,7 @@ export function exportWithPandoc(
   if (resourcePath)
     pandocOpts.push(
       '--resource-path=' +
-        resourcePath.map((p) => encloseInDblQuotes(p)).join(pathDelimiter),
+      resourcePath.map((p) => encloseInDblQuotes(p)).join(pathDelimiter),
     );
   /* --standalone and --template pandoc options */
   if (standalone) {
@@ -276,7 +276,7 @@ export async function transformWithPandoc(
     );
   try {
     // resources
-    const project: PandocEditorProject | undefined =
+    const project: PundokEditorProject | undefined =
       context.project && isString(context.project)
         ? JSON.parse(context.project)
         : context.project;
@@ -348,7 +348,7 @@ export async function transformWithPandoc(
 }
 
 export async function runWriterOnMasterFile(
-  editorProject: string | PandocEditorProject,
+  editorProject: string | PundokEditorProject,
   writerFilename: string,
   options?: {
     metadata?: PandocMetadata;
@@ -356,7 +356,7 @@ export async function runWriterOnMasterFile(
   },
 ): Promise<string | undefined> {
   try {
-    const project: PandocEditorProject =
+    const project: PundokEditorProject =
       editorProject && isString(editorProject)
         ? JSON.parse(editorProject)
         : editorProject;

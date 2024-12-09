@@ -9,9 +9,9 @@ import { OutputConverter } from './outputConverters';
 import { InsertableRaw } from './rawElements';
 
 /**
- * A configuration (customization) of PandocEditor.
+ * A configuration (customization) of PundokEditor.
  */
-export interface PandocEditorConfigInit extends Record<string, any> {
+export interface PundokEditorConfigInit extends Record<string, any> {
   /** the name of the configuration (please only letters, numbers and underscore) */
   name: string;
   /** the minimal suitable version of the editor */

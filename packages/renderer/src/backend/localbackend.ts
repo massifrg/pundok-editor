@@ -7,7 +7,7 @@ import type {
 } from './backend';
 import {
   type ConfigurationSummary,
-  PandocEditorConfig,
+  PundokEditorConfig,
   type SaveResponse,
   type StoredDoc,
   getHardcodedCustomCss,
@@ -17,14 +17,14 @@ import {
   PreviewOptions,
   Query,
   QueryResult,
-  PandocEditorProject,
+  PundokEditorProject,
   EditorKeyType,
   ServerMessageSetConfiguration,
   ServerMessageSetProject,
   ServerMessageFeedback,
   ServerMessageContent,
   ServerMessageCommand,
-  PandocEditorConfigInit,
+  PundokEditorConfigInit,
   computeProjectConfiguration,
   FindResourceOptions,
   ReadDoc,
@@ -134,27 +134,27 @@ export class LocalBackend implements Backend {
           const { editorKey, content, project } = contentMsg;
           console.log(contentMsg);
 
-          const project_with_conf: PandocEditorProject | undefined = project
+          const project_with_conf: PundokEditorProject | undefined = project
             ? await computeProjectConfiguration(
-                project,
-                getConfigurationFunction(this.ipc),
-              )
+              project,
+              getConfigurationFunction(this.ipc),
+            )
             : undefined;
           const action: EditorAction = project_with_conf
             ? {
-                ...ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
-                editorKey: editorKey!,
-                props: {
-                  project: project_with_conf,
-                  configuration: project_with_conf.computedConfig,
-                  content,
-                },
-              }
+              ...ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
+              editorKey: editorKey!,
+              props: {
+                project: project_with_conf,
+                configuration: project_with_conf.computedConfig,
+                content,
+              },
+            }
             : {
-                ...ACTION_BACKEND_SET_CONTENT,
-                editorKey: editorKey!,
-                props: { content },
-              };
+              ...ACTION_BACKEND_SET_CONTENT,
+              editorKey: editorKey!,
+              props: { content },
+            };
           actions.setAction(action);
         },
       );
@@ -250,7 +250,7 @@ export class LocalBackend implements Backend {
 
   private doSave(
     doc: StoredDoc,
-    project?: PandocEditorProject,
+    project?: PundokEditorProject,
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse> {
     const ipc = this.ipc;
@@ -268,14 +268,14 @@ export class LocalBackend implements Backend {
 
   save(
     doc: StoredDoc,
-    project?: PandocEditorProject,
+    project?: PundokEditorProject,
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse> {
     let preview: Partial<PreviewOptions> | undefined = undefined;
     const openResult = doc.converter?.openResult;
     if (openResult)
       preview = {
-        inPandocEditor: openResult === 'editor',
+        inPundokEditor: openResult === 'editor',
       };
     console.log(doc);
     return this.doSave({ ...doc /*, preview */ }, project, editorKey);
@@ -285,7 +285,7 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('debug-info');
   }
 
-  async getProject(context: Record<string, any>): Promise<PandocEditorProject> {
+  async getProject(context: Record<string, any>): Promise<PundokEditorProject> {
     return this.invokeIpc('get-project', context);
   }
 
@@ -304,18 +304,18 @@ export class LocalBackend implements Backend {
     return configs;
   }
 
-  async configuration(name?: string): Promise<PandocEditorConfig> {
+  async configuration(name?: string): Promise<PundokEditorConfig> {
     if (!name || name === HARDCODED_CONFIG_NAME)
       return Promise.resolve(getHardcodedEditorConfig());
     const notFound = `Configuration "${name}" not found`;
     const ipc = this.ipc;
     if (ipc) {
-      const configInit: PandocEditorConfigInit = await ipc.invoke(
+      const configInit: PundokEditorConfigInit = await ipc.invoke(
         'load-configuration',
         name,
       );
       return configInit
-        ? new PandocEditorConfig(configInit)
+        ? new PundokEditorConfig(configInit)
         : Promise.reject(notFound);
     } else {
       return Promise.reject(notFound);
@@ -365,7 +365,7 @@ export class LocalBackend implements Backend {
   }
 
   async getInclusionTree(
-    project: PandocEditorProject,
+    project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined> {
     const structure = await this.invokeIpc(
       'get-inclusion-tree',
@@ -383,7 +383,7 @@ export class LocalBackend implements Backend {
   ): Promise<DocumentCoords | undefined> {
     const maybeProject = context?.project;
     const project = isString(maybeProject)
-      ? (JSON.parse(maybeProject) as PandocEditorProject)
+      ? (JSON.parse(maybeProject) as PundokEditorProject)
       : maybeProject;
     console.log(`asking for a filename relative to ${project?.path}`);
     return this.invokeIpc('ask-for-document', context?.editorKey, context?.id, {
@@ -413,12 +413,12 @@ function getConfigurationFunction(ipc: any) {
       return Promise.resolve(getHardcodedEditorConfig());
     const notFound = `Configuration "${name}" not found`;
     if (ipc) {
-      const configInit: PandocEditorConfigInit = await ipc.invoke(
+      const configInit: PundokEditorConfigInit = await ipc.invoke(
         'load-configuration',
         name,
       );
       return configInit
-        ? new PandocEditorConfig(configInit)
+        ? new PundokEditorConfig(configInit)
         : Promise.reject(notFound);
     } else {
       return Promise.reject(notFound);

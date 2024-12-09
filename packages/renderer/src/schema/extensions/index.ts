@@ -14,7 +14,7 @@ export { HelperCommandsExtension } from './HelperCommandsExtension';
 export * from './IndexingExtension';
 export * from './AutoDelimitersExtension';
 export { SectionHighlighterExtension } from './SectionHighlighterExtension';
-export * from './PandocEditorUtilsExtension';
+export * from './PundokEditorUtilsExtension';
 export * from './SearchAndReplaceExtension';
 export * from './TextTransformExtension';
 export * from './FixDocStructureExtension';

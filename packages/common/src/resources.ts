@@ -1,4 +1,4 @@
-import { PandocEditorProject } from './config';
+import { PundokEditorProject } from './config';
 
 export type ResourceType =
   | 'document'
@@ -26,11 +26,11 @@ export const RESOURCE_SUBPATHS: Record<ResourceType, string[]> = {
 /** structure used to find a resource for a document */
 export interface FindResourceOptions {
   kind: ResourceType;
-  project: PandocEditorProject | string;
+  project: PundokEditorProject | string;
   configurationName: string;
   // path: string;
   base64?: boolean;
-  // configuration: PandocEditorConfig | string;
+  // configuration: PundokEditorConfig | string;
 }
 
 export function resourceTypesFromExtension(ext: string): ResourceType[] {

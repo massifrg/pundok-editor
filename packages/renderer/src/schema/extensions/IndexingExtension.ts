@@ -16,7 +16,7 @@ import { documentIndices, mergeIndices } from '../helpers/indices';
 import {
   DocStateUpdate,
   META_UPDATE_DOC_STATE,
-} from './PandocEditorUtilsExtension';
+} from './PundokEditorUtilsExtension';
 
 const INDEXING_PLUGIN = 'indexing-plugin';
 
@@ -24,7 +24,7 @@ export const INDEXING_DECORATION_PREFIX = 'indexing';
 const META_REDECORATE_INDEX_REFS = 'redecorate-index-refs';
 const META_DETECT_DOCUMENT_INDICES = 'detect-document-indices';
 
-export interface IndexingOptions {}
+export interface IndexingOptions { }
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -242,66 +242,66 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
     return {
       addIndexRef:
         (index: Index) =>
-        ({ tr, state, dispatch }) => {
-          const indexRefType = state.schema.nodes.indexRef;
-          if (!indexRefType) return false;
-          const indexName = index.indexName || DEFAULT_INDEX_NAME;
-          const { from, to, empty } = state.selection;
-          const marks = state.doc.resolve(from).marks();
-          if (empty) {
-            if (!index.onlyEmpty === true) return false;
-            if (dispatch) {
-              const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
-              const indexRef = indexRefType.create(
-                {
-                  classes: [refClass],
-                  kv: { 'index-name': indexName },
-                },
-                null,
-                marks,
-              );
-              tr.insert(from, indexRef);
-            }
-          } else {
-            if (index.onlyEmpty === true) return false;
-            const indexedText = indexedTextWithoutAtoms(state.doc, from, to);
-            if (!indexedText) return false;
-            if (dispatch) {
-              const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
-              const indexRef = indexRefType.create(
-                {
-                  classes: [refClass],
-                  kv: {
-                    'index-name': indexName,
-                    'indexed-text': indexedText,
+          ({ tr, state, dispatch }) => {
+            const indexRefType = state.schema.nodes.indexRef;
+            if (!indexRefType) return false;
+            const indexName = index.indexName || DEFAULT_INDEX_NAME;
+            const { from, to, empty } = state.selection;
+            const marks = state.doc.resolve(from).marks();
+            if (empty) {
+              if (!index.onlyEmpty === true) return false;
+              if (dispatch) {
+                const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
+                const indexRef = indexRefType.create(
+                  {
+                    classes: [refClass],
+                    kv: { 'index-name': indexName },
                   },
-                },
-                null,
-                marks,
-              );
-              const where: IndexRefPlacement =
-                index.putIndexRef || DEFAULT_PUT_INDEX_REF;
-              tr.insert(where === 'before' ? from : to, indexRef);
+                  null,
+                  marks,
+                );
+                tr.insert(from, indexRef);
+              }
+            } else {
+              if (index.onlyEmpty === true) return false;
+              const indexedText = indexedTextWithoutAtoms(state.doc, from, to);
+              if (!indexedText) return false;
+              if (dispatch) {
+                const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
+                const indexRef = indexRefType.create(
+                  {
+                    classes: [refClass],
+                    kv: {
+                      'index-name': indexName,
+                      'indexed-text': indexedText,
+                    },
+                  },
+                  null,
+                  marks,
+                );
+                const where: IndexRefPlacement =
+                  index.putIndexRef || DEFAULT_PUT_INDEX_REF;
+                tr.insert(where === 'before' ? from : to, indexRef);
+              }
             }
-          }
-          return true;
-        },
+            return true;
+          },
       redecorateIndexRefs:
         () =>
-        ({ tr, dispatch }) => {
-          if (dispatch) {
-            tr.setMeta(META_REDECORATE_INDEX_REFS, true);
-          }
-          return true;
-        },
+          ({ tr, dispatch }) => {
+            if (dispatch) {
+              tr.setMeta(META_REDECORATE_INDEX_REFS, true);
+            }
+            return true;
+          },
       detectDocumentIndices:
         () =>
-        ({ tr, dispatch }) => {
-          if (dispatch) {
-            tr.setMeta(META_DETECT_DOCUMENT_INDICES, true);
-          }
-          return true;
-        },
+          ({ tr, dispatch }) => {
+            if (dispatch) {
+              tr.setMeta(META_DETECT_DOCUMENT_INDICES, true);
+            }
+            return true;
+          },
     };
   },
 });

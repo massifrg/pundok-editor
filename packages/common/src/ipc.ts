@@ -1,4 +1,4 @@
-import { FeedbackMessage, PandocEditorProject, ReadDoc, ViewerSetup } from '.';
+import { FeedbackMessage, PundokEditorProject, ReadDoc, ViewerSetup } from '.';
 import { EditorKeyType } from './editorKey';
 
 export type IpcDirection = 'm2r' | 'r2m' | 'both';
@@ -180,12 +180,12 @@ export interface ServerMessageFeedback extends ServerMessage {
 export interface ServerMessageContent extends ServerMessage {
   type: 'content';
   content: ReadDoc;
-  project?: PandocEditorProject;
+  project?: PundokEditorProject;
 }
 
 export interface ServerMessageSetProject extends ServerMessage {
   type: 'project';
-  project: PandocEditorProject;
+  project: PundokEditorProject;
 }
 
 export type CommandToRenderer =

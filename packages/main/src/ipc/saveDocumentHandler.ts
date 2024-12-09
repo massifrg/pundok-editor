@@ -2,7 +2,7 @@ import { IpcMainInvokeEvent, shell } from 'electron';
 import { IpcHub } from './ipcHub';
 import {
   EditorKeyType,
-  PandocEditorProject,
+  PundokEditorProject,
   SaveResponse,
   ServerMessageForViewer,
   StoredDoc,
@@ -17,55 +17,55 @@ import { stringify } from '../utils';
  */
 export const saveDocumentHandler =
   (hub: IpcHub) =>
-  async (
-    e: IpcMainInvokeEvent,
-    docAsJsonString: string,
-    projectAsJsonString: string | undefined,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse> => {
-    let response: SaveResponse;
-    try {
-      const doc: StoredDoc = JSON.parse(docAsJsonString);
-      const project: PandocEditorProject | undefined =
-        !projectAsJsonString || projectAsJsonString === '{}'
-          ? undefined
-          : JSON.parse(projectAsJsonString);
-      if (doc.converter) {
-        response = await hub.exportDocument(doc, project, editorKey);
-        console.log(`EXPORT FINISHED`);
-        console.log(doc);
-        if (!response.error && response.resultFile) {
-          const openResult = doc.converter?.openResult;
-          console.log(`openResult=${openResult}`);
-          if (openResult === 'editor') {
-            hub.send('show-in-viewer', {
-              type: 'viewer',
-              editorKey,
-              setup: {
-                name: response.resultFile,
-              },
-            } as ServerMessageForViewer);
-          } else if (openResult === 'os') {
-            shell.openPath(response.resultFile).catch((error) => {
-              errorFeedback(hub, stringify(error), editorKey);
-            });
+    async (
+      e: IpcMainInvokeEvent,
+      docAsJsonString: string,
+      projectAsJsonString: string | undefined,
+      editorKey?: EditorKeyType,
+    ): Promise<SaveResponse> => {
+      let response: SaveResponse;
+      try {
+        const doc: StoredDoc = JSON.parse(docAsJsonString);
+        const project: PundokEditorProject | undefined =
+          !projectAsJsonString || projectAsJsonString === '{}'
+            ? undefined
+            : JSON.parse(projectAsJsonString);
+        if (doc.converter) {
+          response = await hub.exportDocument(doc, project, editorKey);
+          console.log(`EXPORT FINISHED`);
+          console.log(doc);
+          if (!response.error && response.resultFile) {
+            const openResult = doc.converter?.openResult;
+            console.log(`openResult=${openResult}`);
+            if (openResult === 'editor') {
+              hub.send('show-in-viewer', {
+                type: 'viewer',
+                editorKey,
+                setup: {
+                  name: response.resultFile,
+                },
+              } as ServerMessageForViewer);
+            } else if (openResult === 'os') {
+              shell.openPath(response.resultFile).catch((error) => {
+                errorFeedback(hub, stringify(error), editorKey);
+              });
+            }
           }
+        } else {
+          response = await hub.saveDocument(doc, project);
         }
-      } else {
-        response = await hub.saveDocument(doc, project);
+        if (response.error) {
+          const errmsg = stringify(response.error);
+          errorFeedback(hub, errmsg, editorKey);
+          // console.log(errmsg);
+        } else {
+          // actionsHub.setSavePath(doc.path);
+        }
+        // console.log(response.doc.path);
+        return response;
+      } catch (error) {
+        if (error !== 'save cancelled')
+          errorFeedback(hub, stringify(error), editorKey);
+        return Promise.reject(error);
       }
-      if (response.error) {
-        const errmsg = stringify(response.error);
-        errorFeedback(hub, errmsg, editorKey);
-        // console.log(errmsg);
-      } else {
-        // actionsHub.setSavePath(doc.path);
-      }
-      // console.log(response.doc.path);
-      return response;
-    } catch (error) {
-      if (error !== 'save cancelled')
-        errorFeedback(hub, stringify(error), editorKey);
-      return Promise.reject(error);
-    }
-  };
+    };

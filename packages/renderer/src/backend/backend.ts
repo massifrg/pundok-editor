@@ -3,8 +3,8 @@ import type {
   EditorKeyType,
   FindResourceOptions,
   DocumentContext,
-  PandocEditorConfig,
-  PandocEditorProject,
+  PundokEditorConfig,
+  PundokEditorProject,
   ProjectComponent,
   Query,
   QueryResult,
@@ -93,7 +93,7 @@ export interface Backend {
    */
   save(
     doc: StoredDoc,
-    project?: PandocEditorProject,
+    project?: PundokEditorProject,
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse>;
 
@@ -101,14 +101,14 @@ export interface Backend {
    * Retrieves the project of a document from the backend.
    * @param context
    */
-  getProject(context: Record<string, any>): Promise<PandocEditorProject>;
+  getProject(context: Record<string, any>): Promise<PundokEditorProject>;
 
   /**
    * Retrieves a tree-structure of a document made of multiple documents.
    * @param project
    */
   getInclusionTree(
-    project: PandocEditorProject,
+    project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined>;
 
   /**
@@ -130,7 +130,7 @@ export interface Backend {
    * Retrieves the configuration with a particular name.
    * @param name
    */
-  configuration(name?: string): Promise<PandocEditorConfig>;
+  configuration(name?: string): Promise<PundokEditorConfig>;
 
   /**
    * Retrieves the contents of a file on the backend (e.g. a CSS stylesheet).

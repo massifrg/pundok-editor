@@ -1,4 +1,4 @@
-import { InputConverter, OutputConverter, PandocEditorProject } from './config';
+import { InputConverter, OutputConverter, PundokEditorProject } from './config';
 import { EditorKeyType } from './editorKey';
 
 export * from './bookmarks';
@@ -59,7 +59,7 @@ export interface CompatibleDocumentContext {
   /** The converter to use to read the document */
   inputConverter?: InputConverter | string;
   /** The project associated with the document */
-  project?: PandocEditorProject | string;
+  project?: PundokEditorProject | string;
   /** An array of paths for pandoc's --resource-path option */
   resourcePath?: string[];
 }
@@ -71,7 +71,7 @@ export interface DocumentContext extends CompatibleDocumentContext {
   /** The converter to use to read the document */
   inputConverter?: InputConverter;
   /** The project associated with the document */
-  project?: PandocEditorProject;
+  project?: PundokEditorProject;
 }
 
 /**
@@ -99,7 +99,7 @@ export interface StoredDoc extends ReadDoc {
  */
 export interface PreviewOptions {
   /** Open the preview inside pandoc-editor. */
-  inPandocEditor: boolean;
+  inPundokEditor: boolean;
 }
 
 /**

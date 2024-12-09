@@ -20,15 +20,15 @@ import {
   SelectedNodeOrMark,
   templateNode,
 } from '../schema/helpers';
-import { EditorKeyType, PandocEditorConfig } from '../common';
+import { EditorKeyType, PundokEditorConfig } from '../common';
 import { toRaw } from 'vue';
 
 export type TooltipForAction =
   | string
   | ((
-      editor?: Editor,
-      action?: ActionForNodeOrMark | EditorAction,
-    ) => string | undefined);
+    editor?: Editor,
+    action?: ActionForNodeOrMark | EditorAction,
+  ) => string | undefined);
 
 /** Core properties of actions */
 interface ActionCore {
@@ -107,7 +107,7 @@ interface ActionForNodeOrMarkCore {
 /** Action pertinent to a particular Node or Mark of the document (non linked version) */
 interface BaseActionForNodeOrMark
   extends BaseEditorAction,
-    ActionForNodeOrMarkCore {
+  ActionForNodeOrMarkCore {
   // canDo?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
   // do?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
   // nodeOrMark?: SelectedNodeOrMark;
@@ -118,7 +118,7 @@ interface BaseActionForNodeOrMark
 /** Action pertinent to a particular Node or Mark of the document of the editor with that editorKey */
 export interface ActionForNodeOrMark
   extends EditorAction,
-    ActionForNodeOrMarkCore {
+  ActionForNodeOrMarkCore {
   // canDo?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
   // do?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
   // nodeOrMark?: SelectedNodeOrMark;
@@ -711,7 +711,7 @@ function convertBlockAction(
   fromTypeName: string,
   toTypeName: string,
   pos: number,
-  config?: PandocEditorConfig,
+  config?: PundokEditorConfig,
 ): ActionForNodeOrMark {
   const convertGroup = { ...convertBlockGroup, editorKey } as ActionsGroup;
   return {

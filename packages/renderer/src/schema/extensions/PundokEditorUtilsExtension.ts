@@ -12,8 +12,8 @@ import { setActionEditAttributes } from '../../actions';
 
 import {
   EditorKeyType,
-  PandocEditorConfig,
-  PandocEditorProject,
+  PundokEditorConfig,
+  PundokEditorProject,
   SaveResponse,
   SK_EDIT_ATTRIBUTES,
 } from '../../common';
@@ -36,9 +36,9 @@ export interface DocState {
   /** Resource path for pandoc conversions. FIXME: still useful? */
   readonly resourcePath?: string[];
   /** Current configuration in use in the editor. */
-  readonly configuration?: PandocEditorConfig;
+  readonly configuration?: PundokEditorConfig;
   /** Current project of the document being edited. */
-  readonly project?: PandocEditorProject;
+  readonly project?: PundokEditorProject;
   /** The result of the last save operation. */
   readonly lastSaveResponse?: SaveResponse;
   /** The result of the last export operation. */
@@ -55,8 +55,8 @@ export interface DocState {
 export interface DocStateUpdate {
   documentName: string | null;
   resourcePath: string[] | null;
-  configuration: PandocEditorConfig | null;
-  project: PandocEditorProject | null;
+  configuration: PundokEditorConfig | null;
+  project: PundokEditorProject | null;
   lastSaveResponse: SaveResponse | null;
   lastExportResponse: SaveResponse | null;
   nativeUnsavedChanges: boolean;
@@ -65,7 +65,7 @@ export interface DocStateUpdate {
 }
 
 export function getDocState(state?: EditorState): DocState | undefined {
-  return state ? pandocEditorUtilsPluginKey.getState(state) : undefined;
+  return state ? pundokEditorUtilsPluginKey.getState(state) : undefined;
 }
 
 export function getEditorDocState(editor?: Editor): DocState | undefined {
@@ -74,7 +74,7 @@ export function getEditorDocState(editor?: Editor): DocState | undefined {
 
 export function getEditorConfiguration(
   editorOrState: Editor | EditorState,
-): PandocEditorConfig | undefined {
+): PundokEditorConfig | undefined {
   const state =
     editorOrState instanceof EditorState
       ? editorOrState
@@ -85,7 +85,7 @@ export function getEditorConfiguration(
 
 export function getEditorProject(
   editorOrState: Editor | EditorState,
-): PandocEditorProject | undefined {
+): PundokEditorProject | undefined {
   const state =
     editorOrState instanceof EditorState
       ? editorOrState
@@ -98,7 +98,7 @@ export function getDocStateIfEditorHasKey(
   editorKey?: EditorKeyType,
 ): DocState | undefined {
   const docState = editor?.state
-    ? pandocEditorUtilsPluginKey.getState(editor.state)
+    ? pundokEditorUtilsPluginKey.getState(editor.state)
     : undefined;
   return docState && docState.editorKey === editorKey ? docState : undefined;
 }
@@ -134,22 +134,22 @@ function updateDocState(
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
-    pandocEditorUtils: {
+    pundokEditorUtils: {
       updateDocState: (update: Partial<DocStateUpdate>) => ReturnType;
       editAttributes: () => ReturnType;
     };
   }
 }
 
-export interface PandocEditorUtilsOptions {}
+export interface PundokEditorUtilsOptions { }
 
-export const pandocEditorUtilsPluginKey = new PluginKey(
-  'pandocEditorUtilsPlugin',
+export const pundokEditorUtilsPluginKey = new PluginKey(
+  'pundokEditorUtilsPlugin',
 );
 
-export const PandocEditorUtilsExtension =
-  Extension.create<PandocEditorUtilsOptions>({
-    name: 'pandocEditorUtils',
+export const PundokEditorUtilsExtension =
+  Extension.create<PundokEditorUtilsOptions>({
+    name: 'pundokEditorUtils',
 
     addOptions() {
       return {};
@@ -158,7 +158,7 @@ export const PandocEditorUtilsExtension =
     addProseMirrorPlugins() {
       return [
         new Plugin({
-          key: pandocEditorUtilsPluginKey,
+          key: pundokEditorUtilsPluginKey,
           state: {
             // init(config, instance): DocumentState {
             //   return new DocumentState(newEditorKey());
@@ -245,79 +245,79 @@ export const PandocEditorUtilsExtension =
       return {
         updateDocState:
           (update: Partial<DocStateUpdate>) =>
-          ({ dispatch, tr }) => {
-            // set a property to null if you want to reset it
-            if (dispatch) dispatch(tr.setMeta(META_UPDATE_DOC_STATE, update));
-            return true;
-          },
+            ({ dispatch, tr }) => {
+              // set a property to null if you want to reset it
+              if (dispatch) dispatch(tr.setMeta(META_UPDATE_DOC_STATE, update));
+              return true;
+            },
         editAttributes:
           () =>
-          ({ dispatch, editor, state }) => {
-            const sel = state.selection;
-            let nodeOrMark: SelectedNodeOrMark | undefined = undefined;
-            let tab: string | undefined = undefined;
-            if (sel instanceof NodeSelection) {
-              const node = (sel as NodeSelection).node;
-              const attrs = editableAttrsForNodeOrMark(node);
-              if (attrs.length > 0) {
-                nodeOrMark = {
-                  name: node.type.name,
-                  node,
-                  pos: sel.from,
-                  from: sel.from,
-                  to: sel.from + node.nodeSize,
-                };
-              }
-            } else {
-              const markRange = getMarksBetween(
-                sel.from,
-                sel.to,
-                state.doc,
-              ).find((mr) => editableAttrsForNodeOrMark(mr.mark).length > 0);
-              if (markRange) {
-                nodeOrMark = {
-                  name: markRange.mark.type.name,
-                  mark: markRange.mark,
-                  pos: markRange.from,
-                  from: markRange.from,
-                  to: markRange.to,
-                };
+            ({ dispatch, editor, state }) => {
+              const sel = state.selection;
+              let nodeOrMark: SelectedNodeOrMark | undefined = undefined;
+              let tab: string | undefined = undefined;
+              if (sel instanceof NodeSelection) {
+                const node = (sel as NodeSelection).node;
+                const attrs = editableAttrsForNodeOrMark(node);
+                if (attrs.length > 0) {
+                  nodeOrMark = {
+                    name: node.type.name,
+                    node,
+                    pos: sel.from,
+                    from: sel.from,
+                    to: sel.from + node.nodeSize,
+                  };
+                }
               } else {
-                const $from = sel.$from;
-                let depth = $from.depth;
-                while (depth > 0) {
-                  let node = $from.node(depth);
-                  if (editableAttrsForNodeOrMark(node).length > 0) {
-                    if (
-                      depth <= 0 ||
-                      !isParagraphOfIndexTerm(node, $from.node(depth - 1))
-                    ) {
-                      const start = sel.$from.start(depth) - 1;
-                      nodeOrMark = {
-                        name: node.type.name,
-                        node: node,
-                        pos:
-                          state.doc.nodeAt(start - 1) === node
-                            ? start - 1
-                            : start,
-                        from: start,
-                        to: $from.end(depth),
-                      };
-                      break;
+                const markRange = getMarksBetween(
+                  sel.from,
+                  sel.to,
+                  state.doc,
+                ).find((mr) => editableAttrsForNodeOrMark(mr.mark).length > 0);
+                if (markRange) {
+                  nodeOrMark = {
+                    name: markRange.mark.type.name,
+                    mark: markRange.mark,
+                    pos: markRange.from,
+                    from: markRange.from,
+                    to: markRange.to,
+                  };
+                } else {
+                  const $from = sel.$from;
+                  let depth = $from.depth;
+                  while (depth > 0) {
+                    let node = $from.node(depth);
+                    if (editableAttrsForNodeOrMark(node).length > 0) {
+                      if (
+                        depth <= 0 ||
+                        !isParagraphOfIndexTerm(node, $from.node(depth - 1))
+                      ) {
+                        const start = sel.$from.start(depth) - 1;
+                        nodeOrMark = {
+                          name: node.type.name,
+                          node: node,
+                          pos:
+                            state.doc.nodeAt(start - 1) === node
+                              ? start - 1
+                              : start,
+                          from: start,
+                          to: $from.end(depth),
+                        };
+                        break;
+                      }
                     }
+                    depth--;
                   }
-                  depth--;
                 }
               }
-            }
-            if (nodeOrMark) {
-              // console.log(nodeOrMark)
-              if (dispatch)
-                setActionEditAttributes(editor.state, nodeOrMark, tab);
-              return true;
-            }
-            return false;
-          },
+              if (nodeOrMark) {
+                // console.log(nodeOrMark)
+                if (dispatch)
+                  setActionEditAttributes(editor.state, nodeOrMark, tab);
+                return true;
+              }
+              return false;
+            },
       };
     },
 

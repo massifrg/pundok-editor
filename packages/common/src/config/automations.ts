@@ -1,4 +1,4 @@
-import { PandocEditorConfig } from './editorConfiguration';
+import { PundokEditorConfig } from './editorConfiguration';
 
 /** Types of automations available. */
 export type AutomationType =
@@ -133,7 +133,7 @@ export interface PandocFilterTransform extends Automation {
  */
 function getAutomations(
   automationType: AutomationType,
-  configuration?: PandocEditorConfig,
+  configuration?: PundokEditorConfig,
 ): Automation[] {
   return (configuration?.automations || []).filter(
     (a) => a.type === automationType,
@@ -147,7 +147,7 @@ function getAutomations(
  * @returns
  */
 export function getSearchAndReplaces(
-  configuration?: PandocEditorConfig,
+  configuration?: PundokEditorConfig,
 ): SearchAndReplace[] {
   return getAutomations('search-replace', configuration) as SearchAndReplace[];
 }
@@ -159,7 +159,7 @@ export function getSearchAndReplaces(
  * @returns
  */
 export function getElementsSelections(
-  configuration?: PandocEditorConfig,
+  configuration?: PundokEditorConfig,
 ): ElementsSelection[] {
   return getAutomations(
     'elements-selection',
@@ -173,7 +173,7 @@ export function getElementsSelections(
  * @param configuration
  */
 export function getPandocFilterTransforms(
-  configuration?: PandocEditorConfig,
+  configuration?: PundokEditorConfig,
 ): PandocFilterTransform[] {
   return getAutomations(
     'pandoc-filter',

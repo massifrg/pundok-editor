@@ -5,7 +5,7 @@ import {
   isCustomizableWithClass,
   isCustomizableWithStyle,
   isCustomStyleActive,
-  PandocEditorConfig,
+  PundokEditorConfig,
 } from '../../common';
 import {
   addClass,

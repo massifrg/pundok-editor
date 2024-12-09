@@ -18,7 +18,7 @@
 </template>
 
 <script lang="ts">
-// import { type PandocEditorConfig } from '../config'
+// import { type PundokEditorConfig } from '../config'
 import { mapState } from 'pinia'
 import { useBackend } from '../stores'
 import { ConfigurationSummary } from '../common'

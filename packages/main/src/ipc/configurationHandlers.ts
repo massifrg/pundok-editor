@@ -1,21 +1,21 @@
 import { IpcMainInvokeEvent } from 'electron';
-import { ConfigurationSummary, PandocEditorConfigInit } from '../common';
+import { ConfigurationSummary, PundokEditorConfigInit } from '../common';
 import { IpcHub } from './ipcHub';
 import { parseConfigurationFiles } from '../resourcesManager';
 
 export const availableConfigurationsHandler =
   (hub: IpcHub) =>
-  async (e: IpcMainInvokeEvent): Promise<ConfigurationSummary[]> => {
-    const configs = await parseConfigurationFiles();
-    return configs.map((c) => ({
-      name: c.name,
-      description: c.description,
-    }));
-  };
+    async (e: IpcMainInvokeEvent): Promise<ConfigurationSummary[]> => {
+      const configs = await parseConfigurationFiles();
+      return configs.map((c) => ({
+        name: c.name,
+        description: c.description,
+      }));
+    };
 
 export async function getConfigurationInit(
   configurationName?: string
-): Promise<PandocEditorConfigInit | undefined> {
+): Promise<PundokEditorConfigInit | undefined> {
   if (!configurationName) return undefined;
   const configs = await parseConfigurationFiles();
   const config = configs.find((c) => c.name === configurationName);
@@ -25,9 +25,9 @@ export async function getConfigurationInit(
 
 export const loadConfigurationHandler =
   (hub: IpcHub) =>
-  async (
-    e: IpcMainInvokeEvent,
-    configurationName: string
-  ): Promise<PandocEditorConfigInit | undefined> => {
-    return getConfigurationInit(configurationName);
-  };
+    async (
+      e: IpcMainInvokeEvent,
+      configurationName: string
+    ): Promise<PundokEditorConfigInit | undefined> => {
+      return getConfigurationInit(configurationName);
+    };

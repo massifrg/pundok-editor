@@ -6,7 +6,7 @@ import {
   INDEX_CLASS,
   INDEX_NAME_ATTR,
   INDEX_TERM_CLASS,
-  PandocEditorConfig,
+  PundokEditorConfig,
 } from '../../common';
 import { Div, IndexDiv, IndexTerm } from '..';
 
@@ -15,7 +15,7 @@ interface ProsemirrorPandocFixerOptions {
   tr?: Transaction;
   node: Node;
   pos: number;
-  config?: Partial<PandocEditorConfig>;
+  config?: Partial<PundokEditorConfig>;
 }
 
 type ProsemirrorPandocFixer = (
@@ -27,7 +27,7 @@ declare module '@tiptap/core' {
     fixDocStructure: {
       fixNodeAtPos: (
         pos: number,
-        config?: Partial<PandocEditorConfig>
+        config?: Partial<PundokEditorConfig>
       ) => ReturnType;
     };
   }
@@ -40,20 +40,20 @@ export const FixDocStructureExtension = Extension.create({
     return {
       fixNodeAtPos:
         (pos, config) =>
-        ({ dispatch, state, tr }) => {
-          const node = state.doc.nodeAt(pos);
-          if (node) {
-            let transaction = nodeFromAttrsFixer(config)({
-              node,
-              pos,
-              state,
-              tr,
-            });
-            if (dispatch) dispatch(transaction);
-            return true;
-          }
-          return false;
-        },
+          ({ dispatch, state, tr }) => {
+            const node = state.doc.nodeAt(pos);
+            if (node) {
+              let transaction = nodeFromAttrsFixer(config)({
+                node,
+                pos,
+                state,
+                tr,
+              });
+              if (dispatch) dispatch(transaction);
+              return true;
+            }
+            return false;
+          },
     };
   },
 });
@@ -118,7 +118,7 @@ const DEFAULT_FIXERS: Record<string, ProsemirrorPandocFixer> = {
 };
 
 export function nodeFromAttrsFixer(
-  config?: Partial<PandocEditorConfig>,
+  config?: Partial<PundokEditorConfig>,
   fixers: Record<string, ProsemirrorPandocFixer> = DEFAULT_FIXERS
 ): ProsemirrorPandocFixer {
   // const indicesNames = config.indices?.map(i => i.indexName) || []

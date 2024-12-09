@@ -1,7 +1,7 @@
 import type { Backend, BackendConfig, WhyAskingForIdOrPath } from './backend';
 import {
   type ConfigurationSummary,
-  type PandocEditorConfig,
+  type PundokEditorConfig,
   type SaveResponse,
   type StoredDoc,
   getHardcodedCustomCss,
@@ -11,7 +11,7 @@ import {
   Query,
   QueryResult,
   IndexTermQuery,
-  PandocEditorProject,
+  PundokEditorProject,
   EditorKeyType,
   FindResourceOptions,
   ReadDoc,
@@ -40,7 +40,7 @@ export class NetBackend implements Backend {
     return Promise.resolve(false);
   }
 
-  async editorReady(editorKey?: EditorKeyType) {}
+  async editorReady(editorKey?: EditorKeyType) { }
 
   open(context: DocumentContext): Promise<ReadDoc> {
     throw new Error('Method not implemented.');
@@ -48,7 +48,7 @@ export class NetBackend implements Backend {
 
   save(
     doc: StoredDoc,
-    project?: PandocEditorProject,
+    project?: PundokEditorProject,
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse> {
     console.log(doc.content);
@@ -59,7 +59,7 @@ export class NetBackend implements Backend {
     return Promise.resolve({ info: 'no debug info yet for netbackend!' });
   }
 
-  async getProject(context: Record<string, any>): Promise<PandocEditorProject> {
+  async getProject(context: Record<string, any>): Promise<PundokEditorProject> {
     throw new Error('Method not implemented.');
   }
 
@@ -72,7 +72,7 @@ export class NetBackend implements Backend {
     ] as ConfigurationSummary[];
   }
 
-  async configuration(name?: string): Promise<PandocEditorConfig> {
+  async configuration(name?: string): Promise<PundokEditorConfig> {
     if (!name) return Promise.resolve(getHardcodedEditorConfig());
 
     switch (name) {
@@ -113,7 +113,7 @@ export class NetBackend implements Backend {
   }
 
   async getInclusionTree(
-    project: PandocEditorProject,
+    project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined> {
     return undefined;
   }

@@ -20,14 +20,14 @@ import {
   EditorKeyType,
   ExternalProgramResult,
   IPC_CHANNELS,
-  PandocEditorProject,
+  PundokEditorProject,
   ReadDoc,
   SaveResponse,
   ServerMessage,
   ServerMessageCommand,
   StoredDoc,
   computeProjectConfiguration,
-  PandocEditorConfig,
+  PundokEditorConfig,
   DocumentContext,
   CUSTOM_PANDOC_READERS,
   CustomPandocReader,
@@ -243,7 +243,7 @@ export class IpcHub {
           resourcePath,
         };
         if (cmdLineFeedback) cmdLineFeedback(result.commandLine);
-        let project: PandocEditorProject | undefined = undefined;
+        let project: PundokEditorProject | undefined = undefined;
         try {
           project = await loadProjectFromDocFile(filename);
           if (project) {
@@ -252,7 +252,7 @@ export class IpcHub {
               project,
               async (configName) => {
                 const cfgInit = await getConfigurationInit(configName);
-                return cfgInit && new PandocEditorConfig(cfgInit);
+                return cfgInit && new PundokEditorConfig(cfgInit);
               },
             );
           }
@@ -270,7 +270,7 @@ export class IpcHub {
 
   async saveDocument(
     doc: ReadDoc,
-    project?: PandocEditorProject,
+    project?: PundokEditorProject,
   ): Promise<SaveResponse> {
     const { path, content } = doc;
     const docPath =
@@ -309,7 +309,7 @@ export class IpcHub {
 
   async exportDocument(
     doc: StoredDoc,
-    project?: PandocEditorProject,
+    project?: PundokEditorProject,
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse> {
     const { content, converter, exportedAsPath, configurationName } = doc;
@@ -410,9 +410,6 @@ export class IpcHub {
             path: doc.path,
             exportedAsPath: resultFile,
             content: result.output,
-            // preview: converter?.openResult
-            //   ? { inPandocEditor: ext === 'pdf' ? 'editor' : 'os' }
-            //   : undefined,
           } as StoredDoc,
           resultFile,
         });
