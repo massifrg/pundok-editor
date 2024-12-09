@@ -221,11 +221,13 @@ export function toJson(item: PandocItem): PandocJson | PandocJsonDocument {
   throw new Error(`Object ${JSON.stringify(item)} not known`);
 }
 
-export function toJsonString(pdoc: PandocItem, apiVersion?: number[]): string {
+export function toJsonString(pdoc: PandocItem, apiVersion?: number[], space?: number | string): string {
   return JSON.stringify(
     isPandocDocument(pdoc)
       ? pandocToJson(pdoc as Pandoc, apiVersion)
-      : toJson(pdoc)
+      : toJson(pdoc),
+    undefined,
+    space
   );
 }
 

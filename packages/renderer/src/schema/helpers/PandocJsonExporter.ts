@@ -153,9 +153,14 @@ const logMarkRanges = (
 };
 
 export interface PandocJsonExporterOptions {
+  /** The API version number to be written in Pandoc JSON file. */
   apiVersion?: number[];
+  /** The indices defined for the document. */
   indices?: Index[];
+  /** A function that compares Marks precedence. */
   compareMarks?: CompareMarksFunction;
+  /** The third argument of JSON.stringify, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#syntax */
+  space?: number | string;
 }
 
 /**
@@ -202,7 +207,7 @@ export function nodeToPandocJsonString(
 ): string {
   const exporter = new PandocJsonExporter(schema, options);
   const pandoc = exporter.nodeToPandoc(node);
-  return toJsonString(pandoc, exporter.options?.apiVersion);
+  return toJsonString(pandoc, exporter.options?.apiVersion, options?.space);
 }
 
 export function nodeToPandocFragment(
@@ -711,10 +716,10 @@ export class PandocJsonExporter {
     const attrs = nodeOrMark.attrs;
     return attrs
       ? Attr.from({
-          id: attrs.id,
-          classes: attrs.classes,
-          attributes: attrs.kv,
-        })
+        id: attrs.id,
+        classes: attrs.classes,
+        attributes: attrs.kv,
+      })
       : Attr.empty();
   }
 

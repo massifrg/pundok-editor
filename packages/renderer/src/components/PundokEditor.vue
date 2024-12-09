@@ -155,6 +155,7 @@ const EMPTY_DOCUMENT = '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t
 
 const DEFAULT_INPUT_TEXT_DIALOG_LABEL = 'text'
 const DEFAULT_INPUT_TEXT_DIALOG_START_VALUE = ''
+const DEFAULT_JSON_SPACE = 2 // third argument of JSON.stringify for saved documents.
 
 const COMPLAIN_IF_JUST_EXPORTED_TOGGLE: PendingOperationExtraValue = {
   name: 'complainIfJustExported',
@@ -236,6 +237,7 @@ export default {
       // clickedNodeOrMark: undefined as SelectedNodeOrMark | undefined,
       debugDocTree: undefined as ProjectComponent | undefined,
       $q: useQuasar(),
+      jsonSpace: DEFAULT_JSON_SPACE as string | number | undefined,
     }
   },
 
@@ -683,7 +685,8 @@ export default {
         const indices = this.docState()?.configuration?.indices
         return nodeToPandocJsonString(document, {
           indices,
-          apiVersion: PANDOC_TYPES_VERSION
+          apiVersion: PANDOC_TYPES_VERSION,
+          space: this.jsonSpace,
         });
       }
       return '{}'
