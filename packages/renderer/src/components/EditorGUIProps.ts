@@ -18,7 +18,7 @@ export class EditorGUIPropsClass implements EditorGUIProps {
   exportButton: boolean = true;
   projectStructure: boolean = true;
   showEditorVersion: boolean = true;
-  showEditorKey: boolean = true;
+  showEditorKey: boolean = process.env.NODE_ENV !== 'production';
   showConfiguration: boolean = true;
 
   constructor(props?: Partial<EditorGUIProps>) {
