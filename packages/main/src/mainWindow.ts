@@ -129,9 +129,9 @@ async function loadEditor(win: BrowserWindow | WebContentsView) {
     import.meta.env.DEV && import.meta.env.VITE_DEV_SERVER_URL !== undefined
       ? import.meta.env.VITE_DEV_SERVER_URL
       : new URL(
-          '../renderer/dist/index.html',
-          'file://' + __dirname,
-        ).toString();
+        '../renderer/dist/index.html',
+        'file://' + __dirname,
+      ).toString();
 
   await win.webContents.loadURL(pageUrl);
 }
@@ -146,9 +146,9 @@ async function loadViewer(win: BrowserWindow | WebContentsView) {
     import.meta.env.DEV && import.meta.env.VITE_DEV_SERVER_URL !== undefined
       ? import.meta.env.VITE_DEV_SERVER_URL + 'viewer.html'
       : new URL(
-          '../renderer/dist/viewer.html',
-          'file://' + __dirname,
-        ).toString();
+        '../renderer/dist/viewer.html',
+        'file://' + __dirname,
+      ).toString();
   console.log(pageUrl);
   await win.webContents.loadURL(pageUrl);
 }
@@ -268,25 +268,25 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
             ipcHub.fireEventExportCurrentDocument();
           },
         },
-        {
-          type: 'separator',
-        },
-        {
-          label: 'New project',
-          click: async () => {
-            // sendCommandToRenderer(
-            //   browserWindow,
-            //   'ask-value',
-            //   IPC_VALUE_NEW_PROJECT_NAME
-            // );
-          },
-        },
-        {
-          label: 'Open project',
-        },
-        {
-          label: 'Close project',
-        },
+        // {
+        //   type: 'separator',
+        // },
+        // {
+        //   label: 'New project',
+        //   click: async () => {
+        //     // sendCommandToRenderer(
+        //     //   browserWindow,
+        //     //   'ask-value',
+        //     //   IPC_VALUE_NEW_PROJECT_NAME
+        //     // );
+        //   },
+        // },
+        // {
+        //   label: 'Open project',
+        // },
+        // {
+        //   label: 'Close project',
+        // },
         {
           type: 'separator',
         },
