@@ -17,7 +17,7 @@ class UpdateTableAttrsState {
   constructor(
     public state: 'idle' | 'dragging' | 'setWidth' = 'idle',
     public cellPos: number = -1,
-  ) {}
+  ) { }
 
   apply(tr: Transaction): UpdateTableAttrsState {
     const meta = tr.getMeta(updateTableAttrsPluginKey);
@@ -173,10 +173,8 @@ export function updateTableAttrsPlugin(
                 }
               }
 
-              const pluginState = updateTableAttrsPluginKey.getState(
-                view.state,
-              );
-              if (pluginState === 'setWidth' && pluginState.cellPos > 0) {
+              const pluginState: UpdateTableAttrsState = updateTableAttrsPluginKey.getState(view.state);
+              if (pluginState.state === 'setWidth' && pluginState.cellPos > 0) {
                 setColumnColSpec(view, pluginState.cellPos, width, tr);
                 // reset the plugin state
                 tr.setMeta(updateTableAttrsPluginKey, { reset: true });
@@ -219,7 +217,7 @@ function setColumnColSpec(
           const columns = map.width;
           const tableStart = $cell.start(-2);
           const newColSpec: PmColSpec[] = Array(columns);
-          for (let i = 0; i < columns; ) {
+          for (let i = 0; i < columns;) {
             const c = doc.nodeAt(tableStart + map.map[i]);
             const colspan = c?.attrs.colspan || 1;
             for (let span = 0; span < colspan; span++) {
