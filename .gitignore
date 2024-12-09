@@ -64,7 +64,6 @@ docs/**/*.html
 docs/api
 
 # Quasar core related directories
-.quasar
 /dist
 /quasar.config.*.temporary.compiled*
 
