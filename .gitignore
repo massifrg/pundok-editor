@@ -96,7 +96,4 @@ yarn-error.log*
 *.njsproj
 *.sln
 
-# JSON schemas
-/schemas
-
 out/

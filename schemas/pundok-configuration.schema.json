@@ -1,0 +1,911 @@
+{
+  "$ref": "#/definitions/PandocEditorConfigInit",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Automation": {
+      "description": "Configuration of the interface of the editor to ease the transformation of the document, like search and replace operations.",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/AutomationType"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "type": "object"
+    },
+    "AutomationType": {
+      "description": "Types of automations available.",
+      "enum": [
+        "elements-selection",
+        "pandoc-filter",
+        "search-replace"
+      ],
+      "type": "string"
+    },
+    "CustomAttribute": {
+      "additionalProperties": false,
+      "description": "A custom attribute for Pandoc's `Block`s and `Inline`s with an `Attr` (`CodeBlock`, `Header`, `Table`, `Figure`, `TableHead`, `TableBody`,  `TableFoot`, `Row`, `Cell`, `Code`, `Link`, `Image`, `Span`).",
+      "properties": {
+        "appliesTo": {
+          "description": "the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`)",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "default": {
+          "description": "optional default value",
+          "type": "string"
+        },
+        "description": {
+          "description": "optional description of the attribute",
+          "type": "string"
+        },
+        "editAs": {
+          "description": "attributes are usually edited in a text field, but you can customize the editor for a different type (e.g. a date, an integer)",
+          "type": "string"
+        },
+        "name": {
+          "description": "the name of the attribute (the key in the attributes of `Attr`)",
+          "type": "string"
+        },
+        "suggestions": {
+          "description": "possible, but not compulsory, values",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "values": {
+          "description": "fixed set of values, the attribute value MUST be among these",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "CustomClass": {
+      "additionalProperties": false,
+      "description": "A custom class for Pandoc's `Block`s and `Inline`s with an `Attr` (`CodeBlock`, `Header`, `Table`, `Figure`, `TableHead`, `TableBody`,  `TableFoot`, `Row`, `Cell`, `Code`, `Link`, `Image`, `Span`).",
+      "properties": {
+        "appliesTo": {
+          "description": "the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`)",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "attributes": {
+          "description": "optional attributes that are meaningful only in relation with this class (only for elements with an `Attr`); they work as a further specification of the class meaning.",
+          "items": {
+            "$ref": "#/definitions/CustomAttribute"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "an optional description",
+          "type": "string"
+        },
+        "name": {
+          "description": "the name and value of the class",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "CustomInputConverter": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "description": "true for the default input converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "extensions": {
+          "description": "input file extensions",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "feedback": {
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "options": {
+          "description": "options for internal \"custom\" converters",
+          "type": "object"
+        },
+        "type": {
+          "$ref": "#/definitions/InputConverterType",
+          "description": "kind of importer (used by derived types)"
+        }
+      },
+      "required": [
+        "extensions",
+        "name",
+        "options",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CustomOutputConverter": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "description": "true for the default output converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "dontAskForResultFile": {
+          "description": "don't ask for the output file, because the script knows where to save its output",
+          "type": "boolean"
+        },
+        "extension": {
+          "description": "extension of the resulting file",
+          "type": "string"
+        },
+        "feedback": {
+          "$ref": "#/definitions/FeedbackMessageType",
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
+        },
+        "format": {
+          "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "openResult": {
+          "$ref": "#/definitions/ShowOutputConversion",
+          "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
+        },
+        "projectBuild": {
+          "description": "it's the build of a project-wise product",
+          "type": "boolean"
+        },
+        "resultFile": {
+          "description": "the path of the output file",
+          "type": "string"
+        },
+        "type": {
+          "const": "custom",
+          "description": "converter's type: pandoc, lua script, generic program or internal function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "CustomStyleDef": {
+      "additionalProperties": false,
+      "description": "The definition of a custom style in the configuration files of the editor; a style definition can be shared by many customizable elements: `{ appliesTo: [\"span\", \"paragraph\", \"div\"] }` means that the style is appliable to:\n- `span` Marks (via the `customStyle` attr),\n- `paragraph` Nodes (through the same attr),\n- `div` Nodes (through a class in the `classes` attribute)",
+      "properties": {
+        "appliesTo": {
+          "description": "Elements to which this style applies.",
+          "items": {
+            "$ref": "#/definitions/CustomizableElement"
+          },
+          "type": "array"
+        },
+        "attributes": {
+          "description": "Custom attributes that are meaningful only when this custom style is set (only for elements with an `Attr`).",
+          "items": {
+            "$ref": "#/definitions/CustomAttribute"
+          },
+          "type": "array"
+        },
+        "classes": {
+          "description": "Custom classes that are meaningful only when this custom style is set (only for elements with an `Attr`).",
+          "items": {
+            "$ref": "#/definitions/CustomClass"
+          },
+          "type": "array"
+        },
+        "css": {
+          "description": "CSS properties of this style (alternative to using a CSS stylesheet in the configuration).",
+          "items": {
+            "items": [
+              {
+                "title": "propertyName",
+                "type": "string"
+              },
+              {
+                "title": "propertyValue",
+                "type": "string"
+              }
+            ],
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "deprecatedFor": {
+          "description": "In case a style is deprecated, at least for a particular  {@link  CustomizableElement } .",
+          "items": {
+            "$ref": "#/definitions/CustomizableElement"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "A description of this style.",
+          "type": "string"
+        },
+        "levels": {
+          "description": "Only for custom headings.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "This becomes the value of the `custom-style` property or a class name.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "appliesTo"
+      ],
+      "type": "object"
+    },
+    "CustomizableElement": {
+      "description": "The type names of `Node`s and `Mark`s (representing Pandoc `Block`s or `Inline`s) that can be customized through a custom style or a custom class. The custom style will be stored in the `custom-style` attribute of the element `Attr`, the custom class will be one of the `classes` of the element `Attr`.",
+      "type": [
+        "string"
+      ]
+    },
+    "ExternalInputConverter": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "description": "command to execute for external \"script\" converters",
+          "type": "string"
+        },
+        "commandArgs": {
+          "description": "command-line arguments for external script",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "default": {
+          "description": "true for the default input converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "extensions": {
+          "description": "input file extensions",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "feedback": {
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/InputConverterType",
+          "description": "kind of importer (used by derived types)"
+        }
+      },
+      "required": [
+        "command",
+        "commandArgs",
+        "extensions",
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "FeedbackMessageType": {
+      "description": "Kinds of feedback messages, from the backend to the frontend.",
+      "enum": [
+        "command-line",
+        "error",
+        "progress",
+        "success"
+      ],
+      "type": "string"
+    },
+    "Index": {
+      "additionalProperties": false,
+      "description": "The definition of an index.",
+      "properties": {
+        "allowEmpty": {
+          "description": "allow empty Span elements",
+          "type": "boolean"
+        },
+        "allowRanges": {
+          "description": "allow indexing ranges (see \\startregister, \\stopregister in ConTeXt)",
+          "type": "boolean"
+        },
+        "color": {
+          "description": "color used to highlight the references to the terms in this index",
+          "type": "string"
+        },
+        "iconChar": {
+          "description": "a Unicode character as an alternative to the icon",
+          "type": "string"
+        },
+        "iconSvg": {
+          "description": "icon for the toolbar button",
+          "type": "string"
+        },
+        "indexName": {
+          "description": "the name of the index (es. \"names\", \"bibliographic\", \"subjects\", \"geographic\")",
+          "type": "string"
+        },
+        "onlyEmpty": {
+          "description": "only empty Span elements allowed",
+          "type": "boolean"
+        },
+        "putIndexRef": {
+          "$ref": "#/definitions/IndexRefPlacement",
+          "description": "where the index reference is put (before or after the reference)"
+        },
+        "refClass": {
+          "description": "the class to add to the references to the terms in this index",
+          "type": "string"
+        }
+      },
+      "required": [
+        "indexName",
+        "refClass"
+      ],
+      "type": "object"
+    },
+    "IndexRefPlacement": {
+      "enum": [
+        "before",
+        "after"
+      ],
+      "type": "string"
+    },
+    "InputConverter": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/PandocInputConverter"
+        },
+        {
+          "$ref": "#/definitions/CustomInputConverter"
+        },
+        {
+          "$ref": "#/definitions/ExternalInputConverter"
+        }
+      ]
+    },
+    "InputConverterType": {
+      "enum": [
+        "pandoc",
+        "script",
+        "custom"
+      ],
+      "type": "string"
+    },
+    "InsertableRaw": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "format": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "format"
+      ],
+      "type": "object"
+    },
+    "NoteStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "backgroundColor": {
+          "type": "string"
+        },
+        "default": {
+          "type": "boolean"
+        },
+        "markerAfter": {
+          "type": "string"
+        },
+        "markerBefore": {
+          "type": "string"
+        },
+        "markerConversion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "noteType": {
+          "type": "string"
+        },
+        "textColor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "noteType"
+      ],
+      "type": "object"
+    },
+    "OutputConverter": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/PandocOutputConverter"
+        },
+        {
+          "$ref": "#/definitions/PandocLuaOutputConverter"
+        },
+        {
+          "$ref": "#/definitions/CustomOutputConverter"
+        },
+        {
+          "$ref": "#/definitions/ScriptOutputConverter"
+        }
+      ]
+    },
+    "PandocEditorConfigInit": {
+      "description": "A configuration (customization) of PandocEditor.",
+      "properties": {
+        "autoDelimiters": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": "automatic delimiters for Marks like singleQuoted or doubleQuoted, e.g. { doubleQuoted: [ \"“\", \"”\" ], singleQuoted: [ \"‘\", \"’\" ] }",
+          "type": "object"
+        },
+        "automations": {
+          "description": "predefined search&replace, macro, whatever related to automation tools",
+          "items": {
+            "$ref": "#/definitions/Automation"
+          },
+          "type": "array"
+        },
+        "customAttributes": {
+          "description": "custom attributes for Pandoc's elements with an `Attr` data stucture",
+          "items": {
+            "$ref": "#/definitions/CustomAttribute"
+          },
+          "type": "array"
+        },
+        "customClasses": {
+          "description": "custom classes for Pandoc's elements with an `Attr` data stucture",
+          "items": {
+            "$ref": "#/definitions/CustomClass"
+          },
+          "type": "array"
+        },
+        "customCss": {
+          "description": "paths to CSS files that customize the editor's appearance",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "customStyles": {
+          "description": "custom styles for paragraphs, spans, headings, divs, etc.",
+          "items": {
+            "$ref": "#/definitions/CustomStyleDef"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "a description of the aim of this configuration of the editor",
+          "type": "string"
+        },
+        "documentTemplate": {
+          "description": "a template for new documents",
+          "type": "string"
+        },
+        "indices": {
+          "description": "indices' definitions",
+          "items": {
+            "$ref": "#/definitions/Index"
+          },
+          "type": "array"
+        },
+        "inherits": {
+          "description": "the names of other configurations to derive this from",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "inputConverters": {
+          "description": "scripts, filters, etc. to import documents",
+          "items": {
+            "$ref": "#/definitions/InputConverter"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "the name of the configuration (please only letters, numbers and underscore)",
+          "type": "string"
+        },
+        "noteStyles": {
+          "description": "styling information for different kinds of notes (footnotes, endnotes, etc.)",
+          "items": {
+            "$ref": "#/definitions/NoteStyle"
+          },
+          "type": "array"
+        },
+        "outputConverters": {
+          "description": "scripts, filters, etc. to export documents",
+          "items": {
+            "$ref": "#/definitions/OutputConverter"
+          },
+          "type": "array"
+        },
+        "rawBlocks": {
+          "description": "`RawBlock samples to be made available through the editor interface",
+          "items": {
+            "$ref": "#/definitions/InsertableRaw"
+          },
+          "type": "array"
+        },
+        "rawInlines": {
+          "description": "`RawInline samples to be made available through the editor interface",
+          "items": {
+            "$ref": "#/definitions/InsertableRaw"
+          },
+          "type": "array"
+        },
+        "tiptap": {
+          "additionalProperties": false,
+          "description": "options for TipTap/Prosemirror `Node`s and `Mark`s",
+          "properties": {
+            "options": {
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "version": {
+          "description": "the minimal suitable version of the editor",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "description"
+      ],
+      "type": "object"
+    },
+    "PandocInputConverter": {
+      "additionalProperties": false,
+      "description": "An input converter that spawns a pandoc process to import a document.",
+      "properties": {
+        "default": {
+          "description": "true for the default input converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "extensions": {
+          "description": "input file extensions",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "feedback": {
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
+          "type": "string"
+        },
+        "format": {
+          "description": "a pandoc's input format or a lua script",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "pandocOptions": {
+          "description": "extra command-line options for pandoc",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "$ref": "#/definitions/InputConverterType",
+          "description": "kind of importer (used by derived types)"
+        }
+      },
+      "required": [
+        "extensions",
+        "format",
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "PandocLuaOutputConverter": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "description": "true for the default output converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "dontAskForResultFile": {
+          "description": "don't ask for the output file, because the script knows where to save its output",
+          "type": "boolean"
+        },
+        "extension": {
+          "description": "extension of the resulting file",
+          "type": "string"
+        },
+        "feedback": {
+          "$ref": "#/definitions/FeedbackMessageType",
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
+        },
+        "format": {
+          "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "openResult": {
+          "$ref": "#/definitions/ShowOutputConversion",
+          "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
+        },
+        "projectBuild": {
+          "description": "it's the build of a project-wise product",
+          "type": "boolean"
+        },
+        "resultFile": {
+          "description": "the path of the output file",
+          "type": "string"
+        },
+        "type": {
+          "const": "lua",
+          "description": "converter's type: pandoc, lua script, generic program or internal function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "PandocOutputConverter": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "description": "true for the default output converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "dontAskForResultFile": {
+          "description": "don't ask for the output file, because the script knows where to save its output",
+          "type": "boolean"
+        },
+        "extension": {
+          "description": "extension of the resulting file",
+          "type": "string"
+        },
+        "feedback": {
+          "$ref": "#/definitions/FeedbackMessageType",
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
+        },
+        "filters": {
+          "description": "optional filter (pandoc's `--filter` option)",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "format": {
+          "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "openResult": {
+          "$ref": "#/definitions/ShowOutputConversion",
+          "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
+        },
+        "pandocOptions": {
+          "description": "extra command-line options for pandoc",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "pandocTemplate": {
+          "description": "pandoc template for standalone output (pandoc's `--template` option)",
+          "type": "string"
+        },
+        "projectBuild": {
+          "description": "it's the build of a project-wise product",
+          "type": "boolean"
+        },
+        "referenceFile": {
+          "description": "reference file for DOCX and ODT (pandoc's `--reference-doc` option)",
+          "type": "string"
+        },
+        "resultFile": {
+          "description": "the path of the output file",
+          "type": "string"
+        },
+        "standalone": {
+          "description": "standalone output file (pandoc's `-s` option)",
+          "type": "boolean"
+        },
+        "type": {
+          "const": "pandoc",
+          "description": "converter's type: pandoc, lua script, generic program or internal function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ScriptOutputConverter": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "description": "command to execute for external \"script\" converters",
+          "type": "string"
+        },
+        "commandArgs": {
+          "description": "command-line arguments for external script",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "default": {
+          "description": "true for the default output converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "dontAskForResultFile": {
+          "description": "don't ask for the output file, because the script knows where to save its output",
+          "type": "boolean"
+        },
+        "extension": {
+          "description": "extension of the resulting file",
+          "type": "string"
+        },
+        "feedback": {
+          "$ref": "#/definitions/FeedbackMessageType",
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
+        },
+        "format": {
+          "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "openResult": {
+          "$ref": "#/definitions/ShowOutputConversion",
+          "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
+        },
+        "projectBuild": {
+          "description": "it's the build of a project-wise product",
+          "type": "boolean"
+        },
+        "resultFile": {
+          "description": "the path of the output file",
+          "type": "string"
+        },
+        "type": {
+          "const": "script",
+          "description": "converter's type: pandoc, lua script, generic program or internal function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "command",
+        "commandArgs",
+        "format",
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "ShowOutputConversion": {
+      "description": "The result of a conversion can be opened in the internal viewer of the editor, or with the predefined OS app for that type of file.",
+      "enum": [
+        "editor",
+        "os"
+      ],
+      "type": "string"
+    }
+  }
+}
