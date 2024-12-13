@@ -14,7 +14,7 @@ export { Smallcaps, type SmallcapsOptions } from './Smallcaps';
 export { DoubleQuoted, type DoubleQuotedOptions } from './DoubleQuoted';
 export { SingleQuoted, type SingleQuotedOptions } from './SingleQuoted';
 export { Cite, type CiteOptions } from './Cite';
-export { Code, type CodeOptions } from '@tiptap/extension-code';
+export { Code, type CodeOptions } from './Code';
 export { Math, type MathOptions } from './Math';
 export { Link, type LinkOptions } from './Link';
 export { Span, type SpanOptions } from './Span';

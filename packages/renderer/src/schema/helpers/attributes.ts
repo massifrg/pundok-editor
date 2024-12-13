@@ -69,7 +69,7 @@ const NODE_OR_MARK_ATTRIBUTES: Record<string, NodeOrMarkAttribute> = {
   href: { editable: true, visible: true, order: 18, noTab: true },
   /** used in Image and Link*/
   title: { editable: true, visible: true, order: 18, noTab: true },
-  /** used in CodeBlock*/
+  /** used in CodeBlock and Code */
   language: { editable: true, visible: true, order: 19 },
   /** used in tables (it's automatic) */
   tableWidth: { editable: false, visible: true, order: 100 },
@@ -241,8 +241,8 @@ export function attributeToString(
       case 'classes':
         return value && value.length > 0
           ? 'classes: [' +
-              (value as string[]).map((c) => `"${c}"`).join(', ') +
-              ']'
+          (value as string[]).map((c) => `"${c}"`).join(', ') +
+          ']'
           : undefined;
       case 'kv':
         return Object.keys(value).length > 0
@@ -251,18 +251,17 @@ export function attributeToString(
       case 'colSpec':
         return isArray(value)
           ? `colSpec: ${(value as PmColSpec[])
-              .map(
-                (cs) =>
-                  cs.align +
-                  ', ' +
-                  (cs.colWidth === 0 ? 'ColWidthDefault' : cs.colWidth),
-              )
-              .join('; ')}`
+            .map(
+              (cs) =>
+                cs.align +
+                ', ' +
+                (cs.colWidth === 0 ? 'ColWidthDefault' : cs.colWidth),
+            )
+            .join('; ')}`
           : JSON.stringify(value);
       case 'colwidth':
-        return `${attrName}: ${
-          !value || value == 0 ? 'ColWidthDefault' : value
-        }`;
+        return `${attrName}: ${!value || value == 0 ? 'ColWidthDefault' : value
+          }`;
       case 'tableWidth':
         return `${attrName}: ${value}`;
       case 'textAlign':
