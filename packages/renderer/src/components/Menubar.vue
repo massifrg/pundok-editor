@@ -107,6 +107,10 @@
         @click="editor.chain().runRepeatableCommand('toggleDoubleQuoted', 'toggle DoubleQuoted').focus().run()" />
       <ToolbarButton icon="mdi-math-integral-box" :styleactive="isActive('math')" title="math"
         @click="editor.chain().runRepeatableCommand('toggleMath', 'toggle Math').focus().run()" />
+      <ToolbarButton icon="mdi-language-c" :styleactive="isActive('code')" title="toggle Code"
+        @click="editor.chain().runRepeatableCommand('toggleCode', 'toggle Code').focus().run()" />
+      <ToolbarButton icon="mdi-link" :styleactive="isActive('link')" title="toggle Link"
+        @click="editor.chain().runRepeatableCommand('toggleLink', 'toggle Link').focus().run()" />
 
       <span class="button-separator" />
 
