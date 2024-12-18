@@ -1,8 +1,9 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
+import { Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { Metadata } from './Metadata';
-import MetaMapView from '/@/components/nodeviews/MetaMapView.vue';
 import { templateNode } from '../helpers';
+import { MetaMapView } from '../../components';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -66,56 +67,56 @@ export const MetaMap = Node.create<MetaMapOptions>({
     return {
       appendMetaMap:
         (text: string, metaTypeName: string) =>
-        ({ dispatch, state, tr }) => {
-          const { doc, schema } = state;
-          const metavalue = templateNode(schema, metaTypeName);
-          if (!metavalue) return false;
-          const metamapType = schema.nodes[MetaMap.name];
-          if (!metamapType) return false;
-          const metamap = metamapType.create({ text }, metavalue);
-          if (!metamap) return false;
-          if (dispatch) {
-            const metadata = doc.firstChild;
-            if (metadata && metadata.type.name === Metadata.name) {
-              dispatch(tr.insert(metadata.nodeSize - 1, metamap));
-            } else {
-              dispatch(
-                tr.insert(0, schema.nodes.metadata.create(null, metamap))
-              );
+          ({ dispatch, state, tr }) => {
+            const { doc, schema } = state;
+            const metavalue = templateNode(schema, metaTypeName);
+            if (!metavalue) return false;
+            const metamapType = schema.nodes[MetaMap.name];
+            if (!metamapType) return false;
+            const metamap = metamapType.create({ text }, metavalue.node);
+            if (!metamap) return false;
+            if (dispatch) {
+              const metadata = doc.firstChild;
+              if (metadata && metadata.type.name === Metadata.name) {
+                dispatch(tr.insert(metadata.nodeSize - 1, metamap));
+              } else {
+                dispatch(
+                  tr.insert(0, schema.nodes.metadata.create(null, metamap))
+                );
+              }
             }
-          }
-          return true;
-        },
+            return true;
+          },
       setMetaMapText:
         (text: string, pos?: number) =>
-        ({ dispatch, state, tr }) => {
-          if (!text) return false;
-          const mmPos = pos || state.selection.from;
-          const metamap = state.doc.nodeAt(mmPos);
-          if (!metamap || !(metamap.type.name === this.name)) return false;
-          if (dispatch) dispatch(tr.setNodeAttribute(mmPos, 'text', text));
-          return true;
-        },
+          ({ dispatch, state, tr }) => {
+            if (!text) return false;
+            const mmPos = pos || state.selection.from;
+            const metamap = state.doc.nodeAt(mmPos);
+            if (!metamap || !(metamap.type.name === this.name)) return false;
+            if (dispatch) dispatch(tr.setNodeAttribute(mmPos, 'text', text));
+            return true;
+          },
       moveMetaMapDown:
         (pos?: number) =>
-        ({ commands, state }) => {
-          const p = pos || state.selection.from;
-          const metamap = state.doc.nodeAt(p);
-          if (!metamap || !(metamap.type.name === this.name)) return false;
-          const r = state.doc.resolve(p);
-          if (r.parent.type.name !== Metadata.name) return false;
-          return commands.moveChild('down', pos);
-        },
+          ({ commands, state }) => {
+            const p = pos || state.selection.from;
+            const metamap = state.doc.nodeAt(p);
+            if (!metamap || !(metamap.type.name === this.name)) return false;
+            const r = state.doc.resolve(p);
+            if (r.parent.type.name !== Metadata.name) return false;
+            return commands.moveChild('down', pos);
+          },
       moveMetaMapUp:
         (pos?: number) =>
-        ({ commands, state }) => {
-          const p = pos || state.selection.from;
-          const metamap = state.doc.nodeAt(p);
-          if (!metamap || !(metamap.type.name === this.name)) return false;
-          const r = state.doc.resolve(p);
-          if (r.parent.type.name !== Metadata.name) return false;
-          return commands.moveChild('up', pos);
-        },
+          ({ commands, state }) => {
+            const p = pos || state.selection.from;
+            const metamap = state.doc.nodeAt(p);
+            if (!metamap || !(metamap.type.name === this.name)) return false;
+            const r = state.doc.resolve(p);
+            if (r.parent.type.name !== Metadata.name) return false;
+            return commands.moveChild('up', pos);
+          },
     };
   },
 });

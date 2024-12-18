@@ -21,6 +21,7 @@ import { NodeViewWrapper, NodeViewContent, nodeViewProps } from '@tiptap/vue-3';
 import { ACTION_EDIT_META_MAP_TEXT } from '../../actions';
 import { useActions } from '../../stores';
 import { editorKeyFromState } from '../../schema';
+import { Component } from 'vue';
 
 export default {
   components: {
@@ -50,7 +51,7 @@ export default {
       }
     }
   }
-};
+} as Component;
 </script>
 
 <style lang="scss">
