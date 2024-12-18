@@ -22,6 +22,7 @@ import {
   MetaInlines,
   MetaList,
   MetaMap,
+  MetaMapEntry,
   MetaString,
   OrderedList,
   PandocTable,
@@ -221,11 +222,19 @@ export function templateNode(
     case MetaString.name:
       node = nodeType.create(null, schema.text('meta string'));
       break;
-    case MetaMap.name: {
-      const meta = nodes.metaInlines.create(null, schema.text('meta inlines'));
-      node = nodeType.create({ text: 'key' }, meta);
+    case MetaMapEntry.name:
+      {
+        const metaInlines = nodes.metaInlines.create(null, schema.text('meta inlines'));
+        node = nodeType.create({ text: 'key' }, metaInlines);
+      }
       break;
-    }
+    case MetaMap.name:
+      {
+        const metaInlines = nodes.metaInlines.create(null, schema.text('meta inlines'));
+        const entry = nodes.metaMapEntry.create({ text: 'key' }, metaInlines);
+        node = nodeType.create({ text: 'key' }, entry);
+      }
+      break;
     case MetaList.name: {
       const meta1 = nodes.metaInlines.create(null, schema.text('meta item'));
       const meta2 = nodes.metaInlines.create(null, schema.text('meta item'));

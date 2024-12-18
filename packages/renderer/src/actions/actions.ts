@@ -227,13 +227,13 @@ export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
 };
 
 export const MODIFY_METAMAP_KEY: BaseActionForNodeOrMark = {
-  name: 'modify-metamap-key',
-  label: 'modify MetaMap key',
+  name: 'modify-metamap-entry-key',
+  label: 'modify MetaMap entry  key',
   icon: 'mdi-pencil',
   canDo: (editor, action) =>
-    editor.can().setMetaMapText(action?.props?.text, action?.nodeOrMark?.pos),
+    editor.can().setMetaMapEntryText(action?.props?.text, action?.nodeOrMark?.pos),
   do: (editor, action) =>
-    editor.commands.setMetaMapText(
+    editor.commands.setMetaMapEntryText(
       action?.props?.text,
       action?.nodeOrMark?.pos,
     ),
@@ -280,9 +280,9 @@ export const ACTION_SET_META_MAP_TEXT: BaseActionForNodeOrMark = {
   name: 'set-meta-map-text',
   label: 'set MetaMap text',
   canDo: (editor, action) =>
-    editor.can().setMetaMapText(action?.props?.text, action?.nodeOrMark?.pos),
+    editor.can().setMetaMapEntryText(action?.props?.text, action?.nodeOrMark?.pos),
   do: (editor, action) =>
-    editor.commands.setMetaMapText(
+    editor.commands.setMetaMapEntryText(
       action?.props?.text,
       action?.nodeOrMark?.pos,
     ),

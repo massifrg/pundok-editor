@@ -60,6 +60,8 @@ import {
   MetaListOptions,
   MetaMap,
   MetaMapOptions,
+  MetaMapEntry,
+  MetaMapEntryOptions,
   MetaString,
   MetaStringOptions,
   Note,
@@ -250,6 +252,7 @@ export interface PandocOptions {
 
   metadata: Partial<MetadataOptions> | false;
   metaMap: Partial<MetaMapOptions> | false;
+  metaMapEntry: Partial<MetaMapEntryOptions> | false;
   metaList: Partial<MetaListOptions> | false;
   metaBool: Partial<MetaBoolOptions> | false;
   metaString: Partial<MetaStringOptions> | false;
@@ -338,6 +341,7 @@ export const Pandoc = Document.extend<PandocOptions>({
         { name: 'metaBool', object: MetaBool },
         { name: 'metaList', object: MetaList },
         { name: 'metaMap', object: MetaMap },
+        { name: 'metaMapEntry', object: MetaMapEntry },
 
         { name: 'text', object: Text },
         { name: 'gapcursor', object: Gapcursor },

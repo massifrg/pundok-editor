@@ -61,6 +61,7 @@ export { type IndexDivOptions, IndexDiv } from './IndexDiv';
 export { IndexTerm, type IndexTermOptions } from './IndexTerm';
 export { Metadata, type MetadataOptions } from './Metadata';
 export { MetaMap, type MetaMapOptions } from './MetaMap';
+export { MetaMapEntry, type MetaMapEntryOptions } from './MetaMapEntry';
 export { MetaList, type MetaListOptions } from './MetaList';
 export { MetaBool, type MetaBoolOptions } from './MetaBool';
 export { MetaString, type MetaStringOptions } from './MetaString';
