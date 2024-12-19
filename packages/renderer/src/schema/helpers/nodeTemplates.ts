@@ -309,9 +309,10 @@ export function nodeIcon(typename?: string) {
     case MetaInlines.name:
       return 'mdi-alpha-i-circle';
     case MetaMap.name:
-      return 'mdi-alpha-m-circle';
+      return 'mdi-view-list';
     case MetaList.name:
-      return 'mdi-alpha-l-circle';
+      return 'mdi-format-align-justify';
+    // return 'mdi-view-list-outline';
     case MetaString.name:
       return 'mdi-alpha-s-circle';
     case MetaBool.name:
