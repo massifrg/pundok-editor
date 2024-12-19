@@ -94,7 +94,7 @@ import {
   TableHeadOptions,
   TableRow,
   TableRowOptions,
-} from '../nodes';
+} from '.'; // don't import from '../nodes', because '../nodes/index.ts' exports Pandoc from this file
 import {
   Cite,
   CiteOptions,
