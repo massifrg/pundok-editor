@@ -4,7 +4,7 @@ import {
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import type { PMCitation } from '../helpers/citation';
+import { Citation, textToCitations } from '../helpers';
 
 export interface CiteOptions {
   HTMLAttributes: Record<string, any>,
@@ -46,7 +46,7 @@ export const Cite = Mark.create<CiteOptions>({
   addAttributes() {
     return {
       citations: {
-        default: [] as PMCitation[],
+        default: [] as Citation[],
         parseHTML(element) {
           return JSON.parse(element.getAttribute('data-citations') || '[]');
         },
@@ -74,7 +74,14 @@ export const Cite = Mark.create<CiteOptions>({
       setCite: () => ({ commands }) => {
         return commands.setMark(this.name);
       },
-      toggleCite: () => ({ commands }) => {
+      toggleCite: () => ({ commands, dispatch, state, tr }) => {
+        const { doc, selection } = state
+        const { from, to, empty } = selection
+        if (empty) return false
+        if (dispatch) {
+          const text = doc.textBetween(from, to)
+          textToCitations(text)
+        }
         return commands.toggleMark(this.name);
       },
       unsetCite: () => ({ commands }) => {
