@@ -7,6 +7,7 @@ import {
   type InlineContainer,
   CitationMode,
   MetaMap,
+  MetaMapEntry,
   MetaBool,
   MetaString,
   MetaInlines,
@@ -250,17 +251,13 @@ export class PandocJsonExporter {
   }
 
   nodeToPandoc(node: Node): Pandoc {
-    const pandoc = Pandoc.empty();
+    let pandoc = Pandoc.empty();
     if (node.type.name === 'doc') {
       const nodeJson = node.toJSON();
       const content = nodeJson.content as PmJsonNode[];
       const metadata = content.filter((c) => c.type === 'metadata')[0];
-      if (metadata) {
-        (metadata.content || []).forEach((mm) => {
-          const map = this.nodeToMetaMap(mm);
-          if (map) pandoc.appendMeta(map);
-        });
-      }
+      if (metadata)
+        pandoc = Pandoc.withMetadata(this.nodeToMetaMap(metadata).entries)
       const blocks = content.filter((c) => c.type !== 'metadata');
       this.appendBlocks(pandoc, blocks);
     }
@@ -592,12 +589,18 @@ export class PandocJsonExporter {
     return new MetaList(metaValues);
   }
 
-  private nodeToMetaMap(node: PmJsonNode): MetaMap | undefined {
-    const text = node.attrs?.text || 'unknown';
-    const value = node.content && node.content[0];
-    const metaValue = ((value && this.nodeToPandocItem(value)) ||
-      new MetaString('unknown')) as MetaValue;
-    return new MetaMap(text, metaValue);
+  private nodeToMetaMap(node: PmJsonNode): MetaMap {
+    const entries: MetaMapEntry[] = []
+    node.content?.forEach(mapEntry => {
+      const key = mapEntry.attrs?.text || 'unknown';
+      const value = mapEntry.content && mapEntry.content[0];
+      const pandocItem = key && value && this.nodeToPandocItem(value) as PandocItem
+      if (pandocItem)
+        entries.push(new MetaMapEntry(key, pandocItem))
+      else
+        console.log(`error converting MetaMapEntry, key=${JSON.stringify(key)}, value=${JSON.stringify(value)}`)
+    })
+    return new MetaMap(entries);
   }
 
   private nodeToPandocItem(node: PmJsonNode): PandocItem | PandocItem[] {
