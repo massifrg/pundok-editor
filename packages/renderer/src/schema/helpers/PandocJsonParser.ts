@@ -104,21 +104,13 @@ class PandocJsonParseState {
     top.marks = mark.removeFromSet(top.marks);
   }
 
-  transformMeta(meta: Record<string, PandocJson>): PandocJson {
-    const entries = Object.entries(meta || {});
-    return {
-      t: 'metadata',
-      c: entries.map(([mname, mvalue]) => {
-        const child: PandocJson = {
-          t: 'MetaMap',
-          c: {
-            [mname]: mvalue,
-          },
-        };
-        // console.log(child)
-        return child;
-      }),
-    };
+  transformMetaMapContents(metamap: Record<string, PandocJson>): PandocJson[] {
+    const ret = Object.entries(metamap || {}).map(([mname, mvalue]) => ({
+      t: 'MetaMapEntry',
+      c: [mname, [mvalue]],
+    }))
+    console.log(ret)
+    return ret
   }
 
   parseContents(primaryItems: PandocJson[], alternativeItems?: PandocJson[]) {
@@ -437,7 +429,10 @@ export class PandocJsonParser {
       this.options,
     );
     let doc;
-    const metaBlock = state.transformMeta(pdoc.meta);
+    const metaBlock = {
+      t: 'metadata',
+      c: state.transformMetaMapContents(pdoc.meta)
+    };
     state.parseContents([metaBlock, ...pdoc.blocks]);
     do {
       doc = state.closeNode();
@@ -550,15 +545,21 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
     // block: 'metaMap',
     handler: (spec, schema) => (state, metaMap) => {
       // console.log(metaMap)
-      const [text, metaValue] = Object.entries(metaMap.c)[0] as [
-        t: string,
-        mv: PandocJson,
-      ];
-      state.openNode(schema.nodes.metaMap, { text });
+      state.openNode(schema.nodes.metaMap, null);
       // console.log(`MetaValue: ${text} => ${JSON.stringify(metaValue)}`)
-      state.parseContents([metaValue]);
+      state.parseContents(state.transformMetaMapContents(metaMap.c));
       state.closeNode();
     },
+  },
+
+  MetaMapEntry: {
+    block: 'metaMapEntry',
+    getAttrs(json, state) {
+      return {
+        text: json.c[0]
+      }
+    },
+    parseChildren: [{ index: 1 }],
   },
 
   MetaList: {
