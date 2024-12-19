@@ -212,9 +212,9 @@ export function toJson(item: PandocItem): PandocJson | PandocJsonDocument {
     case 'MetaMap':
       return {
         t: item.name,
-        c: {
-          [item.key]: toJson((item as MetaMap).metaValue),
-        },
+        c: Object.fromEntries(
+          (item as MetaMap).entries.map(e => [e.key, toJson(e.metaValue)])
+        )
       };
     default:
   }
