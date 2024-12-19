@@ -111,6 +111,8 @@
         @click="editor.chain().runRepeatableCommand('toggleCode', 'toggle Code').focus().run()" />
       <ToolbarButton icon="mdi-link" :styleactive="isActive('link')" title="toggle Link"
         @click="editor.chain().runRepeatableCommand('toggleLink', 'toggle Link').focus().run()" />
+      <ToolbarButton icon="mdi-book-account" :styleactive="isActive('cite')" title="toggle Cite"
+        @click="editor.chain().runRepeatableCommand('toggleCite', 'toggle Cite').focus().run()" />
 
       <span class="button-separator" />
 
