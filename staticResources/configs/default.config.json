@@ -1,10 +1,7 @@
 {
   "$schema": "../../schemas/pundok-configuration.schema.json",
   "name": "default",
-  "version": [
-    0,
-    11
-  ],
+  "version": [0, 11],
   "description": "the default, hard-coded, configuration",
   "tiptap": {
     "options": {
@@ -14,14 +11,8 @@
     }
   },
   "autoDelimiters": {
-    "SingleQuote": [
-      "‘",
-      "’"
-    ],
-    "DoubleQuote": [
-      "“",
-      "”"
-    ]
+    "SingleQuote": ["‘", "’"],
+    "DoubleQuote": ["“", "”"]
   },
   "noteStyles": [
     {
@@ -37,76 +28,37 @@
     {
       "name": "highlight-yellow",
       "description": "an example yellow highlighter",
-      "appliesTo": [
-        "span"
-      ],
-      "css": [
-        [
-          "background-color",
-          "yellow"
-        ]
-      ]
+      "appliesTo": ["span"],
+      "css": [["background-color", "yellow"]]
     },
     {
       "name": "highlight-cyan",
       "description": "an example cyan highlighter",
-      "appliesTo": [
-        "span"
-      ],
-      "css": [
-        [
-          "background-color",
-          "cyan"
-        ]
-      ]
+      "appliesTo": ["span"],
+      "css": [["background-color", "cyan"]]
     },
     {
       "name": "no-indent",
       "description": "first line of the paragraph is not indented",
-      "appliesTo": [
-        "paragraph"
-      ],
-      "css": [
-        [
-          "text-indent",
-          "0"
-        ]
-      ]
+      "appliesTo": ["paragraph"],
+      "css": [["text-indent", "0"]]
     },
     {
       "name": "gray",
       "description": "paragraph with a gray background",
-      "appliesTo": [
-        "paragraph"
-      ],
-      "css": [
-        [
-          "background-color",
-          "lightgray"
-        ]
-      ]
+      "appliesTo": ["paragraph"],
+      "css": [["background-color", "lightgray"]]
     },
     {
       "name": "red",
       "description": "red ink",
-      "appliesTo": [
-        "paragraph",
-        "heading",
-        "span"
-      ],
-      "css": [
-        [
-          "color",
-          "red"
-        ]
-      ]
+      "appliesTo": ["paragraph", "heading", "span"],
+      "css": [["color", "red"]]
     },
     {
       "name": "section",
       "description": "a section of the text",
-      "appliesTo": [
-        "div"
-      ],
+      "appliesTo": ["div"],
       "attributes": [
         {
           "name": "toc-title",
@@ -117,9 +69,7 @@
     {
       "name": "chapter",
       "description": "a chapter",
-      "appliesTo": [
-        "div"
-      ],
+      "appliesTo": ["div"],
       "attributes": [
         {
           "name": "toc-title",
@@ -138,16 +88,11 @@
     {
       "name": "see-term",
       "description": "this index term is non preferred (see ...)",
-      "appliesTo": [
-        "indexTerm"
-      ]
+      "appliesTo": ["indexTerm"]
     },
     {
       "name": "hidden",
-      "appliesTo": [
-        "heading",
-        "div"
-      ],
+      "appliesTo": ["heading", "div"],
       "description": "this element should be hidden"
     }
   ],
@@ -163,11 +108,7 @@
       "backgroundColor": "#ffe9f9"
     }
   ],
-  "customCss": [
-    "include-doc.css",
-    "indices.css",
-    "default.css"
-  ],
+  "customCss": ["include-doc.css", "indices.css", "default.css"],
   "indices": [
     {
       "indexName": "names",
@@ -199,10 +140,7 @@
     {
       "format": "context",
       "title": "put content in a \\hbox",
-      "content": [
-        "\\hbox{",
-        "}"
-      ]
+      "content": ["\\hbox{", "}"]
     },
     {
       "format": "html",
@@ -214,28 +152,25 @@
     {
       "format": "html",
       "title": "an HTML div",
-      "content": [
-        "<div>",
-        "</div>"
-      ]
+      "content": ["<div>", "</div>"]
     },
     {
       "format": "context",
       "title": "a TeX group",
-      "content": [
-        "\\bgroup",
-        "\\egroup"
-      ]
+      "content": ["\\bgroup", "\\egroup"]
     }
   ],
-  "rawBlockFormats": [
-    "html",
-    "context",
-    "latex",
-    "plain"
-  ],
+  "rawBlockFormats": ["html", "context", "latex", "plain"],
   "inputConverters": [],
   "outputConverters": [
+    {
+      "name": "native",
+      "type": "pandoc",
+      "description": "standard pandoc native conversion",
+      "extension": "native",
+      "format": "native",
+      "standalone": true
+    },
     {
       "name": "html",
       "type": "pandoc",
