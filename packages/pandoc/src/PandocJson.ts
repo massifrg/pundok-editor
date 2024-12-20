@@ -212,20 +212,22 @@ export function toJson(item: PandocItem): PandocJson | PandocJsonDocument {
     case 'MetaMap':
       return {
         t: item.name,
-        c: {
-          [item.key]: toJson((item as MetaMap).metaValue),
-        },
+        c: Object.fromEntries(
+          (item as MetaMap).entries.map(e => [e.key, toJson(e.metaValue)])
+        )
       };
     default:
   }
   throw new Error(`Object ${JSON.stringify(item)} not known`);
 }
 
-export function toJsonString(pdoc: PandocItem, apiVersion?: number[]): string {
+export function toJsonString(pdoc: PandocItem, apiVersion?: number[], space?: number | string): string {
   return JSON.stringify(
     isPandocDocument(pdoc)
       ? pandocToJson(pdoc as Pandoc, apiVersion)
-      : toJson(pdoc)
+      : toJson(pdoc),
+    undefined,
+    space
   );
 }
 

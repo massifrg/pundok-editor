@@ -1,6 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import MetadataView from '/@/components/nodeviews/MetadataView.vue';
+import { MetadataView } from '../../components';
+import { Component } from 'vue';
 
 export interface MetadataOptions {
   HTMLAttributes: Record<string, any>;
@@ -8,7 +9,7 @@ export interface MetadataOptions {
 
 export const Metadata = Node.create<MetadataOptions>({
   name: 'metadata',
-  content: 'metaMap*',
+  content: 'metaMapEntry*',
   isolating: true,
 
   addOptions() {
@@ -28,6 +29,6 @@ export const Metadata = Node.create<MetadataOptions>({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(MetadataView);
+    return VueNodeViewRenderer(MetadataView as Component);
   },
 });

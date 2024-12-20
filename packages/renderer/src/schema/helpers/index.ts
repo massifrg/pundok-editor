@@ -1,5 +1,6 @@
 export * from './alignments';
 export * from './attributes';
+export * from './citation';
 export * from './customAttribute';
 export * from './customClass';
 export * from './customStyle';

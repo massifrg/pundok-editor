@@ -7,6 +7,7 @@ import { DEFAULT_NOTE_TYPE } from '../../common';
 import { NoteView, getEditorDocState } from '../index';
 import { deltaNodes } from '../helpers/whatChanged';
 import { useNotes } from '../../stores';
+import { Component } from 'vue';
 
 const META_REFRESH_NOTES = 'refresh-notes';
 
@@ -150,77 +151,77 @@ export const Note = Node.create<NoteOptions>({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(NoteView);
+    return VueNodeViewRenderer(NoteView as Component);
   },
 
   addCommands() {
     return {
       insertNote:
         (note_type: string, text?: string) =>
-        ({ commands, dispatch, editor, state, tr }) => {
-          const schema = state.schema;
-          const noteNodeType = schema.nodes[this.name];
-          if (!noteNodeType) return false;
-          const docState = getEditorDocState(editor as Editor);
-          const noteStyles = docState?.configuration?.noteStyles;
-          const noteTypes =
-            (noteStyles && noteStyles.map((ns) => ns.noteType)) ||
-            this.options.noteTypes ||
-            [];
-          const noteType = noteTypes.includes(note_type)
-            ? note_type
-            : noteTypes[0] || DEFAULT_NOTE_TYPE;
-          const selection = state.selection;
-          let content = Fragment.empty;
-          if (selection.empty) {
-            content = Fragment.from(
-              schema.nodes.paragraph.createChecked(
-                null,
-                schema.text(text || this.options.placeHolderText(noteType)),
-              ),
-            );
-          } else {
-            const slice = selection.content();
-            content = slice.content;
-            // console.log(`openStart=${slice.openStart}, openEnd=${slice.openEnd}`)
-            // console.log(slice)
-            if (
-              !(
-                content.childCount === 1 &&
-                slice.content.child(0).type.name === 'paragraph'
-              )
-            ) {
-              return commands.wrapIn('note', {
-                attrs: {
-                  noteType: note_type,
-                  kv: { 'note-type': noteType },
-                },
-              });
-            }
-          }
-          try {
-            const newNote = noteNodeType.createChecked(
-              { noteType, kv: { 'note-type': noteType } },
-              Fragment.from(content),
-            );
-            if (dispatch) {
-              dispatch(
-                tr
-                  .replaceSelectionWith(newNote)
-                  .setMeta(META_REFRESH_NOTES, true),
+          ({ commands, dispatch, editor, state, tr }) => {
+            const schema = state.schema;
+            const noteNodeType = schema.nodes[this.name];
+            if (!noteNodeType) return false;
+            const docState = getEditorDocState(editor as Editor);
+            const noteStyles = docState?.configuration?.noteStyles;
+            const noteTypes =
+              (noteStyles && noteStyles.map((ns) => ns.noteType)) ||
+              this.options.noteTypes ||
+              [];
+            const noteType = noteTypes.includes(note_type)
+              ? note_type
+              : noteTypes[0] || DEFAULT_NOTE_TYPE;
+            const selection = state.selection;
+            let content = Fragment.empty;
+            if (selection.empty) {
+              content = Fragment.from(
+                schema.nodes.paragraph.createChecked(
+                  null,
+                  schema.text(text || this.options.placeHolderText(noteType)),
+                ),
               );
+            } else {
+              const slice = selection.content();
+              content = slice.content;
+              // console.log(`openStart=${slice.openStart}, openEnd=${slice.openEnd}`)
+              // console.log(slice)
+              if (
+                !(
+                  content.childCount === 1 &&
+                  slice.content.child(0).type.name === 'paragraph'
+                )
+              ) {
+                return commands.wrapIn('note', {
+                  attrs: {
+                    noteType: note_type,
+                    kv: { 'note-type': noteType },
+                  },
+                });
+              }
             }
-          } catch (error) {
-            return false;
-          }
-          return true;
-        },
+            try {
+              const newNote = noteNodeType.createChecked(
+                { noteType, kv: { 'note-type': noteType } },
+                Fragment.from(content),
+              );
+              if (dispatch) {
+                dispatch(
+                  tr
+                    .replaceSelectionWith(newNote)
+                    .setMeta(META_REFRESH_NOTES, true),
+                );
+              }
+            } catch (error) {
+              return false;
+            }
+            return true;
+          },
       refreshNotes:
         () =>
-        ({ dispatch, tr }) => {
-          if (dispatch) dispatch(tr.setMeta(META_REFRESH_NOTES, true));
-          return true;
-        },
+          ({ dispatch, tr }) => {
+            if (dispatch) dispatch(tr.setMeta(META_REFRESH_NOTES, true));
+            return true;
+          },
     };
   },
 });

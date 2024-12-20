@@ -7,6 +7,7 @@ import {
   type InlineContainer,
   CitationMode,
   MetaMap,
+  MetaMapEntry,
   MetaBool,
   MetaString,
   MetaInlines,
@@ -56,7 +57,6 @@ import type { Node, Schema } from '@tiptap/pm/model';
 import { toJsonString } from '../../pandoc';
 import { schema } from './PandocSchema';
 import { flatten, isArray, isEqual, uniq } from 'lodash';
-import type { PMCitation } from './citation';
 import { textAlignToPandocAlignment } from './alignments';
 import { colAlignmentsFromSections, PmColSpec } from './colSpec';
 import {
@@ -75,6 +75,8 @@ import {
 } from '../nodes/IndexRef';
 import { AutoDelimiter } from '../extensions/AutoDelimitersExtension';
 import { ShortCaption } from '../nodes';
+import { PundokCitation } from './citation';
+import { Cite } from '../marks';
 
 type PmAttrs = Record<string, any>;
 
@@ -153,9 +155,14 @@ const logMarkRanges = (
 };
 
 export interface PandocJsonExporterOptions {
+  /** The API version number to be written in Pandoc JSON file. */
   apiVersion?: number[];
+  /** The indices defined for the document. */
   indices?: Index[];
+  /** A function that compares Marks precedence. */
   compareMarks?: CompareMarksFunction;
+  /** The third argument of JSON.stringify, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#syntax */
+  space?: number | string;
 }
 
 /**
@@ -202,7 +209,7 @@ export function nodeToPandocJsonString(
 ): string {
   const exporter = new PandocJsonExporter(schema, options);
   const pandoc = exporter.nodeToPandoc(node);
-  return toJsonString(pandoc, exporter.options?.apiVersion);
+  return toJsonString(pandoc, exporter.options?.apiVersion, options?.space);
 }
 
 export function nodeToPandocFragment(
@@ -213,12 +220,13 @@ export function nodeToPandocFragment(
   return exporter.nodeToPandocFragment(node);
 }
 
-export function nodeToPandocInlines(
+export function nodeContentToPandocInlines(
   node: Node,
   options?: PandocJsonExporterOptions,
 ): Inline[] {
   const exporter = new PandocJsonExporter(schema, options);
-  return exporter.nodeToPandocInlines(node);
+  const inlineContainer = exporter.nodeToPandocFragment(node) as InlineContainer
+  return inlineContainer.content || []
 }
 
 export class PandocJsonExporter {
@@ -226,6 +234,7 @@ export class PandocJsonExporter {
   private knownMarksDict: Record<string, number[]> = {};
   private compareMarks: CompareMarksFunction = defaultCompareMarks;
   private indices: Index[] = [];
+  private citationCount: number = 0;
 
   constructor(
     public readonly schema: Schema,
@@ -245,17 +254,13 @@ export class PandocJsonExporter {
   }
 
   nodeToPandoc(node: Node): Pandoc {
-    const pandoc = Pandoc.empty();
+    let pandoc = Pandoc.empty();
     if (node.type.name === 'doc') {
       const nodeJson = node.toJSON();
       const content = nodeJson.content as PmJsonNode[];
       const metadata = content.filter((c) => c.type === 'metadata')[0];
-      if (metadata) {
-        (metadata.content || []).forEach((mm) => {
-          const map = this.nodeToMetaMap(mm);
-          if (map) pandoc.appendMeta(map);
-        });
-      }
+      if (metadata)
+        pandoc = Pandoc.withMetadata(this.nodeToMetaMap(metadata).entries)
       const blocks = content.filter((c) => c.type !== 'metadata');
       this.appendBlocks(pandoc, blocks);
     }
@@ -587,12 +592,18 @@ export class PandocJsonExporter {
     return new MetaList(metaValues);
   }
 
-  private nodeToMetaMap(node: PmJsonNode): MetaMap | undefined {
-    const text = node.attrs?.text || 'unknown';
-    const value = node.content && node.content[0];
-    const metaValue = ((value && this.nodeToPandocItem(value)) ||
-      new MetaString('unknown')) as MetaValue;
-    return new MetaMap(text, metaValue);
+  private nodeToMetaMap(node: PmJsonNode): MetaMap {
+    const entries: MetaMapEntry[] = []
+    node.content?.forEach(mapEntry => {
+      const key = mapEntry.attrs?.text || 'unknown';
+      const value = mapEntry.content && mapEntry.content[0];
+      const pandocItem = key && value && this.nodeToPandocItem(value) as PandocItem
+      if (pandocItem)
+        entries.push(new MetaMapEntry(key, pandocItem))
+      else
+        console.log(`error converting MetaMapEntry, key=${JSON.stringify(key)}, value=${JSON.stringify(value)}`)
+    })
+    return new MetaMap(entries);
   }
 
   private nodeToPandocItem(node: PmJsonNode): PandocItem | PandocItem[] {
@@ -711,11 +722,18 @@ export class PandocJsonExporter {
     const attrs = nodeOrMark.attrs;
     return attrs
       ? Attr.from({
-          id: attrs.id,
-          classes: attrs.classes,
-          attributes: attrs.kv,
-        })
+        id: attrs.id,
+        classes: attrs.classes,
+        attributes: attrs.kv,
+      })
       : Attr.empty();
+  }
+
+  /**
+   * Compute the hash of a citation (TODO: currently always returns 0)
+   */
+  private citationHash() {
+    return 0
   }
 
   private markToIndex(mark: PmJsonMark): number {
@@ -736,22 +754,18 @@ export class PandocJsonExporter {
     const found = BASE_MARKS.find((bm) => bm.type === mark.type);
     if (found) {
       newMark.pandoc = found.pandoc;
-      if (found.type === 'cite') {
-        const pmCitations: PMCitation[] = newMark.attrs?.citations || [];
-        const citations: Citation[] = pmCitations.map((c) => {
+      if (found.type === Cite.name) {
+        const pundokCitations: PundokCitation[] = newMark.attrs?.citations || [];
+        if (pundokCitations.length > 0)
+          this.citationCount++
+        const citations: Citation[] = pundokCitations.map((c) => {
           return Citation.from({
             id: c.citationId,
-            prefix:
-              (c.citationPrefix &&
-                this.nodeToPandocInlines(c.citationPrefix)) ||
-              [],
-            suffix:
-              (c.citationSuffix &&
-                this.nodeToPandocInlines(c.citationSuffix)) ||
-              [],
+            prefix: c.citationPrefix || [],
+            suffix: c.citationSuffix || [],
             mode: c.citationMode as CitationMode,
-            noteNum: c.citationNoteNum,
-            hash: c.citationHash,
+            noteNum: this.citationCount,
+            hash: this.citationHash(),
           });
         });
         newMark.attrs = { ...newMark.attrs, citations };

@@ -4,6 +4,10 @@
 
 - check for unsaved changes before quitting
 
+- encode different notes with a Span item around the Note;
+  that Span will have an attribute specifying the note's type;
+  currently they're encoded with a single Div as the Note content (with the Div carrying the note type information)
+
 - Image inclusion/linking
 
 - ~~reload current document with a different configuration~~
@@ -53,7 +57,9 @@
 
 - keyboard shortcuts for tables (see also tiptap)
 
-- support for citations
+- ~~support for citations~~
+
+- check why and where non breakable spaces (0xA0) are converted to ordinary spaces (0x20)
 
 - ~~new attribute with 'name=value' correctly adds attribute setting its value in one shot~~
 

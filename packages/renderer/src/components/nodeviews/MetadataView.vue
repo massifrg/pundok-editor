@@ -22,7 +22,7 @@
 
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps } from '@tiptap/vue-3';
-import { nodeIcon } from '../../schema/helpers';
+import { nodeIcon, nodeOrMarkToPandocName } from '../../schema/helpers';
 
 export default {
   components: {
@@ -57,23 +57,26 @@ export default {
     iconFor(nodetypename: string) {
       return nodeIcon(nodetypename)
     },
+    labelFor(nodetypename: string) {
+      return `append a ${nodeOrMarkToPandocName(nodetypename)}`
+    },
     appendMetaMap() {
-      this.editor.commands.appendMetaMap('map', 'metaMap')
+      this.editor.commands.appendMetaMapEntry('map', 'metaMap')
     },
     appendMetaList() {
-      this.editor.commands.appendMetaMap('list', 'metaList')
+      this.editor.commands.appendMetaMapEntry('list', 'metaList')
     },
     appendMetaInlines() {
-      this.editor.commands.appendMetaMap('inlines', 'metaInlines')
+      this.editor.commands.appendMetaMapEntry('inlines', 'metaInlines')
     },
     appendMetaBlocks() {
-      this.editor.commands.appendMetaMap('blocks', 'metaBlocks')
+      this.editor.commands.appendMetaMapEntry('blocks', 'metaBlocks')
     },
     appendMetaBool() {
-      this.editor.commands.appendMetaMap('bool', 'metaBool')
+      this.editor.commands.appendMetaMapEntry('bool', 'metaBool')
     },
     appendMetaString() {
-      this.editor.commands.appendMetaMap('string', 'metaString')
+      this.editor.commands.appendMetaMapEntry('string', 'metaString')
     }
   }
 };

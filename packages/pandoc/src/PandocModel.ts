@@ -299,13 +299,17 @@ export class Pandoc implements BlockContainer {
     public readonly meta: Meta,
     public readonly content: Block[],
     public isStandalone: boolean = false
-  ) {}
+  ) { }
 
   static empty() {
     return new Pandoc(Meta.empty(), []);
   }
 
-  appendMeta(metaMap: MetaMap) {
+  static withMetadata(metadata: MetaMapEntry[]) {
+    return new Pandoc(new Meta(metadata), [])
+  }
+
+  appendMeta(metaMap: MetaMapEntry) {
     this.meta.append(metaMap);
   }
 
@@ -331,14 +335,14 @@ export class Meta implements PandocItem {
   name = 'Meta';
   properties = ['name', 'metadata'];
 
-  constructor(public readonly metadata: MetaMap[]) {}
+  constructor(public readonly metadata: MetaMapEntry[]) { }
 
   static empty(): Meta {
     return new Meta([]);
   }
 
-  append(metaMap: MetaMap) {
-    this.metadata.push(metaMap);
+  append(entry: MetaMapEntry) {
+    this.metadata.push(entry);
   }
 
   toNative(buffer: string[]): string[] {
@@ -364,7 +368,7 @@ export class MetaBlocks implements BlockContainer {
   name = 'MetaBlocks';
   properties = ['name', 'content'];
 
-  constructor(public readonly content: Block[]) {}
+  constructor(public readonly content: Block[]) { }
 
   static from(paras: string[]): MetaBlocks {
     return new MetaBlocks(paras.map((p) => Para.from(p)));
@@ -379,7 +383,7 @@ export class MetaInlines implements InlineContainer {
   name = 'MetaInlines';
   properties = ['name', 'content'];
 
-  constructor(public readonly content: Inline[]) {}
+  constructor(public readonly content: Inline[]) { }
 
   static from(text: string): MetaInlines {
     return new MetaInlines(simpleMarkdownToInlines(text));
@@ -394,7 +398,7 @@ export class MetaBool implements PandocItem {
   name = 'MetaBool';
   properties = ['name', 'value'];
 
-  constructor(public readonly value: boolean) {}
+  constructor(public readonly value: boolean) { }
 
   toNative(buffer: string[]): string[] {
     buffer.push(`${this.name} ${this.value ? 'True' : 'False'}`);
@@ -406,7 +410,7 @@ export class MetaString implements PandocItem {
   name = 'MetaString';
   properties = ['name', 'text'];
 
-  constructor(public readonly text: string) {}
+  constructor(public readonly text: string) { }
 
   toNative(buffer: string[]): string[] {
     buffer.push(`${this.name} "${escapeDoubleQuotes(this.text)}"`);
@@ -414,30 +418,47 @@ export class MetaString implements PandocItem {
   }
 }
 
-export class MetaMap implements PandocItem {
-  name = 'MetaMap';
-  properties = ['name', 'key', 'metaValue'];
+export class MetaMapEntry implements PandocItem {
+  properties = ['key', 'metaValue'];
   isBetweenParentheses = true;
   commaSeparatedProps = true;
 
   constructor(
     public readonly key: string,
     public readonly metaValue: MetaValue
-  ) {}
+  ) { }
 
-  static from(key: string, value: any): MetaMap {
+  static from(key: string, value: any): MetaMapEntry {
     if (!key)
       throw new Error(
         `${JSON.stringify(key)} is not a valid key for a MetaMap entry`
       );
-    return new MetaMap(key, valueToMetaValue(value));
+    return new MetaMapEntry(key, valueToMetaValue(value));
   }
 
   toNative(buffer: string[]): string[] {
-    buffer.push(`${this.name} (`);
-    mapToNative([[this.key, this.metaValue]], buffer);
+    buffer.push(`(`);
+    buffer.push(this.key)
+    buffer.push(', ')
+    toNative(this.metaValue, buffer)
     buffer.push(')');
     return buffer;
+  }
+}
+
+export class MetaMap implements PandocItem {
+  name = 'MetaMap'
+  properties: string[] = ['name', 'entries'];
+
+  constructor(
+    public readonly entries: MetaMapEntry[]
+  ) { }
+
+  toNative(buffer: string[]): string[] {
+    buffer.push('MetaMap (')
+    mapToNative(this.entries.map(e => [e.key, e.metaValue]), buffer)
+    buffer.push(')')
+    return buffer
   }
 }
 
@@ -454,7 +475,7 @@ function valueToMetaValue(
     v instanceof MetaInlines ||
     v instanceof MetaBlocks ||
     v instanceof MetaList ||
-    v instanceof MetaMap
+    v instanceof MetaMapEntry
   ) {
     return v;
   }
@@ -506,13 +527,13 @@ export type MetaValue =
   | MetaInlines
   | MetaBlocks
   | MetaList
-  | MetaMap;
+  | MetaMapEntry;
 
 export class MetaList implements PandocItem {
   name = 'MetaList';
   properties = ['name', 'items'];
 
-  constructor(public readonly items: MetaValue[]) {}
+  constructor(public readonly items: MetaValue[]) { }
 }
 
 export interface AttrInitObject {
@@ -528,7 +549,7 @@ export class Attr implements PandocItem {
     public readonly id: string,
     public readonly classes: string[],
     public readonly attributes: Record<string, string>
-  ) {}
+  ) { }
 
   static from(obj: Partial<AttrInitObject> | Attr): Attr {
     if (obj instanceof Attr) return obj;
@@ -710,7 +731,7 @@ export class DefinitionListItem implements PandocItem {
   constructor(
     public readonly term: Inline[],
     public readonly definitions: Block[][]
-  ) {}
+  ) { }
 }
 
 export class DefinitionList extends Block {
@@ -922,7 +943,7 @@ export class Citation implements PandocItem {
     public readonly citationMode: CitationMode,
     public readonly citationNoteNum: number,
     public readonly citationHash: number
-  ) {}
+  ) { }
 
   static from(init: Partial<CitationProperties>): Citation {
     const prefix = isArray(init.prefix)
@@ -944,15 +965,15 @@ export class Citation implements PandocItem {
   toNative(buffer: string[]): string[] {
     buffer.push(
       'Citation {' +
-        [
-          `citationId = "${escapeDoubleQuotes(this.citationId)}"`,
-          `citationPrefix = ${toNativeString(this.citationPrefix)}`,
-          `citationSuffix = ${toNativeString(this.citationSuffix)}`,
-          `citationMode = ${this.citationMode}`,
-          `citationNoteNum = ${this.citationNoteNum}`,
-          `citationHash = ${this.citationHash}`,
-        ].join(', ') +
-        '}'
+      [
+        `citationId = "${escapeDoubleQuotes(this.citationId)}"`,
+        `citationPrefix = ${toNativeString(this.citationPrefix)}`,
+        `citationSuffix = ${toNativeString(this.citationSuffix)}`,
+        `citationMode = ${this.citationMode}`,
+        `citationNoteNum = ${this.citationNoteNum}`,
+        `citationHash = ${this.citationHash}`,
+      ].join(', ') +
+      '}'
     );
     return buffer;
   }
@@ -1031,7 +1052,7 @@ export class Target implements PandocItem {
   commaSeparatedProps = true;
   properties = ['url', 'title'];
 
-  constructor(public readonly url: string, public readonly title: string) {}
+  constructor(public readonly url: string, public readonly title: string) { }
 
   static from(init: TargetInitObject): Target {
     return new Target(init.url || '', init.title || '');
@@ -1121,7 +1142,7 @@ export class Caption implements BlockContainer {
   constructor(
     public readonly short: Inline[] | undefined,
     public readonly content: Block[]
-  ) {}
+  ) { }
 
   static empty(): Caption {
     return new Caption(undefined, []);
@@ -1155,7 +1176,7 @@ export class ColSpec implements PandocItem {
   constructor(
     public readonly alignment: Alignment,
     public readonly colWidth: number
-  ) {}
+  ) { }
 
   static readonly default = new ColSpec('AlignDefault', 0);
 }
@@ -1172,7 +1193,7 @@ export class TableHead implements PandocItem {
   isBetweenParentheses = true;
   properties = ['name', 'attr', 'rows'];
 
-  constructor(public readonly attr: Attr, public readonly rows: Row[]) {}
+  constructor(public readonly attr: Attr, public readonly rows: Row[]) { }
 
   columns() {
     return this.rows.reduce((c, r) => {
@@ -1209,7 +1230,7 @@ export class TableBody implements PandocItem {
     public readonly rowHeadColumns: number,
     public readonly headers: Row[],
     public readonly rows: Row[]
-  ) {}
+  ) { }
 
   static from(
     init:
@@ -1243,7 +1264,7 @@ export class TableFoot implements PandocItem {
   isBetweenParentheses = true;
   properties = ['name', 'attr', 'rows'];
 
-  constructor(public readonly attr: Attr, public readonly rows: Row[]) {}
+  constructor(public readonly attr: Attr, public readonly rows: Row[]) { }
 
   columns() {
     return this.rows.reduce((c, r) => {
@@ -1279,7 +1300,7 @@ export class Row implements PandocItem {
   name = 'Row';
   properties = ['name', 'attr', 'cells'];
 
-  constructor(public readonly attr: Attr, public readonly cells: Cell[]) {}
+  constructor(public readonly attr: Attr, public readonly cells: Cell[]) { }
 
   static from(
     init: Partial<RowProperties> | (Cell | CellProperties | string)[]
@@ -1319,7 +1340,7 @@ export class Cell implements BlockContainer {
     public readonly rowspan: number,
     public readonly colspan: number,
     public readonly content: Block[]
-  ) {}
+  ) { }
 
   static from(init: Partial<CellProperties> | Cell | string): Cell {
     if (init instanceof Cell) return init;

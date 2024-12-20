@@ -143,6 +143,6 @@ export { default as EmptySpanView } from './nodeviews/EmptySpanView.vue';
 export { default as IndexRefView } from './nodeviews/IndexRefView.vue';
 export { default as MetaBoolView } from './nodeviews/MetaBoolView.vue';
 export { default as MetadataView } from './nodeviews/MetadataView.vue';
-export { default as MetaMapView } from './nodeviews/MetaMapView.vue';
+export { default as MetaMapEntryView } from './nodeviews/MetaMapEntryView.vue';
 export { default as NoteView } from './nodeviews/NoteView.vue';
 export { default as RawBlockView } from './nodeviews/RawBlockView.vue';

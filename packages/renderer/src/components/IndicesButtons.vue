@@ -1,11 +1,11 @@
 <template>
   <ToolbarButton v-if="buttonStyle == 'menubar'" v-for="index in allIndices" :key="index.indexName" :size="size"
-    :styleactive="isActive('span', { indexName: index.indexName })" :title="`reference for ${index.indexName} index`"
+    :styleactive="isActive('span', { indexName: index.indexName })" :title='`reference for index "${index.indexName}"`'
     :disabled="!editor.can().addIndexRef(index)" @click="editor.chain().focus().addIndexRef(index).run()">
     <q-icon :name="index.iconSvg || defaultIndexIconSvg()" :style="{ color: index.color || defaultIndexColor() }" />
   </ToolbarButton>
   <q-btn v-if="buttonStyle !== 'menubar'" v-for="index in allIndices" :key="index.indexName" :size="size || 'md'"
-    :padding="padding || 'md'" :title="`reference for ${index.indexName} index`"
+    :padding="padding || 'md'" :title='`reference for index "${index.indexName}"`'
     :disabled="!editor.can().addIndexRef(index)" @click="editor.chain().focus().addIndexRef(index).run()">
     <q-icon :name="index.iconSvg || defaultIndexIconSvg()" :style="{ color: index.color || defaultIndexColor() }" />
   </q-btn>
