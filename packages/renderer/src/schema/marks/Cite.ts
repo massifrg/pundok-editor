@@ -96,6 +96,8 @@ export const Cite = Mark.create<CiteOptions>({
           }
           childStart = childEnd
         }
+        // TODO: don't recompute citations before this paragraph (or inline container)
+        //       and fix just citationNoteNum in Cite marks in the following paragraphs.
         if (citePresent) {
           if (dispatch) {
             tr.removeMark(from, to, citeMarkType)
@@ -166,12 +168,12 @@ function fixCites(
   dispatch?: Function,
   pos?: number,
 ): boolean {
+  if (!tr) return false
   let noteNum = 0
   const doc = tr.doc
   const node = pos ? doc.nodeAt(pos) : doc
   if (!node) return false
   if (!dispatch) return true
-  if (!tr) return false
   node.descendants((desc, dpos) => {
     if (desc.inlineContent) {
       const ranges: number[][] = []
