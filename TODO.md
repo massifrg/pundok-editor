@@ -53,7 +53,9 @@
 
 - keyboard shortcuts for tables (see also tiptap)
 
-- support for citations
+- ~~support for citations~~
+
+- check why and where non breakable spaces (0xA0) are converted to ordinary spaces (0x20)
 
 - ~~new attribute with 'name=value' correctly adds attribute setting its value in one shot~~
 
