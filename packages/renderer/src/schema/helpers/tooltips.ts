@@ -3,6 +3,7 @@ import { visibleAttrsForNodeOrMark } from './attributes';
 import { LabeledNodeOrMark } from './selection';
 import { Mark, Node } from '@tiptap/pm/model';
 import { PmColSpec, colSpecToCompactString } from './colSpec';
+import { PundokCitation } from './citation';
 
 export const TOOLTIP_CLASSES: Record<string, string> = {
   nodeName: 'tt-node-name',
@@ -13,10 +14,15 @@ export const TOOLTIP_CLASSES: Record<string, string> = {
   attrNameId: 'tt-attr-id',
   attrNameClasses: 'tt-attr-classes',
   attrNameKv: 'tt-attr-kv',
+  attrNameCitations: 'tt-attr-citations',
   attrValue: 'tt-attr-value',
   attrValueStart: 'tt-attr-value-start',
   attrValueNumDelim: 'tt-attr-value-num-delim',
   attrValueNumStyle: 'tt-attr-value-num-style',
+  attrValueCitationId: 'tt-attr-value-citation-id',
+  attrValueCitationMode: 'tt-attr-value-citation-mode',
+  attrValueCitationPrefix: 'tt-attr-value-citation-prefix',
+  attrValueCitationSuffix: 'tt-attr-value-citation-suffix',
   kvName: 'tt-kv-name',
   kvValue: 'tt-kv-value',
 };
@@ -86,10 +92,10 @@ export function attributeToHtml(
         htmlValue = emptyValue
           ? undefined
           : attrValueToHtml(
-              (value as string[]).map((c) => `"${c}"`).join(', '),
-              'span',
-              [TC.attrValueClasses]
-            );
+            (value as string[]).map((c) => `"${c}"`).join(', '),
+            'span',
+            [TC.attrValueClasses]
+          );
         break;
       case 'kv':
         if (Object.keys(value).length === 0) return undefined;
@@ -127,6 +133,22 @@ export function attributeToHtml(
         htmlValue = attrValueToHtml(value || 'DefaultDelim', 'span', [
           TC.attrValueNumDelim,
         ]);
+        break;
+      case 'citations':
+        if (value.length === 0) return undefined;
+        name = 'citations';
+        htmlClasses.push(TC.attrNameCitations);
+        htmlValue = (value as PundokCitation[]).map((cit) => {
+          const chunks = [`<br />\n(${cit.citationNoteNum || '??'}) `]
+          chunks.push(`<span class="${TC.attrValueCitationMode}">${cit.citationMode}</span>, `)
+          if (cit.prefix)
+            chunks.push(`<span class="${TC.attrValueCitationPrefix}">${cit.prefix.text}</span> `)
+          if (cit.citationId)
+            chunks.push(`<span class="${TC.attrValueCitationId}">@${cit.citationId}</span> `)
+          if (cit.suffix)
+            chunks.push(`<span class="${TC.attrValueCitationSuffix}">${cit.suffix.text}</span>`)
+          return chunks.join('')
+        }).join('');
         break;
       default:
         htmlValue = emptyValue ? undefined : attrValueToHtml(value, 'span', []);

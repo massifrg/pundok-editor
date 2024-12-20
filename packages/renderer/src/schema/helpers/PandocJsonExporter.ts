@@ -57,7 +57,6 @@ import type { Node, Schema } from '@tiptap/pm/model';
 import { toJsonString } from '../../pandoc';
 import { schema } from './PandocSchema';
 import { flatten, isArray, isEqual, uniq } from 'lodash';
-import type { PMCitation } from './citation';
 import { textAlignToPandocAlignment } from './alignments';
 import { colAlignmentsFromSections, PmColSpec } from './colSpec';
 import {
@@ -76,6 +75,8 @@ import {
 } from '../nodes/IndexRef';
 import { AutoDelimiter } from '../extensions/AutoDelimitersExtension';
 import { ShortCaption } from '../nodes';
+import { PundokCitation } from './citation';
+import { Cite } from '../marks';
 
 type PmAttrs = Record<string, any>;
 
@@ -224,7 +225,9 @@ export function nodeToPandocInlines(
   options?: PandocJsonExporterOptions,
 ): Inline[] {
   const exporter = new PandocJsonExporter(schema, options);
-  return exporter.nodeToPandocInlines(node);
+  const a = exporter.nodeToPandocFragment(node);
+  console.log(a)
+  return (a as Plain).content
 }
 
 export class PandocJsonExporter {
@@ -232,6 +235,7 @@ export class PandocJsonExporter {
   private knownMarksDict: Record<string, number[]> = {};
   private compareMarks: CompareMarksFunction = defaultCompareMarks;
   private indices: Index[] = [];
+  private citationCount: number = 0;
 
   constructor(
     public readonly schema: Schema,
@@ -726,6 +730,13 @@ export class PandocJsonExporter {
       : Attr.empty();
   }
 
+  /**
+   * Compute the hash of a citation (TODO: currently always returns 0)
+   */
+  private citationHash() {
+    return 0
+  }
+
   private markToIndex(mark: PmJsonMark): number {
     const knownMarks = this.knownMarks;
     let indices = this.knownMarksDict[mark.type];
@@ -744,22 +755,16 @@ export class PandocJsonExporter {
     const found = BASE_MARKS.find((bm) => bm.type === mark.type);
     if (found) {
       newMark.pandoc = found.pandoc;
-      if (found.type === 'cite') {
-        const pmCitations: PMCitation[] = newMark.attrs?.citations || [];
-        const citations: Citation[] = pmCitations.map((c) => {
+      if (found.type === Cite.name) {
+        const pundokCitations: PundokCitation[] = newMark.attrs?.citations || [];
+        const citations: Citation[] = pundokCitations.map((c) => {
           return Citation.from({
             id: c.citationId,
-            prefix:
-              (c.citationPrefix &&
-                this.nodeToPandocInlines(c.citationPrefix)) ||
-              [],
-            suffix:
-              (c.citationSuffix &&
-                this.nodeToPandocInlines(c.citationSuffix)) ||
-              [],
+            prefix: c.citationPrefix || [],
+            suffix: c.citationSuffix || [],
             mode: c.citationMode as CitationMode,
-            noteNum: c.citationNoteNum,
-            hash: c.citationHash,
+            noteNum: ++this.citationCount,
+            hash: this.citationHash(),
           });
         });
         newMark.attrs = { ...newMark.attrs, citations };

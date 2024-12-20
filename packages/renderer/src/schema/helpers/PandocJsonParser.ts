@@ -2,7 +2,6 @@
 import { isArray, isString } from 'lodash';
 import type { Attrs, Schema, NodeType } from '@tiptap/pm/model';
 import { Mark, Node } from '@tiptap/pm/model';
-import { pandocCitationsToPMAttrs } from './citation';
 import { pandocColSpecToPmColSpec } from './colSpec';
 import { listAttributesToPMAttrs } from './listAttributes';
 import { schema } from './PandocSchema';
@@ -105,12 +104,10 @@ class PandocJsonParseState {
   }
 
   transformMetaMapContents(metamap: Record<string, PandocJson>): PandocJson[] {
-    const ret = Object.entries(metamap || {}).map(([mname, mvalue]) => ({
+    return Object.entries(metamap || {}).map(([mname, mvalue]) => ({
       t: 'MetaMapEntry',
       c: [mname, [mvalue]],
     }))
-    console.log(ret)
-    return ret
   }
 
   parseContents(primaryItems: PandocJson[], alternativeItems?: PandocJson[]) {
@@ -804,7 +801,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
   },
   Cite: {
     mark: 'cite',
-    getAttrs: (json) => pandocCitationsToPMAttrs(json.c[0]),
+    getAttrs: (json) => ({ citations: [] }),
     parseChildren: [{ index: 1 }],
   },
   Code: {

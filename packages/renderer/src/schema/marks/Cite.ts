@@ -1,10 +1,13 @@
+import { MarkType, Node as ProsemirrorNode } from '@tiptap/pm/model'
 import {
   Mark,
   // markInputRule,
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { Citation, textToCitations } from '../helpers';
+import { PundokCitation, textToCitations } from '../helpers';
+import { EditorState, Transaction } from '@tiptap/pm/state';
+import { Note } from '../nodes';
 
 export interface CiteOptions {
   HTMLAttributes: Record<string, any>,
@@ -14,10 +17,6 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     cite: {
       /**
-       * Set a cite mark
-       */
-      setCite: () => ReturnType,
-      /**
        * Toggle a cite mark
        */
       toggleCite: () => ReturnType,
@@ -25,6 +24,10 @@ declare module '@tiptap/core' {
        * Unset a cite mark
        */
       unsetCite: () => ReturnType,
+      /**
+       * Fix all the Cite attributes in a Node.
+       */
+      fixCites: (pos?: number) => ReturnType,
     }
   }
 }
@@ -46,7 +49,7 @@ export const Cite = Mark.create<CiteOptions>({
   addAttributes() {
     return {
       citations: {
-        default: [] as Citation[],
+        default: [] as PundokCitation[],
         parseHTML(element) {
           return JSON.parse(element.getAttribute('data-citations') || '[]');
         },
@@ -71,21 +74,62 @@ export const Cite = Mark.create<CiteOptions>({
 
   addCommands() {
     return {
-      setCite: () => ({ commands }) => {
-        return commands.setMark(this.name);
-      },
-      toggleCite: () => ({ commands, dispatch, state, tr }) => {
-        const { doc, selection } = state
-        const { from, to, empty } = selection
-        if (empty) return false
-        if (dispatch) {
-          const text = doc.textBetween(from, to)
-          textToCitations(text)
+      toggleCite: () => ({ dispatch, state, tr }) => {
+        const { schema, selection } = state
+        const citeMarkType = schema.marks[this.name]
+        if (!citeMarkType) return false
+        const { $from, $to, from, to, empty } = selection
+        const fromNode = $from.node()
+        if (empty || fromNode !== $to.node() || !fromNode.inlineContent) return false
+        let citePresent = false // check whether any selected node has a Cite Mark
+        let childStart = $from.start()
+        let childEnd
+        for (let i = 0; i < fromNode.childCount; i++) {
+          const child = fromNode.child(i)
+          childEnd = childStart + child.nodeSize
+          console.log(`child ${i} from ${childStart} to ${childEnd}`)
+          if (childEnd > from && childStart < to) {
+            if (child.type.name === Note.name)
+              return false
+            if (!citePresent && child.marks.find(m => m.type.name === this.name))
+              citePresent = true
+          }
+          childStart = childEnd
         }
-        return commands.toggleMark(this.name);
+        if (citePresent) {
+          if (dispatch) {
+            tr.removeMark(from, to, citeMarkType)
+            fixCites(state, tr, citeMarkType, dispatch)
+            dispatch(tr)
+          }
+        } else {
+          if (dispatch) {
+            const text = state.doc.textBetween(from, to)
+            const citations = textToCitations(text, state, from)
+            if (citations.length === 0)
+              return false
+            const cite = citeMarkType.create({ citations })
+            if (!cite)
+              return false
+            tr.addMark(from, to, cite)
+            fixCites(state, tr, citeMarkType, dispatch)
+            dispatch(tr)
+          }
+        }
+        return true
       },
       unsetCite: () => ({ commands }) => {
         return commands.unsetMark(this.name);
+      },
+      fixCites: (pos?: number) => ({ dispatch, state, tr }) => {
+        const citeMarkType = state.schema.marks[this.name]
+        if (!citeMarkType) return false
+        const ok = fixCites(state, tr, citeMarkType, dispatch, pos)
+        if (dispatch && ok) {
+          dispatch(tr)
+          return true
+        }
+        return ok
       },
     };
   },
@@ -114,3 +158,48 @@ export const Cite = Mark.create<CiteOptions>({
   //   ]
   // },
 });
+
+function fixCites(
+  state: EditorState,
+  tr: Transaction,
+  citeMarkType: MarkType,
+  dispatch?: Function,
+  pos?: number,
+): boolean {
+  let noteNum = 0
+  const doc = tr.doc
+  const node = pos ? doc.nodeAt(pos) : doc
+  if (!node) return false
+  if (!dispatch) return true
+  if (!tr) return false
+  node.descendants((desc, dpos) => {
+    if (desc.inlineContent) {
+      const ranges: number[][] = []
+      let start = pos ? pos + dpos + 1 : dpos + 1
+      for (let i = 0; i < desc.childCount; i++) {
+        const child = desc.child(i)
+        const cite = child.marks.find(m => m.type.name === Cite.name)
+        const stop = start + child.nodeSize
+        if (cite) {
+          const prevRange = ranges.length > 0 && ranges[ranges.length - 1]
+          if (prevRange && prevRange[1] === start) {
+            prevRange[1] = stop
+          } else {
+            ranges.push([start, stop])
+          }
+        }
+        start = stop
+      }
+      if (!citeMarkType) return false
+      ranges.forEach(([from, to]) => {
+        const text = node.textBetween(from, to)
+        const citations = textToCitations(text, state, from, ++noteNum)
+        const citeMark = citeMarkType.create({ citations })
+        if (citeMark)
+          tr.removeMark(from, to, citeMarkType).addMark(from, to, citeMark)
+      })
+    }
+    return true // descend into children
+  })
+  return tr.steps.length > 0
+}

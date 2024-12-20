@@ -77,6 +77,8 @@ const NODE_OR_MARK_ATTRIBUTES: Record<string, NodeOrMarkAttribute> = {
   colSpec: { editable: false, visible: true, order: 101 },
   /** used in notes */
   noteType: { editable: true, visible: true, order: 102 },
+  /** used in Cite */
+  citations: { editable: false, visible: true, order: 103 },
 };
 
 export const PANDOC_OUTPUT_FORMATS: string[][] = [
