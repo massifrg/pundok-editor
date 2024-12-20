@@ -130,7 +130,7 @@ These are some of the reasons you might find it useful:
 
   - `packages/common/src/config/`
 
-  - `staticResources/configs/
+  - `staticResources/configs/`
 
   - `schemas/`
 
@@ -220,7 +220,7 @@ the original goal of this project.
 
 The following are some of the tasks I plan to work on:
 
-- ~~support for citations, that is almost absent now;~~ (basic support since v. 0.11.9)
+- support for citations, ~~that is almost absent now;~~ (basic support since v. 0.11.9)
 
 - tools to edit and save configurations and project files;
 
