@@ -220,14 +220,13 @@ export function nodeToPandocFragment(
   return exporter.nodeToPandocFragment(node);
 }
 
-export function nodeToPandocInlines(
+export function nodeContentToPandocInlines(
   node: Node,
   options?: PandocJsonExporterOptions,
 ): Inline[] {
   const exporter = new PandocJsonExporter(schema, options);
-  const a = exporter.nodeToPandocFragment(node);
-  console.log(a)
-  return (a as Plain).content
+  const inlineContainer = exporter.nodeToPandocFragment(node) as InlineContainer
+  return inlineContainer.content || []
 }
 
 export class PandocJsonExporter {
@@ -757,13 +756,15 @@ export class PandocJsonExporter {
       newMark.pandoc = found.pandoc;
       if (found.type === Cite.name) {
         const pundokCitations: PundokCitation[] = newMark.attrs?.citations || [];
+        if (pundokCitations.length > 0)
+          this.citationCount++
         const citations: Citation[] = pundokCitations.map((c) => {
           return Citation.from({
             id: c.citationId,
             prefix: c.citationPrefix || [],
             suffix: c.citationSuffix || [],
             mode: c.citationMode as CitationMode,
-            noteNum: ++this.citationCount,
+            noteNum: this.citationCount,
             hash: this.citationHash(),
           });
         });

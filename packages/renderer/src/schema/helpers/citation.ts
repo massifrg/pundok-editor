@@ -1,7 +1,7 @@
-import { CitationMode, Inline } from '../../pandoc';
+import { CitationMode, Cite as PandocCite, Inline } from '../../pandoc';
 import { EditorState } from '@tiptap/pm/state';
 import { Plain } from '../nodes';
-import { nodeToPandocInlines } from './PandocJsonExporter';
+import { nodeContentToPandocInlines } from './PandocJsonExporter';
 
 // export interface PMCitation {
 //   citationId: string;
@@ -92,11 +92,13 @@ export function textToCitations(text: string, state: EditorState, pos: number, n
         while (text.charAt(offset) === ' ') offset++
       }
       if (author && citations.length === 1) {
-        citations[0].suffix = {
+        const suffix = {
           from: text.indexOf('[') + 1,
           to: text.length - 1,
           text: inbrackets
         }
+        citations[0].suffix = suffix
+        citations[0].citationSuffix = affixToInlines(state, pos, suffix)
       }
     }
   }
@@ -113,13 +115,13 @@ function affixToInlines(state: EditorState, pos: number, affix?: Affix): Inline[
     const plainType = state.schema.nodes[Plain.name]
     if (plainType) {
       const plain = plainType.create(null, state.doc.slice(from, to).content)
-      console.log(affix.text)
-      console.log(plain.textContent)
+      // console.log(affix.text)
+      // console.log(plain.textContent)
       if (plain) {
-        return []
-        return nodeToPandocInlines(plain, {
-
-        })
+        let inlines = nodeContentToPandocInlines(plain)
+        if (inlines.length === 1 && (inlines[0] as PandocCite).name === 'Cite')
+          inlines = (inlines[0] as PandocCite).content
+        return inlines
       }
     }
   }
