@@ -4,6 +4,10 @@
 
 - check for unsaved changes before quitting
 
+- encode different notes with a Span item around the Note;
+  that Span will have an attribute specifying the note's type;
+  currently they're encoded with a single Div as the Note content (with the Div carrying the note type information)
+
 - Image inclusion/linking
 
 - ~~reload current document with a different configuration~~

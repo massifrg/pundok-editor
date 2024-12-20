@@ -67,8 +67,6 @@ If you know how to compile packages for other systems, e.g. for Macs, you are we
 This software is still in an alpha stage of development,
 though you can do some real work with it.
 
-The support for some textual elements, e.g. citations, is very limited (for now).
-
 The editor reads and writes Pandoc's JSON format natively,
 but it can read and write any format supported by the version of Pandoc
 you installed in your system, since it calls `pandoc` to make format conversions.
@@ -88,7 +86,7 @@ These are some of the reasons you might find it useful:
 
 - tools to edit attributes of Blocks and Inlines, especially the `Attr` data structure;
 
-- support for more than one kind of notes;
+- support for more than one kind of notes (there's an ongoing change in the way they are encoded);
 
 - a GUI to search and replace text, and CSS-like selection of elements of the Pandoc AST;
 
@@ -119,10 +117,24 @@ These are some of the reasons you might find it useful:
   in your documents (e.g. I use the injection of raw elements to tune
   the typesetting with [ConTeXt](https://wiki.contextgarden.net));
 
+- the result of running an external Pandoc filter on the document can be prepended,
+  appended or overwritten to the document itself;
+
 - custom conversions, text styles, CSS files, search/replace operations, CSS-like
   selections, indexes, delimiters, raw elements can be saved in configurations
   or project files, so that you can reconfigure the editor with all the tools
   you need for a particular workflow or project.
+
+- while documentation, and a proper GUI to edit configurations files, are still lacking,
+  you can take a look under these directories:
+
+  - `packages/common/src/config/`
+
+  - `staticResources/configs/
+
+  - `schemas/`
+
+  to understand how configuration and project files are encoded.
 
 ### How it works
 
@@ -208,7 +220,7 @@ the original goal of this project.
 
 The following are some of the tasks I plan to work on:
 
-- support for citations, that is almost absent now;
+- ~~support for citations, that is almost absent now;~~ (basic support since v. 0.11.9)
 
 - tools to edit and save configurations and project files;
 
