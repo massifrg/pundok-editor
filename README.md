@@ -182,40 +182,6 @@ It also reflects my learning process of the softwares it relies on.
 
 Euphemistically, let's say there's a lot of room for improvement in the quality of the code.
 
-## The editor's name
-
-The original purpose of this project was a semantic editor that could manage
-different formats, adapting its GUI to each one as much as possible
-(so "multieditor" was its very first code name), with the extra of convertibility
-from and to many other formats; which drives you pretty soon to Pandoc.
-
-Eventually I decided to stick to the most universal and broadly used format,
-the one to which Pandoc (silently) converts every input format, before translating it
-back to one of the many output formats it supports.
-
-It's a sort of _least common multiple_, and it has two actual forms: `json` and `native`.
-They are equivalent in the information they carry, and that is the maximum
-of information you can have in a Pandoc document;
-as far as I know, every other format Pandoc knows is somehow lossy.
-
-Perhaps it was conceived just as a medium, a vehicle of information,
-but in this editor it becomes a first class citizen.
-
-Though I code-named this software "pandoc-editor" since that choice,
-I did not want to publish it with such a name, because someone could mistakenly
-take it as _the_ editor for Pandoc, or the official editor for its types.
-
-So I searched the Internet for a name that was not used;
-I ended up with "pundok", which is a wordplay, a "pun" of course,
-that can sound like "pandoc" (though I heard Pandoc's author,
-John MacFarlane, spell it more like "pen-doc").
-
-By the way, I discovered that "pundok" is a word in the Cebuano/Binisaya language,
-which is spoken in a part of the Philippines, and it means "group", but also
-"abstraction", "group of people", etc;
-it has this "multiplicity" and "sharing something common" etimology that matches
-the original goal of this project.
-
 ## Roadmap
 
 The following are some of the tasks I plan to work on:
