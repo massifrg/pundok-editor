@@ -86,7 +86,7 @@ These are some of the reasons you might find it useful:
 
 - tools to edit attributes of Blocks and Inlines, especially the `Attr` data structure;
 
-- support for more than one kind of notes (there's an ongoing change in the way they are encoded);
+- support for more than one kind of notes;
 
 - a GUI to search and replace text, and CSS-like selection of elements of the Pandoc AST;
 
