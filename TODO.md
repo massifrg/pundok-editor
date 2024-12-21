@@ -89,3 +89,5 @@
 - CTRL+F to open search dialog
 
 - default classes for Blocks like Headers, Figure, Div
+
+- remove circular references in the source code that make vite complain during build
