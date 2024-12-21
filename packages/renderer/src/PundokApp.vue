@@ -581,5 +581,10 @@ $color-fg-index: #dc7200;
   span.index-ref {
     border-bottom: 3px solid $color-fg-index;
   }
+
+  span.cite {
+    color: rgb(80, 10, 127);
+    background-color: rgb(229, 189, 255);
+  }
 }
 </style>

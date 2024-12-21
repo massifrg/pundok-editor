@@ -42,7 +42,9 @@ export const Cite = Mark.create<CiteOptions>({
 
   addOptions() {
     return {
-      HTMLAttributes: {},
+      HTMLAttributes: {
+        class: 'cite'
+      },
     };
   },
 
@@ -64,12 +66,12 @@ export const Cite = Mark.create<CiteOptions>({
 
   parseHTML() {
     return [
-      { tag: 'cite' },
+      { tag: 'span.cite' },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['cite', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
+    return ['span', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
   },
 
   addCommands() {
