@@ -66,6 +66,7 @@ import {
   INDEX_CLASS,
   INDEX_TERM_CLASS,
   Index,
+  NOTE_TYPE_ATTRIBUTE,
 } from '../../common';
 import {
   INDEX_RANGE_START,
@@ -505,26 +506,40 @@ export class PandocJsonExporter {
     return new Image(this.attrFrom(node), alt, target);
   }
 
-  private nodeToNote(node: PmJsonNode): Note {
+  private nodeToNote(node: PmJsonNode): Note | Span {
     const attrs = node.attrs || {};
     const noteType = attrs.noteType || DEFAULT_NOTE_TYPE;
     let noteContent: Block[] = (node.content || []).map(
       (b) => this.nodeToPandocItem(b) as Block,
     );
-    if (!isFootnoteWithoutAttr(node)) {
-      const { id, classes, kv } = attrs;
-      noteContent = [
-        new Div(
-          Attr.from({
-            id,
-            classes,
-            attributes: { ...kv, 'note-type': noteType },
-          }),
-          noteContent,
-        ),
-      ];
-    }
-    return new Note(noteContent);
+    if (isPlainFootnote(node))
+      return new Note(noteContent)
+    const { id, classes, kv } = attrs;
+    const noteSpan = new Span(
+      Attr.from({
+        id,
+        classes,
+        attributes: { ...kv, [NOTE_TYPE_ATTRIBUTE]: noteType },
+      }),
+      [new Note(noteContent)]
+    )
+    return noteSpan
+
+    // OLD WAY
+    // if (!isFootnoteWithoutAttr(node)) {
+    //   const { id, classes, kv } = attrs;
+    //   noteContent = [
+    //     new Div(
+    //       Attr.from({
+    //         id,
+    //         classes,
+    //         attributes: { ...kv, 'note-type': noteType },
+    //       }),
+    //       noteContent,
+    //     ),
+    //   ];
+    // }
+    // return new Note(noteContent);
   }
 
   private nodeToFigure(node: PmJsonNode): Figure {
@@ -1032,14 +1047,19 @@ export class PandocJsonExporter {
 //   return 'Inline?'
 // }
 
-export function isFootnoteWithoutAttr(note: PmJsonNode): boolean {
+/**
+ * Check whether a note is a plain footnote without any extra information.
+ * @param note
+ * @returns 
+ */
+export function isPlainFootnote(note: PmJsonNode): boolean {
   const attrs = note.attrs;
   if (!attrs) return true;
   const { noteType, id, classes, kv } = attrs;
   if (noteType && noteType !== DEFAULT_NOTE_TYPE) return false;
-  return (
-    !id &&
-    (!classes || classes.length === 0) &&
-    (!kv || Object.keys(kv).length === 0)
-  );
+  const keys = Object.keys(kv || {})
+  console.log(`id=${JSON.stringify(id)}, classes=${JSON.stringify(classes)}, keys=${JSON.stringify(keys)}`)
+  return (!id || id === '')
+    && (!classes || classes.length === 0)
+    && (keys.length === 0 || (keys.length === 1 && keys[0] === NOTE_TYPE_ATTRIBUTE))
 }

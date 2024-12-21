@@ -24,6 +24,7 @@ import {
   INDEX_CLASS,
   INDEX_TERM_CLASS,
   Index,
+  NOTE_TYPE_ATTRIBUTE,
   NoteStyle,
 } from '../../common';
 
@@ -40,10 +41,11 @@ class PandocJsonParseState {
     content: Node[];
     marks: readonly Mark[];
   }[];
-  currentParaCustomStyle: string | undefined = undefined;
-  currentNoteType: string | undefined = undefined;
   indexRefClasses: Record<string, Index> = {};
+  currentParaCustomStyle?: string;
   defaultNoteType: string = DEFAULT_NOTE_TYPE;
+  currentNoteType?: string;
+  currentNoteAttrs?: Record<string, any>;
 
   constructor(
     readonly schema: Schema,
@@ -489,7 +491,7 @@ export const getPandocAttrs = ([id, classes, attributes]: [
   return { id, classes, kv } as PandocAttr;
 };
 
-export function getNoteAttrs(
+export function getNoteAttrsOld(
   noteJson: PandocJson,
   defaultNoteType?: string,
 ): PandocAttr {
@@ -503,8 +505,8 @@ export function getNoteAttrs(
     classes: [],
     kv: {},
   };
-  attrs.kv['note-type'] =
-    attrs.kv['note-type'] || defaultNoteType || DEFAULT_NOTE_TYPE;
+  attrs.kv[NOTE_TYPE_ATTRIBUTE] =
+    attrs.kv[NOTE_TYPE_ATTRIBUTE] || defaultNoteType || DEFAULT_NOTE_TYPE;
   return attrs;
 }
 
@@ -728,7 +730,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
       const noteWrapper = !!(
         state.currentNoteType &&
         attrs &&
-        attrs.kv['note-type']
+        attrs.kv[NOTE_TYPE_ATTRIBUTE]
       );
       const isIndex = attrs.classes.includes(INDEX_CLASS);
       const isIndexTerm = attrs.classes.includes(INDEX_TERM_CLASS);
@@ -855,25 +857,38 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
   Note: {
     // block: 'note',
     handler: (spec, schema) => (state, pandocItem) => {
-      const attrs: Record<string, any> = getNoteAttrs(
-        pandocItem,
-        state.defaultNoteType,
-      );
-      attrs.noteType = attrs.kv['note-type'];
-      state.currentNoteType = attrs.noteType;
-      state.openNode(schema.nodes.note, attrs);
-      parseChildren(state, spec, pandocItem);
-      state.closeNode();
+      // note type set by a surronding Span
+      if (state.currentNoteType) {
+        state.openNode(schema.nodes.note, state.currentNoteAttrs!);
+        parseChildren(state, spec, pandocItem);
+        state.closeNode();
+      } else {
+        // OLD WAY (left here for compatibility):
+        // Note contents embedded in a single Div with the note-type attribute
+        const attrs: Record<string, any> = getNoteAttrsOld(
+          pandocItem,
+          state.defaultNoteType,
+        );
+        attrs.noteType = attrs.kv[NOTE_TYPE_ATTRIBUTE];
+        state.currentNoteType = attrs.noteType;
+        state.openNode(schema.nodes.note, attrs);
+        parseChildren(state, spec, pandocItem);
+        state.closeNode();
+      }
       state.currentNoteType = undefined;
+      state.currentNoteAttrs = undefined;
     },
-    getAttrs: (json, state) => {
-      const attrs: Record<string, any> = getNoteAttrs(
-        json,
-        state.defaultNoteType,
-      );
-      attrs.noteType = attrs.kv['note-type'];
-      return attrs;
-    },
+    // getAttrs: (json, state) => {
+    //   let attrs: Record<string, any>
+    //   const noteType = state.currentNoteType
+    //   if (noteType) {
+    //     attrs = state.currentNoteAttrs!
+    //   } else {
+    //     attrs = getNoteAttrsOld(json, state.defaultNoteType);
+    //     attrs.noteType = attrs.kv[NOTE_TYPE_ATTRIBUTE];
+    //   }
+    //   return attrs;
+    // },
   },
   Span: {
     // mark: 'span',
@@ -892,6 +907,13 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
           state.openNode(schema.nodes.emptySpan, attrs);
         }
         state.closeNode();
+        return
+      }
+      let noteType = attrs.kv[NOTE_TYPE_ATTRIBUTE]
+      if (noteType) {
+        state.currentNoteType = noteType
+        state.currentNoteAttrs = { ...attrs, noteType }
+        parseChildren(state, spec, pandocItem);
       } else {
         const spanMarkType = schema.marks.span;
         const mark = spanMarkType.create(attrs);
