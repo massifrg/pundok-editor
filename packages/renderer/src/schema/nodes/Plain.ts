@@ -1,7 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core';
-import { isCellSelection } from '../helpers';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
 import { SK_BREAK_PLAIN, SK_TOGGLE_PLAIN } from '../../common';
+import { isCellSelection } from '../helpers/pandocTable';
 
 export interface PlainOptions {
   HTMLAttributes: Record<string, any>;
@@ -74,47 +74,47 @@ export const Plain = Node.create<PlainOptions>({
     return {
       setPlain:
         () =>
-        ({ commands }) =>
-          commands.setNode(this.name),
+          ({ commands }) =>
+            commands.setNode(this.name),
       setBreakInPlain:
         () =>
-        ({ commands, state }) => {
-          const { doc, selection } = state;
-          const { empty, from } = selection;
-          if (empty) {
-            let inPlain = false;
-            doc.nodesBetween(from, from, (node) => {
-              if (node.type.name === this.name) {
-                inPlain = true;
-                return false;
-              }
-              return true;
-            });
-            if (inPlain) return commands.setBreak();
-          }
-          return false;
-        },
+          ({ commands, state }) => {
+            const { doc, selection } = state;
+            const { empty, from } = selection;
+            if (empty) {
+              let inPlain = false;
+              doc.nodesBetween(from, from, (node) => {
+                if (node.type.name === this.name) {
+                  inPlain = true;
+                  return false;
+                }
+                return true;
+              });
+              if (inPlain) return commands.setBreak();
+            }
+            return false;
+          },
       togglePlain:
         () =>
-        ({ commands, state }) => {
-          const sel = state.selection;
-          if (isCellSelection(sel)) {
-            let plains = 0,
-              paras = 0;
-            (sel as CellSelection).forEachCell((cell) => {
-              if (cell.firstChild) {
-                const firstTypeName = cell.firstChild.type.name;
-                if (firstTypeName == 'paragraph') paras++;
-                else if (firstTypeName == 'plain') plains++;
-              }
-            });
-            return commands.setCellContentType(
-              paras > plains ? 'plain' : 'paragraph',
-            );
-          } else {
-            return commands.toggleNode(this.name, 'paragraph');
-          }
-        },
+          ({ commands, state }) => {
+            const sel = state.selection;
+            if (isCellSelection(sel)) {
+              let plains = 0,
+                paras = 0;
+              (sel as CellSelection).forEachCell((cell) => {
+                if (cell.firstChild) {
+                  const firstTypeName = cell.firstChild.type.name;
+                  if (firstTypeName == 'paragraph') paras++;
+                  else if (firstTypeName == 'plain') plains++;
+                }
+              });
+              return commands.setCellContentType(
+                paras > plains ? 'plain' : 'paragraph',
+              );
+            } else {
+              return commands.toggleNode(this.name, 'paragraph');
+            }
+          },
     };
   },
 
