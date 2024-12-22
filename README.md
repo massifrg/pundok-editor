@@ -198,3 +198,24 @@ The following are some of the tasks I plan to work on:
   to be imported by the main, renderer and server packages;
 
 - a PDF preview.
+
+## Related projects
+
+These are other projects of mine that have been started to provide some features
+to the editor:
+
+- [pandoc-include-doc](https://github.com/massifrg/pandoc-include-doc) is a filter
+  to include sub-documents with `Div.include-doc` elements, whose contents are replaced
+  by the sub-document specified through attributes in the same `Div`;
+  since the editor lives in a web page, it can't handle documents that are too long,
+  so a tool to assemble smaller files was needed;
+
+- [pandoc-export-index](https://github.com/massifrg/pandoc-export-index) is a collection
+  of filters and custom writers to define and export indices to formats like ICML,
+  docx and odt;
+
+- [prosemirror-tables-sections](https://github.com/massifrg/prosemirror-tables-sections)
+  is a fork of [prosemirror-tables](https://github.com/ProseMirror/prosemirror-tables)
+  to make it usable for tables in Pandoc, which have sections (head, bodies and foot)
+  and an optional caption; since the editor is based on [Prosemirror](https://prosemirror.net),
+  I needed a component to edit Pandoc tables.
