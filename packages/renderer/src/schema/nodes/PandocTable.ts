@@ -23,6 +23,7 @@ import {
 import {
   createPandocTable,
   isCellSelection,
+  isTable,
   isTableSection,
 } from '../helpers/pandocTable';
 import {
@@ -60,17 +61,20 @@ import {
   toggleHeaderCell,
   setComputedStyleColumnWidths,
 } from '@massifrg/prosemirror-tables-sections';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
 import {
   COLSPEC_ALIGNMENT_FREQ_THRESHOLD,
   PmColSpec,
   pmColSpecsToString,
 } from '../helpers/colSpec';
 import { EditorView } from '@tiptap/pm/view';
-import { TABLE_CELL_ALIGNMENTS, textAlignToPandocAlignment } from '../helpers';
+import { innerNodeDepth, pandocAlignmentToTextAlign, TABLE_CELL_ALIGNMENTS, TableColumnAlignment, textAlignToPandocAlignment } from '../helpers';
 import { Alignment } from '../../pandoc';
-import TableRow from '@tiptap/extension-table-row';
 import { fill, isEqual } from 'lodash';
 import { updateTableAttrsPlugin } from '../helpers/updateTableAttrsPlugin';
+import { Pandoc } from './Pandoc';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -131,7 +135,8 @@ declare module '@tiptap/core' {
       updateColSpecs: () => ReturnType;
       tableToFullWidth: () => ReturnType;
       equalizeColumnWidths: () => ReturnType;
-      secureColumnWidths: () => ReturnType;
+      // secureColumnWidths: () => ReturnType;
+      setColumnAlignment: (alignment: TableColumnAlignment, column?: number) => ReturnType
     };
   }
 
@@ -140,13 +145,13 @@ declare module '@tiptap/core' {
      * Table Role
      */
     tableRole?:
-      | string
-      | ((this: {
-          name: string;
-          options: Options;
-          storage: Storage;
-          parent: ParentConfig<NodeConfig<Options>>['tableRole'];
-        }) => string);
+    | string
+    | ((this: {
+      name: string;
+      options: Options;
+      storage: Storage;
+      parent: ParentConfig<NodeConfig<Options>>['tableRole'];
+    }) => string);
   }
 }
 
@@ -240,137 +245,182 @@ export const PandocTable = Node.create<PandocTableOptions>({
           rowHeadColumns = options.defaultBodyHeadRowColumnsCount,
           cellContainer = options.defaultCellContainer,
         } = {}) =>
-        ({ dispatch, editor, tr, view }) => {
-          if (dispatch) {
-            const node = createPandocTable(editor.schema, rows, cols, {
-              caption,
-              headRowsCount,
-              footRowsCount,
-              rowHeadColumns,
-              enumerateCells: true,
-              cellContainer,
-            });
-            if (!node) return false;
-            tr.replaceSelectionWith(node).scrollIntoView();
-          }
-          return true;
-        },
+          ({ dispatch, editor, tr, view }) => {
+            if (dispatch) {
+              const node = createPandocTable(editor.schema, rows, cols, {
+                caption,
+                headRowsCount,
+                footRowsCount,
+                rowHeadColumns,
+                enumerateCells: true,
+                cellContainer,
+              });
+              if (!node) return false;
+              tr.replaceSelectionWith(node).scrollIntoView();
+            }
+            return true;
+          },
       deletePandocTable:
         () =>
-        ({ dispatch, state, tr }) => {
-          const { from, to } = state.selection;
-          let innerTablePos: number = -1;
-          tr.doc.nodesBetween(from, to, (node, pos) => {
-            if (node.type.name === PandocTable.name) innerTablePos = pos;
+          ({ dispatch, state, tr }) => {
+            const { from, to } = state.selection;
+            let innerTablePos: number = -1;
+            tr.doc.nodesBetween(from, to, (node, pos) => {
+              if (node.type.name === PandocTable.name) innerTablePos = pos;
+              return true;
+            });
+            if (innerTablePos < 0) return false;
+            const tableSelection = NodeSelection.create(tr.doc, innerTablePos);
+            if (!tableSelection) return false;
+            if (dispatch)
+              dispatch(tr.setSelection(tableSelection).deleteSelection());
             return true;
-          });
-          if (innerTablePos < 0) return false;
-          const tableSelection = NodeSelection.create(tr.doc, innerTablePos);
-          if (!tableSelection) return false;
-          if (dispatch)
-            dispatch(tr.setSelection(tableSelection).deleteSelection());
-          return true;
-        },
+          },
       addTableCaption:
         () =>
-        ({ state, dispatch }) => {
-          return addCaption(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addCaption(state, dispatch);
+          },
       deleteTableCaption:
         () =>
-        ({ state, dispatch }) => {
-          return deleteCaption(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return deleteCaption(state, dispatch);
+          },
       addTableHead:
         () =>
-        ({ state, dispatch }) => {
-          return addTableHead(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addTableHead(state, dispatch);
+          },
       addTableFoot:
         () =>
-        ({ state, dispatch }) => {
-          return addTableFoot(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addTableFoot(state, dispatch);
+          },
       addTableBodyBefore:
         () =>
-        ({ state, dispatch }) => {
-          return addBodyBefore(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addBodyBefore(state, dispatch);
+          },
       addTableBodyAfter:
         () =>
-        ({ state, dispatch }) => {
-          return addBodyAfter(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addBodyAfter(state, dispatch);
+          },
       makeTableHead:
         () =>
-        ({ state, dispatch }) => {
-          return makeHead(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return makeHead(state, dispatch);
+          },
       makeTableBody:
         () =>
-        ({ state, dispatch }) => {
-          return chainCommands(makeBody, fixPandocTablesCommand)(
-            state,
-            dispatch,
-          );
-        },
+          ({ state, dispatch }) => {
+            return chainCommands(makeBody, fixPandocTablesCommand)(
+              state,
+              dispatch,
+            );
+          },
       makeTableFoot:
         () =>
-        ({ state, dispatch }) => {
-          return makeFoot(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return makeFoot(state, dispatch);
+          },
       addColumnBefore:
         () =>
-        ({ state, dispatch }) => {
-          return addColumnBefore(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addColumnBefore(state, dispatch);
+          },
       addColumnAfter:
         () =>
-        ({ state, dispatch }) => {
-          return addColumnAfter(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addColumnAfter(state, dispatch);
+          },
       deleteColumn:
         () =>
-        ({ state, dispatch }) => {
-          return deleteColumn(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return deleteColumn(state, dispatch);
+          },
       addRowBefore:
         () =>
-        ({ state, dispatch }) => {
-          return addRowBefore(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addRowBefore(state, dispatch);
+          },
       addRowAfter:
         () =>
-        ({ state, dispatch }) => {
-          return addRowAfter(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return addRowAfter(state, dispatch);
+          },
       deleteRow:
         () =>
-        ({ state, dispatch }) => {
-          return deleteRow(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return deleteRow(state, dispatch);
+          },
       deleteSection:
         () =>
-        ({ state, dispatch }) => {
-          return deleteSection(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return deleteSection(state, dispatch);
+          },
       deleteTable:
         () =>
-        ({ state, dispatch }) => {
-          return deleteTable(state, dispatch);
-        },
+          ({ state, dispatch }) => {
+            return deleteTable(state, dispatch);
+          },
       decreaseColspan:
         () =>
-        ({ state, dispatch, tr }) => {
-          const selection = state.selection;
-          // case cell selection
-          if (selection instanceof CellSelection) {
-            if (dispatch) {
-              let modified = false;
-              selection.forEachCell((node, pos) => {
-                const attrs = node.attrs;
-                if (attrs.colspan > 1) {
-                  modified = true;
+          ({ state, dispatch, tr }) => {
+            const selection = state.selection;
+            // case cell selection
+            if (selection instanceof CellSelection) {
+              if (dispatch) {
+                let modified = false;
+                selection.forEachCell((node, pos) => {
+                  const attrs = node.attrs;
+                  if (attrs.colspan > 1) {
+                    modified = true;
+                    const cellAttrs = {
+                      colspan: attrs.colspan,
+                      rowspan: attrs.rowspan,
+                      colwidth: attrs.colwidth,
+                    };
+                    tr.setNodeMarkup(pos, null, {
+                      ...attrs,
+                      ...removeColSpan(cellAttrs, pos),
+                    });
+                  }
+                });
+                if (modified) dispatch(tr);
+              }
+            } else {
+              // no cell selection
+              const cell = getInnerCell(state);
+              if (!cell) return false;
+              const { node, pos } = cell;
+              const attrs = node.attrs;
+              if (attrs.colspan <= 1) return false;
+              if (dispatch) {
+                const cellAttrs = {
+                  colspan: attrs.colspan,
+                  rowspan: attrs.rowspan,
+                  colwidth: attrs.colwidth,
+                };
+                dispatch(
+                  tr.setNodeMarkup(pos, null, {
+                    ...attrs,
+                    ...removeColSpan(cellAttrs, pos),
+                  }),
+                );
+              }
+            }
+            return true;
+          },
+      increaseColspan:
+        () =>
+          ({ state, dispatch, tr }) => {
+            const selection = state.selection;
+            // case cell selection
+            if (selection instanceof CellSelection) {
+              if (dispatch) {
+                selection.forEachCell((node, pos) => {
+                  const attrs = node.attrs;
                   const cellAttrs = {
                     colspan: attrs.colspan,
                     rowspan: attrs.rowspan,
@@ -378,428 +428,383 @@ export const PandocTable = Node.create<PandocTableOptions>({
                   };
                   tr.setNodeMarkup(pos, null, {
                     ...attrs,
-                    ...removeColSpan(cellAttrs, pos),
+                    ...addColSpan(cellAttrs, pos),
                   });
-                }
-              });
-              if (modified) dispatch(tr);
-            }
-          } else {
-            // no cell selection
-            const cell = getInnerCell(state);
-            if (!cell) return false;
-            const { node, pos } = cell;
-            const attrs = node.attrs;
-            if (attrs.colspan <= 1) return false;
-            if (dispatch) {
-              const cellAttrs = {
-                colspan: attrs.colspan,
-                rowspan: attrs.rowspan,
-                colwidth: attrs.colwidth,
-              };
-              dispatch(
-                tr.setNodeMarkup(pos, null, {
-                  ...attrs,
-                  ...removeColSpan(cellAttrs, pos),
-                }),
-              );
-            }
-          }
-          return true;
-        },
-      increaseColspan:
-        () =>
-        ({ state, dispatch, tr }) => {
-          const selection = state.selection;
-          // case cell selection
-          if (selection instanceof CellSelection) {
-            if (dispatch) {
-              selection.forEachCell((node, pos) => {
+                });
+                dispatch(tr);
+              }
+            } else {
+              // no cell selection
+              const cell = getInnerCell(state);
+              if (!cell) return false;
+              const { node, pos } = cell;
+              if (dispatch) {
                 const attrs = node.attrs;
                 const cellAttrs = {
                   colspan: attrs.colspan,
                   rowspan: attrs.rowspan,
                   colwidth: attrs.colwidth,
                 };
-                tr.setNodeMarkup(pos, null, {
-                  ...attrs,
-                  ...addColSpan(cellAttrs, pos),
-                });
-              });
-              dispatch(tr);
+                dispatch(
+                  tr.setNodeMarkup(pos, null, {
+                    ...attrs,
+                    ...addColSpan(cellAttrs, pos),
+                  }),
+                );
+              }
             }
-          } else {
-            // no cell selection
-            const cell = getInnerCell(state);
-            if (!cell) return false;
-            const { node, pos } = cell;
-            if (dispatch) {
-              const attrs = node.attrs;
-              const cellAttrs = {
-                colspan: attrs.colspan,
-                rowspan: attrs.rowspan,
-                colwidth: attrs.colwidth,
-              };
-              dispatch(
-                tr.setNodeMarkup(pos, null, {
-                  ...attrs,
-                  ...addColSpan(cellAttrs, pos),
-                }),
-              );
-            }
-          }
-          return true;
-        },
+            return true;
+          },
       decreaseRowspan:
         () =>
-        ({ state, dispatch, tr }) => {
-          const selection = state.selection;
-          // case cell selection
-          if (selection instanceof CellSelection) {
-            if (dispatch) {
-              let modified = false;
-              selection.forEachCell((node, pos) => {
-                const attrs = node.attrs;
-                if (attrs.rowspan > 1) {
-                  modified = true;
+          ({ state, dispatch, tr }) => {
+            const selection = state.selection;
+            // case cell selection
+            if (selection instanceof CellSelection) {
+              if (dispatch) {
+                let modified = false;
+                selection.forEachCell((node, pos) => {
+                  const attrs = node.attrs;
+                  if (attrs.rowspan > 1) {
+                    modified = true;
+                    tr.setNodeMarkup(pos, null, {
+                      ...attrs,
+                      rowspan: attrs.rowspan - 1,
+                    });
+                  }
+                });
+                if (modified) dispatch(tr);
+              }
+              return true;
+            } else {
+              // no cell selection
+              const cell = getInnerCell(state);
+              if (!cell) return false;
+              const { node, pos } = cell;
+              const attrs = node.attrs;
+              if (attrs.rowspan <= 1) return false;
+              if (dispatch) {
+                dispatch(
                   tr.setNodeMarkup(pos, null, {
                     ...attrs,
                     rowspan: attrs.rowspan - 1,
-                  });
-                }
-              });
-              if (modified) dispatch(tr);
+                  }),
+                );
+              }
+              return true;
             }
-            return true;
-          } else {
-            // no cell selection
-            const cell = getInnerCell(state);
-            if (!cell) return false;
-            const { node, pos } = cell;
-            const attrs = node.attrs;
-            if (attrs.rowspan <= 1) return false;
-            if (dispatch) {
-              dispatch(
-                tr.setNodeMarkup(pos, null, {
-                  ...attrs,
-                  rowspan: attrs.rowspan - 1,
-                }),
-              );
-            }
-            return true;
-          }
-        },
+          },
       increaseRowspan:
         () =>
-        ({ state, dispatch, tr }) => {
-          const selection = state.selection;
-          // case cell selection
-          if (selection instanceof CellSelection) {
-            if (dispatch) {
-              selection.forEachCell((node, pos) => {
-                const attrs = node.attrs;
-                tr.setNodeMarkup(pos, null, {
-                  ...attrs,
-                  rowspan: attrs.rowspan + 1,
+          ({ state, dispatch, tr }) => {
+            const selection = state.selection;
+            // case cell selection
+            if (selection instanceof CellSelection) {
+              if (dispatch) {
+                selection.forEachCell((node, pos) => {
+                  const attrs = node.attrs;
+                  tr.setNodeMarkup(pos, null, {
+                    ...attrs,
+                    rowspan: attrs.rowspan + 1,
+                  });
                 });
+                dispatch(tr);
+              }
+            } else {
+              // no cell selection
+              const cell = getInnerCell(state);
+              if (!cell) return false;
+              const { node, pos } = cell;
+              if (dispatch) {
+                const attrs = node.attrs;
+                dispatch(
+                  tr.setNodeMarkup(pos, null, {
+                    ...attrs,
+                    rowspan: attrs.rowspan + 1,
+                  }),
+                );
+              }
+            }
+            return true;
+          },
+      mergeCells:
+        () =>
+          ({ state, dispatch }) => {
+            return mergeCells(state, dispatch);
+          },
+      splitCell:
+        () =>
+          ({ state, dispatch }) => {
+            return splitCell(state, dispatch);
+          },
+      toggleHeaderColumn:
+        () =>
+          ({ state, dispatch }) => {
+            return toggleHeader('column')(state, dispatch);
+          },
+      toggleHeaderRow:
+        () =>
+          ({ state, dispatch }) => {
+            return toggleHeader('row')(state, dispatch);
+          },
+      toggleHeaderCell:
+        () =>
+          ({ state, dispatch }) => {
+            return toggleHeaderCell(state, dispatch);
+          },
+      mergeOrSplit:
+        () =>
+          ({ state, dispatch }) => {
+            if (mergeCells(state, dispatch)) {
+              return true;
+            }
+
+            return splitCell(state, dispatch);
+          },
+      setCellAttribute:
+        (name, value) =>
+          ({ state, dispatch }) => {
+            return setCellAttr(name, value)(state, dispatch);
+          },
+      goToNextCell:
+        () =>
+          ({ state, dispatch }) => {
+            return goToNextCell(1)(state, dispatch);
+          },
+      goToPreviousCell:
+        () =>
+          ({ state, dispatch }) => {
+            return goToNextCell(-1)(state, dispatch);
+          },
+      setCellContentType:
+        (type: 'plain' | 'paragraph') =>
+          ({ state, dispatch }) => {
+            const blocktype = state.schema.nodes[type];
+            if (!blocktype) return false;
+            const sel = state.selection;
+            if (isCellSelection(sel)) {
+              if (dispatch) {
+                const tr = state.tr;
+                let count = 0;
+                (sel as CellSelection).forEachCell((cell, pos) => {
+                  // console.log(
+                  //   `replace from ${pos + 1} to ${pos + 1 + cell.content.size}`
+                  // );
+                  if (
+                    cell.childCount == 1 &&
+                    blocktype !== cell.firstChild!.type
+                  ) {
+                    count++;
+                    tr.replaceRangeWith(
+                      pos + 1,
+                      pos + 1 + cell.content.size,
+                      blocktype.create(null, cell.firstChild!.content),
+                    );
+                  }
+                });
+                return count > 0 ? dispatch(tr) : false;
+              }
+              return true;
+            }
+            return false;
+          },
+      setCellSelection:
+        (position) =>
+          ({ tr, dispatch }) => {
+            if (dispatch) {
+              const selection = CellSelection.create(
+                tr.doc,
+                position.anchorCell,
+                position.headCell,
+              );
+
+              // @ts-ignore
+              tr.setSelection(selection);
+            }
+
+            return true;
+          },
+      fixPandocTables:
+        (all_tables?: boolean) =>
+          ({ dispatch, state, view }) =>
+            fixPandocTablesCommand(state, dispatch, view, all_tables),
+      fixPandocTable:
+        () =>
+          ({ dispatch, state, tr }) => {
+            const table = singleTableNodeAtSelection(state.selection, 'table');
+            if (!table) return false;
+            const { node, pos } = table;
+            if (dispatch) {
+              node.descendants((n, p) => {
+                fixTableSection(state, tr, n, pos + p + 1);
+                return false;
               });
               dispatch(tr);
             }
-          } else {
-            // no cell selection
-            const cell = getInnerCell(state);
-            if (!cell) return false;
-            const { node, pos } = cell;
-            if (dispatch) {
-              const attrs = node.attrs;
-              dispatch(
-                tr.setNodeMarkup(pos, null, {
-                  ...attrs,
-                  rowspan: attrs.rowspan + 1,
-                }),
-              );
-            }
-          }
-          return true;
-        },
-      mergeCells:
-        () =>
-        ({ state, dispatch }) => {
-          return mergeCells(state, dispatch);
-        },
-      splitCell:
-        () =>
-        ({ state, dispatch }) => {
-          return splitCell(state, dispatch);
-        },
-      toggleHeaderColumn:
-        () =>
-        ({ state, dispatch }) => {
-          return toggleHeader('column')(state, dispatch);
-        },
-      toggleHeaderRow:
-        () =>
-        ({ state, dispatch }) => {
-          return toggleHeader('row')(state, dispatch);
-        },
-      toggleHeaderCell:
-        () =>
-        ({ state, dispatch }) => {
-          return toggleHeaderCell(state, dispatch);
-        },
-      mergeOrSplit:
-        () =>
-        ({ state, dispatch }) => {
-          if (mergeCells(state, dispatch)) {
             return true;
-          }
-
-          return splitCell(state, dispatch);
-        },
-      setCellAttribute:
-        (name, value) =>
-        ({ state, dispatch }) => {
-          return setCellAttr(name, value)(state, dispatch);
-        },
-      goToNextCell:
-        () =>
-        ({ state, dispatch }) => {
-          return goToNextCell(1)(state, dispatch);
-        },
-      goToPreviousCell:
-        () =>
-        ({ state, dispatch }) => {
-          return goToNextCell(-1)(state, dispatch);
-        },
-      setCellContentType:
-        (type: 'plain' | 'paragraph') =>
-        ({ state, dispatch }) => {
-          const blocktype = state.schema.nodes[type];
-          if (!blocktype) return false;
-          const sel = state.selection;
-          if (isCellSelection(sel)) {
-            if (dispatch) {
-              const tr = state.tr;
-              let count = 0;
-              (sel as CellSelection).forEachCell((cell, pos) => {
-                // console.log(
-                //   `replace from ${pos + 1} to ${pos + 1 + cell.content.size}`
-                // );
-                if (
-                  cell.childCount == 1 &&
-                  blocktype !== cell.firstChild!.type
-                ) {
-                  count++;
-                  tr.replaceRangeWith(
-                    pos + 1,
-                    pos + 1 + cell.content.size,
-                    blocktype.create(null, cell.firstChild!.content),
-                  );
-                }
-              });
-              return count > 0 ? dispatch(tr) : false;
-            }
-            return true;
-          }
-          return false;
-        },
-      setCellSelection:
-        (position) =>
-        ({ tr, dispatch }) => {
-          if (dispatch) {
-            const selection = CellSelection.create(
-              tr.doc,
-              position.anchorCell,
-              position.headCell,
-            );
-
-            // @ts-ignore
-            tr.setSelection(selection);
-          }
-
-          return true;
-        },
-      fixPandocTables:
-        (all_tables?: boolean) =>
-        ({ dispatch, state, view }) =>
-          fixPandocTablesCommand(state, dispatch, view, all_tables),
-      fixPandocTable:
-        () =>
-        ({ dispatch, state, tr }) => {
-          const table = singleTableNodeAtSelection(state.selection, 'table');
-          if (!table) return false;
-          const { node, pos } = table;
-          if (dispatch) {
-            node.descendants((n, p) => {
-              fixTableSection(state, tr, n, pos + p + 1);
-              return false;
-            });
-            dispatch(tr);
-          }
-          return true;
-        },
+          },
       setComputedStyleColumnWidths:
         () =>
-        ({ state, dispatch, view }) => {
-          return setComputedStyleColumnWidths(state, dispatch, view);
-        },
+          ({ state, dispatch, view }) => {
+            return setComputedStyleColumnWidths(state, dispatch, view);
+          },
       increaseTableBodyHeaderRows:
         () =>
-        ({ dispatch, state, tr }) => {
-          const body = singleTableNodeAtSelection(state.selection, 'body');
-          if (!body) return false;
-          const { node, pos } = body;
-          const attrs = node.attrs;
-          let { headRows, rowHeadColumns } = attrs;
-          const maxRows = node.childCount;
-          if (headRows >= maxRows) return false;
-          if (dispatch) {
-            headRows++;
-            tr.setNodeMarkup(pos, null, { ...attrs, headRows });
-            // const { cell, header_cell } = tableNodeTypes(state.schema);
-            fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
-            dispatch(tr);
-          }
-          return true;
-        },
+          ({ dispatch, state, tr }) => {
+            const body = singleTableNodeAtSelection(state.selection, 'body');
+            if (!body) return false;
+            const { node, pos } = body;
+            const attrs = node.attrs;
+            let { headRows, rowHeadColumns } = attrs;
+            const maxRows = node.childCount;
+            if (headRows >= maxRows) return false;
+            if (dispatch) {
+              headRows++;
+              tr.setNodeMarkup(pos, null, { ...attrs, headRows });
+              // const { cell, header_cell } = tableNodeTypes(state.schema);
+              fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
+              dispatch(tr);
+            }
+            return true;
+          },
       decreaseTableBodyHeaderRows:
         () =>
-        ({ dispatch, state, tr }) => {
-          const body = singleTableNodeAtSelection(state.selection, 'body');
-          if (!body) return false;
-          const { node, pos } = body;
-          const attrs = node.attrs;
-          let { headRows, rowHeadColumns } = attrs;
-          if (headRows <= 0) return false;
-          if (dispatch) {
-            headRows--;
-            tr.setNodeMarkup(pos, null, { ...attrs, headRows });
-            fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
-            dispatch(tr);
-          }
-          return true;
-        },
+          ({ dispatch, state, tr }) => {
+            const body = singleTableNodeAtSelection(state.selection, 'body');
+            if (!body) return false;
+            const { node, pos } = body;
+            const attrs = node.attrs;
+            let { headRows, rowHeadColumns } = attrs;
+            if (headRows <= 0) return false;
+            if (dispatch) {
+              headRows--;
+              tr.setNodeMarkup(pos, null, { ...attrs, headRows });
+              fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
+              dispatch(tr);
+            }
+            return true;
+          },
       increaseTableBodyHeaderColumns:
         () =>
-        ({ dispatch, state, tr }) => {
-          const body = singleTableNodeAtSelection(state.selection, 'body');
-          if (!body) return false;
-          const { node, pos } = body;
-          const attrs = node.attrs;
-          let { headRows, rowHeadColumns } = attrs;
-          if (rowHeadColumns >= tableBodyColumnsCount(node)) return false;
-          if (dispatch) {
-            rowHeadColumns++;
-            tr.setNodeMarkup(pos, null, { ...attrs, rowHeadColumns });
-            fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
-            dispatch(tr);
-          }
-          return true;
-        },
+          ({ dispatch, state, tr }) => {
+            const body = singleTableNodeAtSelection(state.selection, 'body');
+            if (!body) return false;
+            const { node, pos } = body;
+            const attrs = node.attrs;
+            let { headRows, rowHeadColumns } = attrs;
+            if (rowHeadColumns >= tableBodyColumnsCount(node)) return false;
+            if (dispatch) {
+              rowHeadColumns++;
+              tr.setNodeMarkup(pos, null, { ...attrs, rowHeadColumns });
+              fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
+              dispatch(tr);
+            }
+            return true;
+          },
       decreaseTableBodyHeaderColumns:
         () =>
-        ({ dispatch, state, tr }) => {
-          const body = singleTableNodeAtSelection(state.selection, 'body');
-          if (!body) return false;
-          const { node, pos } = body;
-          const attrs = node.attrs;
-          let { headRows, rowHeadColumns } = attrs;
-          if (rowHeadColumns <= 0) return false;
-          if (dispatch) {
-            rowHeadColumns--;
-            tr.setNodeMarkup(pos, null, { ...attrs, rowHeadColumns });
-            fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
-            dispatch(tr);
-          }
-          return true;
-        },
+          ({ dispatch, state, tr }) => {
+            const body = singleTableNodeAtSelection(state.selection, 'body');
+            if (!body) return false;
+            const { node, pos } = body;
+            const attrs = node.attrs;
+            let { headRows, rowHeadColumns } = attrs;
+            if (rowHeadColumns <= 0) return false;
+            if (dispatch) {
+              rowHeadColumns--;
+              tr.setNodeMarkup(pos, null, { ...attrs, rowHeadColumns });
+              fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
+              dispatch(tr);
+            }
+            return true;
+          },
       tableToFullWidth:
         () =>
-        ({ dispatch, state, view }) => {
-          if (!isInTable(state)) return false;
-          const selection = state.selection;
-          const $from = selection.$from;
-          let node: PmNode | null = null;
-          let pos: number = -1;
-          let d;
-          for (d = $from.depth; d > 0; d--) {
-            node = $from.node(d);
-            if (node?.type.name === PandocTable.name) {
-              pos = $from.start(d) - 1;
-              break;
+          ({ dispatch, state, view }) => {
+            if (!isInTable(state)) return false;
+            const selection = state.selection;
+            const $from = selection.$from;
+            let node: PmNode | null = null;
+            let pos: number = -1;
+            let d;
+            for (d = $from.depth; d > 0; d--) {
+              node = $from.node(d);
+              if (node?.type.name === PandocTable.name) {
+                pos = $from.start(d) - 1;
+                break;
+              }
             }
-          }
-          if (!node || pos < 0) return false;
-          if (dispatch) {
-            let tableWidth: number | undefined = undefined;
-            if (d == 1) {
-              tableWidth = maxTableWidth(this.options.tableWidthShare);
-            } else {
-              const parentPos = $from.start(d) - 1;
-              const domNode = view.domAtPos(parentPos);
-              if (domNode)
-                tableWidth = Math.round(
-                  parseFloat(
-                    window.getComputedStyle(domNode.node as Element).width,
-                  ),
-                );
+            if (!node || pos < 0) return false;
+            if (dispatch) {
+              let tableWidth: number | undefined = undefined;
+              if (d == 1) {
+                tableWidth = maxTableWidth(this.options.tableWidthShare);
+              } else {
+                const parentPos = $from.start(d) - 1;
+                const domNode = view.domAtPos(parentPos);
+                if (domNode)
+                  tableWidth = Math.round(
+                    parseFloat(
+                      window.getComputedStyle(domNode.node as Element).width,
+                    ),
+                  );
+              }
+              resizeColumnsFromColSpec(
+                state.tr,
+                node,
+                pos,
+                this.options.cellMinWidth,
+                {
+                  tableWidth,
+                  tableWidthShare: this.options.tableWidthShare,
+                  tableMinWidth: this.options.tableMinWidth,
+                },
+              );
             }
-            resizeColumnsFromColSpec(
-              state.tr,
-              node,
-              pos,
-              this.options.cellMinWidth,
-              {
-                tableWidth,
-                tableWidthShare: this.options.tableWidthShare,
-                tableMinWidth: this.options.tableMinWidth,
-              },
-            );
-          }
-          return true;
-        },
+            return true;
+          },
       equalizeColumnWidths:
         () =>
-        ({ dispatch, state, tr, view }) => {
-          if (!isInTable(state)) return false;
-          const selection = state.selection;
-          const $from = selection.$from;
-          let node: PmNode | null = null;
-          let pos: number = -1;
-          let d;
-          for (d = $from.depth; d > 0; d--) {
-            node = $from.node(d);
-            if (node?.type.name === PandocTable.name) {
-              pos = $from.start(d) - 1;
-              break;
+          ({ dispatch, state, tr, view }) => {
+            if (!isInTable(state)) return false;
+            const selection = state.selection;
+            const $from = selection.$from;
+            let node: PmNode | null = null;
+            let pos: number = -1;
+            let d;
+            for (d = $from.depth; d > 0; d--) {
+              node = $from.node(d);
+              if (node?.type.name === PandocTable.name) {
+                pos = $from.start(d) - 1;
+                break;
+              }
             }
-          }
-          if (!node || pos < 0) return false;
-          let tableWidth: number | undefined = undefined;
-          const domNode = view.domAtPos(pos + 1);
-          if (domNode)
-            tableWidth = Math.round(
-              parseFloat(
-                window.getComputedStyle(domNode.node as Element).width,
-              ),
-            );
-          else return false;
-          if (dispatch) {
-            const colSpec: PmColSpec[] = node.attrs.colSpec;
-            const newColSpec: PmColSpec[] = colSpec.map(({ align }) => ({
-              align,
-              colWidth: 0,
-            }));
-            tr.setNodeAttribute(pos, 'colSpec', newColSpec);
-            resizeColumnsFromColSpec(tr, node, pos, this.options.cellMinWidth, {
-              tableWidth,
-              relativeWidths: colSpec.map((cs) => 0),
-              tableWidthShare: this.options.tableWidthShare,
-              tableMinWidth: this.options.tableMinWidth,
-            });
-          }
-          return true;
-        },
+            if (!node || pos < 0) return false;
+            let tableWidth: number | undefined = undefined;
+            const domNode = view.domAtPos(pos + 1);
+            if (domNode)
+              tableWidth = Math.round(
+                parseFloat(
+                  window.getComputedStyle(domNode.node as Element).width,
+                ),
+              );
+            else return false;
+            if (dispatch) {
+              const colSpec: PmColSpec[] = node.attrs.colSpec;
+              const newColSpec: PmColSpec[] = colSpec.map(({ align }) => ({
+                align,
+                colWidth: 0,
+              }));
+              tr.setNodeAttribute(pos, 'colSpec', newColSpec);
+              resizeColumnsFromColSpec(tr, node, pos, this.options.cellMinWidth, {
+                tableWidth,
+                relativeWidths: colSpec.map((cs) => 0),
+                tableWidthShare: this.options.tableWidthShare,
+                tableMinWidth: this.options.tableMinWidth,
+              });
+            }
+            return true;
+          },
       // secureColumnWidths:
       //   () =>
       //     ({ dispatch, state, tr, view }) => {
@@ -830,6 +835,62 @@ export const PandocTable = Node.create<PandocTableOptions>({
       //       }
       //       return true;
       //     },
+      setColumnAlignment: (alignment: TableColumnAlignment, column?: number) => ({ dispatch, state, tr }) => {
+        const { doc, selection } = state
+        let $pos, tableDepth
+        let colStart = undefined, colStop = undefined, cellPos = undefined
+        if (column) {
+          $pos = selection.$anchor
+          tableDepth = innerNodeDepth($pos, node => node.type.name === PandocTable.name)
+          colStart = column
+          colStop = column + 1
+        } else {
+          if (selection instanceof CellSelection) {
+            $pos = selection.$anchorCell
+            tableDepth = -2
+          } else {
+            $pos = selection.$anchor
+            const cellDepth = innerNodeDepth($pos, node => {
+              const typeName = node.type.name
+              return typeName === TableCell.name || typeName === TableHeader.name
+            })
+            if (!cellDepth) return false
+            cellPos = $pos.start(cellDepth) - 1
+            tableDepth = cellDepth - 3
+          }
+        }
+        if (!tableDepth) return false
+        if (dispatch) {
+          const table = $pos.node(tableDepth)
+          const tableStart = $pos.start(tableDepth)
+          const map = TableMap.get(table)
+          if (!colStart || !colStop) {
+            const rect = selection instanceof CellSelection
+              ? map.rectBetween($pos.pos - tableStart, selection.$headCell.pos - tableStart)
+              : map.findCell(cellPos! - tableStart)
+            colStart = rect.left
+            colStop = rect.right
+          }
+          // console.log(`alignment=${alignment}, colStart=${colStart}, colStop=${colStop}`)
+          const visited: boolean[] = []
+          const { height, width } = map
+          let pos: number, cell
+          for (let r = 0; r < height; r++) {
+            for (let c = colStart; c < colStop; c++) {
+              pos = map.map[r * width + c]
+              if (!visited[pos]) {
+                cell = table.nodeAt(pos)
+                if (cell!.attrs.textAlign.startsWith('default-'))
+                  tr.setNodeAttribute(tableStart + pos, 'textAlign', alignment)
+                visited[pos] = true
+              }
+            }
+          }
+          if (tr.steps.length > 0)
+            dispatch(tr)
+        }
+        return true
+      }
     };
   },
 
@@ -900,7 +961,7 @@ function tableNodeAt(
 ): NodeWithPos | undefined {
   let d = 0;
   let node: PmNode | null = null;
-  for (;;) {
+  for (; ;) {
     node = $pos.node(d);
     if (node) {
       if (node.type.spec.tableRole === role)
@@ -1005,6 +1066,40 @@ function fixTableHeadFootCells(
   return _tr;
 }
 
+function fixTableColumnsAlignment(
+  tr: Transaction,
+  tablePos: number,
+  alignments: Alignment[]
+): boolean {
+  const table = tr.doc.nodeAt(tablePos)
+  if (!table || !isTable(table))
+    return false
+  const tableStart = tablePos + 1
+  const map = TableMap.get(table)
+  const { width, height } = map
+  const visited: boolean[] = []
+  let pos, cell, alignment, textAlign
+  for (let c = 0; c < width; c++) {
+    alignment = alignments[c]
+    if (alignment && alignment !== 'AlignDefault') {
+      textAlign = 'default-' + pandocAlignmentToTextAlign(alignment)
+      if (textAlign && textAlign !== '') {
+        for (let r = 0; r < height; r++) {
+          pos = map.map[r * width + c]
+          if (!visited[pos]) {
+            cell = table.nodeAt(pos)
+            const currentTextAlign = cell && cell.attrs.textAlign
+            if (!currentTextAlign || currentTextAlign.startsWith('default-'))
+              tr.setNodeAttribute(tableStart + pos, 'textAlign', textAlign)
+            visited[pos] = true
+          }
+        }
+      }
+    }
+  }
+  return tr.steps.length > 0
+}
+
 function fixTableSection(
   state: EditorState,
   tr: Transaction,
@@ -1040,26 +1135,25 @@ function fixPandocTablesCommand(
 ): boolean {
   const { cell, header_cell } = tableNodeTypes(state.schema);
   if (!cell || !header_cell) return false;
-  let modified = false;
   const { from, to } = state.selection;
   if (dispatch) {
     const selectionBookmark = all_tables
       ? state.selection.getBookmark()
       : undefined;
-    let tr = state.tr;
-    if (all_tables) tr = tr.setSelection(new AllSelection(state.doc));
+    const tr = state.tr;
+    if (all_tables) tr.setSelection(new AllSelection(state.doc));
     state.doc.nodesBetween(from, to, (node, pos) => {
       // fix table body header cells and make all the head's and foot's cells as header_cell
+      if (isTable(node))
+        fixTableColumnsAlignment(tr, pos, (node.attrs.colSpec as PmColSpec[]).map(cs => cs.align as Alignment))
       if (isTableSection(node)) {
-        const newTr = fixTableSection(state, tr, node, pos);
-        modified ||= newTr !== tr;
-        tr = newTr;
+        fixTableSection(state, tr, node, pos);
       }
       return true;
     });
-    if (modified) {
+    if (tr.steps.length > 0) {
       if (selectionBookmark)
-        tr = tr.setSelection(selectionBookmark.resolve(tr.doc));
+        tr.setSelection(selectionBookmark.resolve(tr.doc));
       dispatch(tr);
     }
   }
@@ -1170,7 +1264,7 @@ export function colAlignmentsFromSections(table: PmNode): Alignment[] {
             if (colIndex < colAlignStat.length) {
               colAlignStat[colIndex][alignIndex] += 1 / span;
             }
-          } catch {}
+          } catch { }
         }
         col = col + span;
       }

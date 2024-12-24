@@ -7,7 +7,7 @@ export {
   PandocAttrExtension,
   type PandocAttrOptions,
 } from './PandocAttrExtension';
-export { TextAlign, type TextAlignOptions } from '@tiptap/extension-text-align';
+export { TextAlign, type TextAlignOptions } from './TextAlign';
 export { VerticalAlign, type VerticalAlignOptions } from './VerticalAlign';
 export * from './SearchAndReplaceExtension';
 export { HelperCommandsExtension } from './HelperCommandsExtension';
