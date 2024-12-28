@@ -15,9 +15,11 @@ export const TABLE_CELL_ALIGNMENTS = [
   'default-right'
 ];
 
+const CSS_DEFAULT_ALIGNMENT = 'default'
+
 export const ALIGNMENT_MAP: { pandoc: Alignment; css: string | null }[] = [
   { pandoc: 'AlignDefault', css: null },
-  { pandoc: 'AlignDefault', css: 'default' },
+  { pandoc: 'AlignDefault', css: CSS_DEFAULT_ALIGNMENT },
   { pandoc: 'AlignLeft', css: 'left' },
   { pandoc: 'AlignCenter', css: 'center' },
   { pandoc: 'AlignRight', css: 'right' },
@@ -28,6 +30,15 @@ export function pandocAlignmentToTextAlign(
 ): string | null {
   const found = ALIGNMENT_MAP.find((i) => i.pandoc === pandocAlignment);
   return found ? found.css : null;
+}
+
+export function pandocAlignmentToCellAlign(
+  pandocAlignment: string
+): TableColumnAlignment | null {
+  const alignment = pandocAlignmentToTextAlign(pandocAlignment)
+  if (!alignment || alignment === CSS_DEFAULT_ALIGNMENT)
+    return TABLE_CELL_DEFAULT_ALIGNMENT
+  return `default-${alignment}` as TableColumnAlignment
 }
 
 export function textAlignToPandocAlignment(

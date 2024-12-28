@@ -144,6 +144,9 @@
           <div class="q-pt-sm q-mr-sm">alignment:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
+            <q-btn :disabled="!isCursorInTable" icon="mdi-format-columns"
+              title="default alignment of the column (see table's ColSpec)" color="primary" rounded
+              @click="resetTextAlign()" />
             <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-left" title="align left" color="primary" rounded
               @click="setTextAlign('left')" />
             <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-center" title="align center" color="primary"
@@ -354,6 +357,15 @@ export default {
         'setTextAlign',
         `set alignment to ${align}`,
         align,
+      )
+    },
+    resetTextAlign() {
+      this.editor.commands.runRepeatableCommandsChain(
+        [
+          ['unsetTextAlign'],
+          ['fixPandocTable'],
+        ],
+        "set alignment to the default of the column"
       )
     },
     setVerticalAlign(align: string) {

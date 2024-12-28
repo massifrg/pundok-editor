@@ -66,13 +66,10 @@ export const TextAlign = Extension.create<TextAlignOptions>({
             default: this.options.defaultAlignment,
             parseHTML: element => {
               const alignment = element.style.textAlign
-
               return this.options.alignments.includes(alignment) ? alignment : this.options.defaultAlignment
             },
             renderHTML: attributes => {
-              if (!attributes.textAlign) {
-                return {}
-              }
+              if (!attributes.textAlign) return {}
               return { style: `text-align: ${attributes.textAlign.replace(/^default-/, '')}` }
             },
           },
@@ -106,6 +103,7 @@ export const TextAlign = Extension.create<TextAlignOptions>({
       'Mod-Shift-l': () => this.editor.commands.setTextAlign('left'),
       'Mod-Shift-e': () => this.editor.commands.setTextAlign('center'),
       'Mod-Shift-r': () => this.editor.commands.setTextAlign('right'),
+      'Mod-Shift-t': () => this.editor.commands.setTextAlign('default'),
       // 'Mod-Shift-j': () => this.editor.commands.setTextAlign('justify'),
     }
   },

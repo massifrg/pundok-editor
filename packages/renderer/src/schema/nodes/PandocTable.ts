@@ -70,7 +70,7 @@ import {
   pmColSpecsToString,
 } from '../helpers/colSpec';
 import { EditorView } from '@tiptap/pm/view';
-import { innerNodeDepth, pandocAlignmentToTextAlign, TABLE_CELL_ALIGNMENTS, TableColumnAlignment, textAlignToPandocAlignment } from '../helpers';
+import { innerNodeDepth, pandocAlignmentToCellAlign, TABLE_CELL_ALIGNMENTS, textAlignToPandocAlignment } from '../helpers';
 import { Alignment } from '../../pandoc';
 import { fill, isEqual } from 'lodash';
 import { updateTableAttrsPlugin } from '../helpers/updateTableAttrsPlugin';
@@ -134,7 +134,7 @@ declare module '@tiptap/core' {
       tableToFullWidth: () => ReturnType;
       equalizeColumnWidths: () => ReturnType;
       // secureColumnWidths: () => ReturnType;
-      setColumnAlignment: (alignment: TableColumnAlignment, column?: number) => ReturnType
+      setColumnAlignment: (alignment: Alignment, column?: number) => ReturnType
     };
   }
 
@@ -835,10 +835,12 @@ export const PandocTable = Node.create<PandocTableOptions>({
       //       }
       //       return true;
       //     },
-      setColumnAlignment: (alignment: TableColumnAlignment, column?: number) => ({ dispatch, state, tr }) => {
-        const { doc, selection } = state
+      setColumnAlignment: (align: Alignment, column?: number) => ({ dispatch, state, tr }) => {
+        const selection = state.selection
         let $pos, tableDepth
-        let colStart = undefined, colStop = undefined, cellPos = undefined
+        let colStart: number | undefined = undefined,
+          colStop: number | undefined = undefined,
+          cellPos = undefined
         if (column) {
           $pos = selection.$anchor
           tableDepth = innerNodeDepth($pos, node => node.type.name === PandocTable.name)
@@ -872,6 +874,17 @@ export const PandocTable = Node.create<PandocTableOptions>({
             colStop = rect.right
           }
           // console.log(`alignment=${alignment}, colStart=${colStart}, colStop=${colStop}`)
+          // set colSpec alignments
+          const colSpec: PmColSpec[] = (table.attrs.colSpec as PmColSpec[]).map((cs, c) => {
+            if (c >= colStart! && c < colStop!) {
+              return { colWidth: cs.colWidth, align }
+            } else {
+              return cs
+            }
+          })
+          tr.setNodeAttribute(tableStart - 1, 'colSpec', colSpec)
+          // cells without a local alignment set, get the default-* alignment matching the column predefined alignment
+          const alignment = pandocAlignmentToCellAlign(align)
           const visited: boolean[] = []
           const { height, width } = map
           let pos: number, cell
@@ -880,7 +893,8 @@ export const PandocTable = Node.create<PandocTableOptions>({
               pos = map.map[r * width + c]
               if (!visited[pos]) {
                 cell = table.nodeAt(pos)
-                if (cell!.attrs.textAlign.startsWith('default-'))
+                const textAlign = cell!.attrs.textAlign
+                if (!textAlign || textAlign.startsWith('default-'))
                   tr.setNodeAttribute(tableStart + pos, 'textAlign', alignment)
                 visited[pos] = true
               }
@@ -1027,6 +1041,7 @@ function fixTableBodyCells(
         if (!visited[cellPos]) {
           const cellNode = table.nodeAt(cellPos);
           const cellType = r < headRows || c < rowHeadColumns ? header_cell : cell
+          // TODO: fix alignment when it's not set
           if (cellNode && cellNode.type !== cellType) {
             const fixedCell = cellType.createAndFill(
               cellNode.attrs,
@@ -1058,6 +1073,7 @@ function fixTableHeadFootCells(
     pos += 1; // row start
     for (let c = 0; c < row.childCount; c++) {
       const cellNode = row.child(c);
+      // TODO: fix alignment when it's not set
       if (cellNode.type !== header_cell) {
         const fixedCell = header_cell.createAndFill(
           cellNode.attrs,
@@ -1089,8 +1105,8 @@ function fixTableColumnsAlignment(
   for (let c = 0; c < width; c++) {
     alignment = alignments[c]
     if (alignment && alignment !== 'AlignDefault') {
-      textAlign = 'default-' + pandocAlignmentToTextAlign(alignment)
-      if (textAlign && textAlign !== '') {
+      textAlign = pandocAlignmentToCellAlign(alignment)
+      if (textAlign) {
         for (let r = 0; r < height; r++) {
           pos = map.map[r * width + c]
           if (!visited[pos]) {

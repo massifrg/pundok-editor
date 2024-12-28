@@ -22,9 +22,9 @@ function pandocColWidthToWidth(colWidth: PandocJson): number {
 }
 
 export class PmColSpec {
-  align: string = 'AlignDefault';
+  align: Alignment = 'AlignDefault';
   colWidth: number = 0;
-  constructor(align?: string, colWidth?: number) {
+  constructor(align?: Alignment, colWidth?: number) {
     this.align = align ? align : 'AlignDefault';
     this.colWidth = colWidth || 0;
   }
@@ -42,7 +42,7 @@ export function fillPmColSpecs(length: number): PmColSpec[] {
 
 export function pandocColSpecToPmColSpec(pColSpec: PandocJson[][]) {
   const colSpec: PmColSpec[] = pColSpec.map((cs) => ({
-    align: cs[0].t,
+    align: cs[0].t as Alignment,
     colWidth: pandocColWidthToWidth(cs[1]),
   }));
   return { colSpec: colSpec };
@@ -136,9 +136,9 @@ export function colSpecToCompactString(colSpec: PmColSpec): string {
 export function pmColSpecsToPandoc(colspecs: PmColSpec[]): ColSpec[] {
   return colspecs
     ? colspecs.map(
-        (cs) =>
-          new ColSpec((cs.align || 'AlignDefault') as Alignment, cs.colWidth),
-      )
+      (cs) =>
+        new ColSpec((cs.align || 'AlignDefault') as Alignment, cs.colWidth),
+    )
     : [];
 }
 
