@@ -16,9 +16,9 @@ import {
 } from '@tiptap/pm/state';
 import {
   Fragment,
-  NodeType,
   Node as PmNode,
   ResolvedPos,
+  Schema,
 } from '@tiptap/pm/model';
 import {
   createPandocTable,
@@ -74,7 +74,6 @@ import { innerNodeDepth, pandocAlignmentToTextAlign, TABLE_CELL_ALIGNMENTS, Tabl
 import { Alignment } from '../../pandoc';
 import { fill, isEqual } from 'lodash';
 import { updateTableAttrsPlugin } from '../helpers/updateTableAttrsPlugin';
-import { Pandoc } from './Pandoc';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -630,12 +629,14 @@ export const PandocTable = Node.create<PandocTableOptions>({
       fixPandocTable:
         () =>
           ({ dispatch, state, tr }) => {
-            const table = singleTableNodeAtSelection(state.selection, 'table');
+            const { schema, selection } = state
+            const table = singleTableNodeAtSelection(selection, 'table');
             if (!table) return false;
             const { node, pos } = table;
             if (dispatch) {
               node.descendants((n, p) => {
-                fixTableSection(state, tr, n, pos + p + 1);
+                if (isTableSection(n))
+                  fixTableSection(schema, tr, n, pos + p + 1);
                 return false;
               });
               dispatch(tr);
@@ -661,7 +662,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
               headRows++;
               tr.setNodeMarkup(pos, null, { ...attrs, headRows });
               // const { cell, header_cell } = tableNodeTypes(state.schema);
-              fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
+              fixTableBodyCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
             return true;
@@ -678,7 +679,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             if (dispatch) {
               headRows--;
               tr.setNodeMarkup(pos, null, { ...attrs, headRows });
-              fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
+              fixTableBodyCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
             return true;
@@ -695,7 +696,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             if (dispatch) {
               rowHeadColumns++;
               tr.setNodeMarkup(pos, null, { ...attrs, rowHeadColumns });
-              fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
+              fixTableBodyCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
             return true;
@@ -712,7 +713,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             if (dispatch) {
               rowHeadColumns--;
               tr.setNodeMarkup(pos, null, { ...attrs, rowHeadColumns });
-              fixTableBodyCells(state, tr, node, pos, headRows, rowHeadColumns);
+              fixTableBodyCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
             return true;
@@ -1000,49 +1001,57 @@ function tableBodyColumnsCount(body: PmNode): number {
 }
 
 function fixTableBodyCells(
-  state: EditorState,
+  schema: Schema,
   tr: Transaction,
-  node: PmNode,
   bodyPos: number,
   headRows: number,
   rowHeadColumns: number,
-): Transaction {
-  let _tr: Transaction = tr || state.tr;
-  const { cell, header_cell } = tableNodeTypes(state.schema);
-  if (!cell || !header_cell) return tr;
-  let pos = bodyPos + 1;
-  for (let r = 0; r < node.childCount; r++) {
-    const row = node.child(r);
-    pos += 1; // row start
-    for (let c = 0; c < row.childCount; c++) {
-      const cellNode = row.child(c);
-      const cellType: NodeType =
-        c < rowHeadColumns || r < headRows ? header_cell : cell;
-      if (cellNode.type !== cellType) {
-        const fixedCell = cellType.createAndFill(
-          cellNode.attrs,
-          cellNode.content,
-        );
-        if (fixedCell) {
-          _tr = _tr.replaceWith(pos, pos + cellNode.nodeSize, fixedCell);
+): void {
+  const { cell, header_cell } = tableNodeTypes(schema);
+  if (!cell || !header_cell) return;
+  const bodyStart = bodyPos + 1
+  const $pos = tr.doc.resolve(bodyStart)
+  const bodyEnd = $pos.end()
+  const table = $pos.node(-1)
+  const tableStart = $pos.start(-1)
+  const tableMap = TableMap.get(table)
+  const { width, height, map } = tableMap
+  let cellPos
+  const visited: boolean[] = []
+  for (let r = 0; r < height; r++) {
+    cellPos = tableStart + map[r * width]
+    if (cellPos > bodyEnd) break
+    if (cellPos > bodyStart) {
+      for (let c = 0; c < width; c++) {
+        cellPos = map[r * width + c]
+        if (!visited[cellPos]) {
+          const cellNode = table.nodeAt(cellPos);
+          const cellType = r < headRows || c < rowHeadColumns ? header_cell : cell
+          if (cellNode && cellNode.type !== cellType) {
+            const fixedCell = cellType.createAndFill(
+              cellNode.attrs,
+              cellNode.content,
+            );
+            if (fixedCell) {
+              cellPos += tableStart
+              tr.replaceWith(cellPos, cellPos + cellNode.nodeSize, fixedCell);
+            }
+          }
+          visited[cellPos] = true
         }
       }
-      pos += cellNode.nodeSize;
     }
-    pos += 1; // row end
   }
-  return _tr;
 }
 
 function fixTableHeadFootCells(
-  state: EditorState,
+  schema: Schema,
   tr: Transaction,
   node: PmNode,
   sectionPos: number,
-): Transaction {
-  let _tr = tr || state.tr;
-  const header_cell = tableNodeTypes(state.schema).header_cell;
-  if (!header_cell) return tr;
+): void {
+  const header_cell = tableNodeTypes(schema).header_cell;
+  if (!header_cell) return;
   let pos = sectionPos + 1;
   for (let r = 0; r < node.childCount; r++) {
     const row = node.child(r);
@@ -1055,14 +1064,13 @@ function fixTableHeadFootCells(
           cellNode.content,
         );
         if (fixedCell) {
-          _tr = _tr.replaceWith(pos, pos + cellNode.nodeSize, fixedCell);
+          tr.replaceWith(pos, pos + cellNode.nodeSize, fixedCell);
         }
       }
       pos += cellNode.nodeSize;
     }
     pos += 1; // row end
   }
-  return _tr;
 }
 
 function fixTableColumnsAlignment(
@@ -1100,12 +1108,11 @@ function fixTableColumnsAlignment(
 }
 
 function fixTableSection(
-  state: EditorState,
+  schema: Schema,
   tr: Transaction,
   node: PmNode,
   pos: number,
-): Transaction {
-  let _tr = tr || state.tr;
+): void {
   const role = node.type.spec.tableRole;
   if (role === 'body') {
     let { headRows, rowHeadColumns } = node.attrs;
@@ -1117,13 +1124,12 @@ function fixTableSection(
     if (headRows > maxRows) modifiedAttrs = { headRows: maxRows };
     if (rowHeadColumns > maxCols) modifiedAttrs = { rowHeadColumns: maxCols };
     if (Object.keys(modifiedAttrs).length > 0) {
-      _tr = _tr.setNodeMarkup(pos, null, { ...node.attrs, ...modifiedAttrs });
+      tr.setNodeMarkup(pos, null, { ...node.attrs, ...modifiedAttrs });
     }
-    _tr = fixTableBodyCells(state, _tr, node, pos, headRows, rowHeadColumns);
+    fixTableBodyCells(schema, tr, pos, headRows, rowHeadColumns);
   } else if (role === 'head' || role === 'foot') {
-    _tr = fixTableHeadFootCells(state, _tr, node, pos);
+    fixTableHeadFootCells(schema, tr, node, pos);
   }
-  return _tr;
 }
 
 function fixPandocTablesCommand(
@@ -1146,7 +1152,7 @@ function fixPandocTablesCommand(
       if (isTable(node))
         fixTableColumnsAlignment(tr, pos, (node.attrs.colSpec as PmColSpec[]).map(cs => cs.align as Alignment))
       if (isTableSection(node)) {
-        fixTableSection(state, tr, node, pos);
+        fixTableSection(state.schema, tr, node, pos);
       }
       return true;
     });
