@@ -132,7 +132,6 @@ declare module '@tiptap/core' {
       decreaseTableBodyHeaderRows: () => ReturnType;
       increaseTableBodyHeaderColumns: () => ReturnType;
       decreaseTableBodyHeaderColumns: () => ReturnType;
-      updateColSpecs: () => ReturnType;
       tableToFullWidth: () => ReturnType;
       equalizeColumnWidths: () => ReturnType;
       // secureColumnWidths: () => ReturnType;

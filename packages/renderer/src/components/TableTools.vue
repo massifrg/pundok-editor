@@ -350,12 +350,10 @@ export default {
       this.editor?.chain().deleteColumn().focus().run()
     },
     setTextAlign(align: string) {
-      this.editor?.commands.runRepeatableCommandsChain(
-        [
-          ['setTextAlign', align],
-          ['updateColSpecs']
-        ],
-        `set alignment to ${align}`
+      this.editor?.commands.runRepeatableCommand(
+        'setTextAlign',
+        `set alignment to ${align}`,
+        align,
       )
     },
     setVerticalAlign(align: string) {
