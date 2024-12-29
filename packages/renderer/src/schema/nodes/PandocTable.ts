@@ -61,18 +61,16 @@ import {
   toggleHeaderCell,
   setComputedStyleColumnWidths,
 } from '@massifrg/prosemirror-tables-sections';
-import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import {
-  COLSPEC_ALIGNMENT_FREQ_THRESHOLD,
   PmColSpec,
   pmColSpecsToString,
 } from '../helpers/colSpec';
 import { EditorView } from '@tiptap/pm/view';
-import { innerNodeDepth, pandocAlignmentToCellAlign, TABLE_CELL_ALIGNMENTS, textAlignToPandocAlignment } from '../helpers';
+import { innerNodeDepth, pandocAlignmentToCellAlign } from '../helpers';
 import { Alignment } from '../../pandoc';
-import { fill, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import { updateTableAttrsPlugin } from '../helpers/updateTableAttrsPlugin';
 
 declare module '@tiptap/core' {
@@ -662,7 +660,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
               headRows++;
               tr.setNodeMarkup(pos, null, { ...attrs, headRows });
               // const { cell, header_cell } = tableNodeTypes(state.schema);
-              fixTableBodyCells(state.schema, tr, pos, headRows, rowHeadColumns);
+              fixTableSectionCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
             return true;
@@ -679,7 +677,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             if (dispatch) {
               headRows--;
               tr.setNodeMarkup(pos, null, { ...attrs, headRows });
-              fixTableBodyCells(state.schema, tr, pos, headRows, rowHeadColumns);
+              fixTableSectionCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
             return true;
@@ -696,7 +694,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             if (dispatch) {
               rowHeadColumns++;
               tr.setNodeMarkup(pos, null, { ...attrs, rowHeadColumns });
-              fixTableBodyCells(state.schema, tr, pos, headRows, rowHeadColumns);
+              fixTableSectionCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
             return true;
@@ -713,7 +711,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             if (dispatch) {
               rowHeadColumns--;
               tr.setNodeMarkup(pos, null, { ...attrs, rowHeadColumns });
-              fixTableBodyCells(state.schema, tr, pos, headRows, rowHeadColumns);
+              fixTableSectionCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
             return true;
@@ -1014,19 +1012,22 @@ function tableBodyColumnsCount(body: PmNode): number {
   return countColumns;
 }
 
-function fixTableBodyCells(
+function fixTableSectionCells(
   schema: Schema,
   tr: Transaction,
-  bodyPos: number,
-  headRows: number,
-  rowHeadColumns: number,
+  sectionPos: number,
+  headRows: number = 0,
+  rowHeadColumns: number = 0,
 ): void {
   const { cell, header_cell } = tableNodeTypes(schema);
   if (!cell || !header_cell) return;
-  const bodyStart = bodyPos + 1
-  const $pos = tr.doc.resolve(bodyStart)
-  const bodyEnd = $pos.end()
+  const sectionStart = sectionPos + 1
+  const $pos = tr.doc.resolve(sectionStart)
+  const sectionRole = $pos.node().type.spec.tableRole
+  const isHeadOrFoot = sectionRole === 'head' || sectionRole === 'foot'
+  const sectionEnd = $pos.end()
   const table = $pos.node(-1)
+  const defaultAlignments = (table.attrs.colSpec as PmColSpec[]).map(cs => pandocAlignmentToCellAlign(cs.align))
   const tableStart = $pos.start(-1)
   const tableMap = TableMap.get(table)
   const { width, height, map } = tableMap
@@ -1034,58 +1035,35 @@ function fixTableBodyCells(
   const visited: boolean[] = []
   for (let r = 0; r < height; r++) {
     cellPos = tableStart + map[r * width]
-    if (cellPos > bodyEnd) break
-    if (cellPos > bodyStart) {
+    if (cellPos > sectionEnd) break
+    if (cellPos > sectionStart) {
       for (let c = 0; c < width; c++) {
         cellPos = map[r * width + c]
         if (!visited[cellPos]) {
           const cellNode = table.nodeAt(cellPos);
-          const cellType = r < headRows || c < rowHeadColumns ? header_cell : cell
-          // TODO: fix alignment when it's not set
-          if (cellNode && cellNode.type !== cellType) {
-            const fixedCell = cellType.createAndFill(
-              cellNode.attrs,
-              cellNode.content,
-            );
-            if (fixedCell) {
-              cellPos += tableStart
-              tr.replaceWith(cellPos, cellPos + cellNode.nodeSize, fixedCell);
+          const cellType = isHeadOrFoot || (r < headRows || c < rowHeadColumns) ? header_cell : cell
+          if (cellNode) {
+            const textAlign = cellNode.attrs.textAlign
+            const hasNoAlign = !textAlign || textAlign.startsWith('default-')
+            const columnAlign = defaultAlignments[c] || null
+            const fixAlign = hasNoAlign && textAlign !== columnAlign
+            if (cellNode.type !== cellType || fixAlign) {
+              const fixedCell = cellType.createAndFill(
+                fixAlign
+                  ? { ...cellNode.attrs, textAlign: columnAlign }
+                  : cellNode.attrs,
+                cellNode.content
+              )
+              if (fixedCell) {
+                cellPos += tableStart
+                tr.replaceWith(cellPos, cellPos + cellNode.nodeSize, fixedCell);
+              }
             }
           }
           visited[cellPos] = true
         }
       }
     }
-  }
-}
-
-function fixTableHeadFootCells(
-  schema: Schema,
-  tr: Transaction,
-  node: PmNode,
-  sectionPos: number,
-): void {
-  const header_cell = tableNodeTypes(schema).header_cell;
-  if (!header_cell) return;
-  let pos = sectionPos + 1;
-  for (let r = 0; r < node.childCount; r++) {
-    const row = node.child(r);
-    pos += 1; // row start
-    for (let c = 0; c < row.childCount; c++) {
-      const cellNode = row.child(c);
-      // TODO: fix alignment when it's not set
-      if (cellNode.type !== header_cell) {
-        const fixedCell = header_cell.createAndFill(
-          cellNode.attrs,
-          cellNode.content,
-        );
-        if (fixedCell) {
-          tr.replaceWith(pos, pos + cellNode.nodeSize, fixedCell);
-        }
-      }
-      pos += cellNode.nodeSize;
-    }
-    pos += 1; // row end
   }
 }
 
@@ -1142,9 +1120,9 @@ function fixTableSection(
     if (Object.keys(modifiedAttrs).length > 0) {
       tr.setNodeMarkup(pos, null, { ...node.attrs, ...modifiedAttrs });
     }
-    fixTableBodyCells(schema, tr, pos, headRows, rowHeadColumns);
+    fixTableSectionCells(schema, tr, pos, headRows, rowHeadColumns);
   } else if (role === 'head' || role === 'foot') {
-    fixTableHeadFootCells(schema, tr, node, pos);
+    fixTableSectionCells(schema, tr, pos);
   }
 }
 
@@ -1258,56 +1236,6 @@ export function resizeColumnsFromColSpec(
     }
   }
   return modified;
-}
-
-type AlignmentFrequency = number[];
-export function colAlignmentsFromSections(table: PmNode): Alignment[] {
-  const map = TableMap.get(table);
-  const maxColumns = map.width;
-  const colAlignStat: AlignmentFrequency[] = Array(maxColumns);
-  for (let i = 0; i < maxColumns; i++) {
-    colAlignStat[i] = Array(TABLE_CELL_ALIGNMENTS.length);
-    fill(colAlignStat[i], 0);
-  }
-  const rows = map.height;
-  table.descendants((row) => {
-    if (row.type.name === TableRow.name) {
-      let col = 0;
-      for (let i = 0; i < row.childCount; i++) {
-        const cell = row.child(i);
-        const { textAlign, colspan } = cell.attrs;
-        let alignIndex = TABLE_CELL_ALIGNMENTS.indexOf(textAlign);
-        if (alignIndex < 0) alignIndex = 0;
-        const span = colspan || 1;
-        for (let c = 0; c < span; c++) {
-          const colIndex = col + c;
-          try {
-            if (colIndex < colAlignStat.length) {
-              colAlignStat[colIndex][alignIndex] += 1 / span;
-            }
-          } catch { }
-        }
-        col = col + span;
-      }
-    }
-  });
-  if (rows > 0) {
-    return colAlignStat.map((colStat) => {
-      const [mostFrequentAlignIndex /*, mostFrequentAlignFreq */] = colStat
-        .map((count) => (100 * count) / rows)
-        .reduce(
-          ([mostFreqIndex, maxFreq], freq, index) =>
-            freq >= COLSPEC_ALIGNMENT_FREQ_THRESHOLD && freq >= maxFreq
-              ? [index, freq]
-              : [mostFreqIndex, maxFreq],
-          [0, 0],
-        );
-      return textAlignToPandocAlignment(
-        TABLE_CELL_ALIGNMENTS[mostFrequentAlignIndex],
-      );
-    });
-  }
-  return colAlignStat.map((c) => 'AlignDefault');
 }
 
 /**
