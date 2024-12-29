@@ -141,12 +141,38 @@
           </div>
         </q-card-section>
         <q-card-section v-if="showAlignControls" horizontal class="q-mt-md">
+          <div class="q-pt-sm q-mr-sm">columns alignment:</div>
+          <q-space />
+          <div class="q-gutter-xs">
+            <q-btn :disabled="!isCursorInTable" title="column alignment: AlignDefault" color="primary" rounded
+              @click="setColumnAlignment('AlignDefault')">
+              <q-icon name="mdi-table-column" />
+              <q-icon name="mdi-format-columns" />
+            </q-btn>
+            <q-btn :disabled="!isCursorInTable" title="column alignment: AlignLeft" color="primary" rounded
+              @click="setColumnAlignment('AlignLeft')">
+              <q-icon name="mdi-table-column" />
+              <q-icon name="mdi-format-align-left" />
+            </q-btn>
+            <q-btn :disabled="!isCursorInTable" title="column alignment: AlignCenter" color="primary" rounded
+              @click="setColumnAlignment('AlignCenter')">
+              <q-icon name="mdi-table-column" />
+              <q-icon name="mdi-format-align-center" />
+            </q-btn>
+            <q-btn :disabled="!isCursorInTable" title="column alignment: AlignRight" color="primary" rounded
+              @click="setColumnAlignment('AlignRight')">
+              <q-icon name="mdi-table-column" />
+              <q-icon name="mdi-format-align-right" />
+            </q-btn>
+          </div>
+        </q-card-section>
+        <q-card-section v-if="showAlignControls" horizontal class="q-mt-md">
           <div class="q-pt-sm q-mr-sm">alignment:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
             <q-btn :disabled="!isCursorInTable" icon="mdi-format-columns"
               title="default alignment of the column (see table's ColSpec)" color="primary" rounded
-              @click="resetTextAlign()" />
+              @click="unsetTextAlign()" />
             <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-left" title="align left" color="primary" rounded
               @click="setTextAlign('left')" />
             <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-center" title="align center" color="primary"
@@ -196,6 +222,7 @@ import { NodeWithPos } from '@tiptap/core';
 import { isInTable } from '@massifrg/prosemirror-tables-sections'
 import { isTableSection } from '../schema/helpers';
 import ToolbarButton from './ToolbarButton.vue';
+import { Alignment } from '../pandoc';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
 
@@ -359,13 +386,20 @@ export default {
         align,
       )
     },
-    resetTextAlign() {
+    unsetTextAlign() {
       this.editor.commands.runRepeatableCommandsChain(
         [
           ['unsetTextAlign'],
           ['fixPandocTable'],
         ],
         "set alignment to the default of the column"
+      )
+    },
+    setColumnAlignment(alignment: Alignment) {
+      this.editor.commands.runRepeatableCommand(
+        'setColumnAlignment',
+        `set the default column alignment (in ColSpec) to ${alignment}`,
+        alignment
       )
     },
     setVerticalAlign(align: string) {
