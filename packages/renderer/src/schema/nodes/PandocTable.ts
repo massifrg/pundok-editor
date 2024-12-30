@@ -1064,8 +1064,7 @@ function fixTableSectionCells(
                 cellNode.content
               )
               if (fixedCell) {
-                cellPos += tableStart
-                tr.replaceWith(cellPos, cellPos + cellNode.nodeSize, fixedCell);
+                tr.replaceWith(tableStart + cellPos, tableStart + cellPos + cellNode.nodeSize, fixedCell);
               }
             }
           }
