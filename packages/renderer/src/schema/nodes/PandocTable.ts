@@ -1043,14 +1043,23 @@ function fixTableSectionCells(
           const cellNode = table.nodeAt(cellPos);
           const cellType = isHeadOrFoot || (r < headRows || c < rowHeadColumns) ? header_cell : cell
           if (cellNode) {
-            const textAlign = cellNode.attrs.textAlign
+            const { colspan, textAlign, leftEdge, rightEdge } = cellNode.attrs
             const hasNoAlign = !textAlign || textAlign.startsWith('default-')
             const columnAlign = defaultAlignments[c] || null
+            const fixCellType = cellNode.type !== cellType
             const fixAlign = hasNoAlign && textAlign !== columnAlign
-            if (cellNode.type !== cellType || fixAlign) {
+            const isLeftEdge = c === 0
+            const isRightEdge = c + (colspan || 1) === width
+            const fixEdge = (isLeftEdge && !leftEdge) || (isRightEdge && !rightEdge)
+            if (fixCellType || fixAlign || fixEdge) {
               const fixedCell = cellType.createAndFill(
-                fixAlign
-                  ? { ...cellNode.attrs, textAlign: columnAlign }
+                fixAlign || fixEdge
+                  ? {
+                    ...cellNode.attrs,
+                    textAlign: columnAlign,
+                    leftEdge: isLeftEdge ? true : undefined,
+                    rightEdge: isRightEdge ? true : undefined,
+                  }
                   : cellNode.attrs,
                 cellNode.content
               )

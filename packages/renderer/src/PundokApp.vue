@@ -206,41 +206,34 @@ $color-fg-index: #dc7200;
       }
     }
 
-    thead>tr>th:first-of-type,
-    thead>tr>td:first-of-type,
-    tfoot>tr>th:first-of-type,
-    tfoot>tr>td:first-of-type {
+    thead>tr>th.edge-left,
+    tfoot>tr>th.edge-left {
       border-left: .5rem solid #ccc;
     }
 
-    thead>tr>th:last-of-type,
-    thead>tr>td:last-of-type,
-    tfoot>tr>th:last-of-type,
-    tfoot>tr>td:last-of-type {
+    thead>tr>th.edge-right,
+    tfoot>tr>th.edge-right {
       border-right: .5rem solid #ccc;
     }
 
-    tbody {
+    tbody:nth-of-type(odd)>tr>th.edge-left,
+    tbody:nth-of-type(odd)>tr>td.edge-left {
+      border-left: .5rem solid #ffffa0;
+    }
 
-      &:nth-of-type(odd)>tr>th:first-child,
-      &:nth-of-type(odd)>tr>td:first-child {
-        border-left: .5rem solid #ffffa0;
-      }
+    tbody:nth-of-type(odd)>tr>th.edge-right,
+    tbody:nth-of-type(odd)>tr>td.edge-right {
+      border-right: .5rem solid #ffffa0;
+    }
 
-      &:nth-of-type(odd) tr>th:last-child,
-      &:nth-of-type(odd) tr>td:last-child {
-        border-right: .5rem solid #ffffa0;
-      }
+    tbody:nth-of-type(even)>tr>th.edge-left,
+    tbody:nth-of-type(even)>tr>td.edge-left {
+      border-left: .5rem solid #a0ffff;
+    }
 
-      &:nth-of-type(even) tr>th:first-child,
-      &:nth-of-type(even) tr>td:first-child {
-        border-left: .5rem solid #a0ffff;
-      }
-
-      &:nth-of-type(even) tr>th:last-child,
-      &:nth-of-type(even) tr>td:last-child {
-        border-right: .5rem solid #a0ffff;
-      }
+    tbody:nth-of-type(even)>tr>th.edge-right,
+    tbody:nth-of-type(even)>tr>td.edge-right {
+      border-right: .5rem solid #a0ffff;
     }
 
     td,

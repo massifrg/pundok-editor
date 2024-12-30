@@ -22,3 +22,4 @@ export * from './IncludeDivExtension';
 export * from './RepeatableCommandExtension';
 export * from './CssSelectionExtension';
 export * from './ExtraCommandsExtension';
+export * from './TableEdgesExtension';

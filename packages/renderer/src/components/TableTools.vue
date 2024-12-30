@@ -195,15 +195,15 @@
           <q-space />
           <div class="q-gutter-xs q-mr-md">
             <q-btn color="primary" rounded icon="mdi-arrow-collapse-horizontal" title="decrease cell's column span"
-              :disabled="!editor.can().decreaseColspan()" @click="editor.chain().decreaseColspan().focus().run()" />
+              :disabled="!editor.can().decreaseColspan()" @click="decreaseColspan()" />
             <q-btn color="primary" rounded icon="mdi-arrow-expand-horizontal" title="increase cell's column span"
-              :disabled="!editor.can().increaseColspan()" @click="editor.chain().increaseColspan().focus().run()" />
+              :disabled="!editor.can().increaseColspan()" @click="increaseColspan()" />
           </div>
           <div class="q-gutter-xs q-mr-md">
             <q-btn color="primary" rounded icon="mdi-arrow-collapse-vertical" title="decrease cell's row span"
-              :disabled="!editor.can().decreaseRowspan()" @click="editor.chain().decreaseRowspan().focus().run()" />
+              :disabled="!editor.can().decreaseRowspan()" @click="decreaseRowspan()" />
             <q-btn color="primary" rounded icon="mdi-arrow-expand-vertical" title="increase cell's row span"
-              :disabled="!editor.can().increaseRowspan()" @click="editor.chain().increaseRowspan().focus().run()" />
+              :disabled="!editor.can().increaseRowspan()" @click="increaseRowspan()" />
           </div>
           <div class="q-gutter-xs">
             <q-btn color="primary" rounded icon="mdi-table-merge-cells" title="merge cells"
@@ -279,6 +279,7 @@ export default {
     newTable() {
       this.editor?.chain()
         .insertPandocTable({ rows: 3, cols: 3, cellContainer: 'plain' })
+        .fixPandocTable()
         .focus()
         .run()
     },
@@ -335,49 +336,61 @@ export default {
       )
     },
     addTableBodyBefore() {
-      this.editor?.chain().addTableBodyBefore().focus().run()
+      this.editor?.chain().addTableBodyBefore().fixPandocTable().focus().run()
     },
     addTableBodyAfter() {
-      this.editor?.chain().addTableBodyAfter().focus().run()
+      this.editor?.chain().addTableBodyAfter().fixPandocTable().focus().run()
     },
     makeTableFoot() {
-      this.editor?.chain().makeTableFoot().focus().run()
+      this.editor?.chain().makeTableFoot().fixPandocTable().focus().run()
     },
     addTableFoot() {
-      this.editor?.chain().addTableFoot().focus().run()
+      this.editor?.chain().addTableFoot().fixPandocTable().focus().run()
     },
     removeTableFoot() {
-      this.editor?.chain().removeTableFoot().focus().run()
+      this.editor?.chain().removeTableFoot().fixPandocTable().focus().run()
     },
     increaseTableBodyHeaderRows() {
-      this.editor?.chain().increaseTableBodyHeaderRows().focus().run()
+      this.editor?.chain().increaseTableBodyHeaderRows().fixPandocTable().focus().run()
     },
     decreaseTableBodyHeaderRows() {
-      this.editor?.chain().decreaseTableBodyHeaderRows().focus().run()
+      this.editor?.chain().decreaseTableBodyHeaderRows().fixPandocTable().focus().run()
     },
     increaseTableBodyHeaderColumns() {
-      this.editor?.chain().increaseTableBodyHeaderColumns().focus().run()
+      this.editor?.chain().increaseTableBodyHeaderColumns().fixPandocTable().focus().run()
     },
     decreaseTableBodyHeaderColumns() {
-      this.editor?.chain().decreaseTableBodyHeaderColumns().focus().run()
+      this.editor?.chain().decreaseTableBodyHeaderColumns().fixPandocTable().focus().run()
     },
     addRowBefore() {
-      this.editor?.chain().addRowBefore().focus().run()
+      this.editor?.chain().addRowBefore().fixPandocTable().focus().run()
     },
     addRowAfter() {
-      this.editor?.chain().addRowAfter().focus().run()
+      this.editor?.chain().addRowAfter().fixPandocTable().focus().run()
     },
     deleteRow() {
-      this.editor?.chain().deleteRow().focus().run()
+      this.editor?.chain().deleteRow().fixPandocTable().focus().run()
     },
     addColumnBefore() {
-      this.editor?.chain().addColumnBefore().focus().run()
+      this.editor?.chain().addColumnBefore().fixPandocTable().focus().run()
     },
     addColumnAfter() {
-      this.editor?.chain().addColumnAfter().focus().run()
+      this.editor?.chain().addColumnAfter().fixPandocTable().focus().run()
     },
     deleteColumn() {
-      this.editor?.chain().deleteColumn().focus().run()
+      this.editor?.chain().deleteColumn().fixPandocTable().focus().run()
+    },
+    decreaseRowspan() {
+      this.editor?.chain().decreaseRowspan().fixPandocTable().focus().run()
+    },
+    increaseRowspan() {
+      this.editor?.chain().increaseRowspan().fixPandocTable().focus().run()
+    },
+    decreaseColspan() {
+      this.editor?.chain().decreaseColspan().fixPandocTable().focus().run()
+    },
+    increaseColspan() {
+      this.editor?.chain().increaseColspan().fixPandocTable().focus().run()
     },
     setTextAlign(align: string) {
       this.editor?.commands.runRepeatableCommand(
@@ -410,10 +423,22 @@ export default {
       )
     },
     mergeCells() {
-      this.editor?.commands.runRepeatableCommand('mergeCells', 'merge cells')
+      this.editor?.commands.runRepeatableCommandsChain(
+        [
+          ['mergeCells'],
+          ['fixPandocTable']
+        ],
+        'merge cells'
+      )
     },
     splitCell() {
-      this.editor?.commands.runRepeatableCommand('splitCell', 'split cell')
+      this.editor?.commands.runRepeatableCommandsChain(
+        [
+          ['splitCell'],
+          ['fixPandocTable']
+        ],
+        'split cell'
+      )
     }
   }
 }

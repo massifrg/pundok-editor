@@ -146,6 +146,8 @@ import {
   RepeatableCommandExtension,
   SearchAndReplaceExtension,
   SectionHighlighterExtension,
+  TableEdgesExtension,
+  TableEdgesOptions,
   TextAlign,
   TextAlignOptions,
   TextTransformExtension,
@@ -274,6 +276,7 @@ export interface PandocOptions {
   repeatableCommand: false;
   cssSelection: false;
   extraCommands: false;
+  tableEdges: Partial<TableEdgesOptions> | false;
 }
 
 export const Pandoc = Document.extend<PandocOptions>({
@@ -314,6 +317,7 @@ export const Pandoc = Document.extend<PandocOptions>({
         { name: 'repeatableCommand', object: RepeatableCommandExtension },
         { name: 'cssSelection', object: CssSelectionExtension },
         { name: 'extraCommands', object: ExtraCommandsExtension },
+        { name: 'tableEdges', object: TableEdgesExtension },
         {
           name: 'textAlign',
           object: TextAlign,
