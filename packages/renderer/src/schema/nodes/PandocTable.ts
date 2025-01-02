@@ -1056,7 +1056,7 @@ function fixTableSectionCells(
                 fixAlign || fixEdge
                   ? {
                     ...cellNode.attrs,
-                    textAlign: columnAlign,
+                    textAlign: fixAlign ? columnAlign : textAlign,
                     leftEdge: isLeftEdge ? true : undefined,
                     rightEdge: isRightEdge ? true : undefined,
                   }
