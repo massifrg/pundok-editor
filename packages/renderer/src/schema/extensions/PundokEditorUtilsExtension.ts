@@ -1,24 +1,21 @@
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorView } from '@tiptap/pm/view';
-import {
-  EditorState,
-  NodeSelection,
-  Plugin,
-  PluginKey,
-} from '@tiptap/pm/state';
+import { NodeSelection, Plugin } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import { IndexRef, IndexTerm, Paragraph, RawInline } from '..';
 import { setActionEditAttributes } from '../../actions';
 
+import { EditorKeyType, SK_EDIT_ATTRIBUTES } from '../../common';
+import { getMarksBetween } from '@tiptap/vue-3';
 import {
-  EditorKeyType,
-  PundokEditorConfig,
-  PundokEditorProject,
-  SaveResponse,
-  SK_EDIT_ATTRIBUTES,
-} from '../../common';
-import { Editor, getMarksBetween } from '@tiptap/vue-3';
-import { editableAttrsForNodeOrMark, SelectedNodeOrMark } from '../helpers';
+  DocState,
+  DocStateUpdate,
+  editableAttrsForNodeOrMark,
+  editorKeyFromState,
+  SelectedNodeOrMark,
+  updateDocState
+} from '../helpers';
+import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
 
 export const META_UPDATE_DOC_STATE = 'update-doc-state';
 
@@ -26,110 +23,6 @@ let keyCounter = 1;
 
 export function newEditorKey(): EditorKeyType {
   return keyCounter++;
-}
-
-export interface DocState {
-  /** The unique key of the editor. */
-  readonly editorKey: EditorKeyType;
-  /** The name of the document being edited. */
-  readonly documentName?: string;
-  /** Resource path for pandoc conversions. FIXME: still useful? */
-  readonly resourcePath?: string[];
-  /** Current configuration in use in the editor. */
-  readonly configuration?: PundokEditorConfig;
-  /** Current project of the document being edited. */
-  readonly project?: PundokEditorProject;
-  /** The result of the last save operation. */
-  readonly lastSaveResponse?: SaveResponse;
-  /** The result of the last export operation. */
-  readonly lastExportResponse?: SaveResponse;
-  /** `true` when the doc has changed and the changes are not saved in JSON yet. FIXME: native format too? */
-  readonly nativeUnsavedChanges?: boolean;
-  /** `true` when the doc has changed and the changes are not saved in any format. */
-  readonly unsavedChanges?: boolean;
-  /** callback to get notified when the doc state changes. */
-  readonly callback?: (updated: DocState) => void;
-}
-
-/** An interface to update the {@link DocState}. */
-export interface DocStateUpdate {
-  documentName: string | null;
-  resourcePath: string[] | null;
-  configuration: PundokEditorConfig | null;
-  project: PundokEditorProject | null;
-  lastSaveResponse: SaveResponse | null;
-  lastExportResponse: SaveResponse | null;
-  nativeUnsavedChanges: boolean;
-  unsavedChanges: boolean;
-  callback: ((updated: DocState) => void) | null;
-}
-
-export function getDocState(state?: EditorState): DocState | undefined {
-  return state ? pundokEditorUtilsPluginKey.getState(state) : undefined;
-}
-
-export function getEditorDocState(editor?: Editor): DocState | undefined {
-  return getDocState(editor?.state);
-}
-
-export function getEditorConfiguration(
-  editorOrState: Editor | EditorState,
-): PundokEditorConfig | undefined {
-  const state =
-    editorOrState instanceof EditorState
-      ? editorOrState
-      : (editorOrState as Editor)?.state;
-  const docState = getDocState(state);
-  return docState?.project?.computedConfig || docState?.configuration;
-}
-
-export function getEditorProject(
-  editorOrState: Editor | EditorState,
-): PundokEditorProject | undefined {
-  const state =
-    editorOrState instanceof EditorState
-      ? editorOrState
-      : (editorOrState as Editor)?.state;
-  return getDocState(state)?.project;
-}
-
-export function getDocStateIfEditorHasKey(
-  editor?: Editor,
-  editorKey?: EditorKeyType,
-): DocState | undefined {
-  const docState = editor?.state
-    ? pundokEditorUtilsPluginKey.getState(editor.state)
-    : undefined;
-  return docState && docState.editorKey === editorKey ? docState : undefined;
-}
-
-export function editorKeyFromState(
-  state?: EditorState,
-): EditorKeyType | undefined {
-  const docState = getDocState(state);
-  return docState ? docState.editorKey : undefined;
-}
-
-function updateDocState(
-  currentDocState: DocState,
-  updates: Partial<DocStateUpdate>,
-): DocState {
-  if (updates) {
-    let newDocState: DocState = { ...currentDocState };
-    Object.entries(updates).forEach(([key, value]) => {
-      // set a property to null if you want to reset it
-      newDocState =
-        value === null
-          ? { ...newDocState, [key]: undefined }
-          : { ...newDocState, [key]: value };
-    });
-    newDocState = {
-      ...newDocState,
-      editorKey: currentDocState.editorKey,
-    };
-    return newDocState;
-  }
-  return currentDocState;
 }
 
 declare module '@tiptap/core' {
@@ -142,10 +35,6 @@ declare module '@tiptap/core' {
 }
 
 export interface PundokEditorUtilsOptions { }
-
-export const pundokEditorUtilsPluginKey = new PluginKey(
-  'pundokEditorUtilsPlugin',
-);
 
 export const PundokEditorUtilsExtension =
   Extension.create<PundokEditorUtilsOptions>({

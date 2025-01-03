@@ -5,6 +5,7 @@ export * from './customAttribute';
 export * from './customClass';
 export * from './customStyle';
 export * from './cssSelection';
+export * from './DocState';
 export * from './fixPreArrowUpPlugin';
 export * from './nodeDepth';
 export * from './markHelpers';

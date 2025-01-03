@@ -1,3 +1,5 @@
+import { PluginKey } from '@tiptap/pm/state';
+
 export {
   CustomStyleExtension,
   type CustomStyleOptions,
@@ -14,6 +16,7 @@ export { HelperCommandsExtension } from './HelperCommandsExtension';
 export * from './IndexingExtension';
 export * from './AutoDelimitersExtension';
 export { SectionHighlighterExtension } from './SectionHighlighterExtension';
+export * from './PundokEditorUtilsPluginKey';
 export * from './PundokEditorUtilsExtension';
 export * from './SearchAndReplaceExtension';
 export * from './TextTransformExtension';

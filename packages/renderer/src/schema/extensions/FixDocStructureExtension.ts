@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core';
-import { Node, Attrs } from '@tiptap/pm/model';
-import { EditorState, NodeSelection, Transaction } from '@tiptap/pm/state';
+import { Node } from '@tiptap/pm/model';
+import { EditorState, Transaction } from '@tiptap/pm/state';
 import {
   DEFAULT_INDEX_NAME,
   INDEX_CLASS,
@@ -8,7 +8,6 @@ import {
   INDEX_TERM_CLASS,
   PundokEditorConfig,
 } from '../../common';
-import { Div, IndexDiv, IndexTerm } from '..';
 
 interface ProsemirrorPandocFixerOptions {
   state: EditorState;
@@ -64,7 +63,13 @@ export const FixDocStructureExtension = Extension.create({
 //   return transaction.replaceRangeWith(pos, pos + node.nodeSize, transformedNode)
 // }
 
-const divEncodedNodeNames = [Div.name, IndexDiv.name, IndexTerm.name];
+// TODO: externalize names' constants
+const NODE_NAME_DIV = 'div'
+const NODE_NAME_INDEX_DIV = 'indexDiv'
+const NODE_NAME_INDEX_TERM = 'indexTerm'
+
+// const divEncodedNodeNames = [Div.name, IndexDiv.name, IndexTerm.name];
+const divEncodedNodeNames = [NODE_NAME_DIV, NODE_NAME_INDEX_DIV, NODE_NAME_INDEX_TERM];
 
 const divEncodedNodesFixer: ProsemirrorPandocFixer = ({
   state,
@@ -79,7 +84,7 @@ const divEncodedNodesFixer: ProsemirrorPandocFixer = ({
   if (divEncodedNodeNames.includes(newTypeName)) {
     let { classes, kv } = attrs || {};
     if (classes.includes(INDEX_CLASS)) {
-      newTypeName = IndexDiv.name;
+      newTypeName = NODE_NAME_DIV;
       let indexName = kv[INDEX_NAME_ATTR];
       if (!indexName)
         indexName =
@@ -89,9 +94,9 @@ const divEncodedNodesFixer: ProsemirrorPandocFixer = ({
       classes = (classes as string[]).filter((c) => c !== INDEX_TERM_CLASS);
       attrs = { ...node.attrs, classes, kv };
     } else if (classes.includes(INDEX_TERM_CLASS)) {
-      newTypeName = IndexTerm.name;
+      newTypeName = NODE_NAME_INDEX_TERM;
     } else {
-      newTypeName = Div.name;
+      newTypeName = NODE_NAME_DIV;
     }
   }
   if (newTypeName !== node.type.name) {
@@ -112,9 +117,9 @@ const divEncodedNodesFixer: ProsemirrorPandocFixer = ({
 };
 
 const DEFAULT_FIXERS: Record<string, ProsemirrorPandocFixer> = {
-  [Div.name]: divEncodedNodesFixer,
-  [IndexDiv.name]: divEncodedNodesFixer,
-  [IndexTerm.name]: divEncodedNodesFixer,
+  [NODE_NAME_DIV]: divEncodedNodesFixer,
+  [NODE_NAME_INDEX_DIV]: divEncodedNodesFixer,
+  [NODE_NAME_INDEX_TERM]: divEncodedNodesFixer,
 };
 
 export function nodeFromAttrsFixer(

@@ -1,9 +1,8 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { DEFAULT_RAW_INLINE_FORMAT, SK_TOGGLE_RAWINLINE } from '../../common';
-import { getEditorConfiguration } from '../extensions/PundokEditorUtilsExtension';
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { NodeSelection } from '@tiptap/pm/state';
-import { marksEnding, marksStarting } from '../helpers';
+import { getEditorConfiguration, marksEnding, marksStarting } from '../helpers';
 import { intersection } from 'lodash';
 
 declare module '@tiptap/core' {
