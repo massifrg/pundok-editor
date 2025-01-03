@@ -8,6 +8,7 @@ export * from './cssSelection';
 export * from './fixPreArrowUpPlugin';
 export * from './nodeDepth';
 export * from './markHelpers';
+export * from './mathType';
 export * from './nodeTemplates';
 export * from './pandocTable';
 export * from './PandocVsProsemirror';

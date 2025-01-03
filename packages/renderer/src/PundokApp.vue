@@ -328,6 +328,12 @@ $color-fg-index: #dc7200;
 
   span.math {
     background: pink;
+
+    &.display-math {
+      padding: .3rem;
+      border: 2px solid rgb(140, 45, 61);
+      border-radius: .3rem;
+    }
   }
 
   div[class=div] {

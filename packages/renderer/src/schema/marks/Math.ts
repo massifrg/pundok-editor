@@ -1,4 +1,5 @@
 import {
+  isMarkActive,
   Mark,
   // markInputRule,
   // markPasteRule,
@@ -9,13 +10,15 @@ import {
   PANDOC_DEFAULT_MATH_TYPE,
   PANDOC_MATH_TYPES,
   mathTypeToHtmlAttributes,
-} from '../helpers/mathType';
-import { SK_TOGGLE_MATH } from '../../common';
+  nextMathType,
+  MathType,
+} from '../helpers';
+import { SK_TOGGLE_MATH, SK_TOGGLE_MATH_TYPE } from '../../common';
 
 export interface MathOptions {
   HTMLAttributes: Record<string, any>;
-  mathTypes: string[];
-  defaultMathType: string;
+  mathTypes: MathType[];
+  defaultMathType: MathType;
 }
 
 declare module '@tiptap/core' {
@@ -33,6 +36,10 @@ declare module '@tiptap/core' {
        * Unset a math mark
        */
       unsetMath: () => ReturnType;
+      /**
+       * Cycle the mathType attribute through the possible values.
+       */
+      toggleMathType: () => ReturnType;
     };
   }
 }
@@ -80,25 +87,75 @@ export const Math = Mark.create<MathOptions>({
     return {
       setMath:
         () =>
-        ({ commands }) => {
-          return commands.setMark(this.name);
-        },
+          ({ commands }) => {
+            return commands.setMark(this.name);
+          },
       toggleMath:
         () =>
-        ({ commands }) => {
-          return commands.toggleMark(this.name);
-        },
+          ({ commands }) => {
+            return commands.toggleMark(this.name);
+          },
       unsetMath:
         () =>
-        ({ commands }) => {
-          return commands.unsetMark(this.name);
-        },
+          ({ commands }) => {
+            return commands.unsetMark(this.name);
+          },
+      toggleMathType:
+        () =>
+          ({ dispatch, state, tr }) => {
+            const { doc, schema, selection } = state
+            const mathTypeName = this.name
+            const mathMarkType = schema.marks[mathTypeName]
+            const { empty, from } = selection
+            if (isMarkActive(state, mathTypeName)) {
+              if (dispatch) {
+                const positions: { from: number, to: number, mathType: MathType }[] = []
+                if (empty) {
+                  const node = doc.nodeAt(from)
+                  if (node) {
+                    const start = doc.resolve(from).start()
+                    const currentMathMark = node.marks.find(m => m.type.name === mathTypeName)
+                    if (currentMathMark)
+                      positions.push({
+                        from: start,
+                        to: start + node.nodeSize,
+                        mathType: currentMathMark.attrs.mathType
+                      })
+                  }
+                } else {
+                  selection.content().content.descendants((node, pos) => {
+                    const currentMathMark = node.marks.find(m => m.type.name === mathTypeName)
+                    if (currentMathMark) {
+                      const start = from + pos - 1
+                      positions.push({
+                        from: start,
+                        to: start + node.nodeSize,
+                        mathType: currentMathMark.attrs.mathType
+                      })
+                    }
+                  })
+                }
+                positions.forEach(({ from, to, mathType }) => {
+                  const node = doc.nodeAt(from)
+                  if (node) {
+                    const mark = mathMarkType.create({ mathType: nextMathType(mathType) })
+                    tr.removeMark(from, to, mathMarkType)
+                      .addMark(from, to, mark)
+                  }
+                })
+                dispatch(tr)
+              }
+              return true
+            }
+            return false
+          },
     };
   },
 
   addKeyboardShortcuts() {
     return {
       [SK_TOGGLE_MATH]: () => this.editor.commands.toggleMath(),
+      [SK_TOGGLE_MATH_TYPE]: () => this.editor.commands.toggleMathType(),
     };
   },
 

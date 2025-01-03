@@ -681,7 +681,7 @@ export const schema = new Schema({
       parseDOM: [
         {
           tag: 'span.math',
-          getAttrs: (e) => ({ quoteType: domToMathType(e as HTMLElement) }),
+          getAttrs: (e) => ({ mathType: domToMathType(e as HTMLElement) }),
         },
       ],
       toDOM: (node) => {

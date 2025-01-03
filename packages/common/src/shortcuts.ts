@@ -38,6 +38,7 @@ export const SK_TOGGLE_HIGHLIGHT = 'Mod-Shift-h';
 export const SK_TOGGLE_SINGLEQUOTE = "Mod-Shift-'";
 export const SK_TOGGLE_DOUBLEQUOTE = 'Mod-Shift-2';
 export const SK_TOGGLE_MATH = 'Mod-Shift-m';
+export const SK_TOGGLE_MATH_TYPE = 'Mod-Alt-m';
 export const SK_ALIGN_LEFT = 'Mod-Shift-l';
 export const SK_ALIGN_CENTER = 'Mod-Shift-e';
 export const SK_ALIGN_RIGHT = 'Mod-Shift-r';

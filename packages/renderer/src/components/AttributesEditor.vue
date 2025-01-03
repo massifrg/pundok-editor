@@ -202,6 +202,16 @@
               @click="resetAttribute('indexName')" />
           </q-card-actions>
         </q-tab-panel>
+        <q-tab-panel v-if="hasAttribute('mathType')" name="mathType">
+          <SelectValueEditor :start-value="attrs.mathType" attr-name="mathType" :options="[
+            { label: 'InlineMath', value: 'InlineMath' },
+            { label: 'DisplayMath', value: 'DisplayMath' }
+          ]" @update-attribute="updateAttribute" />
+          <q-space />
+          <q-card-actions align="center">
+            <q-btn icon="mdi-reload" title="reset MathType" size="xs" @click="resetAttribute('mathType')" />
+          </q-card-actions>
+        </q-tab-panel>
         <q-tab-panel v-if="isImage || isLink" name="target">
           <TargetEditor :editor="editor" :node-or-mark="nodeOrMark" :url-attr-name="isImage ? 'src' : 'href'"
             :url="isImage ? attrs.src : attrs.href" :title="attrs.title" @update-attribute="updateAttribute" />
