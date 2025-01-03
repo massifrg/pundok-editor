@@ -140,6 +140,7 @@ export { default as OtherAttributesEditor } from './attreditors/OtherAttributesE
 export { default as TextAttrEditor } from './attreditors/TextAttrEditor.vue';
 
 export { default as EmptySpanView } from './nodeviews/EmptySpanView.vue';
+export { default as ImageView } from './nodeviews/ImageView.vue';
 export { default as IndexRefView } from './nodeviews/IndexRefView.vue';
 export { default as MetaBoolView } from './nodeviews/MetaBoolView.vue';
 export { default as MetadataView } from './nodeviews/MetadataView.vue';

@@ -1,5 +1,8 @@
 // slightly modified from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-image/src/image.ts
-import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core';
+import { Node, nodeInputRule } from '@tiptap/core';
+import { VueNodeViewRenderer } from '@tiptap/vue-3';
+import { Component } from 'vue';
+import { ImageView } from '../../components';
 
 export interface ImageOptions {
   inline: boolean;
@@ -38,6 +41,7 @@ export const Image = Node.create<ImageOptions>({
       HTMLAttributes: {},
     };
   },
+
   addAttributes() {
     return {
       src: {
@@ -61,23 +65,27 @@ export const Image = Node.create<ImageOptions>({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return [
-      'img',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-    ];
+  // renderHTML({ HTMLAttributes }) {
+  //   return [
+  //     'img',
+  //     mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+  //   ];
+  // },
+
+  addNodeView() {
+    return VueNodeViewRenderer(ImageView as Component);
   },
 
   addCommands() {
     return {
       setImage:
         (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        },
+          ({ commands }) => {
+            return commands.insertContent({
+              type: this.name,
+              attrs: options,
+            });
+          },
     };
   },
 

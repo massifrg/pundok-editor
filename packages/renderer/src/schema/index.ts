@@ -5,4 +5,4 @@ export * from './extensions';
 export * from './helpers';
 
 // views
-export { EmptySpanView, IndexRefView, NoteView } from '../components';
+export { EmptySpanView, ImageView, IndexRefView, NoteView } from '../components';
