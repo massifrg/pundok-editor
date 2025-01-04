@@ -1,8 +1,6 @@
 // slightly modified from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-image/src/image.ts
-import { Node, nodeInputRule } from '@tiptap/core';
-import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { Component } from 'vue';
-import { ImageView } from '../../components';
+import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core';
+import { getEditorDocState } from '../helpers';
 
 export interface ImageOptions {
   inline: boolean;
@@ -42,11 +40,30 @@ export const Image = Node.create<ImageOptions>({
     };
   },
 
+  addStorage() {
+    return {
+      editor: null
+    }
+  },
+
   addAttributes() {
     return {
       src: {
         default: null,
-        renderHTML: (attrs) => (attrs.src ? { src: attrs.src } : {}),
+        renderHTML: (attrs) => {
+          let baseUrl = ''
+          if (this.storage.editor) {
+            const docState = getEditorDocState(this.storage.editor)
+            if (docState)
+              baseUrl = docState.project?.path
+                || docState.lastSaveResponse?.doc.path
+                || docState.lastExportResponse?.doc.path
+                || (docState.resourcePath && docState.resourcePath[0])
+                || ''
+            baseUrl = baseUrl.length > 0 && !baseUrl.endsWith('/') ? baseUrl + '/' : baseUrl
+          }
+          return attrs.src ? { src: 'img://' + baseUrl + attrs.src } : {}
+        },
       },
       title: {
         default: null,
@@ -65,15 +82,15 @@ export const Image = Node.create<ImageOptions>({
     ];
   },
 
-  // renderHTML({ HTMLAttributes }) {
-  //   return [
-  //     'img',
-  //     mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-  //   ];
-  // },
+  renderHTML({ HTMLAttributes }) {
+    return [
+      'img',
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+    ];
+  },
 
-  addNodeView() {
-    return VueNodeViewRenderer(ImageView as Component);
+  onCreate() {
+    this.storage.editor = this.editor
   },
 
   addCommands() {
