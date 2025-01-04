@@ -10,7 +10,7 @@ import {
 } from './resourcesManager';
 import { updateStaticResources } from './staticResources';
 import { getBookmarks } from './bookmarks';
-import { readFile } from 'fs/promises';
+import { handleImagesFor } from './protocolHandler';
 
 let showDeveloperTools = !!import.meta.env.DEV;
 let showPdfView = false;
@@ -43,18 +43,10 @@ async function createWindow() {
       preload: join(__dirname, '../../preload/dist/index.cjs'),
       devTools: true,
       spellcheck: true,
-      webSecurity: false,
+      // webSecurity: false,
     },
   });
-  editorView.webContents.session.protocol.handle('img', async (request) => {
-    const url = request.url;
-    const imageBuffer = await readFile(url.substring('img://'.length));
-    const blob = new Blob([imageBuffer], { type: 'image/jpeg' })
-    return new Response(blob, {
-      status: 200,
-      headers: { 'Content-Type': blob.type }
-    });
-  })
+  handleImagesFor(editorView)
   baseWindow.contentView.addChildView(editorView);
   editorView.setBounds({ x: 0, y: 0, width: 600, height: 600 });
 

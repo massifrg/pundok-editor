@@ -1,6 +1,8 @@
 // slightly modified from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-image/src/image.ts
 import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core';
 import { getEditorDocState } from '../helpers';
+import { parse as parsePath } from 'path'
+import { Editor } from '@tiptap/vue-3';
 
 export interface ImageOptions {
   inline: boolean;
@@ -42,7 +44,7 @@ export const Image = Node.create<ImageOptions>({
 
   addStorage() {
     return {
-      editor: null
+      baseUrl: undefined as string | undefined
     }
   },
 
@@ -50,24 +52,11 @@ export const Image = Node.create<ImageOptions>({
     return {
       src: {
         default: null,
-        renderHTML: (attrs) => {
-          let baseUrl = ''
-          if (this.storage.editor) {
-            const docState = getEditorDocState(this.storage.editor)
-            if (docState)
-              baseUrl = docState.project?.path
-                || docState.lastSaveResponse?.doc.path
-                || docState.lastExportResponse?.doc.path
-                || (docState.resourcePath && docState.resourcePath[0])
-                || ''
-            baseUrl = baseUrl.length > 0 && !baseUrl.endsWith('/') ? baseUrl + '/' : baseUrl
-          }
-          return attrs.src ? { src: 'img://' + baseUrl + attrs.src } : {}
-        },
+        // renderHTML: (attrs) => (attrs.src ? { src: 'img://' + this.storage.baseUrl + attrs.src } : {}),
       },
       title: {
         default: null,
-        renderHTML: (attrs) => (attrs.title ? { title: attrs.title } : {}),
+        // renderHTML: (attrs) => (attrs.title ? { title: attrs.title } : {}),
       },
     };
   },
@@ -82,15 +71,30 @@ export const Image = Node.create<ImageOptions>({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes, node }) {
+    const editor = this.editor
+    const storage = this.storage
+    const attributes: Record<string, any> = { ...node.attrs }
+    if (editor && !storage.baseUrl) {
+      let baseUrl: string | undefined = undefined
+      const docState = getEditorDocState(editor as Editor)
+      console.log(docState)
+      if (docState) {
+        baseUrl = docState.lastSaveResponse?.doc.path
+        if (baseUrl)
+          baseUrl = parsePath(baseUrl).dir
+        baseUrl = docState.resourcePath && docState.resourcePath[0]
+        // console.log(`baseUrl: ${baseUrl}`)
+        if (baseUrl)
+          storage.baseUrl = baseUrl
+      }
+    }
+    if (storage.baseUrl)
+      attributes.src = `img://${storage.baseUrl}/${attributes.src}`
     return [
       'img',
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, attributes),
     ];
-  },
-
-  onCreate() {
-    this.storage.editor = this.editor
   },
 
   addCommands() {
