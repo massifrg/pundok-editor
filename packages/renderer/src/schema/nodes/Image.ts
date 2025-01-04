@@ -1,7 +1,7 @@
 // slightly modified from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-image/src/image.ts
 import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core';
 import { getEditorDocState } from '../helpers';
-import { parse as parsePath } from 'path'
+import { parse as parsePath } from 'path-browserify'
 import { Editor } from '@tiptap/vue-3';
 
 export interface ImageOptions {
