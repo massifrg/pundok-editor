@@ -7,6 +7,7 @@ import {
 } from "../../common";
 import { pundokEditorUtilsPluginKey } from "../extensions";
 import { Editor } from "@tiptap/vue-3";
+import { parse as parsePath, relative as relativePath } from 'path-browserify'
 
 export interface DocState {
   /** The unique key of the editor. */
@@ -110,4 +111,23 @@ export function updateDocState(
     return newDocState;
   }
   return currentDocState;
+}
+
+export function docBasePath(docState: DocState): string | undefined {
+  let basePath = docState.project?.path
+  if (basePath)
+    return basePath
+  basePath = docState.lastSaveResponse?.doc.path
+  if (basePath)
+    return parsePath(basePath).dir
+  basePath = docState.resourcePath && docState.resourcePath[0]
+  if (basePath)
+    return basePath
+}
+
+export function makePathRelativeToDoc(docState: DocState, path: string): string {
+  const basePath = docBasePath(docState)
+  return basePath
+    ? relativePath(basePath, path)
+    : path
 }

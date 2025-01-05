@@ -1,6 +1,6 @@
 // slightly modified from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-image/src/image.ts
 import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core';
-import { getEditorDocState } from '../helpers';
+import { docBasePath, getEditorDocState } from '../helpers';
 import { parse as parsePath } from 'path-browserify'
 import { Editor } from '@tiptap/vue-3';
 
@@ -80,16 +80,10 @@ export const Image = Node.create<ImageOptions>({
     if (editor && !storage.baseUrl) {
       let baseUrl: string | undefined = undefined
       const docState = getEditorDocState(editor as Editor)
-      console.log(docState)
-      if (docState) {
-        baseUrl = docState.lastSaveResponse?.doc.path
-        if (baseUrl)
-          baseUrl = parsePath(baseUrl).dir
-        baseUrl = docState.resourcePath && docState.resourcePath[0]
-        // console.log(`baseUrl: ${baseUrl}`)
-        if (baseUrl)
-          storage.baseUrl = baseUrl
-      }
+      if (docState)
+        baseUrl = docBasePath(docState)
+      if (baseUrl)
+        storage.baseUrl = baseUrl
     }
     const ext = parsePath(attributes.src).ext.toLowerCase()
     const { page, ['preview-width']: width, ['preview-height']: height } = attributes.kv || {}

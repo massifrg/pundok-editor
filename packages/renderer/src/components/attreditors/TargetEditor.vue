@@ -12,7 +12,7 @@
 <script lang="ts">
 import { useBackend } from '../../stores';
 import { mapState } from 'pinia';
-import { getDocState } from '../../schema';
+import { getDocState, makePathRelativeToDoc } from '../../schema';
 
 export default {
   props: ['editor', 'urlAttrName', 'url', 'title'],
@@ -65,8 +65,9 @@ export default {
       if (coords) {
         // console.log(coords)
         const { src } = coords
-        if (src)
-          this.updateTargetUrl(src)
+        if (src) {
+          this.updateTargetUrl(docState ? makePathRelativeToDoc(docState, src) : src)
+        }
       }
     }
   }
