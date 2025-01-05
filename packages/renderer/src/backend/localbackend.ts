@@ -55,6 +55,7 @@ import {
 import { useActions } from '../stores';
 import { IPC_CHANNELS } from '../common';
 import { isString } from 'lodash';
+import { OpenDialogOptions } from 'electron';
 
 type Listener = () => void;
 
@@ -379,17 +380,32 @@ export class LocalBackend implements Backend {
 
   async askForDocumentIdOrPath(
     why: WhyAskingForIdOrPath,
-    context?: DocumentContext,
+    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
   ): Promise<DocumentCoords | undefined> {
-    const maybeProject = context?.project;
+    const maybeProject = options?.project;
     const project = isString(maybeProject)
       ? (JSON.parse(maybeProject) as PundokEditorProject)
       : maybeProject;
     console.log(`asking for a filename relative to ${project?.path}`);
-    return this.invokeIpc('ask-for-document', context?.editorKey, context?.id, {
+    let title = 'Open document'
+    let buttonLabel: string | undefined = undefined
+    switch (why) {
+      case 'inclusion':
+        title = 'Include document'
+        buttonLabel = 'Include'
+        break
+      case 'edit':
+        break
+      case 'image':
+        title = 'Set image src attribute'
+        buttonLabel = 'Set'
+        break
+    }
+    return this.invokeIpc('ask-for-document', options?.editorKey, options?.id, {
       defaultPath: project?.path,
-      title: why === 'inclusion' ? 'Include document' : 'Open document',
-      buttonLabel: why === 'inclusion' ? 'Include' : undefined,
+      title,
+      buttonLabel,
+      ...options?.openDialogOptions
     });
   }
 

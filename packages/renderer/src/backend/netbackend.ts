@@ -20,6 +20,7 @@ import {
   DocumentCoords,
   PandocFilterTransform,
 } from '../common';
+import { OpenDialogOptions } from 'electron';
 
 export class NetBackend implements Backend {
   private config: BackendConfig = {};
@@ -120,7 +121,7 @@ export class NetBackend implements Backend {
 
   async askForDocumentIdOrPath(
     why: WhyAskingForIdOrPath,
-    context?: DocumentContext,
+    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
   ): Promise<DocumentCoords | undefined> {
     return Promise.reject('method non implemented');
   }

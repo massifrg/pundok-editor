@@ -64,6 +64,11 @@
 
       <span class="button-separator" />
 
+      <ToolbarButton icon="mdi-image-outline" title="insert Image"
+        @click="editor.commands.setImage({ src: '', title: 'new image' })" />
+
+      <span class="button-separator" />
+
       <InsertNoteButton :editor="editor" :disabled="!editor.can().insertNote()" @insert-note="insertNote" />
 
       <span class="button-separator" />

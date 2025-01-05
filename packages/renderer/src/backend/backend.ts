@@ -17,6 +17,7 @@ import type {
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
 import { NetBackend } from './netbackend';
+import { OpenDialogOptions } from 'electron';
 
 export type IpcRendererListener = (
   e: Electron.IpcRendererEvent,
@@ -36,7 +37,7 @@ export interface BackendConfig {
   ipc?: Ipc;
 }
 
-export type WhyAskingForIdOrPath = 'edit' | 'inclusion';
+export type WhyAskingForIdOrPath = 'edit' | 'inclusion' | 'image';
 
 /**
  * An interface to connect to the backend, to get the documents' data.
@@ -114,11 +115,11 @@ export interface Backend {
   /**
    * Retrieves the id or the path of a document from the backend.
    * @param why The aim of the request (open a document, include a document, ...)
-   * @param context
+   * @param options
    */
   askForDocumentIdOrPath(
     why: WhyAskingForIdOrPath,
-    context?: DocumentContext,
+    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
   ): Promise<DocumentCoords | undefined>;
 
   /**
