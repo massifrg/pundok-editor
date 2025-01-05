@@ -64,8 +64,7 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-image-outline" title="insert Image"
-        @click="editor.commands.setImage({ src: '', title: 'new image' })" />
+      <ImageButton :editor="editor" />
 
       <span class="button-separator" />
 
@@ -179,6 +178,7 @@ import CustomWrapperMenu from './CustomWrapperMenu.vue'
 import CustomMarkMenu from './CustomMarkMenu.vue'
 import CustomBlocksButtons from './CustomBlocksButtons.vue';
 import ElementSelectionButton from './ElementSelectionButton.vue';
+import ImageButton from './ImageButton.vue';
 import IndicesButtons from './IndicesButtons.vue';
 import InsertNoteButton from './InsertNoteButton.vue'
 import ImportToolbarButton from './ImportToolbarButton.vue';
@@ -209,6 +209,7 @@ export default {
     CustomWrapperMenu,
     ElementSelectionButton,
     ExportToolbarButton,
+    ImageButton,
     IndicesButtons,
     InsertNoteButton,
     ImportToolbarButton,

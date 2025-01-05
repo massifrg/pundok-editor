@@ -115,6 +115,7 @@ export { default as CustomMarkMenu } from './CustomMarkMenu.vue';
 export { default as DraggableDialog } from './DraggableDialog.vue';
 export { default as ExportDialog } from './ExportDialog.vue';
 export { default as ExportToolbarButton } from './ExportToolbarButton.vue';
+export { default as ImageButton } from './ImageButton.vue';
 export { default as ImportDialog } from './ImportDialog.vue';
 export { default as ImportToolbarButton } from './ImportToolbarButton.vue';
 export { default as InputTextDialog } from './InputTextDialog.vue';
@@ -134,9 +135,16 @@ export { default as ToolbarButton } from './ToolbarButton.vue';
 
 export { default as ClassesEditor } from './attreditors/ClassesEditor.vue';
 export { default as CustomStyleEditor } from './attreditors/CustomStyleEditor.vue';
+export { default as IndexIdEditor } from './attreditors/IndexIdEditor.vue'
+export { default as IndexNameEditor } from './attreditors/IndexNameEditor.vue'
+export { default as IndexRefEditor } from './attreditors/IndexRefEditor.vue'
 export { default as IntegerEditor } from './attreditors/IntegerEditor.vue';
 export { default as LevelEditor } from './attreditors/LevelEditor.vue';
+export { default as NoteTypeEditor } from './attreditors/NoteTypeEditor.vue';
 export { default as OtherAttributesEditor } from './attreditors/OtherAttributesEditor.vue';
+export { default as RawTextEditor } from './attreditors/RawTextEditor.vue';
+export { default as SelectValueEditor } from './attreditors/SelectValueEditor.vue';
+export { default as TargetEditor } from './attreditors/TargetEditor.vue';
 export { default as TextAttrEditor } from './attreditors/TextAttrEditor.vue';
 
 export { default as EmptySpanView } from './nodeviews/EmptySpanView.vue';
