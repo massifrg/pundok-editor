@@ -585,5 +585,9 @@ $color-fg-index: #dc7200;
     color: rgb(80, 10, 127);
     background-color: rgb(229, 189, 255);
   }
+
+  img.ProseMirror-selectednode {
+    border: 2px solid #3584e4;
+  }
 }
 </style>

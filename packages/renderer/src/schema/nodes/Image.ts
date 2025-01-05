@@ -89,8 +89,15 @@ export const Image = Node.create<ImageOptions>({
           storage.baseUrl = baseUrl
       }
     }
+    const ext = parsePath(attributes.src).ext.toLowerCase()
+    const { page, ['preview-width']: width, ['preview-height']: height } = attributes.kv || {}
+    const query = ext === '.pdf' && page && parseInt(page) > 1 && `?page=${page}` || ''
     if (storage.baseUrl)
-      attributes.src = `img://${storage.baseUrl}/${attributes.src}`
+      attributes.src = `img://${storage.baseUrl}/${attributes.src}${query}`
+    const style = (width || height)
+      && Object.entries({ width, height }).map(([p, v]) => `${p}: ${v}`).join('; ') || ''
+    if (style)
+      attributes.style = style
     return [
       'img',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, attributes),
