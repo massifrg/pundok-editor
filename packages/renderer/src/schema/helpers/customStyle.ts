@@ -5,7 +5,7 @@ import {
   isCustomizableWithClass,
   isCustomizableWithStyle,
   isCustomStyleActive,
-  PundokEditorConfig,
+  NODE_NAME_HEADING,
 } from '../../common';
 import {
   addClass,
@@ -41,7 +41,7 @@ export function setCustomStyleAttr(
   } else if (isCustomizableWithClass(el)) {
     const { className, level } = cs.attrs;
     let newAttrs = addClass(el.attrs, className);
-    return level && el.type.name === Heading.name
+    return level && el.type.name === NODE_NAME_HEADING
       ? { ...newAttrs, level }
       : newAttrs;
   }

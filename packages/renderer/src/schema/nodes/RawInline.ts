@@ -1,5 +1,9 @@
 import { mergeAttributes, Node } from '@tiptap/core';
-import { DEFAULT_RAW_INLINE_FORMAT, SK_TOGGLE_RAWINLINE } from '../../common';
+import {
+  DEFAULT_RAW_INLINE_FORMAT,
+  NODE_NAME_RAW_INLINE,
+  SK_TOGGLE_RAWINLINE
+} from '../../common';
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { NodeSelection } from '@tiptap/pm/state';
 import { getEditorConfiguration, marksEnding, marksStarting } from '../helpers';
@@ -24,7 +28,7 @@ export interface RawInlineOptions {
 }
 
 export const RawInline = Node.create<RawInlineOptions>({
-  name: 'rawInline',
+  name: NODE_NAME_RAW_INLINE,
   group: 'inline',
   inline: true,
   atom: true,
@@ -151,7 +155,7 @@ export const RawInline = Node.create<RawInlineOptions>({
                 tr = tr.insert(from, rawInline1);
               } else {
                 const text = doc.textBetween(from, to, ' ', (node) =>
-                  node.type.name === this.name ? node.attrs.text : '',
+                  node.type.name === NODE_NAME_RAW_INLINE ? node.attrs.text : '',
                 );
                 const rawInline = rawInlineType.create({ format, text });
                 tr = tr.replaceSelectionWith(rawInline, true);
@@ -169,7 +173,7 @@ export const RawInline = Node.create<RawInlineOptions>({
             const positions: number[] = [];
             const texts: string[] = [];
             doc.nodesBetween(from, to, (node, pos) => {
-              if (node.type.name == RawInline.name) {
+              if (node.type.name == NODE_NAME_RAW_INLINE) {
                 positions.push(pos);
                 texts.push(node.attrs.text);
               }
@@ -190,7 +194,7 @@ export const RawInline = Node.create<RawInlineOptions>({
             const { selection } = state;
             if (
               selection instanceof NodeSelection &&
-              selection.node.type.name === this.name
+              selection.node.type.name === NODE_NAME_RAW_INLINE
             )
               return dispatch
                 ? editor.commands.rawInlineToText()

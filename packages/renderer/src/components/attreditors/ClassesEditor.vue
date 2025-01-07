@@ -30,8 +30,13 @@
 
 <script lang="ts">
 import { isString } from 'lodash';
-import { CustomClass, CustomStyleInstance, customClassesForNodeOrMark } from '../../common';
-import { Div, IncludeDocCustomClass, getEditorConfiguration } from '../../schema';
+import {
+  CustomClass,
+  CustomStyleInstance,
+  NODE_NAME_DIV,
+  customClassesForNodeOrMark
+} from '../../common';
+import { IncludeDocCustomClass, getEditorConfiguration } from '../../schema';
 
 export default {
   props: ['editor', 'nodeOrMark', 'startValue', 'importantClasses', 'forbiddenClasses'],
@@ -50,7 +55,7 @@ export default {
     },
     customClasses(): CustomClass[] {
       const classes = []
-      if (this.nodeOrMark?.type.name === Div.name) classes.push(IncludeDocCustomClass)
+      if (this.nodeOrMark?.type.name === NODE_NAME_DIV) classes.push(IncludeDocCustomClass)
       const customClasses = this.configuration && this.configuration.customClasses || []
       return [...classes, ...customClasses]
     },

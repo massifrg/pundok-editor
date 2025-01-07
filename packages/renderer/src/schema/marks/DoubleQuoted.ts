@@ -5,7 +5,7 @@ import {
   mergeAttributes,
 } from '@tiptap/core';
 import { DOUBLE_QUOTED_CLASS } from '../helpers/quoted';
-import { SK_TOGGLE_DOUBLEQUOTE } from '../../common';
+import { MARK_NAME_DOUBLE_QUOTED, SK_TOGGLE_DOUBLEQUOTE } from '../../common';
 
 export interface DoubleQuotedOptions {
   HTMLAttributes: Record<string, any>;
@@ -34,7 +34,7 @@ declare module '@tiptap/core' {
 // export const pasteRegex = /(?:^|\s)((?:~~)((?:[^~]+))(?:~~))/g
 
 export const DoubleQuoted = Mark.create<DoubleQuotedOptions>({
-  name: 'doubleQuoted',
+  name: MARK_NAME_DOUBLE_QUOTED,
   inclusive: false,
 
   addOptions() {
@@ -61,27 +61,27 @@ export const DoubleQuoted = Mark.create<DoubleQuotedOptions>({
     return {
       setDoubleQuoted:
         () =>
-        ({ commands }) => {
-          return commands.setMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-            includeSpaces: true,
-          });
-        },
+          ({ commands }) => {
+            return commands.setMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+              includeSpaces: true,
+            });
+          },
       toggleDoubleQuoted:
         () =>
-        ({ commands }) => {
-          return commands.toggleMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-            includeSpaces: true,
-          });
-        },
+          ({ commands }) => {
+            return commands.toggleMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+              includeSpaces: true,
+            });
+          },
       unsetDoubleQuoted:
         () =>
-        ({ commands }) => {
-          return commands.unsetMarkNoAtoms(this.name, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.unsetMarkNoAtoms(this.name, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
     };
   },
 

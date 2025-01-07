@@ -4,7 +4,7 @@ import {
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { SK_TOGGLE_SMALLCAPS } from '../../common';
+import { MARK_NAME_SMALLCAPS, SK_TOGGLE_SMALLCAPS } from '../../common';
 
 export interface SmallcapsOptions {
   HTMLAttributes: Record<string, any>;
@@ -33,7 +33,7 @@ declare module '@tiptap/core' {
 // export const pasteRegex = /(?:^|\s)((?:~~)((?:[^~]+))(?:~~))/g
 
 export const Smallcaps = Mark.create<SmallcapsOptions>({
-  name: 'smallcaps',
+  name: MARK_NAME_SMALLCAPS,
 
   addOptions() {
     return {
@@ -70,25 +70,25 @@ export const Smallcaps = Mark.create<SmallcapsOptions>({
     return {
       setSmallcaps:
         () =>
-        ({ commands }) => {
-          return commands.setMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.setMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
       toggleSmallcaps:
         () =>
-        ({ commands }) => {
-          return commands.toggleMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.toggleMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
       unsetSmallcaps:
         () =>
-        ({ commands }) => {
-          return commands.unsetMarkNoAtoms(this.name, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.unsetMarkNoAtoms(this.name, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
     };
   },
 

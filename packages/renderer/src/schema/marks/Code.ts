@@ -1,4 +1,5 @@
 import { Mark, mergeAttributes } from '@tiptap/core'
+import { MARK_NAME_CODE } from '../../common'
 
 export interface CodeOptions {
   /**
@@ -40,7 +41,7 @@ declare module '@tiptap/core' {
 }
 
 export const Code = Mark.create<CodeOptions>({
-  name: 'code',
+  name: MARK_NAME_CODE,
 
   addOptions() {
     return {

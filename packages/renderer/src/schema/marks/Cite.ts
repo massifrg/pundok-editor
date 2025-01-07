@@ -1,4 +1,5 @@
-import { MarkType, Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { MarkType } from '@tiptap/pm/model'
+import { EditorState, Transaction } from '@tiptap/pm/state';
 import {
   Mark,
   // markInputRule,
@@ -6,8 +7,7 @@ import {
   mergeAttributes,
 } from '@tiptap/core';
 import { PundokCitation, textToCitations } from '../helpers';
-import { EditorState, Transaction } from '@tiptap/pm/state';
-import { Note } from '../nodes';
+import { MARK_NAME_CITE, NODE_NAME_NOTE } from '../../common';
 
 export interface CiteOptions {
   HTMLAttributes: Record<string, any>,
@@ -36,7 +36,7 @@ declare module '@tiptap/core' {
 // export const pasteRegex = /(?:^|\s)((?:~~)((?:[^~]+))(?:~~))/g
 
 export const Cite = Mark.create<CiteOptions>({
-  name: 'cite',
+  name: MARK_NAME_CITE,
 
   priority: 1200,
 
@@ -91,7 +91,7 @@ export const Cite = Mark.create<CiteOptions>({
           childEnd = childStart + child.nodeSize
           console.log(`child ${i} from ${childStart} to ${childEnd}`)
           if (childEnd > from && childStart < to) {
-            if (child.type.name === Note.name)
+            if (child.type.name === NODE_NAME_NOTE)
               return false
             if (!citePresent && child.marks.find(m => m.type.name === this.name))
               citePresent = true
@@ -182,7 +182,7 @@ function fixCites(
       let start = pos ? pos + dpos + 1 : dpos + 1
       for (let i = 0; i < desc.childCount; i++) {
         const child = desc.child(i)
-        const cite = child.marks.find(m => m.type.name === Cite.name)
+        const cite = child.marks.find(m => m.type.name === MARK_NAME_CITE)
         const stop = start + child.nodeSize
         if (cite) {
           const prevRange = ranges.length > 0 && ranges[ranges.length - 1]

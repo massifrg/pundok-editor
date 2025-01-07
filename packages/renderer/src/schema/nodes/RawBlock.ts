@@ -6,8 +6,15 @@ import {
   PluginKey,
   TextSelection,
 } from '@tiptap/pm/state';
-import { DEFAULT_RAW_BLOCK_FORMAT, SK_CONVERT_TO_RAWBLOCK } from '../../common';
-import { CodeBlock, getEditorConfiguration, PandocTable, RawInline } from '..';
+import {
+  DEFAULT_RAW_BLOCK_FORMAT,
+  NODE_NAME_CODE_BLOCK,
+  NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_RAW_BLOCK,
+  NODE_NAME_RAW_INLINE,
+  SK_CONVERT_TO_RAWBLOCK
+} from '../../common';
+import { getEditorConfiguration } from '..';
 import {
   depthOfInnerNodeType,
   innerBlockDepth,
@@ -34,7 +41,7 @@ export interface RawBlockOptions {
 }
 
 export const RawBlock = Node.create<RawBlockOptions>({
-  name: 'rawBlock',
+  name: NODE_NAME_RAW_BLOCK,
   content: 'text*',
   group: 'block',
   code: true,
@@ -105,7 +112,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
         const { empty, $anchor } = this.editor.state.selection;
         const isAtStart = $anchor.pos === 1;
 
-        if (!empty || $anchor.parent.type.name !== this.name) {
+        if (!empty || $anchor.parent.type.name !== NODE_NAME_RAW_BLOCK) {
           return false;
         }
 
@@ -167,7 +174,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
             }
 
             // don’t create a new code block within code blocks
-            if (this.editor.isActive(this.type.name)) {
+            if (this.editor.isActive(NODE_NAME_RAW_BLOCK)) {
               return false;
             }
 
@@ -239,7 +246,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                 } while (
                   d > 0 &&
                   selectedNode &&
-                  selectedNode.type.name !== PandocTable.name
+                  selectedNode.type.name !== NODE_NAME_PANDOC_TABLE
                 );
                 insertPos1 = $from.start(d) - 1;
               } else {
@@ -350,8 +357,8 @@ export const RawBlock = Node.create<RawBlockOptions>({
             const { empty, $from } = state.selection;
             if (!empty) return false;
             const depth = depthOfInnerNodeType($from, [
-              RawBlock.name,
-              CodeBlock.name,
+              NODE_NAME_RAW_BLOCK,
+              NODE_NAME_CODE_BLOCK,
             ]);
             if (!depth) return false;
             if (dispatch) {
@@ -363,7 +370,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                 config?.defaultRawFormat ||
                 this.options.defaultFormat ||
                 DEFAULT_RAW_BLOCK_FORMAT;
-              const rawBlock = state.schema.nodes[this.name].create(
+              const rawBlock = state.schema.nodes[NODE_NAME_RAW_BLOCK].create(
                 { format: format || currentFormat },
                 node.content,
               );
@@ -377,7 +384,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
           ({ state, dispatch }) => {
             const { empty, $from } = state.selection;
             if (!empty) return false;
-            const depth = depthOfInnerNodeType($from, [RawBlock.name]);
+            const depth = depthOfInnerNodeType($from, [NODE_NAME_RAW_BLOCK]);
             if (!depth) return false;
             const node = $from.node(depth);
             if (node.childCount !== 1) return false;
@@ -403,5 +410,5 @@ export const RawBlock = Node.create<RawBlockOptions>({
 });
 
 function toRawBlockText(node: PmNode): string {
-  return node.type.name === RawInline.name ? node.attrs.text : '';
+  return node.type.name === NODE_NAME_RAW_INLINE ? node.attrs.text : '';
 }

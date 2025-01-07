@@ -8,6 +8,7 @@ export * from './editorKey';
 export * from './ipc';
 export * from './pandocFormat';
 export * from './pandocOptions';
+export * from './prosemirrorNames';
 export * from './query';
 export * from './readers';
 export * from './resources';

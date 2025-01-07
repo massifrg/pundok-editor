@@ -2,13 +2,14 @@ import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { MetadataView } from '../../components';
 import { Component } from 'vue';
+import { NODE_NAME_METADATA } from '../../common';
 
 export interface MetadataOptions {
   HTMLAttributes: Record<string, any>;
 }
 
 export const Metadata = Node.create<MetadataOptions>({
-  name: 'metadata',
+  name: NODE_NAME_METADATA,
   content: 'metaMapEntry*',
   isolating: true,
 

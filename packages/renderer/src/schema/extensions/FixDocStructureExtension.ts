@@ -1,11 +1,14 @@
 import { Extension } from '@tiptap/core';
-import { Node } from '@tiptap/pm/model';
-import { EditorState, Transaction } from '@tiptap/pm/state';
+import { Node, Attrs } from '@tiptap/pm/model';
+import { EditorState, NodeSelection, Transaction } from '@tiptap/pm/state';
 import {
   DEFAULT_INDEX_NAME,
   INDEX_CLASS,
   INDEX_NAME_ATTR,
   INDEX_TERM_CLASS,
+  NODE_NAME_DIV,
+  NODE_NAME_INDEX_DIV,
+  NODE_NAME_INDEX_TERM,
   PundokEditorConfig,
 } from '../../common';
 
@@ -59,16 +62,10 @@ export const FixDocStructureExtension = Extension.create({
 
 // const indexRefFixer: ProsemirrorPandocFixer = ({ state, tr, node, pos }) => {
 //   const transaction = tr || state.tr
-//   if (node.type.name === 'indexRef')
+//   if (node.type.name === NODE_NAME_INDEX_REF)
 //   return transaction.replaceRangeWith(pos, pos + node.nodeSize, transformedNode)
 // }
 
-// TODO: externalize names' constants
-const NODE_NAME_DIV = 'div'
-const NODE_NAME_INDEX_DIV = 'indexDiv'
-const NODE_NAME_INDEX_TERM = 'indexTerm'
-
-// const divEncodedNodeNames = [Div.name, IndexDiv.name, IndexTerm.name];
 const divEncodedNodeNames = [NODE_NAME_DIV, NODE_NAME_INDEX_DIV, NODE_NAME_INDEX_TERM];
 
 const divEncodedNodesFixer: ProsemirrorPandocFixer = ({

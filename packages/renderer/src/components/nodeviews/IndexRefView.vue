@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';
-import { DEFAULT_INDEX_COLOR, DEFAULT_INDEX_ICON_SVG, DEFAULT_INDEX_NAME, Index } from '../../common';
+import { DEFAULT_INDEX_COLOR, DEFAULT_INDEX_ICON_SVG, DEFAULT_INDEX_NAME, Index, INDEX_NAME_ATTR, INDEXED_TEXT_ATTR } from '../../common';
 import { getEditorConfiguration } from '../../schema';
 
 export default {
@@ -30,7 +30,7 @@ export default {
       return this.configuration?.indices || []
     },
     index() {
-      const indexName = this.node.attrs?.kv['index-name'];
+      const indexName = this.node.attrs?.kv[INDEX_NAME_ATTR];
       return indexName && this.indices.find(i => i.indexName === indexName)
     },
     // classes() {
@@ -40,7 +40,7 @@ export default {
     // },
     title() {
       const kv = this.node.attrs.kv || {};
-      const text = kv['indexed-text'];
+      const text = kv[INDEXED_TEXT_ATTR];
       const info: string[] = []
       const index = this.index
       const indexName = index && index.indexName || DEFAULT_INDEX_NAME

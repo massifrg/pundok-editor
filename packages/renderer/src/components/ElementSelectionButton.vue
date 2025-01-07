@@ -71,7 +71,7 @@ import { Component } from 'vue';
 import { Editor } from '@tiptap/core'
 import { Node as PmNode } from '@tiptap/pm/model'
 import ToolbarButton from './ToolbarButton.vue'
-import { IndexRef, editorKeyFromState, getCssSelected, getEditorConfiguration } from '../schema'
+import { editorKeyFromState, getCssSelected, getEditorConfiguration } from '../schema'
 import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
   editableAttrsForNodeOrMark,
@@ -79,7 +79,12 @@ import {
   SelectedNodeOrMark,
   tooltipFor
 } from '../schema/helpers';
-import { ElementsSelection, getElementsSelections } from '../common';
+import {
+  ElementsSelection,
+  getElementsSelections,
+  INDEXED_TEXT_ATTR,
+  NODE_NAME_INDEX_REF
+} from '../common';
 import { setActionEditAttributes } from '../actions';
 import { nodeOrMarkToPandocName } from '../schema/helpers/PandocVsProsemirror';
 
@@ -95,8 +100,8 @@ const defaultNodeOrMarkToLabel: NodeOrMarkToLabel = (doc, nom, key) => {
   const label = node_or_mark && nodeOrMarkToPandocName(node_or_mark) || typeName
   const textContent = node?.textContent
   if (node?.isAtom) {
-    if (typeName === IndexRef.name && node.attrs.kv['indexed-text']) {
-      return `${typeName}: ${node.attrs.kv['indexed-text']}`
+    if (typeName === NODE_NAME_INDEX_REF && node.attrs.kv[INDEXED_TEXT_ATTR]) {
+      return `${typeName}: ${node.attrs.kv[INDEXED_TEXT_ATTR]}`
     }
   } else if (textContent) {
     return textContent.length < SELECTED_LABEL_MAX_LENGTH

@@ -61,8 +61,6 @@ import {
   toggleHeaderCell,
   setComputedStyleColumnWidths,
 } from '@massifrg/prosemirror-tables-sections';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
 import {
   PmColSpec,
   pmColSpecsToString,
@@ -72,6 +70,17 @@ import { innerNodeDepth, pandocAlignmentToCellAlign } from '../helpers';
 import { Alignment } from '../../pandoc';
 import { isEqual } from 'lodash';
 import { updateTableAttrsPlugin } from '../helpers/updateTableAttrsPlugin';
+import {
+  NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_TABLE_CELL,
+  NODE_NAME_TABLE_HEADER,
+  TABLE_ROLE_BODY,
+  TABLE_ROLE_CELL,
+  TABLE_ROLE_FOOT,
+  TABLE_ROLE_HEAD,
+  TABLE_ROLE_HEADER_CELL,
+  TABLE_ROLE_TABLE
+} from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -174,9 +183,9 @@ export const TABLE_MIN_WIDTH = 400;
 export const TABLE_WIDTH_SHARE = 0.95;
 
 export const PandocTable = Node.create<PandocTableOptions>({
-  name: 'pandocTable',
+  name: NODE_NAME_PANDOC_TABLE,
   content: 'caption? tableHead? tableBody* tableFoot?',
-  tableRole: 'table',
+  tableRole: TABLE_ROLE_TABLE,
   isolating: true,
   group: 'block',
 
@@ -262,7 +271,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             const { from, to } = state.selection;
             let innerTablePos: number = -1;
             tr.doc.nodesBetween(from, to, (node, pos) => {
-              if (node.type.name === PandocTable.name) innerTablePos = pos;
+              if (node.type.name === NODE_NAME_PANDOC_TABLE) innerTablePos = pos;
               return true;
             });
             if (innerTablePos < 0) return false;
@@ -727,7 +736,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             let d;
             for (d = $from.depth; d > 0; d--) {
               node = $from.node(d);
-              if (node?.type.name === PandocTable.name) {
+              if (node?.type.name === NODE_NAME_PANDOC_TABLE) {
                 pos = $from.start(d) - 1;
                 break;
               }
@@ -772,7 +781,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             let d;
             for (d = $from.depth; d > 0; d--) {
               node = $from.node(d);
-              if (node?.type.name === PandocTable.name) {
+              if (node?.type.name === NODE_NAME_PANDOC_TABLE) {
                 pos = $from.start(d) - 1;
                 break;
               }
@@ -814,7 +823,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
       //       let d;
       //       for (d = $from.depth; d > 0; d--) {
       //         node = $from.node(d);
-      //         if (node?.type.name === PandocTable.name) {
+      //         if (node?.type.name === NODE_NAME_PANDOC_TABLE) {
       //           pos = $from.start(d) - 1;
       //           break;
       //         }
@@ -841,7 +850,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
           cellPos = undefined
         if (column) {
           $pos = selection.$anchor
-          tableDepth = innerNodeDepth($pos, node => node.type.name === PandocTable.name)
+          tableDepth = innerNodeDepth($pos, node => node.type.name === NODE_NAME_PANDOC_TABLE)
           colStart = column
           colStop = column + 1
         } else {
@@ -852,7 +861,7 @@ export const PandocTable = Node.create<PandocTableOptions>({
             $pos = selection.$anchor
             const cellDepth = innerNodeDepth($pos, node => {
               const typeName = node.type.name
-              return typeName === TableCell.name || typeName === TableHeader.name
+              return typeName === NODE_NAME_TABLE_CELL || typeName === NODE_NAME_TABLE_HEADER
             })
             if (!cellDepth) return false
             cellPos = $pos.start(cellDepth) - 1
@@ -1116,7 +1125,7 @@ function fixTableSection(
   pos: number,
 ): void {
   const role = node.type.spec.tableRole;
-  if (role === 'body') {
+  if (role === TABLE_ROLE_BODY) {
     let { headRows, rowHeadColumns } = node.attrs;
     const maxRows = node.childCount;
     const maxCols = tableBodyColumnsCount(node);
@@ -1129,7 +1138,7 @@ function fixTableSection(
       tr.setNodeMarkup(pos, null, { ...node.attrs, ...modifiedAttrs });
     }
     fixTableSectionCells(schema, tr, pos, headRows, rowHeadColumns);
-  } else if (role === 'head' || role === 'foot') {
+  } else if (role === TABLE_ROLE_HEAD || role === TABLE_ROLE_FOOT) {
     fixTableSectionCells(schema, tr, pos);
   }
 }
@@ -1174,7 +1183,7 @@ function getInnerCell(state: EditorState): NodeWithPos | null {
       const node = $anchor.node(d);
       if (!node) break;
       const role: TableRole = node.type.spec.tableRole;
-      if (role === 'cell' || role === 'header_cell') {
+      if (role === TABLE_ROLE_CELL || role === TABLE_ROLE_HEADER_CELL) {
         return { node, pos: $anchor.start(d) - 1 };
       }
     }

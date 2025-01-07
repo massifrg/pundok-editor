@@ -34,8 +34,9 @@ import { NodeViewWrapper, NodeViewContent, nodeViewProps } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { ACTION_EDIT_META_MAP_TEXT } from '../../actions';
 import { useActions } from '../../stores';
-import { editorKeyFromState, Metadata, MetaList, MetaMap } from '../../schema';
+import { editorKeyFromState } from '../../schema';
 import { nodeIcon } from '../../schema/helpers';
+import { NODE_NAME_META_LIST, NODE_NAME_META_MAP, NODE_NAME_METADATA } from '../../common';
 
 export default {
   components: {
@@ -52,10 +53,10 @@ export default {
       return node?.firstChild || null
     },
     containsMetaMap() {
-      return this.metaValue?.type.name === MetaMap.name
+      return this.metaValue?.type.name === NODE_NAME_META_MAP
     },
     containsMetaList() {
-      return this.metaValue?.type.name === MetaList.name
+      return this.metaValue?.type.name === NODE_NAME_META_LIST
     },
     aroundListOrMap() {
       return this.containsMetaList || this.containsMetaMap
@@ -95,7 +96,7 @@ export default {
       const $pos = this.editor.state.doc.resolve(this.getPos())
       const parent = $pos.node()
       console.log(parent.type.name)
-      if (parent.childCount > 1 || parent.type.name === Metadata.name) {
+      if (parent.childCount > 1 || parent.type.name === NODE_NAME_METADATA) {
         this.deleteNode()
       } else {
         const ppos = $pos.start(-1) - 1

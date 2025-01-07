@@ -1,7 +1,8 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { MetaList } from './MetaList';
-import MetaBoolView from '/@/components/nodeviews/MetaBoolView.vue';
+import { Component } from 'vue';
+import MetaBoolView from '../../components/nodeviews/MetaBoolView.vue';
+import { NODE_NAME_META_BOOL, NODE_NAME_META_LIST } from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -16,7 +17,7 @@ export interface MetaBoolOptions {
 }
 
 export const MetaBool = Node.create<MetaBoolOptions>({
-  name: 'metaBool',
+  name: NODE_NAME_META_BOOL,
   group: 'meta',
   atom: true,
 
@@ -52,32 +53,32 @@ export const MetaBool = Node.create<MetaBoolOptions>({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(MetaBoolView);
+    return VueNodeViewRenderer(MetaBoolView as Component);
   },
 
   addCommands() {
     return {
       appendMetaBool:
         () =>
-        ({ dispatch, state, tr }) => {
-          const { from, to, empty } = state.selection;
-          const doc = tr.doc;
-          const r = doc.resolve(from);
-          const schema = state.schema;
-          for (let d = r.depth; d > 0; d--) {
-            const n = r.node(d);
-            if (n && n.type.name === MetaList.name) {
-              if (dispatch) {
-                const metabool = schema.nodes[this.name].create({
-                  value: 'True',
-                });
-                dispatch(tr.insert(r.end(d), metabool));
+          ({ dispatch, state, tr }) => {
+            const { from, to, empty } = state.selection;
+            const doc = tr.doc;
+            const r = doc.resolve(from);
+            const schema = state.schema;
+            for (let d = r.depth; d > 0; d--) {
+              const n = r.node(d);
+              if (n && n.type.name === NODE_NAME_META_LIST) {
+                if (dispatch) {
+                  const metabool = schema.nodes[this.name].create({
+                    value: 'True',
+                  });
+                  dispatch(tr.insert(r.end(d), metabool));
+                }
+                return true;
               }
-              return true;
             }
-          }
-          return false;
-        },
+            return false;
+          },
     };
   },
 });

@@ -192,10 +192,19 @@ import WholeDocTransformsButton from './WholeDocTransformsButton.vue';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
 // import TextAlignMenubarItem from "./TextAlignMenubarItem.vue";
 // import VerticalAlignMenubarItem from "./VerticalAlignMenubarItem.vue";
-import { COLOR_JUST_EXPORTED, COLOR_UNSAVED, ConfigurationSummary, CustomStyleInstance, version } from '../common'
+import {
+  COLOR_JUST_EXPORTED,
+  COLOR_UNSAVED,
+  ConfigurationSummary,
+  CustomStyleInstance,
+  MARK_NAME_SPAN,
+  NODE_NAME_FIGURE,
+  NODE_NAME_PARAGRAPH,
+  version
+} from '../common'
 import { useBackend } from '../stores';
 import { setActionNewEmptyDocument, setActionShowProjectStructureDialog } from '../actions';
-import { Figure, currentRepeatableCommandTooltip, editorKeyFromState, getEditorConfiguration, getEditorProject } from '../schema';
+import { currentRepeatableCommandTooltip, editorKeyFromState, getEditorConfiguration, getEditorProject } from '../schema';
 import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween } from '../schema/helpers';
@@ -269,7 +278,7 @@ export default {
     currentParagraph(): NodeWithPos | undefined {
       return [...this.currentNodesWithPos]
         .reverse()
-        .find(({ node }) => node.type.name === 'paragraph');
+        .find(({ node }) => node.type.name === NODE_NAME_PARAGRAPH);
     },
     nonEmptySelection() {
       const editor = this.editor;
@@ -309,7 +318,7 @@ export default {
     },
     currentInlineCustomStyles(): MarkRange[] {
       return this.currentTextMarks.filter(
-        (m) => m.mark.type.name === 'span' && !!m.mark.attrs.customStyle,
+        (m) => m.mark.type.name === MARK_NAME_SPAN && !!m.mark.attrs.customStyle,
       );
     },
     currentInlineCustomStylesLabel(): string {
@@ -364,7 +373,7 @@ export default {
       this.editor.chain().runRepeatableCommand('insertNote', description, noteType).run()
     },
     inFigure() {
-      return (this.currentNodesWithPos as NodeWithPos[]).find(n => n.node.type.name === Figure.name)
+      return (this.currentNodesWithPos as NodeWithPos[]).find(n => n.node.type.name === NODE_NAME_FIGURE)
     },
     showProjectStructure() {
       setActionShowProjectStructureDialog(this.editor.state)

@@ -1,12 +1,13 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { LINE_BLOCK_CLASS } from '../helpers/lineBlock';
+import { NODE_NAME_LINE_BLOCK } from '../../common';
 
 export interface LineBlockOptions {
   HTMLAttributes: Record<string, any>
 }
 
 export const LineBlock = Node.create<LineBlockOptions>({
-  name: 'lineBlock',
+  name: NODE_NAME_LINE_BLOCK,
   content: 'line*',
   group: 'block',
 

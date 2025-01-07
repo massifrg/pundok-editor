@@ -19,8 +19,19 @@
 </template>
 
 <script lang="ts">
-import { getEditorProject, INDEX_RANGE_NONE, INDEX_RANGE_START, INDEX_RANGE_STOP } from '../../schema';
-import { INDEX_NAME_ATTR, INDEX_RANGE_ATTR, IndexSource, IndexSourceJsonFile } from '../../common';
+import {
+  getEditorProject,
+  INDEX_RANGE_NONE,
+  INDEX_RANGE_START,
+  INDEX_RANGE_STOP
+} from '../../schema';
+import {
+  INDEX_NAME_ATTR,
+  INDEX_RANGE_ATTR,
+  INDEXED_TEXT_ATTR,
+  IndexSource,
+  IndexSourceJsonFile
+} from '../../common';
 import IndexIdEditor from './IndexIdEditor.vue';
 
 export interface KvAttribute {
@@ -53,7 +64,7 @@ export default {
       return e && e.value || INDEX_RANGE_NONE
     },
     indexedText() {
-      const e = this.entryWithKey('indexed-text', this.entries)
+      const e = this.entryWithKey(INDEXED_TEXT_ATTR, this.entries)
       return e?.value || ''
     },
     sources(): IndexSource[] {

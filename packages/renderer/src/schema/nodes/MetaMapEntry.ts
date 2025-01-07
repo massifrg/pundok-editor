@@ -1,11 +1,14 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model'
-import { Metadata } from './Metadata';
+import { Component } from 'vue';
 import { innerNodeDepth, templateNode } from '../helpers';
 import { MetaMapEntryView } from '../../components';
-import { MetaMap } from './MetaMap';
-import { Component } from 'vue';
+import {
+  NODE_NAME_META_MAP,
+  NODE_NAME_META_MAP_ENTRY,
+  NODE_NAME_METADATA
+} from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -27,7 +30,7 @@ export interface MetaMapEntryOptions {
 }
 
 export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
-  name: 'metaMapEntry',
+  name: NODE_NAME_META_MAP_ENTRY,
   content: 'meta',
   group: 'meta',
   isolating: true,
@@ -79,7 +82,7 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
             const $pos = pos ? doc.resolve(pos) : selection.$from
             const mapDepth = innerNodeDepth($pos, node => {
               const ntn = node.type.name
-              return ntn === Metadata.name || ntn === MetaMap.name
+              return ntn === NODE_NAME_METADATA || ntn === NODE_NAME_META_MAP
             })
             let metamap: ProsemirrorNode | null
             console.log(`appendMetaMapEntry, pos = ${JSON.stringify(pos)}`)
@@ -91,7 +94,7 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
             } else {
               metamap = doc.firstChild
               inspos = metamap!.nodeSize - 1
-              if (metamap!.type.name !== Metadata.name)
+              if (metamap!.type.name !== NODE_NAME_METADATA)
                 return false
             }
             console.log(`appendMetaMapEntry, found ${metamap?.type.name}, insertion pos: ${inspos}`)
@@ -125,7 +128,7 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
             const metamap = state.doc.nodeAt(p);
             if (!metamap || !(metamap.type.name === this.name)) return false;
             const r = state.doc.resolve(p);
-            if (r.parent.type.name !== Metadata.name) return false;
+            if (r.parent.type.name !== NODE_NAME_METADATA) return false;
             return commands.moveChild('down', pos);
           },
       moveMetaMapEntryUp:
@@ -135,7 +138,7 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
             const metamap = state.doc.nodeAt(p);
             if (!metamap || !(metamap.type.name === this.name)) return false;
             const r = state.doc.resolve(p);
-            if (r.parent.type.name !== Metadata.name) return false;
+            if (r.parent.type.name !== NODE_NAME_METADATA) return false;
             return commands.moveChild('up', pos);
           },
     };

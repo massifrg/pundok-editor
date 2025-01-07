@@ -152,6 +152,9 @@ import { NodeWithPos } from '@tiptap/core';
 import {
   CustomClass,
   CustomStyleInstance,
+  NODE_NAME_HEADING,
+  NODE_NAME_PARAGRAPH,
+  NODE_NAME_PLAIN,
   PundokEditorConfig,
   activeCustomStyles,
   compatibleCustomStylesPerTypeName,
@@ -162,12 +165,7 @@ import {
   isCustomizableElement,
   labelForStyle,
 } from '../common';
-import {
-  getEditorConfiguration,
-  Heading,
-  Paragraph,
-  Plain
-} from '../schema';
+import { getEditorConfiguration, Heading } from '../schema';
 import { nodeIcon, nodeOrMarkToPandocName } from '../schema/helpers';
 import { isString } from 'lodash';
 
@@ -235,7 +233,7 @@ export default {
         for (let i = blocks.length - 1; i >= 0; i--) {
           const node = blocks[i].node
           const typeName = node.type.name
-          if (typeName === Paragraph.name || typeName === Heading.name || typeName === Plain.name)
+          if (typeName === NODE_NAME_PARAGRAPH || typeName === NODE_NAME_HEADING || typeName === NODE_NAME_PLAIN)
             return i
         }
       }
@@ -259,10 +257,10 @@ export default {
       return outer
     },
     isParagraph() {
-      return this.innerParaLike?.type.name === Paragraph.name
+      return this.innerParaLike?.type.name === NODE_NAME_PARAGRAPH
     },
     isHeader() {
-      return this.innerParaLike?.type.name === Heading.name
+      return this.innerParaLike?.type.name === NODE_NAME_HEADING
     },
     innerParaLikeActiveStyles(): CustomStyleInstance[] {
       const paraLike = this.innerParaLike
@@ -337,9 +335,9 @@ export default {
     },
     iconForNode(node: Node) {
       const typeName = node.type.name
-      if (typeName === Paragraph.name)
+      if (typeName === NODE_NAME_PARAGRAPH)
         return 'paragraph_style'
-      else if (typeName === Heading.name)
+      else if (typeName === NODE_NAME_HEADING)
         return 'mdi-format-header-pound'
       return nodeIcon(node.type.name)
     },

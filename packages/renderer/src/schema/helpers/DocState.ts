@@ -45,6 +45,8 @@ export interface DocStateUpdate {
   callback: ((updated: DocState) => void) | null;
 }
 
+export const META_UPDATE_DOC_STATE = 'update-doc-state';
+
 export function getDocState(state?: EditorState): DocState | undefined {
   return state ? pundokEditorUtilsPluginKey.getState(state) : undefined;
 }

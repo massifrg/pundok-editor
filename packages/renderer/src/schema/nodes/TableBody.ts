@@ -1,11 +1,12 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NODE_NAME_TABLE_BODY, TABLE_ROLE_BODY } from '../../common';
 
 export interface TableBodyOptions {
   HTMLAttributes: Record<string, any>;
 }
 
 export const TableBody = Node.create<TableBodyOptions>({
-  name: 'tableBody',
+  name: NODE_NAME_TABLE_BODY,
 
   addOptions() {
     return {
@@ -15,7 +16,7 @@ export const TableBody = Node.create<TableBodyOptions>({
 
   content: 'tableRow+',
 
-  tableRole: 'body',
+  tableRole: TABLE_ROLE_BODY,
 
   addAttributes() {
     return {

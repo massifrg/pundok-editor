@@ -2,8 +2,8 @@ import { Extension } from '@tiptap/core';
 import { Fragment, Node, ResolvedPos, Slice } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { EditorView } from '@tiptap/pm/view';
-import { Note } from '../nodes/Note';
 import { JsonPastePlugin, META_COPY_AS_JSON } from '../helpers/JsonPastePlugin';
+import { NODE_NAME_NOTE } from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -56,7 +56,7 @@ export const CustomPasteExtension = Extension.create({
           },
           handlePaste(view, event, slice) {
             const firstChild = slice.content.firstChild;
-            if (firstChild && firstChild.type.name === Note.name) {
+            if (firstChild && firstChild.type.name === NODE_NAME_NOTE) {
               console.log(slice.content);
               view.dispatch(
                 view.state.tr.replaceSelection(
@@ -79,11 +79,11 @@ export const CustomPasteExtension = Extension.create({
     return {
       copyAsJson:
         (node?: Node) =>
-        ({ dispatch, state, tr }) => {
-          if (!node && state.selection.empty) return false;
-          if (dispatch) dispatch(tr.setMeta(META_COPY_AS_JSON, node || true));
-          return true;
-        },
+          ({ dispatch, state, tr }) => {
+            if (!node && state.selection.empty) return false;
+            if (dispatch) dispatch(tr.setMeta(META_COPY_AS_JSON, node || true));
+            return true;
+          },
     };
   },
 });

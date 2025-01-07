@@ -18,11 +18,11 @@ import {
 } from './HelperCommandsExtension';
 import { CommandProps } from '@tiptap/vue-3';
 import { isArray, isString } from 'lodash';
-import { META_UPDATE_DOC_STATE } from './PundokEditorUtilsExtension';
 import { setMarkNoAtoms, toggleMarkNoAtoms } from '../../commands';
 import {
   addClass,
   getDocState,
+  META_UPDATE_DOC_STATE,
   setCustomClassAttr,
   setCustomStyleAttr,
   setCustomStyleAttribute,

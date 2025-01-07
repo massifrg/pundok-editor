@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { SK_WRAP_IN_FIGURE } from '../../common';
+import { NODE_NAME_FIGURE, SK_WRAP_IN_FIGURE } from '../../common';
 
 export interface FigureOptions {
   HTMLAttributes: Record<string, any>;
@@ -16,7 +16,7 @@ declare module '@tiptap/core' {
 }
 
 export const Figure = Node.create<FigureOptions>({
-  name: 'figure',
+  name: NODE_NAME_FIGURE,
 
   content: 'figureCaption? block+',
 
@@ -44,19 +44,19 @@ export const Figure = Node.create<FigureOptions>({
     return {
       setFigure:
         () =>
-        ({ commands }) => {
-          return commands.wrapIn(this.name);
-        },
+          ({ commands }) => {
+            return commands.wrapIn(this.name);
+          },
       toggleFigure:
         () =>
-        ({ commands }) => {
-          return commands.toggleWrap(this.name);
-        },
+          ({ commands }) => {
+            return commands.toggleWrap(this.name);
+          },
       unsetFigure:
         () =>
-        ({ commands }) => {
-          return commands.lift(this.name);
-        },
+          ({ commands }) => {
+            return commands.lift(this.name);
+          },
     };
   },
 

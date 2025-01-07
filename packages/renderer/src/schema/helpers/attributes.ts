@@ -2,8 +2,15 @@ import type { Attrs, Mark, Node } from '@tiptap/pm/model';
 import { isArray, isString } from 'lodash';
 import { PmColSpec } from './colSpec';
 import { textAlignToPandocAlignment } from './alignments';
-import { INDEX_NAME_ATTR } from '../../common';
-import { Code, CodeBlock, Note, Span } from '..';
+import {
+  INDEX_NAME_ATTR,
+  INDEX_PUT_INDEX_REF_ATTR,
+  INDEX_REF_CLASS_ATTR,
+  MARK_NAME_CODE,
+  MARK_NAME_SPAN,
+  NODE_NAME_CODE_BLOCK,
+  NODE_NAME_NOTE
+} from '../../common';
 
 /**
  * The attribute of a Node or a Mark can be
@@ -54,9 +61,9 @@ const NODE_OR_MARK_ATTRIBUTES: Record<string, NodeOrMarkAttribute> = {
   /** used in index divs and terms */
   [INDEX_NAME_ATTR]: { editable: true, visible: true, order: 11, isKv: true },
   /** used in index divs */
-  'ref-class': { editable: true, visible: true, order: 12, isKv: true },
+  [INDEX_REF_CLASS_ATTR]: { editable: true, visible: true, order: 12, isKv: true },
   /** used in index divs */
-  'put-index-ref': { editable: true, visible: true, order: 13, isKv: true },
+  [INDEX_PUT_INDEX_REF_ATTR]: { editable: true, visible: true, order: 13, isKv: true },
   /** used in index terms */
   // 'sort-key': { editable: true, visible: true, order: 14, isKv: true },
   /** used in RawInline and RawBlock */
@@ -167,10 +174,10 @@ export type DuplicatedAttribute = [
  * of a Pandoc Attr.
  */
 const DUPLICATED_KV_ATTRIBUTES: DuplicatedAttribute[] = [
-  [Code.name, 'language', 'language'],
-  [CodeBlock.name, 'language', 'language'],
-  [Note.name, 'noteType', 'note-type'],
-  [Span.name, 'customStyle', 'custom-style'],
+  [MARK_NAME_CODE, 'language', 'language'],
+  [NODE_NAME_CODE_BLOCK, 'language', 'language'],
+  [NODE_NAME_NOTE, 'noteType', 'note-type'],
+  [MARK_NAME_SPAN, 'customStyle', 'custom-style'],
 ];
 
 function attrNamesForNodeOrMark(

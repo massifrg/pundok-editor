@@ -1,11 +1,12 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NODE_NAME_DEFINITION_DATA } from '../../common';
 
 export interface DefinitionDataOptions {
   HTMLAttributes: Record<string, any>;
 }
 
 export const DefinitionData = Node.create<DefinitionDataOptions>({
-  name: 'definitionData',
+  name: NODE_NAME_DEFINITION_DATA,
   content: 'block*',
   defining: true,
 

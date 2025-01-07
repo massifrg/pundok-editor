@@ -19,7 +19,17 @@ import {
 } from './pandocAttr';
 import { DOUBLE_QUOTED_CLASS, SINGLE_QUOTED_CLASS } from './quoted';
 import { PmColSpec } from './colSpec';
-import { DEFAULT_NOTE_TYPE } from '../../common';
+import {
+  DEFAULT_NOTE_TYPE,
+  TABLE_ROLE_BODY,
+  TABLE_ROLE_CAPTION,
+  TABLE_ROLE_CELL,
+  TABLE_ROLE_FOOT,
+  TABLE_ROLE_HEAD,
+  TABLE_ROLE_HEADER_CELL,
+  TABLE_ROLE_ROW,
+  TABLE_ROLE_TABLE
+} from '../../common';
 
 /// Document schema for the data model used by Pandoc.
 export const schema = new Schema({
@@ -296,7 +306,7 @@ export const schema = new Schema({
       content: 'caption? tableHead? tableBody* tableFoot?',
       isolating: true,
       group: 'block',
-      tableRole: 'table',
+      tableRole: TABLE_ROLE_TABLE,
       attrs: {
         ...pandocAttrAsPmAttrs,
         colSpec: {
@@ -312,7 +322,7 @@ export const schema = new Schema({
     caption: {
       content: 'block+',
       isolating: true,
-      tableRole: 'caption',
+      tableRole: TABLE_ROLE_CAPTION,
       parseDOM: [{ tag: 'caption' }],
       toDOM() {
         return ['caption', { class: 'table-caption' }, 0];
@@ -323,7 +333,7 @@ export const schema = new Schema({
       attrs: { ...pandocAttrAsPmAttrs },
       content: 'tableRow+',
       isolating: true,
-      tableRole: 'head',
+      tableRole: TABLE_ROLE_HEAD,
       parseDOM: [{ tag: 'thead' }],
       toDOM() {
         return ['thead', 0];
@@ -338,7 +348,7 @@ export const schema = new Schema({
       },
       content: 'tableRow+',
       isolating: true,
-      tableRole: 'body',
+      tableRole: TABLE_ROLE_BODY,
       parseDOM: [{ tag: 'tbody' }],
       toDOM() {
         return ['tbody', 0];
@@ -349,7 +359,7 @@ export const schema = new Schema({
       attrs: { ...pandocAttrAsPmAttrs },
       content: 'tableRow+',
       isolating: true,
-      tableRole: 'foot',
+      tableRole: TABLE_ROLE_FOOT,
       parseDOM: [{ tag: 'tfoot' }],
       toDOM() {
         return ['tfoot', 0];
@@ -360,6 +370,7 @@ export const schema = new Schema({
       attrs: { ...pandocAttrAsPmAttrs },
       content: '(tableCell | tableHeader)*',
       isolating: true,
+      tableRole: TABLE_ROLE_ROW,
       parseDOM: [{ tag: 'tr' }],
       toDOM() {
         return ['tr', 0];
@@ -381,6 +392,7 @@ export const schema = new Schema({
       },
       content: 'block+',
       isolating: true,
+      tableRole: TABLE_ROLE_HEADER_CELL,
       parseDOM: [{ tag: 'th' }],
       toDOM() {
         return ['th', 0];
@@ -402,6 +414,7 @@ export const schema = new Schema({
       },
       content: 'block+',
       isolating: true,
+      tableRole: TABLE_ROLE_CELL,
       parseDOM: [{ tag: 'td' }],
       toDOM() {
         return ['td', 0];

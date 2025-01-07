@@ -1,11 +1,12 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NODE_NAME_TABLE_FOOT, TABLE_ROLE_FOOT } from '../../common';
 
 export interface TableFootOptions {
   HTMLAttributes: Record<string, any>;
 }
 
 export const TableFoot = Node.create<TableFootOptions>({
-  name: 'tableFoot',
+  name: NODE_NAME_TABLE_FOOT,
 
   addOptions() {
     return {
@@ -15,7 +16,7 @@ export const TableFoot = Node.create<TableFootOptions>({
 
   content: 'tableRow+',
 
-  tableRole: 'foot',
+  tableRole: TABLE_ROLE_FOOT,
 
   parseHTML() {
     return [{ tag: 'tfoot' }];

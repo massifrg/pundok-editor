@@ -1,11 +1,12 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NODE_NAME_SHORT_CAPTION } from '../../common';
 
 export interface ShortCaptionOptions {
   HTMLAttributes: Record<string, any>;
 }
 
 export const ShortCaption = Node.create({
-  name: 'shortCaption',
+  name: NODE_NAME_SHORT_CAPTION,
   content: 'inline*',
   isolating: true,
 

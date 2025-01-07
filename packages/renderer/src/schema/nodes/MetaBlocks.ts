@@ -1,11 +1,12 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NODE_NAME_META_BLOCKS } from '../../common';
 
 export interface MetaBlocksOptions {
   HTMLAttributes: Record<string, any>;
 }
 
 export const MetaBlocks = Node.create<MetaBlocksOptions>({
-  name: 'metaBlocks',
+  name: NODE_NAME_META_BLOCKS,
   content: 'block+',
   group: 'meta',
   isolating: true,

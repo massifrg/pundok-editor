@@ -6,8 +6,13 @@ import {
   Schema,
 } from '@tiptap/pm/model';
 import { EditorState, SelectionRange } from '@tiptap/pm/state';
-import { Emph, Link, Span, Strong } from '..';
 import { difference } from 'lodash';
+import {
+  MARK_NAME_EMPH,
+  MARK_NAME_LINK,
+  MARK_NAME_SPAN,
+  MARK_NAME_STRONG
+} from '../../common';
 
 /**
  * Options to add/remove Marks.
@@ -120,14 +125,14 @@ export function getMark(
 
 export function markIcon(mark?: Mark) {
   switch (mark?.type.name) {
-    case Emph.name:
+    case MARK_NAME_EMPH:
       return 'mdi-format-italic';
-    case Strong.name:
+    case MARK_NAME_STRONG:
       return 'mdi-format-bold';
     //FIXME: add the remainder
-    case Link.name:
+    case MARK_NAME_LINK:
       return 'mdi-link-variant';
-    case Span.name:
+    case MARK_NAME_SPAN:
       if (mark.attrs.customStyle) return 'mdi-palette-swatch-variant';
       break;
     default:

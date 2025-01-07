@@ -259,23 +259,28 @@ import IndexNameEditor from './attreditors/IndexNameEditor.vue';
 import IndexIdEditor, { SearchTextVariant } from './attreditors/IndexIdEditor.vue';
 import TargetEditor from './attreditors/TargetEditor.vue';
 import {
-  Code,
-  CodeBlock,
-  Div,
   INCLUDE_DOC_CLASS,
   INCLUDE_FORMAT_ATTR,
   INCLUDE_SRC_ATTR,
-  Image,
-  IndexRef,
-  IndexTerm,
-  Link,
-  RawBlock,
-  RawInline,
-  TableBody,
   getDocState,
   getEditorConfiguration
 } from '../schema';
-import { DEFAULT_INDEX_NAME, INDEX_NAME_ATTR, Index, IndexSource } from '../common';
+import {
+  DEFAULT_INDEX_NAME,
+  INDEX_NAME_ATTR,
+  Index,
+  IndexSource,
+  MARK_NAME_CODE,
+  MARK_NAME_LINK,
+  NODE_NAME_CODE_BLOCK,
+  NODE_NAME_DIV,
+  NODE_NAME_IMAGE,
+  NODE_NAME_INDEX_REF,
+  NODE_NAME_INDEX_TERM,
+  NODE_NAME_RAW_BLOCK,
+  NODE_NAME_RAW_INLINE,
+  NODE_NAME_TABLE_BODY
+} from '../common';
 import { useBackend } from '../stores';
 import { mapState } from 'pinia';
 import {
@@ -364,30 +369,30 @@ export default {
         : this.nodeOrMarkName
     },
     isIndexTerm() {
-      return this.nodeOrMarkName === IndexTerm.name
+      return this.nodeOrMarkName === NODE_NAME_INDEX_TERM
     },
     isIndexRef() {
-      return this.nodeOrMarkName === IndexRef.name
+      return this.nodeOrMarkName === NODE_NAME_INDEX_REF
     },
     indexName() {
       return this.nodeOrMark?.attrs?.kv[INDEX_NAME_ATTR]
     },
     isImage() {
-      return this.nodeOrMarkName === Image.name
+      return this.nodeOrMarkName === NODE_NAME_IMAGE
     },
     isLink() {
-      return this.nodeOrMarkName === Link.name
+      return this.nodeOrMarkName === MARK_NAME_LINK
     },
     isRawElement() {
       const typeName = this.nodeOrMark?.type.name
-      return typeName === RawInline.name || typeName === RawBlock.name
+      return typeName === NODE_NAME_RAW_INLINE || typeName === NODE_NAME_RAW_BLOCK
     },
     isRawBlock() {
-      return this.nodeOrMark?.type.name === RawBlock.name
+      return this.nodeOrMark?.type.name === NODE_NAME_RAW_BLOCK
     },
     isCode() {
       const typeName = this.nodeOrMark?.type.name
-      return typeName === CodeBlock.name || typeName === Code.name
+      return typeName === NODE_NAME_CODE_BLOCK || typeName === MARK_NAME_CODE
     },
     editableAttributes(): string[] {
       return editableAttrsForNodeOrMark(this.nodeOrMark)
@@ -411,12 +416,12 @@ export default {
     },
     rowsOfTableBody() {
       const sel = this.selectedNodeOrMark as SelectedNodeOrMark
-      const rows = sel.name == 'tableBody' ? sel.node?.childCount || 0 : 0
+      const rows = sel.name == NODE_NAME_TABLE_BODY ? sel.node?.childCount || 0 : 0
       return rows
     },
     columnsOfTableBody() {
       const sel = this.selectedNodeOrMark as SelectedNodeOrMark
-      if (sel.name != 'tableBody') return 0
+      if (sel.name != NODE_NAME_TABLE_BODY) return 0
       let cols = 0
       const firstRow = sel.node?.firstChild
       if (firstRow) {
@@ -457,7 +462,7 @@ export default {
         if (isEmpty(tab)) {
           if (!isEmpty(startTab)) {
             this.tab = startTab
-          } else if (node && node.type.name === IndexRef.name) {
+          } else if (node && node.type.name === NODE_NAME_INDEX_REF) {
             this.tab = 'idref'
           } else {
             this.tab = this.editorTabs[0]
@@ -565,7 +570,7 @@ export default {
         // const { classes } = this.attrs || []
         const repeatableChange = getAttrsChange(snom.node, deproxify(this.attrs), deproxify(this.originalAttrs))
         // console.log(repeatableChange)
-        if (snom.name === TableBody.name) {
+        if (snom.name === NODE_NAME_TABLE_BODY) {
           this.editor?.chain()
             .setNodeSelection(pos)
             .setAttrsChange(repeatableChange)
@@ -584,7 +589,7 @@ export default {
             .run();
         }
       } else if (snom.mark && snom.from && snom.to) {
-        // if (snom.name === Span.name) {
+        // if (snom.name === MARK_NAME_SPAN) {
         const repeatableChange = getAttrsChange(snom.mark, deproxify(this.attrs), deproxify(this.originalAttrs))
         // console.log(repeatableChange)
         this.editor.chain()
@@ -599,7 +604,7 @@ export default {
         //     .run();
         // }
       }
-      if (snom.name === IndexRef.name && this.optionPropagateIdref) {
+      if (snom.name === NODE_NAME_INDEX_REF && this.optionPropagateIdref) {
         const editor = this.editor
         if (editor) {
           const indexRef = editor.state.doc.nodeAt(snom.pos)
@@ -624,7 +629,7 @@ export default {
     async addClass(ac: string) {
       console.log(`addClass: ${ac}`);
       if (!this.attrs.classes.includes(ac)) {
-        if (ac === INCLUDE_DOC_CLASS && this.nodeOrMarkName === Div.name)
+        if (ac === INCLUDE_DOC_CLASS && this.nodeOrMarkName === NODE_NAME_DIV)
           this.setIncludedDocAttrs()
         this.attrs.classes = [...this.attrs.classes, ac]
       }

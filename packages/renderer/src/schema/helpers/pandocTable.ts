@@ -3,6 +3,12 @@ import { Fragment, Node as PmNode, NodeType, Schema } from '@tiptap/pm/model';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
 import { fillPmColSpecs } from './colSpec';
 import { isString } from 'lodash';
+import {
+  TABLE_ROLE_BODY,
+  TABLE_ROLE_FOOT,
+  TABLE_ROLE_HEAD,
+  TABLE_ROLE_TABLE
+} from '../../common';
 
 // from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-table/src/utilities/getTableNodeTypes.ts
 export function getTableNodeTypes(schema: Schema): { [key: string]: NodeType } {
@@ -142,18 +148,20 @@ export function createPandocTableSection(
 
 // TODO: export it from prosemirror-tables-sections
 export function isTable(node: PmNode) {
-  return 'table' == node.type.spec.tableRole;
+  return TABLE_ROLE_TABLE == node.type.spec.tableRole;
 }
 
 // TODO: export it from prosemirror-tables-sections
 export function isTableSection(node: PmNode) {
   const role = node.type.spec.tableRole;
-  return role == 'body' || role == 'head' || role == 'foot';
+  return role == TABLE_ROLE_BODY
+    || role == TABLE_ROLE_HEAD
+    || role == TABLE_ROLE_FOOT;
 }
 
 // TODO: export it from prosemirror-tables-sections
 export function isTableBody(node: PmNode) {
-  return 'body' == node.type.spec.tableRole;
+  return TABLE_ROLE_BODY == node.type.spec.tableRole;
 }
 
 export function pandocTableSections(table: PmNode): NodeWithPos[] {

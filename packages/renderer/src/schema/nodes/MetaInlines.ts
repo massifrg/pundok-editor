@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NODE_NAME_META_INLINES } from '../../common';
 
 // declare module '@tiptap/core' {
 //   interface Commands<ReturnType> {
@@ -13,7 +14,7 @@ export interface MetaInlinesOptions {
 }
 
 export const MetaInlines = Node.create<MetaInlinesOptions>({
-  name: 'metaInlines',
+  name: NODE_NAME_META_INLINES,
   content: 'inline*',
   group: 'meta',
   isolating: true,

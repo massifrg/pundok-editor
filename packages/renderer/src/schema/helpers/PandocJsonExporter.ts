@@ -63,9 +63,18 @@ import {
   DEFAULT_INDEX_NAME,
   DEFAULT_INDEX_REF_CLASS,
   DEFAULT_NOTE_TYPE,
+  INDEXED_TEXT_ATTR,
   INDEX_CLASS,
+  INDEX_NAME_ATTR,
+  INDEX_PUT_INDEX_REF_ATTR,
+  INDEX_RANGE_ATTR,
+  INDEX_REF_CLASS_ATTR,
+  INDEX_SORT_KEY_ATTR,
   INDEX_TERM_CLASS,
   Index,
+  MARK_NAME_CITE,
+  NODE_NAME_AUTO_DELIMITER,
+  NODE_NAME_SHORT_CAPTION,
   NOTE_TYPE_ATTRIBUTE,
 } from '../../common';
 import {
@@ -360,7 +369,7 @@ export class PandocJsonExporter {
   private captionToPandocItem(jsonCaption: PmJsonNode): Caption {
     const content: PmJsonNode[] = jsonCaption.content || [];
     const maybeShortCaption =
-      (content[0].type === ShortCaption.name && content[0]) || undefined;
+      (content[0].type === NODE_NAME_SHORT_CAPTION && content[0]) || undefined;
     const scInlines = maybeShortCaption
       ? this.inlineContentToInlines(maybeShortCaption.content || [])
       : undefined;
@@ -560,9 +569,9 @@ export class PandocJsonExporter {
   private nodeToIndexDiv(node: PmJsonNode): Div {
     const attributes: Record<string, string> = {};
     const { indexName, refClass, putIndexRef } = node.attrs || {};
-    if (indexName) attributes['index-name'] = indexName;
-    if (refClass) attributes['ref-class'] = refClass;
-    if (putIndexRef) attributes['put-index-ref'] = putIndexRef;
+    if (indexName) attributes[INDEX_NAME_ATTR] = indexName;
+    if (refClass) attributes[INDEX_REF_CLASS_ATTR] = refClass;
+    if (putIndexRef) attributes[INDEX_PUT_INDEX_REF_ATTR] = putIndexRef;
     const div = new Div(new Attr('', [INDEX_CLASS], attributes), []);
     this.appendBlocks(div, node.content);
     return div;
@@ -571,8 +580,8 @@ export class PandocJsonExporter {
   private nodeToIndexTerm(node: PmJsonNode): Div {
     const attributes: Record<string, string> = {};
     const { indexName, sortKey } = node.attrs || {};
-    if (indexName) attributes['index-name'] = indexName;
-    if (sortKey) attributes['sort-key'] = sortKey;
+    if (indexName) attributes[INDEX_NAME_ATTR] = indexName;
+    if (sortKey) attributes[INDEX_SORT_KEY_ATTR] = sortKey;
     const div = new Div(
       new Attr(node.attrs?.id || '', [INDEX_TERM_CLASS], attributes),
       [],
@@ -584,19 +593,19 @@ export class PandocJsonExporter {
   private nodeToIndexRef(node: PmJsonNode): Span {
     const attrs = node.attrs || {};
     const kv = attrs.kv;
-    const indexName = kv['index-name'] || DEFAULT_INDEX_NAME;
+    const indexName = kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME;
     const {
       idref,
-      'indexed-text': indexedText,
-      'index-range': indexRange,
+      [INDEXED_TEXT_ATTR]: indexedText,
+      [INDEX_RANGE_ATTR]: indexRange,
     } = kv;
     const classes = [this.indexRefClass(indexName)];
     if (indexRange === INDEX_RANGE_START) classes.push(INDEX_RANGE_START_CLASS);
     if (indexRange === INDEX_RANGE_STOP) classes.push(INDEX_RANGE_STOP_CLASS);
     const attributes: Record<string, string> = { ...kv };
-    if (indexName) attributes['index-name'] = indexName;
+    if (indexName) attributes[INDEX_NAME_ATTR] = indexName;
     if (idref) attributes.idref = idref;
-    if (indexedText) attributes['indexed-text'] = indexedText;
+    if (indexedText) attributes[INDEXED_TEXT_ATTR] = indexedText;
     return new Span(Attr.from({ id: '', classes, attributes }), []);
   }
 
@@ -769,7 +778,7 @@ export class PandocJsonExporter {
     const found = BASE_MARKS.find((bm) => bm.type === mark.type);
     if (found) {
       newMark.pandoc = found.pandoc;
-      if (found.type === Cite.name) {
+      if (found.type === MARK_NAME_CITE) {
         const pundokCitations: PundokCitation[] = newMark.attrs?.citations || [];
         if (pundokCitations.length > 0)
           this.citationCount++
@@ -979,7 +988,7 @@ export class PandocJsonExporter {
               ];
               extendCurrentRanges = true;
               break;
-            case AutoDelimiter.name:
+            case NODE_NAME_AUTO_DELIMITER:
               addedChunks = [];
               extendCurrentRanges = true;
               break;

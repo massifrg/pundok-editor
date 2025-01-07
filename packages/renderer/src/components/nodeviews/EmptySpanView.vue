@@ -6,7 +6,7 @@
       </q-icon>
     </span>
     <span v-if="type === 'milestone'" :class="classes" :title="title">{{ node.attrs.kv['page-number'] || 'MS'
-    }}</span>
+      }}</span>
     <span v-if="type === 'anchor'" :class="classes" :title="title">⚓</span>
     <node-view-content as="span" class="content" />
   </node-view-wrapper>
@@ -15,7 +15,7 @@
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';
 import { getEditorConfiguration } from '../../schema';
-import { Index } from '../../common';
+import { Index, INDEXED_TEXT_ATTR } from '../../common';
 
 export default {
   components: {
@@ -53,7 +53,7 @@ export default {
       const attributes = this.node.attrs.kv || {};
       switch (this.type) {
         case 'index':
-          const text = attributes['indexed-text'];
+          const text = attributes[INDEXED_TEXT_ATTR];
           const info: string[] = []
           if (this.index.indexName) info.push(`${this.index.indexName} index`)
           if (attributes.idref)

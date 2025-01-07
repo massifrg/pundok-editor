@@ -256,6 +256,7 @@ export default {
       return cnwp.find(({ node }) => isTableSection(node));
     },
     currentCell(): NodeWithPos | undefined {
+      // TODO: write this better
       return [...this.currentNodesWithPos].reverse().find(({ node }) => {
         const name = node.type.name;
         return name.startsWith('tableCell') || name.startsWith('tableHeader');

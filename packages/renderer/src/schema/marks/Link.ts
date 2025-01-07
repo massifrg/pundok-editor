@@ -23,6 +23,14 @@ export const Link = TiptapLink.extend<LinkOptions>({
         class: 'pandoc-link',
       },
       validate: () => true,
+      isAllowedUri(url, ctx) {
+        // TODO:
+        return true
+      },
+      shouldAutoLink(url) {
+        // TODO:
+        return false
+      },
     };
   },
 

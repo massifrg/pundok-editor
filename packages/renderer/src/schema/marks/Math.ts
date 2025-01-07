@@ -13,7 +13,7 @@ import {
   nextMathType,
   MathType,
 } from '../helpers';
-import { SK_TOGGLE_MATH, SK_TOGGLE_MATH_TYPE } from '../../common';
+import { MARK_NAME_MATH, SK_TOGGLE_MATH, SK_TOGGLE_MATH_TYPE } from '../../common';
 
 export interface MathOptions {
   HTMLAttributes: Record<string, any>;
@@ -48,7 +48,7 @@ declare module '@tiptap/core' {
 // export const pasteRegex = /(?:^|\s)((?:~~)((?:[^~]+))(?:~~))/g
 
 export const Math = Mark.create<MathOptions>({
-  name: 'math',
+  name: MARK_NAME_MATH,
   excludes: '_',
 
   addOptions() {

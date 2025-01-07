@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NODE_NAME_META_STRING } from '../../common';
 
 // declare module '@tiptap/core' {
 //   interface Commands<ReturnType> {
@@ -13,7 +14,7 @@ export interface MetaStringOptions {
 }
 
 export const MetaString = Node.create<MetaStringOptions>({
-  name: 'metaString',
+  name: NODE_NAME_META_STRING,
   content: 'text*',
   group: 'meta',
   isolating: true,

@@ -1,5 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { innerNodeDepth, templateNode } from '../helpers';
+import { NODE_NAME_META_LIST } from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -17,7 +18,7 @@ export interface MetaListOptions {
 }
 
 export const MetaList = Node.create<MetaListOptions>({
-  name: 'metaList',
+  name: NODE_NAME_META_LIST,
   content: 'meta*',
   group: 'meta',
   isolating: true,
@@ -46,7 +47,7 @@ export const MetaList = Node.create<MetaListOptions>({
           ({ dispatch, state, tr }) => {
             const { doc, schema, selection } = state;
             const $pos = pos ? doc.resolve(pos) : selection.$from
-            const mapDepth = innerNodeDepth($pos, node => node.type.name === MetaList.name)
+            const mapDepth = innerNodeDepth($pos, node => node.type.name === NODE_NAME_META_LIST)
             console.log(`appendMetaListItem, pos = ${JSON.stringify(pos)}`)
             if (!mapDepth) return false
             const item = templateNode(schema, metaTypeName);

@@ -1,14 +1,15 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NODE_NAME_CAPTION, TABLE_ROLE_CAPTION } from '../../common';
 
 export interface CaptionOptions {
   HTMLAttributes: Record<string, any>;
 }
 
 export const Caption = Node.create({
-  name: 'caption',
+  name: NODE_NAME_CAPTION,
   content: 'shortCaption? block+',
   isolating: true,
-  tableRole: 'caption',
+  tableRole: TABLE_ROLE_CAPTION,
 
   addOptions() {
     return {

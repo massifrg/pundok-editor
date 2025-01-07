@@ -7,11 +7,10 @@ import {
   Transaction,
 } from '@tiptap/pm/state';
 import { type Mark, type Node as PmNode } from '@tiptap/pm/model';
-import { SingleQuoted } from '../marks/SingleQuoted';
-import { DoubleQuoted } from '../marks/DoubleQuoted';
 import { Editor, NodeWithPos, mergeAttributes } from '@tiptap/vue-3';
 import { difference, intersection, isString } from 'lodash';
 import { changedRanges } from '../helpers/whatChanged';
+import { MARK_NAME_DOUBLE_QUOTED, MARK_NAME_SINGLE_QUOTED, NODE_NAME_AUTO_DELIMITER } from '/@/common';
 
 const AUTO_DELIMITER_CLASS = 'auto-delimiter';
 const AUTO_DELIMITER_OPEN_CLASS = 'delimiter-open';
@@ -34,9 +33,9 @@ const defaultDelimiterForMark: DelimiterForMarkFunction = (
   isOpen: boolean,
 ) => {
   switch (isString(mark) ? mark : mark.type.name) {
-    case DoubleQuoted.name:
+    case MARK_NAME_DOUBLE_QUOTED:
       return isOpen ? '“' : '”';
-    case SingleQuoted.name:
+    case MARK_NAME_SINGLE_QUOTED:
       return isOpen ? '‘' : '’';
     default:
       return '"';
@@ -90,9 +89,9 @@ export function registerAutodelimiters(
     let typeName = k;
     const lk = k.toLowerCase();
     if (lk === 'singlequote' || lk === 'singlequoted')
-      typeName = SingleQuoted.name;
+      typeName = MARK_NAME_SINGLE_QUOTED;
     else if (lk === 'doublequote' || lk === 'doublequoted')
-      typeName = DoubleQuoted.name;
+      typeName = MARK_NAME_DOUBLE_QUOTED;
     const delimiters = autoDelimiters[k];
     markDefs.push({
       typeName,
@@ -108,7 +107,7 @@ export interface AutoDelimitersOptions {
 }
 
 export const AutoDelimiter = Node.create<AutoDelimitersOptions>({
-  name: 'autoDelimiter',
+  name: NODE_NAME_AUTO_DELIMITER,
   group: 'inline',
   inline: true,
   atom: true,
@@ -265,45 +264,45 @@ export const AutoDelimitersExtension = Extension.create<AutoDelimitersOptions>({
     return {
       fixAutoDelimiters:
         (fixFrom?: number, fixTo?: number) =>
-        ({ dispatch, state, tr }) => {
-          const { doc, selection } = state;
-          let from, to;
-          if (fixFrom && fixTo && fixTo >= fixFrom) {
-            from = fixFrom;
-            to = fixTo;
-          } else {
-            let { empty, $from } = selection;
-            if (empty) {
-              from = $from.start(0);
-              to = $from.end(0);
+          ({ dispatch, state, tr }) => {
+            const { doc, selection } = state;
+            let from, to;
+            if (fixFrom && fixTo && fixTo >= fixFrom) {
+              from = fixFrom;
+              to = fixTo;
             } else {
-              (from = selection.from), (to = selection.to);
+              let { empty, $from } = selection;
+              if (empty) {
+                from = $from.start(0);
+                to = $from.end(0);
+              } else {
+                (from = selection.from), (to = selection.to);
+              }
             }
-          }
-          const autodelimitedMarks: Mark[] =
-            this.storage.autodelimitedMarks || [];
-          if (autodelimitedMarks.length === 0) return false;
-          if (dispatch) {
-            const paraLikes: NodeWithPos[] = [];
-            try {
-              doc.nodesBetween(from, to, (node, pos) => {
-                if (node.inlineContent) paraLikes.push({ node, pos });
-                return true;
-              });
-            } catch {
-              return false;
+            const autodelimitedMarks: Mark[] =
+              this.storage.autodelimitedMarks || [];
+            if (autodelimitedMarks.length === 0) return false;
+            if (dispatch) {
+              const paraLikes: NodeWithPos[] = [];
+              try {
+                doc.nodesBetween(from, to, (node, pos) => {
+                  if (node.inlineContent) paraLikes.push({ node, pos });
+                  return true;
+                });
+              } catch {
+                return false;
+              }
+              if (paraLikes.length === 0) return false;
+              dispatch(
+                fixAutoDelimitersTransaction(
+                  state,
+                  paraLikes,
+                  autodelimitedMarks,
+                ),
+              );
             }
-            if (paraLikes.length === 0) return false;
-            dispatch(
-              fixAutoDelimitersTransaction(
-                state,
-                paraLikes,
-                autodelimitedMarks,
-              ),
-            );
-          }
-          return true;
-        },
+            return true;
+          },
     };
   },
 });

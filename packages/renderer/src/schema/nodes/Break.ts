@@ -1,6 +1,7 @@
 import { mergeAttributes } from '@tiptap/core';
 import { HardBreak, type HardBreakOptions } from '@tiptap/extension-hard-break';
 import {
+  NODE_NAME_BREAK,
   SK_SET_LINEBREAK,
   SK_SET_LINEBREAK_ALT,
   SK_SET_SOFTBREAK,
@@ -20,6 +21,7 @@ declare module '@tiptap/core' {
 }
 
 export const Break = HardBreak.extend<BreakOptions>({
+  name: NODE_NAME_BREAK,
   marks: '_',
 
   addAttributes() {
@@ -44,41 +46,41 @@ export const Break = HardBreak.extend<BreakOptions>({
     return {
       setBreak:
         (soft?: boolean) =>
-        ({ commands, chain, state, editor }) => {
-          return commands.first([
-            () => commands.exitCode(),
-            () =>
-              commands.command(() => {
-                const { selection, storedMarks } = state;
+          ({ commands, chain, state, editor }) => {
+            return commands.first([
+              () => commands.exitCode(),
+              () =>
+                commands.command(() => {
+                  const { selection, storedMarks } = state;
 
-                if (selection.$from.parent.type.spec.isolating) {
-                  return false;
-                }
+                  if (selection.$from.parent.type.spec.isolating) {
+                    return false;
+                  }
 
-                const { keepMarks } = this.options;
-                const { splittableMarks } = editor.extensionManager;
-                const marks =
-                  storedMarks ||
-                  (selection.$to.parentOffset && selection.$from.marks());
+                  const { keepMarks } = this.options;
+                  const { splittableMarks } = editor.extensionManager;
+                  const marks =
+                    storedMarks ||
+                    (selection.$to.parentOffset && selection.$from.marks());
 
-                const attrs = soft ? { soft: true } : {};
-                return chain()
-                  .insertContent({ type: this.name, attrs })
-                  .command(({ tr, dispatch }) => {
-                    if (dispatch && marks && keepMarks) {
-                      const filteredMarks = marks.filter((mark) =>
-                        splittableMarks.includes(mark.type.name),
-                      );
+                  const attrs = soft ? { soft: true } : {};
+                  return chain()
+                    .insertContent({ type: this.name, attrs })
+                    .command(({ tr, dispatch }) => {
+                      if (dispatch && marks && keepMarks) {
+                        const filteredMarks = marks.filter((mark) =>
+                          splittableMarks.includes(mark.type.name),
+                        );
 
-                      tr.ensureMarks(filteredMarks);
-                    }
+                        tr.ensureMarks(filteredMarks);
+                      }
 
-                    return true;
-                  })
-                  .run();
-              }),
-          ]);
-        },
+                      return true;
+                    })
+                    .run();
+                }),
+            ]);
+          },
     };
   },
 

@@ -6,7 +6,7 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { SK_TOGGLE_STRIKEOUT } from '../../common';
+import { MARK_NAME_STRIKEOUT, SK_TOGGLE_STRIKEOUT } from '../../common';
 
 export interface StrikeoutOptions {
   HTMLAttributes: Record<string, any>;
@@ -35,7 +35,7 @@ export const inputRegex = /(?:^|\s)((?:~~)((?:[^~]+))(?:~~))$/;
 export const pasteRegex = /(?:^|\s)((?:~~)((?:[^~]+))(?:~~))/g;
 
 export const Strikeout = Mark.create<StrikeoutOptions>({
-  name: 'strikeout',
+  name: MARK_NAME_STRIKEOUT,
 
   addOptions() {
     return {
@@ -74,25 +74,25 @@ export const Strikeout = Mark.create<StrikeoutOptions>({
     return {
       setStrikeout:
         () =>
-        ({ commands }) => {
-          return commands.setMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.setMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
       toggleStrikeout:
         () =>
-        ({ commands }) => {
-          return commands.toggleMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.toggleMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
       unsetStrikeout:
         () =>
-        ({ commands }) => {
-          return commands.unsetMarkNoAtoms(this.name, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.unsetMarkNoAtoms(this.name, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
     };
   },
 

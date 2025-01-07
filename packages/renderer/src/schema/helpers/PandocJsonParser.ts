@@ -18,12 +18,15 @@ import {
   PandocAttr,
   pandocAttrAsPmAttrs,
 } from './pandocAttr';
-import { Div, IndexDiv, IndexTerm } from '..';
 import {
   DEFAULT_NOTE_TYPE,
   INDEX_CLASS,
+  INDEX_NAME_ATTR,
   INDEX_TERM_CLASS,
   Index,
+  NODE_NAME_DIV,
+  NODE_NAME_INDEX_DIV,
+  NODE_NAME_INDEX_TERM,
   NOTE_TYPE_ATTRIBUTE,
   NoteStyle,
 } from '../../common';
@@ -737,10 +740,10 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
       if (customStyle) state.currentParaCustomStyle = customStyle;
       const createDiv = !customStyleOnly && !noteWrapper;
       const nodeTypeName = isIndex
-        ? IndexDiv.name
+        ? NODE_NAME_INDEX_DIV
         : isIndexTerm
-          ? IndexTerm.name
-          : Div.name;
+          ? NODE_NAME_INDEX_TERM
+          : NODE_NAME_DIV;
       if (createDiv) state.openNode(schema.nodes[nodeTypeName], attrs);
       parseChildren(state, spec, pandocItem);
       if (createDiv) state.closeNode();
@@ -901,7 +904,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
         if (refClass) {
           const index = indexRefClasses[refClass];
           if (!attrs.kv.indexName && index)
-            attrs.kv['index-name'] = index.indexName;
+            attrs.kv[INDEX_NAME_ATTR] = index.indexName;
           state.openNode(schema.nodes.indexRef, attrs);
         } else {
           state.openNode(schema.nodes.emptySpan, attrs);

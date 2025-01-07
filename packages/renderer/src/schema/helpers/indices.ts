@@ -1,6 +1,5 @@
 import { Node as PmNode } from '@tiptap/pm/model';
-import { Index } from '../../common';
-import { IndexDiv } from '..';
+import { Index, NODE_NAME_DIV } from '../../common';
 
 /**
  * Merges indices definitions from the document and from the configuration
@@ -41,7 +40,7 @@ export function mergeIndices(
 export function documentIndices(doc: PmNode): Index[] {
   const indices: Index[] = [];
   doc.descendants((node) => {
-    if (node.type.name === IndexDiv.name) {
+    if (node.type.name === NODE_NAME_DIV) {
       const { indexName, refClass, putIndexRef } = node.attrs;
       if (indexName) {
         const newIndex: Index = { indexName, refClass };

@@ -3,11 +3,6 @@ import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/core';
 import { editableAttrsForNodeOrMark } from '../schema/helpers/attributes';
 import {
-  IndexDiv,
-  PandocTable,
-  TableBody,
-  TableCell,
-  TableHeader,
   currentRepeatableCommandTooltip,
   editorKeyFromState,
   getEditorConfiguration,
@@ -20,7 +15,15 @@ import {
   SelectedNodeOrMark,
   templateNode,
 } from '../schema/helpers';
-import { EditorKeyType, PundokEditorConfig } from '../common';
+import {
+  EditorKeyType,
+  NODE_NAME_INDEX_DIV,
+  NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_TABLE_BODY,
+  NODE_NAME_TABLE_CELL,
+  NODE_NAME_TABLE_HEADER,
+  PundokEditorConfig
+} from '../common';
 import { toRaw } from 'vue';
 
 export type TooltipForAction =
@@ -427,7 +430,7 @@ export function actionsForNodeOrMark(
     actions.push({ editorKey, ...UNWRAP_BLOCKS_ACTION, nodeOrMark });
 
     // add table head or foot
-    if (nodeTypeName === PandocTable.name) {
+    if (nodeTypeName === NODE_NAME_PANDOC_TABLE) {
       const addPandocTableCaptionAction: ActionForNodeOrMark = {
         editorKey,
         name: 'add-table-caption',
@@ -463,7 +466,7 @@ export function actionsForNodeOrMark(
     }
 
     // add table body
-    if (nodeTypeName === TableBody.name) {
+    if (nodeTypeName === NODE_NAME_TABLE_BODY) {
       const prependPandocTableBodyAction: ActionForNodeOrMark = {
         editorKey,
         name: 'prepend-table-body',
@@ -533,7 +536,7 @@ export function actionsForNodeOrMark(
     }
 
     // table cell alignment
-    if (nodeTypeName === TableCell.name || nodeTypeName === TableHeader.name) {
+    if (nodeTypeName === NODE_NAME_TABLE_CELL || nodeTypeName === NODE_NAME_TABLE_HEADER) {
       actions = actions.concat(
         TABLE_CELL_ALIGNMENT_ACTIONS.map((tcaa) => {
           return { ...tcaa, editorKey } as EditorAction;
@@ -581,7 +584,7 @@ export function actionsForNodeOrMark(
       });
     }
 
-    if (nodeTypeName === IndexDiv.name) {
+    if (nodeTypeName === NODE_NAME_INDEX_DIV) {
       actions.push({
         editorKey,
         name: 'propagate-index-name',
@@ -593,7 +596,7 @@ export function actionsForNodeOrMark(
       });
     }
 
-    // if (nodeTypeName === MetaMap.name) {
+    // if (nodeTypeName === NODE_NAME_META_MAP) {
     //   actions.push({
     //     name: 'edit-meta-map-text',
     //     label: 'edit MetaMap text',

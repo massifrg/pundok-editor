@@ -7,16 +7,16 @@ import type { NodeWithPos } from '@tiptap/vue-3';
 import {
   DEFAULT_INDEX_REF_CLASS,
   DEFAULT_PUT_INDEX_REF,
+  INDEXED_TEXT_ATTR,
+  INDEX_NAME_ATTR,
   Index,
   IndexRefPlacement,
+  NODE_NAME_INDEX_REF,
   indexRefDecorationCss,
 } from '../../common';
 import { DEFAULT_INDEX_NAME } from '../../common';
 import { documentIndices, mergeIndices } from '../helpers/indices';
-import {
-  DocStateUpdate,
-  META_UPDATE_DOC_STATE,
-} from './PundokEditorUtilsExtension';
+import { DocStateUpdate, META_UPDATE_DOC_STATE } from '../helpers';
 
 const INDEXING_PLUGIN = 'indexing-plugin';
 
@@ -37,7 +37,7 @@ declare module '@tiptap/core' {
 }
 
 export function isIndexRef(node: PmNode): boolean {
-  return node.type.name === 'indexRef' && node.attrs.kv['index-name'];
+  return node.type.name === NODE_NAME_INDEX_REF && node.attrs.kv[INDEX_NAME_ATTR];
 }
 
 function indexRefToDecoration(
@@ -47,10 +47,10 @@ function indexRefToDecoration(
 ): Decoration | undefined {
   const { node, pos } = ref;
   const kv = node.attrs.kv;
-  const indexedText = kv['indexed-text'];
+  const indexedText = kv[INDEXED_TEXT_ATTR];
   if (indexedText) {
     const width = indexedText.length;
-    const index = indices.find((i) => i.indexName === kv['index-name']);
+    const index = indices.find((i) => i.indexName === kv[INDEX_NAME_ATTR]);
     const where: IndexRefPlacement =
       index?.putIndexRef || DEFAULT_PUT_INDEX_REF;
     const dir = where === 'before' ? 1 : -1;
@@ -101,7 +101,7 @@ function indexRefToDecoration(
         style: indexRefDecorationCss(index),
       },
       {
-        type: `${INDEXING_DECORATION_PREFIX}-${kv['index-name']}`,
+        type: `${INDEXING_DECORATION_PREFIX}-${kv[INDEX_NAME_ATTR]}`,
         indexNode: node,
       },
     );
@@ -255,7 +255,7 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
                 const indexRef = indexRefType.create(
                   {
                     classes: [refClass],
-                    kv: { 'index-name': indexName },
+                    kv: { [INDEX_NAME_ATTR]: indexName },
                   },
                   null,
                   marks,
@@ -272,8 +272,8 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
                   {
                     classes: [refClass],
                     kv: {
-                      'index-name': indexName,
-                      'indexed-text': indexedText,
+                      [INDEX_NAME_ATTR]: indexName,
+                      [INDEXED_TEXT_ATTR]: indexedText,
                     },
                   },
                   null,

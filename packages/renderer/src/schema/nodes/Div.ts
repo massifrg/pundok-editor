@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { SK_TOGGLE_DIV } from '../../common';
+import { NODE_NAME_DIV, SK_TOGGLE_DIV } from '../../common';
 
 export interface DivOptions {
   HTMLAttributes: Record<string, any>;
@@ -16,7 +16,7 @@ declare module '@tiptap/core' {
 }
 
 export const Div = Node.create<DivOptions>({
-  name: 'div',
+  name: NODE_NAME_DIV,
 
   content: 'block+',
 
@@ -44,19 +44,19 @@ export const Div = Node.create<DivOptions>({
     return {
       setDiv:
         () =>
-        ({ commands }) => {
-          return commands.wrapIn(this.name);
-        },
+          ({ commands }) => {
+            return commands.wrapIn(this.name);
+          },
       toggleDiv:
         () =>
-        ({ commands }) => {
-          return commands.toggleWrap(this.name);
-        },
+          ({ commands }) => {
+            return commands.toggleWrap(this.name);
+          },
       unsetDiv:
         () =>
-        ({ commands }) => {
-          return commands.lift(this.name);
-        },
+          ({ commands }) => {
+            return commands.lift(this.name);
+          },
     };
   },
 

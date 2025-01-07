@@ -1,12 +1,15 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { Node as PmNode } from '@tiptap/pm/model';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
+import { Component } from 'vue';
 import { IndexRefView } from '../../components';
 import {
   DEFAULT_INDEX_NAME,
   DEFAULT_INDEX_REF_CLASS,
   INDEX_NAME_ATTR,
   INDEX_RANGE_ATTR,
+  INDEXED_TEXT_ATTR,
+  NODE_NAME_INDEX_REF,
 } from '../../common';
 
 export const INDEX_RANGE_START_CLASS = 'index-start';
@@ -32,7 +35,7 @@ export interface IndexRefOptions {
 }
 
 export const IndexRef = Node.create<IndexRefOptions>({
-  name: 'indexRef',
+  name: NODE_NAME_INDEX_REF,
   group: 'inline',
   inline: true,
   atom: true,
@@ -120,7 +123,7 @@ export const IndexRef = Node.create<IndexRefOptions>({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(IndexRefView);
+    return VueNodeViewRenderer(IndexRefView as Component);
   },
 
   addCommands() {
@@ -133,27 +136,27 @@ export const IndexRef = Node.create<IndexRefOptions>({
             node: PmNode,
           ) => boolean = defaultPropagate,
         ) =>
-        ({ dispatch, state, tr }) => {
-          if (refNode.type.name !== IndexRef.name) return false;
-          const idref = refNode.attrs.kv.idref;
-          if (!idref) return false;
-          if (dispatch) {
-            state.doc.descendants((node, pos) => {
-              if (refNode !== node && node.type.name === IndexRef.name) {
-                if (propagate(refNode, node)) {
-                  const newAttrs = {
-                    ...node.attrs,
-                    kv: { ...node.attrs.kv, idref },
-                  };
-                  tr.setNodeMarkup(pos, null, newAttrs);
+          ({ dispatch, state, tr }) => {
+            if (refNode.type.name !== NODE_NAME_INDEX_REF) return false;
+            const idref = refNode.attrs.kv.idref;
+            if (!idref) return false;
+            if (dispatch) {
+              state.doc.descendants((node, pos) => {
+                if (refNode !== node && node.type.name === NODE_NAME_INDEX_REF) {
+                  if (propagate(refNode, node)) {
+                    const newAttrs = {
+                      ...node.attrs,
+                      kv: { ...node.attrs.kv, idref },
+                    };
+                    tr.setNodeMarkup(pos, null, newAttrs);
+                  }
                 }
-              }
-              return true;
-            });
-            dispatch(tr);
-          }
-          return true;
-        },
+                return true;
+              });
+              dispatch(tr);
+            }
+            return true;
+          },
     };
   },
 });
@@ -161,11 +164,11 @@ export const IndexRef = Node.create<IndexRefOptions>({
 function defaultPropagate(refNode: PmNode, node: PmNode): boolean {
   const refkv = refNode.attrs.kv || {};
   const indexName = refkv[INDEX_NAME_ATTR];
-  const indexedText = refkv['indexed-text'];
+  const indexedText = refkv[INDEXED_TEXT_ATTR];
   const kv = node.attrs.kv || {};
   return (
-    node.type.name === IndexRef.name &&
+    node.type.name === NODE_NAME_INDEX_REF &&
     indexName &&
-    kv['indexed-text'] === indexedText
+    kv[INDEXED_TEXT_ATTR] === indexedText
   );
 }

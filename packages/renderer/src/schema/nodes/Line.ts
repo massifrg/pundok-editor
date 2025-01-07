@@ -1,12 +1,13 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { LINE_BLOCK_CLASS, LINE_BLOCK_LINE_CLASS } from '../helpers/lineBlock';
+import { NODE_NAME_LINE } from '../../common';
 
 export interface LineOptions {
   HTMLAttributes: Record<string, any>;
 }
 
 export const Line = Node.create<LineOptions>({
-  name: 'line',
+  name: NODE_NAME_LINE,
   content: 'inline*',
   defining: true,
 

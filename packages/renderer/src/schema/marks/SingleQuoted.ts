@@ -5,7 +5,7 @@ import {
   mergeAttributes,
 } from '@tiptap/core';
 import { SINGLE_QUOTED_CLASS } from '../helpers/quoted';
-import { SK_TOGGLE_SINGLEQUOTE } from '../../common';
+import { MARK_NAME_SINGLE_QUOTED, SK_TOGGLE_SINGLEQUOTE } from '../../common';
 
 export interface SingleQuotedOptions {
   HTMLAttributes: Record<string, any>;
@@ -34,7 +34,7 @@ declare module '@tiptap/core' {
 // export const pasteRegex = /(?:^|\s)((?:~~)((?:[^~]+))(?:~~))/g
 
 export const SingleQuoted = Mark.create<SingleQuotedOptions>({
-  name: 'singleQuoted',
+  name: MARK_NAME_SINGLE_QUOTED,
   inclusive: false,
 
   addOptions() {
@@ -61,27 +61,27 @@ export const SingleQuoted = Mark.create<SingleQuotedOptions>({
     return {
       setSingleQuoted:
         () =>
-        ({ commands }) => {
-          return commands.setMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-            includeSpaces: true,
-          });
-        },
+          ({ commands }) => {
+            return commands.setMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+              includeSpaces: true,
+            });
+          },
       toggleSingleQuoted:
         () =>
-        ({ commands }) => {
-          return commands.toggleMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-            includeSpaces: true,
-          });
-        },
+          ({ commands }) => {
+            return commands.toggleMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+              includeSpaces: true,
+            });
+          },
       unsetSingleQuoted:
         () =>
-        ({ commands }) => {
-          return commands.unsetMarkNoAtoms(this.name, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.unsetMarkNoAtoms(this.name, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
     };
   },
 

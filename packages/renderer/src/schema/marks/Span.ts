@@ -1,5 +1,5 @@
 import { Mark, mergeAttributes } from '@tiptap/core';
-import { SK_TOGGLE_SPAN } from '../../common';
+import { MARK_NAME_SPAN, SK_TOGGLE_SPAN } from '../../common';
 
 export interface SpanOptions {
   HTMLAttributes: Record<string, any>;
@@ -17,7 +17,7 @@ declare module '@tiptap/core' {
 }
 
 export const Span = Mark.create<SpanOptions>({
-  name: 'span',
+  name: MARK_NAME_SPAN,
   priority: 500,
   excludes: '',
 
@@ -39,26 +39,26 @@ export const Span = Mark.create<SpanOptions>({
     return {
       setSpan:
         (attributes) =>
-        ({ commands }) => {
-          return commands.setMarkNoAtoms(this.name, attributes, {
-            excludeNonLeafAtoms: 'only-content',
-          });
-        },
+          ({ commands }) => {
+            return commands.setMarkNoAtoms(this.name, attributes, {
+              excludeNonLeafAtoms: 'only-content',
+            });
+          },
       toggleSpan:
         (attributes) =>
-        ({ commands }) => {
-          return commands.toggleMarkNoAtoms(this.name, attributes, {
-            excludeNonLeafAtoms: 'only-content',
-            extendEmptyMarkRange: true,
-          });
-        },
+          ({ commands }) => {
+            return commands.toggleMarkNoAtoms(this.name, attributes, {
+              excludeNonLeafAtoms: 'only-content',
+              extendEmptyMarkRange: true,
+            });
+          },
       unsetSpan:
         () =>
-        ({ commands }) => {
-          return commands.unsetMarkNoAtoms(this.name, {
-            excludeNonLeafAtoms: 'only-content',
-          });
-        },
+          ({ commands }) => {
+            return commands.unsetMarkNoAtoms(this.name, {
+              excludeNonLeafAtoms: 'only-content',
+            });
+          },
     };
   },
 

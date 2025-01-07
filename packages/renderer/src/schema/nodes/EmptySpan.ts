@@ -1,7 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { EmptySpanView } from '../index';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { SK_INSERT_ANCHOR } from '../../common';
+import { NODE_NAME_EMPTY_SPAN, SK_INSERT_ANCHOR } from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -17,7 +17,7 @@ export interface EmptySpanOptions {
 }
 
 export const EmptySpan = Node.create<EmptySpanOptions>({
-  name: 'emptySpan',
+  name: NODE_NAME_EMPTY_SPAN,
   group: 'inline',
   inline: true,
   atom: true,
@@ -52,21 +52,21 @@ export const EmptySpan = Node.create<EmptySpanOptions>({
     return {
       insertEmptySpan:
         (attrs: Record<string, any>) =>
-        ({ state, dispatch }) => {
-          const emptySpanType = state.schema.nodes.emptySpan;
-          const { $from, empty } = state.selection,
-            index = $from.index();
-          if (
-            !empty ||
-            !$from.parent.canReplaceWith(index, index, emptySpanType)
-          )
-            return false;
-          if (dispatch) {
-            const inode = emptySpanType.create(attrs);
-            dispatch(state.tr.replaceSelectionWith(inode));
-          }
-          return true;
-        },
+          ({ state, dispatch }) => {
+            const emptySpanType = state.schema.nodes.emptySpan;
+            const { $from, empty } = state.selection,
+              index = $from.index();
+            if (
+              !empty ||
+              !$from.parent.canReplaceWith(index, index, emptySpanType)
+            )
+              return false;
+            if (dispatch) {
+              const inode = emptySpanType.create(attrs);
+              dispatch(state.tr.replaceSelectionWith(inode));
+            }
+            return true;
+          },
     };
   },
 

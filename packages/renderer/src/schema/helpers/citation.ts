@@ -1,7 +1,7 @@
 import { CitationMode, Cite as PandocCite, Inline } from '../../pandoc';
 import { EditorState } from '@tiptap/pm/state';
-import { Plain } from '../nodes';
 import { nodeContentToPandocInlines } from './PandocJsonExporter';
+import { NODE_NAME_PLAIN } from '../../common';
 
 // export interface PMCitation {
 //   citationId: string;
@@ -112,7 +112,7 @@ function affixToInlines(state: EditorState, pos: number, affix?: Affix): Inline[
   from += pos
   to += pos
   if (from < to) {
-    const plainType = state.schema.nodes[Plain.name]
+    const plainType = state.schema.nodes[NODE_NAME_PLAIN]
     if (plainType) {
       const plain = plainType.create(null, state.doc.slice(from, to).content)
       // console.log(affix.text)

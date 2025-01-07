@@ -1,23 +1,28 @@
+import { getMarksBetween } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorView } from '@tiptap/pm/view';
 import { NodeSelection, Plugin } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
-import { IndexRef, IndexTerm, Paragraph, RawInline } from '..';
 import { setActionEditAttributes } from '../../actions';
-
-import { EditorKeyType, SK_EDIT_ATTRIBUTES } from '../../common';
-import { getMarksBetween } from '@tiptap/vue-3';
+import {
+  EditorKeyType,
+  NODE_NAME_IMAGE,
+  NODE_NAME_INDEX_REF,
+  NODE_NAME_INDEX_TERM,
+  NODE_NAME_PARAGRAPH,
+  NODE_NAME_RAW_INLINE,
+  SK_EDIT_ATTRIBUTES
+} from '../../common';
 import {
   DocState,
   DocStateUpdate,
   editableAttrsForNodeOrMark,
   editorKeyFromState,
+  META_UPDATE_DOC_STATE,
   SelectedNodeOrMark,
   updateDocState
 } from '../helpers';
 import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
-
-export const META_UPDATE_DOC_STATE = 'update-doc-state';
 
 let keyCounter = 1;
 
@@ -96,7 +101,7 @@ export const PundokEditorUtilsExtension =
               const editorKey = editorKeyFromState(view.state);
               if (!editorKey) return false;
               switch (node.type.name) {
-                case RawInline.name:
+                case NODE_NAME_RAW_INLINE:
                   setActionEditAttributes(
                     editorKey,
                     {
@@ -104,12 +109,12 @@ export const PundokEditorUtilsExtension =
                       to: pos,
                       pos: nodePos,
                       node,
-                      name: RawInline.name,
+                      name: NODE_NAME_RAW_INLINE,
                     },
                     'text',
                   );
                   return true;
-                case IndexRef.name:
+                case NODE_NAME_INDEX_REF:
                   setActionEditAttributes(
                     editorKey,
                     {
@@ -117,9 +122,21 @@ export const PundokEditorUtilsExtension =
                       to: pos,
                       pos: nodePos,
                       node,
-                      name: IndexRef.name,
+                      name: NODE_NAME_INDEX_REF,
                     },
                     'idref',
+                  );
+                case NODE_NAME_IMAGE:
+                  setActionEditAttributes(
+                    editorKey,
+                    {
+                      from: pos,
+                      to: pos,
+                      pos: nodePos,
+                      node,
+                      name: NODE_NAME_IMAGE,
+                    },
+                    'target',
                   );
                   return true;
               }
@@ -221,7 +238,6 @@ function isParagraphOfIndexTerm(
   node: ProsemirrorNode,
   parent: ProsemirrorNode,
 ): boolean {
-  return (
-    parent?.type.name === IndexTerm.name && node?.type.name === Paragraph.name
-  );
+  return parent?.type.name === NODE_NAME_INDEX_TERM
+    && node?.type.name === NODE_NAME_PARAGRAPH
 }

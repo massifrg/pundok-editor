@@ -1,11 +1,12 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { NodeSelection } from '@tiptap/pm/state';
 import {
   DEFAULT_INDEX_NAME,
   INDEX_NAME_ATTR,
   INDEX_TERM_CLASS,
+  NODE_NAME_DIV,
+  NODE_NAME_INDEX_TERM,
 } from '../../common';
-import { NodeSelection } from '@tiptap/pm/state';
-import { Div } from './Div';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -21,7 +22,7 @@ export interface IndexTermOptions {
 }
 
 export const IndexTerm = Node.create<IndexTermOptions>({
-  name: 'indexTerm',
+  name: NODE_NAME_INDEX_TERM,
   content: 'block* indexTerm*',
   group: 'block',
   isolating: true,
@@ -73,58 +74,58 @@ export const IndexTerm = Node.create<IndexTermOptions>({
     return {
       convertDivToIndexTerm:
         () =>
-        ({ state, tr, dispatch }) => {
-          const { doc, schema, selection } = state;
-          if (selection instanceof NodeSelection) {
-            const maybeDiv = doc.nodeAt(selection.from);
-            if (maybeDiv && maybeDiv.type.name === Div.name) {
-              if (dispatch) {
-                let { id, kv } = maybeDiv.attrs;
-                kv = kv || {};
-                const indexTerm = schema.nodes.indexTerm.createAndFill(
-                  {
-                    id,
-                    indexName: kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
-                    sortKey: kv['sort-key'],
-                  },
-                  maybeDiv.content
-                );
-                if (indexTerm) selection.replaceWith(tr, indexTerm);
-                else return false;
-                return true;
+          ({ state, tr, dispatch }) => {
+            const { doc, schema, selection } = state;
+            if (selection instanceof NodeSelection) {
+              const maybeDiv = doc.nodeAt(selection.from);
+              if (maybeDiv && maybeDiv.type.name === NODE_NAME_DIV) {
+                if (dispatch) {
+                  let { id, kv } = maybeDiv.attrs;
+                  kv = kv || {};
+                  const indexTerm = schema.nodes.indexTerm.createAndFill(
+                    {
+                      id,
+                      indexName: kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
+                      sortKey: kv['sort-key'],
+                    },
+                    maybeDiv.content
+                  );
+                  if (indexTerm) selection.replaceWith(tr, indexTerm);
+                  else return false;
+                  return true;
+                }
               }
             }
-          }
-          return false;
-        },
+            return false;
+          },
       convertIndexTermToDiv:
         () =>
-        ({ state, tr, dispatch }) => {
-          const { doc, schema, selection } = state;
-          if (selection instanceof NodeSelection) {
-            const maybeIndexTerm = doc.nodeAt(selection.from);
-            if (maybeIndexTerm && maybeIndexTerm.type.name === IndexTerm.name) {
-              if (dispatch) {
-                let { id, indexName, sortKey } = maybeIndexTerm.attrs;
-                const div = schema.nodes.div.createAndFill(
-                  {
-                    id,
-                    classes: [],
-                    kv: {
-                      [INDEX_NAME_ATTR]: indexName,
-                      ['sort-key']: sortKey,
+          ({ state, tr, dispatch }) => {
+            const { doc, schema, selection } = state;
+            if (selection instanceof NodeSelection) {
+              const maybeIndexTerm = doc.nodeAt(selection.from);
+              if (maybeIndexTerm && maybeIndexTerm.type.name === IndexTerm.name) {
+                if (dispatch) {
+                  let { id, indexName, sortKey } = maybeIndexTerm.attrs;
+                  const div = schema.nodes.div.createAndFill(
+                    {
+                      id,
+                      classes: [],
+                      kv: {
+                        [INDEX_NAME_ATTR]: indexName,
+                        ['sort-key']: sortKey,
+                      },
                     },
-                  },
-                  maybeIndexTerm.content
-                );
-                if (div) selection.replaceWith(tr, div);
-                else return false;
-                return true;
+                    maybeIndexTerm.content
+                  );
+                  if (div) selection.replaceWith(tr, div);
+                  else return false;
+                  return true;
+                }
               }
             }
-          }
-          return false;
-        },
+            return false;
+          },
     };
   },
 });

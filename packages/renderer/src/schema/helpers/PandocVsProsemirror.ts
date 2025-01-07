@@ -2,6 +2,20 @@ import type { Node, Mark, NodeType, MarkType } from '@tiptap/pm/model';
 import {
   CustomStyleDef,
   INDEX_NAME_ATTR,
+  MARK_NAME_DOUBLE_QUOTED,
+  MARK_NAME_SINGLE_QUOTED,
+  MARK_NAME_SMALLCAPS,
+  MARK_NAME_SPAN,
+  NODE_NAME_BLOCKQUOTE,
+  NODE_NAME_BREAK,
+  NODE_NAME_DIV,
+  NODE_NAME_EMPTY_SPAN,
+  NODE_NAME_FIGURE,
+  NODE_NAME_HEADING,
+  NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_PARAGRAPH,
+  NODE_NAME_RAW_BLOCK,
+  NODE_NAME_RAW_INLINE,
   PundokEditorConfig,
 } from '../../common';
 import { isString } from 'lodash';
@@ -83,27 +97,27 @@ export function nodeOrMarkToPandocName(
   const customStyle: string | undefined =
     (attrs && attrs.customStyle) || (attrs.kv && attrs.kv['custom-style']);
   switch (name) {
-    case 'div':
-    case 'figure':
+    case NODE_NAME_DIV:
+    case NODE_NAME_FIGURE:
       return firstToUpperWithClasses(name, attrs.classes, nameToCustomStyle);
-    case 'paragraph':
+    case NODE_NAME_PARAGRAPH:
       return customStyle ? `Para(${customStyle})` : 'Para';
-    case 'hardBreak':
+    case NODE_NAME_BREAK:
       return attrs.soft ? 'SoftBreak' : 'LineBreak';
-    case 'smallcaps':
+    case MARK_NAME_SMALLCAPS:
       return 'SmallCaps';
-    case 'blockquote':
+    case NODE_NAME_BLOCKQUOTE:
       return 'BlockQuote';
-    case 'doubleQuoted':
+    case MARK_NAME_DOUBLE_QUOTED:
       return 'Quoted(Double)';
-    case 'singleQuoted':
+    case MARK_NAME_SINGLE_QUOTED:
       return 'Quoted(Single)';
-    case 'span':
+    case MARK_NAME_SPAN:
       if (customStyle) return `Span(${customStyle})`;
       return spanToLabel(nom);
-    case 'emptySpan':
+    case NODE_NAME_EMPTY_SPAN:
       return spanToLabel(nom);
-    case 'heading':
+    case NODE_NAME_HEADING:
       return firstToUpperWithClasses(
         `Header(${attrs.level || Heading.options.levels[0]})`,
         attrs.classes,
@@ -113,20 +127,20 @@ export function nodeOrMarkToPandocName(
       return 'text';
     case 'pandocNull':
       return 'Null';
-    case 'rawInline':
+    case NODE_NAME_RAW_INLINE:
       return `RawInline(${attrs.format ||
         config?.defaultRawFormat ||
         RawInline.options.defaultFormat
         })`;
-    case 'rawBlock':
+    case NODE_NAME_RAW_BLOCK:
       return `RawBlock(${attrs.format ||
         config?.defaultRawFormat ||
         RawBlock.options.defaultFormat
         })`;
-    case 'pandocTable':
+    case NODE_NAME_PANDOC_TABLE:
       return `Table`;
-    case 'pandocTableSection':
-      return attrs.section;
+    // case 'pandocTableSection':
+    //   return attrs.section;
     default:
       return name ? ucfirst(name) : '?';
   }

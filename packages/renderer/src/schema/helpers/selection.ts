@@ -144,7 +144,7 @@ export function labeledNodesAndMarksAtPos(
   const labeled: LabeledNodeOrMark[] = [];
   let markCount = 0;
   doc.nodesBetween(atPos, atPos, (node, pos, _parent, index) => {
-    const isText = node.type.name === 'text';
+    const isNotText = !node.isText
     node.marks.forEach((mark) => {
       markCount += 1;
       labeled.push(
@@ -157,9 +157,9 @@ export function labeledNodesAndMarksAtPos(
         )
       );
     });
-    if (!isText)
+    if (isNotText)
       labeled.push(labelNode(node, pos, `node_${index}`, nameToCustomStyle));
-    return !isText;
+    return isNotText;
   });
   return labeled;
 }

@@ -6,7 +6,7 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { SK_TOGGLE_BOLD, SK_TOGGLE_BOLD_ALT } from '../../common';
+import { MARK_NAME_STRONG, SK_TOGGLE_BOLD, SK_TOGGLE_BOLD_ALT } from '../../common';
 
 export interface StrongOptions {
   HTMLAttributes: Record<string, any>;
@@ -37,7 +37,7 @@ export const underscoreInputRegex = /(?:^|\s)((?:__)((?:[^__]+))(?:__))$/;
 export const underscorePasteRegex = /(?:^|\s)((?:__)((?:[^__]+))(?:__))/g;
 
 export const Strong = Mark.create<StrongOptions>({
-  name: 'strong',
+  name: MARK_NAME_STRONG,
 
   addOptions() {
     return {
@@ -74,25 +74,25 @@ export const Strong = Mark.create<StrongOptions>({
     return {
       setStrong:
         () =>
-        ({ commands }) => {
-          return commands.setMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.setMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
       toggleStrong:
         () =>
-        ({ commands }) => {
-          return commands.toggleMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.toggleMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
       unsetStrong:
         () =>
-        ({ commands }) => {
-          return commands.unsetMarkNoAtoms(this.name, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.unsetMarkNoAtoms(this.name, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
     };
   },
 

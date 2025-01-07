@@ -172,6 +172,15 @@ import {
   TABLE_CELL_ALIGNMENTS,
   TABLE_CELL_DEFAULT_ALIGNMENT,
 } from '../helpers';
+import {
+  NODE_NAME_CAPTION,
+  NODE_NAME_CODE_BLOCK,
+  NODE_NAME_DIV,
+  NODE_NAME_FIGURE,
+  NODE_NAME_FIGURE_CAPTION,
+  NODE_NAME_METADATA,
+  NODE_NAME_RAW_BLOCK
+} from '../../common';
 const lowlight = createLowlight(all);
 lowlight.register('javascript', javascript);
 lowlight.register('typescript', typescript);
@@ -387,7 +396,7 @@ export const Pandoc = Document.extend<PandocOptions>({
             allowTableNodeSelection: false,
           },
         },
-        { name: 'caption', object: Caption },
+        { name: NODE_NAME_CAPTION, object: Caption },
         { name: 'shortCaption', object: ShortCaption },
         { name: 'tableHead', object: TableHead },
         { name: 'tableBody', object: TableBody },
@@ -395,9 +404,9 @@ export const Pandoc = Document.extend<PandocOptions>({
         { name: 'tableRow', object: TableRow },
         { name: 'tableHeader', object: TableHeader },
         { name: 'tableCell', object: TableCell },
-        { name: 'div', object: Div },
-        { name: 'figure', object: Figure },
-        { name: 'figureCaption', object: FigureCaption },
+        { name: NODE_NAME_DIV, object: Div },
+        { name: NODE_NAME_FIGURE, object: Figure },
+        { name: NODE_NAME_FIGURE_CAPTION, object: FigureCaption },
         { name: 'pandocNull', object: PandocNull },
         { name: 'indexDiv', object: IndexDiv },
         { name: 'indexTerm', object: IndexTerm },
@@ -453,7 +462,7 @@ export const Pandoc = Document.extend<PandocOptions>({
               let { $anchor, from } = sel;
               const depth = $anchor.depth;
               for (let d = 0; d <= depth; d++) {
-                if ($anchor.node(d).type.name === Metadata.name) {
+                if ($anchor.node(d).type.name === NODE_NAME_METADATA) {
                   from = $anchor.after(d);
                   break;
                 }
@@ -474,6 +483,6 @@ export const Pandoc = Document.extend<PandocOptions>({
   },
 
   addProseMirrorPlugins() {
-    return [fixPreArrowUpPlugin([CodeBlock.name, RawBlock.name])];
+    return [fixPreArrowUpPlugin([NODE_NAME_CODE_BLOCK, NODE_NAME_RAW_BLOCK])];
   },
 });

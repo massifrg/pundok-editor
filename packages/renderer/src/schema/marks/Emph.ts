@@ -6,7 +6,7 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { SK_TOGGLE_EMPH, SK_TOGGLE_EMPH_ALT } from '../../common';
+import { MARK_NAME_EMPH, SK_TOGGLE_EMPH, SK_TOGGLE_EMPH_ALT } from '../../common';
 
 export interface EmphOptions {
   HTMLAttributes: Record<string, any>;
@@ -37,7 +37,7 @@ export const underscoreInputRegex = /(?:^|\s)((?:_)((?:[^_]+))(?:_))$/;
 export const underscorePasteRegex = /(?:^|\s)((?:_)((?:[^_]+))(?:_))/g;
 
 export const Emph = Mark.create<EmphOptions>({
-  name: 'emph',
+  name: MARK_NAME_EMPH,
 
   addOptions() {
     return {
@@ -73,25 +73,25 @@ export const Emph = Mark.create<EmphOptions>({
     return {
       setEmph:
         () =>
-        ({ commands }) => {
-          return commands.setMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.setMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
       toggleEmph:
         () =>
-        ({ commands }) => {
-          return commands.toggleMarkNoAtoms(this.name, null, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.toggleMarkNoAtoms(this.name, null, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
       unsetEmph:
         () =>
-        ({ commands }) => {
-          return commands.unsetMarkNoAtoms(this.name, {
-            excludeNonLeafAtoms: 'whole',
-          });
-        },
+          ({ commands }) => {
+            return commands.unsetMarkNoAtoms(this.name, {
+              excludeNonLeafAtoms: 'whole',
+            });
+          },
     };
   },
 
