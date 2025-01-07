@@ -6,7 +6,7 @@ import {
   TextSelection,
   Transaction,
 } from '@tiptap/pm/state';
-import { type Mark, type Node as PmNode } from '@tiptap/pm/model';
+import { Schema, type Mark, type Node as PmNode } from '@tiptap/pm/model';
 import { Editor, NodeWithPos, mergeAttributes } from '@tiptap/vue-3';
 import { difference, intersection, isString } from 'lodash';
 import { changedRanges } from '../helpers/whatChanged';
@@ -253,7 +253,7 @@ export const AutoDelimitersExtension = Extension.create<AutoDelimitersOptions>({
             }
             paras.sort((p1, p2) => p2.pos - p1.pos);
 
-            return fixAutoDelimitersTransaction(newState, paras, adm, tr);
+            return fixAutoDelimitersTransaction(tr, schema, paras, adm);
           }
         },
       }),
@@ -295,7 +295,8 @@ export const AutoDelimitersExtension = Extension.create<AutoDelimitersOptions>({
               if (paraLikes.length === 0) return false;
               dispatch(
                 fixAutoDelimitersTransaction(
-                  state,
+                  tr,
+                  state.schema,
                   paraLikes,
                   autodelimitedMarks,
                 ),
@@ -322,12 +323,11 @@ interface MarkIndexRange {
 }
 
 function fixAutoDelimitersTransaction(
-  state: EditorState,
+  tr: Transaction,
+  schema: Schema,
   paraLikes: NodeWithPos[],
   autoDelimMarks: Mark[],
-  _tr?: Transaction,
 ): Transaction {
-  let tr = _tr || state.tr;
   paraLikes.sort((p1, p2) => p2.pos - p1.pos);
   // save the selection
   const bookmark = tr.selection.getBookmark();
@@ -352,7 +352,7 @@ function fixAutoDelimitersTransaction(
       // const markType = mark.type.name;
       const marks = [...curMarks!];
       if (mark && !marks.find((m) => m.eq(mark))) marks.push(mark);
-      const delim = state.schema.nodes.autoDelimiter.create(
+      const delim = schema.nodes.autoDelimiter.create(
         { isOpen, markType: mark?.type.name },
         undefined,
         marks,
@@ -362,13 +362,18 @@ function fixAutoDelimitersTransaction(
   });
   if (tr.docChanged) {
     try {
-      // restore the selection
+      // restore the selection, if possible
       const sel = bookmark.resolve(tr.doc);
       if (sel instanceof TextSelection) {
         const mapping = tr.mapping;
-        const $from = tr.doc.resolve(mapping.map(sel.from));
-        const $to = tr.doc.resolve(mapping.map(sel.to));
-        tr = tr.setSelection(new TextSelection($from, $to));
+        const newFrom = mapping.map(sel.from)
+        const newTo = mapping.map(sel.to)
+        const size = tr.doc.content.size + 1
+        if (newFrom <= size && newTo <= size) {
+          const $from = tr.doc.resolve(newFrom);
+          const $to = tr.doc.resolve(newTo);
+          tr = tr.setSelection(new TextSelection($from, $to));
+        }
       }
     } catch (err: any) {
       console.log(err.toString());

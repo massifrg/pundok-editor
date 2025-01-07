@@ -91,3 +91,6 @@
 - default classes for Blocks like Headers, Figure, Div
 
 - remove circular references in the source code that make vite complain during build
+
+- see if it's possible to allow marks on Code Mark
+  (see pandoc testsuite.native, that has a quoted code)
