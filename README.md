@@ -4,16 +4,6 @@ This software is a visual editor for
 [Pandoc's internal document model](https://hackage.haskell.org/package/pandoc-types-1.23.1/docs/Text-Pandoc-Definition.html),
 that can be adapted to different document production workflows.
 
-## A couple of screenshots
-
-This is a glimpse of the `test/testsuite.native` file in Pandoc's repository, opened in the editor:
-
-![testsuite.native](./screenshots/testsuite.jpg)
-
-Here's the rendering of `test/tables/planets.native`, from Pandoc's repository:
-
-![planets.native](./screenshots/planets-table.jpg)
-
 ## Running the editor
 
 I compile [two binaries](https://github.com/massifrg/pundok-editor/releases),
@@ -71,6 +61,16 @@ Those are the only two packages I was able to produce.
 Making the Windows executable works even under my Debian,
 with the help from the `wine` software.
 If you know how to compile packages for other systems, e.g. for Macs, you are welcome.
+
+## A couple of screenshots
+
+This is a glimpse of the `test/testsuite.native` file in Pandoc's repository, opened in the editor:
+
+![testsuite.native](./screenshots/testsuite.jpg)
+
+Here's the rendering of `test/tables/planets.native`, from Pandoc's repository:
+
+![planets.native](./screenshots/planets-table.jpg)
 
 ## What the editor does
 
