@@ -11,11 +11,11 @@ import { CodeBlock, getEditorConfiguration, PandocTable, RawInline } from '..';
 import {
   depthOfInnerNodeType,
   innerBlockDepth,
-  isCellSelection,
 } from '../helpers';
 import { RawBlockView } from '../../components';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
+import { Component } from 'vue';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -63,12 +63,12 @@ export const RawBlock = Node.create<RawBlockOptions>({
         renderHTML(attrs) {
           return attrs.format
             ? {
-                class: `format-${attrs.format}`,
-                'data-format': attrs.format,
-              }
+              class: `format-${attrs.format}`,
+              'data-format': attrs.format,
+            }
             : {
-                'data-format': options.defaultFormat,
-              };
+              'data-format': options.defaultFormat,
+            };
         },
       },
     };
@@ -92,7 +92,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(RawBlockView);
+    return VueNodeViewRenderer(RawBlockView as Component);
   },
 
   addKeyboardShortcuts() {
@@ -215,189 +215,189 @@ export const RawBlock = Node.create<RawBlockOptions>({
     return {
       insertRawBlock:
         (rawformat?: string, rawtext?: string | string[]) =>
-        ({ state, dispatch, tr }) => {
-          const rawBlockType = state.schema.nodes.rawBlock;
-          const { doc, selection, schema } = state;
-          const { empty, from, to, $from, $to } = selection;
-          const isarray = Array.isArray(rawtext);
-          if (isarray && rawtext.length < 1) return false;
-          const rt1: string | undefined = isarray ? rawtext[0] : rawtext;
-          const rt2: string | undefined = isarray ? rawtext[1] : undefined;
+          ({ state, dispatch, tr }) => {
+            const rawBlockType = state.schema.nodes.rawBlock;
+            const { doc, selection, schema } = state;
+            const { empty, from, to, $from, $to } = selection;
+            const isarray = Array.isArray(rawtext);
+            if (isarray && rawtext.length < 1) return false;
+            const rt1: string | undefined = isarray ? rawtext[0] : rawtext;
+            const rt2: string | undefined = isarray ? rawtext[1] : undefined;
 
-          // the selection is a Block or a table CellSelection
-          const isBlockSelection =
-            selection instanceof NodeSelection && selection.node.isBlock;
-          const isCellSelection = selection instanceof CellSelection;
-          if (isBlockSelection || isCellSelection) {
-            let selectedNode: PmNode | null = null;
-            let insertPos1 = from;
-            if (isCellSelection) {
-              let d = $from.depth + 1;
-              do {
-                d--;
-                selectedNode = $from.node(d);
-              } while (
-                d > 0 &&
-                selectedNode &&
-                selectedNode.type.name !== PandocTable.name
-              );
-              insertPos1 = $from.start(d) - 1;
-            } else {
-              selectedNode = selection.node;
-              insertPos1 = from;
+            // the selection is a Block or a table CellSelection
+            const isBlockSelection =
+              selection instanceof NodeSelection && selection.node.isBlock;
+            const isCellSelection = selection instanceof CellSelection;
+            if (isBlockSelection || isCellSelection) {
+              let selectedNode: PmNode | null = null;
+              let insertPos1 = from;
+              if (isCellSelection) {
+                let d = $from.depth + 1;
+                do {
+                  d--;
+                  selectedNode = $from.node(d);
+                } while (
+                  d > 0 &&
+                  selectedNode &&
+                  selectedNode.type.name !== PandocTable.name
+                );
+                insertPos1 = $from.start(d) - 1;
+              } else {
+                selectedNode = selection.node;
+                insertPos1 = from;
+              }
+              if (!selectedNode) return false;
+              const insertPos2 = insertPos1 + selectedNode.nodeSize;
+              if (dispatch) {
+                // console.log(selectedNode);
+                const config = getEditorConfiguration(state);
+                const format =
+                  rawformat ||
+                  config?.defaultRawFormat ||
+                  this.options.defaultFormat ||
+                  DEFAULT_RAW_BLOCK_FORMAT;
+                const rawBlock1 =
+                  (rt1 && rawBlockType.create({ format }, schema.text(rt1))) ||
+                  null;
+                const rawBlock2 =
+                  (rt2 && rawBlockType.create({ format }, schema.text(rt2))) ||
+                  null;
+                if (rawBlock2) tr.insert(insertPos2, rawBlock2);
+                if (rawBlock1) tr.insert(insertPos1, rawBlock1);
+                dispatch(tr);
+              }
+              return true;
             }
-            if (!selectedNode) return false;
-            const insertPos2 = insertPos1 + selectedNode.nodeSize;
+
+            const depth1 = innerBlockDepth($from);
+            const depth2 = innerBlockDepth($to);
+            // console.log(`depth1: ${depth1}, depth2: ${depth2}`);
+            if (depth1 < 0 || depth2 < 0) return false;
             if (dispatch) {
-              // console.log(selectedNode);
               const config = getEditorConfiguration(state);
+              const depth = Math.min(depth1, depth2);
+              const pos1 = $from.start(depth) - 1;
+              const pos2 = $to.start(depth) + $to.node(depth).nodeSize - 1;
               const format =
                 rawformat ||
                 config?.defaultRawFormat ||
                 this.options.defaultFormat ||
                 DEFAULT_RAW_BLOCK_FORMAT;
-              const rawBlock1 =
-                (rt1 && rawBlockType.create({ format }, schema.text(rt1))) ||
-                null;
-              const rawBlock2 =
-                (rt2 && rawBlockType.create({ format }, schema.text(rt2))) ||
-                null;
-              if (rawBlock2) tr.insert(insertPos2, rawBlock2);
-              if (rawBlock1) tr.insert(insertPos1, rawBlock1);
+              if (isarray) {
+                // two texts
+                const rawBlock1 =
+                  (rt1 && rawBlockType.create({ format }, schema.text(rt1))) ||
+                  null;
+                const rawBlock2 =
+                  (rt2 && rawBlockType.create({ format }, schema.text(rt2))) ||
+                  null;
+                if (rawBlock2) tr.insert(pos2, rawBlock2);
+                if (rawBlock1) tr.insert(pos1, rawBlock1);
+              } else if (!rt1) {
+                // no text
+                if (empty) {
+                  // no text and empty selection
+                  const text = $from.node(depth1).textContent;
+                  const rawBlock = rawBlockType.create(
+                    { format },
+                    schema.text(text),
+                  );
+                  if (!rawBlock) return false;
+                  const pos = $from.start(depth1) - 1;
+                  tr.setSelection(
+                    new NodeSelection(doc.resolve(pos)),
+                  ).replaceSelectionWith(rawBlock);
+                } else {
+                  // no text and range selected
+                  const text = doc.textBetween(from, to, '\n', toRawBlockText);
+                  const rawBlock = rawBlockType.create(
+                    { format },
+                    schema.text(text),
+                  );
+                  tr.replaceRangeWith(from, to, rawBlock);
+                }
+              } else {
+                // one text
+                if (empty) {
+                  // one text and empty selection
+                  const rawBlock = rawBlockType.create(
+                    { format },
+                    schema.text(rt1),
+                  );
+                  const splitDepth = $from.depth - depth1;
+                  const offset = splitDepth;
+                  const isAtStart = $from.start() === from;
+                  const insertionPos = isAtStart ? from - 1 : from + offset;
+                  if (!isAtStart) tr = tr.split(from, splitDepth);
+                  tr.insert(insertionPos, rawBlock);
+                } else {
+                  // one text and range selected
+                  const text = doc.textBetween(from, to, '\n', toRawBlockText);
+                  const rawBlock = rawBlockType.create(
+                    { format },
+                    schema.text(rawtext + text),
+                  );
+                  tr.replaceRangeWith(from, to, rawBlock);
+                }
+              }
               dispatch(tr);
             }
             return true;
-          }
-
-          const depth1 = innerBlockDepth($from);
-          const depth2 = innerBlockDepth($to);
-          // console.log(`depth1: ${depth1}, depth2: ${depth2}`);
-          if (depth1 < 0 || depth2 < 0) return false;
-          if (dispatch) {
-            const config = getEditorConfiguration(state);
-            const depth = Math.min(depth1, depth2);
-            const pos1 = $from.start(depth) - 1;
-            const pos2 = $to.start(depth) + $to.node(depth).nodeSize - 1;
-            const format =
-              rawformat ||
-              config?.defaultRawFormat ||
-              this.options.defaultFormat ||
-              DEFAULT_RAW_BLOCK_FORMAT;
-            if (isarray) {
-              // two texts
-              const rawBlock1 =
-                (rt1 && rawBlockType.create({ format }, schema.text(rt1))) ||
-                null;
-              const rawBlock2 =
-                (rt2 && rawBlockType.create({ format }, schema.text(rt2))) ||
-                null;
-              if (rawBlock2) tr.insert(pos2, rawBlock2);
-              if (rawBlock1) tr.insert(pos1, rawBlock1);
-            } else if (!rt1) {
-              // no text
-              if (empty) {
-                // no text and empty selection
-                const text = $from.node(depth1).textContent;
-                const rawBlock = rawBlockType.create(
-                  { format },
-                  schema.text(text),
-                );
-                if (!rawBlock) return false;
-                const pos = $from.start(depth1) - 1;
-                tr.setSelection(
-                  new NodeSelection(doc.resolve(pos)),
-                ).replaceSelectionWith(rawBlock);
-              } else {
-                // no text and range selected
-                const text = doc.textBetween(from, to, '\n', toRawBlockText);
-                const rawBlock = rawBlockType.create(
-                  { format },
-                  schema.text(text),
-                );
-                tr.replaceRangeWith(from, to, rawBlock);
-              }
-            } else {
-              // one text
-              if (empty) {
-                // one text and empty selection
-                const rawBlock = rawBlockType.create(
-                  { format },
-                  schema.text(rt1),
-                );
-                const splitDepth = $from.depth - depth1;
-                const offset = splitDepth;
-                const isAtStart = $from.start() === from;
-                const insertionPos = isAtStart ? from - 1 : from + offset;
-                if (!isAtStart) tr = tr.split(from, splitDepth);
-                tr.insert(insertionPos, rawBlock);
-              } else {
-                // one text and range selected
-                const text = doc.textBetween(from, to, '\n', toRawBlockText);
-                const rawBlock = rawBlockType.create(
-                  { format },
-                  schema.text(rawtext + text),
-                );
-                tr.replaceRangeWith(from, to, rawBlock);
-              }
-            }
-            dispatch(tr);
-          }
-          return true;
-        },
+          },
       convertToRawBlock:
         (format) =>
-        ({ state, dispatch }) => {
-          const { empty, $from } = state.selection;
-          if (!empty) return false;
-          const depth = depthOfInnerNodeType($from, [
-            RawBlock.name,
-            CodeBlock.name,
-          ]);
-          if (!depth) return false;
-          if (dispatch) {
-            const node = $from.node(depth);
-            const config = getEditorConfiguration(state);
-            const currentFormat =
-              node.attrs?.format ||
-              node.attrs?.kv?.format ||
-              config?.defaultRawFormat ||
-              this.options.defaultFormat ||
-              DEFAULT_RAW_BLOCK_FORMAT;
-            const rawBlock = state.schema.nodes[this.name].create(
-              { format: format || currentFormat },
-              node.content,
-            );
-            const sel = NodeSelection.create(state.doc, $from.before(depth));
-            dispatch(state.tr.setSelection(sel).replaceSelectionWith(rawBlock));
-          }
-          return true;
-        },
+          ({ state, dispatch }) => {
+            const { empty, $from } = state.selection;
+            if (!empty) return false;
+            const depth = depthOfInnerNodeType($from, [
+              RawBlock.name,
+              CodeBlock.name,
+            ]);
+            if (!depth) return false;
+            if (dispatch) {
+              const node = $from.node(depth);
+              const config = getEditorConfiguration(state);
+              const currentFormat =
+                node.attrs?.format ||
+                node.attrs?.kv?.format ||
+                config?.defaultRawFormat ||
+                this.options.defaultFormat ||
+                DEFAULT_RAW_BLOCK_FORMAT;
+              const rawBlock = state.schema.nodes[this.name].create(
+                { format: format || currentFormat },
+                node.content,
+              );
+              const sel = NodeSelection.create(state.doc, $from.before(depth));
+              dispatch(state.tr.setSelection(sel).replaceSelectionWith(rawBlock));
+            }
+            return true;
+          },
       rawBlockToText:
         () =>
-        ({ state, dispatch }) => {
-          const { empty, $from } = state.selection;
-          if (!empty) return false;
-          const depth = depthOfInnerNodeType($from, [RawBlock.name]);
-          if (!depth) return false;
-          const node = $from.node(depth);
-          if (node.childCount !== 1) return false;
-          if (dispatch) {
-            const lines = node
-              .firstChild!.textContent.split(/\r?\n/)
-              .map((t) => state.schema.text(t))
-              .map((t) =>
-                state.schema.nodes.paragraph.createAndFill(null, t),
-              ) as PmNode[];
-            dispatch(
-              state.tr.replaceWith(
-                $from.before(depth),
-                $from.after(depth),
-                Fragment.from(lines),
-              ),
-            );
-          }
-          return true;
-        },
+          ({ state, dispatch }) => {
+            const { empty, $from } = state.selection;
+            if (!empty) return false;
+            const depth = depthOfInnerNodeType($from, [RawBlock.name]);
+            if (!depth) return false;
+            const node = $from.node(depth);
+            if (node.childCount !== 1) return false;
+            if (dispatch) {
+              const lines = node
+                .firstChild!.textContent.split(/\r?\n/)
+                .map((t) => state.schema.text(t))
+                .map((t) =>
+                  state.schema.nodes.paragraph.createAndFill(null, t),
+                ) as PmNode[];
+              dispatch(
+                state.tr.replaceWith(
+                  $from.before(depth),
+                  $from.after(depth),
+                  Fragment.from(lines),
+                ),
+              );
+            }
+            return true;
+          },
     };
   },
 });
