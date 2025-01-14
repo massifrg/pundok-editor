@@ -10,13 +10,14 @@ import {
   NODE_NAME_META_MAP_ENTRY,
   NODE_NAME_METADATA
 } from '../../common';
+import { isString } from 'lodash';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     metaMapEntry: {
       appendMetaMapEntry: (
         text: string,
-        metaTypeName: string,
+        metaTypeNameOrValue: string | ProsemirrorNode,
         pos?: number
       ) => ReturnType;
       setMetaMapEntryText: (text: string, pos?: number) => ReturnType;
@@ -73,10 +74,12 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
     const self = this
     return {
       appendMetaMapEntry:
-        (text: string, metaTypeName: string, pos?: number) =>
+        (text: string, metaTypeNameOrValue: string | ProsemirrorNode, pos?: number) =>
           ({ dispatch, state, tr }) => {
             const { doc, schema, selection } = state;
-            const metavalue = templateNode(schema, metaTypeName);
+            const metavalue = isString(metaTypeNameOrValue)
+              ? templateNode(schema, metaTypeNameOrValue)
+              : { node: metaTypeNameOrValue, attrs: metaTypeNameOrValue.attrs }
             // console.log(metavalue)
             if (!metavalue) return false;
             const entryType = schema.nodes[self.name];

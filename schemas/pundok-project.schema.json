@@ -152,6 +152,26 @@
       ],
       "type": "object"
     },
+    "CustomMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {},
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/MetaValueName"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "type": "object"
+    },
     "CustomOutputConverter": {
       "additionalProperties": false,
       "properties": {
@@ -491,6 +511,17 @@
       ],
       "type": "object"
     },
+    "MetaValueName": {
+      "enum": [
+        "MetaBool",
+        "MetaString",
+        "MetaInlines",
+        "MetaBlocks",
+        "MetaList",
+        "MetaMap"
+      ],
+      "type": "string"
+    },
     "NoteStyle": {
       "additionalProperties": false,
       "properties": {
@@ -777,6 +808,13 @@
           },
           "type": "array"
         },
+        "customMetadata": {
+          "description": "custom metadata keys and types",
+          "items": {
+            "$ref": "#/definitions/CustomMetadata"
+          },
+          "type": "array"
+        },
         "customStyles": {
           "description": "Definitions of custom styles available with this configuration. These definitions can encompass multiple elements (e.g. `span`, `paragraph`). See [Pandoc custom styles](https://pandoc.org/MANUAL.html#custom-styles)",
           "items": {
@@ -933,6 +971,13 @@
               "description": "Filenames of CSS stylesheets to customize documents with this configuration.",
               "items": {
                 "type": "string"
+              },
+              "type": "array"
+            },
+            "customMetadata": {
+              "description": "custom metadata keys and types",
+              "items": {
+                "$ref": "#/definitions/CustomMetadata"
               },
               "type": "array"
             },

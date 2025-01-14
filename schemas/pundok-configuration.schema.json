@@ -152,6 +152,26 @@
       ],
       "type": "object"
     },
+    "CustomMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {},
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/MetaValueName"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "type": "object"
+    },
     "CustomOutputConverter": {
       "additionalProperties": false,
       "properties": {
@@ -451,6 +471,17 @@
       ],
       "type": "object"
     },
+    "MetaValueName": {
+      "enum": [
+        "MetaBool",
+        "MetaString",
+        "MetaInlines",
+        "MetaBlocks",
+        "MetaList",
+        "MetaMap"
+      ],
+      "type": "string"
+    },
     "NoteStyle": {
       "additionalProperties": false,
       "properties": {
@@ -734,6 +765,13 @@
           "description": "paths to CSS files that customize the editor's appearance",
           "items": {
             "type": "string"
+          },
+          "type": "array"
+        },
+        "customMetadata": {
+          "description": "custom metadata keys and types",
+          "items": {
+            "$ref": "#/definitions/CustomMetadata"
           },
           "type": "array"
         },

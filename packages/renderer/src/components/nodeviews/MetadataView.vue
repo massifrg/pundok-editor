@@ -17,14 +17,35 @@
           @click="appendMetaList" />
         <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaMap')" label="append map" title="append MetaMap"
           @click="appendMetaMap" />
+        <q-btn-dropdown no-caps size="sm" color="primary" icon="mdi-help-circle-outline" label="append custom"
+          title="append custom metadata from configuration">
+          <q-list>
+            <q-item v-for="cm in customMetadata" :key="cm.name" :title="cm.description" dense clickable v-close-popup
+              color="primary" @click="appendCustomMetaMapEntry(cm)">
+              <q-item-section side>
+                <q-icon :name="iconForCustomMeta(cm)" color="primary" text-color="white" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ cm.name }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </div>
     </div>
   </node-view-wrapper>
 </template>
 
 <script lang="ts">
-import { NodeViewWrapper, NodeViewContent, nodeViewProps } from '@tiptap/vue-3';
-import { nodeIcon, nodeOrMarkToPandocName } from '../../schema/helpers';
+import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';
+import { CustomMetadata } from '../../common';
+import {
+  anyToMetaValue,
+  getEditorConfiguration,
+  metaValueNameToNodeTypeName,
+  nodeIcon,
+  nodeOrMarkToPandocName
+} from '../../schema/helpers';
 
 export default {
   components: {
@@ -41,6 +62,12 @@ export default {
   },
 
   computed: {
+    configuration() {
+      return getEditorConfiguration(this.editor as Editor)
+    },
+    customMetadata(): CustomMetadata[] {
+      return this.configuration?.customMetadata || []
+    },
     icon() {
       return this.showMetadata ? 'mdi-minus' : 'mdi-plus'
     },
@@ -56,11 +83,22 @@ export default {
     toggleMetadata() {
       this.showMetadata = !this.showMetadata
     },
-    iconFor(nodetypename: string) {
-      return nodeIcon(nodetypename)
+    iconFor(nodetypename?: string) {
+      return nodetypename && nodeIcon(nodetypename)
     },
     labelFor(nodetypename: string) {
       return `append a ${nodeOrMarkToPandocName(nodetypename)}`
+    },
+    iconForCustomMeta(cm: CustomMetadata) {
+      return this.iconFor(metaValueNameToNodeTypeName(this.editor.state.schema, cm.type))
+    },
+    appendCustomMetaMapEntry(cm: CustomMetadata) {
+      const schema = this.editor.state.schema
+      const value = anyToMetaValue(schema, cm.default, cm.type)
+        || metaValueNameToNodeTypeName(schema, cm.type)
+      if (value) {
+        this.editor.chain().appendMetaMapEntry(cm.name, value).focus().run()
+      }
     },
     appendMetaMap() {
       this.editor.chain().appendMetaMapEntry('map', 'metaMap').focus().run()

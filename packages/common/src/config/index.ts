@@ -2,6 +2,7 @@ export * from './appliesTo';
 export * from './automations';
 export * from './customClasses';
 export * from './customAttributes';
+export * from './customMetadata';
 export * from './customStyles';
 export * from './editorConfigInit';
 export * from './editorConfiguration';

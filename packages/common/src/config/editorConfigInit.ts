@@ -1,6 +1,7 @@
 import { Automation } from './automations';
 import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';
+import { CustomMetadata } from './customMetadata';
 import { CustomStyleDef } from './customStyles';
 import { Index } from './indices';
 import { InputConverter } from './inputConverters';
@@ -35,6 +36,8 @@ export interface PundokEditorConfigInit extends Record<string, any> {
   customClasses?: CustomClass[];
   /** custom attributes for Pandoc's elements with an `Attr` data stucture */
   customAttributes?: CustomAttribute[];
+  /** custom metadata keys and types */
+  customMetadata?: CustomMetadata[];
   /** styling information for different kinds of notes (footnotes, endnotes, etc.) */
   noteStyles?: NoteStyle[];
   /** paths to CSS files that customize the editor's appearance */

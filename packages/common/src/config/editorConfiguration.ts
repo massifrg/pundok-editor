@@ -1,6 +1,7 @@
 import { isEqual, isString, uniq } from 'lodash';
 import {
   Automation,
+  CustomMetadata,
   Index,
   InputConverter,
   InsertableRaw,
@@ -40,6 +41,8 @@ export class PundokEditorConfig {
   customClasses?: CustomClass[] | undefined;
   /** Custom attributes that can be added to Blocks or Inlines with an `Attr`. */
   customAttributes?: CustomAttribute[] | undefined;
+  /** custom metadata keys and types */
+  customMetadata?: CustomMetadata[];
   /** Kinds of notes available to the documents in this configuration. */
   noteStyles?: NoteStyle[] | undefined;
   /** Filenames of CSS stylesheets to customize documents with this configuration. */
@@ -79,6 +82,7 @@ export class PundokEditorConfig {
     this.customStyles = init.customStyles;
     this.customClasses = init.customClasses;
     this.customAttributes = init.customAttributes;
+    this.customMetadata = init.customMetadata;
     this.noteStyles = init.noteStyles;
     this.customCss = init.customCss;
     this.indices = init.indices;
@@ -329,6 +333,10 @@ export function enrichConfiguration(
         enriching.customAttributes,
         base.customAttributes,
       ) as CustomAttribute[],
+      customMetadata: mergeNamedObjects(
+        enriching.customMetadata,
+        base.customMetadata,
+      ) as CustomMetadata[],
       noteStyles: mergeNamedObjects(
         enriching.noteStyles,
         base.noteStyles,
