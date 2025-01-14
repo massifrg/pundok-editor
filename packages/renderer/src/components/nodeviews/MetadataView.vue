@@ -3,20 +3,22 @@
     <div spellcheck="false">
       <q-btn class="metadata-btn" no-caps size="sm" color="primary" :icon="icon" :label="label"
         @click="toggleMetadata" />
-      <q-btn v-if="showMetadata" no-caps size="sm" color="primary" :icon="iconFor('metaString')" label="append a string"
-        title="append MetaString" @click="appendMetaString" />
-      <q-btn v-if="showMetadata" no-caps size="sm" color="primary" :icon="iconFor('metaInlines')" label="append a line"
-        title="append MetaInlines" @click="appendMetaInlines" />
-      <q-btn v-if="showMetadata" no-caps size="sm" color="primary" :icon="iconFor('metaBlocks')" label="append blocks"
-        title="append MetaBlocks" @click="appendMetaBlocks" />
-      <q-btn v-if="showMetadata" no-caps size="sm" color="primary" :icon="iconFor('metaBool')" label="append boolean"
-        title="append MetaBool" @click="appendMetaBool" />
-      <q-btn v-if="showMetadata" no-caps size="sm" color="primary" :icon="iconFor('metaList')" label="append list"
-        title="append MetaList" @click="appendMetaList" />
-      <q-btn v-if="showMetadata" no-caps size="sm" color="primary" :icon="iconFor('metaMap')" label="append map"
-        title="append MetaMap" @click="appendMetaMap" />
+      <node-view-content :class="classAttr" style="margin-top: 0.3rem" />
+      <div :style="{ display: showMetadata ? 'inline-block' : 'none' }">
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaString')" label="append a string"
+          title="append MetaString" @click="appendMetaString" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaInlines')" label="append a line"
+          title="append MetaInlines" @click="appendMetaInlines" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaBlocks')" label="append blocks"
+          title="append MetaBlocks" @click="appendMetaBlocks" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaBool')" label="append boolean"
+          title="append MetaBool" @click="appendMetaBool" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaList')" label="append list" title="append MetaList"
+          @click="appendMetaList" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaMap')" label="append map" title="append MetaMap"
+          @click="appendMetaMap" />
+      </div>
     </div>
-    <node-view-content :class="classAttr" />
   </node-view-wrapper>
 </template>
 
@@ -61,22 +63,22 @@ export default {
       return `append a ${nodeOrMarkToPandocName(nodetypename)}`
     },
     appendMetaMap() {
-      this.editor.commands.appendMetaMapEntry('map', 'metaMap')
+      this.editor.chain().appendMetaMapEntry('map', 'metaMap').focus().run()
     },
     appendMetaList() {
-      this.editor.commands.appendMetaMapEntry('list', 'metaList')
+      this.editor.chain().appendMetaMapEntry('list', 'metaList').focus().run()
     },
     appendMetaInlines() {
-      this.editor.commands.appendMetaMapEntry('inlines', 'metaInlines')
+      this.editor.chain().appendMetaMapEntry('inlines', 'metaInlines').focus().run()
     },
     appendMetaBlocks() {
-      this.editor.commands.appendMetaMapEntry('blocks', 'metaBlocks')
+      this.editor.chain().appendMetaMapEntry('blocks', 'metaBlocks').focus().run()
     },
     appendMetaBool() {
-      this.editor.commands.appendMetaMapEntry('bool', 'metaBool')
+      this.editor.chain().appendMetaMapEntry('bool', 'metaBool').focus().run()
     },
     appendMetaString() {
-      this.editor.commands.appendMetaMapEntry('string', 'metaString')
+      this.editor.chain().appendMetaMapEntry('string', 'metaString').focus().run()
     }
   }
 };

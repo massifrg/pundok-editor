@@ -1,31 +1,21 @@
 <template>
-  <node-view-wrapper as="dl" class="meta-value meta-map">
-    <dt>
+  <node-view-wrapper as="div" class="meta-value meta-map-entry">
+    <div class="meta-map-entry-key" :style="entryKeyStyle">
       <q-card-actions class="no-padding" spellcheck="false">
-        <q-btn size="md" :label="node.attrs.text" @click="editKey" no-caps />
-        <q-space />
-        <q-btn v-if="aroundListOrMap" rounded size="xs" :icon="iconFor('metaString')" title="new MetaString"
-          @click="appendMetaItem('metaString', 'string')" />
-        <q-btn v-if="aroundListOrMap" rounded size="xs" :icon="iconFor('metaInlines')" title="new MetaInlines"
-          @click="appendMetaItem('metaInlines', 'inlines')" />
-        <q-btn v-if="aroundListOrMap" rounded size="xs" :icon="iconFor('metaBlocks')" title="new MetaBlocks"
-          @click="appendMetaItem('metaBlocks', 'blocks')" />
-        <q-btn v-if="aroundListOrMap" rounded size="xs" :icon="iconFor('metaBool')" title="new MetaBool"
-          @click="appendMetaItem('metaBool', 'bool')" />
-        <q-btn v-if="aroundListOrMap" rounded size="xs" :icon="iconFor('metaList')" title="new MetaList"
-          @click="appendMetaItem('metaList', 'list')" />
-        <q-btn v-if="aroundListOrMap" rounded size="xs" :icon="iconFor('metaMap')" title="new MetaMap"
-          @click="appendMetaItem('metaMap', 'map')" />
-        <q-space />
-        <q-btn icon="mdi-pencil" rounded size="xs" title="edit the metadata key" @click="editKey" />
+        <q-btn size="sm" :icon="iconForContent" :label="node.attrs.text" :title="titleForContent" @click="editKey"
+          no-caps />
+        <!-- <q-space /> -->
+        <!-- <q-btn icon="mdi-pencil" rounded size="xs" title="edit the metadata key" @click="editKey" /> -->
         <q-btn icon="mdi-arrow-up" rounded size="xs" title="move this metadata entry up"
           @click="editor.commands.moveMetaMapEntryUp(getPos())" />
         <q-btn icon="mdi-arrow-down" rounded size="xs" title="move this metadata entry down"
           @click="editor.commands.moveMetaMapEntryDown(getPos())" />
         <q-btn icon="mdi-trash-can" rounded size="xs" title="remove this metadata entry" @click="deleteEntry" />
       </q-card-actions>
-    </dt>
-    <dd><node-view-content /></dd>
+    </div>
+    <div class="meta-map-entry-value" :style="entryValueStyle">
+      <node-view-content as="div" />
+    </div>
   </node-view-wrapper>
 </template>
 
@@ -35,8 +25,8 @@ import { Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { ACTION_EDIT_META_MAP_TEXT } from '../../actions';
 import { useActions } from '../../stores';
 import { editorKeyFromState } from '../../schema';
-import { nodeIcon } from '../../schema/helpers';
-import { NODE_NAME_META_LIST, NODE_NAME_META_MAP, NODE_NAME_METADATA } from '../../common';
+import { nodeIcon, nodeOrMarkToPandocName } from '../../schema/helpers';
+import { NODE_NAME_META_BOOL, NODE_NAME_META_INLINES, NODE_NAME_META_LIST, NODE_NAME_META_MAP, NODE_NAME_META_STRING, NODE_NAME_METADATA } from '../../common';
 
 export default {
   components: {
@@ -52,14 +42,30 @@ export default {
       const node = doc && doc.nodeAt(this.getPos())
       return node?.firstChild || null
     },
+    iconForContent() {
+      const contentTypename = this.metaValue?.type.name
+      return contentTypename && this.iconFor(contentTypename)
+    },
+    titleForContent() {
+      return `this entry contains a ${this.metaValuePandocName()}`
+    },
+    containsInline() {
+      const contentTypename = this.metaValue?.type.name
+      return contentTypename === NODE_NAME_META_BOOL
+        || contentTypename === NODE_NAME_META_STRING
+        || contentTypename === NODE_NAME_META_INLINES
+    },
     containsMetaMap() {
       return this.metaValue?.type.name === NODE_NAME_META_MAP
     },
     containsMetaList() {
       return this.metaValue?.type.name === NODE_NAME_META_LIST
     },
-    aroundListOrMap() {
-      return this.containsMetaList || this.containsMetaMap
+    entryKeyStyle() {
+      return this.containsInline ? 'display: inline-block' : ''
+    },
+    entryValueStyle() {
+      return this.containsInline ? 'display: inline-block' : ''
     }
   },
 
@@ -85,12 +91,8 @@ export default {
     iconFor(nodetypename: string) {
       return nodeIcon(nodetypename)
     },
-    appendMetaItem(metaType: string, key: string) {
-      const pos = this.metaValue ? this.getPos() + 2 : undefined
-      if (this.containsMetaMap)
-        this.editor.commands.appendMetaMapEntry(key, metaType, pos)
-      else if (this.containsMetaList)
-        this.editor.commands.appendMetaListItem(metaType, pos)
+    metaValuePandocName() {
+      return this.metaValue && nodeOrMarkToPandocName(this.metaValue)
     },
     deleteEntry() {
       const $pos = this.editor.state.doc.resolve(this.getPos())

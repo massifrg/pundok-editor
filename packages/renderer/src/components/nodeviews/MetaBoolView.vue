@@ -1,6 +1,6 @@
 <template>
-  <node-view-wrapper class="meta-bool-wrapper" as="p">
-    <q-checkbox v-model="label" true-value="True" false-value="False" :label="label"
+  <node-view-wrapper class="meta-bool-wrapper meta-value meta-bool" as="div">
+    <q-checkbox v-model="label" true-value="True" false-value="False" :label="label" size="sm"
       @update:model-value="updateValue" />
   </node-view-wrapper>
 </template>

@@ -73,6 +73,8 @@ export function nodesWithTemplate(): string[] {
     NODE_NAME_META_INLINES,
     NODE_NAME_META_LIST,
     NODE_NAME_META_MAP,
+    NODE_NAME_META_MAP_ENTRY,
+    NODE_NAME_META_STRING,
   ];
 }
 

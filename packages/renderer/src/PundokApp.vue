@@ -491,15 +491,37 @@ $color-fg-index: #dc7200;
   }
 
   /* metadata */
-  dl.meta-map {
-    margin: .2rem 0 .1rem 0;
+  div.metadata,
+  div.meta-map {
+    border-radius: 0.4rem;
+    padding: 0px;
+  }
+
+  .meta-bool {
+    padding: 0;
+  }
+
+  .meta-map-content,
+  .meta-list-content {
+    padding: 0.5rem;
+    margin: 0;
+    border: .2rem solid rgb(0, 137, 175);
+  }
+
+  div.meta-plural-commands {
+    background-color: rgb(0, 137, 175);
+    color: white;
+    border: 0px;
+  }
+
+  div.meta-map-entry {
+    margin: 0 0 0.6rem 0;
     font-size: smaller;
 
-    & dt {
+    & div.meta-map-entry-key {
       background-color: rgb(0, 137, 175);
       color: white;
-      max-width: 50%;
-      border-radius: 1rem 1rem 0 0;
+      max-width: 30%;
       padding-top: .3rem;
       padding-bottom: .2rem;
       padding-left: 1rem;
@@ -507,33 +529,21 @@ $color-fg-index: #dc7200;
       margin: 0;
     }
 
-    & dd {
-      background-color: rgb(170, 210, 222);
+    & div.meta-map-entry-value {
       color: black;
+      background-color: rgb(170, 210, 222);
       border-radius: 0;
-      border-bottom-right-radius: 1rem;
-      border-top-right-radius: 1rem;
-      border: .2rem solid rgb(0, 137, 175);
-      margin: 0 .4rem 0 0;
-      padding: 0 1rem;
+      margin: 0 .4rem 0 1rem;
 
       & p {
-        margin: 0;
+        margin: 4px;
         text-indent: 0;
       }
 
-      & .meta-blocks p::before,
-      & .meta-list> :not(.meta-map)::before {
-        display: inline-block;
-        width: 1rem;
-        content: ' ';
-      }
-
-      & .meta-blocks p:first-child::before,
-      & .meta-list>.meta-value:not(.meta-map)::before {
-        position: relative;
-        left: -.3rem;
-        content: '-';
+      & .meta-list ul>.meta-value {
+        display: list-item;
+        margin-left: 1rem;
+        padding: .3rem 0 .2rem 0;
       }
     }
   }

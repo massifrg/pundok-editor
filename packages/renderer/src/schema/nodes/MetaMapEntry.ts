@@ -1,6 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { TextSelection } from '@tiptap/pm/state';
 import { Component } from 'vue';
 import { innerNodeDepth, templateNode } from '../helpers';
 import { MetaMapEntryView } from '../../components';
@@ -76,6 +77,7 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
           ({ dispatch, state, tr }) => {
             const { doc, schema, selection } = state;
             const metavalue = templateNode(schema, metaTypeName);
+            // console.log(metavalue)
             if (!metavalue) return false;
             const entryType = schema.nodes[self.name];
             if (!entryType) return false;
@@ -102,12 +104,13 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
               const entry = entryType.create({ text }, metavalue.node);
               if (!entry) return false;
               if (metamap) {
-                dispatch(tr.insert(inspos, entry));
+                tr.insert(inspos, entry)
+                tr.setSelection(new TextSelection(tr.doc.resolve(inspos + 1)))
               } else {
-                dispatch(
-                  tr.insert(0, schema.nodes.metadata.create(null, entry))
-                );
+                tr.insert(0, schema.nodes.metadata.create(null, entry))
+                tr.setSelection(new TextSelection(tr.doc.resolve(1)))
               }
+              dispatch(tr)
             }
             return true;
           },

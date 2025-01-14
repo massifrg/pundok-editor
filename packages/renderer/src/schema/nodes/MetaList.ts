@@ -1,6 +1,9 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { VueNodeViewRenderer } from '@tiptap/vue-3';
+import { Component } from 'vue';
 import { innerNodeDepth, templateNode } from '../helpers';
 import { NODE_NAME_META_LIST } from '../../common';
+import { MetaListView } from '../../components';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -28,16 +31,21 @@ export const MetaList = Node.create<MetaListOptions>({
     return {
       HTMLAttributes: {
         class: 'meta-value meta-list',
+        style: 'list-style-type: square',
       },
     };
   },
 
   renderHTML({ HTMLAttributes }) {
     return [
-      'div',
+      'ul',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
       0,
     ];
+  },
+
+  addNodeView() {
+    return VueNodeViewRenderer(MetaListView as Component);
   },
 
   addCommands() {
