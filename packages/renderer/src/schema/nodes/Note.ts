@@ -3,7 +3,7 @@ import { EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
 import { DecorationSet } from '@tiptap/pm/view';
 import { mergeAttributes, Node, NodeWithPos } from '@tiptap/core';
 import { Editor, VueNodeViewRenderer } from '@tiptap/vue-3';
-import { DEFAULT_NOTE_TYPE } from '../../common';
+import { DEFAULT_NOTE_TYPE, NODE_NAME_PARAGRAPH } from '../../common';
 import { NoteView, getEditorDocState } from '../index';
 import { deltaNodes } from '../helpers/whatChanged';
 import { useNotes } from '../../stores';
@@ -175,7 +175,7 @@ export const Note = Node.create<NoteOptions>({
             let content = Fragment.empty;
             if (selection.empty) {
               content = Fragment.from(
-                schema.nodes.paragraph.createChecked(
+                schema.nodes[NODE_NAME_PARAGRAPH].createChecked(
                   null,
                   schema.text(text || this.options.placeHolderText(noteType)),
                 ),

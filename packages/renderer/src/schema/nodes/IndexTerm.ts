@@ -82,7 +82,7 @@ export const IndexTerm = Node.create<IndexTermOptions>({
                 if (dispatch) {
                   let { id, kv } = maybeDiv.attrs;
                   kv = kv || {};
-                  const indexTerm = schema.nodes.indexTerm.createAndFill(
+                  const indexTerm = schema.nodes[NODE_NAME_INDEX_TERM].createAndFill(
                     {
                       id,
                       indexName: kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
@@ -107,7 +107,7 @@ export const IndexTerm = Node.create<IndexTermOptions>({
               if (maybeIndexTerm && maybeIndexTerm.type.name === IndexTerm.name) {
                 if (dispatch) {
                   let { id, indexName, sortKey } = maybeIndexTerm.attrs;
-                  const div = schema.nodes.div.createAndFill(
+                  const div = schema.nodes[NODE_NAME_DIV].createAndFill(
                     {
                       id,
                       classes: [],

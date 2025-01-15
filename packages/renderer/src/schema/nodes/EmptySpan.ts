@@ -53,7 +53,7 @@ export const EmptySpan = Node.create<EmptySpanOptions>({
       insertEmptySpan:
         (attrs: Record<string, any>) =>
           ({ state, dispatch }) => {
-            const emptySpanType = state.schema.nodes.emptySpan;
+            const emptySpanType = state.schema.nodes[NODE_NAME_EMPTY_SPAN];
             const { $from, empty } = state.selection,
               index = $from.index();
             if (

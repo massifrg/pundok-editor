@@ -63,7 +63,7 @@ export const Figure = Node.create<FigureOptions>({
   addKeyboardShortcuts() {
     return {
       [SK_WRAP_IN_FIGURE]: () =>
-        this.editor.commands.wrapIn(this.editor.schema.nodes.figure),
+        this.editor.commands.wrapIn(this.editor.schema.nodes[NODE_NAME_FIGURE]),
     };
   },
 });

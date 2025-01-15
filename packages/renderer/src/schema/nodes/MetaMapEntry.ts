@@ -110,7 +110,7 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
                 tr.insert(inspos, entry)
                 tr.setSelection(new TextSelection(tr.doc.resolve(inspos + 1)))
               } else {
-                tr.insert(0, schema.nodes.metadata.create(null, entry))
+                tr.insert(0, schema.nodes[NODE_NAME_METADATA].create(null, entry))
                 tr.setSelection(new TextSelection(tr.doc.resolve(1)))
               }
               dispatch(tr)

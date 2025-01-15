@@ -243,7 +243,7 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
       addIndexRef:
         (index: Index) =>
           ({ tr, state, dispatch }) => {
-            const indexRefType = state.schema.nodes.indexRef;
+            const indexRefType = state.schema.nodes[NODE_NAME_INDEX_REF];
             if (!indexRefType) return false;
             const indexName = index.indexName || DEFAULT_INDEX_NAME;
             const { from, to, empty } = state.selection;

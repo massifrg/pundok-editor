@@ -24,9 +24,21 @@ import {
   INDEX_NAME_ATTR,
   INDEX_TERM_CLASS,
   Index,
+  MARK_NAME_DOUBLE_QUOTED,
+  MARK_NAME_SINGLE_QUOTED,
+  MARK_NAME_SPAN,
+  NODE_NAME_CAPTION,
   NODE_NAME_DIV,
+  NODE_NAME_EMPTY_SPAN,
+  NODE_NAME_FIGURE_CAPTION,
+  NODE_NAME_IMAGE,
   NODE_NAME_INDEX_DIV,
+  NODE_NAME_INDEX_REF,
   NODE_NAME_INDEX_TERM,
+  NODE_NAME_META_MAP,
+  NODE_NAME_META_STRING,
+  NODE_NAME_NOTE,
+  NODE_NAME_PARAGRAPH,
   NOTE_TYPE_ATTRIBUTE,
   NoteStyle,
 } from '../../common';
@@ -85,7 +97,7 @@ class PandocJsonParseState {
   // Adds the given text to the current position in the document,
   // using the current marks as styling.
   addText(text: string) {
-    if (!text) return;
+    if (!text || text.length === 0) return;
     const top = this.top(),
       nodes = top.content,
       last = nodes[nodes.length - 1];
@@ -547,7 +559,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
     // block: 'metaMap',
     handler: (spec, schema) => (state, metaMap) => {
       // console.log(metaMap)
-      state.openNode(schema.nodes.metaMap, null);
+      state.openNode(schema.nodes[NODE_NAME_META_MAP], null);
       // console.log(`MetaValue: ${text} => ${JSON.stringify(metaValue)}`)
       state.parseContents(state.transformMetaMapContents(metaMap.c));
       state.closeNode();
@@ -578,7 +590,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
 
   MetaString: {
     handler: (spec, schema) => (state, pandocItem) => {
-      state.openNode(schema.nodes.metaString, null);
+      state.openNode(schema.nodes[NODE_NAME_META_STRING], null);
       state.addText(pandocItem.c);
       state.closeNode();
     },
@@ -598,7 +610,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
       const attr = state.currentParaCustomStyle
         ? { customStyle: state.currentParaCustomStyle }
         : {};
-      state.openNode(schema.nodes.paragraph, attr);
+      state.openNode(schema.nodes[NODE_NAME_PARAGRAPH], attr);
       parseChildren(state, spec, pandocItem);
       state.closeNode();
     },
@@ -759,11 +771,11 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
       const parentTypeName = state.top().type.name;
       if (countChildren(spec, pandocItem) > 0) {
         if (parentTypeName === 'figure') {
-          state.openNode(schema.nodes.figureCaption, null);
+          state.openNode(schema.nodes[NODE_NAME_FIGURE_CAPTION], null);
           parseChildren(state, spec, pandocItem);
           state.closeNode();
         } else if (parentTypeName === 'pandocTable') {
-          state.openNode(schema.nodes.caption, null);
+          state.openNode(schema.nodes[NODE_NAME_CAPTION], null);
           parseChildren(state, spec, pandocItem);
           state.closeNode();
         }
@@ -791,11 +803,11 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
       const quoteType = pandocItem.c[0].t;
       switch (quoteType) {
         case 'SingleQuote':
-          quoteMarkType = schema.marks.singleQuoted;
+          quoteMarkType = schema.marks[MARK_NAME_SINGLE_QUOTED];
           break;
         case 'DoubleQuote':
         default:
-          quoteMarkType = schema.marks.doubleQuoted;
+          quoteMarkType = schema.marks[MARK_NAME_DOUBLE_QUOTED];
       }
       const quoted = quoteMarkType.create();
       state.openMark(quoted);
@@ -845,7 +857,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
   Image: {
     handler: (spec, schema) => (state, pandocItem) => {
       const attrs = spec.getAttrs ? spec.getAttrs(pandocItem, state) : null;
-      state.openNode(schema.nodes.image, attrs);
+      state.openNode(schema.nodes[NODE_NAME_IMAGE], attrs);
       parseChildren(state, spec, pandocItem);
       state.closeNode();
     },
@@ -862,7 +874,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
     handler: (spec, schema) => (state, pandocItem) => {
       // note type set by a surronding Span
       if (state.currentNoteType) {
-        state.openNode(schema.nodes.note, state.currentNoteAttrs!);
+        state.openNode(schema.nodes[NODE_NAME_NOTE], state.currentNoteAttrs!);
         parseChildren(state, spec, pandocItem);
         state.closeNode();
       } else {
@@ -874,7 +886,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
         );
         attrs.noteType = attrs.kv[NOTE_TYPE_ATTRIBUTE];
         state.currentNoteType = attrs.noteType;
-        state.openNode(schema.nodes.note, attrs);
+        state.openNode(schema.nodes[NODE_NAME_NOTE], attrs);
         parseChildren(state, spec, pandocItem);
         state.closeNode();
       }
@@ -905,9 +917,9 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
           const index = indexRefClasses[refClass];
           if (!attrs.kv.indexName && index)
             attrs.kv[INDEX_NAME_ATTR] = index.indexName;
-          state.openNode(schema.nodes.indexRef, attrs);
+          state.openNode(schema.nodes[NODE_NAME_INDEX_REF], attrs);
         } else {
-          state.openNode(schema.nodes.emptySpan, attrs);
+          state.openNode(schema.nodes[NODE_NAME_EMPTY_SPAN], attrs);
         }
         state.closeNode();
         return
@@ -918,7 +930,7 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
         state.currentNoteAttrs = { ...attrs, noteType }
         parseChildren(state, spec, pandocItem);
       } else {
-        const spanMarkType = schema.marks.span;
+        const spanMarkType = schema.marks[MARK_NAME_SPAN];
         const mark = spanMarkType.create(attrs);
         state.openMark(mark);
         parseChildren(state, spec, pandocItem);

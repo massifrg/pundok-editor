@@ -49,12 +49,10 @@
 
       <span class="button-separator" />
 
-      <!-- <ToolbarButton icon="mdi-application-import" :disabled="!editor.can().wrapIn(editor.state.schema.nodes.figure)"
-        title="wrap selection in Figure" @click="editor.chain().wrapIn(editor.state.schema.nodes.figure).run()" /> -->
       <CustomWrapperMenu :editor="editor" wrapper-type-name="figure" pandoc-type="Figure"
         wrap-icon="mdi-application-import" unwrap-icon="mdi-application-export" />
       <ToolbarButton v-if="inFigure()" icon="mdi-page-layout-header" title="wrap selection in Caption"
-        @click="editor.chain().wrapIn(editor.state.schema.nodes.figureCaption).run()" />
+        @click="wrapInFigureCaption()" />
 
       <span class="button-separator" />
 
@@ -199,6 +197,7 @@ import {
   CustomStyleInstance,
   MARK_NAME_SPAN,
   NODE_NAME_FIGURE,
+  NODE_NAME_FIGURE_CAPTION,
   NODE_NAME_PARAGRAPH,
   version
 } from '../common'
@@ -366,6 +365,10 @@ export default {
     },
     unsetCustomMark(markName: string, style: CustomStyleInstance) {
       this.editor.chain().runRepeatableCommand('unsetCustomMark', `remove "${style.styleDef.name}" style`, markName, style).run()
+    },
+    wrapInFigureCaption() {
+      const editor = this.editor
+      editor.commands.wrapIn(editor.state.schema.nodes[NODE_NAME_FIGURE_CAPTION])
     },
     insertNote(noteType: string) {
       const description = `insert a note` + (noteType ? ` of type "${noteType}"` : '')
