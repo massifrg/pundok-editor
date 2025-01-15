@@ -1,6 +1,5 @@
 import { Extension, Node } from '@tiptap/core';
 import {
-  EditorState,
   Plugin,
   PluginKey,
   TextSelection,
@@ -10,7 +9,11 @@ import { Schema, type Mark, type Node as PmNode } from '@tiptap/pm/model';
 import { Editor, NodeWithPos, mergeAttributes } from '@tiptap/vue-3';
 import { difference, intersection, isString } from 'lodash';
 import { changedRanges } from '../helpers/whatChanged';
-import { MARK_NAME_DOUBLE_QUOTED, MARK_NAME_SINGLE_QUOTED, NODE_NAME_AUTO_DELIMITER } from '/@/common';
+import {
+  MARK_NAME_DOUBLE_QUOTED,
+  MARK_NAME_SINGLE_QUOTED,
+  NODE_NAME_AUTO_DELIMITER
+} from '../../common';
 
 const AUTO_DELIMITER_CLASS = 'auto-delimiter';
 const AUTO_DELIMITER_OPEN_CLASS = 'delimiter-open';
@@ -352,7 +355,7 @@ function fixAutoDelimitersTransaction(
       // const markType = mark.type.name;
       const marks = [...curMarks!];
       if (mark && !marks.find((m) => m.eq(mark))) marks.push(mark);
-      const delim = schema.nodes.autoDelimiter.create(
+      const delim = schema.nodes[NODE_NAME_AUTO_DELIMITER].create(
         { isOpen, markType: mark?.type.name },
         undefined,
         marks,

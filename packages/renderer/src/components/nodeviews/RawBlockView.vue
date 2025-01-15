@@ -11,7 +11,7 @@
 import { NodeViewWrapper, NodeViewContent, nodeViewProps } from '@tiptap/vue-3';
 import { RawBlock } from '../../schema'
 import { setActionEditAttributes } from '../../actions';
-import { SelectedNodeOrMark } from '/@/schema/helpers';
+import { SelectedNodeOrMark } from '../../schema/helpers';
 
 export default {
   components: {

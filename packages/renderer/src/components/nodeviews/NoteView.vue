@@ -29,6 +29,7 @@
 
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';
+import { ResolvedPos } from '@tiptap/pm/model';
 import { CachedNote } from '../../schema/nodes/Note';
 import { isArray } from 'lodash';
 import { romanize } from 'romanize-deromanize'
@@ -40,9 +41,8 @@ import {
 import { getEditorConfiguration, getEditorDocState } from '../../schema';
 import { mapState } from 'pinia'
 import { useActions, useNotes } from '../../stores';
-import { NotesViewAction, ViewAction, setViewActionCloseNotes } from '/@/actions';
+import { NotesViewAction, ViewAction, setViewActionCloseNotes } from '../../actions';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
-import { ResolvedPos } from '@tiptap/pm/model';
 
 const MarkerConversions: Record<string, (n: number) => string> = {
   'noConversion': n => n.toString(),
