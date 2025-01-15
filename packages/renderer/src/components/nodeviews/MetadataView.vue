@@ -17,8 +17,11 @@
           @click="appendMetaList" />
         <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaMap')" label="append map" title="append MetaMap"
           @click="appendMetaMap" />
-        <q-btn-dropdown no-caps size="sm" color="primary" icon="mdi-help-circle-outline" label="append custom"
-          title="append custom metadata from configuration">
+        <q-btn v-if="customMetadata.length === 1" no-caps size="sm" color="primary"
+          :icon="iconForCustomMeta(customMetadata[0])" :label="'append ' + customMetadata[0].name"
+          :title="customMetadata[0].description" @click="appendCustomMetaMapEntry(customMetadata[0])" />
+        <q-btn-dropdown v-if="customMetadata.length > 1" no-caps size="sm" color="primary"
+          icon="mdi-help-circle-outline" label="append custom" title="append custom metadata from configuration">
           <q-list>
             <q-item v-for="cm in customMetadata" :key="cm.name" :title="cm.description" dense clickable v-close-popup
               color="primary" @click="appendCustomMetaMapEntry(cm)">
