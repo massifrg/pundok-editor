@@ -1,4 +1,4 @@
-import { Attrs, Node, NodeType, ResolvedPos, Schema } from '@tiptap/pm/model';
+import { Attrs, Mark, Node, NodeType, ResolvedPos, Schema } from '@tiptap/pm/model';
 import {
   DEFAULT_INDEX_NAME,
   DEFAULT_RAW_BLOCK_FORMAT,
@@ -80,11 +80,35 @@ export function nodesWithTemplate(): string[] {
 
 let COMPATIBLE_BLOCKS: string[][] = [];
 
-function para(schema: Schema, text?: string): Node | null {
-  return schema.nodes.paragraph.create(
-    null,
-    text && text.length > 0 ? schema.text(text) : null,
-  );
+/**
+ * Create a text node from a string, only if the string is non empty, otherwise return `null`.
+ * @param schema
+ * @param text The string of the text node.
+ * @param marks The optional marks of the text node.
+ * @returns
+ */
+export function textNode(schema: Schema, text?: string, marks?: readonly Mark[] | null): Node | null {
+  if (isString(text) && text.length > 0)
+    return schema.text(text, marks)
+  return null
+}
+
+/**
+ * Create a paragraph node from a string.
+ * @param schema
+ * @param text The text of the paragraph.
+ * @param textMarks The marks of the text node.
+ * @returns 
+ */
+export function paragraphNode(
+  schema: Schema,
+  text?: string,
+  textMarks?: readonly Mark[] | null
+): Node | null {
+  const paragraphType = schema.nodes[NODE_NAME_PARAGRAPH]
+  if (paragraphType)
+    return paragraphType.create(null, textNode(schema, text, textMarks));
+  return null
 }
 
 interface TemplateNodeContext {
@@ -106,15 +130,15 @@ export function templateNode(
   let attrs: Attrs | undefined = undefined;
   switch (typename) {
     case NODE_NAME_PARAGRAPH:
-      node = para(schema, '');
+      node = paragraphNode(schema, '');
       break;
     case NODE_NAME_DIV:
-      node = (para && nodeType.create(null, para(schema, ''))) || null;
+      node = (paragraphNode && nodeType.create(null, paragraphNode(schema, ''))) || null;
       break;
     case NODE_NAME_DEFINITION_LIST:
       {
-        const term = nodes.definitionTerm.create(null, schema.text('term'));
-        const data = nodes.definitionData.create(null, para(schema, 'data'));
+        const term = nodes[NODE_NAME_DEFINITION_TERM].create(null, textNode(schema, 'term'));
+        const data = nodes[NODE_NAME_DEFINITION_DATA].create(null, paragraphNode(schema, 'data'));
         node = nodeType.create(null, [term, data]);
       }
       break;
@@ -122,18 +146,18 @@ export function templateNode(
       node = nodeType.create(null, schema.text('term'));
       break;
     case NODE_NAME_DEFINITION_DATA:
-      node = nodeType.create(null, para(schema, 'data')) || null;
+      node = nodeType.create(null, paragraphNode(schema, 'data')) || null;
       break;
     case NODE_NAME_BULLET_LIST:
     case NODE_NAME_ORDERED_LIST:
       {
-        const item = nodes.listItem.create(null, para(schema, 'item'));
+        const item = nodes[NODE_NAME_LIST_ITEM].create(null, paragraphNode(schema, 'item'));
         node = nodeType.create(null, item);
       }
       node = node;
       break;
     case NODE_NAME_LIST_ITEM:
-      node = nodeType.create(null, para(schema, 'item')) || null;
+      node = nodeType.create(null, paragraphNode(schema, 'item')) || null;
       break;
     case NODE_NAME_HORIZONTAL_RULE:
       node = nodeType.create();
@@ -149,7 +173,7 @@ export function templateNode(
       break;
     case NODE_NAME_LINE_BLOCK:
       {
-        const line = nodes.line.create(null, schema.text(' '));
+        const line = nodes[NODE_NAME_LINE].create(null, schema.text(' '));
         node = nodeType.create(null, line);
       }
       node = node;
@@ -167,19 +191,19 @@ export function templateNode(
       });
       break;
     case NODE_NAME_BLOCKQUOTE:
-      node = nodeType.create(null, para(schema));
+      node = nodeType.create(null, paragraphNode(schema));
       break;
     case NODE_NAME_FIGURE_CAPTION:
-      node = nodeType.create(null, para(schema, 'caption'));
+      node = nodeType.create(null, paragraphNode(schema, 'caption'));
       break;
     case NODE_NAME_SHORT_CAPTION:
       node = nodeType.create(null, schema.text('short caption'));
       break;
     case NODE_NAME_FIGURE:
-      node = nodeType.create(null, para(schema));
+      node = nodeType.create(null, paragraphNode(schema));
       break;
     case NODE_NAME_INDEX_TERM:
-      node = nodeType.create(null, para(schema, 'index term'));
+      node = nodeType.create(null, paragraphNode(schema, 'index term'));
       let indexName = DEFAULT_INDEX_NAME;
       const { state, $pos, pos } = context || {};
       if (state && ($pos || pos)) {
@@ -198,9 +222,9 @@ export function templateNode(
       break;
     case NODE_NAME_INDEX_DIV: {
       const kv = { [INDEX_NAME_ATTR]: DEFAULT_INDEX_NAME };
-      const term = nodes.indexTerm.create(
+      const term = nodes[NODE_NAME_INDEX_TERM].create(
         { classes: [INDEX_TERM_CLASS], kv },
-        para(schema, 'index term'),
+        paragraphNode(schema, 'index term'),
       );
       node = nodeType.create({ classes: [INDEX_CLASS], kv }, term);
       break;
@@ -208,11 +232,11 @@ export function templateNode(
     case NODE_NAME_METADATA:
       node = nodeType.create(
         null,
-        nodes.metaInlines.create(null, schema.text('meta inlines')),
+        nodes[NODE_NAME_META_INLINES].create(null, schema.text('meta inlines')),
       );
       break;
     case NODE_NAME_META_BLOCKS:
-      node = nodeType.create(null, para(schema, 'meta blocks'));
+      node = nodeType.create(null, paragraphNode(schema, 'meta blocks'));
       break;
     case NODE_NAME_META_INLINES:
       node = nodeType.create(null, schema.text('meta inlines'));
@@ -225,20 +249,20 @@ export function templateNode(
       break;
     case NODE_NAME_META_MAP_ENTRY:
       {
-        const metaInlines = nodes.metaInlines.create(null, schema.text('meta inlines'));
+        const metaInlines = nodes[NODE_NAME_META_INLINES].create(null, schema.text('meta inlines'));
         node = nodeType.create({ text: 'key' }, metaInlines);
       }
       break;
     case NODE_NAME_META_MAP:
       {
-        const metaInlines = nodes.metaInlines.create(null, schema.text('meta inlines'));
-        const entry = nodes.metaMapEntry.create({ text: 'key' }, metaInlines);
+        const metaInlines = nodes[NODE_NAME_META_INLINES].create(null, schema.text('meta inlines'));
+        const entry = nodes[NODE_NAME_META_MAP_ENTRY].create({ text: 'key' }, metaInlines);
         node = nodeType.create({ text: 'key' }, entry);
       }
       break;
     case NODE_NAME_META_LIST: {
-      const meta1 = nodes.metaInlines.create(null, schema.text('meta item'));
-      const meta2 = nodes.metaInlines.create(null, schema.text('meta item'));
+      const meta1 = nodes[NODE_NAME_META_INLINES].create(null, schema.text('meta item'));
+      const meta2 = nodes[NODE_NAME_META_INLINES].create(null, schema.text('meta item'));
       node = nodeType.create(null, [meta1, meta2]);
       break;
     }

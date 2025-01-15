@@ -3,7 +3,8 @@ import { Fragment, Node, ResolvedPos, Slice } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { EditorView } from '@tiptap/pm/view';
 import { JsonPastePlugin, META_COPY_AS_JSON } from '../helpers/JsonPastePlugin';
-import { NODE_NAME_NOTE } from '../../common';
+import { NODE_NAME_BREAK, NODE_NAME_NOTE } from '../../common';
+import { textNode } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -40,8 +41,8 @@ export const CustomPasteExtension = Extension.create({
           ) {
             const lines = text.split(/[\r\n]+/);
             const schema = view.state.schema;
-            const breakNode = schema.nodes.hardBreak.create({ soft: true });
-            // const paraType = schema.nodes.paragraph
+            const breakNode = schema.nodes[NODE_NAME_BREAK].create({ soft: true });
+            // const paraType = schema.nodes[NODE_NAME_PARAGRAPH]
             let content = Fragment.empty;
             lines.forEach((line, i) => {
               if (i > 0) {
@@ -49,8 +50,9 @@ export const CustomPasteExtension = Extension.create({
                   content = content.append(Fragment.from(schema.text(' ')));
                 content = content.append(Fragment.from(breakNode));
               }
-              // content = content.append(Fragment.from(paraType.createAndFill({}, schema.text(line))))
-              content = content.append(Fragment.from(schema.text(line)));
+              const node = textNode(schema, line)
+              if (node)
+                content = content.append(Fragment.from(node));
             });
             return new Slice(content, 0, 0);
           },

@@ -6,7 +6,7 @@ import {
 } from '../../common';
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { NodeSelection } from '@tiptap/pm/state';
-import { getEditorConfiguration, marksEnding, marksStarting } from '../helpers';
+import { getEditorConfiguration, marksEnding, marksStarting, textNode } from '../helpers';
 import { intersection } from 'lodash';
 
 declare module '@tiptap/core' {
@@ -92,7 +92,7 @@ export const RawInline = Node.create<RawInlineOptions>({
       insertRawInline:
         (rawformat?: string, rawtext?: string | string[]) =>
           ({ state, dispatch }) => {
-            const rawInlineType = state.schema.nodes.rawInline;
+            const rawInlineType = state.schema.nodes[NODE_NAME_RAW_INLINE];
             const { empty, from, to } = state.selection;
             if (empty && !rawtext) return false;
             const isarray = Array.isArray(rawtext);
@@ -182,7 +182,7 @@ export const RawInline = Node.create<RawInlineOptions>({
             if (dispatch) {
               positions.sort();
               positions.forEach((p, i) => {
-                tr.replaceWith(p, p + 1, schema.text(texts[i]));
+                tr.replaceWith(p, p + 1, textNode(schema, texts[i]) || []);
               });
               dispatch(tr);
             }

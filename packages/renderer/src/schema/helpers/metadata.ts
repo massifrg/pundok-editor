@@ -11,6 +11,7 @@ import {
   NODE_NAME_META_STRING,
   NODE_NAME_PARAGRAPH
 } from '../../common'
+import { textNode } from './nodeTemplates'
 
 const DEFAULT_STRING_META_VALUE = NODE_NAME_META_INLINES // NODE_NAME_META_STRING
 
@@ -46,7 +47,7 @@ export function metaValueNameToNodeTypeName(schema: Schema, metaType: MetaValueN
   return nodeType && nodeType?.name
 }
 
-function stringMetaValue(schema: Schema, value: string, metaType?: MetaValueName) {
+function stringMetaValue(schema: Schema, value: string, metaType?: MetaValueName): ProsemirrorNode {
   let nodeTypeName: string = DEFAULT_STRING_META_VALUE
   switch (metaType) {
     case 'MetaInlines':
@@ -56,7 +57,16 @@ function stringMetaValue(schema: Schema, value: string, metaType?: MetaValueName
       nodeTypeName = NODE_NAME_META_STRING
       break
   }
-  return schema.nodes[nodeTypeName]?.create(null, schema.text(value))
+  return schema.nodes[nodeTypeName]?.create(null, textNode(schema, value))
+}
+
+function arrayToParasMetaBlocks(schema: Schema, lines: string[]): ProsemirrorNode | null {
+  const paragraphType = schema.nodes[NODE_NAME_PARAGRAPH]
+  if (paragraphType) {
+    const paras = lines.map(l => paragraphType.create(null, textNode(schema, l))).filter(p => !!p)
+    return schema.nodes[NODE_NAME_META_BLOCKS].create(null, paras)
+  }
+  return null
 }
 
 /**
@@ -77,18 +87,20 @@ export function anyToMetaValue(schema: Schema, obj: any, metaType?: MetaValueNam
       const paragraphType = nodes[NODE_NAME_PARAGRAPH]
       if (paragraphType) {
         const lines = obj.split(/(\n|\r\n|\r)/)
-        const paras = lines.map(l => paragraphType.create(null, schema.text(l))).filter(p => !!p)
-        node = nodes[NODE_NAME_META_BLOCKS].create(null, paras)
+        node = arrayToParasMetaBlocks(schema, lines)
       }
     } else {
       node = stringMetaValue(schema, obj, metaType)
     }
   } else if (isBoolean(obj) && (!metaType || metaType === 'MetaBool')) {
     node = nodes[NODE_NAME_META_BOOL].create({ value: obj ? 'True' : 'False' })
-  } else if (isArray(obj) && (!metaType || metaType === 'MetaList')) {
-    const list = obj.map(o => anyToMetaValue(schema, o))
-    if (list.every(o => o !== null)) {
-      node = nodes[NODE_NAME_META_LIST].create(null, list)
+  } else if (isArray(obj)) {
+    if (!metaType || metaType === 'MetaList') {
+      const list = obj.map(o => anyToMetaValue(schema, o))
+      if (list.every(o => o !== null))
+        node = nodes[NODE_NAME_META_LIST].create(null, list)
+    } else if (metaType === 'MetaBlocks' && obj.every(o => isString(o))) {
+      node = arrayToParasMetaBlocks(schema, obj)
     }
   } else if (isObject(obj) && (!metaType || metaType === 'MetaMap')) {
     const entries = Object.entries(obj).map(([key, value]) => {

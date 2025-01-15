@@ -1,5 +1,6 @@
 import { Fragment, Node as PmNode, Schema, Slice } from '@tiptap/pm/model';
 import { Command, Transaction } from '@tiptap/pm/state';
+import { textNode } from '../schema';
 
 interface TextTransformState {
   wordBoundaryLeft?: boolean;
@@ -63,7 +64,8 @@ const textTrasformTransaction: TextTransformTransaction = (
         state.wordBoundaryLeft = true;
         firstTextFound = true;
       }
-      nodes.push(schema.text(transform(child.text!, state), child.marks));
+      const node = textNode(schema, transform(child.text!, state), child.marks)
+      if (node) nodes.push(node);
     } else nodes.push(child);
   }
   return tr.replace(

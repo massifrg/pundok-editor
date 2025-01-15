@@ -4,11 +4,15 @@ import { CellSelection } from '@massifrg/prosemirror-tables-sections';
 import { fillPmColSpecs } from './colSpec';
 import { isString } from 'lodash';
 import {
+  NODE_NAME_CAPTION,
+  NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_PARAGRAPH,
   TABLE_ROLE_BODY,
   TABLE_ROLE_FOOT,
   TABLE_ROLE_HEAD,
   TABLE_ROLE_TABLE
 } from '../../common';
+import { textNode } from './nodeTemplates';
 
 // from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-table/src/utilities/getTableNodeTypes.ts
 export function getTableNodeTypes(schema: Schema): { [key: string]: NodeType } {
@@ -48,12 +52,13 @@ export function createPandocTable(
   options?: PandocTableCreationOptions,
 ): PmNode | null {
   let caption: PmNode | undefined = undefined;
-  if (options?.caption) {
-    const captionText = schema.nodes.paragraph.createChecked(
+  const textnode = textNode(schema, options?.caption)
+  if (textnode) {
+    const captionText = schema.nodes[NODE_NAME_PARAGRAPH].createChecked(
       null,
-      Fragment.from(schema.text(options.caption)),
+      Fragment.from(textnode),
     );
-    caption = schema.nodes.caption.createChecked(null, captionText);
+    caption = schema.nodes[NODE_NAME_CAPTION].createChecked(null, captionText);
   }
 
   const headRows = options?.headRowsCount || 0;
@@ -104,7 +109,7 @@ export function createPandocTable(
 
   const colSpec = fillPmColSpecs(colsCount);
 
-  const pandocTable = schema.nodes.pandocTable.create(
+  const pandocTable = schema.nodes[NODE_NAME_PANDOC_TABLE].create(
     { colSpec },
     tableElements,
   );
@@ -127,7 +132,7 @@ export function createPandocTableSection(
   const rhcols = rowHeadColumns || 0;
   const containerType = schema.nodes[cellContainer || 'paragraph'];
   const createCellContent = (t: string) =>
-    containerType.create(null, schema.text(t));
+    containerType.create(null, textNode(schema, t));
   for (let rindex = 0; rindex < rowsCount; rindex += 1) {
     const cells: PmNode[] = [];
     for (let cindex = 0; cindex < colsCount; cindex += 1) {

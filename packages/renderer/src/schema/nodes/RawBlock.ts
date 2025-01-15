@@ -10,6 +10,7 @@ import {
   DEFAULT_RAW_BLOCK_FORMAT,
   NODE_NAME_CODE_BLOCK,
   NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_PARAGRAPH,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
   SK_CONVERT_TO_RAWBLOCK
@@ -18,6 +19,7 @@ import { getEditorConfiguration } from '..';
 import {
   depthOfInnerNodeType,
   innerBlockDepth,
+  textNode,
 } from '../helpers';
 import { RawBlockView } from '../../components';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
@@ -223,7 +225,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
       insertRawBlock:
         (rawformat?: string, rawtext?: string | string[]) =>
           ({ state, dispatch, tr }) => {
-            const rawBlockType = state.schema.nodes.rawBlock;
+            const rawBlockType = state.schema.nodes[NODE_NAME_RAW_BLOCK];
             const { doc, selection, schema } = state;
             const { empty, from, to, $from, $to } = selection;
             const isarray = Array.isArray(rawtext);
@@ -264,10 +266,10 @@ export const RawBlock = Node.create<RawBlockOptions>({
                   this.options.defaultFormat ||
                   DEFAULT_RAW_BLOCK_FORMAT;
                 const rawBlock1 =
-                  (rt1 && rawBlockType.create({ format }, schema.text(rt1))) ||
+                  (rt1 && rawBlockType.create({ format }, textNode(schema, rt1))) ||
                   null;
                 const rawBlock2 =
-                  (rt2 && rawBlockType.create({ format }, schema.text(rt2))) ||
+                  (rt2 && rawBlockType.create({ format }, textNode(schema, rt2))) ||
                   null;
                 if (rawBlock2) tr.insert(insertPos2, rawBlock2);
                 if (rawBlock1) tr.insert(insertPos1, rawBlock1);
@@ -293,10 +295,10 @@ export const RawBlock = Node.create<RawBlockOptions>({
               if (isarray) {
                 // two texts
                 const rawBlock1 =
-                  (rt1 && rawBlockType.create({ format }, schema.text(rt1))) ||
+                  (rt1 && rawBlockType.create({ format }, textNode(schema, rt1))) ||
                   null;
                 const rawBlock2 =
-                  (rt2 && rawBlockType.create({ format }, schema.text(rt2))) ||
+                  (rt2 && rawBlockType.create({ format }, textNode(schema, rt2))) ||
                   null;
                 if (rawBlock2) tr.insert(pos2, rawBlock2);
                 if (rawBlock1) tr.insert(pos1, rawBlock1);
@@ -307,7 +309,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                   const text = $from.node(depth1).textContent;
                   const rawBlock = rawBlockType.create(
                     { format },
-                    schema.text(text),
+                    textNode(schema, text),
                   );
                   if (!rawBlock) return false;
                   const pos = $from.start(depth1) - 1;
@@ -319,7 +321,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                   const text = doc.textBetween(from, to, '\n', toRawBlockText);
                   const rawBlock = rawBlockType.create(
                     { format },
-                    schema.text(text),
+                    textNode(schema, text),
                   );
                   tr.replaceRangeWith(from, to, rawBlock);
                 }
@@ -329,7 +331,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                   // one text and empty selection
                   const rawBlock = rawBlockType.create(
                     { format },
-                    schema.text(rt1),
+                    textNode(schema, rt1),
                   );
                   const splitDepth = $from.depth - depth1;
                   const offset = splitDepth;
@@ -342,7 +344,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                   const text = doc.textBetween(from, to, '\n', toRawBlockText);
                   const rawBlock = rawBlockType.create(
                     { format },
-                    schema.text(rawtext + text),
+                    textNode(schema, rawtext + text),
                   );
                   tr.replaceRangeWith(from, to, rawBlock);
                 }
@@ -389,11 +391,13 @@ export const RawBlock = Node.create<RawBlockOptions>({
             const node = $from.node(depth);
             if (node.childCount !== 1) return false;
             if (dispatch) {
+              const schema = state.schema
               const lines = node
                 .firstChild!.textContent.split(/\r?\n/)
-                .map((t) => state.schema.text(t))
+                .map((t) => textNode(schema, t))
+                .filter(t => !!t)
                 .map((t) =>
-                  state.schema.nodes.paragraph.createAndFill(null, t),
+                  schema.nodes[NODE_NAME_PARAGRAPH].createAndFill(null, t),
                 ) as PmNode[];
               dispatch(
                 state.tr.replaceWith(
