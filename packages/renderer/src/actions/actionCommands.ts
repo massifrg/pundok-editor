@@ -122,10 +122,15 @@ export function setActionShowExportDialog(
     useActions().setAction({ ...ACTION_SHOW_EXPORT_DIALOG, editorKey });
 }
 
+export interface ActionEditAttributesProps {
+  tab?: string,
+  addClass?: string,
+}
+
 export function setActionEditAttributes(
   stateOrKey: EditorState | EditorKeyType,
   nodeOrMark: SelectedNodeOrMark,
-  tab?: string,
+  props?: ActionEditAttributesProps,
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey) {
@@ -133,7 +138,7 @@ export function setActionEditAttributes(
       ...ACTION_EDIT_ATTRIBUTES,
       editorKey,
       nodeOrMark,
-      props: { tab },
+      props,
     };
     useActions().setAction(action);
   }

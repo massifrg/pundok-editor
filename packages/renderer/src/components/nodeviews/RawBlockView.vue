@@ -50,7 +50,7 @@ export default {
           from: pos,
           to: pos
         }
-        setActionEditAttributes(this.editor.state, selNode, 'format')
+        setActionEditAttributes(this.editor.state, selNode, { tab: 'format' })
       }
       event.preventDefault()
     }

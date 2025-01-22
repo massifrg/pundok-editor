@@ -111,7 +111,7 @@ export const PundokEditorUtilsExtension =
                       node,
                       name: NODE_NAME_RAW_INLINE,
                     },
-                    'text',
+                    { tab: 'text' },
                   );
                   return true;
                 case NODE_NAME_INDEX_REF:
@@ -124,7 +124,7 @@ export const PundokEditorUtilsExtension =
                       node,
                       name: NODE_NAME_INDEX_REF,
                     },
-                    'idref',
+                    { tab: 'idref' },
                   );
                 case NODE_NAME_IMAGE:
                   setActionEditAttributes(
@@ -136,7 +136,7 @@ export const PundokEditorUtilsExtension =
                       node,
                       name: NODE_NAME_IMAGE,
                     },
-                    'target',
+                    { tab: 'target' },
                   );
                   return true;
               }
@@ -219,7 +219,7 @@ export const PundokEditorUtilsExtension =
               if (nodeOrMark) {
                 // console.log(nodeOrMark)
                 if (dispatch)
-                  setActionEditAttributes(editor.state, nodeOrMark, tab);
+                  setActionEditAttributes(editor.state, nodeOrMark, { tab });
                 return true;
               }
               return false;
