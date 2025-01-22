@@ -108,7 +108,7 @@ interface ActionForNodeOrMarkCore {
 }
 
 /** Action pertinent to a particular Node or Mark of the document (non linked version) */
-interface BaseActionForNodeOrMark
+export interface BaseActionForNodeOrMark
   extends BaseEditorAction,
   ActionForNodeOrMarkCore {
   // canDo?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
@@ -241,6 +241,11 @@ export const MODIFY_METAMAP_KEY: BaseActionForNodeOrMark = {
       action?.nodeOrMark?.pos,
     ),
 };
+
+export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
+  name: 'add-class',
+  label: 'add a class',
+}
 
 export const ACTION_NEW_EMPTY_DOCUMENT: BaseEditorAction = {
   name: 'new-empty-document',

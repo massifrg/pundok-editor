@@ -15,6 +15,7 @@ export const SK_TOGGLE_DIV = 'Mod-Shift-d';
 export const SK_TOGGLE_LINK = 'Mod-l';
 export const SK_INSERT_ANCHOR = 'Alt-l';
 export const SK_EDIT_ATTRIBUTES = 'Alt-a';
+export const SK_INCLUDE_DOC = 'Alt-i';
 
 // from tiptap
 export const SK_UNDO = 'Mod-z';

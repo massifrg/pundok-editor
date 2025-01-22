@@ -3,7 +3,7 @@ import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorView } from '@tiptap/pm/view';
 import { NodeSelection, Plugin } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
-import { setActionEditAttributes } from '../../actions';
+import { ActionEditAttributesProps, setActionEditAttributes } from '../../actions';
 import {
   EditorKeyType,
   NODE_NAME_IMAGE,
@@ -34,7 +34,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     pundokEditorUtils: {
       updateDocState: (update: Partial<DocStateUpdate>) => ReturnType;
-      editAttributes: () => ReturnType;
+      editAttributes: (props?: ActionEditAttributesProps) => ReturnType;
     };
   }
 }
@@ -157,15 +157,15 @@ export const PundokEditorUtilsExtension =
               return true;
             },
         editAttributes:
-          () =>
+          (props) =>
             ({ dispatch, editor, state }) => {
               const sel = state.selection;
+              const selectNode = props?.selectNode || (() => true)
               let nodeOrMark: SelectedNodeOrMark | undefined = undefined;
-              let tab: string | undefined = undefined;
               if (sel instanceof NodeSelection) {
                 const node = (sel as NodeSelection).node;
                 const attrs = editableAttrsForNodeOrMark(node);
-                if (attrs.length > 0) {
+                if (selectNode(node) && attrs.length > 0) {
                   nodeOrMark = {
                     name: node.type.name,
                     node,
@@ -195,7 +195,7 @@ export const PundokEditorUtilsExtension =
                     let node = $from.node(depth);
                     if (editableAttrsForNodeOrMark(node).length > 0) {
                       if (
-                        depth <= 0 ||
+                        selectNode(node) &&
                         !isParagraphOfIndexTerm(node, $from.node(depth - 1))
                       ) {
                         const start = sel.$from.start(depth) - 1;
@@ -219,7 +219,7 @@ export const PundokEditorUtilsExtension =
               if (nodeOrMark) {
                 // console.log(nodeOrMark)
                 if (dispatch)
-                  setActionEditAttributes(editor.state, nodeOrMark, { tab });
+                  setActionEditAttributes(editor.state, nodeOrMark, props);
                 return true;
               }
               return false;

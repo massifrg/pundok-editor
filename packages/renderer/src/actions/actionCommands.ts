@@ -11,6 +11,7 @@ import {
   ACTION_CLOSE_EDITOR,
   ACTION_SETUP_VIEWER,
   ACTION_DOCUMENT_TRANSFORM,
+  BaseActionForNodeOrMark,
 } from './actions';
 import {
   DocumentContext,
@@ -25,6 +26,7 @@ import { useActions } from '../stores';
 import { editorKeyFromState } from '../schema';
 import { SelectedNodeOrMark } from '../schema/helpers';
 import { EditorState } from '@tiptap/pm/state';
+import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { NotesViewAction } from './viewAction';
 
 function editorKeyFrom(
@@ -124,7 +126,8 @@ export function setActionShowExportDialog(
 
 export interface ActionEditAttributesProps {
   tab?: string,
-  addClass?: string,
+  action?: BaseActionForNodeOrMark,
+  selectNode?: (node: ProsemirrorNode) => boolean,
 }
 
 export function setActionEditAttributes(

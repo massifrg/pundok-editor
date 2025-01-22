@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core';
 import { innerNodeDepth } from '../helpers';
-import { CustomClass, NODE_NAME_DIV } from '../../common';
+import { CustomClass, NODE_NAME_DIV, SK_INCLUDE_DOC } from '../../common';
+import { ACTION_ADD_CLASS } from '../../actions';
 
 export const INCLUDE_DOC_CLASS = 'include-doc';
 export const INCLUDE_FORMAT_ATTR = 'include-format';
@@ -56,6 +57,23 @@ export const IncludeDivExtension = Extension.create({
           },
     };
   },
+
+  addKeyboardShortcuts() {
+    return {
+      [SK_INCLUDE_DOC]: () => {
+        return this.editor.commands.editAttributes({
+          tab: 'classes',
+          action: {
+            ...ACTION_ADD_CLASS,
+            props: {
+              class: INCLUDE_DOC_CLASS
+            }
+          },
+          selectNode: (node) => node.type.name === NODE_NAME_DIV
+        })
+      },
+    }
+  }
 });
 
 export const IncludeDocCustomClass: CustomClass = {

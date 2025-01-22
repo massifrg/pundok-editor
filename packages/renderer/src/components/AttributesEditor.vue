@@ -292,6 +292,7 @@ import {
 } from '../schema/helpers';
 import { deproxify } from './helpers/deproxify';
 import { createLowlight, all } from 'lowlight';
+import { ACTION_ADD_CLASS, BaseActionForNodeOrMark } from '../actions';
 const lowlight = createLowlight(all);
 
 const myIcons: Record<string, string> = {
@@ -326,7 +327,7 @@ export default {
       }
     }
   },
-  props: ['editor', 'selectedNodeOrMark', 'startTab'],
+  props: ['editor', 'selectedNodeOrMark', 'startTab', 'onAttributesEditorShow'],
   emits: ['closeAttributesEditor'],
   data() {
     return {
@@ -469,6 +470,13 @@ export default {
           }
         }
         // const names = [this.startTab, ...this.editableAttributes]
+        const action = this.onAttributesEditorShow as BaseActionForNodeOrMark | undefined
+        if (action?.name === ACTION_ADD_CLASS.name) {
+          const class_to_add = action.props?.class
+          if (class_to_add) {
+            this.addClass(class_to_add)
+          }
+        }
       }
     },
   },
@@ -628,10 +636,11 @@ export default {
     },
     async addClass(ac: string) {
       console.log(`addClass: ${ac}`);
-      if (!this.attrs.classes.includes(ac)) {
+      const classes = this.attrs.classes || []
+      if (!classes.includes(ac)) {
         if (ac === INCLUDE_DOC_CLASS && this.nodeOrMarkName === NODE_NAME_DIV)
           this.setIncludedDocAttrs()
-        this.attrs.classes = [...this.attrs.classes, ac]
+        this.attrs.classes = [...classes, ac]
       }
     },
     removeClass(rc: string) {

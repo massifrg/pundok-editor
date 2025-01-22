@@ -27,7 +27,8 @@
         <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
           @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
         <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
-          @closeAttributesEditor="closeAttributesEditor()"></AttributesEditor>
+          :on-attributes-editor-show="onAttributesEditorShow" @closeAttributesEditor="closeAttributesEditor()">
+        </AttributesEditor>
         <ConfigurationsDialog :editor="editor" :visible="visibleConfigurationDialog"
           @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
         </ConfigurationsDialog>
@@ -141,6 +142,8 @@ import {
   ACTION_SHOW_PROJECT_STRUCTURE_DIALOG,
   ACTION_CLOSE_EDITOR,
   ACTION_DOCUMENT_TRANSFORM,
+  ActionEditAttributesProps,
+  BaseActionForNodeOrMark,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -234,6 +237,7 @@ export default {
       inputTextDialogCallback: undefined as ((text: string, oldText?: string) => void) | undefined,
       nodeOrMarkToEdit: undefined as SelectedNodeOrMark | undefined,
       startAttributesTab: undefined as string | undefined,
+      onAttributesEditorShow: undefined as BaseActionForNodeOrMark | undefined,
       // clickedNodeOrMark: undefined as SelectedNodeOrMark | undefined,
       debugDocTree: undefined as ProjectComponent | undefined,
       $q: useQuasar(),
@@ -315,7 +319,7 @@ export default {
             this.save();
             break
           case ACTION_EDIT_ATTRIBUTES.name:
-            if (nom) this.editNodeOrMarkAttributes(nom, props?.tab)
+            if (nom) this.editNodeOrMarkAttributes(nom, props)
             break
           case ACTION_EDIT_META_MAP_TEXT.name:
             if (nom) {
@@ -919,9 +923,10 @@ export default {
       this.visibleSearchAndReplaceDialog = !this.visibleSearchAndReplaceDialog;
     },
     // methods for attributes editing
-    editNodeOrMarkAttributes(nodeOrMark: SelectedNodeOrMark, tab?: string) {
+    editNodeOrMarkAttributes(nodeOrMark: SelectedNodeOrMark, props?: ActionEditAttributesProps) {
       if (nodeOrMark) {
-        this.startAttributesTab = tab;
+        this.startAttributesTab = props?.tab;
+        this.onAttributesEditorShow = props?.action;
         this.nodeOrMarkToEdit = nodeOrMark;
       }
     },
