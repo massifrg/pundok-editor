@@ -1,12 +1,11 @@
 <template>
-  <q-btn v-if="wrapperCustomStyles.length === 0" :disabled="isDisabled" @click="editor.commands.wrapIn(wrapperType)"
+  <q-btn v-if="wrapperCustomStyles.length === 0" :disabled="isDisabled" @click="wrap()"
     :title="`wrap selection in a ${pandocType}`" :icon="wrapIcon || 'mdi-location-enter'" :label="wrapperTypeName"
     color="grey-5" split dense size="sm"></q-btn>
   <q-btn-dropdown v-if="wrapperCustomStyles.length > 0" :title="`wrap selection in a ${pandocType}`"
     :icon="wrapIcon || 'mdi-location-enter'" :label="wrapperTypeName" color="grey-5" split dense size="sm"
-    dropdown-icon="mdi-menu-down" :disable-dropdown="isDisabled" :disable-main-btn="isDisabled"
-    @click="editor.commands.wrapIn(wrapperType)">
-    <CustomClassList :editor="editor" :type="wrapperTypeName" :custom-class-description="customClassDescription"
+    dropdown-icon="mdi-menu-down" :disable-dropdown="isDisabled" :disable-main-btn="isDisabled" @click="wrap()">
+    <CustomClassList :editor="editor" :type="wrapperTypeName" :custom-class-description="customStyleInstanceDescription"
       no-avatar="true" @chosen-class="wrapWithClass" />
   </q-btn-dropdown>
   <ToolbarButton :icon="unwrapIcon || 'mdi-location-exit'" :disabled="!canUnwrap()"
@@ -14,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import { CustomStyleInstance, customStylesForType } from '../common';
+import { CustomStyleDef, CustomStyleInstance, customStylesForType } from '../common';
 import CustomClassList from './CustomClassList.vue';
 import ToolbarButton from './ToolbarButton.vue';
 import { Node } from '@tiptap/pm/model'
@@ -40,17 +39,31 @@ export default {
     isDisabled() {
       return !this.editor.can().wrapIn(this.wrapperType)
     },
-    customClassDescription() {
-      return (cs: CustomStyleInstance) => {
-        const d = cs.styleDef
-        const descSuffix = d.description ? ` (${d.description})` : ''
-        return `wrap in a ${this.pandocType} with class "${d.name}"${descSuffix}`
-      }
-    }
   },
   methods: {
+    customStyleDefinitionDescription(csd: CustomStyleDef) {
+      const descSuffix = csd.description ? ` (${csd.description})` : ''
+      return `wrap in a ${this.pandocType} with class "${csd.name}"${descSuffix}`
+    },
+    customStyleInstanceDescription() {
+      return (cs: CustomStyleInstance) => {
+        return this.customStyleDefinitionDescription(cs.styleDef)
+      }
+    },
+    wrap() {
+      this.editor.commands.runRepeatableCommand(
+        'wrapIn',
+        `wrap in a ${this.pandocType}`,
+        this.wrapperType
+      )
+    },
     wrapWithClass(c: string) {
-      this.editor.commands.wrapIn(this.wrapperType, { classes: [c] })
+      this.editor.commands.runRepeatableCommand(
+        'wrapIn',
+        `wrap in a ${this.pandocType} with class ${c}`,
+        this.wrapperType,
+        { classes: [c] }
+      )
     },
     canUnwrap() {
       const editor = this.editor
@@ -64,7 +77,8 @@ export default {
     unwrap() {
       const editor = this.editor
       const state = editor.state
-      if (isInTable(state) && !editor.can().lift(this.wrapperType)) {
+      const wrapperType = this.wrapperType
+      if (isInTable(state) && !editor.can().lift(wrapperType)) {
         const { $anchor } = state.selection
         const depth = $anchor.depth
         let closestBlock: Node | null = null
@@ -73,7 +87,13 @@ export default {
           const node = $anchor.node(d)
           if (node.type === this.wrapperType) {
             if (closestBlock) {
-              editor.chain().setNodeSelection(closestBlockPos).lift().run()
+              // editor.chain().setNodeSelection(closestBlockPos).lift().run()
+              editor.commands.runRepeatableCommandsChain([
+                ['setNodeSelection', closestBlockPos],
+                ['lift'],
+              ],
+                `unwrap (inner) ${this.pandocType}`
+              )
               break
             }
           }
@@ -84,7 +104,11 @@ export default {
         }
         return false
       } else {
-        editor.commands.lift(this.wrapperType)
+        editor.commands.runRepeatableCommand(
+          'lift',
+          `unwrap ${this.pandocType}`,
+          wrapperType
+        )
       }
     }
   }
