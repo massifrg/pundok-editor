@@ -7,7 +7,7 @@ import {
 } from "../../common";
 import { pundokEditorUtilsPluginKey } from "../extensions";
 import { Editor } from "@tiptap/vue-3";
-import { parse as parsePath, relative as relativePath } from 'path-browserify'
+import { isAbsolute, parse as parsePath, relative as relativePath } from 'path-browserify'
 
 export interface DocState {
   /** The unique key of the editor. */
@@ -129,7 +129,7 @@ export function docBasePath(docState: DocState): string | undefined {
 
 export function makePathRelativeToDoc(docState: DocState, path: string): string {
   const basePath = docBasePath(docState)
-  return basePath
+  return basePath && isAbsolute(path)
     ? relativePath(basePath, path)
     : path
 }
