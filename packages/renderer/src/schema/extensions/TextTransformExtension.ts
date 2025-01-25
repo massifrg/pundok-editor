@@ -8,6 +8,7 @@ import {
 } from '../../commands';
 import { Attrs, Mark, MarkType } from '@tiptap/pm/model';
 import { getMark } from '../helpers';
+import { SK_LOWERCASE, SK_UPPERCASE, SK_UPPERCASEFIRST } from '../../common';
 
 export type TextTransformType =
   | 'add-mark'
@@ -33,9 +34,9 @@ export interface CapitalizeTransform extends TextTransform {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     textTransform: {
-      toLowercase: (locales: string | string[]) => ReturnType;
-      toUppercase: (locales: string | string[]) => ReturnType;
-      toUppercaseFirst: (locales: string | string[]) => ReturnType;
+      toLowercase: (locales?: string | string[]) => ReturnType;
+      toUppercase: (locales?: string | string[]) => ReturnType;
+      toUppercaseFirst: (locales?: string | string[]) => ReturnType;
       applyTextTransforms: (transforms: TextTransform[]) => ReturnType;
     };
   }
@@ -47,63 +48,63 @@ export const TextTransformExtension = Extension.create({
   addCommands() {
     return {
       toLowercase:
-        (locales: string | string[]) =>
-        ({ dispatch, state }) =>
-          lowerCaseCommand(locales)(state, dispatch),
+        (locales?: string | string[]) =>
+          ({ dispatch, state }) =>
+            lowerCaseCommand(locales)(state, dispatch),
       toUppercase:
-        (locales: string | string[]) =>
-        ({ dispatch, state }) =>
-          upperCaseCommand(locales)(state, dispatch),
+        (locales?: string | string[]) =>
+          ({ dispatch, state }) =>
+            upperCaseCommand(locales)(state, dispatch),
       toUppercaseFirst:
-        (locales: string | string[]) =>
-        ({ dispatch, state }) =>
-          upperCaseFirstCommand(locales)(state, dispatch),
+        (locales?: string | string[]) =>
+          ({ dispatch, state }) =>
+            upperCaseFirstCommand(locales)(state, dispatch),
       applyTextTransforms:
         (transforms: TextTransform[]) =>
-        ({ dispatch, state, tr }) => {
-          const { empty, from, to } = state.selection;
-          if (empty) return false;
-          if (dispatch) {
-            const schema = state.schema;
-            let mark: Mark | undefined;
-            transforms.forEach((t) => {
-              switch (t.type) {
-                case 'add-mark':
-                  mark = getMark(
-                    (t as MarkTransform).mark,
-                    (t as MarkTransform).attrs,
-                    schema
-                  );
-                  if (mark) tr.addMark(from, to, mark);
-                  break;
-                case 'remove-mark':
-                  mark = getMark(
-                    (t as MarkTransform).mark,
-                    (t as MarkTransform).attrs,
-                    schema
-                  );
-                  if (mark) tr.removeMark(from, to, mark);
-                  break;
-                case 'lowercase':
-                  lowerCaseTransaction(
-                    tr,
-                    schema,
-                    (t as CapitalizeTransform).locales
-                  );
-                  break;
-                case 'uppercase':
-                  upperCaseTransaction(
-                    tr,
-                    schema,
-                    (t as CapitalizeTransform).locales
-                  );
-                  break;
-              }
-            });
-            dispatch(tr);
-          }
-          return true;
-        },
+          ({ dispatch, state, tr }) => {
+            const { empty, from, to } = state.selection;
+            if (empty) return false;
+            if (dispatch) {
+              const schema = state.schema;
+              let mark: Mark | undefined;
+              transforms.forEach((t) => {
+                switch (t.type) {
+                  case 'add-mark':
+                    mark = getMark(
+                      (t as MarkTransform).mark,
+                      (t as MarkTransform).attrs,
+                      schema
+                    );
+                    if (mark) tr.addMark(from, to, mark);
+                    break;
+                  case 'remove-mark':
+                    mark = getMark(
+                      (t as MarkTransform).mark,
+                      (t as MarkTransform).attrs,
+                      schema
+                    );
+                    if (mark) tr.removeMark(from, to, mark);
+                    break;
+                  case 'lowercase':
+                    lowerCaseTransaction(
+                      tr,
+                      schema,
+                      (t as CapitalizeTransform).locales
+                    );
+                    break;
+                  case 'uppercase':
+                    upperCaseTransaction(
+                      tr,
+                      schema,
+                      (t as CapitalizeTransform).locales
+                    );
+                    break;
+                }
+              });
+              dispatch(tr);
+            }
+            return true;
+          },
       // const transform: SingleRangeTransform = (text, marks) => {
       //   return {
       //     transformedText: text.replace(
@@ -118,4 +119,11 @@ export const TextTransformExtension = Extension.create({
       // };
     };
   },
+  addKeyboardShortcuts() {
+    return {
+      [SK_LOWERCASE]: () => this.editor.commands.toLowercase(),
+      [SK_UPPERCASE]: () => this.editor.commands.toUppercase(),
+      [SK_UPPERCASEFIRST]: () => this.editor.commands.toUppercaseFirst()
+    }
+  }
 });

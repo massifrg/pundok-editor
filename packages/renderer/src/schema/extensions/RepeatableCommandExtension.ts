@@ -20,6 +20,7 @@ import {
   NODE_NAME_TABLE_CELL,
   NODE_NAME_TABLE_HEADER,
   NODE_NAME_TABLE_ROW,
+  shortcutSuffix,
   SK_REPEAT_COMMAND
 } from '../../common';
 import { isString } from 'lodash';
@@ -368,7 +369,7 @@ export function getCurrentRepeatableCommand(
 }
 
 export function currentRepeatableCommandTooltip(state: EditorState): string {
-  let tooltip = 'repeat last command';
+  let tooltip = 'repeat last command' + shortcutSuffix('SK_REPEAT_COMMAND');
   const repeatable = getCurrentRepeatableCommand(state);
   if (repeatable) tooltip += `: ${describeRepeatableCommand(repeatable)}`;
   return tooltip;

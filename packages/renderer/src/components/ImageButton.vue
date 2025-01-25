@@ -1,6 +1,6 @@
 <template>
   <!-- <ToolbarButton v-if="noteTypes.length <= 1" :disabled="disabled" icon="mdi-note-plus" @click="$emit('insertNote')" /> -->
-  <q-btn-dropdown auto-close icon="mdi-image-outline" title="insert Image" color="grey-5" split dense size="sm"
+  <q-btn-dropdown auto-close icon="mdi-image-outline" :title="title" color="grey-5" split dense size="sm"
     dropdown-icon="mdi-menu-down" :disable-main-btn="false" :disable-dropdown="false"
     @click="editor.commands.setImage({ src: '', title: 'new image' })">
     <q-list>
@@ -19,6 +19,7 @@
 </template>
 
 <script lang="ts">
+import { shortcut } from '../common';
 import { docBasePath, getDocState } from '../schema';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 
@@ -27,6 +28,10 @@ export default {
   computed: {
     docState() {
       return this.editor && getDocState(this.editor)
+    },
+    title() {
+      const sc = shortcut('SK_INSERT_IMAGE')
+      return "insert Image" + (sc && sc.length > 0 ? ` [${sc}]` : '')
     },
     basePath() {
       return this.docState && docBasePath(this.docState)

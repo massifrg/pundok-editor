@@ -6,7 +6,7 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { MARK_NAME_STRONG, SK_TOGGLE_BOLD, SK_TOGGLE_BOLD_ALT } from '../../common';
+import { MARK_NAME_STRONG, SK_TOGGLE_STRONG } from '../../common';
 
 export interface StrongOptions {
   HTMLAttributes: Record<string, any>;
@@ -98,8 +98,8 @@ export const Strong = Mark.create<StrongOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_BOLD]: () => this.editor.commands.toggleStrong(),
-      [SK_TOGGLE_BOLD_ALT]: () => this.editor.commands.toggleStrong(),
+      [SK_TOGGLE_STRONG]: () => this.editor.commands.toggleStrong(),
+      // [SK_TOGGLE_BOLD_ALT]: () => this.editor.commands.toggleStrong(),
     };
   },
 

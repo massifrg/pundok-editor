@@ -3,7 +3,7 @@ import { EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
 import { DecorationSet } from '@tiptap/pm/view';
 import { mergeAttributes, Node, NodeWithPos } from '@tiptap/core';
 import { Editor, VueNodeViewRenderer } from '@tiptap/vue-3';
-import { DEFAULT_NOTE_TYPE, NODE_NAME_PARAGRAPH } from '../../common';
+import { DEFAULT_NOTE_TYPE, NODE_NAME_PARAGRAPH, SK_INSERT_NOTE } from '../../common';
 import { NoteView, getEditorDocState } from '../index';
 import { deltaNodes } from '../helpers/whatChanged';
 import { useNotes } from '../../stores';
@@ -22,7 +22,7 @@ declare module '@tiptap/core' {
       /**
        * Insert a note
        */
-      insertNote: (note_type: string, text?: string) => ReturnType;
+      insertNote: (note_type?: string, text?: string) => ReturnType;
       /**
        * Refresh notes (decorations)
        */
@@ -157,7 +157,7 @@ export const Note = Node.create<NoteOptions>({
   addCommands() {
     return {
       insertNote:
-        (note_type: string, text?: string) =>
+        (note_type?: string, text?: string) =>
           ({ commands, dispatch, editor, state, tr }) => {
             const schema = state.schema;
             const noteNodeType = schema.nodes[this.name];
@@ -168,7 +168,7 @@ export const Note = Node.create<NoteOptions>({
               (noteStyles && noteStyles.map((ns) => ns.noteType)) ||
               this.options.noteTypes ||
               [];
-            const noteType = noteTypes.includes(note_type)
+            const noteType = note_type && noteTypes.includes(note_type)
               ? note_type
               : noteTypes[0] || DEFAULT_NOTE_TYPE;
             const selection = state.selection;
@@ -224,4 +224,10 @@ export const Note = Node.create<NoteOptions>({
           },
     };
   },
+
+  addKeyboardShortcuts() {
+    return {
+      [SK_INSERT_NOTE]: () => this.editor.commands.insertNote()
+    }
+  }
 });

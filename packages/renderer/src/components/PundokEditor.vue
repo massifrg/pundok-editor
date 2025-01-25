@@ -127,6 +127,7 @@ import {
   ACTION_NEW_EMPTY_DOCUMENT,
   ACTION_SHOW_EXPORT_DIALOG,
   ACTION_SHOW_IMPORT_DIALOG,
+  ACTION_SHOW_SEARCH_DIALOG,
   executeEditorAction,
   ACTION_NEW_DOCUMENT,
   ACTION_DOCUMENT_SAVE_AS,
@@ -356,6 +357,9 @@ export default {
             break
           case ACTION_SHOW_IMPORT_DIALOG.name:
             this.visibleImportDialog = true
+            break
+          case ACTION_SHOW_SEARCH_DIALOG.name:
+            this.visibleSearchAndReplaceDialog = true
             break
           case ACTION_NEW_EMPTY_DOCUMENT.name:
             this.newDocument(action?.props?.configurationName)

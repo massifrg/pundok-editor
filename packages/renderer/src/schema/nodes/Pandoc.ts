@@ -179,8 +179,12 @@ import {
   NODE_NAME_FIGURE,
   NODE_NAME_FIGURE_CAPTION,
   NODE_NAME_METADATA,
-  NODE_NAME_RAW_BLOCK
+  NODE_NAME_RAW_BLOCK,
+  SK_REMOVE_MARKS,
+  SK_SHOW_SEARCH_DIALOG,
 } from '../../common';
+import { setActionShowSearchDialog } from '../../actions';
+
 const lowlight = createLowlight(all);
 lowlight.register('javascript', javascript);
 lowlight.register('typescript', typescript);
@@ -485,4 +489,14 @@ export const Pandoc = Document.extend<PandocOptions>({
   addProseMirrorPlugins() {
     return [fixPreArrowUpPlugin([NODE_NAME_CODE_BLOCK, NODE_NAME_RAW_BLOCK])];
   },
+
+  addKeyboardShortcuts() {
+    return {
+      [SK_REMOVE_MARKS]: () => this.editor.commands.removeAllMarks(),
+      [SK_SHOW_SEARCH_DIALOG]: () => {
+        setActionShowSearchDialog(this.editor.state)
+        return true
+      }
+    }
+  }
 });

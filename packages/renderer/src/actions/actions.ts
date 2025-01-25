@@ -207,6 +207,12 @@ export const ACTION_SHOW_IMPORT_DIALOG: BaseEditorAction = {
   icon: 'mdi-file-import',
 };
 
+export const ACTION_SHOW_SEARCH_DIALOG: BaseEditorAction = {
+  name: 'show-search-dialog',
+  label: 'open search dialog',
+  icon: 'mdi-magnify',
+};
+
 export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
   name: 'repeat-change',
   label: 'repeat change',

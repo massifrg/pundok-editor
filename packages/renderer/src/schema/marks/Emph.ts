@@ -6,7 +6,7 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { MARK_NAME_EMPH, SK_TOGGLE_EMPH, SK_TOGGLE_EMPH_ALT } from '../../common';
+import { MARK_NAME_EMPH, SK_TOGGLE_EMPH } from '../../common';
 
 export interface EmphOptions {
   HTMLAttributes: Record<string, any>;
@@ -98,7 +98,6 @@ export const Emph = Mark.create<EmphOptions>({
   addKeyboardShortcuts() {
     return {
       [SK_TOGGLE_EMPH]: () => this.editor.commands.toggleEmph(),
-      [SK_TOGGLE_EMPH_ALT]: () => this.editor.commands.toggleEmph(),
     };
   },
 

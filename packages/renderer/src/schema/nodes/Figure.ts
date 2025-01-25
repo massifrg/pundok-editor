@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { NODE_NAME_FIGURE, SK_WRAP_IN_FIGURE } from '../../common';
+import { NODE_NAME_FIGURE, SK_TOGGLE_FIGURE } from '../../common';
 
 export interface FigureOptions {
   HTMLAttributes: Record<string, any>;
@@ -62,8 +62,8 @@ export const Figure = Node.create<FigureOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_WRAP_IN_FIGURE]: () =>
-        this.editor.commands.wrapIn(this.editor.schema.nodes[NODE_NAME_FIGURE]),
+      [SK_TOGGLE_FIGURE]: () =>
+        this.editor.commands.toggleFigure(),
     };
   },
 });

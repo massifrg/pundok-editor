@@ -1,19 +1,23 @@
 <template>
-  <q-btn v-if="wrapperCustomStyles.length === 0" :disabled="isDisabled" @click="wrap()"
-    :title="`wrap selection in a ${pandocType}`" :icon="wrapIcon || 'mdi-location-enter'" :label="wrapperTypeName"
-    color="grey-5" split dense size="sm"></q-btn>
-  <q-btn-dropdown v-if="wrapperCustomStyles.length > 0" :title="`wrap selection in a ${pandocType}`"
-    :icon="wrapIcon || 'mdi-location-enter'" :label="wrapperTypeName" color="grey-5" split dense size="sm"
-    dropdown-icon="mdi-menu-down" :disable-dropdown="isDisabled" :disable-main-btn="isDisabled" @click="wrap()">
+  <q-btn v-if="wrapperCustomStyles.length === 0" :disabled="isDisabled" @click="wrap()" :title="title"
+    :icon="wrapIcon || 'mdi-location-enter'" :label="wrapperTypeName" color="grey-5" split dense size="sm"></q-btn>
+  <q-btn-dropdown v-if="wrapperCustomStyles.length > 0" :title="title" :icon="wrapIcon || 'mdi-location-enter'"
+    :label="wrapperTypeName" color="grey-5" split dense size="sm" dropdown-icon="mdi-menu-down"
+    :disable-dropdown="isDisabled" :disable-main-btn="isDisabled" @click="wrap()">
     <CustomClassList :editor="editor" :type="wrapperTypeName" :custom-class-description="customStyleInstanceDescription"
       no-avatar="true" @chosen-class="wrapWithClass" />
   </q-btn-dropdown>
   <ToolbarButton :icon="unwrapIcon || 'mdi-location-exit'" :disabled="!canUnwrap()"
-    :title="`unwrap selection from ${pandocType}`" @click="unwrap" />
+    :title="`unwrap selection from ${pandocType}`" :shortcut="shortcut" @click="unwrap" />
 </template>
 
 <script lang="ts">
-import { CustomStyleDef, CustomStyleInstance, customStylesForType } from '../common';
+import {
+  CustomStyleDef,
+  CustomStyleInstance,
+  customStylesForType,
+  shortcutSuffix
+} from '../common';
 import CustomClassList from './CustomClassList.vue';
 import ToolbarButton from './ToolbarButton.vue';
 import { Node } from '@tiptap/pm/model'
@@ -22,7 +26,7 @@ import { getEditorConfiguration } from '../schema';
 
 export default {
   components: { CustomClassList, ToolbarButton },
-  props: ['editor', 'wrapperTypeName', 'pandocType', 'wrapIcon', 'unwrapIcon'],
+  props: ['editor', 'wrapperTypeName', 'pandocType', 'wrapIcon', 'unwrapIcon', 'shortcut'],
   computed: {
     configuration() {
       return getEditorConfiguration(this.editor)
@@ -39,6 +43,9 @@ export default {
     isDisabled() {
       return !this.editor.can().wrapIn(this.wrapperType)
     },
+    title() {
+      return `wrap selection in a ${this.pandocType}` + shortcutSuffix(this.shortcut)
+    }
   },
   methods: {
     customStyleDefinitionDescription(csd: CustomStyleDef) {

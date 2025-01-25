@@ -63,7 +63,7 @@ export const Div = Node.create<DivOptions>({
   addKeyboardShortcuts() {
     return {
       [SK_TOGGLE_DIV]: () =>
-        this.editor.commands.wrapIn(this.editor.schema.nodes[NODE_NAME_DIV]),
+        this.editor.commands.toggleDiv(),
     };
   },
 });

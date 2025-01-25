@@ -12,6 +12,7 @@ import {
   ACTION_SETUP_VIEWER,
   ACTION_DOCUMENT_TRANSFORM,
   BaseActionForNodeOrMark,
+  ACTION_SHOW_SEARCH_DIALOG,
 } from './actions';
 import {
   DocumentContext,
@@ -122,6 +123,14 @@ export function setActionShowExportDialog(
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey)
     useActions().setAction({ ...ACTION_SHOW_EXPORT_DIALOG, editorKey });
+}
+
+export function setActionShowSearchDialog(
+  stateOrKey: EditorState | EditorKeyType,
+) {
+  const editorKey = editorKeyFrom(stateOrKey);
+  if (editorKey)
+    useActions().setAction({ ...ACTION_SHOW_SEARCH_DIALOG, editorKey });
 }
 
 export interface ActionEditAttributesProps {

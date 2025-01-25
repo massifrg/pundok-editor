@@ -35,7 +35,7 @@
 
 <script lang="ts">
 import ToolbarButton from './ToolbarButton.vue'
-import { DEFAULT_NOTE_TYPE, NoteStyle } from '../common'
+import { DEFAULT_NOTE_TYPE, NoteStyle, shortcutSuffix } from '../common'
 import { getEditorConfiguration } from '../schema';
 import { setViewActionCloseNotes, setViewActionExpandNotes } from '../actions';
 
@@ -60,8 +60,7 @@ export default {
       return this.noteTypes[index >= 0 ? index : 0]
     },
     title() {
-      const sc = this.shortcut
-      return `insert a new ${this.defaultNoteType}` + (sc ? ` [${sc}]` : '')
+      return `insert a new ${this.defaultNoteType}` + shortcutSuffix(this.shortcut)
     }
   },
   methods: {
