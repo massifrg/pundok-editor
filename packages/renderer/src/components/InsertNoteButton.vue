@@ -1,12 +1,12 @@
 <template>
   <!-- <ToolbarButton v-if="noteTypes.length <= 1" :disabled="disabled" icon="mdi-note-plus" @click="$emit('insertNote')" /> -->
   <q-btn-dropdown auto-close icon="mdi-note-plus" color="grey-5" split dense size="sm" dropdown-icon="mdi-menu-down"
-    :disable-main-btn="disabled" :disable-dropdown="disabled" @click="$emit('insertNote')">
+    :title="title" :disable-main-btn="disabled" :disable-dropdown="disabled" @click="$emit('insertNote')">
     <q-list>
       <q-item v-for="nt in noteTypes" :key="nt" density="compact" :value="nt" :title="`insert a new ${nt}`" dense
         @click="$emit('insertNote', nt)">
         <q-item-section>
-          <q-btn icon="mdi-note-plus" :label="nt" :title="`insert ${defaultNoteType}`" no-caps
+          <q-btn icon="mdi-note-plus" :label="nt" :title="`insert a new ${nt}`" no-caps
             @click="$emit('insertNote', nt)" />
         </q-item-section>
         <q-item-section side>
@@ -40,7 +40,7 @@ import { getEditorConfiguration } from '../schema';
 import { setViewActionCloseNotes, setViewActionExpandNotes } from '../actions';
 
 export default {
-  props: ['editor', 'disabled'],
+  props: ['editor', 'disabled', 'shortcut'],
   emits: ['insertNote'],
   components: {
     ToolbarButton
@@ -56,8 +56,12 @@ export default {
       return this.noteStyles?.map(ns => ns.noteType) || [DEFAULT_NOTE_TYPE]
     },
     defaultNoteType() {
-      const index = this.noteStyles?.findIndex(ns => ns.default === true) || 0
-      return this.noteTypes[index]
+      const index = this.noteStyles?.findIndex(ns => ns.default === true)
+      return this.noteTypes[index >= 0 ? index : 0]
+    },
+    title() {
+      const sc = this.shortcut
+      return `insert a new ${this.defaultNoteType}` + (sc ? ` [${sc}]` : '')
     }
   },
   methods: {
