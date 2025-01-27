@@ -18,6 +18,7 @@ export const SK_INSERT_IMAGE = 'Mod-Shift-i';
 export const SK_EDIT_ATTRIBUTES = 'Alt-a';
 export const SK_INCLUDE_DOC = 'Alt-i';
 export const SK_SHOW_SEARCH_DIALOG = 'Mod-f';
+export const SK_DUPLICATE_NODE = 'Alt-d';
 
 // from tiptap
 export const SK_UNDO = 'Mod-z';
@@ -80,6 +81,7 @@ export const SHORTCUT: Record<string, string> = {
   SK_EDIT_ATTRIBUTES,
   SK_INCLUDE_DOC,
   SK_SHOW_SEARCH_DIALOG,
+  SK_DUPLICATE_NODE,
   SK_UNDO,
   SK_REDO,
   SK_REDO_ALT,

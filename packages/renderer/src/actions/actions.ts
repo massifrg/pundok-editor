@@ -437,6 +437,18 @@ export function actionsForNodeOrMark(
     };
     actions.push(deleteAction);
 
+    // duplicate node
+    const duplicateAction: ActionForNodeOrMark = {
+      editorKey,
+      name: 'duplicate-node',
+      label: 'duplicate',
+      icon: 'mdi-content-duplicate',
+      canDo: (editor) => editor.can().duplicateNode(pos),
+      do: (editor) => editor.commands.duplicateNode(pos),
+      nodeOrMark,
+    }
+    actions.push(duplicateAction);
+
     // unwrap contents
     actions.push({ editorKey, ...UNWRAP_BLOCKS_ACTION, nodeOrMark });
 
