@@ -1,12 +1,12 @@
 <template>
   <ToolbarButton v-if="buttonStyle == 'menubar'" v-for="index in allIndices" :key="index.indexName" :size="size"
     :styleactive="isActive('span', { indexName: index.indexName })" :title='`reference for index "${index.indexName}"`'
-    :disabled="!editor.can().addIndexRef(index)" @click="editor.chain().focus().addIndexRef(index).run()">
+    :disabled="!editor.can().addIndexRef(index)" @click="addIndexRef(index)">
     <q-icon :name="index.iconSvg || defaultIndexIconSvg()" :style="{ color: index.color || defaultIndexColor() }" />
   </ToolbarButton>
   <q-btn v-if="buttonStyle !== 'menubar'" v-for="index in allIndices" :key="index.indexName" :size="size || 'md'"
     :padding="padding || 'md'" :title='`reference for index "${index.indexName}"`'
-    :disabled="!editor.can().addIndexRef(index)" @click="editor.chain().focus().addIndexRef(index).run()">
+    :disabled="!editor.can().addIndexRef(index)" @click="addIndexRef(index)">
     <q-icon :name="index.iconSvg || defaultIndexIconSvg()" :style="{ color: index.color || defaultIndexColor() }" />
   </q-btn>
 </template>
@@ -50,6 +50,16 @@ export default {
     defaultIndexColor() {
       return DEFAULT_INDEX_COLOR
     },
+    addIndexRef(index: Index) {
+      this.editor.commands.runRepeatableCommandsChain(
+        [
+          ['focus'],
+          ['addIndexRef', index]
+        ],
+        `add reference to index "${index.indexName}"`
+      )
+      // editor.chain().focus().addIndexRef(index).run()
+    }
   }
 }
 </script>
