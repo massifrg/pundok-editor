@@ -8,7 +8,7 @@ import { isObject, isString } from 'lodash';
 import {
   Mark,
   MarkType,
-  Node as PmNode,
+  Node as ProsemirrorNode,
   NodeRange,
   NodeType,
   ResolvedPos,
@@ -33,16 +33,20 @@ import {
   NODE_NAME_DIV,
   NODE_NAME_FIGURE,
   NODE_NAME_INDEX_DIV,
+  NODE_NAME_INDEX_TERM,
   NODE_NAME_PANDOC_TABLE,
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_FOOT,
   NODE_NAME_TABLE_HEAD,
   SK_MOVE_NODE_DOWN,
+  SK_MOVE_NODE_DOWN_INSIDE,
   SK_MOVE_NODE_UP,
+  SK_MOVE_NODE_UP_INSIDE,
+  TABLE_ROLE_TABLE,
   typeNameOfElement,
 } from '../../common';
 
-export type TypeOrNode = string | NodeType | PmNode | MarkType;
+export type TypeOrNode = string | NodeType | ProsemirrorNode | MarkType;
 export const typeOrNodeName: (ton: TypeOrNode) => string = typeNameOfElement;
 
 export interface TransformedNodeOrMark {
@@ -52,7 +56,7 @@ export interface TransformedNodeOrMark {
 }
 
 export type UpdateNodeOrMarkCallback = (
-  nodeOrMark: PmNode | Mark,
+  nodeOrMark: ProsemirrorNode | Mark,
   pos?: number,
 ) => TransformedNodeOrMark | undefined;
 
@@ -61,7 +65,7 @@ export function nodeTypeOf(
   schema: Schema,
 ): NodeType | undefined {
   if (ton instanceof NodeType) return ton;
-  else if (ton instanceof PmNode) return ton.type;
+  else if (ton instanceof ProsemirrorNode) return ton.type;
   else if (ton instanceof MarkType) return undefined;
   else return schema.nodes[ton];
 }
@@ -118,7 +122,7 @@ declare module '@tiptap/core' {
        */
       deleteNodeAtPos: (
         pos: number,
-        node?: PmNode | NodeType | string,
+        node?: ProsemirrorNode | NodeType | string,
       ) => ReturnType;
 
       /**
@@ -131,7 +135,7 @@ declare module '@tiptap/core' {
        */
       insertChildToNodeAtPos: (
         pos: number,
-        child: PmNode,
+        child: ProsemirrorNode,
         index: number,
         attrs?: Attrs,
       ) => ReturnType;
@@ -139,13 +143,13 @@ declare module '@tiptap/core' {
       /**
        * appendChildToNodeAtPos(pos, node)
        */
-      appendChildToNodeAtPos: (pos: number, child: PmNode) => ReturnType;
+      appendChildToNodeAtPos: (pos: number, child: ProsemirrorNode) => ReturnType;
 
       /**
        * Moves child among its siblings (up, down, start, end)
        */
       moveChild: (
-        where: 'up' | 'down' | 'start' | 'end' | 'before' | 'after',
+        where: 'up' | 'down' | 'start' | 'end' | 'before' | 'after' | 'up-inside' | 'down-inside',
         pos?: number,
       ) => ReturnType;
 
@@ -200,9 +204,9 @@ export function updateAttributesCommand(
     let nodeType: NodeType | null = null;
     let markType: MarkType | null = null;
 
-    const isNode = !!(typeOrNode as PmNode).type;
+    const isNode = !!(typeOrNode as ProsemirrorNode).type;
     const typeOrName: string | NodeType | MarkType = isNode
-      ? (typeOrNode as PmNode).type
+      ? (typeOrNode as ProsemirrorNode).type
       : (typeOrNode as string | NodeType | MarkType);
     const schemaType = getSchemaTypeNameByName(
       typeof typeOrName === 'string' ? typeOrName : typeOrName.name,
@@ -266,6 +270,8 @@ export const HelperCommandsExtension = Extension.create({
     return {
       [SK_MOVE_NODE_UP]: () => this.editor.commands.moveChild('up'),
       [SK_MOVE_NODE_DOWN]: () => this.editor.commands.moveChild('down'),
+      [SK_MOVE_NODE_UP_INSIDE]: () => this.editor.commands.moveChild('up-inside'),
+      [SK_MOVE_NODE_DOWN_INSIDE]: () => this.editor.commands.moveChild('down-inside'),
     };
   },
 
@@ -371,7 +377,7 @@ export const HelperCommandsExtension = Extension.create({
                   matchingNodeTypeName = nodeType && nodeType.name;
                 } else if (node instanceof NodeType) {
                   matchingNodeTypeName = node.name;
-                } else if (node instanceof PmNode) {
+                } else if (node instanceof ProsemirrorNode) {
                   matchingNodeTypeName = node.type.name;
                 }
                 if (
@@ -396,7 +402,7 @@ export const HelperCommandsExtension = Extension.create({
       convertNode:
         (toNodeType: NodeType | string, nodePos?: number) =>
           ({ dispatch, editor, state, tr }) => {
-            let fromNode: PmNode | null, pos: number;
+            let fromNode: ProsemirrorNode | null, pos: number;
             if (nodePos) {
               fromNode = state.doc.nodeAt(nodePos);
               pos = nodePos;
@@ -426,7 +432,7 @@ export const HelperCommandsExtension = Extension.create({
           },
 
       insertChildToNodeAtPos:
-        (pos: number, child: PmNode, index: number = 0, attrs?: Attrs) =>
+        (pos: number, child: ProsemirrorNode, index: number = 0, attrs?: Attrs) =>
           ({ dispatch, state, tr }) => {
             const doc = state.doc;
             const node = pos < 0 ? doc : doc.nodeAt(pos);
@@ -446,149 +452,22 @@ export const HelperCommandsExtension = Extension.create({
        * appendChildToNodeAtPos(pos, node)
        */
       appendChildToNodeAtPos:
-        (pos: number, child: PmNode) =>
+        (pos: number, child: ProsemirrorNode) =>
           ({ editor }) =>
             editor.commands.insertChildToNodeAtPos(pos, child, -1),
 
       moveChild:
         (
-          where: 'up' | 'down' | 'start' | 'end' | 'before' | 'after',
+          where: 'up' | 'down' | 'start' | 'end' | 'before' | 'after' | 'up-inside' | 'down-inside',
           pos?: number,
-        ) =>
-          ({ dispatch, state, tr }) => {
-            const { doc, selection } = state;
-            let $pos: ResolvedPos;
-            let nodeToMove: PmNode | null = null;
-            // let parent: PmNode | null = null
-            // let oldIndex = -1
-            let newIndex: number | null = -1;
-            if (pos) {
-              nodeToMove = doc.nodeAt(pos);
-              $pos = doc.resolve(nodeToMove ? pos + 1 : pos);
-            } else {
-              nodeToMove =
-                selection instanceof NodeSelection && !selection.node.isInline
-                  ? selection.node
-                  : null;
-              $pos = nodeToMove
-                ? doc.resolve(selection.from + 1)
-                : selection.$from;
-            }
-            let depth = $pos.depth;
-            if (depth === 0) return false;
-            let parent = $pos.node(depth - 1);
-            let oldIndex = $pos!.index(depth - 1);
-            let offset = 0;
-            if (where === 'up' || where === 'before') offset = -1;
-            else if (where === 'down' || where === 'after') offset = 2;
-            else if (where === 'start' || where === 'end') offset = 0;
-            else return false;
-
-            function canGoUp() {
-              if (--depth >= 0) {
-                parent = $pos!.node(depth);
-                oldIndex = $pos!.index(depth);
-                nodeToMove = parent.child(oldIndex);
-                newIndex =
-                  where === 'end'
-                    ? parent.childCount
-                    : where === 'start'
-                      ? 0
-                      : oldIndex + offset;
-                return true;
-              }
-              return false;
-            }
-
-            if (nodeToMove) {
-              // if node is selected, find parent and check if it has at least 2 children
-              while (!nodeToMove || oldIndex < 0 || newIndex < 0) {
-                if (!canGoUp() || parent.childCount < 2) return false;
-              }
-            } else {
-              // go up and find a parent that has at least two children
-              while (
-                !nodeToMove ||
-                oldIndex < 0 ||
-                newIndex < 0 ||
-                newIndex > parent.childCount
-              ) {
-                if (!canGoUp()) return false;
-                while (parent.childCount < 2) {
-                  if (!canGoUp()) return false;
-                }
-              }
-            }
-            if (!parent || !nodeToMove || nodeToMove.type.spec.tableRole)
-              return false;
-            // console.log(
-            //   `node is a ${nodeToMove.type.name} and it starts at ${$pos.start(
-            //     depth,
-            //   )}`,
-            // );
-            // console.log(`parent is a ${parent.type.name}`);
-            newIndex = oldIndex;
-            switch (where) {
-              case 'up':
-              case 'before':
-                newIndex--;
-                break;
-              case 'down':
-              case 'after':
-                newIndex += 2;
-                break;
-              case 'start':
-                newIndex = 0;
-              case 'end':
-                newIndex = parent.childCount;
-              default:
-                return false;
-            }
-            // console.log(`oldIndex=${oldIndex}, newIndex=${newIndex}`);
-            if (newIndex < 0 || newIndex > parent.childCount) return false;
-            if (dispatch) {
-              let oldPos: number | undefined = undefined;
-              let newPos: number | undefined = undefined;
-              let curpos = $pos.start(depth);
-              for (let i = 0; i < parent.childCount; i++) {
-                if (i === oldIndex) oldPos = curpos;
-                if (i === newIndex) newPos = curpos;
-                curpos += parent.child(i).nodeSize;
-              }
-              if (newIndex === parent.childCount) newPos = curpos;
-              if (!oldPos || !newPos) return false;
-              const isEmptyTextSelection =
-                selection.empty && selection instanceof TextSelection;
-              const cursorOffset =
-                (isEmptyTextSelection && selection.from - oldPos) || 1;
-              // console.log(
-              //   `oldPos=${oldPos}, newPos=${newPos}, cursorOffset=${cursorOffset}`,
-              // );
-              if (oldPos > newPos) {
-                tr.delete(oldPos, oldPos + nodeToMove.nodeSize)
-                  .insert(newPos, nodeToMove)
-                  .setSelection(
-                    TextSelection.create(tr.doc, newPos + cursorOffset),
-                  );
-              } else {
-                tr.insert(newPos, nodeToMove)
-                  .delete(oldPos, oldPos + nodeToMove.nodeSize)
-                  .setSelection(
-                    TextSelection.create(
-                      tr.doc,
-                      newPos - nodeToMove.nodeSize + cursorOffset,
-                    ),
-                  );
-              }
-              dispatch(tr);
-            }
-            return true;
-          },
+        ) => where === 'up-inside' || where === 'down-inside'
+            ? moveChildInside(where, pos)
+            : moveChild(where, pos),
 
       unwrapNodeAtPos:
         (pos: number) =>
           ({ dispatch, state, tr }) => {
-            const doc: PmNode = state.doc;
+            const doc: ProsemirrorNode = state.doc;
             const container = doc.nodeAt(pos);
             if (!container) return false;
             const name = container.type.name;
@@ -640,7 +519,7 @@ export const HelperCommandsExtension = Extension.create({
   },
 });
 
-function parentCantLiveWithoutNodeAtPos(doc: PmNode, pos: number) {
+function parentCantLiveWithoutNodeAtPos(doc: ProsemirrorNode, pos: number) {
   const nodeAtPos = doc.nodeAt(pos);
   if (nodeAtPos) {
     const rpos = doc.resolve(pos);
@@ -663,4 +542,206 @@ function parentCantLiveWithoutNodeAtPos(doc: PmNode, pos: number) {
     }
   }
   return false;
+}
+
+function moveChild(where: 'up' | 'down' | 'start' | 'end' | 'before' | 'after', pos?: number): ((cp: CommandProps) => boolean) {
+  return ({ dispatch, state, tr }) => {
+    const { doc, selection } = state;
+    let $pos: ResolvedPos;
+    let nodeToMove: ProsemirrorNode | null = null;
+    // let parent: PmNode | null = null
+    // let oldIndex = -1
+    let newIndex: number | null = -1;
+    if (pos) {
+      nodeToMove = doc.nodeAt(pos);
+      $pos = doc.resolve(nodeToMove ? pos + 1 : pos);
+    } else {
+      nodeToMove =
+        selection instanceof NodeSelection && !selection.node.isInline
+          ? selection.node
+          : null;
+      $pos = nodeToMove
+        ? doc.resolve(selection.from + 1)
+        : selection.$from;
+    }
+    let depth = $pos.depth;
+    if (depth === 0) return false;
+    let parent = $pos.node(depth - 1);
+    let oldIndex = $pos!.index(depth - 1);
+    let offset = 0;
+    if (where === 'up' || where === 'before') offset = -1;
+    else if (where === 'down' || where === 'after') offset = 2;
+    else if (where === 'start' || where === 'end') offset = 0;
+    else return false;
+
+    function canGoUp() {
+      if (--depth >= 0) {
+        parent = $pos!.node(depth);
+        oldIndex = $pos!.index(depth);
+        nodeToMove = parent.child(oldIndex);
+        newIndex =
+          where === 'end'
+            ? parent.childCount
+            : where === 'start'
+              ? 0
+              : oldIndex + offset;
+        return true;
+      }
+      return false;
+    }
+
+    if (nodeToMove) {
+      // if node is selected, find parent and check if it has at least 2 children
+      while (!nodeToMove || oldIndex < 0 || newIndex < 0) {
+        if (!canGoUp() || parent.childCount < 2) return false;
+      }
+    } else {
+      // go up and find a parent that has at least two children
+      while (
+        !nodeToMove ||
+        oldIndex < 0 ||
+        newIndex < 0 ||
+        newIndex > parent.childCount
+      ) {
+        if (!canGoUp()) return false;
+        while (parent.childCount < 2) {
+          if (!canGoUp()) return false;
+        }
+      }
+    }
+    if (!parent || !nodeToMove || nodeToMove.type.spec.tableRole)
+      return false;
+    // console.log(
+    //   `node is a ${nodeToMove.type.name} and it starts at ${$pos.start(
+    //     depth,
+    //   )}`,
+    // );
+    // console.log(`parent is a ${parent.type.name}`);
+    newIndex = oldIndex;
+    switch (where) {
+      case 'up':
+      case 'before':
+        newIndex--;
+        break;
+      case 'down':
+      case 'after':
+        newIndex += 2;
+        break;
+      case 'start':
+        newIndex = 0;
+      case 'end':
+        newIndex = parent.childCount;
+      default:
+        return false;
+    }
+    // console.log(`oldIndex=${oldIndex}, newIndex=${newIndex}`);
+    if (newIndex < 0 || newIndex > parent.childCount) return false;
+    if (dispatch) {
+      let oldPos: number | undefined = undefined;
+      let newPos: number | undefined = undefined;
+      let curpos = $pos.start(depth);
+      for (let i = 0; i < parent.childCount; i++) {
+        if (i === oldIndex) oldPos = curpos;
+        if (i === newIndex) newPos = curpos;
+        curpos += parent.child(i).nodeSize;
+      }
+      if (newIndex === parent.childCount) newPos = curpos;
+      if (!oldPos || !newPos) return false;
+      const isEmptyTextSelection =
+        selection.empty && selection instanceof TextSelection;
+      const cursorOffset =
+        (isEmptyTextSelection && selection.from - oldPos) || 1;
+      // console.log(
+      //   `oldPos=${oldPos}, newPos=${newPos}, cursorOffset=${cursorOffset}`,
+      // );
+      if (oldPos > newPos) {
+        tr.delete(oldPos, oldPos + nodeToMove.nodeSize)
+          .insert(newPos, nodeToMove)
+          .setSelection(
+            TextSelection.create(tr.doc, newPos + cursorOffset),
+          );
+      } else {
+        tr.insert(newPos, nodeToMove)
+          .delete(oldPos, oldPos + nodeToMove.nodeSize)
+          .setSelection(
+            TextSelection.create(
+              tr.doc,
+              newPos - nodeToMove.nodeSize + cursorOffset,
+            ),
+          );
+      }
+      dispatch(tr);
+    }
+    return true;
+  }
+}
+
+function moveChildInside(where: 'up-inside' | 'down-inside', pos?: number): ((cp: CommandProps) => boolean) {
+  return ({ dispatch, state, tr }) => {
+    let nodeToMove: ProsemirrorNode | null = null
+    const movingUp = where === 'up-inside'
+    const { doc, selection } = state
+    const $pos = pos ? doc.resolve(pos + 1) : selection.$anchor
+    let depth = $pos.depth
+    let acceptorIndex: number
+    let acceptor: ProsemirrorNode | null = null
+    let parent: ProsemirrorNode
+    const indexOffset = movingUp ? -1 : 1
+    while (depth > 0) {
+      nodeToMove = $pos.node(depth)
+      parent = $pos.node(depth - 1)
+      acceptorIndex = $pos.index(depth - 1) + indexOffset
+      // console.log(`depth=${depth}, possible node ${nodeToMove!.type.name}, index=${$pos.index(depth - 1)}, acceptorIndex=${acceptorIndex}, parent is ${parent.type.name}`)
+      if (acceptorIndex >= 0 && acceptorIndex < parent.childCount) {
+        acceptor = parent.child(acceptorIndex)
+        // console.log(`acceptor is a ${acceptor.type.name}`)
+        if (canMoveInside(nodeToMove, acceptor))
+          break
+      }
+      depth--
+    }
+    if (!acceptor || !nodeToMove) return false
+    // console.log(`depth=${depth}, moving a ${nodeToMove!.type.name} into a ${acceptor!.type.name}`)
+    const oldPos = $pos.start(depth) - 1
+    let newPos = $pos.start(depth - 1) + 2
+    for (let i = 1; i < acceptorIndex!; i++)
+      newPos += parent!.child(i).nodeSize
+    newPos += 1 + (movingUp ? acceptor!.content.size : 0)
+
+    // console.log(`moving a ${nodeToMove!.type.name}@${oldPos} into a ${acceptor!.type.name}@${newPos}`)
+    if (depth <= 0) return false
+    if (dispatch) {
+      const isEmptyTextSelection =
+        selection.empty && selection instanceof TextSelection;
+      const cursorOffset =
+        (isEmptyTextSelection && selection.from - oldPos) || 1;
+      if (oldPos > newPos) {
+        tr.delete(oldPos, oldPos + nodeToMove.nodeSize)
+          .insert(newPos, nodeToMove)
+          .setSelection(
+            TextSelection.create(tr.doc, newPos + cursorOffset),
+          );
+      } else {
+        tr.insert(newPos, nodeToMove)
+          .delete(oldPos, oldPos + nodeToMove.nodeSize)
+          .setSelection(
+            TextSelection.create(
+              tr.doc,
+              newPos - nodeToMove.nodeSize + cursorOffset,
+            ),
+          );
+      }
+      dispatch(tr);
+    }
+    return true
+  }
+}
+
+function canMoveInside(moving: ProsemirrorNode, acceptor: ProsemirrorNode) {
+  const movName = moving.type.name
+  const accName = acceptor.type.name
+  return accName === NODE_NAME_DIV
+    || accName === NODE_NAME_FIGURE
+    || accName === NODE_NAME_BLOCKQUOTE
+    || (accName === NODE_NAME_INDEX_TERM && movName === NODE_NAME_INDEX_TERM)
 }

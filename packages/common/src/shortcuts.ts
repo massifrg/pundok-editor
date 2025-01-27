@@ -1,6 +1,8 @@
 export const SK_REPEAT_COMMAND = 'Alt-r';
 export const SK_MOVE_NODE_UP = 'Alt-ArrowUp';
 export const SK_MOVE_NODE_DOWN = 'Alt-ArrowDown';
+export const SK_MOVE_NODE_UP_INSIDE = 'Shift-Alt-ArrowUp';
+export const SK_MOVE_NODE_DOWN_INSIDE = 'Shift-Alt-ArrowDown';
 
 export const SK_SET_LINEBREAK = 'Mod-Enter';
 export const SK_SET_LINEBREAK_ALT = 'Shift-Enter';

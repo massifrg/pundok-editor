@@ -31,7 +31,7 @@ export default {
       this.useActions.setAction(action)
     },
     titleFor(action: ActionForNodeOrMark) {
-      console.log(`action tooltip!`)
+      // console.log(`action tooltip!`)
       const actionTooltip = action.tooltip
       if (actionTooltip) {
         return isString(actionTooltip)

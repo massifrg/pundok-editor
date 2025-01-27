@@ -798,5 +798,23 @@ function moveBlockActions(
       canDo: (editor) => editor.can().moveChild('end', pos),
       do: (editor, action) => editor.commands.moveChild('end', pos),
     },
+    {
+      editorKey,
+      name: 'move-inside-prev-sibling',
+      label: 'move inside previous sibling',
+      icon: 'mdi-arrow-top-right',
+      group: moveGroup,
+      canDo: (editor) => editor.can().moveChild('up-inside', pos),
+      do: (editor, action) => editor.commands.moveChild('up-inside', pos),
+    },
+    {
+      editorKey,
+      name: 'move-inside-next-sibling',
+      label: 'move inside next sibling',
+      icon: 'mdi-arrow-bottom-right',
+      group: moveGroup,
+      canDo: (editor) => editor.can().moveChild('down-inside', pos),
+      do: (editor, action) => editor.commands.moveChild('down-inside', pos),
+    },
   ];
 }
