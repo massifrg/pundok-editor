@@ -247,7 +247,10 @@ export default {
     editAttributes(e: LabeledNodeOrMark) {
       this.scrollAtElement(e)
       const editorKey = editorKeyFromState(this.editor.state)
-      if (editorKey) setActionEditAttributes(editorKey, e, this.editorAttributesTab || this.guessBetterTab(e))
+      if (editorKey)
+        setActionEditAttributes(editorKey, e, {
+          tab: this.editorAttributesTab || this.guessBetterTab(e)
+        })
     }
   }
 } as Component

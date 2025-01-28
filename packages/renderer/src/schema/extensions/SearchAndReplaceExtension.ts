@@ -12,9 +12,6 @@ import {
   search,
   setSearchState,
 } from '../helpers';
-import { chainCommands } from '@tiptap/pm/commands';
-import { Command } from '@tiptap/pm/state';
-import { TextTransform } from './TextTransformExtension';
 
 const SEARCH_AND_REPLACE_EXT_NAME = 'searchAndReplace';
 
@@ -64,37 +61,37 @@ export const SearchAndReplaceExtension = Extension.create({
     return {
       startSearch:
         (query) =>
-        ({ dispatch, tr }) => {
-          if (dispatch) dispatch(setSearchState(tr, query));
-          return true;
-        },
+          ({ dispatch, tr }) => {
+            if (dispatch) dispatch(setSearchState(tr, query));
+            return true;
+          },
       selectPrevFoundText:
         (wrap) =>
-        ({ dispatch, state }) =>
-          (wrap ? findPrev : findPrevNoWrap)(state, dispatch),
+          ({ dispatch, state }) =>
+            (wrap ? findPrev : findPrevNoWrap)(state, dispatch),
       selectNextFoundText:
         (wrap) =>
-        ({ dispatch, state }) =>
-          (wrap ? findNext : findNextNoWrap)(state, dispatch),
+          ({ dispatch, state }) =>
+            (wrap ? findNext : findNextNoWrap)(state, dispatch),
       replaceSelectedText:
         () =>
-        ({ dispatch, state }) =>
-          replaceCurrent(state, dispatch),
+          ({ dispatch, state }) =>
+            replaceCurrent(state, dispatch),
       replaceNextText:
         (wrap) =>
-        ({ dispatch, state }) =>
-          (wrap ? replaceNext : replaceNextNoWrap)(state, dispatch),
+          ({ dispatch, state }) =>
+            (wrap ? replaceNext : replaceNextNoWrap)(state, dispatch),
       replaceAll:
         () =>
-        ({ dispatch, state }) =>
-          replaceAll(state, dispatch),
+          ({ dispatch, state }) =>
+            replaceAll(state, dispatch),
       hideFoundTexts:
         () =>
-        ({ dispatch, tr }) => {
-          if (dispatch)
-            dispatch(setSearchState(tr, new SearchQuery({ search: '' })));
-          return true;
-        },
+          ({ dispatch, tr }) => {
+            if (dispatch)
+              dispatch(setSearchState(tr, new SearchQuery({ search: '' })));
+            return true;
+          },
     };
   },
 });
