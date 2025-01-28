@@ -31,6 +31,7 @@ interface NodeRef {
   pos: number;
   parent?: Node;
   index: number;
+  mark?: Mark;
 }
 
 /**
@@ -51,8 +52,21 @@ export function cssSelect(
   const doc = state.doc;
   const ast = parse(selector);
   const bases: NodeRef[] = [{ node: doc, pos: 0, index: 0 }];
-  const selected = ast ? applyRule(ast, bases, 'descendant') : [];
-  console.log(selected);
+  const refs = ast ? applyRule(ast, bases, 'descendant') : [];
+  // console.log(refs);
+  const selected: SelectedNodeOrMark[] = []
+  refs.forEach(({ node, pos, parent, index, mark }) => {
+    selected.push({
+      name: mark?.type.name || node.type.name,
+      node: mark ? undefined : node,
+      mark,
+      pos,
+      from: pos,
+      to: pos + node.nodeSize,
+      parent,
+      index
+    })
+  })
   return options?.mergeSameAdjacentMarks
     ? mergeAdjacentMarks(selected)
     : selected;
@@ -62,9 +76,9 @@ function applyRule(
   ast: AST,
   bases: NodeRef[],
   applyTo: CombinatorSelector,
-  _acc?: SelectedNodeOrMark[]
-): SelectedNodeOrMark[] {
-  let acc: SelectedNodeOrMark[] = _acc || [];
+  _acc?: NodeRef[]
+): NodeRef[] {
+  let acc: NodeRef[] = _acc || [];
   if (ast.type === 'complex') {
     return applyComplexRule(ast as Complex, bases, applyTo, acc);
   } else {
@@ -87,71 +101,59 @@ function applyComplexRule(
   complex: Complex,
   bases: NodeRef[],
   combsel: CombinatorSelector,
-  _acc?: SelectedNodeOrMark[]
-): SelectedNodeOrMark[] {
+  _acc?: NodeRef[]
+): NodeRef[] {
   const { left, right, combinator } = complex;
   if (!isSupportedCombinator(combinator))
     throw new Error(
       `combinator "${combinator}" is not supported in Complex AST`
     );
-  const newBases = selectedToBases(applyRule(left, bases, combsel));
+  const newBases = applyRule(left, bases, combsel);
   const newCombsel = combinatorToApplyTo[combinator];
   return applyRule(right, newBases, newCombsel, _acc);
-}
-
-function selectedToBases(selected: SelectedNodeOrMark[]): NodeRef[] {
-  const bases: NodeRef[] = [];
-  selected.forEach((s) => {
-    if (s.node)
-      bases.push({
-        node: s.node,
-        pos: s.pos + 1,
-        parent: s.parent,
-        index: s.index!,
-      });
-  });
-  return bases;
 }
 
 function applyNotComplexRule(
   ast: AST,
   bases: NodeRef[],
   combsel: CombinatorSelector,
-  _acc?: SelectedNodeOrMark[]
-): SelectedNodeOrMark[] {
-  let acc: SelectedNodeOrMark[] = _acc || [];
+  _acc?: NodeRef[]
+): NodeRef[] {
+  let acc: NodeRef[] = _acc || [];
   const goDeeper = combsel === 'descendant';
   switch (combsel) {
-    case 'descendant':
     case 'child':
-      bases.forEach(({ node: base, pos: basePos }) => {
-        base.descendants((node, p, parent, index) => {
-          const pos = basePos + p;
-          const typeName = node.type.name;
-          if (nomMatchesAST(node, ast))
-            acc.push({
-              name: typeName,
-              node,
-              pos,
-              from: pos,
-              to: pos + node.nodeSize,
-              parent: parent || undefined,
-              index,
-            });
-          node.marks.forEach((mark) => {
-            if (nomMatchesAST(mark, ast))
+    case 'descendant':
+      bases.forEach((curBase) => {
+        const { node: base, mark, parent, index: parentIndex } = curBase
+        const basePos = curBase.pos > 0 ? curBase.pos + 1 : 0
+        if (mark) {
+          const child = parent?.child(parentIndex)
+          const m = child?.marks.find((m) => nomMatchesAST(m, ast))
+          if (m) acc.push({ ...curBase, mark: m })
+        } else {
+          base.descendants((node, p, parent, index) => {
+            const pos = basePos + p;
+            if (nomMatchesAST(node, ast))
               acc.push({
-                name: mark.type.name,
-                mark,
+                node,
                 pos,
-                from: pos,
-                to: pos + node.nodeSize,
                 parent: parent || undefined,
                 index,
               });
+            node.marks.forEach((mark) => {
+              if (nomMatchesAST(mark, ast))
+                acc.push({
+                  mark,
+                  node,
+                  pos: pos,
+                  parent: parent || undefined,
+                  index,
+                });
+            });
+            return goDeeper;
           });
-          return goDeeper;
-        });
+        }
       });
       break;
     case 'adjacent-sibling':
@@ -162,20 +164,28 @@ function applyNotComplexRule(
             combsel === 'adjacent-sibling'
               ? Math.min(index + 2, parent.childCount)
               : parent.childCount;
-          let curPos = pos + node.nodeSize - 1;
+          let curPos = (pos > 0 ? pos + 1 : 0) + node.nodeSize - 1;
           for (let i = index + 1; i < limit; i++) {
             const sibling = parent.child(i);
             const nextPos = curPos + sibling.nodeSize;
             if (nomMatchesAST(sibling, ast)) {
               acc.push({
-                name: sibling.type.name,
                 node: sibling,
                 pos: curPos,
-                from: curPos,
-                to: nextPos,
                 parent: parent || undefined,
                 index: i,
               });
+            } else {
+              const mark = sibling.marks.find(m => nomMatchesAST(m, ast))
+              if (mark) {
+                acc.push({
+                  mark,
+                  node: sibling,
+                  pos: curPos,
+                  parent: parent || undefined,
+                  index: i
+                })
+              }
             }
             curPos = nextPos;
           }
