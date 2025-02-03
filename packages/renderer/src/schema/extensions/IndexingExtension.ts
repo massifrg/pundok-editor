@@ -12,6 +12,7 @@ import {
   Index,
   IndexRefPlacement,
   NODE_NAME_INDEX_REF,
+  SK_SET_INDEX_REF,
   indexRefDecorationCss,
 } from '../../common';
 import { DEFAULT_INDEX_NAME } from '../../common';
@@ -23,13 +24,14 @@ const INDEXING_PLUGIN = 'indexing-plugin';
 export const INDEXING_DECORATION_PREFIX = 'indexing';
 const META_REDECORATE_INDEX_REFS = 'redecorate-index-refs';
 const META_DETECT_DOCUMENT_INDICES = 'detect-document-indices';
+const META_SET_LAST_REFERENCED_INDEX = 'set-last-referenced-index';
 
 export interface IndexingOptions { }
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     indexing: {
-      addIndexRef: (index: Index) => ReturnType;
+      addIndexRef: (index?: Index) => ReturnType;
       redecorateIndexRefs: () => ReturnType;
       detectDocumentIndices: () => ReturnType;
     };
@@ -123,6 +125,7 @@ interface IndexingPluginState {
   decorationSet: DecorationSet;
   indices: Index[] | undefined;
   docIndices: Index[] | undefined;
+  lastReferenced: Index | undefined;
 }
 
 const indexingPluginKey = new PluginKey(INDEXING_PLUGIN);
@@ -155,11 +158,12 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
               decorationSet: DecorationSet.empty,
               indices: undefined,
               docIndices: undefined,
+              lastReferenced: undefined,
             };
           },
           apply(tr, pluginState, oldState, newState): IndexingPluginState {
             const doc: PmNode = tr.doc;
-            let { decorationSet, indices, docIndices } = pluginState;
+            let { decorationSet, indices, docIndices, lastReferenced } = pluginState;
             if (
               indices === undefined ||
               tr.getMeta(META_DETECT_DOCUMENT_INDICES)
@@ -199,6 +203,7 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
                   .add(doc, indexDecos),
                 indices,
                 docIndices,
+                lastReferenced,
               };
             }
 
@@ -227,10 +232,17 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
               );
               updatedDecos = updatedDecos.map(mapping, doc).add(doc, newDecos);
             }
+
+            // set last referenced index (defaults to the first index)
+            lastReferenced = tr.getMeta(META_SET_LAST_REFERENCED_INDEX) || lastReferenced
+            if (!lastReferenced && indices && indices.length > 0)
+              lastReferenced = indices[0]
+
             return {
               decorationSet: updatedDecos,
               indices,
               docIndices,
+              lastReferenced
             };
           },
         },
@@ -241,10 +253,12 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
   addCommands() {
     return {
       addIndexRef:
-        (index: Index) =>
+        (optIndex?: Index) =>
           ({ tr, state, dispatch }) => {
             const indexRefType = state.schema.nodes[NODE_NAME_INDEX_REF];
             if (!indexRefType) return false;
+            const index = optIndex || indexingPluginKey.getState(state).lastReferenced
+            if (!index) return false
             const indexName = index.indexName || DEFAULT_INDEX_NAME;
             const { from, to, empty } = state.selection;
             const marks = state.doc.resolve(from).marks();
@@ -260,7 +274,8 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
                   null,
                   marks,
                 );
-                tr.insert(from, indexRef);
+                tr.insert(from, indexRef)
+                  .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
               }
             } else {
               if (index.onlyEmpty === true) return false;
@@ -281,7 +296,8 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
                 );
                 const where: IndexRefPlacement =
                   index.putIndexRef || DEFAULT_PUT_INDEX_REF;
-                tr.insert(where === 'before' ? from : to, indexRef);
+                tr.insert(where === 'before' ? from : to, indexRef)
+                  .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
               }
             }
             return true;
@@ -304,6 +320,12 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
           },
     };
   },
+
+  addKeyboardShortcuts() {
+    return {
+      [SK_SET_INDEX_REF]: () => this.editor.commands.addIndexRef()
+    }
+  }
 });
 
 function indexedTextWithoutAtoms(

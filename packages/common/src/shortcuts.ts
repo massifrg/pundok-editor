@@ -20,6 +20,7 @@ export const SK_TOGGLE_LINK = 'Mod-l';
 export const SK_INSERT_ANCHOR = 'Alt-l';
 export const SK_INSERT_NOTE = 'Alt-n';
 export const SK_INSERT_IMAGE = 'Mod-Shift-i';
+export const SK_SET_INDEX_REF = 'Alt-x';
 export const SK_EDIT_ATTRIBUTES = 'Alt-a';
 export const SK_INCLUDE_DOC = 'Alt-i';
 export const SK_SHOW_SEARCH_DIALOG = 'Mod-f';
@@ -69,6 +70,9 @@ export const SHORTCUT: Record<string, string> = {
   SK_REPEAT_COMMAND,
   SK_MOVE_NODE_UP,
   SK_MOVE_NODE_DOWN,
+  SK_SELECT_PREV,
+  SK_SELECT_NEXT,
+  SK_REPLACE_AND_SELECT_NEXT,
   SK_SET_LINEBREAK,
   SK_SET_LINEBREAK_ALT,
   SK_SET_SOFTBREAK,
@@ -83,6 +87,7 @@ export const SHORTCUT: Record<string, string> = {
   SK_INSERT_ANCHOR,
   SK_INSERT_NOTE,
   SK_INSERT_IMAGE,
+  SK_SET_INDEX_REF,
   SK_EDIT_ATTRIBUTES,
   SK_INCLUDE_DOC,
   SK_SHOW_SEARCH_DIALOG,
