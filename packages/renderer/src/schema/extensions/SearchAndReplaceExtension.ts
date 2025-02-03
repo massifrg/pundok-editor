@@ -12,6 +12,13 @@ import {
   search,
   setSearchState,
 } from '../helpers';
+import { SK_REPLACE_AND_SELECT_NEXT, SK_SELECT_NEXT, SK_SELECT_PREV } from '../../common';
+import {
+  ACTION_REPLACE_AND_SELECT_NEXT,
+  ACTION_SELECT_NEXT,
+  ACTION_SELECT_PREV,
+  setActionCommand
+} from '../../actions';
 
 const SEARCH_AND_REPLACE_EXT_NAME = 'searchAndReplace';
 
@@ -94,4 +101,12 @@ export const SearchAndReplaceExtension = Extension.create({
           },
     };
   },
+
+  addKeyboardShortcuts() {
+    return {
+      [SK_SELECT_PREV]: () => setActionCommand(this.editor.state, ACTION_SELECT_PREV),
+      [SK_SELECT_NEXT]: () => setActionCommand(this.editor.state, ACTION_SELECT_NEXT),
+      [SK_REPLACE_AND_SELECT_NEXT]: () => setActionCommand(this.editor.state, ACTION_REPLACE_AND_SELECT_NEXT),
+    }
+  }
 });

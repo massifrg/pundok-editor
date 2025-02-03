@@ -213,6 +213,25 @@ export const ACTION_SHOW_SEARCH_DIALOG: BaseEditorAction = {
   icon: 'mdi-magnify',
 };
 
+export const ACTION_SELECT_PREV: BaseEditorAction = {
+  name: 'select-prev',
+  label: 'select previous',
+  icon: 'mdi-chevron-left',
+};
+
+export const ACTION_SELECT_NEXT: BaseEditorAction = {
+  name: 'select-next',
+  label: 'select next',
+  icon: 'mdi-chevron-right',
+};
+
+export const ACTION_REPLACE_AND_SELECT_NEXT: BaseEditorAction = {
+  name: 'replace-and-select-next',
+  label: 'replace and select next',
+  icon: 'mdi-autorenew',
+  iconRight: 'mdi-chevron-right',
+};
+
 export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
   name: 'repeat-change',
   label: 'repeat change',

@@ -3,6 +3,9 @@ export const SK_MOVE_NODE_UP = 'Alt-ArrowUp';
 export const SK_MOVE_NODE_DOWN = 'Alt-ArrowDown';
 export const SK_MOVE_NODE_UP_INSIDE = 'Shift-Alt-ArrowUp';
 export const SK_MOVE_NODE_DOWN_INSIDE = 'Shift-Alt-ArrowDown';
+export const SK_SELECT_PREV = 'Alt-ArrowLeft';
+export const SK_SELECT_NEXT = 'Alt-ArrowRight';
+export const SK_REPLACE_AND_SELECT_NEXT = 'Shift-Alt-ArrowRight';
 
 export const SK_SET_LINEBREAK = 'Mod-Enter';
 export const SK_SET_LINEBREAK_ALT = 'Shift-Enter';

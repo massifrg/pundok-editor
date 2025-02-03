@@ -80,7 +80,7 @@
       </q-card-section>
       <q-card-section horizontal class="q-ma-xs">
         <q-chip :color="foundItemsColor" text-color="white" icon="mdi-text-search" :title="foundItemsText">{{
-    currentFoundItemText }}</q-chip>
+          currentFoundItemText }}</q-chip>
         <q-space />
         <q-toggle v-model="showIndicesButtons" icon="mdi-cursor-pointer" title="show buttons for indices" />
       </q-card-section>
@@ -139,6 +139,13 @@ import IndicesButtons from './IndicesButtons.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 import { SearchQuery, SearchResultFilter, getMatchHighlights } from '../schema/helpers';
 import { Mark } from '@tiptap/pm/model';
+import { useActions } from '../stores';
+import { mapState } from 'pinia';
+import {
+  ACTION_REPLACE_AND_SELECT_NEXT,
+  ACTION_SELECT_NEXT,
+  ACTION_SELECT_PREV
+} from '../actions';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
 
@@ -195,6 +202,7 @@ export default {
     };
   },
   computed: {
+    ...mapState(useActions, ['lastAction']),
     configuration() {
       return getEditorConfiguration(this.editor)
     },
@@ -293,6 +301,14 @@ export default {
     },
     optionWholeWord() {
       this.startSearch()
+    },
+    lastAction(action) {
+      if (action.name === ACTION_SELECT_PREV.name)
+        this.prevFound()
+      else if (action.name === ACTION_SELECT_NEXT.name)
+        this.nextFound()
+      else if (action.name === ACTION_REPLACE_AND_SELECT_NEXT.name)
+        this.replaceNextText()
     }
   },
   methods: {

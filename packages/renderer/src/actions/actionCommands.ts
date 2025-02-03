@@ -13,6 +13,7 @@ import {
   ACTION_DOCUMENT_TRANSFORM,
   BaseActionForNodeOrMark,
   ACTION_SHOW_SEARCH_DIALOG,
+  BaseEditorAction,
 } from './actions';
 import {
   DocumentContext,
@@ -225,4 +226,20 @@ export function setActionTransformDocument(
       editorKey,
       props: { transform },
     });
+}
+
+export function setActionCommand(
+  stateOrKey: EditorState | EditorKeyType,
+  action: BaseEditorAction,
+  options?: Record<string, any>): boolean {
+  const editorKey = editorKeyFrom(stateOrKey);
+  if (editorKey) {
+    useActions().setAction({
+      ...action,
+      ...options,
+      editorKey,
+    });
+    return true
+  }
+  return false
 }
