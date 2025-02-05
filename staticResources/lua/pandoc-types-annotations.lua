@@ -6,9 +6,9 @@ with [Lua Language Server](https://luals.github.io).
 Just put the following line in your sources to get help about types by LuaLs:
 ---@module "pandoc-types-annotations"
 
-This is version 0.1.1; you can look for updates of this file at:
+This is version 0.3.0; you can look for updates of this file at:
 https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pandoc-types-annotations.lua
-]]--
+]] --
 
 ---@class List<T>: {[integer]: T} A Pandoc List.
 
@@ -28,12 +28,17 @@ https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pan
 
 ---@class Block: WithTag A Pandoc `Block`.
 ---@field content List The content of the Block.
+---@field walk fun(self: Block, filter: Filter)
 
 ---@class Inline: WithTag A Pandoc `Inline`.
 ---@field content List The content of the Inline.
+---@field walk fun(self: Inline, filter: Filter)
 
----@alias Blocks List<Block>
----@alias Inlines List<Inline>
+---@class Blocks: List<Block>
+---@field walk fun(self: Blocks, filter: Filter)
+
+---@class Inlines: List<Inlines>
+---@field walk fun(self: Inlines, filter: Filter)
 
 ---@class Plain: Block A Pandoc `Plain`.
 ---@field content Blocks
@@ -80,7 +85,7 @@ https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pan
 ---@field level integer
 ---@field content Inlines
 
----@class HorizontalRule A Pandoc `HorizontalRule`.
+---@class HorizontalRule: Block A Pandoc `HorizontalRule`.
 
 ---@class Caption A Pandoc `Table` or `Figure` caption
 ---@field long Blocks
@@ -178,6 +183,7 @@ https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pan
 ---@field citations List<Citation>
 
 ---@class Code: Inline,WithAttr A Pandoc `Code`.
+---@field text string
 
 ---@class Space: Inline A Pandoc `Space`.
 
@@ -236,6 +242,7 @@ https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pan
 ---@class Pandoc
 ---@field blocks Blocks
 ---@field meta Meta
+---@field walk fun(self: Pandoc, filter: Filter)
 
 ---@class ChunkedDoc
 ---@field chunks Chunk[] List of chunks that make up the document.
@@ -261,40 +268,41 @@ https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pan
 ---@class Filter
 ---@field traverse?       "topdown"|"typewise" Traversal order of this filter (default: `typewise`).
 ---@field Pandoc?         fun(doc: Pandoc): Pandoc|nil `nil` = leave untouched.
----@field Blocks?         fun(blocks: List): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Inlines?        fun(inlines: List): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Plain?          fun(plain: Plain): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Para?           fun(para: Para): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field LineBlock?      fun(lineblock: LineBlock): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
+---@field Blocks?         fun(blocks: Blocks): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Inlines?        fun(inlines: Inlines): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Plain?          fun(plain: Plain): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Para?           fun(para: Para): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field LineBlock?      fun(lineblock: LineBlock): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
 ---@field RawBlock?       fun(rawblock: RawBlock): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field OrderedList?    fun(orderedlist: OrderedList): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field BulletList?     fun(bulletlist: BulletList): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field DefinitionList? fun(definitionlist: DefinitionList): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Header?         fun(header: Header): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete. `nil` = leave untouched, `EmptyList` = delete.
+---@field CodeBlock?      fun(codeblock: CodeBlock): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
+---@field OrderedList?    fun(orderedlist: OrderedList): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field BulletList?     fun(bulletlist: BulletList): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field DefinitionList? fun(definitionlist: DefinitionList): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Header?         fun(header: Header): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete. `nil` = leave untouched, `EmptyList` = delete.
 ---@field HorizontalRule? fun(): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Table?          fun(): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Figure?         fun(): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Div?            fun(div: Div): BlockFilterResult `nil` = leave untouched, `EmptyList` = delete.
+---@field Table?          fun(table: Table): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Figure?         fun(figure: Figure): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Div?            fun(div: Div): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
 ---@field Str?            fun(str: Str): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Emph?           fun(emph: Emph): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Underline?      fun(underline: Underline): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Strong?         fun(strong: Strong): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Strikeout?      fun(strikeout: Strikeout): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Superscript?    fun(superscript: Superscript): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Subscript?      fun(subscript: Subscript): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field SmallCaps?      fun(smallcaps: SmallCaps): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Quoted?         fun(quoted: Quoted): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Cite?           fun(cite: Cite): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
+---@field Emph?           fun(emph: Emph): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Underline?      fun(underline: Underline): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Strong?         fun(strong: Strong): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Strikeout?      fun(strikeout: Strikeout): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Superscript?    fun(superscript: Superscript): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Subscript?      fun(subscript: Subscript): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field SmallCaps?      fun(smallcaps: SmallCaps): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Quoted?         fun(quoted: Quoted): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Cite?           fun(cite: Cite): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
 ---@field Code?           fun(code: Code): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
 ---@field Space?          fun(): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
 ---@field SoftBreak?      fun(): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
 ---@field LineBreak?      fun(): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Math?           fun(): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
+---@field Math?           fun(math: Math): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
 ---@field RawInline?      fun(rawinline: RawInline): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Link?           fun(link: Link): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Image?          fun(image: Image): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Note?           fun(note: Note): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
----@field Span?           fun(span: Span): InlineFilterResult `nil` = leave untouched, `EmptyList` = delete.
+---@field Link?           fun(link: Link): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Image?          fun(image: Image): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Note?           fun(note: Note): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
+---@field Span?           fun(span: Span): InlineFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
 
 ---@class Template An opaque object holding a compiled template.
 
