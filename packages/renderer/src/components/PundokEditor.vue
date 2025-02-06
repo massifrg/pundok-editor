@@ -154,6 +154,7 @@ import { useQuasar } from 'quasar'
 import { Component } from 'vue';
 import { EditorGUIPropsClass } from './EditorGUIProps'
 import { PendingOperationExtraValue } from './helpers/pending';
+import { mergeIndices } from '../schema/helpers/indices';
 
 const EMPTY_DOCUMENT = '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}'
 
@@ -692,7 +693,12 @@ export default {
       const state = this.editorState()
       if (state) {
         const document = state.doc;
-        const indices = this.docState()?.configuration?.indices
+        // const indices = this.docState()?.configuration?.indices
+        const indexingState = getIndexingState(state)
+        const indices = mergeIndices(
+          indexingState?.indices || this.docState()?.configuration?.indices,
+          indexingState?.docIndices
+        )
         return nodeToPandocJsonString(document, {
           indices,
           apiVersion: PANDOC_TYPES_VERSION,
