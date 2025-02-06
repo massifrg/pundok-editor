@@ -6,11 +6,14 @@ import { IndexRefView } from '../../components';
 import {
   DEFAULT_INDEX_NAME,
   DEFAULT_INDEX_REF_CLASS,
+  Index,
   INDEX_NAME_ATTR,
   INDEX_RANGE_ATTR,
   INDEXED_TEXT_ATTR,
+  NODE_NAME_EMPTY_SPAN,
   NODE_NAME_INDEX_REF,
 } from '../../common';
+import { documentIndices } from '../helpers/indices';
 
 export const INDEX_RANGE_START_CLASS = 'index-start';
 export const INDEX_RANGE_STOP_CLASS = 'index-stop';
@@ -25,6 +28,7 @@ declare module '@tiptap/core' {
         refNode: PmNode,
         propagate: (refNode: PmNode, node: PmNode) => boolean,
       ) => ReturnType;
+      fixIndexRefs: () => ReturnType;
     };
   }
 }
@@ -157,6 +161,37 @@ export const IndexRef = Node.create<IndexRefOptions>({
             }
             return true;
           },
+      fixIndexRefs: () => ({ dispatch, state, tr }) => {
+        const { doc, schema } = state
+        const indices = documentIndices(doc)
+        if (indices.length === 0)
+          return false
+        const indexRefType = schema.nodes[NODE_NAME_INDEX_REF]
+        if (!indexRefType)
+          return false
+        if (dispatch) {
+          const positions: number[] = []
+          const refClassToIndex: Record<string, Index> = {}
+          indices.forEach(index => {
+            refClassToIndex[index.refClass] = index
+          })
+          doc.descendants((node, pos) => {
+            const classes: string[] = node.attrs?.classes
+            if (classes && node.type.name === NODE_NAME_EMPTY_SPAN && classes.find(c => !!refClassToIndex[c]))
+              positions.push(pos)
+          })
+          if (positions.length === 0)
+            return false
+          positions.sort((p1, p2) => p2 - p1)
+          positions.forEach(pos => {
+            const node = doc.nodeAt(pos)
+            if (node)
+              tr.setNodeMarkup(pos, indexRefType, node.attrs, node.marks)
+          })
+          dispatch(tr)
+        }
+        return true
+      }
     };
   },
 });

@@ -164,10 +164,7 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
           apply(tr, pluginState, oldState, newState): IndexingPluginState {
             const doc: PmNode = tr.doc;
             let { decorationSet, indices, docIndices, lastReferenced } = pluginState;
-            if (
-              indices === undefined ||
-              tr.getMeta(META_DETECT_DOCUMENT_INDICES)
-            ) {
+            if (indices === undefined || tr.getMeta(META_DETECT_DOCUMENT_INDICES)) {
               docIndices = documentIndices(doc);
             }
             const docStateUpdate: DocStateUpdate = tr.getMeta(

@@ -528,6 +528,7 @@ export default {
           .fixPandocTables(true)
           .fixAutoDelimiters()
           .fixCites()
+          .fixIndexRefs()
           .scrollIntoViewAtTop()
           .run()
         // }, 2000)

@@ -31,10 +31,8 @@ export default {
     allIndices(): Index[] {
       if (this.editor) {
         const indexingState = getIndexingState(this.editor.state)
-        if (indexingState) {
-          const docIndices = indexingState.indices || []
-          return mergeIndices(docIndices, this.indices)
-        }
+        if (indexingState)
+          return mergeIndices(indexingState.indices, indexingState.docIndices)
       }
       return []
     },
