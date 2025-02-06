@@ -189,7 +189,7 @@
             @update-attribute="updateAttribute" @commit="doChange" />
           <q-toggle v-model="optionPropagateIdref" label="propagate idref to the refs with the same indexed text" />
           <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset idref" size="xs" @click="resetAttribute('idref')" />
+            <q-btn icon="mdi-reload" title="reset idref" size="xs" @click="resetKvAttribute('idref')" />
           </q-card-actions>
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute(indexNameAttr())" :name="indexNameAttr()">
@@ -519,6 +519,9 @@ export default {
       } else if (this.hasAttribute(attrName)) {
         this.updateAttribute(attrName, this.originalAttrs[attrName]);
       }
+    },
+    resetKvAttribute(kvAttrName: string) {
+      this.updateKvAttribute(kvAttrName, this.originalAttrs.kv[kvAttrName]);
     },
     resetAllAttributes() {
       Object.keys(this.originalAttrs).forEach(attrName => {
