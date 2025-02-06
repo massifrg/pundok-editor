@@ -11,8 +11,16 @@
 
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';
-import { DEFAULT_INDEX_COLOR, DEFAULT_INDEX_ICON_SVG, DEFAULT_INDEX_NAME, Index, INDEX_NAME_ATTR, INDEXED_TEXT_ATTR } from '../../common';
-import { getEditorConfiguration } from '../../schema';
+import {
+  DEFAULT_INDEX_COLOR,
+  DEFAULT_INDEX_ICON_SVG,
+  DEFAULT_INDEX_NAME,
+  Index,
+  INDEX_NAME_ATTR,
+  INDEXED_TEXT_ATTR
+} from '../../common';
+import { getEditorConfiguration, getIndexingState } from '../../schema';
+import { mergeIndices } from '../../schema/helpers/indices';
 
 export default {
   components: {
@@ -27,7 +35,11 @@ export default {
       return getEditorConfiguration(this.editor as Editor)
     },
     indices(): Index[] {
-      return this.configuration?.indices || []
+      const state = this.editor.state
+      const indexingState = state && getIndexingState(state)
+      return indexingState
+        ? mergeIndices(indexingState.indices || [], indexingState.docIndices || [])
+        : this.configuration?.indices || []
     },
     index() {
       const indexName = this.node.attrs?.kv[INDEX_NAME_ATTR];

@@ -163,9 +163,12 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
           },
           apply(tr, pluginState, oldState, newState): IndexingPluginState {
             const doc: PmNode = tr.doc;
+            let redecorate = false
             let { decorationSet, indices, docIndices, lastReferenced } = pluginState;
             if (indices === undefined || tr.getMeta(META_DETECT_DOCUMENT_INDICES)) {
+              const docIndicesCount = docIndices ? docIndices.length : 0
               docIndices = documentIndices(doc);
+              redecorate = docIndices.length !== docIndicesCount
             }
             const docStateUpdate: DocStateUpdate = tr.getMeta(
               META_UPDATE_DOC_STATE,
@@ -179,7 +182,8 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
               }
             }
             let updatedDecos: DecorationSet = decorationSet;
-            if (tr.getMeta(META_REDECORATE_INDEX_REFS)) {
+            redecorate = redecorate || tr.getMeta(META_REDECORATE_INDEX_REFS)
+            if (redecorate) {
               updatedDecos = updatedDecos.remove(
                 updatedDecos.find(
                   undefined,

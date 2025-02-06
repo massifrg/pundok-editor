@@ -4,6 +4,7 @@ import {
   DEFAULT_INDEX_REF_CLASS,
   DEFAULT_PUT_INDEX_REF,
   Index,
+  INDEX_COLORS_PALETTE,
   INDEX_NAME_ATTR,
   INDEX_PUT_INDEX_REF_ATTR,
   INDEX_REF_CLASS_ATTR,
@@ -31,14 +32,18 @@ export function mergeIndices(
     if (foundIndex >= 0) {
       const found: Record<string, any> = merged[foundIndex]
       for (const k in index) {
-        if (!found.hasOwnProperty(k))
-          found[k] = (index as Record<string, any>)[k]
+        if (!found.hasOwnProperty(k)) {
+          if (index.hasOwnProperty(k)) {
+            found[k] = (index as Record<string, any>)[k]
+          }
+        }
       }
     } else {
       merged.push(index)
     }
   })
-  return merged
+  let colorIndex = 0;
+  return merged.map(index => index.color ? index : { ...index, color: INDEX_COLORS_PALETTE[colorIndex++ % INDEX_COLORS_PALETTE.length] })
 }
 
 /**
