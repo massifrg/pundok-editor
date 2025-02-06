@@ -126,6 +126,7 @@ export const PundokEditorUtilsExtension =
                     },
                     { tab: 'idref' },
                   );
+                  return true
                 case NODE_NAME_IMAGE:
                   setActionEditAttributes(
                     editorKey,
