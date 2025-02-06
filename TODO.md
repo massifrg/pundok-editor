@@ -86,7 +86,7 @@
 
 - convert text to tables and tables to text
 
-- CTRL+F to open search dialog
+- ~~CTRL+F to open search dialog~~
 
 - default classes for Blocks like Headers, Figure, Div
 
@@ -94,3 +94,7 @@
 
 - see if it's possible to allow marks on Code Mark
   (see pandoc testsuite.native, that has a quoted code)
+
+- native file open/save dialogs
+
+- remove duplication of indices in DocState and IndexingState
