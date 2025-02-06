@@ -83,10 +83,7 @@ import {
   INDEX_RANGE_STOP,
   INDEX_RANGE_STOP_CLASS,
 } from '../nodes/IndexRef';
-import { AutoDelimiter } from '../extensions/AutoDelimitersExtension';
-import { ShortCaption } from '../nodes';
 import { PundokCitation } from './citation';
-import { Cite } from '../marks';
 
 type PmAttrs = Record<string, any>;
 
