@@ -24,10 +24,18 @@ export const INDEX_RANGE_STOP = 'STOP';
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     indexRef: {
+      /**
+       * Copy the `idref` value of a reference `IndexRef` 
+       * @param refNode The `IndexRef` node to be used as reference.
+       * @param propagate A function that says whether to copy the `idref` of a reference `IndexRef` to another one.
+       */
       propagateIdref: (
         refNode: PmNode,
         propagate: (refNode: PmNode, node: PmNode) => boolean,
       ) => ReturnType;
+      /**
+       * Transform all the `EmptySpan` nodes with a suitable class for index references into `IndexRef` nodes.
+       */
       fixIndexRefs: () => ReturnType;
     };
   }

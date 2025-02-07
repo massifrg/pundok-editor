@@ -3,6 +3,7 @@ import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import {
   INDEX_CLASS,
   INDEX_NAME_ATTR,
+  NODE_NAME_DIV,
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM
 } from '../../common';
@@ -10,6 +11,15 @@ import {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     indexDiv: {
+      /**
+       * Transform all the `Div` nodes with a `INDEX_CLASS` into an `IndexDiv`.
+       */
+      fixIndexDivs: () => ReturnType;
+      /**
+       * Propagate the `INDEX_NAME_ATTR` attribute of an `IndexDiv` to its `IndexTerm` descendants.
+       * @param indexPos When specified, work only on the `IndexDiv` at `indexPos`,
+       *                 otherwise work on the `IndexDiv` nodes in the selection.
+       */
       propagateIndexNameToTerms: (indexPos?: number) => ReturnType;
     };
   }
@@ -43,6 +53,29 @@ export const IndexDiv = Node.create<IndexDivOptions>({
 
   addCommands() {
     return {
+      fixIndexDivs: () => ({ dispatch, state, tr }) => {
+        const { doc, schema } = state
+        const indexDivType = schema.nodes[NODE_NAME_INDEX_DIV]
+        if (!indexDivType) return false
+        if (dispatch) {
+          const positions: number[] = []
+          doc.descendants((node, pos) => {
+            const classes = node.attrs?.classes || []
+            if (node.type.name === NODE_NAME_DIV && classes.indexOf(INDEX_CLASS) >= 0)
+              positions.push(pos)
+          })
+          if (positions.length === 0)
+            return false
+          positions.sort((p1, p2) => p2 - p1)
+          positions.forEach(pos => {
+            const node = doc.nodeAt(pos)
+            if (node)
+              tr.setNodeMarkup(pos, indexDivType, node.attrs)
+          })
+          dispatch(tr)
+        }
+        return true
+      },
       propagateIndexNameToTerms:
         (indexPos?: number) =>
           ({ dispatch, state, tr }) => {

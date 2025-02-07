@@ -5,13 +5,24 @@ import {
   INDEX_NAME_ATTR,
   INDEX_TERM_CLASS,
   NODE_NAME_DIV,
+  NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM,
 } from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     indexTerm: {
+      /**
+       * Transform all the `Div` nodes with a `INDEX_TERM_CLASS` into an `IndexTerm`.
+       */
+      fixIndexTerms: () => ReturnType;
+      /**
+       * Transform an ordinary `Div` node (at `selection.from`) into an `IndexTerm`.
+       */
       convertDivToIndexTerm: () => ReturnType;
+      /**
+       * Transform an `IndexTerm` (at `selection.from`) into an ordinary `Div` node.
+       */
       convertIndexTermToDiv: () => ReturnType;
     };
   }
@@ -72,6 +83,35 @@ export const IndexTerm = Node.create<IndexTermOptions>({
 
   addCommands() {
     return {
+      fixIndexTerms: () => ({ dispatch, state, tr }) => {
+        const { doc, schema } = state
+        const indexTermType = schema.nodes[NODE_NAME_INDEX_TERM]
+        if (!indexTermType) return false
+        if (dispatch) {
+          const positions: number[] = []
+          doc.descendants((node, pos, parent) => {
+            const isParentIndex = parent?.type.name === NODE_NAME_INDEX_DIV
+            const isParentTerm = parent?.type.name === NODE_NAME_INDEX_TERM
+            const classes = node.attrs?.classes || []
+            const mustBeTerm = node.type.name === NODE_NAME_DIV && classes.indexOf(INDEX_TERM_CLASS) >= 0
+            if ((isParentIndex || isParentTerm) && mustBeTerm)
+              positions.push(pos)
+          })
+          if (positions.length === 0)
+            return false
+          positions.sort((p1, p2) => p2 - p1)
+          positions.forEach(pos => {
+            const node = doc.nodeAt(pos)
+            if (node) {
+              const classes = node.attrs?.classes || []
+              if (classes.indexOf(INDEX_TERM_CLASS) < 0) classes.push(INDEX_TERM_CLASS)
+              tr.setNodeMarkup(pos, indexTermType, { ...node.attrs, classes })
+            }
+          })
+          dispatch(tr)
+        }
+        return true
+      },
       convertDivToIndexTerm:
         () =>
           ({ state, tr, dispatch }) => {
