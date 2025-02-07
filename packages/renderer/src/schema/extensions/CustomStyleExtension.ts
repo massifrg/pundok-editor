@@ -9,6 +9,7 @@ import {
   PundokEditorConfig,
   CustomClass,
   typeNameOfElement,
+  NODE_NAME_PARAGRAPH,
 } from '../../common';
 import {
   TypeOrNode,
@@ -49,6 +50,7 @@ declare module '@tiptap/core' {
         style: CustomStyleInstance,
         pos?: number,
       ) => ReturnType;
+      unsetParagraphCustomStyle: (pos?: number) => ReturnType;
       toggleCustomStyle: (
         typeOrNode: TypeOrNode,
         style: CustomStyleInstance,
@@ -244,6 +246,28 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
               )(cp);
             }
           },
+      unsetParagraphCustomStyle: (pos?: number) => ({ dispatch, state, tr }) => {
+        const { doc, selection } = state
+        if (pos) {
+          const para = doc.nodeAt(pos)
+          if (para && para.type.name === NODE_NAME_PARAGRAPH) {
+            if (dispatch)
+              dispatch(tr.setNodeMarkup(pos, null, {}))
+            return true
+          }
+          return false
+        }
+        const { from, to } = selection
+        if (dispatch) {
+          doc.nodesBetween(from, to, (node, pos) => {
+            if (node.type.name === NODE_NAME_PARAGRAPH) {
+              tr.setNodeMarkup(pos, null, {})
+            }
+          })
+          dispatch(tr)
+        }
+        return true
+      },
       toggleCustomStyle:
         (typeOrNode: TypeOrNode, cs: CustomStyleInstance, pos?: number) =>
           (cp: CommandProps) => {
