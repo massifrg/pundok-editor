@@ -4,6 +4,7 @@ import {
   DEFAULT_INDEX_REF_CLASS,
   DEFAULT_PUT_INDEX_REF,
   Index,
+  INDEX_CLASS,
   INDEX_COLORS_PALETTE,
   INDEX_NAME_ATTR,
   INDEX_PUT_INDEX_REF_ATTR,
@@ -55,7 +56,10 @@ export function documentIndices(doc: PmNode): Index[] {
   const indices: Index[] = [];
   doc.descendants((node) => {
     const typeName = node.type.name
-    if (typeName === NODE_NAME_DIV || typeName === NODE_NAME_INDEX_DIV) {
+    if (
+      typeName === NODE_NAME_INDEX_DIV
+      || (typeName === NODE_NAME_DIV && node.attrs?.classes.indexOf(INDEX_CLASS) >= 0)
+    ) {
       const kv = node.attrs.kv
       const indexName = kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME
       if (indices.find(i => i.indexName === indexName))
