@@ -27,7 +27,7 @@
               <q-badge v-if="isParagraph && !isParaWithoutStyles()" color="primary" floating rounded />
             </q-icon>
           </q-tab>
-          <q-tab name="char" disable>
+          <q-tab name="char">
             <q-icon name="character_style" size="sm" round @mouseover="tab = 'char'">
               <q-badge v-if="activeCharStyles.length > 0" color="primary" floating rounded />
             </q-icon>
@@ -51,6 +51,7 @@
                 <q-item-section side :class="type === 'style' ? 'q-pl-lg' : ''">
                   <q-icon v-if="type === 'node'" :name="icon" size="sm" />
                   <q-icon v-if="type === 'style'" :name="icon" size="xs" />
+                  <!-- <q-icon v-if="type === 'char'" :name="icon" size="xs" /> -->
                 </q-item-section>
                 <q-item-section>{{ label }}</q-item-section>
               </q-item>
@@ -62,8 +63,7 @@
             <q-list v-if="innerParaLike" dense>
               <q-item class="text-caption text-weight-bold q-pa-xs">Styles</q-item>
               <q-item v-for="(cs, index) in availableStylesForNode(b.node)" :key="index" clickable density="compact"
-                :value="index" :title="cs.styleDef.description" class="q-pa-xs"
-                @click="editor.commands.setCustomStyle(b.node, cs, b.pos)">
+                :value="index" :title="cs.styleDef.description" class="q-pa-xs" @click="toggleStyle(cs, b.node, b.pos)">
                 <q-item-section side>
                   <q-icon :name="isCustomStyleActive(cs, b.node) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
                     size="xs" />
@@ -74,7 +74,7 @@
               <q-item class="text-caption text-weight-bold q-pa-xs">Classes:</q-item>
               <q-item v-for="(cc, index) in customClassesFor(b.node)" :key="index" clickable density="compact"
                 :value="index" :title="cc.description" class="q-pa-xs"
-                @click="editor.commands.setCustomClass(cc, b.pos, configuration)">
+                @click="editor.commands.toggleCustomClass(cc, b.pos, configuration)">
                 <q-item-section side>
                   <q-icon
                     :name="isCustomClassActive(cc, b.node) ? 'mdi-checkbox-outline' : 'mdi-checkbox-blank-outline'"
@@ -135,9 +135,10 @@
 
           <q-tab-panel name="char" class="q-pa-none">
             <q-list dense>
-              <q-item key="char-no-style" clickable title="normal text without custom style" dense class="q-pa-xs">
+              <q-item key="char-no-style" clickable title="normal text without custom style" dense class="q-pa-xs"
+                @click="unsetAllCharStyles()">
                 <q-item-section side>
-                  <q-icon :name="activeCharStyles.length === 0 ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                  <q-icon :name="activeCharStyles.length === 0 ? 'mdi-checkbox-outline' : 'mdi-checkbox-blank-outline'"
                     size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap><span
@@ -145,11 +146,12 @@
               </q-item>
               <q-separator />
               <q-item v-for="s in charStyles" clickable :value="s.styleDef.name" :title="description(s)" class="q-pa-xs"
-                dense>
+                dense @click="toggleCharStyle(s)">
                 <q-item-section side>
-                  <q-icon :name="isCharStyleActive(s) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'" size="xs" />
+                  <q-icon :name="isCharStyleActive(s) ? 'mdi-checkbox-outline' : 'mdi-checkbox-blank-outline'"
+                    size="xs" />
                 </q-item-section>
-                <q-item-section no-wrap v-html="styleLabel(s)" />
+                <q-item-section no-wrap v-html="s.styleDef.name" />
               </q-item>
             </q-list>
           </q-tab-panel>
@@ -319,7 +321,7 @@ export default {
       let st_index = 0
       let stylable = stylableBlocks[st_index]
       const summ: {
-        type: 'node' | 'style',
+        type: 'node' | 'style' | 'char',
         label: string,
         icon: string
       }[] = []
@@ -349,6 +351,9 @@ export default {
           })
         }
       }
+      this.activeCharStyles.forEach(s => {
+        summ.push({ type: 'style', label: s, icon: 'character_style' })
+      })
       return summ
     }
   },
@@ -414,33 +419,34 @@ export default {
       const label = labelForStyle(cs)
       return cs.deprecated ? `<del>${label}</del>` : label
     },
-    setCustomStyle(nodeOrType: Node | string, cs: CustomStyleInstance) {
-      this.editor.chain().runRepeatableCommand('setCustomStyle', `style as "${cs.styleDef.name}"`, nodeOrType, cs).run()
+    setCustomStyle(nodeOrType: Node | string, cs: CustomStyleInstance, pos?: number) {
+      if (pos)
+        this.editor.chain().setCustomStyle(nodeOrType, cs, pos).run()
+      else
+        this.editor.chain().runRepeatableCommand('setCustomStyle', `style as "${cs.styleDef.name}"`, nodeOrType, cs).run()
     },
-    unsetCustomStyle(nodeOrType: Node | string, cs: CustomStyleInstance) {
-      this.editor.chain().runRepeatableCommand('unsetCustomStyle', `remove "${cs.styleDef.name}" style`, nodeOrType, cs).run()
+    unsetCustomStyle(nodeOrType: Node | string, cs: CustomStyleInstance, pos?: number) {
+      if (pos)
+        this.editor.chain().unsetCustomStyle(nodeOrType, cs, pos).run()
+      else
+        this.editor.chain().runRepeatableCommand('unsetCustomStyle', `remove "${cs.styleDef.name}" style`, nodeOrType, cs).run()
     },
     isCustomStyleActive(cs: CustomStyleInstance, node: Node) {
       return isCustomStyleActive(cs, node)
     },
-    isCharStyleActive(cs: CustomStyleInstance) {
-      return this.activeCharStyles.indexOf(cs.styleDef.name) >= 0
-    },
-    toggleStyle(cs: CustomStyleInstance, node: Node) {
+    toggleStyle(cs: CustomStyleInstance, node: Node, pos?: number) {
       if (isCustomStyleActive(cs, node)) {
-        this.unsetCustomStyle(node.type.name, cs)
+        this.unsetCustomStyle(node.type.name, cs, pos)
       } else {
         // it should be only one active style
         const activeStyles = activeCustomStyles(node, this.availableStyles)
         activeStyles.forEach(active => {
-          this.unsetCustomStyle(node.type.name, active)
+          this.unsetCustomStyle(node.type.name, active, pos)
         })
-        this.setCustomStyle(node.type.name, cs)
+        this.setCustomStyle(node.type.name, cs, pos)
       }
     },
     isParaWithoutStyles(): boolean {
-      console.log(`isParagraph: ${this.isParagraph}`)
-      console.log(this.innerParaLikeActiveStyles)
       return this.isParagraph && this.innerParaLikeActiveStyles.length === 0
     },
     setParaWithoutCustomStyles() {
@@ -477,6 +483,28 @@ export default {
         `toggle custom class "${cc.name}"`,
         cc
       )
+    },
+    isCharStyleActive(cs: CustomStyleInstance) {
+      return this.activeCharStyles.indexOf(cs.styleDef.name) >= 0
+    },
+    setCharStyle(style: CustomStyleInstance) {
+      this.editor.chain().runRepeatableCommand('setCustomMark', `style as "${style.styleDef.name}"`, MARK_NAME_SPAN, style).run()
+    },
+    unsetCharStyle(style: CustomStyleInstance) {
+      this.editor.chain().runRepeatableCommand('unsetCustomMark', `remove "${style.styleDef.name}" style`, MARK_NAME_SPAN, style).run()
+    },
+    unsetAllCharStyles() {
+      const names = this.activeCharStyles
+      this.charStyles.filter(cs => names.indexOf(cs.styleDef.name) >= 0).forEach(cs => {
+        this.unsetCharStyle(cs)
+      })
+    },
+    toggleCharStyle(cs: CustomStyleInstance) {
+      if (this.isCharStyleActive(cs)) {
+        this.unsetCharStyle(cs)
+      } else {
+        this.setCharStyle(cs)
+      }
     },
   }
 }

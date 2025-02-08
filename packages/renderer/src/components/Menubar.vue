@@ -29,22 +29,22 @@
       <ToolbarButton icon="mdi-format-paragraph" :disabled="!editor.can().togglePlain()" shortcut="SK_TOGGLE_PLAIN"
         @click="editor.commands.runRepeatableCommand('togglePlain', 'Plain ↔ Para')" title="toggle Plain/Para" />
 
-      <span class="button-separator" />
+      <!-- <span class="button-separator" /> -->
 
       <!--
       <CustomBlocksButtons v-if="!nonEmptySelection" :editor="editor" :current-blocks="currentNodesWithPos"
         @set-custom-style="setCustomStyle" @unset-custom-style="unsetCustomStyle" />
         -->
 
-      <ToolbarButton icon="mdi-palette-swatch-variant" :styleactive="isInlineCustomStyleActive"
+      <!-- <ToolbarButton icon="mdi-palette-swatch-variant" :styleactive="isInlineCustomStyleActive"
         :disabled="!nonEmptySelection" no-caps size="small" dense :label="currentInlineCustomStylesLabel"
         :title="`inline custom style (currently active: ${currentInlineCustomStylesLabel})`">
         <CustomMarkMenu :editor="editor"
           :active-custom-styles="currentInlineCustomStyles.map(s => s.mark.attrs.customStyle)"
           @unset-custom-mark="unsetCustomMark" @set-custom-mark="setCustomMark" />
-      </ToolbarButton>
+      </ToolbarButton> -->
 
-      <span class="button-separator" />
+      <!-- <span class="button-separator" /> -->
 
       <CustomWrapperMenu :editor="editor" wrapper-type-name="div" pandoc-type="Div" shortcut="SK_TOGGLE_DIV" />
 
@@ -185,8 +185,8 @@ import { MarkRange, NodeWithPos } from '@tiptap/vue-3';
 import BreadCrumb from './BreadCrumb.vue'
 import ChooseConfigButton from './ChooseConfigButton.vue';
 import CustomWrapperMenu from './CustomWrapperMenu.vue'
-import CustomMarkMenu from './CustomMarkMenu.vue'
-import CustomBlocksButtons from './CustomBlocksButtons.vue';
+// import CustomMarkMenu from './CustomMarkMenu.vue'
+// import CustomBlocksButtons from './CustomBlocksButtons.vue';
 import ElementSelectionButton from './ElementSelectionButton.vue';
 import ImageButton from './ImageButton.vue';
 import IndicesButtons from './IndicesButtons.vue';
@@ -224,8 +224,8 @@ export default {
   components: {
     BreadCrumb,
     ChooseConfigButton,
-    CustomBlocksButtons,
-    CustomMarkMenu,
+    // CustomBlocksButtons,
+    // CustomMarkMenu,
     CustomWrapperMenu,
     ElementSelectionButton,
     ExportToolbarButton,
