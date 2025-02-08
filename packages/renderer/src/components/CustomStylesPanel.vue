@@ -17,22 +17,22 @@
             </q-icon>
           </q-tab>
 
-          <q-tab name="para" v-if="innerParaLike" title="custom paragraph styles" :disable="!innerParaLike">
-            <q-icon name="paragraph_style" size="sm" round @mouseover="tab = 'para'">
-              <q-badge v-if="isParagraph && !isParaWithoutStyles()" color="primary" floating rounded />
-            </q-icon>
-          </q-tab>
           <q-tab name="header" v-if="innerParaLike" title="custom header styles (classes)" :disable="!innerParaLike">
             <q-icon name="mdi-format-header-pound" size="sm" round @mouseover="tab = 'header'">
               <q-badge v-if="isHeader && !isHeaderWithoutStyles()" color="primary" floating rounded />
             </q-icon>
           </q-tab>
-          <!-- 
-          <q-tab name="char" disable>
-            <q-icon name="character_style" size="sm" round @mouseover="tab = 'char'">
-              <q-badge v-if="!isParaWithoutStyles()" color="primary" floating rounded />
+          <q-tab name="para" v-if="innerParaLike" title="custom paragraph styles" :disable="!innerParaLike">
+            <q-icon name="paragraph_style" size="sm" round @mouseover="tab = 'para'">
+              <q-badge v-if="isParagraph && !isParaWithoutStyles()" color="primary" floating rounded />
             </q-icon>
           </q-tab>
+          <q-tab name="char" disable>
+            <q-icon name="character_style" size="sm" round @mouseover="tab = 'char'">
+              <q-badge v-if="activeCharStyles.length > 0" color="primary" floating rounded />
+            </q-icon>
+          </q-tab>
+          <!-- 
           <q-tab name="cell" disable>
             <q-icon name="mdi-table" size="sm" round @mouseover="tab = 'cell'">
               <q-badge v-if="!isParaWithoutStyles()" color="primary" floating rounded />
@@ -85,6 +85,31 @@
             </q-list>
           </q-tab-panel>
 
+          <q-tab-panel v-if="innerParaLike" name="header" class="q-pa-none">
+            <q-list v-if="innerParaLike" v-for="(level, index) in headingLevels" dense>
+              <q-separator v-if="index !== 0" />
+              <q-item :key="`h${level}-no-style`" clickable :title="`level ${level} header without custom class`" dense
+                class="q-pa-xs" @click="setHeaderWithoutCustomStyles(level)">
+                <q-item-section side>
+                  <q-icon :name="isHeaderWithoutStyles(level) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                    size="xs" />
+                </q-item-section>
+                <q-item-section no-wrap><span class="style-item">H{{ level
+                    }}&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
+              </q-item>
+              <q-item v-for="(styleItem, index) in availableHeaderStylesForNode(innerParaLike, level)" :key="index"
+                clickable :value="index" :title="description(styleItem)" dense class="q-pa-xs"
+                @click="setCustomStyle(innerParaLike, styleItem)">
+                <q-item-section side>
+                  <q-icon
+                    :name="isCustomStyleActive(styleItem, innerParaLike) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                    size="xs" />
+                </q-item-section>
+                <q-item-section no-wrap v-html="styleLabel(styleItem)" />
+              </q-item>
+            </q-list>
+          </q-tab-panel>
+
           <q-tab-panel v-if="innerParaLike" name="para" class="q-pa-none">
             <q-list dense>
               <q-item key="p-no-style" clickable title="normal paragraph without custom style" dense class="q-pa-xs"
@@ -108,36 +133,31 @@
             </q-list>
           </q-tab-panel>
 
-          <q-tab-panel v-if="innerParaLike" name="header" class="q-pa-none">
-            <q-list v-if="innerParaLike" v-for="(level, index) in headingLevels" dense>
-              <q-separator v-if="index !== 0" />
-              <q-item :key="`h${level}-no-style`" clickable :title="`level ${level} header without custom class`"
-                denseclass="q-pa-xs" @click="setHeaderWithoutCustomStyles(level)">
+          <q-tab-panel name="char" class="q-pa-none">
+            <q-list dense>
+              <q-item key="char-no-style" clickable title="normal text without custom style" dense class="q-pa-xs">
                 <q-item-section side>
-                  <q-icon :name="isHeaderWithoutStyles(level) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                  <q-icon :name="activeCharStyles.length === 0 ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
                     size="xs" />
                 </q-item-section>
-                <q-item-section no-wrap><span class="style-item">H{{ level
-                    }}&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
+                <q-item-section no-wrap><span
+                    class="style-item">&nbsp;<i>(no&nbsp;char&nbsp;style)</i></span></q-item-section>
               </q-item>
-              <q-item v-for="(styleItem, index) in availableHeaderStylesForNode(innerParaLike, level)" :key="index"
-                clickable :value="index" :title="description(styleItem)" class="q-pa-xs"
-                @click="setCustomStyle(innerParaLike, styleItem)">
+              <q-separator />
+              <q-item v-for="s in charStyles" clickable :value="s.styleDef.name" :title="description(s)" class="q-pa-xs"
+                dense>
                 <q-item-section side>
-                  <q-icon
-                    :name="isCustomStyleActive(styleItem, innerParaLike) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
-                    size="xs" />
+                  <q-icon :name="isCharStyleActive(s) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'" size="xs" />
                 </q-item-section>
-                <q-item-section no-wrap v-html="styleLabel(styleItem)" />
+                <q-item-section no-wrap v-html="styleLabel(s)" />
               </q-item>
             </q-list>
           </q-tab-panel>
-          <!-- 
-          <q-tab-panel name="char">
-          </q-tab-panel>
 
+          <!-- 
           <q-tab-panel name="cell">
-          </q-tab-panel> -->
+          </q-tab-panel>
+          -->
 
         </q-tab-panels>
       </template>
@@ -148,10 +168,11 @@
 <script lang="ts">
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import { Node } from '@tiptap/pm/model';
-import { NodeWithPos } from '@tiptap/core';
+import { MarkRange, NodeWithPos } from '@tiptap/core';
 import {
   CustomClass,
   CustomStyleInstance,
+  MARK_NAME_SPAN,
   NODE_NAME_HEADING,
   NODE_NAME_PARAGRAPH,
   NODE_NAME_PLAIN,
@@ -159,6 +180,7 @@ import {
   activeCustomStyles,
   compatibleCustomStylesPerTypeName,
   customClassesForNodeOrMark,
+  customStylesForType,
   isBlockOfInlines,
   // customStylesForType,
   isCustomStyleActive,
@@ -166,14 +188,14 @@ import {
   labelForStyle,
 } from '../common';
 import { getEditorConfiguration, Heading } from '../schema';
-import { nodeIcon, nodeOrMarkToPandocName } from '../schema/helpers';
+import { getTextMarkRangesBetween, nodeIcon, nodeOrMarkToPandocName } from '../schema/helpers';
 import { isString } from 'lodash';
 
 const STARTING_TAB = 'summary'
 const MINI_SPLITTER_VALUE = 20
 
 export default {
-  props: ['editor', 'currentBlocks', 'panelState'],
+  props: ['editor', 'currentBlocks', 'activeCustomStyles', 'panelState'],
   emits: ['unsetCustomStyle', 'setCustomStyle'],
   setup() {
     setupQuasarIcons()
@@ -267,6 +289,29 @@ export default {
       return paraLike
         ? this.availableStylesForNode(paraLike).filter(s => isCustomStyleActive(s, paraLike))
         : []
+    },
+    charStyles() {
+      return customStylesForType(this.customStyles, 'span')
+    },
+    styleNames() {
+      return this.charStyles.map((s) => s.styleDef.name);
+    },
+    currentTextMarks(): MarkRange[] {
+      const editor = this.editor
+      if (editor) {
+        const { doc, selection } = editor.state
+        const { from, to } = selection;
+        return getTextMarkRangesBetween(from, to, doc);
+      }
+      return []
+    },
+    currentCharCustomStyles(): MarkRange[] {
+      return this.currentTextMarks.filter(
+        (m) => m.mark.type.name === MARK_NAME_SPAN && !!m.mark.attrs.customStyle,
+      );
+    },
+    activeCharStyles(): string[] {
+      return this.currentCharCustomStyles.map(s => s.mark.attrs.customStyle)
     },
     summary() {
       const blocks = this.currentBlocks
@@ -378,6 +423,9 @@ export default {
     isCustomStyleActive(cs: CustomStyleInstance, node: Node) {
       return isCustomStyleActive(cs, node)
     },
+    isCharStyleActive(cs: CustomStyleInstance) {
+      return this.activeCharStyles.indexOf(cs.styleDef.name) >= 0
+    },
     toggleStyle(cs: CustomStyleInstance, node: Node) {
       if (isCustomStyleActive(cs, node)) {
         this.unsetCustomStyle(node.type.name, cs)
@@ -407,7 +455,7 @@ export default {
     },
     setHeaderWithoutCustomStyles(level: number) {
       if (this.innerParaLike)
-        this.editor?.commands.runRepeatableCommand('setHeading', `set as header of level ${level}`, { level })
+        this.editor?.commands.runRepeatableCommand('setHeading', `set as header of level ${level}`, { level, classes: [] })
     },
     // custom classes for outer blocks
     customClassesFor(node: Node) {
