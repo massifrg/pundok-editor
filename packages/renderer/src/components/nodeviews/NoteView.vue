@@ -113,7 +113,7 @@ export default {
           marker = conv[(n - 1) % conv.length]
         } else {
           const conversion = conv && MarkerConversions[conv as string] || MarkerConversions.noConversion
-          console.log(`${conv}: ${n} => ${conversion(n)}`)
+          // console.log(`${conv}: ${n} => ${conversion(n)}`)
           marker = conversion(n)
         }
       }
@@ -161,7 +161,7 @@ export default {
       let offset;
       for (offset = 1; offset < size; offset++) {
         const n = noteNode.nodeAt(offset)
-        console.log(n)
+        // console.log(n)
         if (n && n.isText) break
       }
       return offset === size ? 1 : offset
