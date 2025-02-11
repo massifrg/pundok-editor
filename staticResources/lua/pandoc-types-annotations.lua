@@ -6,7 +6,7 @@ with [Lua Language Server](https://luals.github.io).
 Just put the following line in your sources to get help about types by LuaLs:
 ---@module "pandoc-types-annotations"
 
-This is version 0.3.0; you can look for updates of this file at:
+You can look for updates of this file at:
 https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pandoc-types-annotations.lua
 ]] --
 
@@ -217,7 +217,7 @@ https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pan
 ---@class Span: Inline,WithAttr A Pandoc `Span`.
 ---@field content Inlines
 
----@class Meta
+---@alias Meta table<string,MetaValue>
 
 ---@class MetaBool
 ---@field bool boolean
@@ -267,7 +267,7 @@ https://raw.githubusercontent.com/massifrg/pandoc-luals-annotations/main/src/pan
 
 ---@class Filter
 ---@field traverse?       "topdown"|"typewise" Traversal order of this filter (default: `typewise`).
----@field Pandoc?         fun(doc: Pandoc): Pandoc|nil `nil` = leave untouched.
+---@field Pandoc?         fun(doc: Pandoc, meta?: Meta): Pandoc|nil `nil` = leave untouched.
 ---@field Blocks?         fun(blocks: Blocks): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
 ---@field Inlines?        fun(inlines: Inlines): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
 ---@field Plain?          fun(plain: Plain): BlockFilterResult,boolean? `nil` = leave untouched, `EmptyList` = delete.
