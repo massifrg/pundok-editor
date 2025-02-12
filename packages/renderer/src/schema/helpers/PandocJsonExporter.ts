@@ -74,6 +74,7 @@ import {
   Index,
   MARK_NAME_CITE,
   NODE_NAME_AUTO_DELIMITER,
+  NODE_NAME_PARAGRAPH,
   NODE_NAME_SHORT_CAPTION,
   NOTE_TYPE_ATTRIBUTE,
 } from '../../common';
@@ -551,16 +552,16 @@ export class PandocJsonExporter {
   private nodeToFigure(node: PmJsonNode): Figure {
     const attr = this.attrFrom(node);
     let caption: Caption | undefined = undefined;
-    let content: PandocItem[] = [];
+    const contents: PmJsonNode[] = []
     node.content?.forEach((c) => {
-      if (c.type === 'figureCaption') {
+      if (c.type === 'figureCaption')
         caption = this.captionToPandocItem(c);
-      } else {
-        const i = this.nodeToPandocItem(c);
-        content = content.concat(isArray(i) ? i : [i]);
-      }
+      else
+        contents.push(c)
     });
-    return new Figure(attr, caption || Caption.empty(), content);
+    const figure = new Figure(attr, caption || Caption.empty(), []);
+    this.appendBlocks(figure, contents)
+    return figure
   }
 
   private nodeToIndexDiv(node: PmJsonNode): Div {
@@ -715,8 +716,9 @@ export class PandocJsonExporter {
       let currentParaStyle: string | null = null;
       let customStyleDiv: Div | null = null;
       content.forEach((child) => {
-        if (child.type === 'paragraph' && child.attrs?.customStyle) {
+        if (child.type === NODE_NAME_PARAGRAPH && child.attrs?.customStyle) {
           const paraStyle = child.attrs?.customStyle;
+          if (paraStyle) console.log(`paraStyle=${paraStyle}, currentParaStyle=${JSON.stringify(currentParaStyle)}`)
           if (currentParaStyle !== paraStyle) {
             currentParaStyle = paraStyle;
             customStyleDiv = new Div(
