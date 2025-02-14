@@ -1,7 +1,7 @@
 <template>
   <q-card>
     <q-table v-if="allAttributes.length > 0" hide-bottom :rows="allAttributes" :columns="columns" row-key="key"
-      v-model:pagination="pagination" :rows-per-page-options="[0]" binary-state-sort>
+      v-model:pagination="pagination" :rows-per-page-options="[0]" binary-state-sort dense>
       <template #body="props">
         <q-tr :props="props">
           <q-td v-for="col in (props.cols as Record<string, string>[])" :key="col.name" :props="props">
