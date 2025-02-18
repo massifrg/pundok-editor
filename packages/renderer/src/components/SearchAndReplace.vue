@@ -13,14 +13,13 @@
         <q-space />
         <q-btn dense icon="mdi-reload" size:xs title="reset" @click="resetDialog()" />
         <q-space />
-        <q-btn dense icon="mdi-close" size:xs title="close"
-          @click="editor.chain().hideFoundTexts().focus().run(); hideDialog()" />
+        <q-btn dense icon="mdi-close" size:xs title="close" @click="closeDialog()" />
       </q-card-section>
       <q-card-section>
         <div v-if="showFields">
           <q-card-section horizontal>
             <q-input autofocus class="search-and-replace-textfield q-mx-xs" :model-value="textToSearch" label="search"
-              stack-label @update:model-value="updateTextToSearch" @keypress="keypressed" />
+              stack-label @update:model-value="updateTextToSearch" @keypress="keypressed" @keyup="keyup" />
             <!-- <q-space /> -->
             <MarksPaletteDropdown :editor="editor" title="search for this Mark(s) or style(s)"
               :addableMarks="marksToSearch" :logicalOperator="optionMarksLogicalOperator" showLogicalOperator="true"
@@ -29,7 +28,7 @@
           </q-card-section>
           <q-card-section v-if="!optionSearchOnly" horizontal>
             <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
-              stack-label @update:model-value="updateTextToReplace" />
+              stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
             <!-- <q-space /> -->
             <MarksPaletteDropdown :editor="editor" title="add/remove Mark(s) or custom style(s) to replaced text"
               :addableMarks="marksOnReplacedText" :operations="(['add', 'remove', 'remove all'] as MarkOperationType[])"
@@ -314,12 +313,23 @@ export default {
   methods: {
     keypressed(e: KeyboardEvent) {
       if (this.editor) {
-        if (e.key == 'Enter') {
+        console.log(e.key)
+        if (e.key === 'Enter') {
           this.startSearch();
         }
       } else {
         console.log('no editor');
       }
+    },
+    keyup(e: KeyboardEvent) {
+      if (this.editor) {
+        if (e.key === 'Escape')
+          this.closeDialog()
+      }
+    },
+    closeDialog() {
+      this.editor.chain().hideFoundTexts().focus().run()
+      this.hideDialog()
     },
     startSearch() {
       const editor = this.editor
