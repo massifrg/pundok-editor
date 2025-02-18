@@ -324,9 +324,22 @@ export default {
       this.attrToAdd = ''
     },
     add(a: OtherAttribute) {
-      const value = a.values && a.values.length > 0 ? a.default || a.values[0] : ''
-      this.entries = this.entries.concat([{ ...a, value, addableButNotPresent: false, editable: true }])
+      const value = a.default
+        || (a.values && a.values.length > 0 && a.values[0])
+        || (a.suggestions && a.suggestions.length > 0 && a.suggestions[0])
+      this.entries = this.entries.concat([
+        {
+          ...a,
+          value: value || '',
+          addableButNotPresent: false,
+          editable: true
+        }
+      ])
       this.emitUpdate()
+      if (!value) {
+        this.editedAttrName = a.key
+        this.showEditAttrDialog = true
+      }
     },
     edit(attrName: string) {
       this.editedAttrName = attrName
