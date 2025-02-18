@@ -19,8 +19,8 @@
       <q-card-section>
         <div v-if="showFields">
           <q-card-section horizontal>
-            <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToSearch" label="search" stack-label
-              @update:model-value="updateTextToSearch" @keypress="keypressed" />
+            <q-input autofocus class="search-and-replace-textfield q-mx-xs" :model-value="textToSearch" label="search"
+              stack-label @update:model-value="updateTextToSearch" @keypress="keypressed" />
             <!-- <q-space /> -->
             <MarksPaletteDropdown :editor="editor" title="search for this Mark(s) or style(s)"
               :addableMarks="marksToSearch" :logicalOperator="optionMarksLogicalOperator" showLogicalOperator="true"
