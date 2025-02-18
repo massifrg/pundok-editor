@@ -5,7 +5,13 @@
       <template #body="props">
         <q-tr :props="props">
           <q-td v-for="col in (props.cols as Record<string, string>[])" :key="col.name" :props="props">
-            <span :class="classForAttributeName(props.row)" :title="props.row.description">{{ col.value }}</span>
+            <span :class="classForAttributeName(props.row)" :title="props.row.description">{{ truncateValue(col.value)
+              }}</span>
+            <q-popup-edit v-if="props.row.editable && col.name === 'value'" v-model="props.row.value"
+              :title='`Edit the  value of "${props.row.key}" attribute:`' auto-save v-slot="scope"
+              @before-show="setAttrBeingEdited(props.row)" @save="setAttrBeingEditedValue">
+              <q-input v-model="scope.value" type="textarea" dense autofocus counter @keyup.enter="scope.set" />
+            </q-popup-edit>
           </q-td>
           <q-td auto-width>
             <q-btn v-if="isAddable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-plus"
@@ -28,8 +34,8 @@
                 </q-list>
               </q-menu>
             </q-btn>
-            <q-btn v-if="isEditable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-pencil"
-              @click="edit(props.key)" title="edit" />
+            <!-- <q-btn v-if="isEditable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-pencil"
+              @click="edit(props.key)" title="edit" /> -->
             <q-btn v-if="isRemovable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-close"
               @click="remove(props.key)" title="remove" />
             <q-btn v-if="isModified(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-reload"
@@ -213,7 +219,6 @@ export default {
       })
       return attributes
     },
-
     invalidAttrError(): string | undefined {
       const entries = this.entries as OtherAttribute[]
       if (entries.map(e => e.key).includes(this.attrToAdd)) return 'attribute already present!'
@@ -287,6 +292,10 @@ export default {
         const matchingAttr = matchingDuplicatedAttribute(this.nodeOrMark, key)
         if (matchingAttr) this.$emit('update-attribute', matchingAttr, originalEntry.value)
       }
+    },
+    truncateValue(value: any) {
+      const v = (value || '').toString()
+      return v.length > 50 ? v.substring(1, 50) + '...' : v
     },
     updateAttrToAdd(newValue: string | number | null) {
       if (isString(newValue)) this.attrToAdd = newValue
@@ -378,6 +387,18 @@ export default {
     setNewValueForEditedAttr(dontCloseDialog?: boolean) {
       this.setNewValueForAttr(this.editedAttrName, this.attrNewValue)
       if (!dontCloseDialog) this.closeEditAttrDialog()
+    },
+    updateValueForAttr(attrName: string) {
+      return (value: string | number) => {
+        this.setNewValueForAttr(attrName, value)
+      }
+    },
+    setAttrBeingEdited(a: OtherAttribute) {
+      this.editedAttrName = a.key
+      console.log(`attribute being edited: ${this.editedAttrName}`)
+    },
+    setAttrBeingEditedValue(value: string | number) {
+      this.setNewValueForAttr(this.editedAttrName, value)
     },
     closeEditAttrDialog() {
       this.showEditAttrDialog = false
