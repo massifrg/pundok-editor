@@ -398,7 +398,7 @@ export default {
       console.log(`attribute being edited: ${this.editedAttrName}`)
     },
     setAttrBeingEditedValue(value: string | number) {
-      this.setNewValueForAttr(this.editedAttrName, value)
+      this.setNewValueForAttr(this.editedAttrName, value.toString().replace(/\n/gs, ''))
     },
     closeEditAttrDialog() {
       this.showEditAttrDialog = false
