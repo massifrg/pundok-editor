@@ -30,11 +30,15 @@ import {
 import { Editor } from '@tiptap/vue-3';
 import {
   NODE_NAME_BLOCKQUOTE,
+  NODE_NAME_CAPTION,
+  NODE_NAME_DEFINITION_TERM,
   NODE_NAME_DIV,
   NODE_NAME_FIGURE,
+  NODE_NAME_FIGURE_CAPTION,
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM,
   NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_SHORT_CAPTION,
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_FOOT,
   NODE_NAME_TABLE_HEAD,
@@ -610,6 +614,12 @@ function moveChild(where: 'up' | 'down' | 'start' | 'end' | 'before' | 'after', 
       }
     }
     if (!parent || !nodeToMove || nodeToMove.type.spec.tableRole)
+      return false
+    const nodeType = nodeToMove.type.name
+    if (nodeType === NODE_NAME_CAPTION
+      || nodeType === NODE_NAME_SHORT_CAPTION
+      || nodeType === NODE_NAME_FIGURE_CAPTION
+      || nodeType === NODE_NAME_DEFINITION_TERM)
       return false;
     // console.log(
     //   `node is a ${nodeToMove.type.name} and it starts at ${$pos.start(
