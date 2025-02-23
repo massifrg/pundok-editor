@@ -703,10 +703,10 @@ function moveChildInside(where: 'up-inside' | 'down-inside', pos?: number): ((cp
     if (!acceptor || !nodeToMove) return false
     // console.log(`depth=${depth}, moving a ${nodeToMove!.type.name} into a ${acceptor!.type.name}`)
     const oldPos = $pos.start(depth) - 1
-    let newPos = $pos.start(depth - 1) + 2
-    for (let i = 1; i < acceptorIndex!; i++)
+    let newPos = $pos.start(depth - 1) // parent start
+    for (let i = 0; i < acceptorIndex!; i++)
       newPos += parent!.child(i).nodeSize
-    newPos += 1 + (movingUp ? acceptor!.content.size : 0)
+    newPos += movingUp ? acceptor!.content.size + 1 : 1
 
     // console.log(`moving a ${nodeToMove!.type.name}@${oldPos} into a ${acceptor!.type.name}@${newPos}`)
     if (depth <= 0) return false
