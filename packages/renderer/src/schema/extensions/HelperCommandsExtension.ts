@@ -481,14 +481,15 @@ export const HelperCommandsExtension = Extension.create({
               name === NODE_NAME_BLOCKQUOTE ||
               name === NODE_NAME_INDEX_DIV
             ) {
-              const targetDepth = doc.resolve(pos).depth;
-              const nodeRange = new NodeRange(
-                doc.resolve(pos + 1),
-                doc.resolve(pos + container.content.size),
-                targetDepth + 1,
-              );
+              // const targetDepth = doc.resolve(pos).depth;
+              let content = container.content
+              if (name === NODE_NAME_FIGURE && container.childCount > 0) {
+                const maybeCaption = container.child(0)
+                if (maybeCaption.type.name === NODE_NAME_FIGURE_CAPTION)
+                  content = container.slice(maybeCaption.nodeSize, content.size).content
+              }
               if (dispatch) {
-                dispatch(tr.lift(nodeRange, targetDepth));
+                dispatch(tr.delete(pos, pos + container.nodeSize).insert(pos, content))
               }
               return true;
             }
