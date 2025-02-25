@@ -39,6 +39,7 @@ import {
   NODE_NAME_META_STRING,
   NODE_NAME_NOTE,
   NODE_NAME_PARAGRAPH,
+  NODE_NAME_SHORT_CAPTION,
   NOTE_TYPE_ATTRIBUTE,
   NoteStyle,
 } from '../../common';
@@ -785,8 +786,15 @@ export const PANDOC_JSON_PARSER_RULES: Record<string, ParseSpec> = {
     dontCreateIfEmpty: true,
   },
   ShortCaption: {
-    block: 'shortCaption',
-    // parseChildren: [{ index: 0 }]
+    // block: 'shortCaption',
+    handler: (spec, schema) => (state, pandocItem) => {
+      if (pandocItem.c && pandocItem.c.length > 0) {
+        state.openNode(schema.nodes[NODE_NAME_SHORT_CAPTION], null);
+        parseChildren(state, spec, pandocItem);
+        state.closeNode();
+      }
+    },
+    parseChildren: [{ index: 0 }]
   },
 
   Emph: { mark: 'emph' },
