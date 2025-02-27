@@ -1,5 +1,6 @@
 <template>
-  <q-dialog v-model="isActive" @show="show" @hide="hide">
+  <q-dialog v-model="isActive" @show="show" @hide="hide"
+    :full-height="hasContentVirtualAttr && tab === contentVirtualAttrName">
     <q-card style="min-height: 20%; min-width: 50%">
       <q-bar>
         <q-icon :name="nodeOrMarkIcon" />
@@ -127,7 +128,7 @@
         <q-tab-panel v-if="hasAttribute('text') && isRawElement" name="text">
           <div style="background-color: black">
             <RawTextEditor :start-value="attrs.text" :format="attrs.format" :is-block="isRawBlock"
-              @update-attribute="updateAttribute" @esc-key-pressed="doCancel" @enter-key-pressed="doChange" />
+              @update-attribute="updateAttribute" @cancel="doCancel" @commit="doChange" />
           </div>
           <q-space />
           <q-card-actions align="center">
@@ -220,6 +221,16 @@
             <q-btn icon="mdi-reload" title="reset target" size="xs" @click="resetAttribute('target')" />
           </q-card-actions>
         </q-tab-panel>
+        <q-tab-panel v-if="hasContentVirtualAttr" :name="contentVirtualAttrName">
+          <div style="background-color: black">
+            <RawTextEditor :start-value="contentVirtualAttrValue" :format="contentVirtualAttrFormat" :is-block="true"
+              @update-attribute="updateContent" @cancel="doCancel" @commit="doChange" />
+          </div>
+          <q-space />
+          <q-card-actions align="center">
+            <q-btn icon="mdi-reload" title="reset id" size="xs" @click="resetAttribute('text')" />
+          </q-card-actions>
+        </q-tab-panel>
       </q-tab-panels>
       <q-card-actions>
         <q-btn v-if="!noAttrModified" color="primary" title="reset all attributes" @click="resetAllAttributes()">
@@ -290,9 +301,11 @@ import {
   nodeIcon,
   nodeOrMarkToPandocName
 } from '../schema/helpers';
+import { toRaw } from 'vue';
 import { deproxify } from './helpers/deproxify';
 import { createLowlight, all } from 'lowlight';
 import { ACTION_ADD_CLASS, BaseActionForNodeOrMark } from '../actions';
+
 const lowlight = createLowlight(all);
 
 const myIcons: Record<string, string> = {
@@ -301,6 +314,7 @@ const myIcons: Record<string, string> = {
 }
 
 const TARGET_ATTRS = ['src', 'href', 'title']
+const TEXT_CONTENT_TAB = 'content'
 
 export default {
   components: {
@@ -334,6 +348,8 @@ export default {
       tab: this.startTab || '',
       originalAttrs: {} as Record<string, any>,
       attrs: {} as Record<string, any>,
+      originalTextContent: undefined as string | undefined,
+      textContent: undefined as string | undefined,
       optionPropagateIdref: false,
       searchTextVariant: 'first-3-words' as SearchTextVariant,
     };
@@ -395,8 +411,34 @@ export default {
       const typeName = this.nodeOrMark?.type.name
       return typeName === NODE_NAME_CODE_BLOCK || typeName === MARK_NAME_CODE
     },
+    isCodeBlock() {
+      return this.nodeOrMark?.type.name === NODE_NAME_CODE_BLOCK
+    },
     editableAttributes(): string[] {
       return editableAttrsForNodeOrMark(this.nodeOrMark)
+    },
+    /** you can edit RawBlock and CodeBlock content in the attributes editor  */
+    hasContentVirtualAttr() {
+      return this.isRawBlock || this.isCodeBlock
+    },
+    /** name of the virtual attribute that represents the content of a RawBlock or a CodeBlock */
+    contentVirtualAttrName() {
+      return this.hasContentVirtualAttr ? TEXT_CONTENT_TAB : undefined
+    },
+    /** the content of a RawBlock or a CodeBlock */
+    contentVirtualAttrValue() {
+      return this.hasContentVirtualAttr ? (this.nodeOrMark as Node).textContent : undefined
+    },
+    /** the format of a RawBlock or the language of a CodeBlock */
+    contentVirtualAttrFormat() {
+      if (this.isRawBlock)
+        return this.attrs.format
+      else if (this.isCodeBlock)
+        return this.attrs.language
+      return undefined
+    },
+    isTextContentChanged(): boolean {
+      return toRaw(this.textContent) !== toRaw(this.originalTextContent)
     },
     editorTabs(): string[] {
       const tabNames = editableAttrsWithTab(this.nodeOrMark)
@@ -404,6 +446,8 @@ export default {
         tabNames.push('idref')
       if (this.isImage || this.isLink)
         tabNames.push('target')
+      if (this.hasContentVirtualAttr)
+        tabNames.push(TEXT_CONTENT_TAB)
       return tabNames || []
     },
     importantClasses(): string[] {
@@ -452,8 +496,8 @@ export default {
     },
   },
   watch: {
-    nodeOrMark(oldValue, newValue) {
-      if (newValue !== oldValue) {
+    nodeOrMark(newValue) {
+      if (newValue) {
         const ee = Object.entries(this.nodeOrMark?.attrs || {});
         this.originalAttrs = Object.fromEntries(ee);
         this.attrs = Object.fromEntries(ee);
@@ -466,6 +510,12 @@ export default {
             this.addClass(class_to_add)
           }
         }
+        const textContent = newValue
+          && (newValue instanceof Node)
+          && newValue.textContent
+          || undefined
+        this.textContent = textContent
+        this.originalTextContent = textContent
       }
     },
     startTab(newValue) {
@@ -553,6 +603,8 @@ export default {
         }));
     },
     isAttributeModifiedInTab(tabName: string): boolean {
+      if (tabName === TEXT_CONTENT_TAB)
+        return this.isTextContentChanged
       const modifiedAttrs = this.modifiedAttrs()
       const modified = modifiedAttrs.find(ma => ma.attrName === tabName)
       if (modified) return true
@@ -603,6 +655,17 @@ export default {
             .updateNodeAttributesAtPos(name, this.attrs, pos)
             .fixPandocTables()
             .run();
+        } else if (this.hasContentVirtualAttr && this.isTextContentChanged) {
+          this.editor?.chain()
+            .setNodeSelection(pos)
+            .setTextContent(this.textContent, pos)
+            .setAttrsChange(repeatableChange)
+            .updateNodeAttributesAtPos(name, this.attrs, pos)
+            // .setNodeSelection(pos)
+            // .fixNodeAtPos(pos, { ...this.indices })
+            .scrollIntoView()
+            .focus()
+            .run();
         } else {
           this.editor?.chain()
             .setNodeSelection(pos)
@@ -651,6 +714,10 @@ export default {
         if (matchingAttr && this.attrs.kv && this.attrs.kv[matchingAttr] !== newValue)
           this.updateKvAttribute(matchingAttr, newValue)
       }
+    },
+    updateContent(_: string, value: string) {
+      // console.log(`updateContent: ${value}`)
+      this.textContent = value
     },
     async addClass(ac: string) {
       console.log(`addClass: ${ac}`);
