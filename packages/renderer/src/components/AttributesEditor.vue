@@ -302,7 +302,6 @@ import {
   nodeOrMarkToPandocName
 } from '../schema/helpers';
 import { toRaw } from 'vue';
-import { deproxify } from './helpers/deproxify';
 import { createLowlight, all } from 'lowlight';
 import { ACTION_ADD_CLASS, BaseActionForNodeOrMark } from '../actions';
 
@@ -646,7 +645,7 @@ export default {
       if (snom.pos >= 0 && snom.node) {
         const { name, pos } = snom
         // const { classes } = this.attrs || []
-        const repeatableChange = getAttrsChange(snom.node, deproxify(this.attrs), deproxify(this.originalAttrs))
+        const repeatableChange = getAttrsChange(snom.node, toRaw(this.attrs), toRaw(this.originalAttrs))
         // console.log(repeatableChange)
         if (snom.name === NODE_NAME_TABLE_BODY) {
           this.editor?.chain()
@@ -679,7 +678,7 @@ export default {
         }
       } else if (snom.mark && snom.from && snom.to) {
         // if (snom.name === MARK_NAME_SPAN) {
-        const repeatableChange = getAttrsChange(snom.mark, deproxify(this.attrs), deproxify(this.originalAttrs))
+        const repeatableChange = getAttrsChange(snom.mark, toRaw(this.attrs), toRaw(this.originalAttrs))
         // console.log(repeatableChange)
         this.editor.chain()
           .setAttrsChange(repeatableChange)
