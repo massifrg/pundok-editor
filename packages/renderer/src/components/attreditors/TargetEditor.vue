@@ -1,11 +1,11 @@
 <template>
-  <q-input class="q-mx-xs" v-model="targetUrl" label="URL" stack-label debounce="500"
+  <q-input class="q-mx-xs" v-model="targetUrl" :autofocus="!isImage" label="URL" stack-label debounce="500"
     @update:model-value="updateTargetUrl">
     <template v-slot:append>
-      <q-icon name="mdi-file-image" @click="askTargetFileUrl" />
+      <q-icon v-if="isImage" name="mdi-file-image" @click="askTargetFileUrl" />
     </template>
   </q-input>
-  <q-input class="q-mx-xs" v-model="targetTitle" label="title" stack-label debounce="500"
+  <q-input class="q-mx-xs" v-model="targetTitle" :autofocus="isImage" label="title" stack-label debounce="500"
     @update:model-value="updateTargetTitle" />
 </template>
 
@@ -24,7 +24,10 @@ export default {
     }
   },
   computed: {
-    ...mapState(useBackend, ['backend'])
+    ...mapState(useBackend, ['backend']),
+    isImage() {
+      return this.urlAttrName === 'src'
+    }
   },
   watch: {
     url(value: string | null) {

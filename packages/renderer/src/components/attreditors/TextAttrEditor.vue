@@ -1,6 +1,7 @@
 <template>
   <q-card>
-    <q-input stack-label :model-value="value" :label="attrName" @update:model-value="updateText" @keydown="keydown" />
+    <q-input stack-label :model-value="value" :label="attrName" autofocus @update:model-value="updateText"
+      @keydown="keydown" />
   </q-card>
 </template>
 
