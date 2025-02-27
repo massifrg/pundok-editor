@@ -1,6 +1,6 @@
 <template>
   <div class="q-pa-sm">
-    <q-input v-model="text" filled dark outlined type="textarea"
+    <q-input v-model="text" filled dark outlined type="textarea" autofocus
       input-style="font-family: monospace; color: antiquewhite" class="text-h6" spellcheck="false" @keydown="keydown" />
   </div>
 </template>

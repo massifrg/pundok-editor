@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="isActive">
+  <q-dialog v-model="isActive" @show="show" @hide="hide">
     <q-card style="min-height: 20%; min-width: 50%">
       <q-bar>
         <q-icon :name="nodeOrMarkIcon" />
@@ -404,7 +404,7 @@ export default {
         tabNames.push('idref')
       if (this.isImage || this.isLink)
         tabNames.push('target')
-      return tabNames
+      return tabNames || []
     },
     importantClasses(): string[] {
       return importantClasses(this.nodeOrMark);
@@ -457,18 +457,7 @@ export default {
         const ee = Object.entries(this.nodeOrMark?.attrs || {});
         this.originalAttrs = Object.fromEntries(ee);
         this.attrs = Object.fromEntries(ee);
-        const node = newValue?.node
-        const tab = this.tab
-        const startTab = this.startTab
-        if (isEmpty(tab)) {
-          if (!isEmpty(startTab)) {
-            this.tab = startTab
-          } else if (node && node.type.name === NODE_NAME_INDEX_REF) {
-            this.tab = 'idref'
-          } else {
-            this.tab = this.editorTabs[0]
-          }
-        }
+        this.setTab()
         // const names = [this.startTab, ...this.editableAttributes]
         const action = this.onAttributesEditorShow as BaseActionForNodeOrMark | undefined
         if (action?.name === ACTION_ADD_CLASS.name) {
@@ -479,8 +468,34 @@ export default {
         }
       }
     },
+    startTab(newValue) {
+      this.setTab(newValue)
+    }
   },
   methods: {
+    show() {
+      this.setTab()
+    },
+    hide() {
+      this.tab = undefined
+    },
+    setTab(_tab?: string) {
+      const tab = _tab || this.startTab || this.tab
+      const node = this.nodeOrMark
+      if (!isEmpty(tab)) {
+        this.tab = tab
+      } else if (node && node.type.name === NODE_NAME_INDEX_REF) {
+        this.tab = 'idref'
+      } else {
+        const tabs = this.editorTabs
+        let index
+        index = tabs.indexOf('target')
+        index = index >= 0 ? index : tabs.indexOf('kv')
+        index = index >= 0 ? index : (tabs?.length || 1) - 1
+        this.tab = tabs[index]
+        console.log(`TAB=${this.tab}, index=${index}`)
+      }
+    },
     rawFormats(): { name: string, description: string, icon: string }[] {
       return PANDOC_OUTPUT_FORMATS.map(([name, description, icon]) => ({
         name,
