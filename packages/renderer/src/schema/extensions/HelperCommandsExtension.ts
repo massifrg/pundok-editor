@@ -9,11 +9,11 @@ import {
   Mark,
   MarkType,
   Node as ProsemirrorNode,
-  NodeRange,
   NodeType,
   ResolvedPos,
   Schema,
   Attrs,
+  Fragment,
 } from '@tiptap/pm/model';
 import {
   NodeSelection,
@@ -46,7 +46,6 @@ import {
   SK_MOVE_NODE_DOWN_INSIDE,
   SK_MOVE_NODE_UP,
   SK_MOVE_NODE_UP_INSIDE,
-  TABLE_ROLE_TABLE,
   typeNameOfElement,
 } from '../../common';
 
@@ -175,6 +174,14 @@ declare module '@tiptap/core' {
        * @returns
        */
       setTextSelectionRange: (from: number, to: number) => ReturnType;
+
+      /**
+       * Set the content of the selected Node (at pos?) with a single text node whose content is passed as first argument.
+       * @param content 
+       * @param pos 
+       * @returns 
+       */
+      setTextContent: (content: string, pos?: number) => ReturnType;
     };
   }
 }
@@ -520,6 +527,34 @@ export const HelperCommandsExtension = Extension.create({
               );
             return true;
           },
+
+      setTextContent: (content: string, pos?: number) => ({ dispatch, state, tr }) => {
+        if (!content || content.length === 0)
+          return false
+        const { doc, selection } = state
+        if (!pos && !(selection instanceof NodeSelection))
+          return false
+        const node = pos
+          ? doc.nodeAt(pos)
+          : (selection as NodeSelection).node
+        if (!node || !node.inlineContent)
+          return false
+        if (dispatch) {
+          const text = state.schema.text(content)
+          const newNode = node.type.createChecked(node.attrs, Fragment.from(text))
+          if (pos)
+            dispatch(
+              tr.setSelection(new NodeSelection(doc.resolve(pos)))
+                .replaceSelectionWith(newNode, true)
+            )
+          else
+            dispatch(
+              tr.replaceSelectionWith(newNode, true)
+            )
+        }
+        return true
+      }
+
     };
   },
 });
