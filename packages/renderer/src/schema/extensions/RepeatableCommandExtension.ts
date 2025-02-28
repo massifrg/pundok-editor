@@ -24,6 +24,7 @@ import {
   SK_REPEAT_COMMAND
 } from '../../common';
 import { isString } from 'lodash';
+import { isConstructorDeclaration } from 'typescript';
 
 const REPEATABLE_COMMAND_PLUGIN = 'repeatable-command-plugin';
 const SET_REPEATABLE_COMMAND = 'set-repeatable-command';
@@ -271,7 +272,6 @@ const applyAttrsChangeCommand: (
     if (!pos) {
       if (selection instanceof CellSelection) {
         const { $anchorCell, $headCell } = selection;
-        const tableStart = $anchorCell.start(-1);
         switch (elemType) {
           case NODE_NAME_TABLE_CELL:
           case NODE_NAME_TABLE_HEADER:
@@ -291,13 +291,17 @@ const applyAttrsChangeCommand: (
             }
             break;
           default:
-            selection.forEachCell((cell, cpos) => {
-              const from = tableStart + cpos;
-              const to = from + cell.content.size;
-              doc.nodesBetween(from, to, (node, pos) => {
-                addNodeIfChangeAppliable(node, pos);
-              });
-            });
+          // FIXME: commented out the following code, because it gave an error
+          // const tableStart = $anchorCell.start(-1);
+          // console.log(`elemType=${elemType}`)
+          // selection.forEachCell((cell, cpos) => {
+          //   console.log(`cellType=${cell.type.name}, cell size=${cell.nodeSize}, content=${cell.textContent}`)
+          //   const from = tableStart + cpos;
+          //   const to = from + cell.content.size;
+          //   doc.nodesBetween(from, to, (node, pos) => {
+          //     addNodeIfChangeAppliable(node, pos);
+          //   });
+          // });
         }
       } else {
         const { from, to, empty, $from } = selection;
