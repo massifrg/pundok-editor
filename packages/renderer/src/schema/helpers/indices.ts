@@ -10,7 +10,8 @@ import {
   INDEX_PUT_INDEX_REF_ATTR,
   INDEX_REF_CLASS_ATTR,
   NODE_NAME_DIV,
-  NODE_NAME_INDEX_DIV
+  NODE_NAME_INDEX_DIV,
+  NODE_NAME_INDEX_TERM
 } from '../../common';
 
 /**
@@ -73,4 +74,26 @@ export function documentIndices(doc: PmNode): Index[] {
     return true;
   });
   return indices;
+}
+
+function indexTerms(indexDiv: PmNode): PmNode[] {
+  const terms: PmNode[] = []
+  if (indexDiv)
+    indexDiv.descendants((node) => {
+      if (node.type.name === NODE_NAME_INDEX_TERM) {
+        terms.push(node)
+      }
+    })
+  return terms
+}
+
+export function termsOfDocumentIndex(doc: PmNode, indexName: string): PmNode[] {
+  const terms: PmNode[] = []
+  if (doc)
+    doc.descendants((node) => {
+      if (node.type.name === NODE_NAME_INDEX_DIV && node.attrs.kv[INDEX_NAME_ATTR] === indexName) {
+        indexTerms(node).forEach(term => { terms.push(term) })
+      }
+    })
+  return terms
 }

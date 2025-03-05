@@ -23,8 +23,8 @@
           </q-item>
         </q-list>
       </q-btn-dropdown>
-      <q-btn v-if="currentSource.type === 'project'" icon="mdi-refresh" color="primary" size="sm"
-        title="refresh project indices" @click="refreshProjectIndices" />
+      <q-btn v-if="currentSource.type !== 'json-file'" icon="mdi-refresh" color="primary" size="sm"
+        title="refresh project indices" @click="refreshIndicesCache" />
     </template>
   </q-input>
   <q-banner v-if="lastError" inline-actions class="text-white bg-red q-my-xs">
@@ -55,7 +55,7 @@ import {
 } from '../../common';
 import { QTableProps } from 'quasar';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
-import { getDocState } from '../../schema';
+import { getDocState, termsOfDocumentIndex } from '../../schema';
 import { Editor } from '@tiptap/vue-3';
 
 const SEARCHTEXT_MIN_LENGTH = 1
@@ -92,15 +92,18 @@ export default {
     'startingSearchText',
     'startingSearchTextVariant',
     'searchEveryWord',
-    'sources'
+    'sources',
+    'defaultSource'
   ],
   emits: ['selected', 'update-attribute', 'change-search-text-variant', 'commit'],
   data() {
+    let sourceIndex = (this.sources as IndexSource[]).findIndex(s => s.type === this.defaultSource)
+    sourceIndex = sourceIndex >= 0 ? sourceIndex : 0
     return {
       selected: this.startValue as string | undefined,
       searchText: this.startingSearchText || '',
       optionEveryWord: !!this.searchEveryWord,
-      optionSourceIndex: 0,
+      optionSourceIndex: sourceIndex,
       optionVariant: (this.startingSearchTextVariant || 'first-3-words') as SearchTextVariant,
       variants: ['first-3-words', 'first-2-words'] as SearchTextVariant[],
       results: [] as QueryResult[],
@@ -154,6 +157,8 @@ export default {
       switch (sourceType) {
         case 'json-file':
           return 'JSON file'
+        case 'document':
+        case 'project':
         default:
           return sourceType
       }
@@ -161,6 +166,8 @@ export default {
     sourceIcon(source?: IndexSource) {
       const sourceType = (source || this.currentSource).type
       switch (sourceType) {
+        case 'document':
+          return 'mdi-file-document-outline'
         case 'project':
           return 'mdi-file-tree'
         case 'json-file':
@@ -172,6 +179,8 @@ export default {
     sourceTitle(source?: IndexSource) {
       const sourceType = (source || this.currentSource).type
       switch (sourceType) {
+        case 'document':
+          return 'search among the index terms defined in this document (in metadata too)'
         case 'project':
           return 'search among the index terms defined in this project'
         case 'json-file':
@@ -189,33 +198,62 @@ export default {
         // this.results = []
         return
       }
-      if (this.currentSource.type === 'project') {
-        if (!this.indexTermsCache) await this.refreshProjectIndices()
-        this.results = searchQueryResults(this.indexTermsCache!, searchText)
-      } else {
-        const docState = getDocState(this.editor?.state)
-        const query: IndexTermQuery = {
-          type: 'index-term',
-          indexName: this.indexName || DEFAULT_INDEX_NAME,
-          searchText,
-          options: {
-            kind: 'index',
-            project: docState?.project,
-            configurationName: docState?.configuration?.name,
-            // path: this.lastSaveResponse?.doc.path,
+      switch (this.currentSource.type) {
+        case 'document':
+          if (!this.indexTermsCache) this.refreshDocumentIndices()
+          this.results = searchQueryResults(this.indexTermsCache!, searchText)
+          break
+        case 'project':
+          if (!this.indexTermsCache) await this.refreshProjectIndices()
+          this.results = searchQueryResults(this.indexTermsCache!, searchText)
+          break
+        case 'json-file':
+          const docState = getDocState(this.editor?.state)
+          const query: IndexTermQuery = {
+            type: 'index-term',
+            indexName: this.indexName || DEFAULT_INDEX_NAME,
+            searchText,
+            options: {
+              kind: 'index',
+              project: docState?.project,
+              configurationName: docState?.configuration?.name,
+              // path: this.lastSaveResponse?.doc.path,
+            }
           }
-        }
-        this.pendingSearch = true
-        this.backend?.queryDatabase(query)
-          .then(results => {
-            this.results = results
-            this.pendingSearch = false
-          })
-          .catch(err => {
-            this.lastError = `ERROR: ${err}`
-            this.pendingSearch = false
-          })
+          this.pendingSearch = true
+          this.backend?.queryDatabase(query)
+            .then(results => {
+              this.results = results
+              this.pendingSearch = false
+            })
+            .catch(err => {
+              this.lastError = `ERROR: ${err}`
+              this.pendingSearch = false
+            })
+          break
       }
+    },
+    async refreshIndicesCache() {
+      switch (this.currentSource.type) {
+        case 'document':
+          this.refreshDocumentIndices()
+          break
+        case 'project':
+          this.refreshProjectIndices()
+          break
+        default:
+      }
+    },
+    refreshDocumentIndices() {
+      this.pendingSearch = true
+      const nodes = termsOfDocumentIndex(this.editor?.state.doc, this.indexName)
+      const index_terms: QueryResult[] = nodes.map(n => ({
+        id: n.attrs.id,
+        text: n.textContent
+      }))
+      if (index_terms)
+        useProjectCache().setIndex(this.indexName, index_terms)
+      this.pendingSearch = false
     },
     async refreshProjectIndices() {
       const docState = getDocState(this.editor?.state)
@@ -252,11 +290,14 @@ export default {
     isSelected(row: any): boolean {
       return this.selected == row.id
     },
-    switchToSource(index: number) {
+    async switchToSource(index: number) {
       const oldIndex = this.optionSourceIndex
-      this.optionSourceIndex = index % this.sources.length
-      if (oldIndex !== this.optionSourceIndex)
+      const newIndex = index % this.sources.length
+      this.optionSourceIndex = newIndex
+      this.indexTermsCache = undefined
+      if (oldIndex !== this.optionSourceIndex) {
         this.doSearch()
+      }
     },
     setVariant(variant: SearchTextVariant) {
       this.optionVariant = variant

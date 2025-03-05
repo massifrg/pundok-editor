@@ -9,7 +9,8 @@
     </q-card-section>
     <q-card-section>
       <IndexIdEditor :editor="editor" :index-name="indexName" :start-value="idref" :starting-search-text="indexedText"
-        search-every-word="true" :sources="sources" @selected="idrefSelected" @commit="$emit('commit')" />
+        search-every-word="true" :sources="sources" :default-source="defaultSource" @selected="idrefSelected"
+        @commit="$emit('commit')" />
     </q-card-section>
     <q-card-actions class="q-my-md" align="center">
       <q-btn-toggle :model-value="indexRange" :options="rangeOptions()" toggle-color="primary" color="white"
@@ -26,6 +27,7 @@ import {
   INDEX_RANGE_STOP
 } from '../../schema';
 import {
+  Index,
   INDEX_NAME_ATTR,
   INDEX_RANGE_ATTR,
   INDEXED_TEXT_ATTR,
@@ -33,6 +35,7 @@ import {
   IndexSourceJsonFile
 } from '../../common';
 import IndexIdEditor from './IndexIdEditor.vue';
+import { documentIndices } from '../../schema/helpers/indices';
 
 export interface KvAttribute {
   key: string,
@@ -48,6 +51,7 @@ export default {
     return {
       entries,
       searchTerm: '',
+      defaultSource: 'document',
     };
   },
   computed: {
@@ -69,12 +73,19 @@ export default {
     },
     sources(): IndexSource[] {
       const project = getEditorProject(this.editor)
-      const s: IndexSource[] = project ? [{ type: 'project' }] : []
-      s.push({
+      const sources: IndexSource[] = project ? [{ type: 'project' }] : []
+      sources.push({
         type: 'json-file',
         filename: (this.indexName || "index") + '.json'
       } as IndexSourceJsonFile)
-      return s
+      const doc = this.editor?.state.doc
+      const docIndices: Index[] = doc && documentIndices(doc) || []
+      const index = this.indexName ? docIndices.find(i => i.indexName == this.indexName) : undefined
+      if (index) {
+        this.defaultSource = 'document'
+        sources.push({ type: 'document' })
+      }
+      return sources
     }
   },
   watch: {

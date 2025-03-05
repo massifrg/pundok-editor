@@ -46,7 +46,7 @@ export interface QueryResult extends Record<string, any> {
   html?: string;
 }
 
-export type IndexSourceType = 'project' | 'json-file';
+export type IndexSourceType = 'project' | 'json-file' | 'document';
 
 interface AbstractIndexSource {
   type: IndexSourceType;
@@ -61,7 +61,14 @@ export interface IndexSourceJsonFile extends AbstractIndexSource {
   filename: string;
 }
 
-export type IndexSource = IndexSourceProject | IndexSourceJsonFile;
+export interface IndexSourceDocumentMetadata extends AbstractIndexSource {
+  type: 'document'
+}
+
+export type IndexSource =
+  | IndexSourceProject
+  | IndexSourceJsonFile
+  | IndexSourceDocumentMetadata;
 
 /**
  * A function to search one or more texts inside an array of records.

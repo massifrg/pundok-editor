@@ -7,6 +7,7 @@ export * from './customStyle';
 export * from './cssSelection';
 export * from './DocState';
 export * from './fixPreArrowUpPlugin';
+export * from './indices';
 export * from './nodeDepth';
 export * from './markHelpers';
 export * from './mathType';
