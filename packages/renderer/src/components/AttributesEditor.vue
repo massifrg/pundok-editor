@@ -662,7 +662,18 @@ export default {
             .updateNodeAttributesAtPos(name, this.attrs, pos)
             // .setNodeSelection(pos)
             // .fixNodeAtPos(pos, { ...this.indices })
-            .scrollIntoView()
+            .scrollPosToCenterIfNotVisible(pos)
+            .focus()
+            .run();
+        } else if (snom.node.isAtom) {
+          // keep selection for atom nodes
+          this.editor?.chain()
+            .setNodeSelection(pos)
+            .setAttrsChange(repeatableChange)
+            .updateNodeAttributesAtPos(name, this.attrs, pos)
+            .setNodeSelection(pos)
+            .fixNodeAtPos(pos, { ...this.indices })
+            .scrollPosToCenterIfNotVisible(pos)
             .focus()
             .run();
         } else {
@@ -672,7 +683,7 @@ export default {
             .updateNodeAttributesAtPos(name, this.attrs, pos)
             // .setNodeSelection(pos)
             .fixNodeAtPos(pos, { ...this.indices })
-            .scrollIntoView()
+            .scrollPosToCenterIfNotVisible(pos)
             .focus()
             .run();
         }
