@@ -93,7 +93,8 @@ import {
   COLOR_JUST_EXPORTED,
   PandocFilterTransform,
   PANDOC_TYPES_VERSION,
-  WhatToDoWithResult
+  WhatToDoWithResult,
+  NODE_NAME_INDEX_TERM
 } from '../common';
 import {
   useActions,
@@ -948,7 +949,18 @@ export default {
     // methods for attributes editing
     editNodeOrMarkAttributes(nodeOrMark: SelectedNodeOrMark, props?: ActionEditAttributesProps) {
       if (nodeOrMark) {
-        this.startAttributesTab = props?.tab;
+        let tab = props?.tab
+        const node = nodeOrMark.node
+        if (!tab && node) {
+          switch (node.type.name) {
+            case NODE_NAME_INDEX_TERM:
+              if ((node.attrs.id || '').length === 0)
+                tab = "id"
+              break
+            default:
+          }
+        }
+        this.startAttributesTab = tab;
         this.onAttributesEditorShow = props?.action;
         this.nodeOrMarkToEdit = nodeOrMark;
       }
