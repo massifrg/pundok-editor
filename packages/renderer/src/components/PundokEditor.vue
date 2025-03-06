@@ -145,6 +145,8 @@ import {
   ACTION_DOCUMENT_TRANSFORM,
   ActionEditAttributesProps,
   BaseActionForNodeOrMark,
+  ACTION_SELECT_NEXT,
+  ACTION_SELECT_PREV,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -379,6 +381,16 @@ export default {
               this.message = message
             } else {
               console.log(message?.message)
+            }
+            break
+          case ACTION_SELECT_PREV.name:
+            if (!this.visibleSearchAndReplaceDialog) {
+              editor.commands.selectPrev()
+            }
+            break
+          case ACTION_SELECT_NEXT.name:
+            if (!this.visibleSearchAndReplaceDialog) {
+              editor.commands.selectNext()
             }
             break
           default:
