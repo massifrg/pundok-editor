@@ -182,6 +182,25 @@ declare module '@tiptap/core' {
        * @returns 
        */
       setTextContent: (content: string, pos?: number) => ReturnType;
+
+      /**
+       * Select the previous node of the same kind.
+       * @param n the node or node type to find
+       */
+      selectPrev: (n?: ProsemirrorNode | NodeType) => ReturnType;
+
+      /**
+       * Select the next node of the same kind.
+       * @param n the node or node type to find
+       */
+      selectNext: (n?: ProsemirrorNode | NodeType) => ReturnType;
+
+      /**
+       * A better implementation of scrollIntoView().
+       * @param pos
+       * @returns 
+       */
+      scrollPosToCenterIfNotVisible: (pos: number) => ReturnType;
     };
   }
 }
@@ -553,11 +572,116 @@ export const HelperCommandsExtension = Extension.create({
             )
         }
         return true
-      }
+      },
 
+      selectPrev: (n?: ProsemirrorNode | NodeType) => ({ dispatch, state, tr, view }) => {
+        const { doc, selection } = state
+        const { from, $head } = selection
+        let searchedType: NodeType
+        let last = from
+        if (n) {
+          if (n instanceof NodeType)
+            searchedType = n
+          else if (n instanceof Node)
+            searchedType = n.type
+        } else if (selection instanceof NodeSelection) {
+          searchedType = selection.node.type
+        } else {
+          searchedType = $head.node().type
+        }
+        // console.log(`searching for previous ${searchedType!.name}`)
+        let prevNodePos: number | undefined = undefined;
+        doc.nodesBetween(0, last >= 0 ? last : 0, (node, pos) => {
+          if (node.type === searchedType)
+            prevNodePos = prevNodePos ? (pos > prevNodePos && pos < last ? pos : prevNodePos) : pos
+          return true
+        })
+        if (prevNodePos && dispatch) {
+          tr.setSelection(new NodeSelection(doc.resolve(prevNodePos)))
+          const dom = view.nodeDOM(prevNodePos) as HTMLElement | null
+          if (dom && !isElementInViewport(dom)) {
+            // tr.scrollIntoView()
+            dom.scrollIntoView({
+              behavior: 'smooth', // Smooth scrolling
+              block: 'center',    // Vertical alignment: 'start', 'center', or 'end'
+              // inline: 'center'    // Horizontal alignment (optional)
+            });
+          }
+        }
+        return !!prevNodePos
+      },
+
+      selectNext: (n?: ProsemirrorNode | NodeType) => ({ dispatch, state, tr, view }) => {
+        const { doc, selection } = state
+        const { to, $head } = selection
+        let searchedType: NodeType
+        let first = to
+        if (n) {
+          if (n instanceof NodeType)
+            searchedType = n
+          else if (n instanceof Node)
+            searchedType = n.type
+        } else if (selection instanceof NodeSelection) {
+          searchedType = selection.node.type
+        } else {
+          searchedType = $head.node().type
+        }
+        // console.log(`searching for next ${searchedType!.name}`)
+        let nextNodePos: number | undefined = undefined;
+        doc.nodesBetween(first, doc.content.size, (node, pos) => {
+          if (node.type === searchedType)
+            nextNodePos = nextNodePos ? (pos < nextNodePos && pos > first ? pos : nextNodePos) : pos
+          return true
+        })
+        if (nextNodePos && dispatch) {
+          tr.setSelection(new NodeSelection(doc.resolve(nextNodePos)))
+          const dom = view.nodeDOM(nextNodePos) as HTMLElement | null
+          if (dom && !isElementInViewport(dom)) {
+            // tr.scrollIntoView()
+            dom.scrollIntoView({
+              behavior: 'smooth', // Smooth scrolling
+              block: 'center',    // Vertical alignment: 'start', 'center', or 'end'
+              // inline: 'center'    // Horizontal alignment (optional)
+            });
+          }
+        }
+        return !!nextNodePos
+      },
+
+      scrollPosToCenterIfNotVisible: (pos: number) => ({ dispatch, state, view }) => {
+        let dom = view.nodeDOM(pos) as HTMLElement | null
+        if (!dom || !(dom instanceof HTMLElement)) {
+          const $pos = state.doc.resolve(pos)
+          let p = $pos.start()
+          if (!$pos.node().isText) p--
+          // console.log(`node: ${$pos.node().type.name} at ${p}`)
+          dom = view.nodeDOM(p) as HTMLElement | null
+        }
+        if (dom && (dom instanceof HTMLElement)) {
+          if (dispatch && !isElementInViewport(dom)) {
+            dom.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',    // Vertical alignment: 'start', 'center', or 'end'
+              // inline: 'center'    // Horizontal alignment (optional)
+            });
+          }
+          return true
+        }
+        return false
+      }
     };
   },
 });
+
+function isElementInViewport(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  );
+}
 
 function parentCantLiveWithoutNodeAtPos(doc: ProsemirrorNode, pos: number) {
   const nodeAtPos = doc.nodeAt(pos);
