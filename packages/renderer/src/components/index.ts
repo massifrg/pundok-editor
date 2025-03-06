@@ -138,6 +138,7 @@ export { default as CustomStyleEditor } from './attreditors/CustomStyleEditor.vu
 export { default as IndexIdEditor } from './attreditors/IndexIdEditor.vue'
 export { default as IndexNameEditor } from './attreditors/IndexNameEditor.vue'
 export { default as IndexRefEditor } from './attreditors/IndexRefEditor.vue'
+export { default as IndexTermIdEditor } from './attreditors/IndexTermIdEditor.vue'
 export { default as IntegerEditor } from './attreditors/IntegerEditor.vue';
 export { default as LevelEditor } from './attreditors/LevelEditor.vue';
 export { default as NoteTypeEditor } from './attreditors/NoteTypeEditor.vue';

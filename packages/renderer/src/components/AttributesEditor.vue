@@ -25,15 +25,13 @@
           </q-card-actions>
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('id')" name="id">
-          <TextAttrEditor :start-value="attrs.id" attr-name="id" @update-attribute="updateAttribute" enter-commits
+          <TextAttrEditor v-if="!isIndexTerm" :start-value="attrs.id" attr-name="id" @update-attribute="updateAttribute"
+            enter-commits @commit="doChange" />
+          <IndexTermIdEditor v-if="isIndexTerm" class="q-my-xs" :editor="editor" :start-value="attrs.id"
+            :index-name="indexName" :sources="indexSources()" :starting-search-text="searchText"
+            search-every-word="true" :starting-search-text-variant="searchTextVariant"
+            @change-search-text-variant="changeSearchTextVariant" @update-attribute="updateAttribute"
             @commit="doChange" />
-          <q-card v-if="isIndexTerm" class="q-my-xs">
-            <IndexIdEditor class="q-my-xs" :editor="editor" attr-name="id" :start-value="attrs.id"
-              :index-name="indexName" :sources="indexSources()" :starting-search-text="searchText"
-              search-every-word="true" :starting-search-text-variant="searchTextVariant"
-              @change-search-text-variant="changeSearchTextVariant" @update-attribute="updateAttribute"
-              @commit="doChange" />
-          </q-card>
           <q-space />
           <q-card-actions align="center">
             <q-btn icon="mdi-reload" title="reset id" size="xs" @click="resetAttribute('id')" />
@@ -266,8 +264,9 @@ import NoteTypeEditor from './attreditors/NoteTypeEditor.vue';
 import SelectValueEditor from './attreditors/SelectValueEditor.vue';
 import RawTextEditor from './attreditors/RawTextEditor.vue';
 import IndexRefEditor from './attreditors/IndexRefEditor.vue';
+import IndexTermIdEditor from './attreditors/IndexTermIdEditor.vue';
 import IndexNameEditor from './attreditors/IndexNameEditor.vue';
-import IndexIdEditor, { SearchTextVariant } from './attreditors/IndexIdEditor.vue';
+import { SearchTextVariant } from './attreditors/IndexIdEditor.vue';
 import TargetEditor from './attreditors/TargetEditor.vue';
 import {
   INCLUDE_DOC_CLASS,
@@ -328,7 +327,7 @@ export default {
     RawTextEditor,
     IndexRefEditor,
     IndexNameEditor,
-    IndexIdEditor,
+    IndexTermIdEditor,
     TargetEditor,
   },
   setup() {
