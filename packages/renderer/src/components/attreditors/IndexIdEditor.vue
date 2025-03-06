@@ -1,6 +1,6 @@
 <template>
   <q-input class="q-mx-xs" v-model="searchText" label="text to search" stack-label debounce="500"
-    @update:model-value="updateSearchText">
+    @update:model-value="updateSearchText" autofocus @keyup="keyup">
     <template v-slot:append>
       <q-btn-dropdown v-if="variants.length > 0" title="what to search" color="primary" size="sm" auto-close
         :label="optionVariant">
@@ -302,6 +302,12 @@ export default {
     setVariant(variant: SearchTextVariant) {
       this.optionVariant = variant
       this.$emit('change-search-text-variant', variant)
+    },
+    keyup(e: KeyboardEvent) {
+      console.log(e)
+      if (e.code === 'Enter' && e.altKey && !this.selected && this.results.length === 1) {
+        this.selectResultAndCommit(e, this.results[0], 0)
+      }
     }
   }
 }
