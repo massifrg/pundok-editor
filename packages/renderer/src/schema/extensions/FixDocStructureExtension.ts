@@ -81,7 +81,7 @@ const divEncodedNodesFixer: ProsemirrorPandocFixer = ({
   if (divEncodedNodeNames.includes(newTypeName)) {
     let { classes, kv } = attrs || {};
     if (classes.includes(INDEX_CLASS)) {
-      newTypeName = NODE_NAME_DIV;
+      newTypeName = NODE_NAME_INDEX_DIV;
       let indexName = kv[INDEX_NAME_ATTR];
       if (!indexName)
         indexName =
