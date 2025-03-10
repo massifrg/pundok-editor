@@ -2,13 +2,13 @@
   <q-card class="q-my-xs">
     <q-card-section class="q-mx-sm" horizontal>
       <q-input class="q-mx-xs" :model-value="idValue" label="id" stack-label @update:model-value="setIdValue"
-        style="min-width: 40%" />
+        style="min-width: 40%" @keyup="keyup" />
     </q-card-section>
     <q-card-section>
       <IndexIdEditor :editor="editor" :index-name="indexName" :start-value="startValue"
         :starting-search-text="startingSearchText" :sources="sources" :search-every-word="searchEveryWord"
         :starting-search-text-variant="startingSearchTextVariant" @selected="setIdValue" @commit="$emit('commit')"
-        @change-search-text-variant="setVariant" />
+        @change-search-text-variant="setVariant" @cancel="$emit('cancel')" />
     </q-card-section>
   </q-card>
 </template>
@@ -28,7 +28,7 @@ export default {
     'searchEveryWord',
     'startingSearchTextVariant'
   ],
-  emits: ['update-attribute', 'commit', 'change-search-text-variant'],
+  emits: ['update-attribute', 'commit', 'cancel', 'change-search-text-variant'],
   data() {
     return {
       searchTerm: '',
@@ -56,6 +56,9 @@ export default {
     setVariant(variant: SearchTextVariant) {
       this.$emit('change-search-text-variant', variant)
     },
+    keyup(e: KeyboardEvent) {
+      if (e.code === 'Escape') this.$emit('cancel')
+    }
   },
 };
 </script>

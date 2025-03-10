@@ -95,7 +95,7 @@ export default {
     'sources',
     'defaultSource'
   ],
-  emits: ['selected', 'update-attribute', 'change-search-text-variant', 'commit'],
+  emits: ['selected', 'update-attribute', 'change-search-text-variant', 'commit', 'cancel'],
   data() {
     let sourceIndex = (this.sources as IndexSource[]).findIndex(s => s.type === this.defaultSource)
     sourceIndex = sourceIndex >= 0 ? sourceIndex : 0
@@ -307,6 +307,8 @@ export default {
       console.log(e)
       if (e.code === 'Enter' && e.altKey && !this.selected && this.results.length === 1) {
         this.selectResultAndCommit(e, this.results[0], 0)
+      } else if (e.code === 'Escape') {
+        this.$emit('cancel')
       }
     }
   }

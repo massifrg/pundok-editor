@@ -2,7 +2,7 @@
   <q-card>
     <q-card-section class="q-mx-sm" horizontal>
       <q-input class="q-mx-xs" :model-value="idref" label="idref" stack-label @update:model-value="updateIdref"
-        style="min-width: 40%" />
+        style="min-width: 40%" @keyup="keyup" />
       <q-space />
       <q-input class="q-mx-xs" disable :model-value="indexName" label="index-name" stack-label @update:model-value=""
         style="min-width: 40%" />
@@ -10,7 +10,7 @@
     <q-card-section>
       <IndexIdEditor :editor="editor" :index-name="indexName" :start-value="idref" :starting-search-text="indexedText"
         search-every-word="true" :sources="sources" :default-source="defaultSource" @selected="idrefSelected"
-        @commit="$emit('commit')" />
+        @commit="$emit('commit')" @cancel="$emit('cancel')" />
     </q-card-section>
     <q-card-actions class="q-my-md" align="center">
       <q-btn-toggle :model-value="indexRange" :options="rangeOptions()" toggle-color="primary" color="white"
@@ -45,7 +45,7 @@ export interface KvAttribute {
 export default {
   components: { IndexIdEditor },
   props: ['editor', 'nodeOrMark', 'originalEntries', 'initialEntries'],
-  emits: ['update-attribute', 'commit'],
+  emits: ['update-attribute', 'commit', 'cancel'],
   data() {
     const entries: KvAttribute[] = [...(this.initialEntries || [] as KvAttribute[])]
     return {
@@ -153,6 +153,9 @@ export default {
     },
     idrefSelected(idref: string) {
       this.setNewValueForAttr('idref', idref)
+    },
+    keyup(e: KeyboardEvent) {
+      if (e.code === 'Escape') this.$emit('cancel')
     }
   },
 };

@@ -1,6 +1,6 @@
 <template>
   <q-dialog v-model="isActive" @show="show" @hide="hide"
-    :full-height="hasContentVirtualAttr && tab === contentVirtualAttrName">
+    :full-height="hasContentVirtualAttr && tab === contentVirtualAttrName" @keyup="keyup">
     <q-card style="min-height: 20%; min-width: 50%">
       <q-bar>
         <q-icon :name="nodeOrMarkIcon" />
@@ -30,8 +30,8 @@
           <IndexTermIdEditor v-if="isIndexTerm" class="q-my-xs" :editor="editor" :start-value="attrs.id"
             :index-name="indexName" :sources="indexSources()" :starting-search-text="searchText"
             search-every-word="true" :starting-search-text-variant="searchTextVariant"
-            @change-search-text-variant="changeSearchTextVariant" @update-attribute="updateAttribute"
-            @commit="doChange" />
+            @change-search-text-variant="changeSearchTextVariant" @update-attribute="updateAttribute" @commit="doChange"
+            @cancel="doCancel" />
           <q-space />
           <q-card-actions align="center">
             <q-btn icon="mdi-reload" title="reset id" size="xs" @click="resetAttribute('id')" />
@@ -185,7 +185,7 @@
         <q-tab-panel v-if="isIndexRef" name="idref">
           <IndexRefEditor :editor="editor" :node-or-mark="nodeOrMark"
             :original-entries="objectEntries('kv', originalAttrs)" :initial-entries="objectEntries('kv', attrs)"
-            @update-attribute="updateAttribute" @commit="doChange" />
+            @update-attribute="updateAttribute" @commit="doChange" @cancel="doCancel" />
           <q-toggle v-model="optionPropagateIdref" label="propagate idref to the refs with the same indexed text" />
           <q-card-actions align="center">
             <q-btn icon="mdi-reload" title="reset idref" size="xs" @click="resetKvAttribute('idref')" />
@@ -713,6 +713,9 @@ export default {
     },
     doCancel() {
       this.$emit('closeAttributesEditor');
+    },
+    keyup(e: KeyboardEvent) {
+      if (e.code === 'Escape') this.doCancel()
     },
     updateAttribute(attrName: string, newValue: any) {
       if (attrName === 'classes') return
