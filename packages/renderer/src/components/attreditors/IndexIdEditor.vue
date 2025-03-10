@@ -296,6 +296,7 @@ export default {
       this.optionSourceIndex = newIndex
       this.indexTermsCache = undefined
       if (oldIndex !== this.optionSourceIndex) {
+        await this.refreshIndicesCache()
         this.doSearch()
       }
     },
