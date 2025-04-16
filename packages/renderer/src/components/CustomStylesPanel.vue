@@ -59,6 +59,7 @@
             <q-separator />
           </q-tab-panel>
 
+          <!-- BLOCKS (Div, Table, ...) -->
           <q-tab-panel v-for="(b, i) in outerBlocks" :name="`outer_${i}`">
             <q-list v-if="innerParaLike" dense>
               <q-item class="text-caption text-weight-bold q-pa-xs">Styles</q-item>
@@ -85,6 +86,7 @@
             </q-list>
           </q-tab-panel>
 
+          <!-- HEADERS -->
           <q-tab-panel v-if="innerParaLike" name="header" class="q-pa-none">
             <q-list v-if="innerParaLike" v-for="(level, index) in headingLevels" dense>
               <q-separator v-if="index !== 0" />
@@ -95,11 +97,11 @@
                     size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap><span class="style-item">H{{ level
-                    }}&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
+                }}&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
               </q-item>
               <q-item v-for="(styleItem, index) in availableHeaderStylesForNode(innerParaLike, level)" :key="index"
                 clickable :value="index" :title="description(styleItem)" dense class="q-pa-xs"
-                @click="setCustomStyle(innerParaLike, styleItem)">
+                @click="toggleStyle(styleItem, innerParaLike)">
                 <q-item-section side>
                   <q-icon
                     :name="isCustomStyleActive(styleItem, innerParaLike) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
@@ -110,6 +112,7 @@
             </q-list>
           </q-tab-panel>
 
+          <!-- PARAGRAPHS -->
           <q-tab-panel v-if="innerParaLike" name="para" class="q-pa-none">
             <q-list dense>
               <q-item key="p-no-style" clickable title="normal paragraph without custom style" dense class="q-pa-xs"
@@ -122,7 +125,7 @@
               <q-separator />
               <q-item v-for="(styleItem, index) in availableParaStylesForNode(innerParaLike)" :key="index" clickable
                 :value="index" :title="description(styleItem)" class="q-pa-xs"
-                @click="setCustomStyle(innerParaLike, styleItem)">
+                @click="toggleStyle(styleItem, innerParaLike)">
                 <q-item-section side>
                   <q-icon
                     :name="isCustomStyleActive(styleItem, innerParaLike) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
@@ -420,6 +423,8 @@ export default {
       return cs.deprecated ? `<del>${label}</del>` : label
     },
     setCustomStyle(nodeOrType: Node | string, cs: CustomStyleInstance, pos?: number) {
+      if (nodeOrType instanceof Node)
+        this.removeCurrentCustomStyle(nodeOrType, pos)
       if (pos)
         this.editor.chain().setCustomStyle(nodeOrType, cs, pos).run()
       else
@@ -434,15 +439,17 @@ export default {
     isCustomStyleActive(cs: CustomStyleInstance, node: Node) {
       return isCustomStyleActive(cs, node)
     },
+    removeCurrentCustomStyle(node: Node, pos?: number) {
+      const activeStyles = activeCustomStyles(node, this.availableStyles)
+      activeStyles.forEach(active => {
+        this.unsetCustomStyle(node.type.name, active, pos)
+      })
+    },
     toggleStyle(cs: CustomStyleInstance, node: Node, pos?: number) {
       if (isCustomStyleActive(cs, node)) {
         this.unsetCustomStyle(node.type.name, cs, pos)
       } else {
-        // it should be only one active style
-        const activeStyles = activeCustomStyles(node, this.availableStyles)
-        activeStyles.forEach(active => {
-          this.unsetCustomStyle(node.type.name, active, pos)
-        })
+        this.removeCurrentCustomStyle(node, pos)
         this.setCustomStyle(node.type.name, cs, pos)
       }
     },
