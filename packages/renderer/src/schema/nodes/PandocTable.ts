@@ -12,10 +12,12 @@ import {
   EditorState,
   NodeSelection,
   Selection,
+  TextSelection,
   Transaction,
 } from '@tiptap/pm/state';
 import {
   Fragment,
+  Mark,
   Node as PmNode,
   ResolvedPos,
   Schema,
@@ -72,8 +74,12 @@ import { isEqual } from 'lodash';
 import { updateTableAttrsPlugin } from '../helpers/updateTableAttrsPlugin';
 import {
   NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_PARAGRAPH,
+  NODE_NAME_PLAIN,
+  NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_CELL,
   NODE_NAME_TABLE_HEADER,
+  NODE_NAME_TABLE_ROW,
   TABLE_ROLE_BODY,
   TABLE_ROLE_CELL,
   TABLE_ROLE_FOOT,
@@ -142,6 +148,7 @@ declare module '@tiptap/core' {
       equalizeColumnWidths: () => ReturnType;
       // secureColumnWidths: () => ReturnType;
       setColumnAlignment: (alignment: Alignment, column?: number) => ReturnType
+      textToTable: (sep?: string) => ReturnType
     };
   }
 
@@ -909,6 +916,67 @@ export const PandocTable = Node.create<PandocTableOptions>({
           }
           if (tr.steps.length > 0)
             dispatch(tr)
+        }
+        return true
+      },
+      textToTable: (sep: string | RegExp = /\s{2,}/) => ({ dispatch, state, tr }) => {
+        const { schema, selection } = state
+        const { empty, $anchor, $head } = selection
+        if (empty) return false
+        const isPara: ((n: PmNode) => boolean) = n =>
+          n.type.name === NODE_NAME_PARAGRAPH || n.type.name === NODE_NAME_PLAIN
+        const depth = innerNodeDepth($anchor, isPara)
+        const headDepth = innerNodeDepth($head, isPara)
+        if (!depth || depth !== headDepth) return false
+        const parent = $anchor.node(depth - 1)
+        const anchorIndex = $anchor.index(depth - 1)
+        const headIndex = $head.index(depth - 1)
+        const paras: PmNode[] = []
+        for (let i = anchorIndex; i <= headIndex; i++)
+          paras.push(parent.child(i))
+        if (!paras.every(isPara)) return false
+        if (dispatch) {
+          const rows: PmNode[] = []
+          let cells: PmNode[]
+          let currentCell: PmNode[]
+          function addText(t: string, marks: readonly Mark[]) {
+            const s = !t || t == '' ? ' ' : t
+            const text = schema.text(s, marks)
+            currentCell.push(text)
+          }
+          function addCell() {
+            const plain = schema.nodes[NODE_NAME_PLAIN].create(null, currentCell)
+            cells.push(schema.nodes[NODE_NAME_TABLE_CELL].create(null, plain))
+          }
+          paras.map(para => {
+            cells = []
+            currentCell = []
+            for (let i = 0; i < para.childCount; i++) {
+              const child = para.child(i)
+              if (!child.isText) {
+                currentCell.push(child)
+              } else {
+                const chunks = child.text!.split(sep)
+                if (chunks.length < 2) {
+                  currentCell.push(child)
+                } else {
+                  chunks.forEach((chunk, index) => {
+                    if (index > 0) {
+                      addCell()
+                      currentCell = []
+                    }
+                    addText(chunk, child.marks)
+                  })
+                }
+              }
+            }
+            if (currentCell.length > 0) addCell()
+            rows.push(schema.nodes[NODE_NAME_TABLE_ROW].create(null, cells))
+          })
+          const body = schema.nodes[NODE_NAME_TABLE_BODY].create(null, rows)
+          const table = schema.nodes[NODE_NAME_PANDOC_TABLE].create(null, body)
+          tr.replaceWith($anchor.start(depth) - 1, $head.end(depth) + 1, table)
+          dispatch(tr)
         }
         return true
       }

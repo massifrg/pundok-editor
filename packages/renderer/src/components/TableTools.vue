@@ -31,6 +31,8 @@
           <q-space />
           <div class="q-gutter-xs q-mr-md">
             <q-btn color="primary" rounded icon="mdi-table-plus" title="create new table" @click="newTable()" />
+            <q-btn color="primary" rounded icon="mdi-table-arrow-left" title="convert text to table"
+              @click="textToTable()" :disabled="!editor.can().textToTable()" />
             <q-btn color="primary" rounded icon="mdi-table-minus" title="delete table" :disabled="!isCursorInTable"
               @click="deleteTable()" />
             <q-btn color="primary" rounded icon="mdi-table-check" title="check and fix table"
@@ -283,6 +285,9 @@ export default {
         .fixPandocTable()
         .focus()
         .run()
+    },
+    textToTable() {
+      this.editor?.commands.textToTable()
     },
     deleteTable() {
       this.editor?.chain().deleteTable().focus().run()
