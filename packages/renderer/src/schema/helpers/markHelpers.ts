@@ -118,9 +118,17 @@ export function getMark(
   attrs?: Attrs | null | undefined,
   schema?: Schema,
 ): Mark | undefined {
-  if (m instanceof Mark) return m;
-  else if (m instanceof MarkType) return m.create(attrs);
-  else return schema?.marks[m]?.create(attrs);
+  let mark: Mark | undefined
+  if (m instanceof Mark) {
+    mark = m;
+  } else {
+    const a: Attrs = { id: null, classes: [], kv: {}, ...(attrs || {}) }
+    if (m instanceof MarkType)
+      mark = m.create(a);
+    else
+      mark = schema?.marks[m]?.create(a);
+  }
+  return mark
 }
 
 export function markIcon(mark?: Mark) {
