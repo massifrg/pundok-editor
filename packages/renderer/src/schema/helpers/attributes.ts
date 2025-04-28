@@ -3,11 +3,11 @@ import { isArray, isString } from 'lodash';
 import { PmColSpec } from './colSpec';
 import { textAlignToPandocAlignment } from './alignments';
 import {
+  CustomizableWithStyle,
   INDEX_NAME_ATTR,
   INDEX_PUT_INDEX_REF_ATTR,
   INDEX_REF_CLASS_ATTR,
   MARK_NAME_CODE,
-  MARK_NAME_SPAN,
   NODE_NAME_CODE_BLOCK,
   NODE_NAME_NOTE
 } from '../../common';
@@ -177,7 +177,8 @@ const DUPLICATED_KV_ATTRIBUTES: DuplicatedAttribute[] = [
   [MARK_NAME_CODE, 'language', 'language'],
   [NODE_NAME_CODE_BLOCK, 'language', 'language'],
   [NODE_NAME_NOTE, 'noteType', 'note-type'],
-  [MARK_NAME_SPAN, 'customStyle', 'custom-style'],
+  ...(Object.keys(CustomizableWithStyle)
+    .map(cws => [cws, 'customStyle', 'custom-style'] as DuplicatedAttribute)),
 ];
 
 function attrNamesForNodeOrMark(

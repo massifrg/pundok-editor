@@ -1,4 +1,4 @@
-import { MarkType, Schema } from '@tiptap/pm/model';
+import { MarkType, Node as PmNode, Schema } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import {
@@ -10,6 +10,7 @@ import {
   CustomClass,
   typeNameOfElement,
   NODE_NAME_PARAGRAPH,
+  CustomizableWithStyle,
 } from '../../common';
 import {
   TypeOrNode,
@@ -50,6 +51,7 @@ declare module '@tiptap/core' {
         style: CustomStyleInstance,
         pos?: number,
       ) => ReturnType;
+      resetCustomStyle: (pos?: number) => ReturnType;
       unsetParagraphCustomStyle: (pos?: number) => ReturnType;
       toggleCustomStyle: (
         typeOrNode: TypeOrNode,
@@ -97,7 +99,7 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
 
   addOptions() {
     return {
-      types: ['paragraph', 'span'],
+      types: Object.keys(CustomizableWithStyle),
     };
   },
 
@@ -246,6 +248,31 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
               )(cp);
             }
           },
+      resetCustomStyle: (pos?: number) => ({ dispatch, state, tr }) => {
+        const { doc, selection } = state
+        function reset(node: PmNode | null, pos: number) {
+          if (node && node.attrs.customStyle) {
+            if (dispatch) {
+              const newAttrs = { ...node.attrs }
+              delete newAttrs.customStyle
+              if (newAttrs.kv) delete newAttrs.kv['custom-style']
+              dispatch(tr.setNodeMarkup(pos, null, newAttrs))
+            }
+            return true
+          }
+          return false
+        }
+        if (pos) {
+          const node = doc.nodeAt(pos)
+          return reset(node, pos)
+        }
+        const { from, to } = selection
+        let cando = false
+        doc.nodesBetween(from, to, (node, pos) => {
+          cando ||= reset(node, pos)
+        })
+        return cando
+      },
       unsetParagraphCustomStyle: (pos?: number) => ({ dispatch, state, tr }) => {
         const { doc, selection } = state
         if (pos) {

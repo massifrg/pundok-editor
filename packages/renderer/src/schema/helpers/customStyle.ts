@@ -5,7 +5,6 @@ import {
   isCustomizableWithClass,
   isCustomizableWithStyle,
   isCustomStyleActive,
-  NODE_NAME_HEADING,
 } from '../../common';
 import {
   addClass,
@@ -31,7 +30,9 @@ export function setCustomStyleAttr(
   cs: CustomStyleInstance,
 ): Attrs {
   if (isCustomizableWithStyle(el)) {
-    let newAttrs = setCustomStyleAttribute(el.attrs, cs.attrs.customStyle);
+    const { customStyle, level } = cs.attrs
+    let newAttrs = setCustomStyleAttribute(el.attrs, customStyle);
+    if (level) newAttrs = { ...newAttrs, level }
     let kv: Record<string, string> = newAttrs.kv;
     cs.styleDef.classes?.forEach((cc) => {
       kv = setAttributesOfCustomClass(kv, cc);
@@ -39,11 +40,7 @@ export function setCustomStyleAttr(
     kv = setAttributesOfCustomStyle(kv, cs.styleDef);
     return { ...newAttrs, kv };
   } else if (isCustomizableWithClass(el)) {
-    const { className, level } = cs.attrs;
-    let newAttrs = addClass(el.attrs, className);
-    return level && el.type.name === NODE_NAME_HEADING
-      ? { ...newAttrs, level }
-      : newAttrs;
+    return addClass(el.attrs, cs.attrs.className);
   }
   return el.attrs;
 }

@@ -101,7 +101,7 @@
               </q-item>
               <q-item v-for="(styleItem, index) in availableHeaderStylesForNode(innerParaLike, level)" :key="index"
                 clickable :value="index" :title="description(styleItem)" dense class="q-pa-xs"
-                @click="toggleStyle(styleItem, innerParaLike)">
+                @click="setHeaderStyle(styleItem)">
                 <q-item-section side>
                   <q-icon
                     :name="isCustomStyleActive(styleItem, innerParaLike) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
@@ -124,8 +124,7 @@
               </q-item>
               <q-separator />
               <q-item v-for="(styleItem, index) in availableParaStylesForNode(innerParaLike)" :key="index" clickable
-                :value="index" :title="description(styleItem)" class="q-pa-xs"
-                @click="toggleStyle(styleItem, innerParaLike)">
+                :value="index" :title="description(styleItem)" class="q-pa-xs" @click="setParaStyle(styleItem)">
                 <q-item-section side>
                   <q-icon
                     :name="isCustomStyleActive(styleItem, innerParaLike) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
@@ -201,7 +200,7 @@ const MINI_SPLITTER_VALUE = 20
 
 export default {
   props: ['editor', 'currentBlocks', 'activeCustomStyles', 'panelState'],
-  emits: ['unsetCustomStyle', 'setCustomStyle'],
+  // emits: ['unsetCustomStyle', 'setCustomStyle'],
   setup() {
     setupQuasarIcons()
   },
@@ -289,11 +288,8 @@ export default {
     isHeader() {
       return this.innerParaLike?.type.name === NODE_NAME_HEADING
     },
-    innerParaLikeActiveStyles(): CustomStyleInstance[] {
-      const paraLike = this.innerParaLike
-      return paraLike
-        ? this.availableStylesForNode(paraLike).filter(s => isCustomStyleActive(s, paraLike))
-        : []
+    headerLevel() {
+      return this.isHeader && this.innerParaLike!.attrs.level || 0
     },
     charStyles() {
       return customStylesForType(this.customStyles, 'span')
@@ -454,23 +450,51 @@ export default {
       }
     },
     isParaWithoutStyles(): boolean {
-      return this.isParagraph && this.innerParaLikeActiveStyles.length === 0
+      return this.isParagraph && !this.innerParaLike?.attrs.customStyle
+    },
+    setParaStyle(cs: CustomStyleInstance) {
+      if (this.innerParaLike) {
+        const commands: any[] = []
+        if (this.isHeader)
+          commands.push(['setParagraph'])
+        commands.push(['setCustomStyle', NODE_NAME_PARAGRAPH, cs])
+        this.editor.commands.runRepeatableCommandsChain(commands, `convert to Para with style "${cs.styleDef.name}"`)
+      }
     },
     setParaWithoutCustomStyles() {
-      if (this.innerParaLike)
-        this.editor?.commands.runRepeatableCommand('unsetParagraphCustomStyle', 'set as paragraph without custom style')
+      if (this.innerParaLike) {
+        const commands: any[] = []
+        if (this.isHeader)
+          commands.push(['setParagraph'])
+        commands.push(['unsetParagraphCustomStyle'])
+        this.editor.commands.runRepeatableCommandsChain(commands, `convert to Para without style`)
+      }
     },
     isHeaderWithoutStyles(level?: number): boolean {
       const h = this.innerParaLike
       return this.isHeader
         && (!level || level === h?.attrs.level)
-        && this.innerParaLikeActiveStyles.length === 0
+        && !h?.attrs.customStyle
+    },
+    setHeaderStyle(cs: CustomStyleInstance) {
+      if (this.innerParaLike) {
+        const commands: any[] = []
+        const level = cs.attrs.level
+        if (this.isParagraph)
+          commands.push(['setHeading', { level }])
+        commands.push(['setCustomStyle', NODE_NAME_HEADING, cs])
+        this.editor.commands.runRepeatableCommandsChain(commands, `convert to Header-${level} with style "${cs.styleDef.name}"`)
+      }
     },
     setHeaderWithoutCustomStyles(level: number) {
-      if (this.innerParaLike)
-        this.editor?.commands.runRepeatableCommand('setHeading', `set as header of level ${level}`, { level, classes: [] })
+      if (this.innerParaLike) {
+        const commands: any[] = []
+        if (this.isParagraph || this.headerLevel !== level)
+          commands.push(['setHeading', { level }])
+        commands.push(['resetCustomStyle'])
+        this.editor.commands.runRepeatableCommandsChain(commands, `convert to Header-${level} without style`)
+      }
     },
-    // custom classes for outer blocks
     customClassesFor(node: Node) {
       const cc = customClassesForNodeOrMark(
         node,

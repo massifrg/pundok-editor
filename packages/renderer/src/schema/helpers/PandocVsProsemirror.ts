@@ -99,6 +99,7 @@ export function nodeOrMarkToPandocName(
   switch (name) {
     case NODE_NAME_DIV:
     case NODE_NAME_FIGURE:
+    case NODE_NAME_PANDOC_TABLE:
       return firstToUpperWithClasses(name, attrs.classes, nameToCustomStyle);
     case NODE_NAME_PARAGRAPH:
       return customStyle ? `Para(${customStyle})` : 'Para';
@@ -119,7 +120,7 @@ export function nodeOrMarkToPandocName(
       return spanToLabel(nom);
     case NODE_NAME_HEADING:
       return firstToUpperWithClasses(
-        `Header(${attrs.level || Heading.options.levels[0]})`,
+        `Header(${attrs.level || Heading.options.levels[0]}${customStyle ? ',' + customStyle : ''})`,
         attrs.classes,
         nameToCustomStyle
       );

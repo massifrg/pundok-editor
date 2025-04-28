@@ -2,19 +2,29 @@ import { Mark, MarkType, Node, NodeType } from '@tiptap/pm/model';
 import { isArray, isString } from 'lodash';
 import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';
+import {
+  MARK_NAME_SPAN,
+  NODE_NAME_DIV,
+  NODE_NAME_FIGURE,
+  NODE_NAME_HEADING,
+  NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_PARAGRAPH,
+  NODE_NAME_TABLE_CELL,
+  NODE_NAME_TABLE_HEADER
+} from '../prosemirrorNames';
 
 export const CustomizableWithStyle: Record<string, string> = {
-  span: 'Span',
-  paragraph: 'Para',
-  tableCell: 'Cell',
-  tableHeader: 'Cell',
+  [MARK_NAME_SPAN]: 'Span',
+  [NODE_NAME_PARAGRAPH]: 'Para',
+  [NODE_NAME_TABLE_CELL]: 'Cell',
+  [NODE_NAME_TABLE_HEADER]: 'Cell',
+  [NODE_NAME_HEADING]: 'Header',
+  [NODE_NAME_PANDOC_TABLE]: 'Table',
 } as const;
 
 export const CustomizableWithClass: Record<string, string> = {
-  div: 'Div',
-  heading: 'Header',
-  figure: 'Figure',
-  table: 'Table',
+  [NODE_NAME_DIV]: 'Div',
+  [NODE_NAME_FIGURE]: 'Figure',
 } as const;
 
 export const CustomizableElements: Record<string, string> = {
@@ -210,42 +220,21 @@ export function customStylesFromDef(
       let key = customStyleKey(name, element);
       const deprecated =
         (deprecatedFor && deprecatedFor.includes(element)) || false;
-      switch (element) {
-        case 'span':
-        case 'tableCell':
-        case 'tableHeader':
-          styles.push({
-            element,
-            styleDef,
-            deprecated,
-            key,
-            attrs: { customStyle: name },
-          });
-          // TODO: mark
-          break;
-        case 'heading':
-          if (levels && levels.length > 0) {
-            levels.forEach((level) => {
-              styles.push({
-                element,
-                styleDef,
-                deprecated,
-                key: customStyleKey(name, element, level),
-                attrs: { className: name, level },
-              });
+      if (isCustomizableWithStyle(element)) {
+        if (element === NODE_NAME_HEADING) {
+          const ll: number[] = levels || [];
+          if (ll.length === 0)
+            for (let l = 1; l <= levelsCount; l++) ll.push(l)
+          ll.forEach(l => {
+            styles.push({
+              element,
+              styleDef,
+              deprecated,
+              key: customStyleKey(name, element, l),
+              attrs: { customStyle: name, level: l },
             });
-          } else {
-            for (let l = 1; l <= levelsCount; l++)
-              styles.push({
-                element,
-                styleDef,
-                deprecated,
-                key,
-                attrs: { className: name, level: l },
-              });
-          }
-          break;
-        case 'paragraph':
+          })
+        } else {
           styles.push({
             element,
             styleDef,
@@ -253,18 +242,15 @@ export function customStylesFromDef(
             key,
             attrs: { customStyle: name },
           });
-          break;
-        case 'div':
-        case 'figure':
-        case 'table':
-          styles.push({
-            element,
-            styleDef,
-            deprecated,
-            key,
-            attrs: { className: name },
-          });
-          break;
+        }
+      } else if (isCustomizableWithClass(element)) {
+        styles.push({
+          element,
+          styleDef,
+          deprecated,
+          key,
+          attrs: { className: name },
+        });
       }
     });
   }
@@ -359,7 +345,9 @@ export function isCustomStyleActive(
   const attrs = nom.attrs;
   if (!attrs) return false;
   if (isCustomizableWithStyle(nom)) {
-    const customStyle = cs.attrs.customStyle;
+    const { customStyle, level } = cs.attrs;
+    if (nom.type.name === NODE_NAME_HEADING && nom.attrs.level !== level)
+      return false
     return !(customStyle && attrs.customStyle !== customStyle);
   } else if (isCustomizableWithClass(nom)) {
     const { className, level } = cs.attrs;
@@ -391,7 +379,5 @@ const ELEMENT_LABELS: Record<string, string> = {
 
 export function labelForStyle(cs: CustomStyleInstance): string {
   const { attrs, element, styleDef } = cs;
-  return `${ELEMENT_LABELS[element] || '?'}${attrs.level || ''} ${
-    styleDef.name
-  }`;
+  return `${ELEMENT_LABELS[element] || '?'}${attrs.level || ''} ${styleDef.name}`;
 }
