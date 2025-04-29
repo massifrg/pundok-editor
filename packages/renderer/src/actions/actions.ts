@@ -233,7 +233,7 @@ export const ACTION_SET_ALTERNATIVE: BaseEditorAction = {
 
 export interface ActionPropsSetAlternative {
   alternative: number,
-  context?: string
+  context?: 'indices' // | 'other-context' ... 
 }
 
 export const ACTION_REPLACE_AND_SELECT_NEXT: BaseEditorAction = {

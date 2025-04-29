@@ -148,6 +148,9 @@ import {
   BaseActionForNodeOrMark,
   ACTION_SELECT_NEXT,
   ACTION_SELECT_PREV,
+  ACTION_SET_ALTERNATIVE,
+  setActionCommand,
+  ActionPropsSetAlternative,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -394,6 +397,17 @@ export default {
               editor.commands.selectNext()
             }
             break
+          case ACTION_SET_ALTERNATIVE.name:
+            if (!(props as ActionPropsSetAlternative)?.context) {
+              // re-dispatch action with the proper context
+              if (this.visibleSearchAndReplaceDialog) {
+                setActionCommand(
+                  editorKey,
+                  action,
+                  { ...action.props, ...{ context: 'indices' } } as ActionPropsSetAlternative
+                )
+              }
+            }
           default:
             executeEditorAction(action, editor)
             break

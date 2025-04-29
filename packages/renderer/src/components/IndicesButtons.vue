@@ -22,7 +22,7 @@ import ToolbarButton from './ToolbarButton.vue';
 import { ACTION_SET_ALTERNATIVE, ActionPropsSetAlternative, EditorAction } from '../actions';
 
 export default {
-  props: ['editor', 'size', 'padding', 'buttonStyle'],
+  props: ['editor', 'size', 'padding', 'buttonStyle', 'enableAlternativeButtons'],
   components: { ToolbarButton },
   computed: {
     ...mapState(useActions, ['lastAction']),
@@ -43,13 +43,11 @@ export default {
   },
   watch: {
     lastAction(action: EditorAction) {
-      console.log(action)
-      if (action.name === ACTION_SET_ALTERNATIVE.name) {
+      if (this.enableAlternativeButtons && action.name === ACTION_SET_ALTERNATIVE.name) {
         const props = action.props as ActionPropsSetAlternative
-        const n = props?.alternative
-        // TODO: we should check the right context
-        if (n) {
-          const index = this.allIndices[n - 1]
+        const { context, alternative } = props || {}
+        if (context === 'indices' && alternative) {
+          const index = this.allIndices[alternative - 1]
           if (index) this.addIndexRef(index)
         }
       }

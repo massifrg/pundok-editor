@@ -104,7 +104,8 @@
           <q-icon name="mdi-chevron-double-right"></q-icon>
         </q-btn>
         <q-space style="min-width: 1rem" />
-        <IndicesButtons v-if="showIndicesButtons" :editor="editor" size="md" padding="md" />
+        <IndicesButtons v-if="showIndicesButtons" enable-alternative-buttons="true" :editor="editor" size="md"
+          padding="md" />
       </q-card-actions>
     </q-card>
   </q-dialog>
