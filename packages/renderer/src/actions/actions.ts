@@ -225,6 +225,17 @@ export const ACTION_SELECT_NEXT: BaseEditorAction = {
   icon: 'mdi-chevron-right',
 };
 
+export const ACTION_SET_ALTERNATIVE: BaseEditorAction = {
+  name: 'set-alternative',
+  label: 'set alternative',
+  icon: 'mdi-numeric-1-box-outline'
+}
+
+export interface ActionPropsSetAlternative {
+  alternative: number,
+  context?: string
+}
+
 export const ACTION_REPLACE_AND_SELECT_NEXT: BaseEditorAction = {
   name: 'replace-and-select-next',
   label: 'replace and select next',

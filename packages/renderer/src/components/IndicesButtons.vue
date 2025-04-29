@@ -4,24 +4,28 @@
     :disabled="!editor.can().addIndexRef(index)" @click="addIndexRef(index)">
     <q-icon :name="index.iconSvg || defaultIndexIconSvg()" :style="{ color: index.color || defaultIndexColor() }" />
   </ToolbarButton>
-  <q-btn v-if="buttonStyle !== 'menubar'" v-for="index in allIndices" :key="index.indexName" :size="size || 'md'"
-    :padding="padding || 'md'" :title='`reference for index "${index.indexName}"`'
+  <q-btn v-if="buttonStyle !== 'menubar'" v-for="(index, i) in allIndices" :key="index.indexName" :size="size || 'md'"
+    :padding="padding || 'md'" :title='`reference for index "${index.indexName}" [Alt+${i + 1}]`'
     :disabled="!editor.can().addIndexRef(index)" @click="addIndexRef(index)">
     <q-icon :name="index.iconSvg || defaultIndexIconSvg()" :style="{ color: index.color || defaultIndexColor() }" />
   </q-btn>
 </template>
 
 <script lang="ts">
+import { useActions } from '../stores';
+import { mapState } from 'pinia';
 import { DEFAULT_INDEX_COLOR, Index } from '../common'
 import { getEditorConfiguration } from '../schema';
 import { mergeIndices } from '../schema/helpers/indices';
 import { getIndexingState } from '../schema/extensions/IndexingExtension';
 import ToolbarButton from './ToolbarButton.vue';
+import { ACTION_SET_ALTERNATIVE, ActionPropsSetAlternative, EditorAction } from '../actions';
 
 export default {
   props: ['editor', 'size', 'padding', 'buttonStyle'],
   components: { ToolbarButton },
   computed: {
+    ...mapState(useActions, ['lastAction']),
     configuration() {
       return getEditorConfiguration(this.editor)
     },
@@ -36,6 +40,20 @@ export default {
       }
       return []
     },
+  },
+  watch: {
+    lastAction(action: EditorAction) {
+      console.log(action)
+      if (action.name === ACTION_SET_ALTERNATIVE.name) {
+        const props = action.props as ActionPropsSetAlternative
+        const n = props?.alternative
+        // TODO: we should check the right context
+        if (n) {
+          const index = this.allIndices[n - 1]
+          if (index) this.addIndexRef(index)
+        }
+      }
+    }
   },
   methods: {
     isActive(name: string, attrs?: Record<string, any>) {

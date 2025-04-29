@@ -3,7 +3,13 @@ import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorView } from '@tiptap/pm/view';
 import { NodeSelection, Plugin } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
-import { ActionEditAttributesProps, setActionEditAttributes } from '../../actions';
+import {
+  ACTION_SET_ALTERNATIVE,
+  ActionEditAttributesProps,
+  ActionPropsSetAlternative,
+  setActionCommand,
+  setActionEditAttributes
+} from '../../actions';
 import {
   EditorKeyType,
   NODE_NAME_IMAGE,
@@ -11,7 +17,17 @@ import {
   NODE_NAME_INDEX_TERM,
   NODE_NAME_PARAGRAPH,
   NODE_NAME_RAW_INLINE,
-  SK_EDIT_ATTRIBUTES
+  SK_EDIT_ATTRIBUTES,
+  SK_SET_ALTERNATIVE_0,
+  SK_SET_ALTERNATIVE_1,
+  SK_SET_ALTERNATIVE_2,
+  SK_SET_ALTERNATIVE_3,
+  SK_SET_ALTERNATIVE_4,
+  SK_SET_ALTERNATIVE_5,
+  SK_SET_ALTERNATIVE_6,
+  SK_SET_ALTERNATIVE_7,
+  SK_SET_ALTERNATIVE_8,
+  SK_SET_ALTERNATIVE_9
 } from '../../common';
 import {
   DocState,
@@ -229,8 +245,23 @@ export const PundokEditorUtilsExtension =
     },
 
     addKeyboardShortcuts() {
+      const altCmd = (n: number) => setActionCommand(
+        this.editor.state,
+        ACTION_SET_ALTERNATIVE,
+        { alternative: n } as ActionPropsSetAlternative
+      )
       return {
         [SK_EDIT_ATTRIBUTES]: () => this.editor.commands.editAttributes(),
+        [SK_SET_ALTERNATIVE_0]: () => altCmd(0),
+        [SK_SET_ALTERNATIVE_1]: () => altCmd(1),
+        [SK_SET_ALTERNATIVE_2]: () => altCmd(2),
+        [SK_SET_ALTERNATIVE_3]: () => altCmd(3),
+        [SK_SET_ALTERNATIVE_4]: () => altCmd(4),
+        [SK_SET_ALTERNATIVE_5]: () => altCmd(5),
+        [SK_SET_ALTERNATIVE_6]: () => altCmd(6),
+        [SK_SET_ALTERNATIVE_7]: () => altCmd(7),
+        [SK_SET_ALTERNATIVE_8]: () => altCmd(8),
+        [SK_SET_ALTERNATIVE_9]: () => altCmd(9),
       };
     },
   });

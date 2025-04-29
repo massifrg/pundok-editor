@@ -26,6 +26,17 @@ export const SK_INCLUDE_DOC = 'Alt-i';
 export const SK_SHOW_SEARCH_DIALOG = 'Mod-f';
 export const SK_DUPLICATE_NODE = 'Alt-d';
 
+export const SK_SET_ALTERNATIVE_0 = 'Alt-0';
+export const SK_SET_ALTERNATIVE_1 = 'Alt-1';
+export const SK_SET_ALTERNATIVE_2 = 'Alt-2';
+export const SK_SET_ALTERNATIVE_3 = 'Alt-3';
+export const SK_SET_ALTERNATIVE_4 = 'Alt-4';
+export const SK_SET_ALTERNATIVE_5 = 'Alt-5';
+export const SK_SET_ALTERNATIVE_6 = 'Alt-6';
+export const SK_SET_ALTERNATIVE_7 = 'Alt-7';
+export const SK_SET_ALTERNATIVE_8 = 'Alt-8';
+export const SK_SET_ALTERNATIVE_9 = 'Alt-9';
+
 // from tiptap
 export const SK_UNDO = 'Mod-z';
 export const SK_REDO = 'Shift-Mod-z';
@@ -125,6 +136,16 @@ export const SHORTCUT: Record<string, string> = {
   SK_TOGGLE_CODEBLOCK,
   SK_TOGGLE_ORDEREDLIST,
   SK_TOGGLE_BULLETLIST,
+  SK_SET_ALTERNATIVE_0,
+  SK_SET_ALTERNATIVE_1,
+  SK_SET_ALTERNATIVE_2,
+  SK_SET_ALTERNATIVE_3,
+  SK_SET_ALTERNATIVE_4,
+  SK_SET_ALTERNATIVE_5,
+  SK_SET_ALTERNATIVE_6,
+  SK_SET_ALTERNATIVE_7,
+  SK_SET_ALTERNATIVE_8,
+  SK_SET_ALTERNATIVE_9,
 }
 
 export function shortcut(sc: string) {

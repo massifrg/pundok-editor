@@ -12,7 +12,11 @@ import {
   search,
   setSearchState,
 } from '../helpers';
-import { SK_REPLACE_AND_SELECT_NEXT, SK_SELECT_NEXT, SK_SELECT_PREV } from '../../common';
+import {
+  SK_REPLACE_AND_SELECT_NEXT,
+  SK_SELECT_NEXT,
+  SK_SELECT_PREV
+} from '../../common';
 import {
   ACTION_REPLACE_AND_SELECT_NEXT,
   ACTION_SELECT_NEXT,
