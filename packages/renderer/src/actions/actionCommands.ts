@@ -231,12 +231,12 @@ export function setActionTransformDocument(
 export function setActionCommand(
   stateOrKey: EditorState | EditorKeyType,
   action: BaseEditorAction,
-  options?: Record<string, any>): boolean {
+  props?: Record<string, any>): boolean {
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey) {
     useActions().setAction({
       ...action,
-      ...options,
+      props,
       editorKey,
     });
     return true
