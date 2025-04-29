@@ -243,7 +243,7 @@
 </template>
 
 <script lang="ts">
-import { isEmpty, isEqual } from 'lodash';
+import { isEmpty, isEqual, isObject } from 'lodash';
 import { Mark, Node } from '@tiptap/pm/model';
 import { useQuasar } from 'quasar';
 import { mdiChevronLeft, mdiChevronRight } from '@quasar/extras/mdi-v6/index.js'
@@ -717,14 +717,15 @@ export default {
     keyup(e: KeyboardEvent) {
       if (e.code === 'Escape') this.doCancel()
     },
-    updateAttribute(attrName: string, newValue: any) {
+    updateAttribute(attrName: string, newValue: any, dontSearchMatchingAttribute?: boolean) {
       if (attrName === 'classes') return
       if (this.hasAttribute(attrName)) {
         console.log(`updateAttribute: ${attrName}=${JSON.stringify(newValue)}`);
         this.attrs[attrName] = newValue;
-        const matchingAttr = matchingDuplicatedAttribute(this.nodeOrMark, attrName)
-        if (matchingAttr && this.attrs.kv && this.attrs.kv[matchingAttr] !== newValue)
-          this.updateKvAttribute(matchingAttr, newValue)
+        const matchingAttr = !dontSearchMatchingAttribute && matchingDuplicatedAttribute(this.nodeOrMark, attrName)
+        if (matchingAttr && this.attrs.kv && this.attrs.kv[matchingAttr] !== newValue) {
+          this.updateKvAttribute(matchingAttr, newValue, true)
+        }
       }
     },
     updateContent(_: string, value: string) {
@@ -744,21 +745,18 @@ export default {
       console.log(`removeClass: ${rc}`);
       this.attrs.classes = (this.attrs.classes as string[]).filter(c => c !== rc)
     },
-    updateKvAttribute(kvAttrName: string, newValue: any) {
+    updateKvAttribute(kvAttrName: string, newValue: any, dontSearchMatchingAttribute?: boolean) {
       const kv = { ...this.attrs.kv }
-      const matchingAttr = matchingDuplicatedAttribute(this.nodeOrMark, kvAttrName)
+      const matchingAttr = !dontSearchMatchingAttribute && matchingDuplicatedAttribute(this.nodeOrMark, kvAttrName)
       if (newValue) {
         console.log(`updateKvAttribute: ${kvAttrName}=${JSON.stringify(newValue)}`);
         kv[kvAttrName] = newValue
         if (matchingAttr && this.attrs[matchingAttr] != newValue)
-          this.updateAttribute(matchingAttr, newValue)
-      } else {
-        if (!matchingAttr) {
-          console.log(`updateKvAttribute: delete ${kvAttrName}`);
-          delete kv[kvAttrName]
-        }
+          this.updateAttribute(matchingAttr, newValue, true)
+      } else if (!matchingAttr) {
+        delete kv[kvAttrName]
       }
-      this.updateAttribute('kv', kv)
+      this.updateAttribute('kv', kv, true)
     },
     objectEntries(attrName: string, obj: Record<string, any>) {
       if (this.hasAttribute(attrName)) {

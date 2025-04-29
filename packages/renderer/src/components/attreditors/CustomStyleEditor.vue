@@ -2,8 +2,13 @@
   <q-card-section align="center">
     <q-btn no-caps :label="selectedLabel">
       <q-menu auto-close>
-        <q-list v-if="styles.length > 0">
-          <q-item v-for="(styleItem, index) in styles" :key="index" clickable v-close-popup density="compact"
+        <q-list>
+          <q-item key="0" clickable v-close-popup density="compact" :value="null" title="remove custom style" dense
+            @click="updateValue(null)">
+            <q-item-section avatar><q-icon v-if="!value" name="mdi-check" size="xs" /></q-item-section>
+            <q-item-section no-wrap><i>no custom style</i></q-item-section>
+          </q-item>
+          <q-item v-for="(styleItem, index) in styles" :key="index + 1" clickable v-close-popup density="compact"
             :value="index" :title="description(styleItem)" dense @click="updateValue(styleItem.styleDef.name)">
             <q-item-section avatar><q-icon v-if="value === styleItem.styleDef.name" name="mdi-check"
                 size="xs" /></q-item-section>
@@ -60,9 +65,10 @@ export default {
   },
   methods: {
     updateValue(newValue: string | number | null) {
-      const value = this.value
-      this.value = value === newValue ? null : newValue
-      this.$emit('update-attribute', 'customStyle', this.value);
+      if (this.value !== newValue) {
+        this.value = newValue
+        this.$emit('update-attribute', 'customStyle', this.value);
+      }
     },
     customStyleDescription(style: CustomStyleInstance | undefined): string {
       return style && style.styleDef.description || ''
