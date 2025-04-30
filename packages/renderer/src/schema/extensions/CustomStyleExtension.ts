@@ -19,7 +19,7 @@ import {
   updateAttributesCommand,
 } from './HelperCommandsExtension';
 import { CommandProps } from '@tiptap/vue-3';
-import { isArray, isString } from 'lodash';
+import { cloneDeep, isArray, isString } from 'lodash';
 import { setMarkNoAtoms, toggleMarkNoAtoms } from '../../commands';
 import {
   addClass,
@@ -185,10 +185,10 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
               const node = state.doc.nodeAt(pos);
               if (!node) return false;
               if (typeName !== node?.type.name) return false;
-              if (dispatch)
-                dispatch(
-                  tr.setNodeMarkup(pos, null, setCustomStyleAttr(node, cs)),
-                );
+              if (dispatch) {
+                tr.setNodeMarkup(pos, null, setCustomStyleAttr(node, cs))
+                dispatch(tr);
+              }
               return true;
             }
             const schema = state.schema;
@@ -469,16 +469,16 @@ function setNodeCustomStyleCallback(
 ): UpdateNodeOrMarkCallback {
   const { customStyle, className, level } = cs.attrs;
   return (n) => {
-    const attrs = n.attrs;
+    let attrs = cloneDeep(n.attrs);
     const newType = schema.nodes[cs.element];
     const oldType = nodeTypeOf(typeOrNode, schema);
     const nodeType =
       newType && oldType && areTypesCompatible(newType, oldType)
         ? newType
         : undefined;
-    let newAttrs = addClass({ ...attrs, level }, className);
-    newAttrs = setCustomStyleAttribute(newAttrs, customStyle);
-    return { nodeType, attrs: newAttrs };
+    attrs = addClass({ ...attrs, level }, className);
+    attrs = setCustomStyleAttribute(attrs, customStyle);
+    return { nodeType, attrs };
   };
 }
 

@@ -1,5 +1,5 @@
 import type { Attrs, Mark, Node } from '@tiptap/pm/model';
-import { isArray, isString } from 'lodash';
+import { cloneDeep, isArray, isString } from 'lodash';
 import { PmColSpec } from './colSpec';
 import { textAlignToPandocAlignment } from './alignments';
 import {
@@ -366,7 +366,7 @@ export function isDuplicatedKvAttribute(
  * @returns a copy of the `attrs` with the class added.
  */
 export function addClass(attrs: Attrs, className?: string): Attrs {
-  const newAttrs = { ...attrs };
+  const newAttrs = cloneDeep(attrs);
   if (!className) return newAttrs;
   const classes: string[] = newAttrs.classes;
   if (classes && className && classes.indexOf(className) < 0) {
@@ -382,10 +382,10 @@ export function addClass(attrs: Attrs, className?: string): Attrs {
  * @returns a copy of the `attrs` with the class removed.
  */
 export function removeClasses(attrs: Attrs, classNames: string[]): Attrs {
-  const newAttrs = { ...attrs };
+  let newAttrs = cloneDeep(attrs);
   const classes: string[] | undefined = newAttrs.classes;
   if (classes)
-    newAttrs.classes = classes.filter((c) => classNames.indexOf(c) < 0);
+    newAttrs = { ...newAttrs, classes: classes.filter((c) => classNames.indexOf(c) < 0) }
   return newAttrs;
 }
 
@@ -393,14 +393,16 @@ export function setCustomStyleAttribute(
   attrs: Attrs,
   customStyle?: string,
 ): Attrs {
-  if (!customStyle) return { ...attrs };
-  const newAttrs: Attrs = { ...attrs, customStyle };
-  if (newAttrs.kv) newAttrs.kv['custom-style'] = customStyle;
+  let newAttrs = cloneDeep(attrs)
+  if (customStyle) {
+    newAttrs = { ...newAttrs, customStyle }
+    if (newAttrs.kv) newAttrs.kv['custom-style'] = customStyle;
+  }
   return newAttrs;
 }
 
 export function unsetCustomStyleAttribute(attrs: Attrs): Attrs {
-  const newAttrs: Record<string, any> = { ...attrs };
+  const newAttrs: Record<string, any> = cloneDeep(attrs);
   delete newAttrs.customStyle;
   if (newAttrs.kv) delete newAttrs.kv['custom-style'];
   return newAttrs;
