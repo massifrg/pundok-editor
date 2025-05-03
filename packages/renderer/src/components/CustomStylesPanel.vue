@@ -519,10 +519,18 @@ export default {
       return this.activeCharStyles.indexOf(cs.styleDef.name) >= 0
     },
     setCharStyle(style: CustomStyleInstance) {
-      this.editor.chain().runRepeatableCommand('setCustomMark', `style as "${style.styleDef.name}"`, MARK_NAME_SPAN, style).run()
+      this.editor.chain()
+        .runRepeatableCommand('setCustomMark',
+          `style as "${style.styleDef.name}"`, MARK_NAME_SPAN, style)
+        .focus()
+        .run()
     },
     unsetCharStyle(style: CustomStyleInstance) {
-      this.editor.chain().runRepeatableCommand('unsetCustomMark', `remove "${style.styleDef.name}" style`, MARK_NAME_SPAN, style).run()
+      this.editor.chain()
+        .runRepeatableCommand('unsetCustomMark',
+          `remove "${style.styleDef.name}" style`, MARK_NAME_SPAN, style)
+        .focus()
+        .run()
     },
     unsetAllCharStyles() {
       const names = this.activeCharStyles
