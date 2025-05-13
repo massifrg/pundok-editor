@@ -101,6 +101,9 @@
     "vue-tsc": "^2.1.6"
   },
   "dependencies": {
+    "@codemirror/lang-markdown": "^6.3.2",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.36.8",
     "@massifrg/prosemirror-tables-sections": "^0.6.3",
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
@@ -133,6 +136,7 @@
     "axios": "^1.7.7",
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0",
+    "codemirror": "^6.0.1",
     "diff": "^7.0.0",
     "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "^6.3.4",
@@ -156,6 +160,7 @@
     "unzip-stream": "^0.3.4",
     "uuid": "^10.0.0",
     "vue": "^3.5.3",
+    "vue-codemirror": "^6.1.1",
     "vue-i18n": "^9.14.0",
     "vue-pdf-embed": "^2.1.0",
     "vue-router": "^4.4.3",

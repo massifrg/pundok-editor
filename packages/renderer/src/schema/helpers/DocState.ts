@@ -1,13 +1,16 @@
 import { EditorState } from "@tiptap/pm/state";
 import {
   EditorKeyType,
+  PANDOC_TYPES_VERSION,
   PundokEditorConfig,
   PundokEditorProject,
   SaveResponse
 } from "../../common";
-import { pundokEditorUtilsPluginKey } from "../extensions";
+import { getIndexingState, pundokEditorUtilsPluginKey } from "../extensions";
 import { Editor } from "@tiptap/vue-3";
 import { isAbsolute, parse as parsePath, relative as relativePath } from 'path-browserify'
+import { nodeToPandocJsonString, PandocJsonExporterOptions } from "./PandocJsonExporter";
+import { mergeIndices } from "./indices";
 
 export interface DocState {
   /** The unique key of the editor. */
@@ -132,4 +135,21 @@ export function makePathRelativeToDoc(docState: DocState, path: string): string 
   return basePath && isAbsolute(path)
     ? relativePath(basePath, path)
     : path
+}
+
+export function getDocAsJsonString(
+  state: EditorState,
+  options: PandocJsonExporterOptions
+): string {
+  if (state) {
+    const docState = getDocState(state)
+    const document = state.doc;
+    const indexingState = getIndexingState(state)
+    const indices = mergeIndices(
+      indexingState?.indices || docState?.configuration?.indices,
+      indexingState?.docIndices
+    )
+    return nodeToPandocJsonString(document, { indices, ...options });
+  }
+  return '{}'
 }

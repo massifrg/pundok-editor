@@ -154,6 +154,12 @@ export const ACTION_BACKEND_SET_CONFIG_NAME: BaseEditorAction = {
   label: 'set the configuration name',
 };
 
+export const ACTION_SET_CONTENT: BaseEditorAction = {
+  name: 'set-content',
+  label: 'set the content of the editor',
+  tooltip: 'set just the content of the editor (project, configuration, etc. stay the same)',
+};
+
 export const ACTION_BACKEND_SET_CONTENT: BaseEditorAction = {
   name: 'backend-set-content',
   label: 'set the content of the editor',

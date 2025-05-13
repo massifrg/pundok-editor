@@ -268,9 +268,16 @@ export async function transformWithPandoc(
   context: Partial<FindResourceOptions>,
 ): Promise<string> {
   const command = 'pandoc';
-  const args = ['-f', 'json', '-t', 'json'];
+  const extraOptions = pandocTransform.pandocOptions || []
+  const fromFormat = pandocTransform.fromFormat || 'json'
+  const toFormat = pandocTransform.toFormat || 'json'
+  const args = [
+    '-f', fromFormat,
+    '-t', toFormat,
+    ...extraOptions,
+  ];
   const { filters, sources } = pandocTransform;
-  if (!filters)
+  if (!filters && fromFormat === toFormat)
     return Promise.reject(
       'you must provide pandoc filters to make a transformation of the document',
     );
@@ -297,18 +304,20 @@ export async function transformWithPandoc(
     });
 
     // find filters
-    filters.forEach((f) => {
-      const ext = extname(f).toLowerCase();
-      const filename = ext === '' ? f + '.lua' : f;
-      const filterFile = findResourceFile(filename, {
-        ...context,
-        kind: 'filter',
+    if (filters) {
+      filters.forEach((f) => {
+        const ext = extname(f).toLowerCase();
+        const filename = ext === '' ? f + '.lua' : f;
+        const filterFile = findResourceFile(filename, {
+          ...context,
+          kind: 'filter',
+        });
+        if (filterFile) {
+          const opt = ext === '' || ext === '.lua' ? '--lua-filter' : '--filter';
+          args.push(`${opt}=${filterFile}`);
+        }
       });
-      if (filterFile) {
-        const opt = ext === '' || ext === '.lua' ? '--lua-filter' : '--filter';
-        args.push(`${opt}=${filterFile}`);
-      }
-    });
+    }
 
     // find input source
     if (sources) {
