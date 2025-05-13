@@ -1,5 +1,5 @@
 <template>
-  <ToolbarButton icon="mdi-language-markdown" @click="editorVisible = true">
+  <ToolbarButton icon="mdi-language-markdown" title="edit this document as Markdown" @click="editorVisible = true">
     <q-dialog v-model="editorVisible" full-width full-height no-esc-dismiss>
       <q-card>
         <q-card-section>
