@@ -3,19 +3,9 @@
     <q-dialog v-model="editorVisible" full-width full-height no-esc-dismiss>
       <q-card>
         <q-card-section>
-          <codemirror
-            v-model="content"
-            placeholder="Code goes here..."
-            :autofocus="true"
-            :indent-with-tab="true"
-            :tab-size="2"
-            :extensions="extensions"
-            :style="{ height: editorHeight }"
-            @ready="handleReady"
-            @change="log('change', $event)"
-            @focus="log('focus', $event)"
-            @blur="log('blur', $event)"
-          />
+          <codemirror v-model="content" placeholder="Code goes here..." :autofocus="true" :indent-with-tab="true"
+            :tab-size="2" :extensions="extensions" :style="{ height: editorHeight }" @ready="handleReady"
+            @change="log('change', $event)" @focus="log('focus', $event)" @blur="log('blur', $event)" />
         </q-card-section>
         <q-card-actions>
           <q-space />
@@ -30,6 +20,7 @@
 <script lang="ts">
 import { defineComponent, ref, shallowRef, toRaw } from 'vue';
 import { Codemirror } from 'vue-codemirror';
+import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { markdown } from '@codemirror/lang-markdown';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -42,6 +33,7 @@ import {
   ACTION_SET_CONTENT,
   setActionCommand,
 } from '../actions';
+import { FeedbackMessage } from '../common';
 
 export default defineComponent({
   props: ['editor'],
@@ -56,13 +48,13 @@ export default defineComponent({
 
     // Codemirror EditorView instance ref
     const view = shallowRef();
-    const handleReady = (payload) => {
+    const handleReady = (payload: { view: EditorView }) => {
       view.value = payload.view;
     };
 
     // Status is available at all times via Codemirror EditorView
     const getCodemirrorStates = () => {
-      const state = view.value.state;
+      const state: EditorState = view.value.state;
       const ranges = state.selection.ranges;
       const selected = ranges.reduce(
         (r, range) => r + range.to - range.from,
@@ -81,7 +73,7 @@ export default defineComponent({
       content,
       extensions,
       handleReady,
-      log: () => {},
+      log: (what: string, e: any) => { },
       // log: console.log,
     };
   },
@@ -99,6 +91,8 @@ export default defineComponent({
           const transformed = await this.backend?.transformPandocJson(
             json,
             {
+              filters: [],
+              name: 'Convert JSON to Markdown',
               type: 'pandoc-filter',
               fromFormat: 'json',
               toFormat: 'markdown',
@@ -109,8 +103,9 @@ export default defineComponent({
               configurationName: docState?.configuration?.name,
             },
           );
-          this.content = transformed;
-        } catch (err) {
+          if (transformed)
+            this.content = transformed;
+        } catch (err: any) {
           console.log(err);
           const feedback: FeedbackMessage = {
             type: 'error',
@@ -130,6 +125,8 @@ export default defineComponent({
         const content = await this.backend?.transformPandocJson(
           toRaw(this.content),
           {
+            filters: [],
+            name: 'Convert Markdown to JSON',
             type: 'pandoc-filter',
             fromFormat: 'markdown',
             toFormat: 'json',
