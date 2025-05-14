@@ -9,7 +9,8 @@ export type ResourceType =
   | 'template'
   | 'referenceDoc'
   | 'script'
-  | 'index';
+  | 'index'
+  | 'other';
 
 export const RESOURCE_SUBPATHS: Record<ResourceType, string[]> = {
   document: ['templates'],
@@ -21,6 +22,7 @@ export const RESOURCE_SUBPATHS: Record<ResourceType, string[]> = {
   referenceDoc: ['templates'],
   script: ['scripts'],
   index: ['indices'],
+  other: ['other'],
 };
 
 /** structure used to find a resource for a document */
@@ -42,6 +44,8 @@ export function resourceTypesFromExtension(ext: string): ResourceType[] {
     case 'docx':
     case 'odt':
       return ['referenceDoc'];
+    case 'txt':
+      return ['other']
     default:
       return [];
   }
