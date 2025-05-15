@@ -139,7 +139,7 @@ export function makePathRelativeToDoc(docState: DocState, path: string): string 
 
 export function getDocAsJsonString(
   state: EditorState,
-  options: PandocJsonExporterOptions
+  options?: PandocJsonExporterOptions
 ): string {
   if (state) {
     const docState = getDocState(state)

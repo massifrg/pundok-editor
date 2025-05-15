@@ -121,6 +121,16 @@ const STATIC_RESOURCES: StaticResource[] = [
       },
     ],
   },
+  {
+    description: 'Unicode data',
+    baseURL: 'https://unicode.org/Public/UNIDATA',
+    resources: [
+      {
+        description: 'Unicode characters table',
+        file: 'UnicodeData.txt'
+      }
+    ]
+  }
 ];
 
 function getResourceSubdir(filename: string, subPath?: string): string {
@@ -135,7 +145,7 @@ function getResourceSubdir(filename: string, subPath?: string): string {
   return sp || '';
 }
 
-const nullLogger: (msg: string) => void = () => {};
+const nullLogger: (msg: string) => void = () => { };
 
 /**
  * Updates the static resources needed by the editor on the file system.
