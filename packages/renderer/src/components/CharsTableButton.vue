@@ -20,15 +20,32 @@
             true-value="table" false-value="list" value="table" :title="`show selection as ${showAs}`" />
         </q-card-actions>
         <q-card-section>
-          <div style="max-width: 70vh; max-height: 50vh; overflow: scroll">
-            <q-markup-table v-if="showAs === 'table'" dense>
-              <tr v-for="r in rows_offsets">
-                <td v-for="c in columns" class="q-pa-none q-ma-none">
-                  <q-btn v-if="r + c < selection.length" no-caps :label="String.fromCodePoint(selection[r + c].value)"
-                    :title="charLabel(selection[r + c])" @click="insertChar(selection[r + c])" size="md" dense
-                    style="min-width:2.4rem" />
+          <q-markup-table dense separator="cell" class="unicode-chars-table">
+            <thead />
+            <tbody>
+              <tr v-for="r in rowsOffsets(stored)" class="q-pa-none q-ma-none">
+                <td v-for="c in columns" class="q-pa-none q-ma-none unicode-char-cell">
+                  <q-btn v-if="r + c < stored.length" no-caps :label="String.fromCodePoint(stored[r + c].value)"
+                    :title="charLabel(stored[r + c])" @click="insertChar(stored[r + c])" size="md" dense flat
+                    class="unicode-char-button q-ma-none" />
                 </td>
               </tr>
+            </tbody>
+          </q-markup-table>
+        </q-card-section>
+        <q-card-section>
+          <div style="max-width: 70vh; max-height: 50vh; overflow: scroll">
+            <q-markup-table v-if="showAs === 'table'" dense separator="cell" class="unicode-chars-table">
+              <thead />
+              <tbody>
+                <tr v-for="r in rowsOffsets(selection)">
+                  <td v-for="c in columns" class="q-pa-none q-ma-none unicode-char-cell">
+                    <q-btn v-if="r + c < selection.length" no-caps :label="String.fromCodePoint(selection[r + c].value)"
+                      :title="charLabel(selection[r + c])" @click="insertChar(selection[r + c])" size="md" dense flat
+                      class="unicode-char-button q-ma-none" />
+                  </td>
+                </tr>
+              </tbody>
             </q-markup-table>
             <q-list v-if="showAs === 'list'" dense>
               <q-item v-for="d in selection" clickable @click="insertChar(d)">
@@ -42,6 +59,21 @@
     </q-dialog>
   </ToolbarButton>
 </template>
+
+<style>
+.unicode-char-button {
+  min-width: 2rem;
+}
+
+.unicode-char-cell {
+  text-align: center;
+}
+
+.unicode-chars-table {
+  border-collapse: collapse;
+  border-spacing: 0px;
+}
+</style>
 
 <script lang="ts">
 import { defineComponent, toRaw } from 'vue';
@@ -76,6 +108,7 @@ interface BlockOption extends Option {
 }
 
 const COLUMNS = 8
+const MAX_STORED_COUNT = COLUMNS * 2
 
 const MIN_SEARCH_TEXT_LENGTH = 3
 
@@ -137,14 +170,12 @@ export default defineComponent({
       table: {} as Record<string, CharDesc[]>,
       columns: range(COLUMNS),
       searchText: '',
-      filteredBlocks: [] as BlockOption[]
+      filteredBlocks: [] as BlockOption[],
+      stored: [] as CharDesc[],
     }
   },
   computed: {
     ...mapState(useBackend, ['backend']),
-    rows_offsets() {
-      return range(Math.ceil(this.selection.length / COLUMNS)).map(r => r * COLUMNS)
-    },
     categories(): Option[] {
       return Object.keys(this.table)
         .map(c => ({ value: c, label: this.catLabel(c) }))
@@ -163,7 +194,6 @@ export default defineComponent({
     tableVisible(newValue) {
       if (newValue && isEmpty(this.table)) {
         this.loadTable()
-        this.selection = this.selectionFromBlock(blockToBlockOption('basiclatin'))
       }
     },
     category(cat) {
@@ -200,10 +230,10 @@ export default defineComponent({
   setup() {
     setupQuasarIcons()
   },
-  // created() {
-  //   this.loadTable()
-  // },
   methods: {
+    rowsOffsets(cd: CharDesc[]) {
+      return range(Math.ceil(cd.length / COLUMNS)).map(r => r * COLUMNS)
+    },
     resetCategory() {
       this.category = undefined
     },
@@ -289,6 +319,7 @@ export default defineComponent({
         }
       })
       this.table = table
+      this.selection = this.selectionFromBlock(blockToBlockOption('basiclatin'))
     },
     catLabel(cat: string) {
       switch (cat) {
@@ -366,9 +397,12 @@ export default defineComponent({
     insertChar(cd: CharDesc) {
       const editor = this.editor
       if (editor) {
+        const stored = this.stored.filter(s => s !== cd)
+        stored.unshift(cd)
+        this.stored = stored.slice(0, MAX_STORED_COUNT)
         editor.commands.insertContent(editor.schema.text(String.fromCharCode(cd.value)))
       }
-    }
+    },
   }
 });
 
