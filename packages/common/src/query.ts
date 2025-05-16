@@ -100,5 +100,16 @@ export function searchQueryResults(data: any[], searchText: string | string[]) {
     });
     results.sort((r1, r2) => r1.minIndex - r2.minIndex);
   }
-  return results;
+  return removeDuplicates(results)
+}
+
+export function removeDuplicates(results: QueryResult[]): QueryResult[] {
+  const id_text: Record<string, boolean> = {}
+  return results
+    .filter(({ id, text, html }) => {
+      const it = `${id} ${text || ''} ${html || ''}`
+      if (id_text[it]) return false
+      id_text[it] = true
+      return true
+    })
 }
