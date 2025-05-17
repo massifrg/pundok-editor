@@ -6,6 +6,9 @@ import {
   currentRepeatableCommandTooltip,
   editorKeyFromState,
   getEditorConfiguration,
+  INCLUDE_DOC_CLASS,
+  INCLUDE_FORMAT_ATTR,
+  INCLUDE_SRC_ATTR,
 } from '../schema';
 import { nodeOrMarkToPandocName } from '../schema/helpers/PandocVsProsemirror';
 import {
@@ -16,12 +19,15 @@ import {
   templateNode,
 } from '../schema/helpers';
 import {
+  DocumentContext,
   EditorKeyType,
+  InputConverter,
   NODE_NAME_INDEX_DIV,
   NODE_NAME_PANDOC_TABLE,
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_CELL,
   NODE_NAME_TABLE_HEADER,
+  pandocFormatsFromExtension,
   PundokEditorConfig
 } from '../common';
 import { toRaw } from 'vue';
@@ -173,6 +179,7 @@ export const ACTION_BACKEND_SET_CONTENT_WITH_PROJECT: BaseEditorAction = {
 export const ACTION_DOCUMENT_OPEN: BaseEditorAction = {
   name: 'open-document',
   label: 'open document',
+  icon: 'mdi-file-document-edit'
 };
 
 export const ACTION_DOCUMENT_SAVE: BaseEditorAction = {
@@ -653,6 +660,32 @@ export function actionsForNodeOrMark(
         do: (editor) => editor.commands.propagateIndexNameToTerms(),
         nodeOrMark,
       });
+    }
+
+    if (node?.attrs.classes?.includes(INCLUDE_DOC_CLASS)) {
+      const id = node?.attrs.id
+      const path = node?.attrs.kv[INCLUDE_SRC_ATTR]
+      const format = node?.attrs.kv[INCLUDE_FORMAT_ATTR]
+        || (path && pandocFormatsFromExtension(path)[0])
+        || 'json'
+      console.log(`id=${id}, path=${path}, format=${format}`)
+      if ((id || path) && format) {
+        actions.push({
+          ...ACTION_DOCUMENT_OPEN,
+          canDo: () => true,
+          props: {
+            context: {
+              id,
+              path,
+              inputConverter: {
+                type: 'pandoc',
+                format,
+              } as InputConverter
+            } as DocumentContext
+          },
+          editorKey
+        })
+      }
     }
 
     // if (nodeTypeName === NODE_NAME_META_MAP) {

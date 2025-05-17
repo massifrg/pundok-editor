@@ -1,4 +1,5 @@
 import { FileFilter } from 'electron';
+import { extname } from 'path-browserify';
 
 export interface PandocFormatDescription {
   description?: string;
@@ -277,4 +278,8 @@ export function pandocFormatsFromExtension(ext: string): string[] {
   return Object.entries(pandocFormats)
     .filter(([_, f]) => f.extensions.indexOf(ext_without_dot) >= 0)
     .map(([format, _]) => format);
+}
+
+export function pandocFormatsFromFilename(fn: string): string[] {
+  return pandocFormatsFromExtension(extname(fn))
 }
