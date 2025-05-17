@@ -1,5 +1,5 @@
 <template>
-  <ToolbarButton icon="invoice_list" title="select elements with CSS selectors" @click="showDialog = !showDialog">
+  <ToolbarButton icon="css_selectors" title="select elements with CSS selectors" @click="showDialog = !showDialog">
     <q-dialog v-model="showDialog" :position="dialogPosition"
       :full-height="dialogPosition == 'right' || dialogPosition == 'left'" seamless>
       <q-card>

@@ -1,5 +1,5 @@
 <template>
-  <ToolbarButton icon="mdi-language-markdown" title="edit this document as Markdown" @click="editorVisible = true">
+  <ToolbarButton icon="markdown" title="edit this document as Markdown" @click="editorVisible = true">
     <q-dialog v-model="editorVisible" full-width full-height no-esc-dismiss>
       <q-card>
         <q-card-section>
@@ -34,6 +34,7 @@ import {
   setActionCommand,
 } from '../actions';
 import { FeedbackMessage } from '../common';
+import { setupQuasarIcons } from './helpers/quasarIcons';
 
 export default defineComponent({
   props: ['editor'],
@@ -42,6 +43,7 @@ export default defineComponent({
     ToolbarButton,
   },
   setup() {
+    setupQuasarIcons();
     const editorVisible = ref(false);
     const content = ref(`markdown code`);
     const extensions = [markdown(), oneDark, EditorView.lineWrapping];
