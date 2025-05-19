@@ -1,13 +1,22 @@
 import { FeedbackMessage, PundokEditorProject, ReadDoc, ViewerSetup } from '.';
 import { EditorKeyType } from './editorKey';
 
+/**
+ * The direction of messages between Main and Renderer in an IPC channel.
+ */
 export type IpcDirection = 'm2r' | 'r2m' | 'both';
 
+/**
+ * The description of an IPC channel of communication between Main and Renderer.
+ */
 interface IpcChannelDescription {
+  /** The direction of messages */
   dir: IpcDirection;
+  /** The description of the channel */
   description: string;
 }
 
+/** Types of IPC channels in the communication from Main to Renderer. */
 export type IpcMainToRendererChannel =
   | 'feedback'
   | 'document'
@@ -18,6 +27,7 @@ export type IpcMainToRendererChannel =
   | 'ask-value'
   | 'show-in-viewer';
 
+/** Types of IPC channels in the communication from Renderer to Main. */
 export type IpcRendererToMainChannel =
   | 'debug-info'
   | 'open-document'
@@ -39,6 +49,7 @@ export type IpcRendererToMainChannel =
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
+/** The available IPC channels. */
 export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   feedback: {
     dir: 'm2r',
@@ -154,6 +165,7 @@ export const IPC_VALUE_NEW_PROJECT_NAME = 'new-project-name';
 export const IPC_VALUE_WINDOW_TITLE = 'window-title';
 export const IPC_MAIN_EDITOR_KEY = 'main-editor-key';
 
+/** Types of messages from Main to Renderer. */
 export type ServerMessageType =
   | 'command'
   | 'configuration'
@@ -162,32 +174,39 @@ export type ServerMessageType =
   | 'project'
   | 'viewer';
 
+/** A message from Main to Renderer. */
 export interface ServerMessage extends Record<string, any> {
   type: ServerMessageType;
+  /** The identifier key of the recipient editor instance */
   editorKey?: EditorKeyType;
 }
 
+/** A message from Main to Renderer to configure the editor with a certain configuration. */
 export interface ServerMessageSetConfiguration extends ServerMessage {
   type: 'configuration';
   configurationName: string;
 }
 
+/** A feedback message from Main to Renderer.*/
 export interface ServerMessageFeedback extends ServerMessage {
   type: 'feedback';
   feedback: FeedbackMessage;
 }
 
+/** A message from Main to Renderer with the content of a document. */
 export interface ServerMessageContent extends ServerMessage {
   type: 'content';
   content: ReadDoc;
   project?: PundokEditorProject;
 }
 
+/** A message from Main to Renderer to configure the editor according to a certain project. */
 export interface ServerMessageSetProject extends ServerMessage {
   type: 'project';
   project: PundokEditorProject;
 }
 
+/** Kind of command to be executed in the Renderer. */
 export type CommandToRenderer =
   | 'open'
   | 'save'
@@ -195,11 +214,13 @@ export type CommandToRenderer =
   | 'import'
   | 'export';
 
+/** A message from Main to Renderer to issue a command inside the editor. */
 export interface ServerMessageCommand extends ServerMessage {
   type: 'command';
   command: CommandToRenderer;
 }
 
+/** A message from Main to the document (pre)viewer. */
 export interface ServerMessageForViewer extends ServerMessage {
   type: 'viewer';
   setup: ViewerSetup;

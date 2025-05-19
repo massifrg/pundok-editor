@@ -13,6 +13,15 @@ import {
   NODE_NAME_TABLE_HEADER
 } from '../prosemirrorNames';
 
+/**
+ * The Nodes and Marks that are customizable with the `customStyle` attribute.
+ * Except for `Para`, the attributes sets the value of the `custom-style` attribute
+ * in the `Attr` data structure.
+ * In the case of paragraph:
+ * - inside the editor, paragraphs have a `customStyle` attribute
+ * - in Pandoc documents, there's a `Div` surrounding one or more paragraphs,
+ *   that is used to carry the `custom-style` attribute in its `Attr`.
+ */
 export const CustomizableWithStyle: Record<string, string> = {
   [MARK_NAME_SPAN]: 'Span',
   [NODE_NAME_PARAGRAPH]: 'Para',
@@ -22,11 +31,17 @@ export const CustomizableWithStyle: Record<string, string> = {
   [NODE_NAME_PANDOC_TABLE]: 'Table',
 } as const;
 
+/**
+ * Nodes that are customizable with custom classes.
+ */
 export const CustomizableWithClass: Record<string, string> = {
   [NODE_NAME_DIV]: 'Div',
   [NODE_NAME_FIGURE]: 'Figure',
 } as const;
 
+/**
+ * The union of Node and Marks customizable with `customStyle` and with classes.
+ */
 export const CustomizableElements: Record<string, string> = {
   ...CustomizableWithStyle,
   ...CustomizableWithClass,
@@ -50,6 +65,12 @@ export function typeNameOfElement(
 const isCustomizable = (elements: Record<string, string>, name: string) =>
   !!elements[name];
 
+/**
+ * Check whether a Node, a Mark, a NodeType, a MarkType or a Node or Mark with a given name
+  * is customizable with the `customStyle` attribute.
+ * @param el
+ * @returns 
+ */
 export function isCustomizableWithStyle(
   el: string | Node | NodeType | Mark | MarkType | undefined,
 ) {
@@ -57,6 +78,12 @@ export function isCustomizableWithStyle(
   return isCustomizable(CustomizableWithStyle, typeNameOfElement(el));
 }
 
+/**
+ * Check whether a Node, a Mark, a NodeType, a MarkType or a Node or Mark with a given name
+ * is customizable with classes.
+ * @param el
+ * @returns 
+ */
 export function isCustomizableWithClass(
   el: string | Node | NodeType | Mark | MarkType | undefined,
 ) {
@@ -64,6 +91,12 @@ export function isCustomizableWithClass(
   return isCustomizable(CustomizableWithClass, typeNameOfElement(el));
 }
 
+/**
+ * Check whether a Node, a Mark, a NodeType, a MarkType or a Node or Mark with a given name
+ * is customizable with the `customStyle` attribute or classes.
+ * @param el
+ * @returns 
+ */
 export function isCustomizableElement(
   el: string | Node | NodeType | Mark | MarkType | undefined,
 ) {

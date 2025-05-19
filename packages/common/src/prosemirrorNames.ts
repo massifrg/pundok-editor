@@ -1,3 +1,7 @@
+/*
+ * The names of Nodes and Marks of pundok's prosemirror schema.
+ */
+
 export const NODE_NAME_PANDOC = 'pandoc'
 export const NODE_NAME_BREAK = 'hardBreak'
 export const NODE_NAME_BLOCKQUOTE = 'blockquote'

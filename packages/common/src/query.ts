@@ -11,6 +11,9 @@ export interface Query extends Record<string, any> {
   type: QueryType;
 }
 
+/**
+ * Some common fields shared by any query.
+ */
 interface IndexQueryCommon {
   /** The name of the index to be searched (e.g. "names", "subjects", etc.) */
   indexName: string;
@@ -46,21 +49,39 @@ export interface QueryResult extends Record<string, any> {
   html?: string;
 }
 
+/**
+ * An index can be:
+ * - in the metadata of a document ("document");
+ * - in the `Div.index` elements of a document resulting from docs' inclusions
+ *   strarting from the master document of a project;
+ * - in an external JSON file, usually in the `indices` subdirectory of a project,
+ *   that contains an array of objects having at least an `id` and a `text`
+ *   string fields.
+ */
 export type IndexSourceType = 'project' | 'json-file' | 'document';
 
+/**
+ * The common fields of the source of an index.
+ */
 interface AbstractIndexSource {
   type: IndexSourceType;
 }
 
+/**
+ * An index source resulting from the inclusions of documents starting from the master document.
+ */
 export interface IndexSourceProject extends AbstractIndexSource {
   type: 'project';
 }
 
+/** An index source made by a JSON file. */
 export interface IndexSourceJsonFile extends AbstractIndexSource {
   type: 'json-file';
+  /** The JSON file's name. */
   filename: string;
 }
 
+/** An index source from the metadata of a document. */
 export interface IndexSourceDocumentMetadata extends AbstractIndexSource {
   type: 'document'
 }
@@ -103,6 +124,7 @@ export function searchQueryResults(data: any[], searchText: string | string[]) {
   return removeDuplicates(results)
 }
 
+/** A function to remove duplicates from an array of query results. */
 export function removeDuplicates(results: QueryResult[]): QueryResult[] {
   const id_text: Record<string, boolean> = {}
   return results

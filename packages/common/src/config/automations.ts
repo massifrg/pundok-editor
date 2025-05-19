@@ -1,6 +1,13 @@
 import { PundokEditorConfig } from './editorConfiguration';
 
-/** Types of automations available. */
+/**
+ * Types of automations available:
+ * - `elements-selection`: selections of nodes or marks with CSS-like selectors
+ * - `pandoc-filter`: apply a pandoc filter to this document or to another document and
+ *     + replace the current document with the result
+ *     + or append/prepend the result to the current document
+ * - `search-replace`: define a search/replace operation
+ */
 export type AutomationType =
   | 'elements-selection'
   | 'pandoc-filter'
@@ -8,8 +15,10 @@ export type AutomationType =
 
 /**
  * Configuration of the interface of the editor
- * to ease the transformation of the document,
- * like search and replace operations.
+ * to ease the transformation of the document, like:
+ * - selection of nodes or marks with CSS selectors;
+ * - transformation of the current document with Pandoc filters;
+ * - search and replace operations.
  */
 export interface Automation extends Record<string, any> {
   type: AutomationType;
