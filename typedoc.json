@@ -11,7 +11,7 @@
     "packages/renderer/src/stores/index.ts",
     "packages/readers/src/index.ts"
   ],
-  "name": "Packages Example",
+  "name": "pundok-editor",
   "entryPointStrategy": "expand",
   "includeVersion": true
 }
