@@ -46,6 +46,7 @@ async function createWindow() {
       // webSecurity: false,
     },
   });
+
   handleImagesFor(editorView)
   baseWindow.contentView.addChildView(editorView);
   editorView.setBounds({ x: 0, y: 0, width: 600, height: 600 });
@@ -114,6 +115,19 @@ async function createWindow() {
 
   const ipcHub = new IpcHub(baseWindow, editorView, pdfView);
   refreshMainMenu(ipcHub);
+
+  // add listeners to intercept dev-tools open/close
+  editorView.webContents.on("devtools-opened", () => {
+    console.log("DevTools opened");
+    showDeveloperTools = true
+    refreshMainMenu(ipcHub)
+  });
+
+  editorView.webContents.on("devtools-closed", () => {
+    console.log("DevTools closed");
+    showDeveloperTools = false
+    refreshMainMenu(ipcHub)
+  });
 
   // await loadEditor(browserWindow);
   await loadEditor(editorView);
