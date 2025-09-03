@@ -1,113 +1,48 @@
 <template>
-  <q-layout
-    view="hHH lpR fFf"
-    :container="!mainEditor"
-    :style="`height: ${height}`"
-    class="shadow-2 rounded-borders"
-  >
+  <q-layout view="hHH lpR fFf" :container="!mainEditor" :style="`height: ${height}`" class="shadow-2 rounded-borders">
     <q-header>
       <q-toolbar class="text-white q-pa-none">
         <q-toolbar-title>
-          <Menubar
-            :editor="editor"
-            :current-nodes-with-pos="currentNodesWithPos"
-            :gui-props="guiProps"
-            :saved-changes="savedChanges"
-            :exported-changes="exportedChanges"
-            :operation-in-progress="operationInProgress"
-            @new-document="newDocument"
-            @save-content="saveContent()"
+          <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
+            :saved-changes="savedChanges" :exported-changes="exportedChanges"
+            :operation-in-progress="operationInProgress" @new-document="newDocument" @save-content="saveContent()"
             @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
-            @reload-with-configuration="reloadWithConfiguration"
-          />
+            @reload-with-configuration="reloadWithConfiguration" />
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
-    <q-drawer
-      show-if-above
-      behavior="desktop"
-      bordered
-      :v-model="rightDrawerState === 'normal'"
-      side="right"
-      :mini="rightDrawerState === 'mini'"
-      @mouseenter="rightDrawerState = 'normal'"
-      @mouseleave="rightDrawerState = 'mini'"
-      mini-to-overlay
-      :mini-width="60"
-      :width="240"
-      :breakpoint="500"
-      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'"
-    >
-      <CustomStylesPanel
-        :editor="editor"
-        :panel-state="rightDrawerState"
-        :current-blocks="currentNodesWithPos"
-      />
+    <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
+      :mini="rightDrawerState === 'mini'" @mouseenter="rightDrawerState = 'normal'"
+      @mouseleave="rightDrawerState = 'mini'" mini-to-overlay :mini-width="60" :width="240" :breakpoint="500"
+      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
+      <CustomStylesPanel :editor="editor" :panel-state="rightDrawerState" :current-blocks="currentNodesWithPos" />
     </q-drawer>
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
-        <PendingOperationDialog
-          :model-value="pending && !savedChanges"
-          :pending-operation="pending"
-          @pending-canceled="cancelPending"
-          @pending-confirmed="confirmPending"
-          @update-value="pendingValueUpdate"
-        />
+        <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
+          @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
         <editor-content :editor="editor as Editor" />
-        <SearchAndReplace
-          :editor="editor"
-          :visible="visibleSearchAndReplaceDialog"
-          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()"
-        />
-        <AttributesEditor
-          :editor="editor"
-          :selected-node-or-mark="nodeOrMarkToEdit"
-          :start-tab="startAttributesTab"
-          :on-attributes-editor-show="onAttributesEditorShow"
-          @closeAttributesEditor="closeAttributesEditor()"
-        >
+        <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
+          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
+        <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
+          :on-attributes-editor-show="onAttributesEditorShow" @closeAttributesEditor="closeAttributesEditor()">
         </AttributesEditor>
-        <ConfigurationsDialog
-          :editor="editor"
-          :visible="visibleConfigurationDialog"
-          @set-configuration="setConfiguration"
-          @close-configurations-dialog="visibleConfigurationDialog = false"
-        >
+        <ConfigurationsDialog :editor="editor" :visible="visibleConfigurationDialog"
+          @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
         </ConfigurationsDialog>
-        <ExportDialog
-          :editor="editor"
-          :visible="visibleExportDialog"
-          @set-output-converter="setOutputConverter"
-          @close-export-dialog="visibleExportDialog = false"
-        ></ExportDialog>
-        <ImportDialog
-          :editor="editor"
-          :visible="visibleImportDialog"
-          @set-input-converter="setInputConverter"
-          @close-import-dialog="visibleImportDialog = false"
-        ></ImportDialog>
-        <ShowMessageDialog
-          :editor="editor"
-          :visible="!!message"
-          :message="message"
-          @close-show-message-dialog="message = null"
-        />
-        <InputTextDialog
-          :editor="editor"
-          :visible="visibleInputTextDialog"
-          :label="inputTextDialogLabel"
-          :start-value="inputTextDialogStartValue"
-          @close-dialog="closeInputTextDialog"
-        />
-        <ProjectStructureDialog
-          :main-editor="editor"
-          :visible="visibleProjectStructureDialog"
-          :project="docState()?.project"
-          @close-project-structure-dialog="closeProjectStructureDialog"
-        />
+        <ExportDialog :editor="editor" :visible="visibleExportDialog" @set-output-converter="setOutputConverter"
+          @close-export-dialog="visibleExportDialog = false"></ExportDialog>
+        <ImportDialog :editor="editor" :visible="visibleImportDialog" @set-input-converter="setInputConverter"
+          @close-import-dialog="visibleImportDialog = false"></ImportDialog>
+        <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
+          @close-show-message-dialog="message = null" />
+        <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
+          :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
+        <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
+          :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog" />
         <ContextMenu :editor="editor" />
         <!-- <q-page-sticky expand position="top">
           <q-toolbar class="text-white q-pa-none">
@@ -631,7 +566,7 @@ export default {
         this.backend?.setValue(IPC_MAIN_EDITOR_KEY, this.editorKey());
       }
     },
-    setContent(content: string, isNew: boolean) {
+    setContent(content: string, isNew?: boolean) {
       // console.log(`SET CONTENT: ${content}`)
       const editor = this.editor;
       if (isNew) {
@@ -822,7 +757,7 @@ export default {
     },
     getDocAsJsonString(): string {
       const state = this.editorState();
-      return getDocAsJsonString(state, {
+      return getDocAsJsonString(state!, { // TODO: check state!
         space: this.jsonSpace,
       });
     },
