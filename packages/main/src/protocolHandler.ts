@@ -79,7 +79,8 @@ async function pdfToImage(filepath: string, params: Record<string, any>): Promis
       canvasContext: canvasAndContext.context,
       viewport,
     };
-    await page.render(renderContext).promise
+    // comment the following line if PDF preview crashes Chrome
+    await page.render(renderContext).promise // TODO: make this skippable with an option
     // Convert the canvas to an image buffer.
     const image = canvasAndContext.canvas.toBuffer(params.mimeType || "image/jpeg");
     // Release page resources.
