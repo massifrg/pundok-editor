@@ -9,10 +9,10 @@ import {
 import { chainCommands } from '@tiptap/pm/commands';
 import {
   AllSelection,
+  Command,
   EditorState,
   NodeSelection,
   Selection,
-  TextSelection,
   Transaction,
 } from '@tiptap/pm/state';
 import {
@@ -541,14 +541,12 @@ export const PandocTable = Node.create<PandocTableOptions>({
           },
       mergeCells:
         () =>
-          ({ state, dispatch }) => {
-            return mergeCells(state, dispatch);
-          },
+          ({ state, dispatch }) =>
+            chainCommands(mergeCells, fixTableSectionCommand)(state, dispatch),
       splitCell:
         () =>
-          ({ state, dispatch }) => {
-            return splitCell(state, dispatch);
-          },
+          ({ state, dispatch }) =>
+            chainCommands(splitCell, fixTableSectionCommand)(state, dispatch),
       toggleHeaderColumn:
         () =>
           ({ state, dispatch }) => {
@@ -1120,14 +1118,16 @@ function fixTableSectionCells(
           const cellNode = table.nodeAt(cellPos);
           const cellType = isHeadOrFoot || (r < headRows || c < rowHeadColumns) ? header_cell : cell
           if (cellNode) {
-            const { colspan, textAlign, leftEdge, rightEdge } = cellNode.attrs
+            const { colspan, textAlign } = cellNode.attrs
+            const leftEdge: boolean = cellNode.attrs.leftEdge
+            const rightEdge: boolean = cellNode.attrs.rightEdge
             const hasNoAlign = !textAlign || textAlign.startsWith('default-')
             const columnAlign = defaultAlignments[c] || null
             const fixCellType = cellNode.type !== cellType
             const fixAlign = hasNoAlign && textAlign !== columnAlign
-            const isLeftEdge = c === 0
-            const isRightEdge = c + (colspan || 1) === width
-            const fixEdge = (isLeftEdge && !leftEdge) || (isRightEdge && !rightEdge)
+            const isLeftEdge: boolean = c === 0
+            const isRightEdge: boolean = c + (colspan || 1) === width
+            const fixEdge = (isLeftEdge !== leftEdge) || (isRightEdge !== rightEdge)
             if (fixCellType || fixAlign || fixEdge) {
               const fixedCell = cellType.createAndFill(
                 fixAlign || fixEdge
@@ -1209,6 +1209,18 @@ function fixTableSection(
   } else if (role === TABLE_ROLE_HEAD || role === TABLE_ROLE_FOOT) {
     fixTableSectionCells(schema, tr, pos);
   }
+}
+
+const fixTableSectionCommand: Command = (state, dispatch) => {
+  const cell = getInnerCell(state)
+  if (!cell) return false
+  if (dispatch) {
+    const $pos = state.doc.resolve(cell.pos)
+    const tr = state.tr
+    console.log($pos.node(-2), $pos.start(-2) - 1)
+    fixTableSection(state.schema, tr, $pos.node(-2), $pos.start(-2) - 1)
+  }
+  return true
 }
 
 function fixPandocTablesCommand(
