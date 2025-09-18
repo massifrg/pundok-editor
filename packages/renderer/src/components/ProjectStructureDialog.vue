@@ -177,6 +177,7 @@ const ProjectStructureDialog: Component = {
         }
       } catch (err) {
         console.log(err)
+        this.isLoadingStructure = false
       }
       this.docTree = []
     },

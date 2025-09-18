@@ -368,14 +368,18 @@ export class LocalBackend implements Backend {
   async getInclusionTree(
     project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined> {
-    const structure = await this.invokeIpc(
-      'get-inclusion-tree',
-      JSON.stringify(project),
-    );
-    if (structure) {
-      return JSON.parse(structure) as ProjectComponent;
+    try {
+      const structure = await this.invokeIpc(
+        'get-inclusion-tree',
+        JSON.stringify(project),
+      );
+      if (structure) {
+        return JSON.parse(structure) as ProjectComponent;
+      }
+      return undefined;
+    } catch (err) {
+      return Promise.reject(err)
     }
-    return undefined;
   }
 
   async askForDocumentIdOrPath(

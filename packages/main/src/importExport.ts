@@ -404,6 +404,7 @@ export async function runWriterOnMasterFile(
         return result.output;
       } else {
         console.log(result.error);
+        return Promise.reject(result.error)
       }
     }
   } catch (err) {
