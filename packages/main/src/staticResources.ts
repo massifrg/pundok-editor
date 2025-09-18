@@ -30,6 +30,10 @@ const STATIC_RESOURCES: StaticResource[] = [
       'https://raw.githubusercontent.com/massifrg/pandoc-include-doc/main/src',
     resources: [
       {
+        description: 'common lua definitions to include other documents',
+        file: 'include-common.lua',
+      },
+      {
         description: 'pandoc lua filter to include other documents',
         file: 'include-doc.lua',
       },
