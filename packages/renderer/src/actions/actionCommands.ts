@@ -14,6 +14,8 @@ import {
   BaseActionForNodeOrMark,
   ACTION_SHOW_SEARCH_DIALOG,
   BaseEditorAction,
+  ACTION_SHOW_RESULT_MESSAGE,
+  ACTION_PROPS_RESULT_MESSAGE,
 } from './actions';
 import {
   DocumentContext,
@@ -108,6 +110,19 @@ export function setActionExportDocument(
       },
     });
   }
+}
+
+export function setActionShowResultMessage(
+  stateOrKey: EditorState | EditorKeyType,
+  props: ACTION_PROPS_RESULT_MESSAGE,
+) {
+  const editorKey = editorKeyFrom(stateOrKey);
+  if (editorKey)
+    useActions().setAction({
+      ...ACTION_SHOW_RESULT_MESSAGE,
+      editorKey,
+      props,
+    });
 }
 
 export function setActionShowImportDialog(

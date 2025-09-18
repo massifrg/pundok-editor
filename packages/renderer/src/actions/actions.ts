@@ -208,6 +208,19 @@ export const ACTION_DOCUMENT_TRANSFORM: BaseEditorAction = {
   icon: 'mdi-file-replace-outline',
 };
 
+export const ACTION_SHOW_RESULT_MESSAGE: BaseEditorAction = {
+  name: 'show-result-message',
+  label: 'show message relative to the result of an operation',
+  icon: 'mdi-message-reply-outline',
+}
+
+export interface ACTION_PROPS_RESULT_MESSAGE {
+  success: boolean,
+  message: string,
+  caption: string,
+  icon: string,
+}
+
 export const ACTION_SHOW_EXPORT_DIALOG: BaseEditorAction = {
   name: 'show-export-dialog',
   label: 'open export dialog',

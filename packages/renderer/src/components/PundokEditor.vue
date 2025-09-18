@@ -123,6 +123,7 @@ import {
   ACTION_DOCUMENT_EXPORT,
   ACTION_DOCUMENT_IMPORT,
   ACTION_NEW_EMPTY_DOCUMENT,
+  ACTION_SHOW_RESULT_MESSAGE,
   ACTION_SHOW_EXPORT_DIALOG,
   ACTION_SHOW_IMPORT_DIALOG,
   ACTION_SHOW_SEARCH_DIALOG,
@@ -149,6 +150,7 @@ import {
   ACTION_SET_CONTENT,
   setActionCommand,
   ActionPropsSetAlternative,
+  ACTION_PROPS_RESULT_MESSAGE,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -375,6 +377,10 @@ export default {
               setActionShowExportDialog(this.editorKey()!);
             }
             break;
+          case ACTION_SHOW_RESULT_MESSAGE.name:
+            if (props)
+              this.showResultMessage(props as ACTION_PROPS_RESULT_MESSAGE)
+            break
           case ACTION_SHOW_EXPORT_DIALOG.name:
             const converter = props?.outputConverter;
             if (converter) {
@@ -761,6 +767,20 @@ export default {
         space: this.jsonSpace,
       });
     },
+    showResultMessage(props: ACTION_PROPS_RESULT_MESSAGE) {
+      const { success, message, caption, icon } = props
+      this.$q.notify({
+        message,
+        caption,
+        icon,
+        position: 'top',
+        color: success ? 'positive' : 'negative',
+        timeout: success ? 2000 : 5000,
+      });
+      const resultMessage = `${message}: ${caption}`;
+      console.log(resultMessage);
+      return resultMessage;
+    },
     saveContent() {
       this.saveToStoredPath();
     },
@@ -772,25 +792,6 @@ export default {
     },
     async save(path?: string): Promise<SaveResponse> {
       this.beforeSaving();
-
-      const showResultMessage = (
-        success: boolean,
-        message: string,
-        caption: string,
-      ) => {
-        this.$q.notify({
-          message,
-          caption,
-          icon: success ? 'mdi-content-save-check' : 'mdi-content-save-alert',
-          position: 'top',
-          color: success ? 'positive' : 'negative',
-          timeout: success ? 2000 : 5000,
-        });
-        const resultMessage = `${message}: ${caption}`;
-        console.log(resultMessage);
-        return resultMessage;
-      };
-
       const jsonDoc = this.getDocAsJsonString();
       try {
         const docState = this.docState();
@@ -807,21 +808,23 @@ export default {
             this.editorKey(),
           );
           if (response.error) {
-            const errmsg = showResultMessage(
-              false,
-              'SAVE ERROR',
-              JSON.stringify(response.error),
-            );
+            const errmsg = this.showResultMessage({
+              success: false,
+              caption: 'SAVE ERROR',
+              message: JSON.stringify(response.error),
+              icon: 'mdi-content-save-alert'
+            });
             // this.currentState.setLastSaveResponse(undefined)
             this.updateEditorDocState({ lastSaveResponse: null });
             return Promise.reject(errmsg);
           } else {
             this.setDocumentAsNativelySaved();
-            showResultMessage(
-              true,
-              'SAVE SUCCESS',
-              `saved as ${response.doc.path || response.doc.id}`,
-            );
+            this.showResultMessage({
+              success: true,
+              caption: 'SAVE SUCCESS',
+              message: `saved as ${response.doc.path || response.doc.id}`,
+              icon: 'mdi-content-save-check'
+            });
             const prevPath = this.docState()?.lastSaveResponse?.doc.path;
             if (prevPath !== response.doc.path) {
               this.updateEditorDocState({ lastExportResponse: null });
@@ -837,7 +840,12 @@ export default {
       } catch (err) {
         const message =
           err instanceof Error ? err.message : JSON.stringify(err);
-        const errmsg = showResultMessage(false, 'SAVE ERROR', message);
+        const errmsg = this.showResultMessage({
+          success: false,
+          caption: 'SAVE ERROR',
+          message,
+          icon: 'mdi-content-save-alert'
+        });
         console.log(message);
         return Promise.reject(errmsg);
       }
