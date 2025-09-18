@@ -53,10 +53,11 @@ import { Component, defineAsyncComponent } from 'vue';
 import { useBackend, useProjectCache } from '../stores';
 import { mapState } from 'pinia';
 import { EditorGUIPropsClass } from './EditorGUIProps';
-import { setActionOpenDocument, setActionCloseEditor } from '../actions';
+import { setActionOpenDocument, setActionCloseEditor, setActionShowResultMessage } from '../actions';
 import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/vue-3';
 import { PendingOperation } from '.';
+import { isString } from 'lodash';
 
 interface LoadedDocument {
   id?: string,
@@ -175,8 +176,15 @@ const ProjectStructureDialog: Component = {
           this.docTree = [root]
           return
         }
-      } catch (err) {
+      } catch (err: Error | string | unknown) {
         console.log(err)
+        const message: string = err instanceof Error || isString(err) ? err.toString() : ""
+        setActionShowResultMessage(this.mainEditor.state, {
+          success: false,
+          message,
+          caption: "Project structure unavailable",
+          icon: "mdi-file-tree"
+        })
         this.isLoadingStructure = false
       }
       this.docTree = []
