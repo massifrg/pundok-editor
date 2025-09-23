@@ -52,7 +52,7 @@ import {
 export type TypeOrNode = string | NodeType | ProsemirrorNode | MarkType;
 export const typeOrNodeName: (ton: TypeOrNode) => string = typeNameOfElement;
 
-export interface TransformedNodeOrMark {
+export interface NodeOrMarkMutation {
   nodeType?: NodeType;
   markType?: MarkType;
   attrs: Record<string, any>;
@@ -61,7 +61,7 @@ export interface TransformedNodeOrMark {
 export type UpdateNodeOrMarkCallback = (
   nodeOrMark: ProsemirrorNode | Mark,
   pos?: number,
-) => TransformedNodeOrMark | undefined;
+) => NodeOrMarkMutation | undefined;
 
 export function nodeTypeOf(
   ton: TypeOrNode,
