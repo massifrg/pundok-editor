@@ -40,7 +40,7 @@ import {
 } from '../helpers';
 import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
 import Paragraph from '@tiptap/extension-paragraph';
-import { Heading, Line, Plain } from '../nodes';
+import { Heading, Line, Metadata, Plain } from '../nodes';
 
 let keyCounter = 1;
 
@@ -253,6 +253,7 @@ export const PundokEditorUtilsExtension =
           const doc = state.doc
           doc.descendants((node, pos) => {
             const tn = node.type.name
+            if (tn === Metadata.name) return false
             if (tn === Paragraph.name || tn === Plain.name || tn === Heading.name || tn === Line.name) {
               count++
               if (count === i) {
