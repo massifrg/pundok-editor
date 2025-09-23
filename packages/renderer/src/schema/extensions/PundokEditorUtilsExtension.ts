@@ -266,8 +266,7 @@ export const PundokEditorUtilsExtension =
           })
           if (!found) return false
           if (dispatch) {
-            const $pos = doc.resolve(foundPos)
-            dispatch(tr.setSelection(TextSelection.create(doc, $pos.start(), $pos.end())))
+            dispatch(tr.setSelection(NodeSelection.create(doc, foundPos)))
           }
           return true
         }
