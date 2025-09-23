@@ -68,6 +68,7 @@
     "@types/path-browserify": "^1.0.3",
     "@types/unzip-stream": "^0.3.4",
     "@types/webfontloader": "^1.6.38",
+    "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
     "@vitejs/plugin-vue": "^5.2.4",
@@ -168,6 +169,7 @@
     "webfontloader": "^1.6.28",
     "xml-parser-xo": "^4.1.2",
     "xregexp": "^5.1.1",
+    "yargs": "^18.0.0",
     "zip-lib": "^1.0.4"
   },
   "nano-staged": {

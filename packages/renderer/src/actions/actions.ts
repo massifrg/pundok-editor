@@ -208,6 +208,12 @@ export const ACTION_DOCUMENT_TRANSFORM: BaseEditorAction = {
   icon: 'mdi-file-replace-outline',
 };
 
+export const ACTION_DOCUMENT_GO_TO_LINE: BaseEditorAction = {
+  name: 'document-go-to-line',
+  label: 'move the cursor to line',
+  icon: 'mdi-debug-step-into'
+}
+
 export const ACTION_SHOW_RESULT_MESSAGE: BaseEditorAction = {
   name: 'show-result-message',
   label: 'show message relative to the result of an operation',

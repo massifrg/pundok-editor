@@ -151,6 +151,7 @@ import {
   setActionCommand,
   ActionPropsSetAlternative,
   ACTION_PROPS_RESULT_MESSAGE,
+  ACTION_DOCUMENT_GO_TO_LINE,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -293,7 +294,6 @@ export default {
       const editor = this.editor as Editor;
       const editorKey = editorKeyFromState(editor.state);
       if (action.editorKey == editorKey) {
-        const editor = this.editor as Editor;
         const nodeMarkAction = action as ActionForNodeOrMark;
         const { name: actionName, nodeOrMark: nom, props } = nodeMarkAction;
         console.log(`action: ${actionName}`);
@@ -329,7 +329,7 @@ export default {
             }
             break;
           case ACTION_DOCUMENT_OPEN.name:
-            this.openDocument(props?.context);
+            this.openDocument(props?.context, props?.atLine);
             break;
           case ACTION_DOCUMENT_SAVE.name:
             this.saveToStoredPath();
@@ -337,6 +337,14 @@ export default {
           case ACTION_DOCUMENT_SAVE_AS.name:
             this.save();
             break;
+          case ACTION_DOCUMENT_GO_TO_LINE.name:
+            if (props?.atLine) console.log("moving to line " + props.atLine)
+            this.editor?.chain()
+              .gotoDocLine(props?.atLine)
+              .focus()
+              .scrollIntoView()
+              .run()
+            break
           case ACTION_EDIT_ATTRIBUTES.name:
             if (nom) this.editNodeOrMarkAttributes(nom, props);
             break;
@@ -611,7 +619,7 @@ export default {
         console.log(err);
       }
     },
-    async openDocument(context?: DocumentContext) {
+    async openDocument(context?: DocumentContext, atLine?: number) {
       const docState = this.docState();
       const docContext: DocumentContext = context || {};
       const configurationName =
@@ -623,9 +631,9 @@ export default {
         project,
         editorKey: docState?.editorKey,
       });
-      if (doc) this.loadDocument(doc);
+      if (doc) this.loadDocument(doc, false, atLine);
     },
-    async loadDocument(doc: ReadDoc, ignoreUnsaved?: boolean) {
+    async loadDocument(doc: ReadDoc, ignoreUnsaved?: boolean, atLine?: number) {
       if (!ignoreUnsaved && this.askToSaveChanges) {
         const pending: PendingOperation = {
           type: 'loading',
@@ -653,7 +661,8 @@ export default {
         // ex TODO: remove history
         this.editor?.destroy();
         this.newEditor();
-        doc.editorKey = this.editorKey();
+        const editorKey = this.editorKey();
+        doc.editorKey = editorKey
         this.setMainEditorKey();
         console.log(`created new editor for doc:`);
         console.log(doc);
@@ -680,6 +689,9 @@ export default {
         this.detectDocumentIndices();
         this.setDocumentAsNativelySaved();
         this.$emit('document-loaded', doc, this.editor);
+        const action = ACTION_DOCUMENT_GO_TO_LINE
+        if (atLine) action.label += ` ${atLine}`
+        setActionCommand(editorKey!, action, { atLine })
       }
     },
     setOperationInProgress(operationInProgress: boolean) {

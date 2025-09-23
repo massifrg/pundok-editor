@@ -1,7 +1,7 @@
 import { getMarksBetween } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorView } from '@tiptap/pm/view';
-import { NodeSelection, Plugin } from '@tiptap/pm/state';
+import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import {
   ACTION_SET_ALTERNATIVE,
@@ -39,6 +39,8 @@ import {
   updateDocState
 } from '../helpers';
 import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
+import Paragraph from '@tiptap/extension-paragraph';
+import { Heading, Line, Plain } from '../nodes';
 
 let keyCounter = 1;
 
@@ -51,6 +53,7 @@ declare module '@tiptap/core' {
     pundokEditorUtils: {
       updateDocState: (update: Partial<DocStateUpdate>) => ReturnType;
       editAttributes: (props?: ActionEditAttributesProps) => ReturnType;
+      gotoDocLine: (i: number) => ReturnType;
     };
   }
 }
@@ -241,6 +244,32 @@ export const PundokEditorUtilsExtension =
               }
               return false;
             },
+        gotoDocLine: (i: number) => ({ dispatch, state, tr }) => {
+          if (!i) return false;
+          let count: number = 0
+          let found = false
+          let foundPos = 0
+          let foundNode: ProsemirrorNode | null = null
+          const doc = state.doc
+          doc.descendants((node, pos) => {
+            const tn = node.type.name
+            if (tn === Paragraph.name || tn === Plain.name || tn === Heading.name || tn === Line.name) {
+              count++
+              if (count === i) {
+                found = true
+                foundPos = pos
+                foundNode = node
+              }
+            }
+            return !found
+          })
+          if (!found) return false
+          if (dispatch) {
+            const $pos = doc.resolve(foundPos)
+            dispatch(tr.setSelection(TextSelection.create(doc, $pos.start(), $pos.end())))
+          }
+          return true
+        }
       };
     },
 

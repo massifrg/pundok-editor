@@ -465,8 +465,8 @@ export class IpcHub {
     }
   }
 
-  fireEventOpenDocument(path?: string, configurationName?: string) {
-    this.fireEventInRenderer('document', 'open', { path, configurationName });
+  fireEventOpenDocument(path?: string, configurationName?: string, atLine?: number) {
+    this.fireEventInRenderer('document', 'open', { path, configurationName, atLine });
   }
 
   fireEventSaveCurrentDocument() {

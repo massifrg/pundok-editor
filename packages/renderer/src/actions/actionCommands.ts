@@ -58,6 +58,7 @@ export function setActionNewEmptyDocument(
 export function setActionOpenDocument(
   stateOrKey: EditorState | EditorKeyType,
   context: DocumentContext,
+  atLine?: number
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   // console.log(`setActionImportDocument, editorKey=${editorKey}`);
@@ -70,6 +71,7 @@ export function setActionOpenDocument(
           ...context,
           editorKey,
         },
+        atLine
       },
     });
   }

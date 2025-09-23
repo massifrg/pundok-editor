@@ -17,7 +17,12 @@ let showPdfView = false;
 let pdfViewRelWidth = 0.6; // 0.35;
 let resizeEditorView: (options?: { refreshDevTools?: boolean }) => void;
 
-async function createWindow() {
+export interface WindowWithIpc {
+  window: BaseWindow,
+  ipcHub: IpcHub
+}
+
+async function createWindow(): Promise<WindowWithIpc> {
   const baseWindow = new BaseWindow({
     width: 800,
     height: 600,
@@ -133,7 +138,7 @@ async function createWindow() {
   await loadEditor(editorView);
   await loadViewer(pdfView);
 
-  return baseWindow;
+  return { window: baseWindow, ipcHub }
 }
 
 async function loadEditor(win: BrowserWindow | WebContentsView) {
@@ -173,13 +178,16 @@ async function loadViewer(win: BrowserWindow | WebContentsView) {
 /**
  * Restore existing BrowserWindow or Create new BrowserWindow
  */
-export async function restoreOrCreateWindow() {
+export async function restoreOrCreateWindow(): Promise<WindowWithIpc> {
   checkAndCreateAppDataDir();
 
   let window = BaseWindow.getAllWindows().find((w) => !w.isDestroyed());
+  let ipcHub: IpcHub | undefined = undefined
 
   if (window === undefined) {
-    window = await createWindow();
+    const wwipc = await createWindow();
+    window = wwipc.window
+    ipcHub = wwipc.ipcHub
   }
 
   window.show();
@@ -189,27 +197,8 @@ export async function restoreOrCreateWindow() {
   }
 
   window.focus();
+  return { window, ipcHub: ipcHub! }
 }
-
-// import { app } from 'electron'
-
-// let mainWindow: BrowserWindow | null
-
-// app.whenReady().then(() => {
-//   createWindow()
-
-//   app.on('activate', () => {
-//     if (BrowserWindow.getAllWindows().length === 0) {
-//       createWindow()
-//     }
-//   })
-// })
-
-// app.on('window-all-closed', () => {
-//   if (process.platform !== 'darwin') {
-//     app.quit()
-//   }
-// })
 
 export async function refreshMainMenu(ipcHub: IpcHub) {
   const bookmarks = await getBookmarks();

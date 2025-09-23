@@ -2,6 +2,7 @@ import { app } from 'electron';
 import './security-restrictions';
 import { restoreOrCreateWindow } from './mainWindow';
 import { copyMissingStaticResourcesInUserDir } from './staticResources';
+import { parseCommandLineOpts } from './cli';
 
 /**
  * Prevent multiple instances
@@ -38,6 +39,9 @@ app.on('activate', restoreOrCreateWindow);
 app
   .whenReady()
   .then(restoreOrCreateWindow)
+  .then(windowWithIpc => {
+    if (windowWithIpc) parseCommandLineOpts(windowWithIpc)
+  })
   .catch((e) => console.error('Failed create window:', e));
 
 /**

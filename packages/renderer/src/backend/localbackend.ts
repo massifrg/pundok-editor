@@ -161,7 +161,7 @@ export class LocalBackend implements Backend {
       );
 
       addListener('document', (e: any, commandMsg: ServerMessageCommand) => {
-        const { editorKey, command, path, configurationName } = commandMsg;
+        const { editorKey, command, path, configurationName, atLine } = commandMsg;
         let props: Record<string, any> = {};
         let baseAction: BaseEditorAction;
         switch (command) {
@@ -171,6 +171,7 @@ export class LocalBackend implements Backend {
               path,
               configurationName,
             } as DocumentContext;
+            props.atLine = atLine
             break;
           case 'save':
             baseAction = ACTION_DOCUMENT_SAVE;
