@@ -1,18 +1,34 @@
 import { app } from 'electron';
 import './security-restrictions';
-import { restoreOrCreateWindow } from './mainWindow';
+import { restoreOrCreateWindow, WindowWithIpc } from './mainWindow';
 import { copyMissingStaticResourcesInUserDir } from './staticResources';
 import { parseCommandLineOpts } from './cli';
+
+/** A global variable of the main window with its Ipc */
+let mainWindowWithIpc: WindowWithIpc | undefined = undefined
+
+// An interface to put process.argv of a second instance into
+// the additional data of the callback to prevent chrome from
+// intersparsing options among arguments passed to the second instance.
+interface SecondInstanceData extends Record<string, any> {
+  argv: string // a JSON.stringified version of process.argv
+}
 
 /**
  * Prevent multiple instances
  */
-const isSingleInstance = app.requestSingleInstanceLock();
+const isSingleInstance = app.requestSingleInstanceLock({
+  argv: JSON.stringify(process.argv)
+});
 if (!isSingleInstance) {
   app.quit();
   process.exit(0);
 }
-app.on('second-instance', restoreOrCreateWindow);
+app.on('second-instance', (event, argv, pwd, data) => {
+  const sid = data as SecondInstanceData
+  const args = sid?.argv && JSON.parse(sid.argv) || argv
+  if (mainWindowWithIpc) parseCommandLineOpts(mainWindowWithIpc, args, pwd)
+})
 
 /**
  * Disable Hardware Acceleration for more power-save
@@ -40,7 +56,10 @@ app
   .whenReady()
   .then(restoreOrCreateWindow)
   .then(windowWithIpc => {
-    if (windowWithIpc) parseCommandLineOpts(windowWithIpc)
+    if (windowWithIpc) {
+      mainWindowWithIpc = windowWithIpc
+      parseCommandLineOpts(windowWithIpc)
+    }
   })
   .catch((e) => console.error('Failed create window:', e));
 

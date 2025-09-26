@@ -3,8 +3,12 @@ import { hideBin } from "yargs/helpers"
 import { WindowWithIpc } from "./mainWindow"
 import { isAbsolute, resolve } from "path"
 
-export function parseCommandLineOpts(windowWithIpc: WindowWithIpc) {
-  const argv = yargs(hideBin(process.argv))
+export function parseCommandLineOpts(
+  windowWithIpc: WindowWithIpc,
+  argv?: string[],
+  pwd?: string
+) {
+  const parsed = yargs(hideBin(argv || process.argv))
     .scriptName("pundok-editor")
     .usage('$0 filename')
     .option('c', {
@@ -20,10 +24,10 @@ export function parseCommandLineOpts(windowWithIpc: WindowWithIpc) {
     .help()
     .parse()
   //@ts-ignore
-  const { _: filenames, config, line } = argv
+  const { _: filenames, config, line } = parsed
   let filename = filenames && filenames[0]
   if (filename) {
-    if (!isAbsolute(filename)) filename = resolve(process.cwd(), filename)
+    if (!isAbsolute(filename)) filename = resolve(pwd || process.cwd(), filename)
     windowWithIpc.ipcHub.fireEventOpenDocument(filename, config, line)
   }
 }
