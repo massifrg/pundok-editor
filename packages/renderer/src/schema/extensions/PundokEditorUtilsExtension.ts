@@ -40,7 +40,7 @@ import {
 } from '../helpers';
 import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
 import Paragraph from '@tiptap/extension-paragraph';
-import { DefinitionTerm, Heading, Line, Metadata, PandocTable, Plain, ShortCaption } from '../nodes';
+import { DefinitionTerm, Heading, Line, Metadata, Plain, ShortCaption } from '../nodes';
 
 let keyCounter = 1;
 
