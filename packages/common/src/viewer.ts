@@ -8,11 +8,11 @@ export interface ViewerSetup {
   /** The raw content to be shown in the viewer. */
   content: string;
   /** The page to be shown. */
-  page: number;
+  page?: number;
   /** The magnifying factor. */
-  magnify: number;
+  magnify?: number;
   /** The x coordinate (as percent of width) of the page to be at the center in the viewer. */
-  centerX: number;
+  centerX?: number;
   /** The y coordinate (as percent of height) of the page to be at the center in the viewer. */
-  centerY: number;
+  centerY?: number;
 }

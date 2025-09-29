@@ -71,6 +71,7 @@ import {
 } from './pandocFormatsHandler';
 import { fileContentsHandler } from './fileContentsHandler';
 import { askForDocumentHandler, getInclusionTreeHandler } from '.';
+import { preparePdfForViewer } from './preparePdfForViewer';
 
 /**
  * A class to handle the communication between `main` and `renderer` processes.
@@ -372,6 +373,10 @@ export class IpcHub {
             resultFile,
             callback,
           });
+          if (resultFile && converter.openResult === 'editor') {
+            const message = await preparePdfForViewer(resultFile, project)
+            this.send('show-in-viewer', message)
+          }
           break;
         case 'pandoc':
         default:

@@ -286,10 +286,10 @@ export default {
     this.loadDefaultPdf()
   },
   methods: {
-    setupViewer(setup?: ViewerSetup) {
+    async setupViewer(setup?: ViewerSetup) {
       if (setup) {
-        const { name: filename, content } = setup
-        this.loadPdf({ filename, content })
+        const { name: filename, content, page, magnify, centerX, centerY } = setup
+        await this.loadPdf({ filename, content })
       }
     },
     async loadPdf(pdf: PdfContent) {
@@ -361,10 +361,13 @@ export default {
       this.setMagnify(this.magnify * magnifyFactor)
     },
     clicked(e: PointerEvent) {
-      // console.log(e)
-      // const { layerX: x, layerY: y, target } = e
-      // const { clientWidth: w, clientHeight: h } = target as HTMLDivElement || { clientWidth: x, clientHeight: y }
-      // console.log(`${(x / w).toFixed(2)},${(y / h).toFixed(2)}`)
+      console.log(e)
+      const { layerX: x, layerY: y, target } = e
+      const { clientWidth: w, clientHeight: h } = target as HTMLDivElement || { clientWidth: x, clientHeight: y }
+      console.log(`${(x / w).toFixed(2)},${(y / h).toFixed(2)}`)
+      if (e.shiftKey) {
+        // TODO: tell the backend to open the source file matching the point clicked
+      }
     },
     mouseWheel(e: WheelEvent) {
       if (e.ctrlKey && !this.isRendering) {

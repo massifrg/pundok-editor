@@ -136,7 +136,7 @@ async function exportWithExternalProgram(
       },
       callback,
     );
-    childProcess.stdin.write(json);
+    if (json) childProcess.stdin.write(json);
     childProcess.stdin.end();
     const { output, exitCode, error } = await result;
     if (exitCode === 0) {

@@ -88,6 +88,8 @@ async function createWindow(): Promise<WindowWithIpc> {
     if (showDeveloperTools && options?.refreshDevTools) {
       editorView.webContents.closeDevTools();
       editorView.webContents.openDevTools();
+      // pdfView.webContents.closeDevTools();
+      // pdfView.webContents.openDevTools();
     }
   };
 
