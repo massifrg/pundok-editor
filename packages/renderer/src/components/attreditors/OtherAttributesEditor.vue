@@ -3,7 +3,7 @@
     <q-table v-if="allAttributes.length > 0" hide-bottom :rows="allAttributes" :columns="columns" row-key="key"
       v-model:pagination="pagination" :rows-per-page-options="[0]" binary-state-sort dense>
       <template #body="props">
-        <q-tr :props="props">
+        <q-tr :props="props" @wheel="(e: WheelEvent) => onWheel(e, props.row)">
           <q-td v-for="col in (props.cols as Record<string, string>[])" :key="col.name" :props="props">
             <span :class="classForAttributeName(props.row)" :title="props.row.description">{{ truncateValue(col.value)
               }}</span>
@@ -86,6 +86,7 @@ import { CustomAttribute, CustomClass, CustomStyleInstance, customAttributesForN
 import { isDuplicatedKvAttribute, matchingDuplicatedAttribute } from '../../schema/helpers'
 import { getEditorConfiguration } from '../../schema'
 import { ref } from 'vue'
+import { nudgeNumericValue } from '../helpers/incrementNumericValue'
 
 interface OtherAttribute {
   key: string,
@@ -239,7 +240,6 @@ export default {
   },
   methods: {
     isEditable(a: OtherAttribute) {
-      if (a.key == 'descrizione') console.log(a)
       return this.isPresent(a) && a.editable && (!a.values || a.values.length === 0)
     },
     isRemovable(a: OtherAttribute) {
@@ -404,6 +404,16 @@ export default {
       this.showEditAttrDialog = false
       this.editedAttrName = ''
       this.attrNewValue = ''
+    },
+    onWheel(e: WheelEvent, row: any) {
+      if (e.altKey) {
+        const sign = e.deltaY !== 0 && (e.deltaY > 0 ? -1 : 1)
+        if (sign) {
+          const modified = nudgeNumericValue(row.value, sign)
+          if (modified)
+            this.setNewValueForAttr(row.key, modified)
+        }
+      }
     }
   },
 };

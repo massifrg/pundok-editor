@@ -2,7 +2,7 @@ import { getMarksBetween } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorView } from '@tiptap/pm/view';
 import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state';
-import { Extension } from '@tiptap/core';
+import { Extension, isNodeSelection } from '@tiptap/core';
 import {
   ACTION_SET_ALTERNATIVE,
   ActionEditAttributesProps,
@@ -16,6 +16,7 @@ import {
   NODE_NAME_INDEX_REF,
   NODE_NAME_INDEX_TERM,
   NODE_NAME_PARAGRAPH,
+  NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
   SK_EDIT_ATTRIBUTES,
   SK_SET_ALTERNATIVE_0,
@@ -34,6 +35,7 @@ import {
   DocStateUpdate,
   editableAttrsForNodeOrMark,
   editorKeyFromState,
+  innerNodeDepth,
   META_UPDATE_DOC_STATE,
   SelectedNodeOrMark,
   updateDocState
@@ -41,6 +43,7 @@ import {
 import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
 import Paragraph from '@tiptap/extension-paragraph';
 import { DefinitionTerm, Heading, Line, Metadata, Plain, ShortCaption } from '../nodes';
+import { nudgeNumericValue, nudgeNumericValueAtIndex } from '/@/components/helpers/incrementNumericValue';
 
 let keyCounter = 1;
 
@@ -54,6 +57,7 @@ declare module '@tiptap/core' {
       updateDocState: (update: Partial<DocStateUpdate>) => ReturnType;
       editAttributes: (props?: ActionEditAttributesProps) => ReturnType;
       gotoDocLine: (i: number) => ReturnType;
+      nudgeNumericValue: (sign: 1 | -1) => ReturnType;
     };
   }
 }
@@ -162,6 +166,19 @@ export const PundokEditorUtilsExtension =
               }
               return false;
             },
+            handleDOMEvents: {
+              wheel: (view, event) => {
+                if (event.altKey) {
+                  const sign = (event.deltaY !== 0) && (event.deltaY < 0 ? 1 : -1)
+                  if (sign && this.editor.can().nudgeNumericValue(sign)) {
+                    this.editor.commands.nudgeNumericValue(sign)
+                    event.preventDefault()
+                    return true
+                  }
+                }
+                return false
+              }
+            }
           },
         }),
       ];
@@ -271,6 +288,37 @@ export const PundokEditorUtilsExtension =
             dispatch(tr.setSelection(NodeSelection.create(doc, foundPos)))
           }
           return true
+        },
+        nudgeNumericValue: (sign) => ({ dispatch, state, tr }) => {
+          const { selection } = state
+          if (selection instanceof NodeSelection) {
+            const node = selection.node
+            const text = node.attrs.text
+            const modified = nudgeNumericValue(text, sign)
+            if (modified) {
+              if (dispatch) {
+                dispatch(tr.setNodeAttribute(selection.from, "text", modified))
+              }
+              return true
+            }
+          }
+          if (selection.empty) {
+            const { $from, from } = selection
+            const inner = innerNodeDepth($from, (n => n.type.name === NODE_NAME_RAW_BLOCK))
+            if (!inner) return false
+            const node_start = $from.start(inner)
+            const index = from - node_start
+            const node = $from.node(inner)
+            const modified = nudgeNumericValueAtIndex(node.textContent, index, sign)
+            if (modified) {
+              if (dispatch) {
+                const { start, end, value } = modified
+                dispatch(tr.insertText(value, node_start + start, node_start + end))
+              }
+              return true
+            }
+          }
+          return false
         }
       };
     },
