@@ -135,9 +135,8 @@ async function exportWithExternalProgram(
         cwd,
       },
       callback,
+      json
     );
-    if (json) childProcess.stdin.write(json);
-    childProcess.stdin.end();
     const { output, exitCode, error } = await result;
     if (exitCode === 0) {
       // don't save output to file, because pandoc or the file already does
