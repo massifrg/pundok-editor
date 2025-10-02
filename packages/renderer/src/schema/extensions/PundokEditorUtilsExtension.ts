@@ -1,8 +1,8 @@
 import { getMarksBetween } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorView } from '@tiptap/pm/view';
-import { NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state';
-import { Extension, isNodeSelection } from '@tiptap/core';
+import { NodeSelection, Plugin } from '@tiptap/pm/state';
+import { Extension } from '@tiptap/core';
 import {
   ACTION_SET_ALTERNATIVE,
   ActionEditAttributesProps,
@@ -43,7 +43,7 @@ import {
 import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
 import Paragraph from '@tiptap/extension-paragraph';
 import { DefinitionTerm, Heading, Line, Metadata, Plain, ShortCaption } from '../nodes';
-import { nudgeNumericValue, nudgeNumericValueAtIndex } from '/@/components/helpers/incrementNumericValue';
+import { nudgeNumericValue, nudgeNumericValueAtIndex } from '../helpers/nudgeNumericValue';
 
 let keyCounter = 1;
 
@@ -57,7 +57,11 @@ declare module '@tiptap/core' {
       updateDocState: (update: Partial<DocStateUpdate>) => ReturnType;
       editAttributes: (props?: ActionEditAttributesProps) => ReturnType;
       gotoDocLine: (i: number) => ReturnType;
-      nudgeNumericValue: (sign: 1 | -1) => ReturnType;
+      nudgeNumericValue: (
+        sign: 1 | -1,
+        x?: number,
+        y?: number,
+      ) => ReturnType;
     };
   }
 }
@@ -170,8 +174,8 @@ export const PundokEditorUtilsExtension =
               wheel: (view, event) => {
                 if (event.altKey) {
                   const sign = (event.deltaY !== 0) && (event.deltaY < 0 ? 1 : -1)
-                  if (sign && this.editor.can().nudgeNumericValue(sign)) {
-                    this.editor.commands.nudgeNumericValue(sign)
+                  if (sign && this.editor.can().nudgeNumericValue(sign, event.clientX, event.clientY)) {
+                    this.editor.commands.nudgeNumericValue(sign, event.clientX, event.clientY)
                     event.preventDefault()
                     return true
                   }
@@ -289,26 +293,50 @@ export const PundokEditorUtilsExtension =
           }
           return true
         },
-        nudgeNumericValue: (sign) => ({ dispatch, state, tr }) => {
+        nudgeNumericValue: (sign, x, y) => ({ dispatch, state, tr, view }) => {
           const { selection } = state
-          if (selection instanceof NodeSelection) {
-            const node = selection.node
+          /** RawInline */
+          let node: ProsemirrorNode | null = null
+          let index: number | undefined = undefined
+          let node_start: number | undefined = undefined
+          if (selection instanceof NodeSelection
+            && selection.node.type.name === NODE_NAME_RAW_INLINE) {
+            node = selection.node
+            node_start = selection.from + 1
+          } else if (x && y) {
+            const pac = view.posAtCoords({ left: x, top: y })
+            if (pac) {
+              const { pos, inside } = pac
+              // console.log(`pos=${pos}, inside=${inside}`)
+              // console.log(state.doc.resolve(pos))
+              node = state.doc.nodeAt(inside)
+              index = pos - inside
+              node_start = inside + 1
+            }
+          }
+          if (node && node.type.name === NODE_NAME_RAW_INLINE && node_start) {
             const text = node.attrs.text
             const modified = nudgeNumericValue(text, sign)
             if (modified) {
               if (dispatch) {
-                dispatch(tr.setNodeAttribute(selection.from, "text", modified))
+                dispatch(tr.setNodeAttribute(node_start - 1, "text", modified))
               }
               return true
             }
+            return false
           }
-          if (selection.empty) {
+          /** RawBlock */
+          if (!node && selection.empty) {
             const { $from, from } = selection
             const inner = innerNodeDepth($from, (n => n.type.name === NODE_NAME_RAW_BLOCK))
             if (!inner) return false
-            const node_start = $from.start(inner)
-            const index = from - node_start
-            const node = $from.node(inner)
+            node_start = $from.start(inner)
+            index = from - node_start
+            node = $from.node(inner)
+          } else if (node?.type.name !== NODE_NAME_RAW_BLOCK) {
+            return false
+          }
+          if (node && node_start && index) {
             const modified = nudgeNumericValueAtIndex(node.textContent, index, sign)
             if (modified) {
               if (dispatch) {

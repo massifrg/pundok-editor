@@ -13,7 +13,9 @@ import {
   NODE_NAME_PARAGRAPH,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
-  SK_CONVERT_TO_RAWBLOCK
+  SK_CONVERT_TO_RAWBLOCK,
+  SK_DECREMENT,
+  SK_INCREMENT
 } from '../../common';
 import { getEditorConfiguration } from '..';
 import {
@@ -158,6 +160,8 @@ export const RawBlock = Node.create<RawBlockOptions>({
       },
 
       [SK_CONVERT_TO_RAWBLOCK]: () => this.editor.commands.convertToRawBlock(),
+      [SK_INCREMENT]: () => this.editor.commands.nudgeNumericValue(1),
+      [SK_DECREMENT]: () => this.editor.commands.nudgeNumericValue(-1),
     };
   },
 

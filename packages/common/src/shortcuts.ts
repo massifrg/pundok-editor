@@ -14,7 +14,10 @@ export const SK_SELECT_PREV = 'Alt-ArrowLeft';
 export const SK_SELECT_NEXT = 'Alt-ArrowRight';
 /** Shortcut key to replace the selection and then select the next item (in search and replace). */
 export const SK_REPLACE_AND_SELECT_NEXT = 'Shift-Alt-ArrowRight';
-
+/** Shortcut key to increment a value */
+export const SK_INCREMENT = 'Alt-+'
+/** Shortcut key to decrement a value */
+export const SK_DECREMENT = 'Alt--'
 
 /** Shortcut key to insert a LineBreak (hard break). */
 export const SK_SET_LINEBREAK = 'Mod-Enter';

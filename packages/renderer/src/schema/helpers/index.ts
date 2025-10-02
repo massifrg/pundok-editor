@@ -9,6 +9,7 @@ export * from './DocState';
 export * from './fixPreArrowUpPlugin';
 export * from './indices';
 export * from './nodeDepth';
+export * from './nudgeNumericValue';
 export * from './markHelpers';
 export * from './mathType';
 export * from './metadata';

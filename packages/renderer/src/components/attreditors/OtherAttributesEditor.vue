@@ -6,7 +6,7 @@
         <q-tr :props="props" @wheel="(e: WheelEvent) => onWheel(e, props.row)">
           <q-td v-for="col in (props.cols as Record<string, string>[])" :key="col.name" :props="props">
             <span :class="classForAttributeName(props.row)" :title="props.row.description">{{ truncateValue(col.value)
-              }}</span>
+            }}</span>
             <q-popup-edit v-if="props.row.editable && col.name === 'value'" v-model="props.row.value"
               :title='`Edit the  value of "${props.row.key}" attribute:`' auto-save v-slot="scope"
               @before-show="setAttrBeingEdited(props.row)" @save="setAttrBeingEditedValue">
@@ -82,11 +82,19 @@
 import { QTableProps } from 'quasar'
 import { isString } from 'lodash'
 import { setupQuasarIcons } from '../helpers/quasarIcons'
-import { CustomAttribute, CustomClass, CustomStyleInstance, customAttributesForNodeOrMark } from '../../common'
-import { isDuplicatedKvAttribute, matchingDuplicatedAttribute } from '../../schema/helpers'
-import { getEditorConfiguration } from '../../schema'
+import {
+  CustomAttribute,
+  CustomClass,
+  CustomStyleInstance,
+  customAttributesForNodeOrMark
+} from '../../common'
+import {
+  getEditorConfiguration,
+  isDuplicatedKvAttribute,
+  matchingDuplicatedAttribute,
+  nudgeNumericValue
+} from '../../schema'
 import { ref } from 'vue'
-import { nudgeNumericValue } from '../helpers/incrementNumericValue'
 
 interface OtherAttribute {
   key: string,
