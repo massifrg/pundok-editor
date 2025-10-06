@@ -426,6 +426,15 @@ export class LocalBackend implements Backend {
       JSON.stringify(options || {}),
     );
   }
+
+  async gotoSource(
+    outputFile: string,
+    page: number,
+    rx: number,
+    ry: number
+  ): Promise<void> {
+    this.invokeIpc('get-source-file', outputFile, page, rx, ry)
+  }
 }
 
 function getConfigurationFunction(ipc: any) {

@@ -44,7 +44,8 @@ export type IpcRendererToMainChannel =
   | 'pandoc-input-formats'
   | 'pandoc-output-formats'
   | 'set-value'
-  | 'query';
+  | 'query'
+  | 'get-source-file';
 // | 'open-viewer'
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
@@ -159,6 +160,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'm2r',
     description: 'show some content in the viewer',
   },
+  'get-source-file': {
+    dir: 'r2m',
+    description: 'open the source file corresponding to a point in a page of a result (PDF) file',
+  }
 };
 
 export const IPC_VALUE_NEW_PROJECT_NAME = 'new-project-name';

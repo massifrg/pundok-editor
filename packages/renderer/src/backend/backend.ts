@@ -185,6 +185,13 @@ export interface Backend {
     transform: PandocFilterTransform,
     options?: Partial<FindResourceOptions>,
   ): Promise<string>;
+
+  gotoSource(
+    outputFile: string,
+    page: number,
+    rx: number,
+    ry: number
+  ): Promise<void>
 }
 
 export function createBackend(config: BackendConfig): Backend {

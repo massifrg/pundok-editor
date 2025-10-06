@@ -137,6 +137,15 @@ export class NetBackend implements Backend {
   ): Promise<string> {
     return Promise.reject('method non implemented');
   }
+
+  async gotoSource(
+    outputFile: string,
+    page: number,
+    rx: number,
+    ry: number
+  ): Promise<void> {
+    return Promise.reject('method non implemented');
+  }
 }
 
 function dummyQueryHandler(query: IndexTermQuery): QueryResult[] {

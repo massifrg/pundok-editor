@@ -249,6 +249,7 @@ export default {
   data() {
     return {
       backend: createBackend({ ipc: window.ipc }),
+      filename: undefined as string | undefined,
       pdfSource: undefined as string | undefined,
       debouncedPage: 1,
       page: 1,
@@ -296,9 +297,11 @@ export default {
       try {
         const { filename, content } = pdf
         let pdfContent: string | undefined = undefined
-        if (filename)
+        if (filename) {
+          this.filename = filename
           pdfContent = 'data:application/pdf;base64,' +
             await this.backend?.getFileContents(filename, { base64: true })
+        }
         else if (content)
           pdfContent = content
         if (pdfContent) {
@@ -361,12 +364,21 @@ export default {
       this.setMagnify(this.magnify * magnifyFactor)
     },
     clicked(e: PointerEvent) {
-      console.log(e)
-      const { layerX: x, layerY: y, target } = e
-      const { clientWidth: w, clientHeight: h } = target as HTMLDivElement || { clientWidth: x, clientHeight: y }
-      console.log(`${(x / w).toFixed(2)},${(y / h).toFixed(2)}`)
-      if (e.shiftKey) {
-        // TODO: tell the backend to open the source file matching the point clicked
+      // console.log(e)
+      let target = e.target
+      let div: HTMLElement | null = target as HTMLElement
+      while (div && div.tagName !== 'DIV') div = div.parentElement
+      if (div) {
+        const bounding = div.getBoundingClientRect()
+        const x = e.clientX - bounding.x
+        const y = e.clientY - bounding.y
+        const { clientWidth: w, clientHeight: h } = div! // || { clientWidth: x, clientHeight: y }
+        const rx = x / w
+        const ry = 1 - (y / h)
+        console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
+        if (e.shiftKey && this.filename) {
+          this.backend.gotoSource(this.filename, this.page, rx, ry)
+        }
       }
     },
     mouseWheel(e: WheelEvent) {

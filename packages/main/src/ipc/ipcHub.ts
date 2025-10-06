@@ -72,6 +72,7 @@ import {
 import { fileContentsHandler } from './fileContentsHandler';
 import { askForDocumentHandler, getInclusionTreeHandler } from '.';
 import { preparePdfForViewer } from './preparePdfForViewer';
+import { getSourceFileHandler } from './getSourceFileHandler';
 
 /**
  * A class to handle the communication between `main` and `renderer` processes.
@@ -124,6 +125,7 @@ export class IpcHub {
     ipcMain.handle('pandoc-input-formats', pandocInputFormatsHandler(this));
     ipcMain.handle('pandoc-output-formats', pandocOutputFormatsHandler(this));
     ipcMain.handle('query', queryHandler(this));
+    ipcMain.handle('get-source-file', getSourceFileHandler(this));
   }
 
   async openDocument(
