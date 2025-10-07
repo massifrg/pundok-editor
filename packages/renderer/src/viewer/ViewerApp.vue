@@ -374,9 +374,9 @@ export default {
         const y = e.clientY - bounding.y
         const { clientWidth: w, clientHeight: h } = div! // || { clientWidth: x, clientHeight: y }
         const rx = x / w
-        const ry = 1 - (y / h)
+        const ry = y / h
         console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
-        if (e.shiftKey && this.filename) {
+        if (e.altKey && this.filename) {
           this.backend.gotoSource(this.filename, this.page, rx, ry)
         }
       }
