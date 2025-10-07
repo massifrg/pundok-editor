@@ -17,10 +17,7 @@ export const getSourceFileHandler =
       if (!existsSync(synctexfile))
         return Promise.reject(`no synctex file found for "${filename}"`)
 
-      // FIXME: get ConTeXt path from environment, configuration or project
-      const ctxpath = '~/context/lmtx-latest/tex/texmf-linux-64/bin/'
-
-      const pdfinfo = runExternalProgram(ctxpath + 'mtxrun',
+      const pdfinfo = runExternalProgram('mtxrun',
         [
           "--script", "pdf",
           "--info", "--detail",
@@ -57,7 +54,7 @@ export const getSourceFileHandler =
       if (!pagewidth || !pageheight)
         return Promise.reject(`Error getting MediaBox of page ${page}`)
       console.log(`Page ${page} is ${pagewidth.toFixed(2)}x${pageheight.toFixed(2)} points`)
-      const sourceinfo = runExternalProgram(ctxpath + 'mtxrun',
+      const sourceinfo = runExternalProgram('mtxrun',
         [
           "--script", "synctex",
           "--goto", `--page=${page}`,
