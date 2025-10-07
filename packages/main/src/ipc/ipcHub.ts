@@ -84,17 +84,12 @@ export class IpcHub {
   constructor(
     readonly baseWindow: BaseWindow,
     readonly editorView: WebContentsView,
-    readonly pdfView: WebContentsView,
   ) {
     this.handleIpcMainEvents();
   }
 
   send(channel: IpcMainToRendererChannel, message: ServerMessage) {
-    const webContents =
-      message.type === 'viewer'
-        ? this.pdfView.webContents
-        : this.editorView.webContents;
-    webContents.send(channel, message);
+    this.editorView.webContents.send(channel, message);
   }
 
   setWindowTitle(title: string) {

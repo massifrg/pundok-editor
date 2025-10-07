@@ -63,7 +63,6 @@ const config = {
     rollupOptions: {
       input: {
         editor: 'index.html',
-        viewer: 'viewer.html',
       },
       external: [...builtinModules.flatMap((p) => [p, `node:${p}`])],
     },

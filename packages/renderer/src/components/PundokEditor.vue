@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHH lpR fFf" :container="!mainEditor" :style="`height: ${height}`" class="shadow-2 rounded-borders">
+  <q-layout view="LHH LpR LFf" :container="!mainEditor" :style="`height: ${height}`" class="shadow-2 rounded-borders">
     <q-header>
       <q-toolbar class="text-white q-pa-none">
         <q-toolbar-title>
@@ -13,6 +13,19 @@
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
+    <q-drawer v-if="isMainEditor" show-if-above behavior="desktop" bordered :v-model="leftDrawerState === 'normal'"
+      side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="16"
+      :width="leftDrawerWidth" :breakpoint="500">
+      <PdfViewer :backend="backend" class="pdf-viewer" />
+      <div class="q-mini-drawer-hide absolute" style="top: 150px; right: -17px">
+        <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
+      </div>
+      <div class="q-mini-drawer-hide absolute" style="top: 210px; right: -17px">
+        <q-btn dense round unelevated color="secondary" icon="mdi-arrow-left-right"
+          @mousedown="startSettingLeftDrawerWidth" @mousemove="changeLeftDrawerWidth"
+          @mouseup="stopSettingLeftDrawerWidth" @mouseleave="stopSettingLeftDrawerWidth" />
+      </div>
+    </q-drawer>
     <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
       :mini="rightDrawerState === 'mini'" @mouseenter="rightDrawerState = 'normal'"
       @mouseleave="rightDrawerState = 'mini'" mini-to-overlay :mini-width="60" :width="240" :breakpoint="500"
@@ -24,7 +37,6 @@
         <!-- style="padding-top: 112px" -->
         <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
           @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
-        <editor-content :editor="editor as Editor" />
         <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
           @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
         <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
@@ -48,14 +60,15 @@
           <q-toolbar class="text-white q-pa-none">
             <q-toolbar-title>
               <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
-                :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
-                @save-content="saveContent()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
-                @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
-                @show-configurations-dialog="visibleConfigurationDialog = true"
-                @reload-with-configuration="reloadWithConfiguration" />
+              :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
+              @save-content="saveContent()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+              @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
+              @show-configurations-dialog="visibleConfigurationDialog = true"
+              @reload-with-configuration="reloadWithConfiguration" />
             </q-toolbar-title>
           </q-toolbar>
         </q-page-sticky> -->
+        <editor-content :editor="(editor as Editor)" />
       </q-page>
     </q-page-container>
   </q-layout>
@@ -152,6 +165,7 @@ import {
   ActionPropsSetAlternative,
   ACTION_PROPS_RESULT_MESSAGE,
   ACTION_DOCUMENT_GO_TO_LINE,
+  ACTION_SETUP_VIEWER,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -163,6 +177,7 @@ import { EditorGUIPropsClass } from './EditorGUIProps';
 import { PendingOperationExtraValue } from './helpers/pending';
 import { mergeIndices } from '../schema/helpers/indices';
 import { getDocAsJsonString } from '../schema/helpers';
+import PdfViewer from './PdfViewer.vue';
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';
@@ -200,6 +215,7 @@ export default {
     NodeOrMarkContextMenu,
     ProjectStructureDialog,
     PendingOperationDialog,
+    PdfViewer,
   },
 
   props: {
@@ -243,7 +259,11 @@ export default {
       message: null as FeedbackMessage | null,
       // an operation is in progress
       operationInProgress: false,
-      rightDrawerState: 'mini',
+      leftDrawerState: 'mini' as 'normal' | 'mini',
+      leftDrawerWidth: 640,
+      leftDrawerHandleStart: undefined as number | undefined,
+      prevLeftDrawerWidth: 640,
+      rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
       visibleImportDialog: false,
       visibleExportDialog: false,
@@ -262,6 +282,7 @@ export default {
       debugDocTree: undefined as ProjectComponent | undefined,
       $q: useQuasar(),
       jsonSpace: DEFAULT_JSON_SPACE as string | number | undefined,
+      splitterModel: 1,
     };
   },
 
@@ -446,6 +467,9 @@ export default {
                 } as ActionPropsSetAlternative);
               }
             }
+          case ACTION_SETUP_VIEWER.name:
+            this.maximizePdfViewer()
+            break
           default:
             executeEditorAction(action, editor);
             break;
@@ -1166,6 +1190,27 @@ export default {
     reloadWithConfiguration(configurationName: string) {
       this.reloadDocumentWithConfiguration(configurationName);
     },
+    maximizePdfViewer() {
+      this.leftDrawerState = 'normal'
+    },
+    minimizePdfViewer() {
+      this.leftDrawerState = 'mini'
+    },
+    startSettingLeftDrawerWidth(e: MouseEvent) {
+      this.leftDrawerHandleStart = e.clientX
+      this.prevLeftDrawerWidth = this.leftDrawerWidth
+    },
+    changeLeftDrawerWidth(e: MouseEvent) {
+      if (this.leftDrawerHandleStart) {
+        const w = this.prevLeftDrawerWidth + e.clientX - this.leftDrawerHandleStart
+        if (w >= 16 && w <= 1024) {
+          this.leftDrawerWidth = w
+        }
+      }
+    },
+    stopSettingLeftDrawerWidth(e: MouseEvent) {
+      this.leftDrawerHandleStart = undefined
+    }
   },
 } as Component;
 </script>
@@ -1173,6 +1218,12 @@ export default {
 <style lang="scss">
 :root {
   --menubar-height: 128;
+}
+
+.pdf-viewer {
+  position: fixed;
+  top: var(--menubar-height);
+  left: 0;
 }
 
 // .editor-panel {

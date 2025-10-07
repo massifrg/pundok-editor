@@ -56,17 +56,6 @@ async function createWindow(): Promise<WindowWithIpc> {
   baseWindow.contentView.addChildView(editorView);
   editorView.setBounds({ x: 0, y: 0, width: 600, height: 600 });
 
-  const pdfView = new WebContentsView({
-    webPreferences: {
-      preload: join(__dirname, '../../preload/dist/index.cjs'),
-      devTools: true,
-      spellcheck: false,
-    },
-  });
-  baseWindow.contentView.addChildView(pdfView);
-  pdfView.setVisible(showPdfView);
-  pdfView.webContents.openDevTools();
-
   resizeEditorView = (options?: { refreshDevTools?: boolean }) => {
     const { width, height } = baseWindow.getContentBounds();
     let pdfwidth = pdfViewRelWidth * width;
@@ -78,18 +67,10 @@ async function createWindow(): Promise<WindowWithIpc> {
       width: editwidth,
       height,
     });
-    pdfView.setBounds({
-      x: editwidth,
-      y: 0,
-      width: pdfwidth,
-      height,
-    });
 
     if (showDeveloperTools && options?.refreshDevTools) {
       editorView.webContents.closeDevTools();
       editorView.webContents.openDevTools();
-      // pdfView.webContents.closeDevTools();
-      // pdfView.webContents.openDevTools();
     }
   };
 
@@ -120,7 +101,7 @@ async function createWindow(): Promise<WindowWithIpc> {
   //   e.preventDefault()
   // })
 
-  const ipcHub = new IpcHub(baseWindow, editorView, pdfView);
+  const ipcHub = new IpcHub(baseWindow, editorView);
   refreshMainMenu(ipcHub);
 
   // add listeners to intercept dev-tools open/close
@@ -138,7 +119,6 @@ async function createWindow(): Promise<WindowWithIpc> {
 
   // await loadEditor(browserWindow);
   await loadEditor(editorView);
-  await loadViewer(pdfView);
 
   return { window: baseWindow, ipcHub }
 }
@@ -157,23 +137,6 @@ async function loadEditor(win: BrowserWindow | WebContentsView) {
         'file://' + __dirname,
       ).toString();
 
-  await win.webContents.loadURL(pageUrl);
-}
-
-async function loadViewer(win: BrowserWindow | WebContentsView) {
-  /**
-   * URL for viewer window.
-   * Vite dev server for development.
-   * `file://../renderer/viewer.html` for production and test
-   */
-  const pageUrl =
-    import.meta.env.DEV && import.meta.env.VITE_DEV_SERVER_URL !== undefined
-      ? import.meta.env.VITE_DEV_SERVER_URL + 'viewer.html'
-      : new URL(
-        '../renderer/dist/viewer.html',
-        'file://' + __dirname,
-      ).toString();
-  console.log(pageUrl);
   await win.webContents.loadURL(pageUrl);
 }
 
@@ -363,19 +326,6 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
             if (showDeveloperTools)
               resizeEditorView({ refreshDevTools: showDeveloperTools });
             else ipcHub.editorView.webContents.closeDevTools();
-          },
-        },
-        {
-          type: 'checkbox',
-          label: 'Toggle PDF View',
-          checked: showPdfView,
-          click: async () => {
-            showPdfView = !showPdfView;
-            if (showPdfView) {
-              loadViewer(ipcHub.pdfView);
-              ipcHub.pdfView.setVisible(true);
-            }
-            resizeEditorView({ refreshDevTools: showDeveloperTools });
           },
         },
       ],

@@ -207,7 +207,6 @@ import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import { ViewerSetup } from '../common';
 import { debounce, throttle } from 'lodash';
-import { createBackend } from '../backend';
 import { setupQuasarIcons } from '../components/helpers/quasarIcons';
 
 interface LoadingProgress {
@@ -251,9 +250,9 @@ export default {
   components: {
     VuePdfEmbed
   },
+  props: ['backend'],
   data() {
     return {
-      backend: createBackend({ ipc: window.ipc }),
       filename: undefined as string | undefined,
       projectAsJson: undefined as string | undefined,
       pdfSource: undefined as string | undefined,
@@ -277,6 +276,7 @@ export default {
   },
   watch: {
     lastAction(action: EditorAction) {
+      console.log(`PDF viewer: action "${action.name}"`)
       if (action.name == ACTION_SETUP_VIEWER.name) {
         this.setupViewer(action.props?.setup)
       }
@@ -389,7 +389,7 @@ export default {
         const ry = y / h
         console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
         if (e.ctrlKey && this.filename) {
-          this.backend.gotoSource(this.filename, this.page, rx, ry, this.projectAsJson)
+          this.backend?.gotoSource(this.filename, this.page, rx, ry, this.projectAsJson)
         }
       }
     },
@@ -407,6 +407,7 @@ export default {
         else
           this.nextPage()
       }
+      e.preventDefault()
     },
     pageWheel(e: WheelEvent) {
       if (e.deltaY < 0) {
@@ -414,6 +415,7 @@ export default {
       } else if (e.deltaY > 0) {
         this.setPage(this.page - 1)
       }
+      e.preventDefault()
     },
     zoomWheel(e: WheelEvent) {
       if (e.deltaY < 0) {
@@ -421,6 +423,7 @@ export default {
       } else if (e.deltaY > 0) {
         this.decreaseScale()
       }
+      e.preventDefault()
     },
     scrolled(e: Event) {
       const div = e.target as HTMLDivElement
@@ -476,7 +479,7 @@ export default {
 </script>
 
 <template>
-  <q-card>
+  <q-card @wheel="(e: Event) => { e.preventDefault() }">
     <q-card-actions>
       <!--
       <q-btn label="default pdf" @click="loadDefaultPdf" />
