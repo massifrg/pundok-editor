@@ -431,9 +431,10 @@ export class LocalBackend implements Backend {
     outputFile: string,
     page: number,
     rx: number,
-    ry: number
+    ry: number,
+    projectAsJson?: string,
   ): Promise<void> {
-    this.invokeIpc('get-source-file', outputFile, page, rx, ry)
+    this.invokeIpc('get-source-file', outputFile, page, rx, ry, projectAsJson)
   }
 }
 

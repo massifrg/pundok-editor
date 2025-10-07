@@ -2,6 +2,8 @@ import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
 import { existsSync } from 'fs';
 import { runExternalProgram } from '../runExternal';
+import { PundokEditorProject } from 'src/common';
+import { isAbsolute, resolve } from 'path';
 
 export const getSourceFileHandler =
   (hub: IpcHub) =>
@@ -11,6 +13,7 @@ export const getSourceFileHandler =
       page: number,
       rx: number,
       ry: number,
+      projectAsJson?: string
     ): Promise<void> => {
       console.log(`looking for source file corresponding to "${filename}", page ${page}, xy@${rx.toFixed(2)},${ry.toFixed(2)}%`)
       const synctexfile = filename.replace(/[.]pdf$/, '.synctex')
@@ -77,10 +80,12 @@ export const getSourceFileHandler =
           return _
         })
         if (sourcefile && sourceline) {
-
-          // FIXME: remove next line and manage project
-          sourcefile = (sourcefile as string).replace(/context\//, '')
-
+          if (!isAbsolute(sourcefile) && projectAsJson) {
+            const project: PundokEditorProject = JSON.parse(projectAsJson)
+            if (project && project.path)
+              sourcefile = resolve(project.path, sourcefile)
+          }
+          console.log(`SOURCE FILE: ${sourcefile}`)
           hub.fireEventOpenDocument(sourcefile, undefined, sourceline)
         }
       }

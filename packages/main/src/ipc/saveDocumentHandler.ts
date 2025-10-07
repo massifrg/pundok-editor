@@ -43,6 +43,7 @@ export const saveDocumentHandler =
                 editorKey,
                 setup: {
                   name: response.resultFile,
+                  projectAsJson: projectAsJsonString,
                 },
               } as ServerMessageForViewer);
             } else if (openResult === 'os') {

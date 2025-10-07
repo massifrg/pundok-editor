@@ -208,6 +208,7 @@ import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import { ViewerSetup } from '../common';
 import { debounce, throttle } from 'lodash';
 import { createBackend } from '../backend';
+import { setupQuasarIcons } from '../components/helpers/quasarIcons';
 
 interface LoadingProgress {
   loaded: number,
@@ -222,6 +223,7 @@ interface PdfContent {
 }
 
 interface ViewerBookmark {
+  label: string,
   page: number,
   magnify: number,
   scrollTopPerc: number,
@@ -243,6 +245,9 @@ async function createHash(message: string, algo = 'SHA-1'): Promise<string> {
 }
 
 export default {
+  setup() {
+    setupQuasarIcons()
+  },
   components: {
     VuePdfEmbed
   },
@@ -250,6 +255,7 @@ export default {
     return {
       backend: createBackend({ ipc: window.ipc }),
       filename: undefined as string | undefined,
+      projectAsJson: undefined as string | undefined,
       pdfSource: undefined as string | undefined,
       debouncedPage: 1,
       page: 1,
@@ -262,7 +268,8 @@ export default {
       div: undefined as HTMLDivElement | undefined,
       scrollTopPerc: 0,
       scrollLeftPerc: 0,
-      bookmark: undefined as ViewerBookmark | undefined,
+      bookmarks: [] as ViewerBookmark[],
+      lastBookmarkIndex: -1,
     }
   },
   computed: {
@@ -289,7 +296,9 @@ export default {
   methods: {
     async setupViewer(setup?: ViewerSetup) {
       if (setup) {
-        const { name: filename, content, page, magnify, centerX, centerY } = setup
+        const { name: filename, content, page, magnify, centerX, centerY, projectAsJson } = setup
+        console.log(projectAsJson)
+        this.projectAsJson = projectAsJson
         await this.loadPdf({ filename, content })
       }
     },
@@ -363,6 +372,9 @@ export default {
     increaseScale() {
       this.setMagnify(this.magnify * magnifyFactor)
     },
+    resetScale() {
+      this.magnify = 1
+    },
     clicked(e: PointerEvent) {
       // console.log(e)
       let target = e.target
@@ -376,18 +388,38 @@ export default {
         const rx = x / w
         const ry = y / h
         console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
-        if (e.altKey && this.filename) {
-          this.backend.gotoSource(this.filename, this.page, rx, ry)
+        if (e.ctrlKey && this.filename) {
+          this.backend.gotoSource(this.filename, this.page, rx, ry, this.projectAsJson)
         }
       }
     },
     mouseWheel(e: WheelEvent) {
-      if (e.ctrlKey && !this.isRendering) {
-        // console.log(`${e.deltaY}, ${e.clientX}`)
-        if (e.deltaY < 0)
+      const rendering = this.isRendering
+      // console.log(`${e.deltaY}, ${e.clientX}`)
+      if (e.deltaY < 0) {
+        if (e.ctrlKey && !rendering)
           this.increaseScale()
-        else if (e.deltaY > 0)
+        else
+          this.prevPage()
+      } else if (e.deltaY > 0) {
+        if (e.ctrlKey && !rendering)
           this.decreaseScale()
+        else
+          this.nextPage()
+      }
+    },
+    pageWheel(e: WheelEvent) {
+      if (e.deltaY < 0) {
+        this.setPage(this.page + 1)
+      } else if (e.deltaY > 0) {
+        this.setPage(this.page - 1)
+      }
+    },
+    zoomWheel(e: WheelEvent) {
+      if (e.deltaY < 0) {
+        this.increaseScale()
+      } else if (e.deltaY > 0) {
+        this.decreaseScale()
       }
     },
     scrolled(e: Event) {
@@ -400,17 +432,34 @@ export default {
         this.scrollTopPerc = scrollTop / scrollHeight
       }
     },
-    setBookmark() {
-      this.bookmark = {
-        page: this.page,
-        magnify: this.magnify,
-        scrollLeftPerc: this.scrollLeftPerc,
-        scrollTopPerc: this.scrollTopPerc,
-      }
+    setBookmark(label?: string) {
+      const page = this.page
+      this.bookmarks = [
+        ...this.bookmarks,
+        {
+          label: label || `p.${page}`,
+          page: page,
+          magnify: this.magnify,
+          scrollLeftPerc: this.scrollLeftPerc,
+          scrollTopPerc: this.scrollTopPerc,
+        }
+      ]
+      this.lastBookmarkIndex = this.bookmarks.length - 1
     },
-    recallBookmark() {
-      if (this.bookmark) {
-        const { page, magnify, scrollLeftPerc, scrollTopPerc } = this.bookmark
+    removeBookmark(index: number) {
+      this.bookmarks = this.bookmarks.filter((_, i) => i !== index)
+      let last = this.lastBookmarkIndex
+      if (last === index)
+        last = 0
+      else if (last > index)
+        last--
+      this.lastBookmarkIndex = last
+    },
+    recallBookmark(index: number) {
+      const bookmark = this.bookmarks[index]
+      if (bookmark) {
+        this.lastBookmarkIndex = index
+        const { page, magnify, scrollLeftPerc, scrollTopPerc } = bookmark
         this.page = page
         this.magnify = magnify
         const div = this.div
@@ -429,16 +478,31 @@ export default {
 <template>
   <q-card>
     <q-card-actions>
+      <!--
       <q-btn label="default pdf" @click="loadDefaultPdf" />
       <q-btn label="load pdf" @click="loadPdf({ filename: 'setup-en.pdf' })" />
+      -->
       <q-btn label="prev" :disabled="page <= 1" @click="prevPage" />
-      <q-badge :label="page" />
+      <q-chip :label="page" size="md" @wheel="pageWheel" />
       <q-btn label="next" :disabled="page >= maxPages" @click="nextPage" />
       <q-btn icon="mdi-minus" :disabled="magnify < 0.11" @click="decreaseScale" />
-      <q-badge :label="(magnify * 100).toFixed(0) + '%'" />
+      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblClick="resetScale" />
       <q-btn icon="mdi-plus" :disabled="magnify > 9.9" @click="increaseScale" />
-      <q-btn icon="mdi-bookmark" @click="setBookmark" />
-      <q-btn v-if="bookmark" icon="mdi-bookmark-box" @click="recallBookmark" />
+      <q-btn icon="mdi-bookmark-plus" @click="setBookmark()" />
+      <q-btn v-if="bookmarks.length <= 3" v-for="(bookmark, i) in bookmarks" icon="mdi-bookmark" :label="bookmark.label"
+        @click="recallBookmark(i)" />
+      <q-btn-dropdown v-if="bookmarks.length > 3" split
+        :label="bookmarks[lastBookmarkIndex >= 0 ? lastBookmarkIndex : 0].label"
+        @click="recallBookmark(lastBookmarkIndex)">
+        <q-list>
+          <q-item v-for="(bookmark, i) in bookmarks" clickable v-close-popup :label="bookmark.label"
+            @click="recallBookmark(i)">
+            <q-item-section><q-icon name="mdi-bookmark" /></q-item-section>
+            <q-item-section><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
+            <q-item-section><q-icon name="mdi-bookmark-remove" @click="removeBookmark(i)" /></q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
       <q-space />
       <q-circular-progress v-if="isRendering" indeterminate rounded size="1.4rem" color="light-blue"
         class="q-mx-md q-my-xs q-pa-xs" />

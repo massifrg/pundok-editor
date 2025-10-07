@@ -190,7 +190,8 @@ export interface Backend {
     outputFile: string,
     page: number,
     rx: number,
-    ry: number
+    ry: number,
+    projectAsJson?: string,
   ): Promise<void>
 }
 

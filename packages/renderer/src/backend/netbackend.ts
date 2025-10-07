@@ -142,7 +142,8 @@ export class NetBackend implements Backend {
     outputFile: string,
     page: number,
     rx: number,
-    ry: number
+    ry: number,
+    projectAsJson?: string,
   ): Promise<void> {
     return Promise.reject('method non implemented');
   }

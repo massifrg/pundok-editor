@@ -15,4 +15,6 @@ export interface ViewerSetup {
   centerX?: number;
   /** The y coordinate (as percent of height) of the page to be at the center in the viewer. */
   centerY?: number;
+  /** The surrounding project, if present */
+  projectAsJson?: string;
 }
