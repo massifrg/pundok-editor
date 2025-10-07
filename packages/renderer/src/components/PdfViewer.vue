@@ -479,7 +479,7 @@ export default {
 </script>
 
 <template>
-  <q-card @wheel="(e: Event) => { e.preventDefault() }">
+  <q-card class="lazy-component-wrapper" @wheel="(e: Event) => { e.preventDefault() }">
     <q-card-actions>
       <!--
       <q-btn label="default pdf" @click="loadDefaultPdf" />
@@ -522,6 +522,12 @@ export default {
 
 <style lang="scss">
 @import 'pdfjs-dist/web/pdf_viewer.css';
+
+/** The next one is necessary to prevent the PdfViewer from staying on top even when minified */
+.lazy-component-wrapper {
+  position: relative !important;
+  z-index: auto !important;
+}
 
 .vue-pdf-embed-container {
   overflow: scroll;

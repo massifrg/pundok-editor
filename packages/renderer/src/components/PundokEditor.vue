@@ -122,7 +122,7 @@ import {
   NodeOrMarkContextMenu,
   PendingOperation,
   PendingOperationDialog,
-  ProjectStructureDialog,
+  // ProjectStructureDialog,
   SearchAndReplace,
   ShowMessageDialog,
 } from '.';
@@ -172,12 +172,11 @@ import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
 import { EditorState } from '@tiptap/pm/state';
 import { CreateDocumentOptions } from '../schema/helpers/createDocument';
 import { useQuasar } from 'quasar';
-import { Component } from 'vue';
+import { Component, defineAsyncComponent } from 'vue';
 import { EditorGUIPropsClass } from './EditorGUIProps';
 import { PendingOperationExtraValue } from './helpers/pending';
 import { mergeIndices } from '../schema/helpers/indices';
 import { getDocAsJsonString } from '../schema/helpers';
-import PdfViewer from './PdfViewer.vue';
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';
@@ -213,9 +212,9 @@ export default {
     AttributesEditor,
     CustomStylesPanel,
     NodeOrMarkContextMenu,
-    ProjectStructureDialog,
     PendingOperationDialog,
-    PdfViewer,
+    "ProjectStructureDialog": defineAsyncComponent(() => import('./ProjectStructureDialog.vue')),
+    "PdfViewer": defineAsyncComponent(() => import('./PdfViewer.vue'))
   },
 
   props: {
