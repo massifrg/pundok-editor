@@ -46,7 +46,7 @@ export type IpcRendererToMainChannel =
   | 'set-value'
   | 'query'
   | 'get-source-file'
-  | 'run-again';
+  | 'export-again';
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
@@ -164,9 +164,9 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'r2m',
     description: 'open the source file corresponding to a point in a page of a result (PDF) file',
   },
-  'run-again': {
+  'export-again': {
     dir: 'r2m',
-    description: 'run the compilation of a PDF again'
+    description: 'export (compile PDF) again'
   }
 };
 

@@ -148,7 +148,7 @@ export class NetBackend implements Backend {
     return Promise.reject('method non implemented');
   }
 
-  async runAgain(hash: string): Promise<void> {
+  async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
     return Promise.reject('method non implemented');
   }
 }

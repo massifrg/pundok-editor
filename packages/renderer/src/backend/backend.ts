@@ -194,7 +194,7 @@ export interface Backend {
     projectAsJson?: string,
   ): Promise<void>;
 
-  runAgain(hash: string): Promise<void>;
+  exportAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 }
 
 export function createBackend(config: BackendConfig): Backend {

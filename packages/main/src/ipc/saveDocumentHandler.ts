@@ -9,7 +9,6 @@ import {
 } from '../common';
 import { errorFeedback } from './feedback';
 import { stringify } from '../utils';
-import { rememberDocumentHash } from './documentHash';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -34,20 +33,19 @@ export const saveDocumentHandler =
         if (doc.converter) {
           response = await hub.exportDocument(doc, project, editorKey);
           console.log(`EXPORT FINISHED`);
-          console.log(doc);
+          // console.log(doc);
           const { commandLine, cwd, error, resultFile } = response
           if (!error && resultFile) {
             const openResult = doc.converter?.openResult;
-            console.log(`openResult=${openResult}`);
+            console.log(`openResult = ${openResult}`);
             if (openResult === 'editor') {
-              const documentHash = await rememberDocumentHash({ resultFile, projectAsJsonString, commandLine, cwd })
               hub.send('show-in-viewer', {
                 type: 'viewer',
                 editorKey,
                 setup: {
                   name: resultFile,
                   projectAsJson: projectAsJsonString,
-                  documentHash
+                  documentHash: response.documentHash
                 },
               } as ServerMessageForViewer);
             } else if (openResult === 'os') {
@@ -56,8 +54,14 @@ export const saveDocumentHandler =
               });
             }
           }
-        } else {
+        } else if (doc.content) {
           response = await hub.saveDocument(doc, project);
+        } else {
+          response = {
+            doc,
+            error: "you provided no content to save",
+            message: "you provided no content to save"
+          }
         }
         if (response.error) {
           const errmsg = stringify(response.error);

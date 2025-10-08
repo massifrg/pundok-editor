@@ -437,8 +437,8 @@ export class LocalBackend implements Backend {
     this.invokeIpc('get-source-file', outputFile, page, rx, ry, projectAsJson)
   }
 
-  async runAgain(hash: string): Promise<void> {
-    this.invokeIpc('run-again', hash)
+  async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    this.invokeIpc('export-again', hash, editorKey)
   }
 
 }

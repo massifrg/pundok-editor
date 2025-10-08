@@ -13,7 +13,6 @@ import {
   format as formatPath,
   isAbsolute,
   parse as parsePath,
-  sep as pathSeparator,
   resolve,
 } from 'path';
 import {
@@ -72,9 +71,9 @@ import {
 } from './pandocFormatsHandler';
 import { fileContentsHandler } from './fileContentsHandler';
 import { askForDocumentHandler, getInclusionTreeHandler } from '.';
-import { preparePdfForViewer } from './preparePdfForViewer';
 import { getSourceFileHandler } from './getSourceFileHandler';
-import { runAgainHandler } from './runAgainHandler';
+import { exportAgainHandler } from './exportAgainHandler';
+import { rememberDocumentHash } from './documentHash';
 
 /**
  * A class to handle the communication between `main` and `renderer` processes.
@@ -123,7 +122,7 @@ export class IpcHub {
     ipcMain.handle('pandoc-output-formats', pandocOutputFormatsHandler(this));
     ipcMain.handle('query', queryHandler(this));
     ipcMain.handle('get-source-file', getSourceFileHandler(this));
-    ipcMain.handle('run-again', runAgainHandler(this));
+    ipcMain.handle('export-again', exportAgainHandler(this));
   }
 
   async openDocument(
@@ -286,29 +285,28 @@ export class IpcHub {
           },
         ],
       }));
-    return writeFile(docPath, content)
-      .then(() => {
-        const p = parsePath(docPath)
-        const id = doc.id || basename(docPath, '.json');
-        return {
-          message: 'document saved',
-          doc: {
-            path: docPath,
-            content,
-            id,
-            configurationName: doc.configurationName,
-          },
-          resultFile: docPath,
-          cwd: p.dir,
-        };
-      })
-      .catch((error) => {
-        return Promise.reject({
-          error,
-          message: JSON.stringify(error),
-          doc: { content, path: docPath },
-        });
+    try {
+      await writeFile(docPath, content!)
+      const p = parsePath(docPath)
+      const id = doc.id || basename(docPath, '.json');
+      return {
+        message: 'document saved',
+        doc: {
+          path: docPath,
+          content,
+          id,
+          configurationName: doc.configurationName,
+        },
+        resultFile: docPath,
+        cwd: p.dir,
+      };
+    } catch (error) {
+      return Promise.reject({
+        error,
+        message: JSON.stringify(error),
+        doc: { content, path: docPath },
       });
+    };
   }
 
   async exportDocument(
@@ -349,6 +347,15 @@ export class IpcHub {
       project,
       configurationName,
     );
+
+    // if content comes from a file (doc.path) and not from stdin, remember job
+    let documentHash: string | undefined = undefined
+    if (doc.path) documentHash = await rememberDocumentHash({
+      path: doc.path,
+      converter: doc.converter!,
+      configurationName: doc.configurationName,
+      projectAsJsonString: project ? JSON.stringify(project) : undefined
+    })
 
     try {
       let result: ExternalProgramResult;
@@ -418,6 +425,7 @@ export class IpcHub {
             content: output,
           } as StoredDoc,
           resultFile,
+          documentHash,
           commandLine,
           cwd,
         });

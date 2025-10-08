@@ -121,7 +121,7 @@ export interface ExportOptions {
 async function exportWithExternalProgram(
   command: string,
   args: string[],
-  json: string,
+  jsonContent: string,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
   const { callback, cwd, resultFile } = exportOptions;
@@ -130,15 +130,16 @@ async function exportWithExternalProgram(
     `RUNNING ${commandLine}${cwd ? ' in directory "' + cwd + '"' : ''}`,
   );
   try {
+    const options = {
+      shell: true,
+      cwd,
+    }
     const { childProcess, result } = runExternalProgram(
       command,
       args,
-      {
-        shell: true,
-        cwd,
-      },
+      options,
       callback,
-      json
+      jsonContent
     );
     const { output, exitCode, error } = await result;
     if (exitCode === 0) {
@@ -154,7 +155,7 @@ async function exportWithExternalProgram(
 }
 
 export function exportWithPandoc(
-  json: string,
+  jsonContent: string,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
   const { configurationName, converter, resourcesPaths, resultFile, project } =
@@ -234,7 +235,7 @@ export function exportWithPandoc(
   args = args.concat(pandocOpts || []);
   args = args.concat(['--', '-']);
 
-  return exportWithExternalProgram('pandoc', args, json, exportOptions);
+  return exportWithExternalProgram('pandoc', args, jsonContent, exportOptions);
 }
 
 export async function exportWithPandocLua(
@@ -246,7 +247,7 @@ export async function exportWithPandocLua(
 }
 
 export async function exportWithScript(
-  json: string,
+  jsonContent: string,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
   const { converter, cwd, sourceFile, project } = exportOptions;
@@ -260,7 +261,7 @@ export async function exportWithScript(
   return exportWithExternalProgram(
     command,
     args,
-    json,
+    jsonContent,
     exportOptions,
   );
 }

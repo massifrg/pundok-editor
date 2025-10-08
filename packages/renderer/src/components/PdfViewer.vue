@@ -267,7 +267,7 @@ export default {
       div: undefined as HTMLDivElement | undefined,
       scrollTopPerc: 0,
       scrollLeftPerc: 0,
-      bookmarks: [] as ViewerBookmark[],
+      documentBookmarks: {} as Record<string, ViewerBookmark[]>,
       lastBookmarkIndex: -1,
       commandLine: undefined as string | undefined,
       cwd: undefined as string | undefined,
@@ -278,6 +278,16 @@ export default {
   },
   computed: {
     ...mapState(useActions, ['lastAction']),
+    documentKey(): string | undefined {
+      return this.documentHash || this.filename
+    },
+    bookmarks(): ViewerBookmark[] {
+      const key = this.documentKey
+      if (key) {
+        return this.documentBookmarks[key] || []
+      }
+      return []
+    }
   },
   watch: {
     lastAction(action: EditorAction) {
@@ -313,8 +323,9 @@ export default {
           projectAsJson,
           documentHash,
         } = setup
-        this.isUpdated = this.documentHash !== documentHash
-        this.documentHash = documentHash
+        const hash = documentHash || filename
+        this.isUpdated = this.documentHash !== hash
+        this.documentHash = hash
         this.projectAsJson = projectAsJson
         await this.loadPdf({ filename, content })
       }
@@ -341,6 +352,12 @@ export default {
       } catch (err) {
         alert(err)
       }
+    },
+    regeneratePdf(hash?: string) {
+      const h = hash || this.documentHash
+      console.log(`document hash: ${h}`)
+      if (h)
+        this.backend.exportAgain(h, this.editorKey)
     },
     loadDefaultPdf() {
       this.loadPdf({ content: defaultPdf })
@@ -452,9 +469,16 @@ export default {
         this.scrollTopPerc = scrollTop / scrollHeight
       }
     },
+    setBookmarks(bookmarks: ViewerBookmark[]) {
+      const key = this.documentKey
+      console.log(key)
+      console.log(bookmarks)
+      if (key)
+        this.documentBookmarks[key] = bookmarks
+    },
     setBookmark(label?: string) {
       const page = this.page
-      this.bookmarks = [
+      this.setBookmarks([
         ...this.bookmarks,
         {
           label: label || `p.${page}`,
@@ -463,17 +487,10 @@ export default {
           scrollLeftPerc: this.scrollLeftPerc,
           scrollTopPerc: this.scrollTopPerc,
         }
-      ]
-      this.lastBookmarkIndex = this.bookmarks.length - 1
+      ])
     },
     removeBookmark(index: number) {
-      this.bookmarks = this.bookmarks.filter((_, i) => i !== index)
-      let last = this.lastBookmarkIndex
-      if (last === index)
-        last = 0
-      else if (last > index)
-        last--
-      this.lastBookmarkIndex = last
+      this.setBookmarks(this.bookmarks.filter((_, i) => i !== index))
     },
     recallBookmark(index: number) {
       const bookmark = this.bookmarks[index]
@@ -508,21 +525,18 @@ export default {
       <q-btn icon="mdi-minus" :disabled="magnify < 0.11" @click="decreaseScale" />
       <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblClick="resetScale" />
       <q-btn icon="mdi-plus" :disabled="magnify > 9.9" @click="increaseScale" />
-      <q-btn icon="mdi-bookmark-plus" @click="setBookmark()" />
-      <q-btn v-if="bookmarks.length <= 3" v-for="(bookmark, i) in bookmarks" icon="mdi-bookmark" :label="bookmark.label"
-        @click="recallBookmark(i)" />
-      <q-btn-dropdown v-if="bookmarks.length > 3" split
-        :label="bookmarks[lastBookmarkIndex >= 0 ? lastBookmarkIndex : 0].label"
-        @click="recallBookmark(lastBookmarkIndex)">
+      <q-btn-dropdown split icon="mdi-bookmark-plus" @click="setBookmark()">
         <q-list>
           <q-item v-for="(bookmark, i) in bookmarks" clickable v-close-popup :label="bookmark.label"
             @click="recallBookmark(i)">
-            <q-item-section><q-icon name="mdi-bookmark" /></q-item-section>
+            <q-item-section><q-icon name="mdi-bookmark-edit" /></q-item-section>
             <q-item-section><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
             <q-item-section><q-icon name="mdi-bookmark-remove" @click="removeBookmark(i)" /></q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>
+      <q-space />
+      <q-btn icon="mdi-reload" @click="regeneratePdf()" />
       <q-space />
       <q-circular-progress v-if="isRendering" indeterminate rounded size="1.4rem" color="light-blue"
         class="q-mx-md q-my-xs q-pa-xs" />

@@ -17,15 +17,6 @@ export * from './version';
 export * from './viewer';
 
 /**
- * The data needed to run an external program.
- */
-export interface ExternalProgramCall {
-  path: string,
-  args: string[],
-  options?: string,
-}
-
-/**
  * The result of the execution of an external program.
  */
 export interface ExternalProgramResult {
@@ -57,6 +48,8 @@ export interface SaveResponse {
   commandLine?: string;
   /** The directory where the command line has been run */
   cwd?: string;
+  /** A hash that lets you retrieve what's needed to export a document again */
+  documentHash?: string;
 }
 
 interface CommonDocumentCoords {
