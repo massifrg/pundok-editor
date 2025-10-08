@@ -14,10 +14,10 @@ export async function preparePdfForViewer(
   try {
     if (existsSync(filepath)) {
       const content = readFileSync(filepath).toString()
-      const name = parse(filepath).name
+      const name = parse(filepath).base
       return {
         type: 'viewer',
-        message: { name, content } as ViewerSetup
+        setup: { name, content } as ViewerSetup
       }
     } else {
       return {

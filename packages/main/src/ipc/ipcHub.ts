@@ -14,6 +14,7 @@ import {
   isAbsolute,
   parse as parsePath,
   sep as pathSeparator,
+  resolve,
 } from 'path';
 import {
   CommandToRenderer,
@@ -273,7 +274,7 @@ export class IpcHub {
     const { path, content } = doc;
     const docPath =
       path ||
-      (await this.fileManager.saveFile({
+      (await this.fileManager.saveFileDialog({
         defaultPath: path,
         filters: [
           {
@@ -320,13 +321,13 @@ export class IpcHub {
           : `${format} files (*.${extension})`;
       saveOpts.filters = [{ name, extensions: [extension] }];
     }
-    const cwd = project?.path;
+    const cwd = project?.path || process.cwd();
 
     let resultFile = converter?.dontAskForResultFile
       ? converter.resultFile
       : exportedAsPath;
     if (!converter?.dontAskForResultFile) {
-      if (!resultFile) resultFile = await this.fileManager.saveFile(saveOpts);
+      if (!resultFile) resultFile = await this.fileManager.saveFileDialog(saveOpts);
       if (!resultFile)
         return Promise.resolve({
           error: 'no output file given',
@@ -336,7 +337,7 @@ export class IpcHub {
         });
     }
     if (resultFile && !isAbsolute(resultFile))
-      resultFile = `${cwd}${pathSeparator}${resultFile}`;
+      resultFile = resolve(cwd, resultFile)
 
     const resourcesPaths = validResourcePaths(
       undefined,
@@ -367,13 +368,10 @@ export class IpcHub {
             project,
             cwd,
             resourcesPaths,
+            sourceFile: doc.path,
             resultFile,
             callback,
           });
-          if (resultFile && converter.openResult === 'editor') {
-            const message = await preparePdfForViewer(resultFile, project)
-            this.send('show-in-viewer', message)
-          }
           break;
         case 'pandoc':
         default:

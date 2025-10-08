@@ -9,6 +9,7 @@ import {
 } from '../common';
 import { errorFeedback } from './feedback';
 import { stringify } from '../utils';
+import { preparePdfForViewer } from './preparePdfForViewer';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -38,6 +39,7 @@ export const saveDocumentHandler =
             const openResult = doc.converter?.openResult;
             console.log(`openResult=${openResult}`);
             if (openResult === 'editor') {
+              // const message = await preparePdfForViewer(response.resultFile, project)
               hub.send('show-in-viewer', {
                 type: 'viewer',
                 editorKey,

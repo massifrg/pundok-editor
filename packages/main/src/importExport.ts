@@ -34,6 +34,7 @@ import {
 import { encloseInDblQuotes } from './utils';
 import { existsSync } from 'fs';
 import { isArray, isObject, isString } from 'lodash';
+import { expandCommandArgs } from './ipc/expandCommandArgs';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';
 
@@ -109,6 +110,8 @@ export interface ExportOptions {
   configurationName: string;
   /** the path(s) where to look for resources */
   resourcesPaths: string[];
+  /** the name of the source document being edited */
+  sourceFile?: string;
   /** the file where the output is exported */
   resultFile: string;
   /** a callback to follow the stdout and stderr of an export operation */
@@ -246,16 +249,17 @@ export async function exportWithScript(
   json: string,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
-  const { converter, cwd } = exportOptions;
+  const { converter, cwd, sourceFile, project } = exportOptions;
   if (!converter) return Promise.reject(`no output converter specified`);
   let { command, commandArgs } = converter as ScriptOutputConverter;
   if (!existsSync(command)) {
     command = formatPath({ dir: cwd, name: command });
   }
   if (!command) return Promise.reject(`this converter has no command to run`);
+  const args = expandCommandArgs(commandArgs || [], sourceFile)
   return exportWithExternalProgram(
     command,
-    commandArgs || [],
+    args,
     json,
     exportOptions,
   );
