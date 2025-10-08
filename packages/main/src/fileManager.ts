@@ -42,7 +42,7 @@ class FileManager {
     }
   }
 
-  async saveFile(
+  async saveFileDialog(
     saveDialogOptions?: Partial<SaveDialogOptions>
   ): Promise<string> {
     const config: SaveDialogOptions = {
