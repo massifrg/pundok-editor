@@ -26,7 +26,7 @@ export const getSourceFileHandler =
           "--info", "--detail",
           filename
         ], {
-        shell: true
+        // shell: true
       }
       )
       let result = await pdfinfo.result
@@ -65,7 +65,7 @@ export const getSourceFileHandler =
           `--y=${(pageheight * ry).toFixed()}`,
           synctexfile
         ], {
-        shell: true
+        // shell: true
       })
       result = await sourceinfo.result
       if (result.exitCode !== 0)

@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from "fs";
 
 export async function preparePdfForViewer(
   filename: string,
+  commandLine: string,
   project?: PundokEditorProject): Promise<ServerMessage> {
   let filepath = filename
   if (!isAbsolute(filepath)) {
@@ -17,7 +18,7 @@ export async function preparePdfForViewer(
       const name = parse(filepath).base
       return {
         type: 'viewer',
-        setup: { name, content } as ViewerSetup
+        setup: { name, content, commandLine } as ViewerSetup
       }
     } else {
       return {

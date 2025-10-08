@@ -192,7 +192,9 @@ export interface Backend {
     rx: number,
     ry: number,
     projectAsJson?: string,
-  ): Promise<void>
+  ): Promise<void>;
+
+  runAgain(hash: string): Promise<void>;
 }
 
 export function createBackend(config: BackendConfig): Backend {

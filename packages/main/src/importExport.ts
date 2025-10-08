@@ -95,7 +95,7 @@ export function runPandocOnFile(
   try {
     return runExternalProgram('pandoc', args, { shell: true, cwd }).result;
   } catch (err) {
-    return Promise.resolve(externalProgramError(err, commandLine));
+    return Promise.resolve(externalProgramError(err, commandLine, cwd));
   }
 }
 
@@ -149,7 +149,7 @@ async function exportWithExternalProgram(
       return Promise.reject(error);
     }
   } catch (err) {
-    return Promise.resolve(externalProgramError(err, commandLine));
+    return Promise.resolve(externalProgramError(err, commandLine, cwd));
   }
 }
 

@@ -45,8 +45,8 @@ export type IpcRendererToMainChannel =
   | 'pandoc-output-formats'
   | 'set-value'
   | 'query'
-  | 'get-source-file';
-// | 'open-viewer'
+  | 'get-source-file'
+  | 'run-again';
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
@@ -163,6 +163,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'get-source-file': {
     dir: 'r2m',
     description: 'open the source file corresponding to a point in a page of a result (PDF) file',
+  },
+  'run-again': {
+    dir: 'r2m',
+    description: 'run the compilation of a PDF again'
   }
 };
 

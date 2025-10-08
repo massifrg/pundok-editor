@@ -205,7 +205,7 @@ import 'vue-pdf-embed/dist/styles/textLayer.css'
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
-import { ViewerSetup } from '../common';
+import { EditorKeyType, ViewerSetup } from '../common';
 import { debounce, throttle } from 'lodash';
 import { setupQuasarIcons } from '../components/helpers/quasarIcons';
 
@@ -261,7 +261,7 @@ export default {
       maxPages: 1,
       magnify: 1,
       width: baseWidth,
-      hash: undefined as string | undefined,
+      contentHash: undefined as string | undefined,
       isRendering: false,
       whenRendered: [] as WhenRendered,
       div: undefined as HTMLDivElement | undefined,
@@ -269,6 +269,11 @@ export default {
       scrollLeftPerc: 0,
       bookmarks: [] as ViewerBookmark[],
       lastBookmarkIndex: -1,
+      commandLine: undefined as string | undefined,
+      cwd: undefined as string | undefined,
+      isUpdated: false,
+      documentHash: undefined as string | undefined,
+      editorKey: undefined as EditorKeyType | undefined,
     }
   },
   computed: {
@@ -278,6 +283,8 @@ export default {
     lastAction(action: EditorAction) {
       console.log(`PDF viewer: action "${action.name}"`)
       if (action.name == ACTION_SETUP_VIEWER.name) {
+        if (action.editorKey)
+          this.editorKey = action.editorKey
         this.setupViewer(action.props?.setup)
       }
     },
@@ -296,8 +303,18 @@ export default {
   methods: {
     async setupViewer(setup?: ViewerSetup) {
       if (setup) {
-        const { name: filename, content, page, magnify, centerX, centerY, projectAsJson } = setup
-        console.log(projectAsJson)
+        const {
+          name: filename,
+          content,
+          page,
+          magnify,
+          centerX,
+          centerY,
+          projectAsJson,
+          documentHash,
+        } = setup
+        this.isUpdated = this.documentHash !== documentHash
+        this.documentHash = documentHash
         this.projectAsJson = projectAsJson
         await this.loadPdf({ filename, content })
       }
@@ -314,10 +331,10 @@ export default {
         else if (content)
           pdfContent = content
         if (pdfContent) {
-          const hash = await createHash(pdfContent)
-          if (hash !== this.hash) {
+          const contentHash = await createHash(pdfContent)
+          if (contentHash !== this.contentHash) {
             this.pdfSource = pdfContent
-            this.hash = hash
+            this.contentHash = contentHash
             this.isRendering = true
           }
         }

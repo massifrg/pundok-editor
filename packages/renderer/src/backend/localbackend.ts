@@ -436,6 +436,11 @@ export class LocalBackend implements Backend {
   ): Promise<void> {
     this.invokeIpc('get-source-file', outputFile, page, rx, ry, projectAsJson)
   }
+
+  async runAgain(hash: string): Promise<void> {
+    this.invokeIpc('run-again', hash)
+  }
+
 }
 
 function getConfigurationFunction(ipc: any) {

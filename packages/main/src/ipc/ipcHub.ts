@@ -74,6 +74,7 @@ import { fileContentsHandler } from './fileContentsHandler';
 import { askForDocumentHandler, getInclusionTreeHandler } from '.';
 import { preparePdfForViewer } from './preparePdfForViewer';
 import { getSourceFileHandler } from './getSourceFileHandler';
+import { runAgainHandler } from './runAgainHandler';
 
 /**
  * A class to handle the communication between `main` and `renderer` processes.
@@ -122,6 +123,7 @@ export class IpcHub {
     ipcMain.handle('pandoc-output-formats', pandocOutputFormatsHandler(this));
     ipcMain.handle('query', queryHandler(this));
     ipcMain.handle('get-source-file', getSourceFileHandler(this));
+    ipcMain.handle('run-again', runAgainHandler(this));
   }
 
   async openDocument(
@@ -220,6 +222,7 @@ export class IpcHub {
             result = {
               exitCode: 0,
               commandLine: '',
+              cwd: parsePath(filename).dir,
               output: await readFile(filename).then((buf) => buf.toString()),
               error: '',
             };
@@ -232,16 +235,17 @@ export class IpcHub {
     if (!result) {
       errorFeedback(this, `no result reading ${filename}`, editorKey);
     } else {
-      if (result.exitCode === 0) {
+      const { commandLine, error, exitCode, output } = result
+      if (exitCode === 0) {
         const readDoc: ReadDoc = {
           editorKey,
           id: name,
           path: filename,
-          content: result.output,
+          content: output,
           configurationName,
           resourcePath,
         };
-        if (cmdLineFeedback) cmdLineFeedback(result.commandLine);
+        if (cmdLineFeedback) cmdLineFeedback(commandLine);
         let project: PundokEditorProject | undefined = undefined;
         try {
           project = await loadProjectFromDocFile(filename);
@@ -261,8 +265,7 @@ export class IpcHub {
         }
         return readDoc;
       } else {
-        const cl = result.commandLine;
-        errorFeedback(this, (cl ? `${cl}\n\n` : '') + result.error, editorKey);
+        errorFeedback(this, (commandLine ? `${commandLine}\n\n` : '') + error, editorKey);
       }
     }
   }
@@ -285,6 +288,7 @@ export class IpcHub {
       }));
     return writeFile(docPath, content)
       .then(() => {
+        const p = parsePath(docPath)
         const id = doc.id || basename(docPath, '.json');
         return {
           message: 'document saved',
@@ -295,6 +299,7 @@ export class IpcHub {
             configurationName: doc.configurationName,
           },
           resultFile: docPath,
+          cwd: p.dir,
         };
       })
       .catch((error) => {
@@ -334,7 +339,7 @@ export class IpcHub {
           message: 'export failed',
           doc: { content, configurationName },
           resultFile,
-        });
+        } as SaveResponse);
     }
     if (resultFile && !isAbsolute(resultFile))
       resultFile = resolve(cwd, resultFile)
@@ -386,10 +391,11 @@ export class IpcHub {
       }
       const ext = converter?.extension;
       const id = doc.id; // || basename(resultFile, ext && `.${ext}`);
+      const { commandLine, error, exitCode, output } = result
       if (converter?.feedback) {
         switch (converter.feedback) {
           case 'command-line':
-            commandLineFeedback(this, result.commandLine, editorKey);
+            commandLineFeedback(this, commandLine, editorKey);
             break;
           case 'success':
           default:
@@ -400,7 +406,7 @@ export class IpcHub {
             );
         }
       }
-      if (result.exitCode === 0) {
+      if (exitCode === 0) {
         return Promise.resolve({
           message: 'document exported',
           doc: {
@@ -409,29 +415,33 @@ export class IpcHub {
             configurationName,
             path: doc.path,
             exportedAsPath: resultFile,
-            content: result.output,
+            content: output,
           } as StoredDoc,
           resultFile,
+          commandLine,
+          cwd,
         });
       } else {
-        const message = `export failed with exitCode ${result.exitCode}`;
+        const message = `export failed with exitCode ${exitCode}`;
         const debugMessage = [
           message,
-          result.error,
+          error,
           'command line:',
-          result.commandLine,
+          commandLine,
         ].join('\n');
         errorFeedback(this, debugMessage, editorKey);
         return Promise.resolve({
-          error: result.error,
+          error,
           message,
           doc: {
             id,
             path: resultFile,
-            content: result.output,
+            content: output,
             configurationName,
           } as StoredDoc,
           resultFile,
+          commandLine,
+          cwd,
         });
       }
     } catch (error) {
@@ -440,6 +450,7 @@ export class IpcHub {
         message: 'export failed',
         doc: { content, configurationName },
         resultFile,
+        cwd,
       });
     }
   }

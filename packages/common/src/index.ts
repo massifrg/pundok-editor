@@ -17,17 +17,46 @@ export * from './version';
 export * from './viewer';
 
 /**
+ * The data needed to run an external program.
+ */
+export interface ExternalProgramCall {
+  path: string,
+  args: string[],
+  options?: string,
+}
+
+/**
+ * The result of the execution of an external program.
+ */
+export interface ExternalProgramResult {
+  /** The command line used to call the external program. */
+  commandLine: string;
+  /** The directory where the command has been run */
+  cwd: string;
+  /** The execution exit code. */
+  exitCode: number;
+  /** The output from `stdout`. */
+  output: string;
+  /** The output from `stderr`. */
+  error: string;
+}
+
+/**
  * The response after trying to save a document.
  */
 export interface SaveResponse {
   /** An error message, in case of failure. */
   error?: any;
-  /** A feddback message about the saving operation. */
+  /** A feedback message about the saving operation. */
   message: string;
   /** The saved document. */
   doc: StoredDoc;
   /** The file where the output has been saved */
   resultFile?: string;
+  /** The command line used to save the document */
+  commandLine?: string;
+  /** The directory where the command line has been run */
+  cwd?: string;
 }
 
 interface CommonDocumentCoords {
@@ -101,20 +130,6 @@ export interface StoredDoc extends ReadDoc {
 export interface PreviewOptions {
   /** Open the preview inside pandoc-editor. */
   inPundokEditor: boolean;
-}
-
-/**
- * The result of the execution of an external program.
- */
-export interface ExternalProgramResult {
-  /** The command line used to call the external program. */
-  commandLine: string;
-  /** The execution exit code. */
-  exitCode: number;
-  /** The output from `stdout`. */
-  output: string;
-  /** The output from `stderr`. */
-  error: string;
 }
 
 /**

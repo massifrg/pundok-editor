@@ -17,4 +17,9 @@ export interface ViewerSetup {
   centerY?: number;
   /** The surrounding project, if present */
   projectAsJson?: string;
+  /** A hash to be used to build the (PDF) document again.
+   * The hash depends on the command line and the directory where it's been run,
+   * the file name of the source file and its eventual project.
+   */
+  documentHash?: string;
 }

@@ -18,12 +18,14 @@ export interface ExternalProgram {
 export function externalProgramError(
   err: unknown,
   commandLine?: string,
+  cwd?: string,
   output?: string,
   error?: string,
 ): ExternalProgramResult {
   return {
     exitCode: -1,
     commandLine: commandLine || '',
+    cwd: cwd || process.cwd(),
     output: output || '',
     error: (error ? `${error}\n` : '') + `${err}`,
   };
@@ -67,9 +69,11 @@ export function runExternalProgram(
   return {
     childProcess: spawned,
     result: new Promise((resolve, reject) => {
+      const cwd = options?.cwd?.toString() || process.cwd()
       spawned.on('close', (exitCode) => {
         resolve({
           commandLine,
+          cwd,
           exitCode: exitCode || 0,
           output: output.join(''),
           error: error.join(''),
@@ -78,6 +82,7 @@ export function runExternalProgram(
       spawned.on('error', (err) => {
         reject({
           commandLine,
+          cwd,
           exitCode: -1,
           output: output.join(''),
           error: error.join('') + '\n' + err?.toString(),

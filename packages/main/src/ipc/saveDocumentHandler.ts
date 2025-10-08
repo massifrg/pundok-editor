@@ -9,7 +9,7 @@ import {
 } from '../common';
 import { errorFeedback } from './feedback';
 import { stringify } from '../utils';
-import { preparePdfForViewer } from './preparePdfForViewer';
+import { rememberDocumentHash } from './documentHash';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -35,21 +35,23 @@ export const saveDocumentHandler =
           response = await hub.exportDocument(doc, project, editorKey);
           console.log(`EXPORT FINISHED`);
           console.log(doc);
-          if (!response.error && response.resultFile) {
+          const { commandLine, cwd, error, resultFile } = response
+          if (!error && resultFile) {
             const openResult = doc.converter?.openResult;
             console.log(`openResult=${openResult}`);
             if (openResult === 'editor') {
-              // const message = await preparePdfForViewer(response.resultFile, project)
+              const documentHash = await rememberDocumentHash({ resultFile, projectAsJsonString, commandLine, cwd })
               hub.send('show-in-viewer', {
                 type: 'viewer',
                 editorKey,
                 setup: {
-                  name: response.resultFile,
+                  name: resultFile,
                   projectAsJson: projectAsJsonString,
+                  documentHash
                 },
               } as ServerMessageForViewer);
             } else if (openResult === 'os') {
-              shell.openPath(response.resultFile).catch((error) => {
+              shell.openPath(resultFile).catch((error) => {
                 errorFeedback(hub, stringify(error), editorKey);
               });
             }
