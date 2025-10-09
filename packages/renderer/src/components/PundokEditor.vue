@@ -437,14 +437,25 @@ export default {
             this.transformDocument(action?.props?.transform);
             break;
           case ACTION_BACKEND_FEEDBACK.name:
-            const message: FeedbackMessage = action.props?.feedback;
-            if (message?.type === 'success')
-              console.log(`success feedback: ${message.message}`);
-            if (message?.type !== 'progress') {
-              this.message = message;
+            const fbmessage: FeedbackMessage = action.props?.feedback;
+            const { message, type } = fbmessage
+            const isSuccess = type === 'success'
+            if (isSuccess) {
+              // console.log(`success feedback: ${message.message}`);
+              this.$q.notify({
+                message,
+                caption: 'Success',
+                icon: 'mdi-check',
+                position: 'top',
+                color: 'positive',
+                timeout: isSuccess ? 2000 : 5000,
+              })
             } else {
-              console.log(message?.message);
+              if (type !== 'progress') {
+                this.message = fbmessage;
+              }
             }
+            console.log(message);
             break;
           case ACTION_SELECT_PREV.name:
             if (!this.visibleSearchAndReplaceDialog) {
