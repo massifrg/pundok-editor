@@ -13,6 +13,7 @@ export * from './query';
 export * from './readers';
 export * from './resources';
 export * from './shortcuts';
+export * from './synctex';
 export * from './version';
 export * from './viewer';
 

@@ -19,6 +19,7 @@ import {
   DocumentContext,
   DocumentCoords,
   PandocFilterTransform,
+  SynctexInfo,
 } from '../common';
 import { OpenDialogOptions } from 'electron';
 
@@ -138,12 +139,9 @@ export class NetBackend implements Backend {
     return Promise.reject('method non implemented');
   }
 
-  async gotoSource(
-    outputFile: string,
-    page: number,
-    rx: number,
-    ry: number,
-    projectAsJson?: string,
+  gotoSource(
+    editorKey: EditorKeyType,
+    info: SynctexInfo,
   ): Promise<void> {
     return Promise.reject('method non implemented');
   }

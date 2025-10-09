@@ -13,6 +13,7 @@ import type {
   StoredDoc,
   DocumentCoords,
   PandocFilterTransform,
+  SynctexInfo,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -187,12 +188,9 @@ export interface Backend {
   ): Promise<string>;
 
   gotoSource(
-    outputFile: string,
-    page: number,
-    rx: number,
-    ry: number,
-    projectAsJson?: string,
-  ): Promise<void>;
+    editorKey: EditorKeyType,
+    info: SynctexInfo,
+  ): Promise<void>
 
   exportAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 }

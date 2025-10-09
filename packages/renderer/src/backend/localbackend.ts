@@ -36,6 +36,7 @@ import {
   IpcMainToRendererChannel,
   ServerMessageForViewer,
   PandocFilterTransform,
+  SynctexInfo,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -428,13 +429,10 @@ export class LocalBackend implements Backend {
   }
 
   async gotoSource(
-    outputFile: string,
-    page: number,
-    rx: number,
-    ry: number,
-    projectAsJson?: string,
+    editorKey: EditorKeyType,
+    info: SynctexInfo,
   ): Promise<void> {
-    this.invokeIpc('get-source-file', outputFile, page, rx, ry, projectAsJson)
+    this.invokeIpc('get-source-file', editorKey, info)
   }
 
   async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {

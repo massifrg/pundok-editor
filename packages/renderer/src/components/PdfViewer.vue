@@ -205,10 +205,11 @@ import 'vue-pdf-embed/dist/styles/textLayer.css'
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
-import { EditorKeyType, ViewerSetup } from '../common';
+import { EditorKeyType, SynctexInfo, ViewerSetup } from '../common';
 import { debounce, isString, throttle } from 'lodash';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import PromptDialog from './helpers/PromptDialog.vue'
+import { toRaw } from 'vue';
 
 interface LoadingProgress {
   loaded: number,
@@ -447,7 +448,13 @@ export default {
         const ry = y / h
         console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
         if (e.ctrlKey && this.filename) {
-          this.backend?.gotoSource(this.filename, this.page, rx, ry, this.projectAsJson)
+          this.backend?.gotoSource(this.editorKey, {
+            outputFile: toRaw(this.filename),
+            page: toRaw(this.page),
+            rx,
+            ry,
+            projectAsJson: toRaw(this.projectAsJson)
+          } as SynctexInfo)
         }
       }
     },
