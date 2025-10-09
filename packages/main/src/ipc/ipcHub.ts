@@ -1,12 +1,10 @@
 import type {
   BaseWindow,
-  BrowserWindow,
-  Input,
   OpenDialogOptions,
   SaveDialogOptions,
   WebContentsView,
 } from 'electron';
-import { ipcMain } from 'electron';
+import { ipcMain, shell } from 'electron';
 import { readFile, writeFile } from 'fs/promises';
 import {
   basename,
@@ -32,6 +30,7 @@ import {
   CUSTOM_PANDOC_READERS,
   CustomPandocReader,
   IpcMainToRendererChannel,
+  ServerMessageForViewer,
 } from '../common';
 import { isReadableFile, validResourcePaths } from '../resourcesManager';
 import FileManager from '../fileManager';
@@ -52,6 +51,7 @@ import {
   messageFeedback,
   progressFeedback,
 } from './feedback';
+import { stringify } from '../utils';
 import { queryHandler } from './queryHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
@@ -70,7 +70,8 @@ import {
   pandocOutputFormatsHandler,
 } from './pandocFormatsHandler';
 import { fileContentsHandler } from './fileContentsHandler';
-import { askForDocumentHandler, getInclusionTreeHandler } from '.';
+import { askForDocumentHandler } from './askForDocumentHandler';
+import { getInclusionTreeHandler } from './getInclusionTreeHandler';
 import { getSourceFileHandler } from './getSourceFileHandler';
 import { exportAgainHandler } from './exportAgainHandler';
 import { rememberDocumentHash } from './documentHash';
@@ -414,7 +415,7 @@ export class IpcHub {
         }
       }
       if (exitCode === 0) {
-        return Promise.resolve({
+        const response: SaveResponse = {
           message: 'document exported',
           doc: {
             id,
@@ -428,7 +429,27 @@ export class IpcHub {
           documentHash,
           commandLine,
           cwd,
-        });
+        }
+        if (resultFile) {
+          const openResult = doc.converter?.openResult;
+          console.log(`openResult = ${openResult}`);
+          if (openResult === 'editor') {
+            this.send('show-in-viewer', {
+              type: 'viewer',
+              editorKey,
+              setup: {
+                name: resultFile,
+                projectAsJson: project ? JSON.stringify(project) : undefined,
+                documentHash: response.documentHash
+              },
+            } as ServerMessageForViewer);
+          } else if (openResult === 'os') {
+            shell.openPath(resultFile).catch((error) => {
+              errorFeedback(this, stringify(error), editorKey);
+            });
+          }
+        }
+        return Promise.resolve(response)
       } else {
         const message = `export failed with exitCode ${exitCode}`;
         const debugMessage = [
