@@ -206,8 +206,9 @@ import { mapState } from 'pinia';
 import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import { EditorKeyType, ViewerSetup } from '../common';
-import { debounce, throttle } from 'lodash';
-import { setupQuasarIcons } from '../components/helpers/quasarIcons';
+import { debounce, isString, throttle } from 'lodash';
+import { setupQuasarIcons } from './helpers/quasarIcons';
+import PromptDialog from './helpers/PromptDialog.vue'
 
 interface LoadingProgress {
   loaded: number,
@@ -248,7 +249,8 @@ export default {
     setupQuasarIcons()
   },
   components: {
-    VuePdfEmbed
+    PromptDialog,
+    VuePdfEmbed,
   },
   props: ['backend'],
   data() {
@@ -263,17 +265,18 @@ export default {
       width: baseWidth,
       contentHash: undefined as string | undefined,
       isRendering: false,
+      regeneratingHash: undefined as string | undefined,
       whenRendered: [] as WhenRendered,
       div: undefined as HTMLDivElement | undefined,
       scrollTopPerc: 0,
       scrollLeftPerc: 0,
       documentBookmarks: {} as Record<string, ViewerBookmark[]>,
-      lastBookmarkIndex: -1,
-      commandLine: undefined as string | undefined,
-      cwd: undefined as string | undefined,
+      currentBookmarkIndex: -1,
       isUpdated: false,
       documentHash: undefined as string | undefined,
       editorKey: undefined as EditorKeyType | undefined,
+      showPageDialog: false,
+      showBookmarkNameDialog: false,
     }
   },
   computed: {
@@ -287,7 +290,10 @@ export default {
         return this.documentBookmarks[key] || []
       }
       return []
-    }
+    },
+    isRegeneratingPdf(): boolean {
+      return !!this.regeneratingHash
+    },
   },
   watch: {
     lastAction(action: EditorAction) {
@@ -326,6 +332,8 @@ export default {
         const hash = documentHash || filename
         this.isUpdated = this.documentHash !== hash
         this.documentHash = hash
+        // if (this.regeneratingHash === hash)
+        this.regeneratingHash = undefined
         this.projectAsJson = projectAsJson
         await this.loadPdf({ filename, content })
       }
@@ -356,8 +364,10 @@ export default {
     regeneratePdf(hash?: string) {
       const h = hash || this.documentHash
       console.log(`document hash: ${h}`)
-      if (h)
+      if (h) {
+        this.regeneratingHash = h
         this.backend.exportAgain(h, this.editorKey)
+      }
     },
     loadDefaultPdf() {
       this.loadPdf({ content: defaultPdf })
@@ -382,17 +392,31 @@ export default {
         this.page = this.page > this.maxPages ? 1 : this.page
       }
     },
-    setPage(page: number) {
+    setPage(p: number | string) {
+      const page = isString(p) ? parseInt(p) : p
       if (page !== this.page && page >= 1 && page <= this.maxPages) {
         this.page = Math.floor(page)
         this.isRendering = true
       }
+    },
+    firstPage() {
+      this.setPage(1)
     },
     prevPage() {
       this.setPage(this.page - 1)
     },
     nextPage() {
       this.setPage(this.page + 1)
+    },
+    lastPage() {
+      this.setPage(this.maxPages)
+    },
+    validatePage(sp: string) {
+      const page_min = 1
+      const page_max = this.maxPages
+      const p = parseInt(sp)
+      return (p >= page_min && p <= page_max)
+        || `page must be between ${page_min} and ${page_max}`
     },
     setMagnify(magnify: number) {
       if (magnify !== this.magnify && magnify > 0.05 && magnify < 2000) {
@@ -495,7 +519,6 @@ export default {
     recallBookmark(index: number) {
       const bookmark = this.bookmarks[index]
       if (bookmark) {
-        this.lastBookmarkIndex = index
         const { page, magnify, scrollLeftPerc, scrollTopPerc } = bookmark
         this.page = page
         this.magnify = magnify
@@ -507,6 +530,26 @@ export default {
           })
         }
       }
+    },
+    editBookmark(index: number) {
+      this.currentBookmarkIndex = index
+      this.showBookmarkNameDialog = true
+    },
+    setBookmarkLabel(label: string) {
+      const index = this.currentBookmarkIndex
+      if (index >= 0) {
+        const bookmarks = this.bookmarks.map((bm, i) => {
+          if (i === index)
+            return { ...bm, label }
+          else
+            return bm
+        })
+        this.setBookmarks(bookmarks)
+      }
+    },
+    stopEditingBookmark() {
+      this.showBookmarkNameDialog = false
+      this.currentBookmarkIndex = -1
     }
   }
 }
@@ -519,27 +562,45 @@ export default {
       <q-btn label="default pdf" @click="loadDefaultPdf" />
       <q-btn label="load pdf" @click="loadPdf({ filename: 'setup-en.pdf' })" />
       -->
-      <q-btn label="prev" :disabled="page <= 1" @click="prevPage" />
-      <q-chip :label="page" size="md" @wheel="pageWheel" />
-      <q-btn label="next" :disabled="page >= maxPages" @click="nextPage" />
-      <q-btn icon="mdi-minus" :disabled="magnify < 0.11" @click="decreaseScale" />
+      <q-btn size="sm" icon='mdi-page-first' title="go to the first page" :disabled="page <= 1" @click="firstPage" />
+      <q-btn size="sm" icon='mdi-chevron-left' title="go to the previous page" :disabled="page <= 1"
+        @click="prevPage" />
+      <q-chip :label="page" size="md" @wheel="pageWheel" clickable @click="showPageDialog = true" />
+      <PromptDialog :visible="showPageDialog" label="go to page" :start-value="page.toString()" :validate="validatePage"
+        @set-value="setPage" @close-dialog="showPageDialog = false" />
+      <q-btn size="sm" icon='mdi-chevron-right' title="go to the next page" :disabled="page >= maxPages"
+        @click="nextPage" />
+      <q-btn size="sm" icon='mdi-page-last' title="go to the last page" :disabled="page >= maxPages"
+        @click="lastPage" />
+      <q-btn size="sm" icon="mdi-minus" :disabled="magnify < 0.11" title="zoom out" @click="decreaseScale" />
       <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblClick="resetScale" />
-      <q-btn icon="mdi-plus" :disabled="magnify > 9.9" @click="increaseScale" />
-      <q-btn-dropdown split icon="mdi-bookmark-plus" @click="setBookmark()">
+      <q-btn size="sm" icon="mdi-plus" :disabled="magnify > 9.9" title="zoom in" @click="increaseScale" />
+      <q-btn v-if="bookmarks.length === 0" size="sm" icon="mdi-bookmark-plus" title="add bookmark"
+        @click="setBookmark()" />
+      <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="mdi-bookmark-plus" title="add bookmark"
+        @click="setBookmark()">
         <q-list>
           <q-item v-for="(bookmark, i) in bookmarks" clickable v-close-popup :label="bookmark.label"
             @click="recallBookmark(i)">
-            <q-item-section><q-icon name="mdi-bookmark-edit" /></q-item-section>
-            <q-item-section><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
-            <q-item-section><q-icon name="mdi-bookmark-remove" @click="removeBookmark(i)" /></q-item-section>
+            <q-item-section side title="edit bookmark"><q-icon name="mdi-comment-bookmark" color="primary"
+                @click="editBookmark(i)" /></q-item-section>
+            <q-item-section title="remove bookmark"><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
+            <q-item-section side title="remove bookmark"><q-icon name="mdi-bookmark-remove" color="primary"
+                @click="removeBookmark(i)" /></q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>
+      <PromptDialog :visible="showBookmarkNameDialog" label="rename bookmark"
+        :start-value="bookmarks[currentBookmarkIndex]?.label" @set-value="setBookmarkLabel"
+        @close-dialog="showBookmarkNameDialog = false" />
       <q-space />
-      <q-btn icon="mdi-reload" @click="regeneratePdf()" />
+      <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'mdi-reload'" :disable="isRegeneratingPdf"
+        @click="regeneratePdf()">
+        <q-circular-progress v-if="isRegeneratingPdf" indeterminate round size="1rem" />
+      </q-btn>
       <q-space />
-      <q-circular-progress v-if="isRendering" indeterminate rounded size="1.4rem" color="light-blue"
-        class="q-mx-md q-my-xs q-pa-xs" />
+      <q-circular-progress :indeterminate="isRendering" :value="isRendering ? 100 : undefined" rounded size="1.4rem"
+        color="light-blue" class="q-mx-md q-my-xs q-pa-xs" />
     </q-card-actions>
     <q-card-section>
       <div class="vue-pdf-embed-container q-pa-md" @scroll="scrolled">
