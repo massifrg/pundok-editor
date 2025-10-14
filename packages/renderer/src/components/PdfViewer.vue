@@ -298,8 +298,8 @@ export default {
   },
   watch: {
     lastAction(action: EditorAction) {
-      console.log(`PDF viewer: action "${action.name}"`)
       if (action.name == ACTION_SETUP_VIEWER.name) {
+        console.log(`PDF viewer: setup action "${action.name}"`)
         if (action.editorKey)
           this.editorKey = action.editorKey
         this.setupViewer(action.props?.setup)

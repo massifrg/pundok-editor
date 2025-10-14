@@ -477,9 +477,10 @@ export default {
                 } as ActionPropsSetAlternative);
               }
             }
+            break;
           case ACTION_SETUP_VIEWER.name:
             this.maximizePdfViewer()
-            break
+            break;
           default:
             executeEditorAction(action, editor);
             break;
