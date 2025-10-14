@@ -6,6 +6,6 @@ const pkg_json = JSON.parse(package_json);
  * 
  * @returns The current version of pundok-editor.
  */
-export function version() {
+export function getPundokVersion() {
   return pkg_json.version;
 }

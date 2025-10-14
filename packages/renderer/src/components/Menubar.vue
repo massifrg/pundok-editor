@@ -271,7 +271,7 @@
       <q-space />
 
       <q-badge v-if="gui.showConfiguration && configSummaries.length === 1" color="accent"><b>{{ configuration?.name ||
-          'unknown' }}</b></q-badge>
+        'unknown' }}</b></q-badge>
       <ChooseConfigButton :current-configuration-name="configuration?.name"
         title="reload document with a different configuration" @change-configuration="reloadWithConfiguration" />
       <q-badge v-if="gui.showEditorKey" color="secondary"><b>{{ editorKey }}</b></q-badge>
@@ -315,7 +315,7 @@ import {
   NODE_NAME_FIGURE,
   NODE_NAME_FIGURE_CAPTION,
   NODE_NAME_PARAGRAPH,
-  version,
+  getPundokVersion,
 } from '../common';
 import { useBackend } from '../stores';
 import {
@@ -374,7 +374,7 @@ export default {
   ],
   data() {
     return {
-      version: version(),
+      version: getPundokVersion(),
       configSummaries: [] as ConfigurationSummary[],
       // actions: useActions(),
     };
