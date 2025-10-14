@@ -76,12 +76,25 @@ import { getSourceFileHandler } from './getSourceFileHandler';
 import { exportAgainHandler } from './exportAgainHandler';
 import { rememberDocumentHash } from './documentHash';
 
+/** An object describing a document's opening */
+export interface DocumentOpening {
+  /** The path of the document to be opened */
+  path?: string,
+  /** The configuration with which the document must be opened */
+  configurationName?: string,
+  /** After opening, go to line (paragraph)... */
+  atLine?: number,
+  /** If there's no mainEditorKey yet, open when it's set (otherwise cancel the open document operation) */
+  whenEditorReady?: boolean
+}
+
 /**
  * A class to handle the communication between `main` and `renderer` processes.
  */
 export class IpcHub {
   readonly fileManager: FileManager = new FileManager();
   private mainEditorKey: EditorKeyType | undefined = undefined;
+  pendingDocumentOpen: DocumentOpening | undefined = undefined;
 
   constructor(
     readonly baseWindow: BaseWindow,
@@ -505,8 +518,13 @@ export class IpcHub {
     }
   }
 
-  fireEventOpenDocument(path?: string, configurationName?: string, atLine?: number) {
-    this.fireEventInRenderer('document', 'open', { path, configurationName, atLine });
+  fireEventOpenDocument(docToOpen?: DocumentOpening) {
+    if (this.mainEditorKey) {
+      const { path, configurationName, atLine } = docToOpen || {}
+      this.fireEventInRenderer('document', 'open', { path, configurationName, atLine });
+      this.pendingDocumentOpen = undefined
+    } else if (docToOpen?.whenEditorReady)
+      this.pendingDocumentOpen = docToOpen
   }
 
   fireEventSaveCurrentDocument() {

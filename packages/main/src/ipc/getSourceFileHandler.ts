@@ -104,7 +104,10 @@ export const getSourceFileHandler =
                 sourcefile = resolve(project.path, sourcefile)
             }
             console.log(`SOURCE FILE: ${sourcefile}`)
-            hub.fireEventOpenDocument(sourcefile, undefined, sourceline)
+            hub.fireEventOpenDocument({
+              path: sourcefile,
+              atLine: sourceline
+            })
           }
         }
       } catch (err) {

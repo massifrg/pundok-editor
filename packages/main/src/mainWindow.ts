@@ -174,7 +174,10 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
       sublabel: b.path,
       tooltip: b.path,
       click: () => {
-        ipcHub.fireEventOpenDocument(b.path, b.configurationName);
+        ipcHub.fireEventOpenDocument({
+          path: b.path,
+          configurationName: b.configurationName
+        });
       },
     }));
   const recentProjectsMenu = bookmarks
@@ -184,7 +187,7 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
       sublabel: b.path,
       tooltip: b.path,
       click: () => {
-        ipcHub.fireEventOpenDocument(b.path);
+        ipcHub.fireEventOpenDocument({ path: b.path });
       },
     }));
   const recentMenu = [

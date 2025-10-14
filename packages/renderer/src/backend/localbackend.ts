@@ -171,8 +171,8 @@ export class LocalBackend implements Backend {
             props.context = {
               path,
               configurationName,
+              atLine,
             } as DocumentContext;
-            props.atLine = atLine
             break;
           case 'save':
             baseAction = ACTION_DOCUMENT_SAVE;
@@ -194,6 +194,7 @@ export class LocalBackend implements Backend {
           editorKey: editorKey!,
           props,
         };
+        console.log(`setting DOCUMENT action for editor ${editorKey}`)
         if (action) actions.setAction(action);
       });
 

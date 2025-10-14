@@ -27,7 +27,14 @@ export function parseCommandLineOpts(
   const { _: filenames, config, line } = parsed
   let filename = filenames && filenames[0]
   if (filename) {
-    if (!isAbsolute(filename)) filename = resolve(pwd || process.cwd(), filename)
-    windowWithIpc.ipcHub.fireEventOpenDocument(filename, config, line)
+    if (!isAbsolute(filename))
+      filename = resolve(pwd || process.cwd(), filename)
+    const ipcHub = windowWithIpc.ipcHub
+    ipcHub.fireEventOpenDocument({
+      path: filename,
+      configurationName: config,
+      atLine: line,
+      whenEditorReady: true
+    })
   }
 }
