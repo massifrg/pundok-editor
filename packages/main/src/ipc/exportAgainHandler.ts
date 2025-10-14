@@ -1,4 +1,3 @@
-import { runExternalProgram } from "../runExternal";
 import { IpcHub } from "./ipcHub";
 import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";

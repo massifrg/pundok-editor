@@ -30,7 +30,7 @@ export async function rememberDocumentHash(obj: ExportJob): Promise<string> {
   docHashes.push(docHash)
   if (docHashes.length > MAX_DOCUMENT_HASHES)
     docHashes = docHashes.slice(1)
-  console.log(`new hash ${hash} for: ${json}`)
+  // console.log(`new hash ${hash} for: ${json}`)
   return hash
 }
 

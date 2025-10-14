@@ -25,15 +25,17 @@ export const getSourceFileHandler =
         if (!existsSync(synctexfile))
           return Promise.reject(`no synctex file found for "${filename}"`)
         const env = await getExtendedEnvironment()
-        const pdfinfo = runExternalProgram('mtxrun',
+        const pdfinfo = runExternalProgram(
+          'mtxrun',
           [
             "--script", "pdf",
             "--info", "--detail",
             filename
-          ], {
-          // shell: true,
-          env
-        }
+          ],
+          {
+            // shell: true,
+            env
+          }
         )
         let result = await pdfinfo.result
         if (result.exitCode !== 0) {
@@ -66,17 +68,20 @@ export const getSourceFileHandler =
         if (!pagewidth || !pageheight)
           return Promise.reject(`Error getting MediaBox of page ${page}`)
         console.log(`Page ${page} is ${pagewidth.toFixed(2)}x${pageheight.toFixed(2)} points`)
-        const sourceinfo = runExternalProgram('mtxrun',
+        const sourceinfo = runExternalProgram(
+          'mtxrun',
           [
             "--script", "synctex",
             "--goto", `--page=${page}`,
             `--x=${(pagewidth * rx).toFixed()}`,
             `--y=${(pageheight * ry).toFixed()}`,
             synctexfile
-          ], {
-          // shell: true,
-          env
-        })
+          ],
+          {
+            // shell: true,
+            env
+          }
+        )
         result = await sourceinfo.result
         if (result.exitCode !== 0) {
           const errMsg = `Error getting the source file for "${filename}", page ${page}: ${result.error}`
