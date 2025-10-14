@@ -1,6 +1,7 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
 import {
+  DocBookmark,
   EditorKeyType,
   PundokEditorProject,
   SaveResponse,
@@ -8,6 +9,7 @@ import {
 } from '../common';
 import { errorFeedback } from './feedback';
 import { stringify } from '../utils';
+import { updateBookmarksFile } from '../bookmarks';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -35,6 +37,13 @@ export const saveDocumentHandler =
           // console.log(doc);
         } else if (doc.content) {
           response = await hub.saveDocument(doc, project);
+          const bookmark: DocBookmark = {
+            type: 'document',
+            path: doc.path!,
+            configurationName: !project && doc.configurationName || undefined,
+            id: doc.id
+          }
+          await updateBookmarksFile([bookmark]);
         } else {
           response = {
             doc,

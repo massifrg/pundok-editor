@@ -42,22 +42,20 @@ function updateBookmarks(
   const index = bookmarks.findIndex((b) => sameBookmark(b, bookmark));
   let docs = MAX_RECENT_DOCS - (bookmark.type === 'document' ? 1 : 0);
   let projects = MAX_RECENT_PROJECTS - (bookmark.type === 'project' ? 1 : 0);
-  return index === 0
-    ? bookmarks
-    : [
-        bookmark,
-        ...bookmarks.filter((b, i) => {
-          if (i === index) return false;
-          if (b.type === 'document') {
-            docs--;
-            return docs >= 0;
-          } else if (b.type === 'project') {
-            projects--;
-            return projects >= 0;
-          }
-          return true;
-        }),
-      ];
+  return [
+    bookmark,
+    ...bookmarks.filter((b, i) => {
+      if (i === index) return false;
+      if (b.type === 'document') {
+        docs--;
+        return docs >= 0;
+      } else if (b.type === 'project') {
+        projects--;
+        return projects >= 0;
+      }
+      return true;
+    }),
+  ];
 }
 
 /**
