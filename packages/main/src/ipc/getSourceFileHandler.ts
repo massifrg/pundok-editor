@@ -22,8 +22,11 @@ export const getSourceFileHandler =
       progressFeedback(hub, "err", `synctex file: ${synctexfile}`, editorKey)
 
       try {
-        if (!existsSync(synctexfile))
-          return Promise.reject(`no synctex file found for "${filename}"`)
+        if (!existsSync(synctexfile)) {
+          const errMsg = `no synctex file found for "${filename}"`
+          console.log(errMsg)
+          return Promise.reject(errMsg)
+        }
         const env = await getExtendedEnvironment()
         const pdfinfo = runExternalProgram(
           'mtxrun',
@@ -40,6 +43,7 @@ export const getSourceFileHandler =
         let result = await pdfinfo.result
         if (result.exitCode !== 0) {
           const errMsg = `Error getting information about "${filename}": ${result.error}`
+          console.log(errMsg)
           progressFeedback(hub, "err", errMsg, editorKey)
           return Promise.reject(errMsg)
         }
@@ -65,8 +69,11 @@ export const getSourceFileHandler =
             })
           }
         })
-        if (!pagewidth || !pageheight)
-          return Promise.reject(`Error getting MediaBox of page ${page}`)
+        if (!pagewidth || !pageheight) {
+          const errMsg = `Error getting MediaBox of page ${page}`
+          console.log(errMsg)
+          return Promise.reject(errMsg)
+        }
         console.log(`Page ${page} is ${pagewidth.toFixed(2)}x${pageheight.toFixed(2)} points`)
         const sourceinfo = runExternalProgram(
           'mtxrun',
@@ -85,6 +92,7 @@ export const getSourceFileHandler =
         result = await sourceinfo.result
         if (result.exitCode !== 0) {
           const errMsg = `Error getting the source file for "${filename}", page ${page}: ${result.error}`
+          console.log(errMsg)
           progressFeedback(hub, "err", errMsg, editorKey)
           return Promise.reject(errMsg)
         }
@@ -111,7 +119,9 @@ export const getSourceFileHandler =
           }
         }
       } catch (err) {
-        return Promise.reject(JSON.stringify(err))
+        const errMsg = JSON.stringify(err)
+        console.log(errMsg)
+        return Promise.reject(errMsg)
       }
     }
 

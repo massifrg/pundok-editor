@@ -1030,7 +1030,7 @@ export default {
                 `saved changes: ${this.savedChanges}, exported changes: ${this.exportedChanges}`,
               );
             }
-            if (response.doc && response.doc.exportedAsPath) {
+            if (response.doc?.exportedAsPath) {
               console.log(`EXPORTED IN: ${response.doc.exportedAsPath}`);
               return response;
             }

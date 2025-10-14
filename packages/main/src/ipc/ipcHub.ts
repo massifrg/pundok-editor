@@ -75,6 +75,7 @@ import { getInclusionTreeHandler } from './getInclusionTreeHandler';
 import { getSourceFileHandler } from './getSourceFileHandler';
 import { exportAgainHandler } from './exportAgainHandler';
 import { rememberDocumentHash } from './documentHash';
+import { expandCommandArgs } from './expandCommandArgs';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -340,8 +341,12 @@ export class IpcHub {
     }
     const cwd = project?.path || process.cwd();
 
-    let resultFile = converter?.dontAskForResultFile
-      ? converter.resultFile
+    const sourceFile = doc.path
+    let resultFile = converter?.resultFile
+      ? expandCommandArgs([converter.resultFile], sourceFile)[0]
+      : undefined
+    resultFile = converter?.dontAskForResultFile
+      ? resultFile
       : exportedAsPath;
     if (!converter?.dontAskForResultFile) {
       if (!resultFile) resultFile = await this.fileManager.saveFileDialog(saveOpts);
@@ -364,12 +369,14 @@ export class IpcHub {
 
     // if content comes from a file (doc.path) and not from stdin, remember job
     let documentHash: string | undefined = undefined
-    if (doc.path) documentHash = await rememberDocumentHash({
-      path: doc.path,
-      converter: doc.converter!,
-      configurationName: doc.configurationName,
-      projectAsJsonString: project ? JSON.stringify(project) : undefined
-    })
+    if (sourceFile) {
+      documentHash = await rememberDocumentHash({
+        path: sourceFile,
+        converter: doc.converter!,
+        configurationName: doc.configurationName,
+        projectAsJsonString: project ? JSON.stringify(project) : undefined
+      })
+    }
 
     try {
       let result: ExternalProgramResult;
@@ -394,7 +401,7 @@ export class IpcHub {
             project,
             cwd,
             resourcesPaths,
-            sourceFile: doc.path,
+            sourceFile,
             resultFile,
             callback,
           });
@@ -467,7 +474,7 @@ export class IpcHub {
         const message = `export failed with exitCode ${exitCode}`;
         const debugMessage = [
           message,
-          error,
+          stringify(error),
           'command line:',
           commandLine,
         ].join('\n');
