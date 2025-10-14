@@ -3,6 +3,7 @@ import { sep as pathSep } from 'path';
 import { existsSync, statSync } from 'fs';
 import { cp, mkdir, writeFile } from 'fs/promises';
 import { staticResourcesDir, userAppDataDir } from './resourcesManager';
+import { stringify } from './utils';
 
 export const STATIC_RESOURCES_DIR = 'staticResources';
 
@@ -175,7 +176,7 @@ export function updateStaticResources(
         const filename = `${subdirPath}${pathSep}${r.file}`;
         await writeFile(filename, response.data);
       } catch (err: any) {
-        log(err.toString());
+        log(stringify(err));
       }
     });
   });
