@@ -5,6 +5,7 @@ import { runExternalProgram } from '../runExternal';
 import { EditorKeyType, PundokEditorProject, SynctexInfo } from 'src/common';
 import { isAbsolute, resolve } from 'path';
 import { progressFeedback } from './feedback';
+import { getExtendedEnvironment } from '../resourcesManager';
 
 export const getSourceFileHandler =
   (hub: IpcHub) =>
@@ -23,14 +24,15 @@ export const getSourceFileHandler =
       try {
         if (!existsSync(synctexfile))
           return Promise.reject(`no synctex file found for "${filename}"`)
-
+        const env = await getExtendedEnvironment()
         const pdfinfo = runExternalProgram('mtxrun',
           [
             "--script", "pdf",
             "--info", "--detail",
             filename
           ], {
-          shell: true
+          // shell: true,
+          env
         }
         )
         let result = await pdfinfo.result
@@ -72,7 +74,8 @@ export const getSourceFileHandler =
             `--y=${(pageheight * ry).toFixed()}`,
             synctexfile
           ], {
-          shell: true
+          // shell: true,
+          env
         })
         result = await sourceinfo.result
         if (result.exitCode !== 0) {

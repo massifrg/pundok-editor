@@ -1,5 +1,6 @@
-import { readdir, readFile } from 'fs/promises';
+import { readdir, readFile, writeFile } from 'fs/promises';
 import {
+  delimiter,
   join as joinPath,
   parse as parsePath,
   sep as pathSeparator,
@@ -9,7 +10,7 @@ import {
   PundokEditorConfigInit,
   HARDCODED_CONFIG_NAME,
   PundokEditorProject,
-  version,
+  getPundokVersion,
   FindResourceOptions,
   ResourceType,
   RESOURCE_SUBPATHS,
@@ -26,6 +27,7 @@ import { app, dialog } from 'electron';
 import { Parse as ParseZipStream } from 'unzip-stream';
 import { archiveFolder } from 'zip-lib';
 import { STATIC_RESOURCES_DIR } from './staticResources';
+import { stringify } from './utils';
 
 //var FindFiles = require("node-find-files").default;
 
@@ -250,11 +252,11 @@ export function findResourceFile(
 export interface StartupConfiguration {
   version: string;
   configuration: string;
+  env: Record<string, string>;
 }
 
 export async function getStartup(): Promise<StartupConfiguration> {
   console.log(`app.getAppPath(): ${app.getAppPath()}`);
-
   try {
     const buf = await readFile(
       `${userAppDataDir()}${pathSeparator}${STARTUP_FILENAME}`,
@@ -263,9 +265,35 @@ export async function getStartup(): Promise<StartupConfiguration> {
     return startup;
   } catch (err) {
     return Promise.resolve({
-      version: version(),
+      version: getPundokVersion(),
       configuration: HARDCODED_CONFIG_NAME,
+      env: {}
     });
+  }
+}
+
+export async function updateStartup(startup: StartupConfiguration) {
+  return await writeFile(
+    `${userAppDataDir()}${pathSeparator}${STARTUP_FILENAME}`,
+    JSON.stringify(startup, undefined, 2)
+  )
+}
+
+/**
+ * @returns A modified process environment, for example to add paths to the PATH variable
+ *          (reading from the startup file).
+ */
+export async function getExtendedEnvironment(): Promise<Record<string, string | undefined>> {
+  try {
+    const env = { ...process.env }
+    const startup = await getStartup()
+    const additional_path = startup?.env?.PATH
+    if (additional_path) {
+      env.PATH = env.PATH ? env.PATH + delimiter + additional_path : additional_path
+    }
+    return env
+  } catch (err) {
+    return Promise.reject(stringify(err))
   }
 }
 

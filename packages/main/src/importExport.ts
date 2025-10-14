@@ -131,7 +131,7 @@ async function exportWithExternalProgram(
   );
   try {
     const options = {
-      shell: true,
+      // shell: true,
       cwd,
     }
     const { childProcess, result } = runExternalProgram(
