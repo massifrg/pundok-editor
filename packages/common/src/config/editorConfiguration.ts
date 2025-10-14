@@ -241,6 +241,16 @@ function mergeNamedObjects(
     : merged;
 }
 
+type HasDefault = InputConverter | OutputConverter
+function onlyLastDefault(list: HasDefault[]): HasDefault[] {
+  let index: number
+  for (index = list.length - 1; index >= 0; index--) {
+    if (list[index].default)
+      break
+  }
+  return list.map((item, i) => ({ ...item, default: i === index }))
+}
+
 function mergeInsertableRaws(
   ir1?: InsertableRaw[],
   ir2?: InsertableRaw[],
@@ -326,14 +336,14 @@ export function enrichConfiguration(
       defaultRawFormat: enriching.defaultRawFormat || base.defaultRawFormat,
       rawInlines: mergeInsertableRaws(enriching.rawInlines, base.rawInlines),
       rawBlocks: mergeInsertableRaws(enriching.rawBlocks, base.rawBlocks),
-      inputConverters: mergeNamedObjects(
+      inputConverters: onlyLastDefault(mergeNamedObjects(
         enriching.inputConverters,
         base.inputConverters,
-      ) as InputConverter[],
-      outputConverters: mergeNamedObjects(
+      ) as InputConverter[]) as InputConverter[],
+      outputConverters: onlyLastDefault(mergeNamedObjects(
         enriching.outputConverters,
         base.outputConverters,
-      ) as OutputConverter[],
+      ) as OutputConverter[]) as OutputConverter[],
       automations: mergeNamedObjects(
         enriching.automations,
         base.automations,

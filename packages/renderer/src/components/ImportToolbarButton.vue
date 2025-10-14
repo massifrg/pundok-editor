@@ -29,7 +29,7 @@ export default {
       return getEditorConfiguration(this.editor)
     },
     defaultInputConverter() {
-      return this.configuration?.inputConverters?.find(ic => ic.default)
+      return this.configuration?.inputConverters?.find(ic => ic.default === true)
     },
     inputConverters() {
       return this.configuration?.inputConverters || []
