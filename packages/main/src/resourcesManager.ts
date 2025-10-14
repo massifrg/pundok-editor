@@ -287,9 +287,14 @@ export async function getExtendedEnvironment(): Promise<Record<string, string | 
   try {
     const env = { ...process.env }
     const startup = await getStartup()
-    const additional_path = startup?.env?.PATH
-    if (additional_path) {
-      env.PATH = env.PATH ? env.PATH + delimiter + additional_path : additional_path
+    if (startup.env) {
+      Object.entries(startup.env).forEach(([varName, value]) => {
+        if (varName === 'PATH' && env.PATH) {
+          env.PATH = env.PATH + delimiter + value
+        } else {
+          env[varName] = value
+        }
+      })
     }
     return env
   } catch (err) {
