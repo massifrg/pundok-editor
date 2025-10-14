@@ -41,7 +41,7 @@ export default {
       return this.configuration?.name
     },
     defaultOutputConverter() {
-      return this.configuration?.defaultOutputConverter
+      return this.configuration?.outputConverters?.find(oc => oc.default)
     },
     outputConverters() {
       return this.configuration?.outputConverters || []

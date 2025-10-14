@@ -63,9 +63,6 @@ export class PundokEditorConfig {
   automations?: Automation[] | undefined;
   /** Custom styles instances for a single element, derived from the definitions of the `CustomStyles` field. */
   customStylesInstances: CustomStyleInstance[] = [];
-  // derived properties
-  private _defaultInputConverter: InputConverter | undefined;
-  private _defaultOutputConverter: OutputConverter | undefined;
 
   /**
    * Creates a new configuration for the editor, with the properties passed in the argument.
@@ -93,12 +90,6 @@ export class PundokEditorConfig {
     this.outputConverters = init.outputConverters;
     this.automations = init.automations;
     this.computeCustomStylesInstances();
-    this._defaultInputConverter = this.inputConverters?.find(
-      (ic) => ic.default === true,
-    );
-    this._defaultOutputConverter = this.outputConverters?.find(
-      (oc) => oc.default === true,
-    );
   }
 
   private computeCustomStylesInstances() {
@@ -120,22 +111,6 @@ export class PundokEditorConfig {
     return (this.automations || []).filter(
       (a) => a.type === 'search-replace',
     ) as SearchAndReplace[];
-  }
-
-  /**
-   * The default input converter.
-   * It's the (first) one with the `default` property set to `true`.
-   */
-  get defaultInputConverter() {
-    return this._defaultInputConverter;
-  }
-
-  /**
-   * The default output converter.
-   * It's the (first) one with the `default` property set to `true`.
-   */
-  get defaultOutputConverter() {
-    return this._defaultOutputConverter;
   }
 
   /**
