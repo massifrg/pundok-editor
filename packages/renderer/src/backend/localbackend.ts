@@ -168,11 +168,13 @@ export class LocalBackend implements Backend {
         switch (command) {
           case 'open':
             baseAction = ACTION_DOCUMENT_OPEN;
-            props.context = {
-              path,
-              configurationName,
+            props = {
+              context: {
+                path,
+                configurationName,
+              } as DocumentContext,
               atLine,
-            } as DocumentContext;
+            }
             break;
           case 'save':
             baseAction = ACTION_DOCUMENT_SAVE;
