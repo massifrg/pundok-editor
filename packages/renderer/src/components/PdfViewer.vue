@@ -205,7 +205,7 @@ import 'vue-pdf-embed/dist/styles/textLayer.css'
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
-import { EditorKeyType, SynctexInfo, ViewerSetup } from '../common';
+import { EditorKeyType, ExportJob, SynctexInfo, ViewerSetup } from '../common';
 import { debounce, isString, throttle } from 'lodash';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import PromptDialog from './helpers/PromptDialog.vue'
@@ -275,6 +275,7 @@ export default {
       currentBookmarkIndex: -1,
       isUpdated: false,
       documentHash: undefined as string | undefined,
+      exportJobs: {} as Record<string, ExportJob>,
       editorKey: undefined as EditorKeyType | undefined,
       showPageDialog: false,
       showBookmarkNameDialog: false,
@@ -302,6 +303,7 @@ export default {
         console.log(`PDF viewer: setup action "${action.name}"`)
         if (action.editorKey)
           this.editorKey = action.editorKey
+        console.log(action)
         this.setupViewer(action.props?.setup)
       }
     },
@@ -333,10 +335,19 @@ export default {
         const hash = documentHash || filename
         this.isUpdated = this.documentHash !== hash
         this.documentHash = hash
+        this.rememberExportJob(hash)
         // if (this.regeneratingHash === hash)
         this.regeneratingHash = undefined
         this.projectAsJson = projectAsJson
         await this.loadPdf({ filename, content })
+      }
+    },
+    async rememberExportJob(hash: string) {
+      if (hash) {
+        const job = await this.backend?.getExportJob(hash)
+        if (job) {
+          this.exportJobs[hash] = job
+        }
       }
     },
     async loadPdf(pdf: PdfContent) {
@@ -364,7 +375,7 @@ export default {
     },
     regeneratePdf(hash?: string) {
       const h = hash || this.documentHash
-      console.log(`document hash: ${h}`)
+      // console.log(`document hash: ${h}`)
       if (h) {
         this.regeneratingHash = h
         this.backend.exportAgain(h, this.editorKey)
@@ -446,7 +457,7 @@ export default {
         const { clientWidth: w, clientHeight: h } = div! // || { clientWidth: x, clientHeight: y }
         const rx = x / w
         const ry = y / h
-        console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
+        // console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
         if (e.ctrlKey && this.filename) {
           this.backend?.gotoSource(this.editorKey, {
             outputFile: toRaw(this.filename),
@@ -502,8 +513,8 @@ export default {
     },
     setBookmarks(bookmarks: ViewerBookmark[]) {
       const key = this.documentKey
-      console.log(key)
-      console.log(bookmarks)
+      // console.log(key)
+      // console.log(bookmarks)
       if (key)
         this.documentBookmarks[key] = bookmarks
     },
@@ -557,6 +568,9 @@ export default {
     stopEditingBookmark() {
       this.showBookmarkNameDialog = false
       this.currentBookmarkIndex = -1
+    },
+    showAgain(hash: string) {
+      this.backend.showAgain(hash, this.editorKey)
     }
   }
 }
@@ -594,6 +608,16 @@ export default {
             <q-item-section title="remove bookmark"><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
             <q-item-section side title="remove bookmark"><q-icon name="mdi-bookmark-remove" color="primary"
                 @click="removeBookmark(i)" /></q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
+      <q-btn-dropdown>
+        <q-list>
+          <q-item v-for="[h, j] in Object.entries(exportJobs)" :disable="h === documentHash" clickable v-close-popup
+            :title="h" @click="showAgain(h)">
+            <q-item-section>
+              <q-item-label>{{ j.path }}</q-item-label>
+            </q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>

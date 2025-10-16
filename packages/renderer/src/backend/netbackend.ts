@@ -20,6 +20,7 @@ import {
   DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
+  ExportJob,
 } from '../common';
 import { OpenDialogOptions } from 'electron';
 
@@ -146,7 +147,15 @@ export class NetBackend implements Backend {
     return Promise.reject('method non implemented');
   }
 
+  async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    return Promise.reject('method non implemented');
+  }
+
   async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    return Promise.reject('method non implemented');
+  }
+
+  async getExportJob(hash: string): Promise<ExportJob | undefined> {
     return Promise.reject('method non implemented');
   }
 }

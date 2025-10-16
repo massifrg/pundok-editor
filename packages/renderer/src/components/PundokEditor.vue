@@ -455,7 +455,7 @@ export default {
                 this.message = fbmessage;
               }
             }
-            console.log(message);
+            // console.log(message);
             break;
           case ACTION_SELECT_PREV.name:
             if (!this.visibleSearchAndReplaceDialog) {
@@ -997,6 +997,7 @@ export default {
           const docState = this.docState();
           if (docState) {
             const { resourcePath, project, configuration } = docState;
+            this.setOperationInProgress(true)
             const response = await backend.save(
               {
                 id: sdoc.id || docState?.documentName,
@@ -1011,6 +1012,9 @@ export default {
               project,
               this.editorKey(),
             );
+            setTimeout(() => {
+              this.setOperationInProgress(false)
+            }, 3000)
             // console.log(response.doc)
             this.setWindowTitleFromDoc(response.doc, 'export');
             if (response.error) {

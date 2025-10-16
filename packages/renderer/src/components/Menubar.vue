@@ -12,6 +12,7 @@
       <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
       <ImportToolbarButton v-if="gui.importButton" :editor="editor" />
       <ExportToolbarButton v-if="gui.exportButton" :editor="editor" />
+      <ExportProgress v-if="operationInProgress" :editor-key="editorKey" />
 
       <span class="button-separator" />
 
@@ -262,9 +263,6 @@
 
       <q-space />
 
-      <q-circular-progress v-if="operationInProgress" color="orange" indeterminate rounded size="1rem"
-        class="q-ma-xs" />
-
       <CodemirrorButton :editor="editor" />
       <CharsTableButton :editor="editor" />
 
@@ -331,6 +329,7 @@ import {
 import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween } from '../schema/helpers';
+import ExportProgress from './ExportProgress.vue';
 
 export default {
   components: {
@@ -342,6 +341,7 @@ export default {
     // CustomMarkMenu,
     CustomWrapperMenu,
     ElementSelectionButton,
+    ExportProgress,
     ExportToolbarButton,
     ImageButton,
     IndicesButtons,

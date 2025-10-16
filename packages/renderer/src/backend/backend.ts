@@ -14,6 +14,7 @@ import type {
   DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
+  ExportJob,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -192,7 +193,11 @@ export interface Backend {
     info: SynctexInfo,
   ): Promise<void>
 
+  showAgain(hash: string, editorKey: EditorKeyType): Promise<void>
+
   exportAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
+
+  getExportJob(hash: string): Promise<ExportJob | undefined>;
 }
 
 export function createBackend(config: BackendConfig): Backend {

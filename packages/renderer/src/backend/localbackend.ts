@@ -37,6 +37,7 @@ import {
   ServerMessageForViewer,
   PandocFilterTransform,
   SynctexInfo,
+  ExportJob,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -438,8 +439,17 @@ export class LocalBackend implements Backend {
     this.invokeIpc('get-source-file', editorKey, info)
   }
 
+  async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    this.invokeIpc('show-again', hash, editorKey)
+  }
+
   async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
     this.invokeIpc('export-again', hash, editorKey)
+  }
+
+  async getExportJob(hash: string): Promise<ExportJob | undefined> {
+    const job_as_string: string | undefined = await this.invokeIpc('get-export-job', hash)
+    return job_as_string && JSON.parse(job_as_string) as ExportJob || undefined
   }
 
 }

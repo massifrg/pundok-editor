@@ -1,11 +1,4 @@
-import { OutputConverter } from "../../../common/src";
-
-interface ExportJob {
-  path: string,
-  converter: OutputConverter,
-  configurationName?: string,
-  projectAsJsonString?: string,
-}
+import { ExportJob } from "../common";
 
 const MAX_DOCUMENT_HASHES = 200
 interface DocHash {
@@ -42,9 +35,14 @@ function indexOfDocumentHash(search_hash: string): number {
   return -1
 }
 
-export function getDocumentHash(hash: string): ExportJob | undefined {
+export function getExportJobWithHashAsJsonString(hash: string): string | undefined {
   const index = indexOfDocumentHash(hash)
-  return index >= 0 ? JSON.parse(docHashes[index].json) : undefined
+  return index >= 0 ? docHashes[index].json : undefined
+}
+
+export function getExportJobWithHash(hash: string): ExportJob | undefined {
+  const jsonstring = getExportJobWithHashAsJsonString(hash)
+  return jsonstring ? JSON.parse(jsonstring) : undefined
 }
 
 export function isKnownDocumentHash(hash: string): boolean {

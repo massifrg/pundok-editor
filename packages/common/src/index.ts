@@ -5,6 +5,7 @@ export * from './bookmarks';
 export * from './colors';
 export * from './config';
 export * from './editorKey';
+export * from './exportJob';
 export * from './ipc';
 export * from './pandocFormat';
 export * from './pandocOptions';

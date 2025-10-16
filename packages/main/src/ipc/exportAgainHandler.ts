@@ -1,7 +1,7 @@
 import { IpcHub } from "./ipcHub";
 import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
-import { getDocumentHash } from "./documentHash";
+import { getExportJobWithHash } from "./documentHash";
 import { EditorKeyType, PundokEditorProject, StoredDoc } from "src/common";
 
 export const exportAgainHandler =
@@ -11,7 +11,7 @@ export const exportAgainHandler =
       documentHash: string,
       editorKey: EditorKeyType,
     ): Promise<void> => {
-      const job = getDocumentHash(documentHash)
+      const job = getExportJobWithHash(documentHash)
       if (job) {
         const { path, converter, configurationName, projectAsJsonString } = job
         const project = projectAsJsonString

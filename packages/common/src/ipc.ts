@@ -46,7 +46,9 @@ export type IpcRendererToMainChannel =
   | 'set-value'
   | 'query'
   | 'get-source-file'
-  | 'export-again';
+  | 'show-again'
+  | 'export-again'
+  | 'get-export-job'
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
@@ -160,14 +162,22 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'm2r',
     description: 'show some content in the viewer',
   },
-  'get-source-file': {
+  'show-again': {
     dir: 'r2m',
-    description: 'open the source file corresponding to a point in a page of a result (PDF) file',
+    description: 'show an export job (a PDF) again in the viewer, without recompiling it'
   },
   'export-again': {
     dir: 'r2m',
     description: 'export (compile PDF) again'
-  }
+  },
+  'get-export-job': {
+    dir: 'r2m',
+    description: 'retrieve information about an export job (e.g. a PDF instance of a document)'
+  },
+  'get-source-file': {
+    dir: 'r2m',
+    description: 'open the source file corresponding to a point in a page of a result (PDF) file',
+  },
 };
 
 export const IPC_VALUE_NEW_PROJECT_NAME = 'new-project-name';

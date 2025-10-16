@@ -76,6 +76,8 @@ import { getSourceFileHandler } from './getSourceFileHandler';
 import { exportAgainHandler } from './exportAgainHandler';
 import { rememberDocumentHash } from './documentHash';
 import { expandCommandArgs } from './expandCommandArgs';
+import { getExportJobHandler } from './getExportJobHandler';
+import { showAgainHandler } from './showAgainHandler';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -137,7 +139,9 @@ export class IpcHub {
     ipcMain.handle('pandoc-output-formats', pandocOutputFormatsHandler(this));
     ipcMain.handle('query', queryHandler(this));
     ipcMain.handle('get-source-file', getSourceFileHandler(this));
+    ipcMain.handle('show-again', showAgainHandler(this));
     ipcMain.handle('export-again', exportAgainHandler(this));
+    ipcMain.handle('get-export-job', getExportJobHandler(this));
   }
 
   async openDocument(
