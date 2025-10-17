@@ -16,6 +16,7 @@ import {
   BaseEditorAction,
   ACTION_SHOW_RESULT_MESSAGE,
   ACTION_PROPS_RESULT_MESSAGE,
+  ACTION_SET_META_MAP_TEXT,
 } from './actions';
 import {
   DocumentContext,
@@ -260,3 +261,28 @@ export function setActionCommand(
   }
   return false
 }
+
+export function actionSetMetaMapText(
+  editorKey: EditorKeyType,
+  nodeOrMark: SelectedNodeOrMark,
+  text?: string,
+  oldText?: string,
+): ActionForNodeOrMark {
+  const action = {
+    ...ACTION_SET_META_MAP_TEXT,
+    editorKey,
+    nodeOrMark,
+  } as ActionForNodeOrMark;
+  action.props = { text, oldText };
+  return action;
+}
+
+// export function actionNewDocument(
+//   editorKey: EditorKeyType,
+//   content: string,
+//   configurationName?: string,
+// ): EditorAction {
+//   const action = { ...ACTION_NEW_DOCUMENT, editorKey } as EditorAction;
+//   action.props = { content, configurationName };
+//   return action;
+// }
