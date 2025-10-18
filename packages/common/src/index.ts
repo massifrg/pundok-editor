@@ -1,5 +1,6 @@
 export * from './actions';
 export * from './bookmarks';
+export * from './capitalize';
 export * from './colors';
 export * from './config';
 export * from './document';

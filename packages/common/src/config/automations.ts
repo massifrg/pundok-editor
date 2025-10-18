@@ -1,5 +1,6 @@
-import { ActionNameWithProps } from 'src';
 import { PundokEditorConfig } from './editorConfiguration';
+import { Capitalize } from '../capitalize';
+import { ActionNameWithProps } from '../actions';
 
 /**
  * Types of automations available:
@@ -57,23 +58,6 @@ export interface SearchAndReplaceSpan {
   /** The attributes that the `Span` will have. */
   kv?: Record<string, string>;
 }
-
-/**
- * The types of capitalization
- */
-export type Capitalize = 'none' | 'lower' | 'upper' | 'first';
-
-export type SearchAndReplaceActionName =
-  | 'add-class'
-  | 'remove-class'
-  | 'add-attributes'
-  | 'remove-attributes'
-  | 'capitalize'
-  | 'add-custom-style'
-  | 'add-index-ref'
-  | 'prepend-text'
-  | 'append-text'
-  | 'add-style'
 
 /**
  * Definition of predefined search/replace operations.

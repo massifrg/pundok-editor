@@ -2,12 +2,14 @@ import { Editor } from '@tiptap/core';
 import { currentRepeatableCommandTooltip } from '../schema';
 import { SelectedNodeOrMark } from '../schema/helpers';
 import {
+  AddOrRemoveClassActionProps,
   EditorKeyType,
   MetaMapTextActionProps,
   TableCellVertAlignActionProps,
   TextAlignmentActionProps
 } from '../common';
 import { ActionsGroup } from './actionGroup';
+import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
 
 export type ActionName =
   | 'backend-feedback'
@@ -36,6 +38,7 @@ export type ActionName =
   | 'repeat-change'
   | 'modify-metamap-entry-key'
   | 'add-class'
+  | 'remove-class'
   | 'new-empty-document'
   | 'new-document'
   | 'setup-viewer'
@@ -61,6 +64,9 @@ export type ActionName =
   | 'propagate-index-name'
   | 'select-mark-range'
   | 'remove-mark'
+  | 'lowercase'
+  | 'uppercase'
+  | 'uppercase-first'
 
 export type TooltipForAction =
   | string
@@ -265,9 +271,64 @@ export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
   },
 };
 
+export const ACTION_LOWERCASE: BaseActionForNodeOrMark = {
+  name: 'lowercase',
+  label: "convert to lower case the selected text",
+  icon: "mdi-format-letter-case-lower",
+  canDo: (editor) => editor.can().toLowercase(),
+  do: (editor) => editor.commands.toLowercase(),
+}
+
+export const ACTION_UPPERCASE: BaseActionForNodeOrMark = {
+  name: 'uppercase',
+  label: "convert to upper case the selected text",
+  icon: "mdi-format-letter-case-upper",
+  canDo: (editor) => editor.can().toUppercase(),
+  do: (editor) => editor.commands.toUppercase(),
+}
+
+export const ACTION_UPPERCASE_FIRST: BaseActionForNodeOrMark = {
+  name: 'uppercase-first',
+  label: "convert to upper case the first letter of every word in selected text",
+  icon: "mdi-format-letter-case",
+  canDo: (editor) => editor.can().toUppercaseFirst(),
+  do: (editor) => editor.commands.toUppercaseFirst(),
+}
+
 export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
   name: 'add-class',
   label: 'add a class',
+  icon: 'mdi-octagram-plus',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.can().addPandocAttrClass(typ, className) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.commands.addPandocAttrClass(typ, className) || false
+  }
+}
+
+export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
+  name: 'remove-class',
+  label: 'remove a class',
+  icon: 'mdi-octagram-minus',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.can().removePandocAttrClass(typ, className) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.commands.removePandocAttrClass(typ, className) || false
+  }
 }
 
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
@@ -358,7 +419,11 @@ export function executeEditorAction(
 }
 
 export const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
-  ACTION_ADD_CLASS
+  ACTION_ADD_CLASS,
+  ACTION_REMOVE_CLASS,
+  ACTION_LOWERCASE,
+  ACTION_UPPERCASE,
+  ACTION_UPPERCASE_FIRST,
 ].map(action => [action.name, action]))
 
 export function availableAction(actionName: string): BaseActionForNodeOrMark | undefined {

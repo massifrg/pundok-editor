@@ -1,16 +1,14 @@
 import {
-  DocumentContext,
   InputConverter,
   OutputConverter,
   PandocFilterTransform,
   PundokEditorConfig,
-  PundokEditorProject,
-  ReadDoc,
-  StoredDoc,
-  ViewerSetup
-} from "src"
+  PundokEditorProject
+} from './config';
+import { DocumentContext, ReadDoc, StoredDoc } from './document';
 import { FeedbackMessage } from "./feedback"
 import { Node as ProsemirrorNode } from "@tiptap/pm/model"
+import { ViewerSetup } from './viewer';
 
 export interface ActionNameWithProps {
   name: string,
@@ -116,5 +114,5 @@ export interface TableCellVertAlignActionProps {
 
 export interface AddOrRemoveClassActionProps {
   class: string,
+  typeName?: string,
 }
-
