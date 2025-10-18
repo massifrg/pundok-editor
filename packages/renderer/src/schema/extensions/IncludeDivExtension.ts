@@ -1,6 +1,13 @@
 import { Extension } from '@tiptap/core';
 import { innerNodeDepth } from '../helpers';
-import { CustomClass, NODE_NAME_DIV, SK_INCLUDE_DOC } from '../../common';
+import {
+  ActionNameWithProps,
+  AddOrRemoveClassActionProps,
+  CustomClass,
+  EditAttributesActionProps,
+  NODE_NAME_DIV,
+  SK_INCLUDE_DOC
+} from '../../common';
 import { ACTION_ADD_CLASS } from '../../actions';
 
 export const INCLUDE_DOC_CLASS = 'include-doc';
@@ -67,10 +74,10 @@ export const IncludeDivExtension = Extension.create({
             ...ACTION_ADD_CLASS,
             props: {
               class: INCLUDE_DOC_CLASS
-            }
-          },
+            } as AddOrRemoveClassActionProps
+          } as ActionNameWithProps,
           selectNode: (node) => node.type.name === NODE_NAME_DIV
-        })
+        } as EditAttributesActionProps)
       },
     }
   }

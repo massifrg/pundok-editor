@@ -1,8 +1,66 @@
 import { Editor } from '@tiptap/core';
 import { currentRepeatableCommandTooltip } from '../schema';
 import { SelectedNodeOrMark } from '../schema/helpers';
-import { EditorKeyType } from '../common';
+import {
+  EditorKeyType,
+  MetaMapTextActionProps,
+  TableCellVertAlignActionProps,
+  TextAlignmentActionProps
+} from '../common';
 import { ActionsGroup } from './actionGroup';
+
+export type ActionName =
+  | 'backend-feedback'
+  | 'backend-set-project'
+  | 'close-editor'
+  | 'show-project-structure'
+  | 'backend-set-configuration-name'
+  | 'set-content'
+  | 'backend-set-content'
+  | 'backend-set-content-with-project'
+  | 'open-document'
+  | 'save-document'
+  | 'save-document-sa'
+  | 'import-document'
+  | 'export-document'
+  | 'transform-document'
+  | 'document-go-to-line'
+  | 'show-result-message'
+  | 'show-export-dialog'
+  | 'show-import-dialog'
+  | 'show-search-dialog'
+  | 'select-prev'
+  | 'select-next'
+  | 'set-alternative'
+  | 'replace-and-select-next'
+  | 'repeat-change'
+  | 'modify-metamap-entry-key'
+  | 'add-class'
+  | 'new-empty-document'
+  | 'new-document'
+  | 'setup-viewer'
+  | 'edit-node-or-mark-attributes'
+  | 'edit-meta-map-text'
+  | 'set-meta-map-text'
+  | 'unwrap-blocks'
+  | 'set-text-align'
+  | 'set-vertical-align'
+  | 'select-node'
+  | 'copy-node'
+  | 'delete-node'
+  | 'duplicate-node'
+  | 'add-table-caption'
+  | 'add-table-head'
+  | 'add-table-foot'
+  | 'prepend-table-body'
+  | 'append-table-body'
+  | 'decrease-table-body-header-rows'
+  | 'increase-table-body-header-rows'
+  | 'decrease-table-body-header-columns'
+  | 'increase-table-body-header-columns'
+  | 'propagate-index-name'
+  | 'select-mark-range'
+  | 'remove-mark'
 
 export type TooltipForAction =
   | string
@@ -13,7 +71,6 @@ export type TooltipForAction =
 
 /** Core properties of actions */
 export interface ActionCore {
-  name: string;
   label: string;
   tooltip?: TooltipForAction;
   icon?: string;
@@ -23,7 +80,8 @@ export interface ActionCore {
 
 /** Editor action that is not linked to an editor instance */
 export interface BaseEditorAction extends ActionCore {
-  props?: Record<string, any>;
+  name: ActionName;
+  props?: object;
 }
 
 /** Editor action that is relevant only to the editor having that editorKey */
@@ -86,6 +144,18 @@ export const ACTION_BACKEND_SET_CONTENT_WITH_PROJECT: BaseEditorAction = {
   label: 'set the content with a project (and a configuration)',
 };
 
+export const ACTION_NEW_EMPTY_DOCUMENT: BaseEditorAction = {
+  name: 'new-empty-document',
+  label: 'new empty document',
+  icon: 'mdi-file-import',
+};
+
+export const ACTION_NEW_DOCUMENT: BaseEditorAction = {
+  name: 'new-document',
+  label: 'new document',
+  icon: 'mdi-file-import',
+};
+
 export const ACTION_DOCUMENT_OPEN: BaseEditorAction = {
   name: 'open-document',
   label: 'open document',
@@ -130,13 +200,6 @@ export const ACTION_SHOW_RESULT_MESSAGE: BaseEditorAction = {
   icon: 'mdi-message-reply-outline',
 }
 
-export interface ACTION_PROPS_RESULT_MESSAGE {
-  success: boolean,
-  message: string,
-  caption: string,
-  icon: string,
-}
-
 export const ACTION_SHOW_EXPORT_DIALOG: BaseEditorAction = {
   name: 'show-export-dialog',
   label: 'open export dialog',
@@ -173,11 +236,6 @@ export const ACTION_SET_ALTERNATIVE: BaseEditorAction = {
   icon: 'mdi-numeric-1-box-outline'
 }
 
-export interface ActionPropsSetAlternative {
-  alternative: number,
-  context?: 'indices' // | 'other-context' ... 
-}
-
 export const ACTION_REPLACE_AND_SELECT_NEXT: BaseEditorAction = {
   name: 'replace-and-select-next',
   label: 'replace and select next',
@@ -207,35 +265,10 @@ export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
   },
 };
 
-export const MODIFY_METAMAP_KEY: BaseActionForNodeOrMark = {
-  name: 'modify-metamap-entry-key',
-  label: 'modify MetaMap entry  key',
-  icon: 'mdi-pencil',
-  canDo: (editor, action) =>
-    editor.can().setMetaMapEntryText(action?.props?.text, action?.nodeOrMark?.pos),
-  do: (editor, action) =>
-    editor.commands.setMetaMapEntryText(
-      action?.props?.text,
-      action?.nodeOrMark?.pos,
-    ),
-};
-
 export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
   name: 'add-class',
   label: 'add a class',
 }
-
-export const ACTION_NEW_EMPTY_DOCUMENT: BaseEditorAction = {
-  name: 'new-empty-document',
-  label: 'new empty document',
-  icon: 'mdi-file-import',
-};
-
-export const ACTION_NEW_DOCUMENT: BaseEditorAction = {
-  name: 'new-document',
-  label: 'new document',
-  icon: 'mdi-file-import',
-};
 
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
   name: 'setup-viewer',
@@ -253,16 +286,18 @@ export const ACTION_EDIT_META_MAP_TEXT: BaseEditorAction = {
   label: 'edit MetaMap text',
   icon: 'mdi-pencil',
 };
+
 export const ACTION_SET_META_MAP_TEXT: BaseActionForNodeOrMark = {
   name: 'set-meta-map-text',
   label: 'set MetaMap text',
-  canDo: (editor, action) =>
-    editor.can().setMetaMapEntryText(action?.props?.text, action?.nodeOrMark?.pos),
-  do: (editor, action) =>
-    editor.commands.setMetaMapEntryText(
-      action?.props?.text,
-      action?.nodeOrMark?.pos,
-    ),
+  canDo: (editor, action) => {
+    const { text } = action?.props as MetaMapTextActionProps
+    return editor.can().setMetaMapEntryText(text, action?.nodeOrMark?.pos)
+  },
+  do: (editor, action) => {
+    const { text } = action?.props as MetaMapTextActionProps
+    return editor.commands.setMetaMapEntryText(text, action?.nodeOrMark?.pos)
+  }
 };
 
 export const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
@@ -278,22 +313,24 @@ export const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
 };
 
 export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
-(['left', 'center', 'right'] as string[]).forEach((where) => {
+(['left', 'center', 'right'] as string[]).forEach((alignment) => {
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
-    name: 'set-text-align',
-    label: `horizontal ${where} align`,
-    icon: `mdi-format-align-${where}`,
-    canDo: (editor) => editor.can().setTextAlign(where),
-    do: (editor) => editor.commands.setTextAlign(where),
+    name: `set-text-align`,
+    label: `horizontal ${alignment} align`,
+    icon: `mdi-format-align-${alignment}`,
+    canDo: (editor, action) => editor.can().setTextAlign((action?.props as TextAlignmentActionProps)?.alignment),
+    do: (editor, action) => editor.commands.setTextAlign((action?.props as TextAlignmentActionProps)?.alignment),
+    props: { alignment } as TextAlignmentActionProps
   });
 });
-(['top', 'middle', 'bottom'] as string[]).forEach((where) => {
+(['top', 'middle', 'bottom'] as string[]).forEach((alignment) => {
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: 'set-vertical-align',
-    label: `vertical ${where} align`,
-    icon: `mdi-format-align-${where}`,
-    canDo: (editor) => editor.can().setVerticalAlign(where),
-    do: (editor) => editor.commands.setVerticalAlign(where),
+    label: `vertical ${alignment} align`,
+    icon: `mdi-format-align-${alignment}`,
+    canDo: (editor, action) => editor.can().setVerticalAlign((action?.props as TableCellVertAlignActionProps)?.alignment),
+    do: (editor, action) => editor.commands.setVerticalAlign((action?.props as TableCellVertAlignActionProps)?.alignment),
+    props: { alignment } as TableCellVertAlignActionProps
   });
 });
 
@@ -320,3 +357,24 @@ export function executeEditorAction(
   }
 }
 
+export const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
+  ACTION_ADD_CLASS
+].map(action => [action.name, action]))
+
+export function availableAction(actionName: string): BaseActionForNodeOrMark | undefined {
+  return AVAILABLE_ACTIONS[actionName]
+}
+
+export function fillAvailableAction(
+  actionName: string,
+  fields: {
+    props?: object,
+    editorKey?: EditorKeyType,
+    nodeOrMark?: SelectedNodeOrMark
+  }
+): ActionForNodeOrMark | undefined {
+  const { props, editorKey, nodeOrMark } = fields
+  const available = availableAction(actionName)
+  if (available && editorKey)
+    return { ...available, props, editorKey, nodeOrMark }
+}

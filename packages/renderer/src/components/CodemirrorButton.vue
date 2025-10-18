@@ -33,7 +33,7 @@ import {
   ACTION_SET_CONTENT,
   setActionCommand,
 } from '../actions';
-import { FeedbackMessage } from '../common';
+import { BackendFeedbackActionProps, FeedbackMessage, SetContentActionProps } from '../common';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 
 export default defineComponent({
@@ -113,7 +113,7 @@ export default defineComponent({
             type: 'error',
             message: err.toString(),
           };
-          setActionCommand(state, ACTION_BACKEND_FEEDBACK, { feedback });
+          setActionCommand(state, ACTION_BACKEND_FEEDBACK, { feedback } as BackendFeedbackActionProps);
           this.editorVisible = false;
         }
       }
@@ -140,7 +140,11 @@ export default defineComponent({
           },
         );
         // console.log(content);
-        setActionCommand(state, ACTION_SET_CONTENT, { content });
+        setActionCommand(
+          state,
+          ACTION_SET_CONTENT,
+          { content } as SetContentActionProps
+        );
         this.editorVisible = false;
       }
     },

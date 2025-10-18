@@ -205,7 +205,13 @@ import 'vue-pdf-embed/dist/styles/textLayer.css'
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
-import { EditorKeyType, ExportJob, SynctexInfo, ViewerSetup } from '../common';
+import {
+  EditorKeyType,
+  ExportJob,
+  SetupViewerActionProps,
+  SynctexInfo,
+  ViewerSetup
+} from '../common';
 import { debounce, isString, throttle } from 'lodash';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import PromptDialog from './helpers/PromptDialog.vue'
@@ -304,7 +310,7 @@ export default {
         if (action.editorKey)
           this.editorKey = action.editorKey
         console.log(action)
-        this.setupViewer(action.props?.setup)
+        this.setupViewer((action.props as SetupViewerActionProps)?.setup)
       }
     },
   },

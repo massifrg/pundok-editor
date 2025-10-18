@@ -5,12 +5,11 @@ import { NodeSelection, Plugin } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import {
   ACTION_SET_ALTERNATIVE,
-  ActionEditAttributesProps,
-  ActionPropsSetAlternative,
   setActionCommand,
   setActionEditAttributes
 } from '../../actions';
 import {
+  EditAttributesActionProps,
   EditorKeyType,
   NODE_NAME_IMAGE,
   NODE_NAME_INDEX_REF,
@@ -18,6 +17,7 @@ import {
   NODE_NAME_PARAGRAPH,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
+  SetAlternativeActionProps,
   SK_EDIT_ATTRIBUTES,
   SK_SET_ALTERNATIVE_0,
   SK_SET_ALTERNATIVE_1,
@@ -55,7 +55,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     pundokEditorUtils: {
       updateDocState: (update: Partial<DocStateUpdate>) => ReturnType;
-      editAttributes: (props?: ActionEditAttributesProps) => ReturnType;
+      editAttributes: (props?: EditAttributesActionProps) => ReturnType;
       gotoDocLine: (i: number) => ReturnType;
       nudgeNumericValue: (
         sign: 1 | -1,
@@ -355,7 +355,7 @@ export const PundokEditorUtilsExtension =
       const altCmd = (n: number) => setActionCommand(
         this.editor.state,
         ACTION_SET_ALTERNATIVE,
-        { alternative: n } as ActionPropsSetAlternative
+        { alternative: n } as SetAlternativeActionProps
       )
       return {
         [SK_EDIT_ATTRIBUTES]: () => this.editor.commands.editAttributes(),

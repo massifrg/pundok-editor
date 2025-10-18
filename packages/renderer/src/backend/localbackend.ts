@@ -38,6 +38,12 @@ import {
   PandocFilterTransform,
   SynctexInfo,
   ExportJob,
+  BackendFeedbackActionProps,
+  BackendSetProjectActionProps,
+  BackendSetConfigNameActionProps,
+  BackendSetContentActionProps,
+  BackendSetContentWithProjectActionProps,
+  DocumentOpenActionProps,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -97,7 +103,7 @@ export class LocalBackend implements Backend {
           const action: EditorAction = {
             ...ACTION_BACKEND_SET_CONFIG_NAME,
             editorKey: editorKey!,
-            props: { configurationName },
+            props: { configurationName } as BackendSetConfigNameActionProps,
           };
           actions.setAction(action);
         },
@@ -115,7 +121,7 @@ export class LocalBackend implements Backend {
           const action: EditorAction = {
             ...ACTION_BACKEND_SET_PROJECT,
             editorKey: editorKey!,
-            props: { project },
+            props: { project } as BackendSetProjectActionProps,
           };
           actions.setAction(action);
         },
@@ -126,7 +132,7 @@ export class LocalBackend implements Backend {
         const action: EditorAction = {
           ...ACTION_BACKEND_FEEDBACK,
           editorKey: editorKey!,
-          props: { feedback },
+          props: { feedback } as BackendFeedbackActionProps,
         };
         actions.setAction(action);
       });
@@ -151,12 +157,12 @@ export class LocalBackend implements Backend {
                 project: project_with_conf,
                 configuration: project_with_conf.computedConfig,
                 content,
-              },
+              } as BackendSetContentWithProjectActionProps,
             }
             : {
               ...ACTION_BACKEND_SET_CONTENT,
               editorKey: editorKey!,
-              props: { content },
+              props: { content } as BackendSetContentActionProps,
             };
           actions.setAction(action);
         },
@@ -175,7 +181,7 @@ export class LocalBackend implements Backend {
                 configurationName,
               } as DocumentContext,
               atLine,
-            }
+            } as DocumentOpenActionProps
             break;
           case 'save':
             baseAction = ACTION_DOCUMENT_SAVE;

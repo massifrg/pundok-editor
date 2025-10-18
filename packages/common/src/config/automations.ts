@@ -1,3 +1,4 @@
+import { ActionNameWithProps } from 'src';
 import { PundokEditorConfig } from './editorConfiguration';
 
 /**
@@ -62,6 +63,18 @@ export interface SearchAndReplaceSpan {
  */
 export type Capitalize = 'none' | 'lower' | 'upper' | 'first';
 
+export type SearchAndReplaceActionName =
+  | 'add-class'
+  | 'remove-class'
+  | 'add-attributes'
+  | 'remove-attributes'
+  | 'capitalize'
+  | 'add-custom-style'
+  | 'add-index-ref'
+  | 'prepend-text'
+  | 'append-text'
+  | 'add-style'
+
 /**
  * Definition of predefined search/replace operations.
  * You can search exact text, regular expressions or by Mark or custom style.
@@ -85,14 +98,16 @@ export interface SearchAndReplace extends Automation {
   optionCycle?: boolean;
   /** Search for whole words. */
   optionWholeWord?: boolean;
-  /** How to change capitalization on replaced text. */
+  /** How to change capitalization on replaced text. (TODO: replace with actions) */
   capitalize?: Capitalize;
-  /** Marks to add to replaced text. */
+  /** Marks to add to replaced text. (TODO: replace with actions) */
   addMarks?: SearchAndReplaceMark[];
-  /** Custom styles to add to replaced text. */
+  /** Custom styles to add to replaced text. (TODO: replace with actions) */
   addStyles?: string[];
-  /** Custom `Span` Marks to add to replaced text. */
+  /** Custom `Span` Marks to add to replaced text. (TODO: replace with actions) */
   addSpans?: SearchAndReplaceSpan[];
+  /** SearchAndReplaceAction */
+  actions?: ActionNameWithProps[];
 }
 
 /**

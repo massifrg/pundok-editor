@@ -14,12 +14,12 @@
 <script lang="ts">
 import { useActions } from '../stores';
 import { mapState } from 'pinia';
-import { DEFAULT_INDEX_COLOR, Index } from '../common'
+import { DEFAULT_INDEX_COLOR, Index, SetAlternativeActionProps } from '../common'
 import { getEditorConfiguration } from '../schema';
 import { mergeIndices } from '../schema/helpers/indices';
 import { getIndexingState } from '../schema/extensions/IndexingExtension';
 import ToolbarButton from './ToolbarButton.vue';
-import { ACTION_SET_ALTERNATIVE, ActionPropsSetAlternative, EditorAction } from '../actions';
+import { ACTION_SET_ALTERNATIVE, EditorAction } from '../actions';
 
 export default {
   props: ['editor', 'size', 'padding', 'buttonStyle', 'enableAlternativeButtons'],
@@ -44,7 +44,7 @@ export default {
   watch: {
     lastAction(action: EditorAction) {
       if (this.enableAlternativeButtons && action.name === ACTION_SET_ALTERNATIVE.name) {
-        const props = action.props as ActionPropsSetAlternative
+        const props = action.props as SetAlternativeActionProps
         const { context, alternative } = props || {}
         if (context === 'indices' && alternative) {
           const index = this.allIndices[alternative - 1]

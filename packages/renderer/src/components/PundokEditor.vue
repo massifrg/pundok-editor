@@ -106,9 +106,26 @@ import {
   IPC_MAIN_EDITOR_KEY,
   COLOR_JUST_EXPORTED,
   PandocFilterTransform,
-  PANDOC_TYPES_VERSION,
   WhatToDoWithResult,
   NODE_NAME_INDEX_TERM,
+  BackendSetProjectActionProps,
+  BackendSetConfigNameActionProps,
+  BackendSetContentActionProps,
+  SetContentActionProps,
+  BackendSetContentWithProjectActionProps,
+  DocumentOpenActionProps,
+  ImportDocumentActionProps,
+  ExportDocumentActionProps,
+  TransformDocumentActionProps,
+  NewEmptyDocumentActionProps,
+  NewDocumentActionProps,
+  GoToLineActionProps,
+  ResultMessageActionProps,
+  ShowExportDialogActionProps,
+  BackendFeedbackActionProps,
+  SetAlternativeActionProps,
+  EditAttributesActionProps,
+  ActionNameWithProps,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import {
@@ -155,15 +172,11 @@ import {
   ACTION_SHOW_PROJECT_STRUCTURE_DIALOG,
   ACTION_CLOSE_EDITOR,
   ACTION_DOCUMENT_TRANSFORM,
-  ActionEditAttributesProps,
-  BaseActionForNodeOrMark,
   ACTION_SELECT_NEXT,
   ACTION_SELECT_PREV,
   ACTION_SET_ALTERNATIVE,
   ACTION_SET_CONTENT,
   setActionCommand,
-  ActionPropsSetAlternative,
-  ACTION_PROPS_RESULT_MESSAGE,
   ACTION_DOCUMENT_GO_TO_LINE,
   ACTION_SETUP_VIEWER,
 } from '../actions';
@@ -276,7 +289,7 @@ export default {
         | undefined,
       nodeOrMarkToEdit: undefined as SelectedNodeOrMark | undefined,
       startAttributesTab: undefined as string | undefined,
-      onAttributesEditorShow: undefined as BaseActionForNodeOrMark | undefined,
+      onAttributesEditorShow: undefined as ActionNameWithProps | undefined,
       // clickedNodeOrMark: undefined as SelectedNodeOrMark | undefined,
       debugDocTree: undefined as ProjectComponent | undefined,
       $q: useQuasar(),
@@ -322,21 +335,27 @@ export default {
             this.setClosePending();
             break;
           case ACTION_BACKEND_SET_PROJECT.name:
-            this.setProject({ ...props?.project });
+            this.setProject({ ...(props as BackendSetProjectActionProps)?.project });
             break;
           case ACTION_BACKEND_SET_CONFIG_NAME.name:
-            const configurationName = props?.configurationName;
+            const configurationName = (props as BackendSetConfigNameActionProps)?.configurationName;
             this.setConfiguration(configurationName);
             break;
           case ACTION_SET_CONTENT.name:
-            if (props?.content) this.setContent(props.content);
+            {
+              const { content } = props as SetContentActionProps
+              if (content) this.setContent(content);
+            }
             break;
           case ACTION_BACKEND_SET_CONTENT.name:
-            if (props?.content) this.loadDocument(props?.content);
+            {
+              const { content } = props as BackendSetContentActionProps
+              if (content) this.loadDocument(content);
+            }
             break;
           case ACTION_BACKEND_SET_CONTENT_WITH_PROJECT.name:
             if (props) {
-              const { content, project, configuration } = props;
+              const { content, project, configuration } = props as BackendSetContentWithProjectActionProps;
               if (project) this.setProject(project);
               else if (configuration) this.setConfiguration(configuration);
               if (content) this.loadDocument(content);
@@ -349,7 +368,10 @@ export default {
             }
             break;
           case ACTION_DOCUMENT_OPEN.name:
-            this.openDocument(props?.context, props?.atLine);
+            {
+              const { context, atLine } = props as DocumentOpenActionProps
+              this.openDocument(context, atLine);
+            }
             break;
           case ACTION_DOCUMENT_SAVE.name:
             this.saveToStoredPath();
@@ -358,12 +380,15 @@ export default {
             this.save();
             break;
           case ACTION_DOCUMENT_GO_TO_LINE.name:
-            if (props?.atLine) console.log("moving to line " + props.atLine)
-            this.editor?.chain()
-              .gotoDocLine(props?.atLine)
-              .focus()
-              .scrollIntoView()
-              .run()
+            {
+              const { atLine } = props as GoToLineActionProps
+              if (atLine) console.log("moving to line " + atLine)
+              this.editor?.chain()
+                .gotoDocLine(atLine)
+                .focus()
+                .scrollIntoView()
+                .run()
+            }
             break
           case ACTION_EDIT_ATTRIBUTES.name:
             if (nom) this.editNodeOrMarkAttributes(nom, props);
@@ -388,8 +413,7 @@ export default {
             }
             break;
           case ACTION_DOCUMENT_IMPORT.name:
-            const inputConverter: InputConverter | undefined =
-              props?.inputConverter;
+            const { inputConverter } = props as ImportDocumentActionProps
             if (inputConverter) {
               this.importDoc(inputConverter /**, action?.props?.storedDoc */);
             } else {
@@ -397,7 +421,7 @@ export default {
             }
             break;
           case ACTION_DOCUMENT_EXPORT.name:
-            const outputConverter = props?.outputConverter;
+            const { outputConverter } = props as ExportDocumentActionProps;
             let storedDoc: Partial<StoredDoc> | undefined = undefined;
             if (outputConverter) {
               this.exportDoc(outputConverter, storedDoc);
@@ -407,14 +431,16 @@ export default {
             break;
           case ACTION_SHOW_RESULT_MESSAGE.name:
             if (props)
-              this.showResultMessage(props as ACTION_PROPS_RESULT_MESSAGE)
+              this.showResultMessage(props as ResultMessageActionProps)
             break
           case ACTION_SHOW_EXPORT_DIALOG.name:
-            const converter = props?.outputConverter;
-            if (converter) {
-              this.setOutputConverter(converter);
-            } else {
-              this.visibleExportDialog = true;
+            {
+              const { outputConverter } = props as ShowExportDialogActionProps
+              // FIXME: not clear: only showing or also exporting?
+              if (outputConverter)
+                this.setOutputConverter(outputConverter);
+              else
+                this.visibleExportDialog = true;
             }
             break;
           case ACTION_SHOW_IMPORT_DIALOG.name:
@@ -424,21 +450,26 @@ export default {
             this.visibleSearchAndReplaceDialog = true;
             break;
           case ACTION_NEW_EMPTY_DOCUMENT.name:
-            this.newDocument(action?.props?.configurationName);
+            {
+              const { configurationName } = props as NewEmptyDocumentActionProps
+              this.newDocument(configurationName);
+            }
             break;
           case ACTION_NEW_DOCUMENT.name:
+            const { configurationName: configName, content } = props as NewDocumentActionProps
             this.newDocument(
-              action?.props?.configurationName,
-              action?.props?.content,
+              configName,
+              content,
             );
             break;
           case ACTION_DOCUMENT_TRANSFORM.name:
-            console.log(action?.props?.transform);
-            this.transformDocument(action?.props?.transform);
+            const { transform } = props as TransformDocumentActionProps
+            console.log(transform);
+            this.transformDocument(transform);
             break;
           case ACTION_BACKEND_FEEDBACK.name:
-            const fbmessage: FeedbackMessage = action.props?.feedback;
-            const { message, type } = fbmessage
+            const { feedback } = props as BackendFeedbackActionProps
+            const { message, type } = feedback
             const isSuccess = type === 'success'
             if (isSuccess) {
               // console.log(`success feedback: ${message.message}`);
@@ -452,7 +483,7 @@ export default {
               })
             } else {
               if (type !== 'progress') {
-                this.message = fbmessage;
+                this.message = feedback;
               }
             }
             // console.log(message);
@@ -468,13 +499,14 @@ export default {
             }
             break;
           case ACTION_SET_ALTERNATIVE.name:
-            if (!(props as ActionPropsSetAlternative)?.context) {
+            const { context } = props as SetAlternativeActionProps
+            if (!context) {
               // re-dispatch action with the proper context
               if (this.visibleSearchAndReplaceDialog) {
                 setActionCommand(editorKey, action, {
                   ...action.props,
                   ...{ context: 'indices' },
-                } as ActionPropsSetAlternative);
+                } as SetAlternativeActionProps);
               }
             }
             break;
@@ -562,7 +594,7 @@ export default {
       }
     },
     async newDocument(
-      configurationName: string,
+      configurationName?: string,
       content?: string,
       ignoreUnsaved?: boolean,
     ) {
@@ -726,7 +758,7 @@ export default {
         this.$emit('document-loaded', doc, this.editor);
         const action = ACTION_DOCUMENT_GO_TO_LINE
         if (atLine) action.label += ` ${atLine}`
-        setActionCommand(editorKey!, action, { atLine })
+        setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps)
       }
     },
     setOperationInProgress(operationInProgress: boolean) {
@@ -814,7 +846,7 @@ export default {
         space: this.jsonSpace,
       });
     },
-    showResultMessage(props: ACTION_PROPS_RESULT_MESSAGE) {
+    showResultMessage(props: ResultMessageActionProps) {
       const { success, message, caption, icon } = props
       this.$q.notify({
         message,
@@ -1082,10 +1114,10 @@ export default {
     // methods for attributes editing
     editNodeOrMarkAttributes(
       nodeOrMark: SelectedNodeOrMark,
-      props?: ActionEditAttributesProps,
+      props?: EditAttributesActionProps,
     ) {
       if (nodeOrMark) {
-        let tab = props?.tab;
+        let { tab, action } = props || {}
         const node = nodeOrMark.node;
         if (!tab && node) {
           switch (node.type.name) {
@@ -1096,7 +1128,7 @@ export default {
           }
         }
         this.startAttributesTab = tab;
-        this.onAttributesEditorShow = props?.action;
+        this.onAttributesEditorShow = action;
         this.nodeOrMarkToEdit = nodeOrMark;
       }
     },

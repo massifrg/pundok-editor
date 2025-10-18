@@ -23,3 +23,11 @@ export interface ViewerSetup {
    */
   documentHash?: string;
 }
+
+/**
+ * Options about previewing a document.
+ */
+export interface PreviewOptions {
+  /** Open the preview inside pandoc-editor. */
+  inPundokEditor: boolean;
+}

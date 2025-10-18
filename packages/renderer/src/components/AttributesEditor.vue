@@ -276,6 +276,8 @@ import {
   getEditorConfiguration
 } from '../schema';
 import {
+  ActionNameWithProps,
+  AddOrRemoveClassActionProps,
   DEFAULT_INDEX_NAME,
   INDEX_NAME_ATTR,
   Index,
@@ -302,7 +304,7 @@ import {
 } from '../schema/helpers';
 import { toRaw } from 'vue';
 import { createLowlight, all } from 'lowlight';
-import { ACTION_ADD_CLASS, BaseActionForNodeOrMark } from '../actions';
+import { ACTION_ADD_CLASS } from '../actions';
 
 const lowlight = createLowlight(all);
 
@@ -501,9 +503,9 @@ export default {
         this.attrs = Object.fromEntries(ee);
         this.setTab()
         // const names = [this.startTab, ...this.editableAttributes]
-        const action = this.onAttributesEditorShow as BaseActionForNodeOrMark | undefined
-        if (action?.name === ACTION_ADD_CLASS.name) {
-          const class_to_add = action.props?.class
+        const { name, props } = this.onAttributesEditorShow as ActionNameWithProps
+        if (name === ACTION_ADD_CLASS.name) {
+          const class_to_add = (props as AddOrRemoveClassActionProps)?.class
           if (class_to_add) {
             this.addClass(class_to_add)
           }

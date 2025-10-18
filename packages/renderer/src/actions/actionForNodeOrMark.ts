@@ -12,6 +12,7 @@ import { nodeOrMarkToPandocName } from '../schema/helpers/PandocVsProsemirror';
 import { nodesWithTemplate, compatibleNodes, SelectedNodeOrMark } from '../schema/helpers';
 import {
   DocumentContext,
+  DocumentOpenActionProps,
   InputConverter,
   NODE_NAME_INDEX_DIV,
   NODE_NAME_PANDOC_TABLE,
@@ -304,7 +305,7 @@ export function actionsForNodeOrMark(
                 format,
               } as InputConverter
             } as DocumentContext
-          },
+          } as DocumentOpenActionProps,
           editorKey
         })
       }
