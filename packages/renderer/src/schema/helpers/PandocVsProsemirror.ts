@@ -1,19 +1,38 @@
-import type { Node, Mark, NodeType, MarkType } from '@tiptap/pm/model';
+import type { Node, Mark, NodeType, MarkType, Schema } from '@tiptap/pm/model';
 import {
   CustomStyleDef,
   INDEX_NAME_ATTR,
+  MARK_NAME_CITE,
+  MARK_NAME_CODE,
   MARK_NAME_DOUBLE_QUOTED,
+  MARK_NAME_EMPH,
+  MARK_NAME_LINK,
+  MARK_NAME_MATH,
   MARK_NAME_SINGLE_QUOTED,
   MARK_NAME_SMALLCAPS,
   MARK_NAME_SPAN,
+  MARK_NAME_STRIKEOUT,
+  MARK_NAME_STRONG,
+  MARK_NAME_SUBSCRIPT,
+  MARK_NAME_SUPERSCRIPT,
+  MARK_NAME_UNDERLINE,
   NODE_NAME_BLOCKQUOTE,
   NODE_NAME_BREAK,
+  NODE_NAME_BULLET_LIST,
+  NODE_NAME_CODE_BLOCK,
+  NODE_NAME_DEFINITION_LIST,
   NODE_NAME_DIV,
   NODE_NAME_EMPTY_SPAN,
   NODE_NAME_FIGURE,
   NODE_NAME_HEADING,
+  NODE_NAME_HORIZONTAL_RULE,
+  NODE_NAME_IMAGE,
+  NODE_NAME_LINE_BLOCK,
+  NODE_NAME_NOTE,
+  NODE_NAME_ORDERED_LIST,
   NODE_NAME_PANDOC_TABLE,
   NODE_NAME_PARAGRAPH,
+  NODE_NAME_PLAIN,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
   PundokEditorConfig,
@@ -25,42 +44,46 @@ function ucfirst(s: string): string {
   return s.substring(0, 1).toUpperCase() + s.substring(1);
 }
 
-const BLOCKS = [
-  'Plain',
-  'Para',
-  'LineBlock',
-  'CodeBlock',
-  'RawBlock',
-  'BlockQuote',
-  'OrderedList',
-  'BulletList',
-  'DefinitionList',
-  'Header',
-  'HorizontalRule',
-  'Table',
-  'Div',
-  'Figure',
-];
-const INLINES = [
-  'Emph',
-  'Underline',
-  'Strong',
-  'Strikeout',
-  'Superscript',
-  'Subscript',
-  'SmallCaps',
-  'Quoted',
-  'Cite',
-  'Code',
-  'SoftBreak',
-  'LineBreak',
-  'Math',
-  'RawInline',
-  'Link',
-  'Image',
-  'Note',
-  'Span',
-];
+const BLOCKS_TO_PM: Record<string, string> = {
+  Plain: NODE_NAME_PLAIN,
+  Para: NODE_NAME_PARAGRAPH,
+  LineBlock: NODE_NAME_LINE_BLOCK,
+  CodeBlock: NODE_NAME_CODE_BLOCK,
+  RawBlock: NODE_NAME_RAW_BLOCK,
+  BlockQuote: NODE_NAME_BLOCKQUOTE,
+  OrderedList: NODE_NAME_ORDERED_LIST,
+  BulletList: NODE_NAME_BULLET_LIST,
+  DefinitionList: NODE_NAME_DEFINITION_LIST,
+  Header: NODE_NAME_HEADING,
+  HorizontalRule: NODE_NAME_HORIZONTAL_RULE,
+  Table: NODE_NAME_PANDOC_TABLE,
+  Div: NODE_NAME_DIV,
+  Figure: NODE_NAME_FIGURE,
+}
+
+const INLINES_TO_PM: Record<string, string> = {
+  Emph: MARK_NAME_EMPH,
+  Underline: MARK_NAME_UNDERLINE,
+  Strong: MARK_NAME_STRONG,
+  Strikeout: MARK_NAME_STRIKEOUT,
+  Superscript: MARK_NAME_SUPERSCRIPT,
+  Subscript: MARK_NAME_SUBSCRIPT,
+  SmallCaps: MARK_NAME_SMALLCAPS,
+  Quoted: MARK_NAME_DOUBLE_QUOTED,
+  Cite: MARK_NAME_CITE,
+  Code: MARK_NAME_CODE,
+  SoftBreak: NODE_NAME_BREAK,
+  LineBreak: NODE_NAME_BREAK,
+  Math: MARK_NAME_MATH,
+  RawInline: NODE_NAME_RAW_INLINE,
+  Link: MARK_NAME_LINK,
+  Image: NODE_NAME_IMAGE,
+  Note: NODE_NAME_NOTE,
+  Span: MARK_NAME_SPAN,
+}
+
+const BLOCKS = Object.keys(BLOCKS_TO_PM)
+const INLINES = Object.keys(INLINES_TO_PM);
 
 function customStyleClasses(
   classes: string[] | null | undefined,
@@ -152,6 +175,13 @@ export function nodeOrMarkToPandocType(nom: Node | Mark): string {
   if (BLOCKS.find((b) => b == name)) return 'Block';
   if (INLINES.find((i) => i == name)) return 'Inline';
   return name;
+}
+
+export function pandocNameToProsemirrorType(schema: Schema, pandocType: string, quoteType?: string): NodeType | MarkType | undefined {
+  let typeName = BLOCKS_TO_PM[pandocType] || INLINES_TO_PM[pandocType]
+  if (typeName === MARK_NAME_DOUBLE_QUOTED && quoteType === 'SingleQuote')
+    typeName = MARK_NAME_SINGLE_QUOTED
+  return schema.nodes[typeName] || schema.marks[typeName]
 }
 
 function spanToLabel(nom: Node | Mark | NodeType | MarkType | string): string {
