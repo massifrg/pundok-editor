@@ -116,3 +116,8 @@ export interface AddOrRemoveClassActionProps {
   class: string,
   typeName?: string,
 }
+
+export interface AddOrRemoveMarkActionProps {
+  markType: string,
+  attrs?: Record<string, string>
+}

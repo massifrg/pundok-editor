@@ -35,6 +35,9 @@
               :default-operation="selectedMarkOperationTypeOnReplacedText" @selected-marks="setMarksOnReplacedText"
               @selected-operation="selectMarkOperationOnReplacedText" menu-anchor="bottom end"
               menu-self="bottom start" />
+            <q-btn-dropdown @click="actionsListVisible = !actionsListVisible">
+              <ActionsList />
+            </q-btn-dropdown>
           </q-card-section>
         </div>
       </q-card-section>
@@ -134,6 +137,7 @@ import {
   customStylesToAddableMarks,
   searchAndReplaceSpanToAddableMarks
 } from '.';
+import ActionsList from './ActionsList.vue';
 import MarksPaletteDropdown from './MarksPaletteDropdown.vue'
 import IndicesButtons from './IndicesButtons.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
@@ -167,6 +171,7 @@ const oneOfMarksFilter: (marks: Mark[]) => SearchResultFilter = (marks) => (stat
 
 export default {
   components: {
+    ActionsList,
     IndicesButtons,
     MarksPaletteDropdown
   },
@@ -193,6 +198,7 @@ export default {
       optionCycle: false,
       optionWholeWord: false,
       marksToSearch: [] as AddableMark[],
+      actionsListVisible: false,
       optionMarksLogicalOperator: 'and' as MarksLogicalOperator,
       selectedMarksToSearch: [] as SearchMarkSpec[],
       marksOnReplacedText: [] as AddableMark[],

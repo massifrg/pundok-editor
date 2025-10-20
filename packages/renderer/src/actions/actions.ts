@@ -63,6 +63,7 @@ export type ActionName =
   | 'increase-table-body-header-columns'
   | 'propagate-index-name'
   | 'select-mark-range'
+  | 'add-mark'
   | 'remove-mark'
   | 'lowercase'
   | 'uppercase'
@@ -331,6 +332,16 @@ export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
   }
 }
 
+export const ACTION_ADD_MARK: BaseActionForNodeOrMark = {
+  name: 'add-mark',
+  label: 'add Mark (Emph, Strong, etc.)'
+}
+
+export const ACTION_REMOVE_MARK: BaseActionForNodeOrMark = {
+  name: 'remove-mark',
+  label: 'remove Mark (Emph, Strong, etc.)'
+}
+
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
   name: 'setup-viewer',
   label: 'setup viewer',
@@ -418,13 +429,19 @@ export function executeEditorAction(
   }
 }
 
-export const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
+const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
   ACTION_ADD_CLASS,
   ACTION_REMOVE_CLASS,
   ACTION_LOWERCASE,
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
+  ACTION_ADD_MARK,
+  ACTION_REMOVE_MARK,
 ].map(action => [action.name, action]))
+
+export function availableActionsNames(): string[] {
+  return Object.keys(AVAILABLE_ACTIONS)
+}
 
 export function availableAction(actionName: string): BaseActionForNodeOrMark | undefined {
   return AVAILABLE_ACTIONS[actionName]

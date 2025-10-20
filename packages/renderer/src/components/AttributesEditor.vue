@@ -243,7 +243,7 @@
 </template>
 
 <script lang="ts">
-import { isEmpty, isEqual, isObject } from 'lodash';
+import { isEmpty, isEqual } from 'lodash';
 import { Mark, Node } from '@tiptap/pm/model';
 import { useQuasar } from 'quasar';
 import { mdiChevronLeft, mdiChevronRight } from '@quasar/extras/mdi-v6/index.js'

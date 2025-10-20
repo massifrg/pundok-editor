@@ -7,6 +7,7 @@ export * from './customStyle';
 export * from './cssSelection';
 export * from './DocState';
 export * from './fixPreArrowUpPlugin';
+export * from './icons';
 export * from './indices';
 export * from './nodeDepth';
 export * from './nudgeNumericValue';
