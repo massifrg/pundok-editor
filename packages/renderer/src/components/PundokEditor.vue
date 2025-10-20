@@ -14,9 +14,12 @@
       </q-toolbar>
     </q-header>
     <q-drawer v-if="isMainEditor" show-if-above behavior="desktop" bordered :v-model="leftDrawerState === 'normal'"
-      side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="16"
+      side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="24"
       :width="leftDrawerWidth" :breakpoint="500">
       <PdfViewer :backend="backend" class="pdf-viewer" />
+      <div class="q-mini-drawer-only absolute" style="top: 150px; right: 3px">
+        <q-btn dense round unelevated color="secondary" icon="chevron_right" @click="maximizePdfViewer" />
+      </div>
       <div class="q-mini-drawer-hide absolute" style="top: 150px; right: -17px">
         <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
       </div>
