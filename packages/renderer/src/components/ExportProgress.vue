@@ -2,7 +2,7 @@
 import { mapState } from 'pinia';
 import { useActions } from '../stores';
 import { ACTION_BACKEND_FEEDBACK, EditorAction } from '../actions';
-import { FeedbackMessage } from '../common';
+import { BackendFeedbackActionProps, FeedbackMessage } from '../common';
 
 export default {
   props: ['editorKey'],
@@ -21,10 +21,10 @@ export default {
   },
   watch: {
     lastAction(action: EditorAction) {
-      const { name, editorKey } = action
+      const { name, editorKey, props } = action
       if (this.editorKey == editorKey && name === ACTION_BACKEND_FEEDBACK.name) {
-        const fbmessage: FeedbackMessage = action.props?.feedback;
-        const { message, type } = fbmessage
+        const { feedback: { message, type } } = props as BackendFeedbackActionProps
+        // const { message, type } = feedback
         if (type === 'progress') {
           if (message.startsWith("pages")) {
             let page: number | undefined = undefined
