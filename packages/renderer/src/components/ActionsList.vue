@@ -2,6 +2,7 @@
 import { ActionName, availableActionsNames } from '../actions';
 import { ActionNameWithProps } from '../common';
 import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassActionEditor.vue'
+import AddOrRemoveMarkActionEditor from './actioneditors/AddOrRemoveMarkActionEditor.vue'
 
 export default {
   data() {
@@ -17,15 +18,25 @@ export default {
     }
   },
   components: {
-    AddOrRemoveClassActionEditor
+    AddOrRemoveClassActionEditor,
+    AddOrRemoveMarkActionEditor,
   },
   methods: {
     isAddOrRemoveClassAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
       return name === 'add-class' || name === 'remove-class'
     },
-    newActionItem() {
-      this.actions.push({ name: this.availableActions[0] })
+    isAddOrRemoveMarkAction(a: ActionNameWithProps) {
+      const name = a.name as ActionName
+      return name === 'add-mark' || name === 'remove-mark'
+    },
+    newActionItem(name?: string, index?: number) {
+      if (index && name) {
+        if (this.actions[index].name !== name)
+          this.actions = this.actions.map((a, i) => i === index ? { name } : a)
+      } else {
+        this.actions.push({ name: name || this.availableActions[0] })
+      }
     },
     moveActionItemUp(index: number) {
       if (index > 0) {
@@ -63,20 +74,33 @@ export default {
     <q-card-section>
       <q-list>
         <q-item v-for="(a, index) in actions" dense>
+          <q-item-section side>
+            <q-icon size="xs" name="mdi-arrow-up" @click="moveActionItemUp(index)" @click.stop.prevent />
+            <q-icon size="xs" name="mdi-arrow-down" @click="moveActionItemDown(index)" @click.stop.prevent />
+          </q-item-section>
           <q-item-section>
-            <q-select v-model="a.name" :options="availableActions" dense>
-              <template v-slot:prepend>
-                <q-icon size="xs" name="mdi-arrow-up" @click="moveActionItemUp(index)" @click.stop.prevent />
-                <q-icon size="xs" name="mdi-arrow-down" @click="moveActionItemDown(index)" @click.stop.prevent />
-              </template>
-              <template v-slot:append>
-                <q-icon size="xs" name="mdi-trash-can" @click="removeActionItem(index)" @click.stop.prevent />
-              </template>
-            </q-select>
+            <q-btn-dropdown :label="a.name">
+              <q-item v-for="action_name in availableActions" clickable @click="newActionItem(action_name, index)"
+                v-close-popup>
+                <q-item-section>
+                  <q-item-label>{{ action_name }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item clickable @click="removeActionItem(index)" v-close-popup>
+                <q-item-section side>
+                  <q-icon name="mdi-trash-can" />
+                </q-item-section>
+                <q-item-section color="negative">
+                  <q-item-label>remove action</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-btn-dropdown>
           </q-item-section>
           <q-item-section>
             <AddOrRemoveClassActionEditor v-if="isAddOrRemoveClassAction(a)" :action="a" :index="index"
-              @set-props="setActionProps" />
+              :start-props='a.props' @set-props="setActionProps" />
+            <AddOrRemoveMarkActionEditor v-if="isAddOrRemoveMarkAction(a)" :action="a" :index="index"
+              :start-props='a.props' @set-props="setActionProps" />
           </q-item-section>
         </q-item>
         <q-item>

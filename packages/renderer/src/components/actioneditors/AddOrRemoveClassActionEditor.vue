@@ -6,11 +6,12 @@
 import { AddOrRemoveClassActionProps } from '../../common';
 
 export default {
-  props: ['index'],
+  props: ['index', 'start-props'],
   emits: ['set-props'],
   data() {
+    const props: AddOrRemoveClassActionProps = this['start-props']
     return {
-      className: ""
+      className: props?.class || ''
     }
   },
   methods: {

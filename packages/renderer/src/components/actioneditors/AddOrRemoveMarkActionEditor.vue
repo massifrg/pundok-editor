@@ -1,16 +1,13 @@
 <template>
-  <q-select v-model='markTypeName' @update:model-value="change">
+  <q-btn-dropdown :label="markTypeName" :icon="iconFor(markTypeName)" no-caps>
     <q-list>
-      <q-item>
-        <q-item-section side><q-icon name="mdi-italic" /></q-item-section>
-        <q-item-section>Emph</q-item-section>
-      </q-item>
-      <q-item>
-        <q-item-section side><q-icon name="mdi-bold" /></q-item-section>
-        <q-item-section>Strong</q-item-section>
+      <q-item v-for="([label, props]) in Object.entries(options)" dense clickable v-close-popup
+        @click="setMarkType(label)">
+        <q-item-section side><q-icon :name="iconFor(props.markType)" /></q-item-section>
+        <q-item-section><q-item-label>{{ label }}</q-item-label></q-item-section>
       </q-item>
     </q-list>
-  </q-select>
+  </q-btn-dropdown>
 </template>
 
 <script lang="ts">
@@ -30,11 +27,14 @@ import {
   MARK_NAME_SUPERSCRIPT,
   MARK_NAME_UNDERLINE
 } from '../../common';
+import { setupQuasarIcons } from '../helpers/quasarIcons';
+import { iconFor } from '../../schema';
 
 export default {
-  props: ['index'],
+  props: ['index', 'start-props'],
   emits: ['set-props'],
   data() {
+    const props: AddOrRemoveMarkActionProps = this['start-props']
     return {
       options: {
         Emph: { markType: MARK_NAME_EMPH },
@@ -52,12 +52,19 @@ export default {
         Cite: { markType: MARK_NAME_CITE },
         Code: { markType: MARK_NAME_CODE },
       } as Record<string, AddOrRemoveMarkActionProps>,
-      markTypeName: ""
+      markTypeName: props?.markType || 'Emph'
     }
   },
+  setup() {
+    setupQuasarIcons()
+  },
   methods: {
-    change(value: string | number | null) {
-      this.$emit('set-props', this.index, { markType: value } as AddOrRemoveMarkActionProps)
+    iconFor(markType: string) {
+      return iconFor(markType)
+    },
+    setMarkType(markType: string) {
+      this.markTypeName = markType
+      this.$emit('set-props', this.index, { markType } as AddOrRemoveMarkActionProps)
     }
   }
 }
