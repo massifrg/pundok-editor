@@ -2,7 +2,7 @@
   <q-btn-dropdown :label="markTypeName" :icon="iconFor(markTypeName)" no-caps>
     <q-list>
       <q-item v-for="([label, props]) in Object.entries(options)" dense clickable v-close-popup
-        @click="setMarkType(label)">
+        @click="setMarkType(props.markType)">
         <q-item-section side><q-icon :name="iconFor(props.markType)" /></q-item-section>
         <q-item-section><q-item-label>{{ label }}</q-item-label></q-item-section>
       </q-item>
@@ -31,10 +31,9 @@ import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { iconFor } from '../../schema';
 
 export default {
-  props: ['index', 'start-props'],
+  props: ['index', 'action'],
   emits: ['set-props'],
   data() {
-    const props: AddOrRemoveMarkActionProps = this['start-props']
     return {
       options: {
         Emph: { markType: MARK_NAME_EMPH },
@@ -52,7 +51,11 @@ export default {
         Cite: { markType: MARK_NAME_CITE },
         Code: { markType: MARK_NAME_CODE },
       } as Record<string, AddOrRemoveMarkActionProps>,
-      markTypeName: props?.markType || 'Emph'
+    }
+  },
+  computed: {
+    markTypeName() {
+      return (this.action as AddOrRemoveMarkActionProps).markType
     }
   },
   setup() {
@@ -63,7 +66,6 @@ export default {
       return iconFor(markType)
     },
     setMarkType(markType: string) {
-      this.markTypeName = markType
       this.$emit('set-props', this.index, { markType } as AddOrRemoveMarkActionProps)
     }
   }

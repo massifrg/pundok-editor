@@ -1,4 +1,5 @@
 <script lang="ts">
+import { toRaw } from 'vue';
 import { ActionName, availableActionsNames } from '../actions';
 import { ActionNameWithProps } from '../common';
 import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassActionEditor.vue'
@@ -30,33 +31,36 @@ export default {
       const name = a.name as ActionName
       return name === 'add-mark' || name === 'remove-mark'
     },
-    newActionItem(name?: string, index?: number) {
-      if (index && name) {
+    newActionItem(name?: string) {
+      this.actions.push({ name: name || this.availableActions[0] })
+    },
+    setActionItem(index: number, name: string) {
+      if (index >= 0 && index < this.actions.length) {
         if (this.actions[index].name !== name)
           this.actions = this.actions.map((a, i) => i === index ? { name } : a)
-      } else {
-        this.actions.push({ name: name || this.availableActions[0] })
       }
     },
     moveActionItemUp(index: number) {
       if (index > 0) {
-        const actions = this.actions
+        const actions: ActionNameWithProps[] = toRaw(this.actions)
         this.actions = actions.map((a, i) => {
-          if (i === index - 1) return actions[index]
-          else if (i === index) return actions[index - 1]
-          else return a
+          if (i === index - 1) return { ...actions[index] }
+          else if (i === index) return { ...actions[index - 1] }
+          else return { ...a }
         })
       }
+      console.log(this.actions)
     },
     moveActionItemDown(index: number) {
-      const actions = this.actions
-      if (index < actions.length - 1) {
+      if (index < this.actions.length - 1) {
+        const actions: ActionNameWithProps[] = toRaw(this.actions)
         this.actions = actions.map((a, i) => {
-          if (i === index) return actions[index + 1]
-          else if (i === index + 1) return actions[index]
-          else return a
+          if (i === index) return { ...actions[index + 1] }
+          else if (i === index + 1) return { ...actions[index] }
+          else return { ...a }
         })
       }
+      console.log(this.actions)
     },
     removeActionItem(index: number) {
       this.actions = this.actions.filter((_, i) => i !== index)
@@ -75,12 +79,15 @@ export default {
       <q-list>
         <q-item v-for="(a, index) in actions" dense>
           <q-item-section side>
+            <q-chip>{{ index + 1 }}</q-chip>
+          </q-item-section>
+          <q-item-section side>
             <q-icon size="xs" name="mdi-arrow-up" @click="moveActionItemUp(index)" @click.stop.prevent />
             <q-icon size="xs" name="mdi-arrow-down" @click="moveActionItemDown(index)" @click.stop.prevent />
           </q-item-section>
           <q-item-section>
             <q-btn-dropdown :label="a.name">
-              <q-item v-for="action_name in availableActions" clickable @click="newActionItem(action_name, index)"
+              <q-item v-for="action_name in availableActions" clickable @click="setActionItem(index, action_name)"
                 v-close-popup>
                 <q-item-section>
                   <q-item-label>{{ action_name }}</q-item-label>
@@ -97,10 +104,10 @@ export default {
             </q-btn-dropdown>
           </q-item-section>
           <q-item-section>
-            <AddOrRemoveClassActionEditor v-if="isAddOrRemoveClassAction(a)" :action="a" :index="index"
-              :start-props='a.props' @set-props="setActionProps" />
-            <AddOrRemoveMarkActionEditor v-if="isAddOrRemoveMarkAction(a)" :action="a" :index="index"
-              :start-props='a.props' @set-props="setActionProps" />
+            <AddOrRemoveClassActionEditor v-if="isAddOrRemoveClassAction(a)" :index="index" :action='a'
+              :default-props="{ class: '' }" @set-props="setActionProps" />
+            <AddOrRemoveMarkActionEditor v-if="isAddOrRemoveMarkAction(a)" :index="index" :action='a'
+              :default-props="{ markType: 'Emph' }" @set-props="setActionProps" />
           </q-item-section>
         </q-item>
         <q-item>
