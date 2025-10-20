@@ -105,7 +105,7 @@
       <ToolbarButton icon="mdi-tag-remove" :disabled="!editor.can().removeAllMarks()"
         title="clear all marks in selection" shortcut="SK_REMOVE_MARKS"
         @click="editor.chain().removeAllMarks().focus().run()" />
-      <ToolbarButton icon="mdi-format-italic" :styleactive="isActive('emph')" title="emphasis" shortcut="SK_TOGGLE_EMPH"
+      <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" title="emphasis" shortcut="SK_TOGGLE_EMPH"
         @click="
           editor
             .chain()
@@ -113,15 +113,15 @@
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-format-bold" :styleactive="isActive('strong')" title="strong" shortcut="SK_TOGGLE_STRONG"
-        @click="
+      <ToolbarButton :icon="iconFor('Strong')" :styleactive="isActive('strong')" title="strong"
+        shortcut="SK_TOGGLE_STRONG" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleStrong', 'toggle Strong')
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-format-underline" :styleactive="isActive('underline')" title="underline"
+      <ToolbarButton :icon="iconFor('Underline')" :styleactive="isActive('underline')" title="underline"
         shortcut="SK_TOGGLE_UNDERLINE" @click="
           editor
             .chain()
@@ -129,7 +129,7 @@
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-format-strikethrough" :styleactive="isActive('strikeout')" title="strikeout"
+      <ToolbarButton :icon="iconFor('Strikeout')" :styleactive="isActive('strikeout')" title="strikeout"
         shortcut="SK_TOGGLE_STRIKEOUT" @click="
           editor
             .chain()
@@ -137,7 +137,7 @@
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-format-superscript" :styleactive="isActive('superscript')" title="superscript"
+      <ToolbarButton :icon="iconFor('Superscript')" :styleactive="isActive('superscript')" title="superscript"
         shortcut="SK_TOGGLE_SUPERSCRIPT" @click="
           editor
             .chain()
@@ -145,7 +145,7 @@
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-format-subscript" :styleactive="isActive('subscript')" title="subscript"
+      <ToolbarButton :icon="iconFor('Subscript')" :styleactive="isActive('subscript')" title="subscript"
         shortcut="SK_TOGGLE_SUBSCRIPT" @click="
           editor
             .chain()
@@ -153,47 +153,47 @@
             .focus()
             .run()
           " />
-      <ToolbarButton text="K" :styleactive="isActive('smallcaps')" title="small caps" shortcut="SK_TOGGLE_SMALLCAPS"
-        @click="
+      <ToolbarButton :icon="iconFor('smallcaps')" :styleactive="isActive('smallcaps')" title="small caps"
+        shortcut="SK_TOGGLE_SMALLCAPS" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleSmallcaps', 'toggle Smallcaps')
             .focus()
             .run()
           " />
-      <ToolbarButton text="‘a’" :styleactive="isActive('quoted', { quoteType: 'SingleQuote' })" title="single quoted"
-        shortcut="SK_TOGGLE_SINGLEQUOTE" @click="
+      <ToolbarButton :icon="iconFor('singleQuoted')" :styleactive="isActive('quoted', { quoteType: 'SingleQuote' })"
+        title="single quoted" shortcut="SK_TOGGLE_SINGLEQUOTE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleSingleQuoted', 'toggle SingleQuoted')
             .focus()
             .run()
           " />
-      <ToolbarButton text="“a”" :styleactive="isActive('quoted', { quoteType: 'DoubleQuote' })" title="double quoted"
-        shortcut="SK_TOGGLE_DOUBLEQUOTE" @click="
+      <ToolbarButton :icon="iconFor('doubleQuoted')" :styleactive="isActive('quoted', { quoteType: 'DoubleQuote' })"
+        title="double quoted" shortcut="SK_TOGGLE_DOUBLEQUOTE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleDoubleQuoted', 'toggle DoubleQuoted')
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-language-c" :styleactive="isActive('code')" title="toggle Code" shortcut="SK_TOGGLE_CODE"
-        @click="
+      <ToolbarButton :icon="iconFor('Code')" :styleactive="isActive('code')" title="toggle Code"
+        shortcut="SK_TOGGLE_CODE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleCode', 'toggle Code')
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-link" :styleactive="isActive('link')" title="toggle Link" shortcut="SK_TOGGLE_LINK"
-        @click="
+      <ToolbarButton :icon="iconFor('Link')" :styleactive="isActive('link')" title="toggle Link"
+        shortcut="SK_TOGGLE_LINK" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleLink', 'toggle Link')
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-book-account" :styleactive="isActive('cite')" title="toggle Cite"
+      <ToolbarButton :icon="iconFor('Cite')" :styleactive="isActive('cite')" title="toggle Cite"
         shortcut="SK_TOGGLE_CITE" @click="
           editor
             .chain()
@@ -201,13 +201,14 @@
             .focus()
             .run()
           " />
-      <ToolbarButton icon="mdi-sigma" :styleactive="isActive('math')" title="math" shortcut="SK_TOGGLE_MATH" @click="
-        editor
-          .chain()
-          .runRepeatableCommand('toggleMath', 'toggle Math')
-          .focus()
-          .run()
-        " />
+      <ToolbarButton :icon="iconFor('Math')" :styleactive="isActive('math')" title="math" shortcut="SK_TOGGLE_MATH"
+        @click="
+          editor
+            .chain()
+            .runRepeatableCommand('toggleMath', 'toggle Math')
+            .focus()
+            .run()
+          " />
       <!-- <q-btn v-if="isActive('math')" label="D/I" title="toggle Display/Inline Math" round
         @click="editor.chain().runRepeatableCommand('toggleMathType', 'toggle MathType').focus().run()" /> -->
 
@@ -328,7 +329,7 @@ import {
 } from '../schema';
 import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
-import { getTextMarkRangesBetween } from '../schema/helpers';
+import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
 
 export default {
@@ -470,6 +471,9 @@ export default {
   methods: {
     isActive(name: string, attrs?: Record<string, any>) {
       return this.editor && this.editor.isActive(name, attrs);
+    },
+    iconFor(typename: string) {
+      return iconFor(typename)
     },
     getAttribute(name: string, attrName: string) {
       const attrs = this.editor && this.editor.getAttributes(name);
