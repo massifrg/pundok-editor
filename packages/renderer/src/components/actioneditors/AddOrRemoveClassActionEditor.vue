@@ -6,11 +6,11 @@
 import { AddOrRemoveClassActionProps } from '../../common';
 
 export default {
-  props: ['index', 'action', 'defaultProps'],
+  props: ['index', 'action'],
   emits: ['set-props'],
   data() {
     return {
-      className: (this.defaultProps as AddOrRemoveClassActionProps)?.class || ''
+      className: this.action?.props?.class || ''
     }
   },
   methods: {

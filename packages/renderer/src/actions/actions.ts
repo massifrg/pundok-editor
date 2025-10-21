@@ -65,6 +65,9 @@ export type ActionName =
   | 'select-mark-range'
   | 'add-mark'
   | 'remove-mark'
+  | 'add-span'
+  | 'add-custom-style'
+  | 'remove-custom-style'
   | 'lowercase'
   | 'uppercase'
   | 'uppercase-first'
@@ -299,7 +302,7 @@ export const ACTION_UPPERCASE_FIRST: BaseActionForNodeOrMark = {
 export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
   name: 'add-class',
   label: 'add a class',
-  icon: 'mdi-octagram-plus',
+  icon: 'add_class',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
     const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
@@ -317,7 +320,7 @@ export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
 export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
   name: 'remove-class',
   label: 'remove a class',
-  icon: 'mdi-octagram-minus',
+  icon: 'remove_class',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
     const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
@@ -334,12 +337,32 @@ export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
 
 export const ACTION_ADD_MARK: BaseActionForNodeOrMark = {
   name: 'add-mark',
-  label: 'add Mark (Emph, Strong, etc.)'
+  label: 'add Mark (Emph, Strong, etc.)',
+  icon: 'mdi-tag-plus',
 }
 
 export const ACTION_REMOVE_MARK: BaseActionForNodeOrMark = {
   name: 'remove-mark',
-  label: 'remove Mark (Emph, Strong, etc.)'
+  label: 'remove Mark (Emph, Strong, etc.)',
+  icon: 'mdi-tag-minus',
+}
+
+export const ACTION_ADD_CUSTOM_STYLE: BaseActionForNodeOrMark = {
+  name: 'add-custom-style',
+  label: 'add custom style',
+  icon: 'character_style',
+}
+
+export const ACTION_REMOVE_CUSTOM_STYLE: BaseActionForNodeOrMark = {
+  name: 'remove-custom-style',
+  label: 'remove custom style',
+  icon: 'character_style',
+}
+
+export const ACTION_ADD_SPAN: BaseActionForNodeOrMark = {
+  name: 'add-span',
+  label: 'add Span (with optional classes and attributes)',
+  icon: 'mdi-text-box-plus',
 }
 
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
@@ -430,13 +453,16 @@ export function executeEditorAction(
 }
 
 const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
-  ACTION_ADD_CLASS,
-  ACTION_REMOVE_CLASS,
+  ACTION_ADD_MARK,
+  ACTION_REMOVE_MARK,
+  ACTION_ADD_CUSTOM_STYLE,
+  ACTION_REMOVE_CUSTOM_STYLE,
   ACTION_LOWERCASE,
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
-  ACTION_ADD_MARK,
-  ACTION_REMOVE_MARK,
+  ACTION_ADD_SPAN,
+  ACTION_ADD_CLASS,
+  ACTION_REMOVE_CLASS,
 ].map(action => [action.name, action]))
 
 export function availableActionsNames(): string[] {

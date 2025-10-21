@@ -1,31 +1,49 @@
 <script lang="ts">
 import { toRaw } from 'vue';
-import { ActionName, availableActionsNames } from '../actions';
+import { ActionName, availableAction, availableActionsNames } from '../actions';
 import { ActionNameWithProps } from '../common';
 import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassActionEditor.vue'
+import AddOrRemoveCustomStyleActionEditor from './actioneditors/AddOrRemoveCustomStyleActionEditor.vue'
 import AddOrRemoveMarkActionEditor from './actioneditors/AddOrRemoveMarkActionEditor.vue'
 
 export default {
+  props: ['editor', 'startActions'],
+  emits: ['update-actions'],
   data() {
     return {
-      actions: [] as ActionNameWithProps[],
+      actions: (this.startActions || []) as ActionNameWithProps[],
       editableActionName: undefined as string | undefined,
     }
   },
   computed: {
     availableActions() {
-      console.log(availableActionsNames())
       return availableActionsNames()
+    }
+  },
+  watch: {
+    actions(value) {
+      this.$emit('update-actions', value)
     }
   },
   components: {
     AddOrRemoveClassActionEditor,
+    AddOrRemoveCustomStyleActionEditor,
     AddOrRemoveMarkActionEditor,
   },
   methods: {
+    getAction(actionName: string) {
+      return availableAction(actionName)
+    },
+    actionIcon(actionName: string) {
+      return this.getAction(actionName)?.icon
+    },
     isAddOrRemoveClassAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
       return name === 'add-class' || name === 'remove-class'
+    },
+    isAddOrRemoveCustomStyleAction(a: ActionNameWithProps) {
+      const name = a.name as ActionName
+      return name === 'add-custom-style' || name === 'remove-custom-style'
     },
     isAddOrRemoveMarkAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
@@ -49,7 +67,6 @@ export default {
           else return { ...a }
         })
       }
-      console.log(this.actions)
     },
     moveActionItemDown(index: number) {
       if (index < this.actions.length - 1) {
@@ -60,7 +77,6 @@ export default {
           else return { ...a }
         })
       }
-      console.log(this.actions)
     },
     removeActionItem(index: number) {
       this.actions = this.actions.filter((_, i) => i !== index)
@@ -75,24 +91,31 @@ export default {
 
 <template>
   <q-card>
-    <q-card-section>
+    <q-card-section class="q-px-xs" style="min-width: 640px">
+      <div class="q-text-h6 q-ma-md">Operations on the replaced text:</div>
       <q-list>
         <q-item v-for="(a, index) in actions" dense>
           <q-item-section side>
             <q-chip>{{ index + 1 }}</q-chip>
           </q-item-section>
           <q-item-section side>
-            <q-icon size="xs" name="mdi-arrow-up" @click="moveActionItemUp(index)" @click.stop.prevent />
-            <q-icon size="xs" name="mdi-arrow-down" @click="moveActionItemDown(index)" @click.stop.prevent />
+            <q-icon v-if="index > 0" size="xs" name="mdi-arrow-up" @click="moveActionItemUp(index)"
+              @click.stop.prevent />
+            <q-icon v-if="index < actions.length - 1" size="xs" name="mdi-arrow-down" @click="moveActionItemDown(index)"
+              @click.stop.prevent />
           </q-item-section>
           <q-item-section>
-            <q-btn-dropdown :label="a.name">
+            <q-btn-dropdown :label="a.name" :icon="actionIcon(a.name)">
               <q-item v-for="action_name in availableActions" clickable @click="setActionItem(index, action_name)"
                 v-close-popup>
+                <q-item-section side>
+                  <q-icon :name="actionIcon(action_name)"></q-icon>
+                </q-item-section>
                 <q-item-section>
                   <q-item-label>{{ action_name }}</q-item-label>
                 </q-item-section>
               </q-item>
+              <q-separator />
               <q-item clickable @click="removeActionItem(index)" v-close-popup>
                 <q-item-section side>
                   <q-icon name="mdi-trash-can" />
@@ -105,14 +128,16 @@ export default {
           </q-item-section>
           <q-item-section>
             <AddOrRemoveClassActionEditor v-if="isAddOrRemoveClassAction(a)" :index="index" :action='a'
-              :default-props="{ class: '' }" @set-props="setActionProps" />
+              @set-props="setActionProps" />
+            <AddOrRemoveCustomStyleActionEditor v-if="isAddOrRemoveCustomStyleAction(a)" :editor="editor" :index="index"
+              :action='a' @set-props="setActionProps" />
             <AddOrRemoveMarkActionEditor v-if="isAddOrRemoveMarkAction(a)" :index="index" :action='a'
-              :default-props="{ markType: 'Emph' }" @set-props="setActionProps" />
+              @set-props="setActionProps" />
           </q-item-section>
         </q-item>
         <q-item>
           <q-item-section>
-            <q-btn size="xs" icon="mdi-plus" @click="newActionItem()" />
+            <q-btn size="sm" icon="mdi-plus" label="append new" @click="newActionItem()" />
           </q-item-section>
         </q-item>
       </q-list>

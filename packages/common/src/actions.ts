@@ -119,5 +119,14 @@ export interface AddOrRemoveClassActionProps {
 
 export interface AddOrRemoveMarkActionProps {
   markType: string,
-  attrs?: Record<string, string>
+  attrs?: Record<string, string>,
+}
+
+export interface AddOrRemoveCustomStyleActionProps {
+  styleName: string,
+}
+
+export interface AddSpanActionProps {
+  classes: string[],
+  attributes: Record<string, string>,
 }
