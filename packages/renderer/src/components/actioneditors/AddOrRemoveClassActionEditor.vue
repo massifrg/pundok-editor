@@ -15,7 +15,7 @@ export default {
   },
   methods: {
     change(value: string | number | null) {
-      this.$emit('set-props', this.index, { class: this.className } as AddOrRemoveClassActionProps)
+      this.$emit('set-props', this.index, { className: this.className } as AddOrRemoveClassActionProps)
     }
   }
 }

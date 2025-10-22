@@ -505,7 +505,7 @@ export default {
         // const names = [this.startTab, ...this.editableAttributes]
         const { name, props } = this.onAttributesEditorShow as ActionNameWithProps
         if (name === ACTION_ADD_CLASS.name) {
-          const class_to_add = (props as AddOrRemoveClassActionProps)?.class
+          const class_to_add = (props as AddOrRemoveClassActionProps)?.className
           if (class_to_add) {
             this.addClass(class_to_add)
           }

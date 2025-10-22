@@ -22,7 +22,7 @@ export default {
   },
   watch: {
     actions(value) {
-      this.$emit('update-actions', value)
+      this.notifyActions(value)
     }
   },
   components: {
@@ -33,6 +33,9 @@ export default {
   methods: {
     getAction(actionName: string) {
       return availableAction(actionName)
+    },
+    notifyActions(actions: ActionNameWithProps[]) {
+      this.$emit('update-actions', actions)
     },
     actionIcon(actionName: string) {
       return this.getAction(actionName)?.icon
@@ -50,7 +53,11 @@ export default {
       return name === 'add-mark' || name === 'remove-mark'
     },
     newActionItem(name?: string) {
-      this.actions.push({ name: name || this.availableActions[0] })
+      this.actions.push({
+        name: name || this.availableActions[0],
+        props: {}
+      })
+      this.notifyActions(this.actions)
     },
     setActionItem(index: number, name: string) {
       if (index >= 0 && index < this.actions.length) {

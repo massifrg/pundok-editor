@@ -73,7 +73,7 @@ export const IncludeDivExtension = Extension.create({
           action: {
             ...ACTION_ADD_CLASS,
             props: {
-              class: INCLUDE_DOC_CLASS
+              className: INCLUDE_DOC_CLASS
             } as AddOrRemoveClassActionProps
           } as ActionNameWithProps,
           selectNode: (node) => node.type.name === NODE_NAME_DIV

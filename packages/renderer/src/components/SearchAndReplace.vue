@@ -35,7 +35,7 @@
               :default-operation="selectedMarkOperationTypeOnReplacedText" @selected-marks="setMarksOnReplacedText"
               @selected-operation="selectMarkOperationOnReplacedText" menu-anchor="bottom end"
               menu-self="bottom start" />
-            <ActionsOnReplaceDropdown :editor="editor" />
+            <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace" @update-actions="updateActions" />
           </q-card-section>
         </div>
       </q-card-section>
@@ -114,6 +114,10 @@
 
 <script lang="ts">
 import {
+  ActionNameWithProps,
+  AddOrRemoveCustomStyleActionProps,
+  AddOrRemoveMarkActionProps,
+  AddSpanActionProps,
   Capitalize,
   CustomStyleInstance,
   SearchAndReplace,
@@ -146,7 +150,8 @@ import { mapState } from 'pinia';
 import {
   ACTION_REPLACE_AND_SELECT_NEXT,
   ACTION_SELECT_NEXT,
-  ACTION_SELECT_PREV
+  ACTION_SELECT_PREV,
+  ActionName
 } from '../actions';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
@@ -196,11 +201,12 @@ export default {
       optionCycle: false,
       optionWholeWord: false,
       marksToSearch: [] as AddableMark[],
-      actionsListVisible: false,
-      optionMarksLogicalOperator: 'and' as MarksLogicalOperator,
       selectedMarksToSearch: [] as SearchMarkSpec[],
-      marksOnReplacedText: [] as AddableMark[],
-      selectedMarksOnReplacedText: [] as AddableMark[],
+      actionsListVisible: false,
+      optionMarksLogicalOperator: 'and' as MarksLogicalOperator, // to be DEPRECATED
+      marksOnReplacedText: [] as AddableMark[], // to be DEPRECATED
+      selectedMarksOnReplacedText: [] as AddableMark[], // to be DEPRECATED
+      actionsOnReplace: [] as ActionNameWithProps[],
       selectedMarkOperationTypeOnReplacedText: 'none',
       foundIndex: -1,
     };
@@ -284,7 +290,7 @@ export default {
         }
       }
       return transforms
-    }
+    },
   },
   watch: {
     customStyles() {
@@ -456,6 +462,34 @@ export default {
       this.optionCycle = !!sar.optionCycle;
       this.optionCapitalize = sar.capitalize || 'none';
       this.optionWholeWord = !!sar.optionWholeWord;
+      const actionsOnReplace: ActionNameWithProps[] = []
+      sar.addMarks?.forEach(m => {
+        actionsOnReplace.push({
+          name: 'add-mark' as ActionName,
+          props: {
+            markType: m
+          } as AddOrRemoveMarkActionProps
+        } as ActionNameWithProps)
+      })
+      sar.addStyles?.forEach(s => {
+        actionsOnReplace.push({
+          name: 'add-custom-style' as ActionName,
+          props: {
+            styleName: s
+          } as AddOrRemoveCustomStyleActionProps
+        } as ActionNameWithProps)
+      })
+      sar.addSpans?.forEach(s => {
+        actionsOnReplace.push({
+          name: 'add-span' as ActionName,
+          props: {
+            name: s.name,
+            classes: s.classes,
+            attributes: s.kv,
+          } as AddSpanActionProps
+        } as ActionNameWithProps)
+      })
+      this.actionsOnReplace = actionsOnReplace
       const am: AddableMark[] = baseAddableMarks(sar.addMarks || [])
       customStylesToAddableMarks(this.customStyles, sar.addStyles, am)
       if (sar.addSpans && sar.addSpans.length > 0) {
@@ -484,6 +518,10 @@ export default {
     },
     selectMarksLogicalOperator(operator: MarksLogicalOperator) {
       this.optionMarksLogicalOperator = operator
+    },
+    updateActions(actions: ActionNameWithProps[]) {
+      console.log(actions)
+      this.actionsOnReplace = actions
     }
   },
 };

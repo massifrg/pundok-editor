@@ -305,13 +305,13 @@ export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
   icon: 'add_class',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return typ && className && editor.can().addPandocAttrClass(typ, className) || false
   },
   do: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return typ && className && editor.commands.addPandocAttrClass(typ, className) || false
   }
@@ -323,13 +323,13 @@ export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
   icon: 'remove_class',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return typ && className && editor.can().removePandocAttrClass(typ, className) || false
   },
   do: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { class: className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return typ && className && editor.commands.removePandocAttrClass(typ, className) || false
   }

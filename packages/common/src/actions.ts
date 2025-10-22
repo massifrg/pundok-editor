@@ -113,7 +113,7 @@ export interface TableCellVertAlignActionProps {
 }
 
 export interface AddOrRemoveClassActionProps {
-  class: string,
+  className: string,
   typeName?: string,
 }
 
@@ -127,6 +127,7 @@ export interface AddOrRemoveCustomStyleActionProps {
 }
 
 export interface AddSpanActionProps {
+  name: string,
   classes: string[],
   attributes: Record<string, string>,
 }
