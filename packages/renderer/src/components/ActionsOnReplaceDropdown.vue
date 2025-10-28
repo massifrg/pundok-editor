@@ -3,6 +3,7 @@ import { ActionName } from '../actions';
 import {
   ActionNameWithProps,
   AddOrRemoveClassActionProps,
+  AddOrRemoveCustomClassActionProps,
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
   SetSpanActionProps
@@ -25,6 +26,14 @@ function actionsAsText(actions: ActionNameWithProps[]) {
       case 'add-custom-style':
       case 'remove-custom-style':
         return `${prefix}${(a?.props as AddOrRemoveCustomStyleActionProps).styleName}`
+      case 'add-custom-class':
+      case 'remove-custom-class': {
+        const { name, className, attrs } = (a?.props || {}) as AddOrRemoveCustomClassActionProps
+        const attrstext = !name && attrs
+          ? '[' + Object.entries(attrs).map(([k, v]) => `${k}=${v}`).join(',') + ']'
+          : ''
+        return `${prefix}${name || className + attrstext}`
+      }
       case 'add-class':
       case 'remove-class':
         return `${prefix}.${(a?.props as AddOrRemoveClassActionProps).className}`

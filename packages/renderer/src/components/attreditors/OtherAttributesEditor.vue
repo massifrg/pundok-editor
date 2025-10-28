@@ -204,12 +204,12 @@ export default {
         return {
           key,
           editable: !isDuplicatedKvAttribute(this.nodeOrMark, e.key),
-          value: e.value || fca?.default || '',
-          addableButNotPresent: false,
-          description: fca?.description,
-          suggestions: fca?.suggestions || [],
-          values: fca?.values || [],
-          default: fca?.default || ''
+          value: e?.value || e?.default || fca?.default || '',
+          addableButNotPresent: e?.addableButNotPresent || false,
+          description: e?.description || fca?.description,
+          suggestions: e?.suggestions || fca?.suggestions || [],
+          values: e?.values || fca?.values || [],
+          default: e?.default || fca?.default || ''
         }
       })
       this.availableCustomAttributes.forEach(aca => {

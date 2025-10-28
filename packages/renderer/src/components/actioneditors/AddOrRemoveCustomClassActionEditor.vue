@@ -1,40 +1,45 @@
 <template>
-  <q-btn-dropdown :label="selectedCustomClass" no-caps>
-    <q-list>
-      <q-item v-for="c in customClasses" dense clickable v-close-popup :title="c.description"
-        @click="setCustomClass(c)">
-        <q-item-section><q-item-label>{{ c.name }}</q-item-label></q-item-section>
-      </q-item>
-    </q-list>
-  </q-btn-dropdown>
-  <q-btn color="primary" icon="mdi-playlist-edit" @click="showDialog = !showDialog">
-    <q-dialog v-model="showDialog">
-      <q-card>
-        <q-card-section>
-          <OtherAttributesEditor :editor="editor" :nodeOrMark="customSpan" attrName="kv" originalEntries=""
-            initialEntries="" forbiddenAttrNames="" classes="" @update-attribute="updateAttribute" />
-        </q-card-section>
-      </q-card>
-    </q-dialog>
-  </q-btn>
+  <q-card-actions style="min-width: 300px">
+    <q-btn-dropdown no-caps>
+      <template v-slot:label>
+        <div>{{ className }}</div>
+        <div v-html="attrsLabel" style="font-size: smaller; text-align: left"></div>
+      </template>
+      <q-list>
+        <q-item v-for="c in customClasses" dense clickable v-close-popup :title="c.description"
+          @click="setCustomClass(c)">
+          <q-item-section><q-item-label>{{ c.name }}</q-item-label></q-item-section>
+        </q-item>
+      </q-list>
+    </q-btn-dropdown>
+    <q-btn color="primary" icon="mdi-playlist-edit">
+      <q-popup-proxy>
+        <q-banner>Attributes related to class "{{ className }}":</q-banner>
+        <OtherAttributesEditor :editor="editor" attrName="kv" :originalEntries="attrEntries"
+          :initialEntries="attrEntries" :forbiddenAttrNames="['custom-style', 'id', 'classes']"
+          :classes="className && [className] || []" @update-attribute="updateAttribute" />
+      </q-popup-proxy>
+    </q-btn>
+  </q-card-actions>
 </template>
 
 <script lang="ts">
-import { AddOrRemoveCustomClassActionProps, CustomClass, MARK_NAME_SPAN } from '../../common';
+import { AddOrRemoveCustomClassActionProps, CustomAttribute, CustomClass } from '../../common';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
-import { editableAttrsForNodeOrMark, getEditorConfiguration } from '../../schema';
+import { getEditorConfiguration } from '../../schema';
 import { defaultPropsFor } from '../../actions';
 import OtherAttributesEditor from '../attreditors/OtherAttributesEditor.vue';
+import { toRaw } from 'vue';
 
 export default {
   props: ['editor', 'index', 'action'],
   emits: ['set-props'],
+  components: { OtherAttributesEditor },
   data() {
     const props: AddOrRemoveCustomClassActionProps = this.action?.props
       || defaultPropsFor(this.action.name)
       || { className: 'class-name', attrs: {} }
     return {
-      showDialog: false,
       className: props.className,
       attrs: props.attrs
     }
@@ -46,32 +51,39 @@ export default {
     customClasses() {
       return this.configuration?.customClasses || []
     },
-    selectedCustomClass() {
-      return this.action.props.className
+    selectedCustomClass(): CustomClass | undefined {
+      return this.customClasses.find(c => c.name === this.className)
     },
-    customSpan() {
-      return this.editor?.state.schema.marks[MARK_NAME_SPAN].create()
+    customAttributes(): CustomAttribute[] {
+      return this.selectedCustomClass?.attributes || []
     },
-    editableAttributes(): string[] {
-      return editableAttrsForNodeOrMark(this.customSpan)
+    attrEntries() {
+      const attrs = this.attrs || {}
+      const entries: Record<string, any> = Object.entries(attrs).map(([key, value]) => {
+        const ca = this.customAttributes.find(a => a.name === key) || {}
+        return { ...ca, key, value }
+      })
+      this.customAttributes.filter(ca => !attrs[ca.name]).forEach(ca => {
+        entries.push({ ...ca, key: ca.name })
+      })
+      console.log(entries)
+      return entries
     },
+    attrsLabel() {
+      const ae = this.attrs && Object.entries(this.attrs)
+      if (ae)
+        return ae.map(([k, v]) => '-&nbsp;' + k + '=' + v).join('<br>')
+    }
   },
   setup() {
     setupQuasarIcons()
   },
   methods: {
-    hasAttribute(attrName: string): boolean {
-      return this.editableAttributes.includes(attrName);
-    },
-    updateAttribute(attrName: string, newValue?: string) {
-      const attrs = { ...this.attrs }
+    updateAttribute(_: string, newValue?: Record<string, string>) {
       if (newValue) {
-        attrs[attrName] = newValue
-      } else {
-        delete attrs[attrName]
+        this.attrs = newValue
+        this.updateProps()
       }
-      this.attrs = attrs
-      this.updateProps()
     },
     setCustomClass(c: CustomClass) {
       this.className = c.name

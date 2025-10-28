@@ -127,6 +127,7 @@ export interface AddOrRemoveCustomStyleActionProps {
 }
 
 export interface AddOrRemoveCustomClassActionProps {
+  name?: string,
   className: string,
   attrs?: Record<string, string>,
 }

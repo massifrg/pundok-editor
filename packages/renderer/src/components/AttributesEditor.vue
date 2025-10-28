@@ -503,11 +503,13 @@ export default {
         this.attrs = Object.fromEntries(ee);
         this.setTab()
         // const names = [this.startTab, ...this.editableAttributes]
-        const { name, props } = this.onAttributesEditorShow as ActionNameWithProps
-        if (name === ACTION_ADD_CLASS.name) {
-          const class_to_add = (props as AddOrRemoveClassActionProps)?.className
-          if (class_to_add) {
-            this.addClass(class_to_add)
+        if (this.onAttributesEditorShow) {
+          const { name, props } = this.onAttributesEditorShow as ActionNameWithProps
+          if (name === ACTION_ADD_CLASS.name) {
+            const class_to_add = (props as AddOrRemoveClassActionProps)?.className
+            if (class_to_add) {
+              this.addClass(class_to_add)
+            }
           }
         }
         const textContent = newValue
