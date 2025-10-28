@@ -117,11 +117,12 @@ import {
   ActionNameWithProps,
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
-  AddSpanActionProps,
+  SetSpanActionProps,
   Capitalize,
   CustomStyleInstance,
   SearchAndReplace,
-  getSearchAndReplaces
+  getSearchAndReplaces,
+  AddOrRemoveCustomClassActionProps
 } from '../common';
 import {
   CapitalizeTransform,
@@ -153,6 +154,7 @@ import {
   ACTION_SELECT_PREV,
   ActionName
 } from '../actions';
+import { toRaw } from 'vue';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
 
@@ -480,13 +482,18 @@ export default {
         } as ActionNameWithProps)
       })
       sar.addSpans?.forEach(s => {
+        const classes = s.classes || []
+        const kventries = Object.entries(s.kv || {})
+        const name = s.name ||
+          classes.map(c => '.' + c).join('')
+          + (classes.length > 0 ? ',' : '')
+          + kventries.map(([an, av]) => `@${an}=${av}`).join(',')
         actionsOnReplace.push({
-          name: 'add-span' as ActionName,
+          name: 'add-custom-class' as ActionName,
           props: {
-            name: s.name,
-            classes: s.classes,
-            attributes: s.kv,
-          } as AddSpanActionProps
+            className: classes[0] || 'class-name',
+            attrs: s.kv,
+          } as AddOrRemoveCustomClassActionProps
         } as ActionNameWithProps)
       })
       this.actionsOnReplace = actionsOnReplace
@@ -520,7 +527,7 @@ export default {
       this.optionMarksLogicalOperator = operator
     },
     updateActions(actions: ActionNameWithProps[]) {
-      console.log(actions)
+      console.log(toRaw(actions))
       this.actionsOnReplace = actions
     }
   },

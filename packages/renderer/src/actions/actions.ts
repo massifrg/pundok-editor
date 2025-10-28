@@ -65,9 +65,11 @@ export type ActionName =
   | 'select-mark-range'
   | 'add-mark'
   | 'remove-mark'
-  | 'add-span'
+  | 'set-span'
   | 'add-custom-style'
   | 'remove-custom-style'
+  | 'add-custom-class'
+  | 'remove-custom-class'
   | 'lowercase'
   | 'uppercase'
   | 'uppercase-first'
@@ -359,10 +361,22 @@ export const ACTION_REMOVE_CUSTOM_STYLE: BaseActionForNodeOrMark = {
   icon: 'character_style',
 }
 
-export const ACTION_ADD_SPAN: BaseActionForNodeOrMark = {
-  name: 'add-span',
+export const ACTION_SET_SPAN: BaseActionForNodeOrMark = {
+  name: 'set-span',
   label: 'add Span (with optional classes and attributes)',
   icon: 'mdi-text-box-plus',
+}
+
+export const ACTION_ADD_CUSTOM_CLASS: BaseActionForNodeOrMark = {
+  name: 'add-custom-class',
+  label: 'add a custom class (with its attributes)',
+  icon: 'add_custom_class'
+}
+
+export const ACTION_REMOVE_CUSTOM_CLASS: BaseActionForNodeOrMark = {
+  name: 'remove-custom-class',
+  label: 'remove a custom class (with its attributes)',
+  icon: 'remove_custom_class'
 }
 
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
@@ -460,7 +474,9 @@ const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEn
   ACTION_LOWERCASE,
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
-  ACTION_ADD_SPAN,
+  // ACTION_SET_SPAN,
+  ACTION_ADD_CUSTOM_CLASS,
+  ACTION_REMOVE_CUSTOM_CLASS,
   ACTION_ADD_CLASS,
   ACTION_REMOVE_CLASS,
 ].map(action => [action.name, action]))

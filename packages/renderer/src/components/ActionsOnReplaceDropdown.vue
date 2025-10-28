@@ -1,6 +1,12 @@
 <script lang="ts">
 import { ActionName } from '../actions';
-import { ActionNameWithProps, AddOrRemoveClassActionProps, AddOrRemoveCustomStyleActionProps, AddOrRemoveMarkActionProps, AddSpanActionProps } from '../common';
+import {
+  ActionNameWithProps,
+  AddOrRemoveClassActionProps,
+  AddOrRemoveCustomStyleActionProps,
+  AddOrRemoveMarkActionProps,
+  SetSpanActionProps
+} from '../common';
 import ActionsList from './ActionsList.vue';
 
 function actionsAsText(actions: ActionNameWithProps[]) {
@@ -22,8 +28,8 @@ function actionsAsText(actions: ActionNameWithProps[]) {
       case 'add-class':
       case 'remove-class':
         return `${prefix}.${(a?.props as AddOrRemoveClassActionProps).className}`
-      case 'add-span':
-        return `${prefix}${(a?.props as AddSpanActionProps).name}`
+      case 'set-span':
+        return `${prefix}${(a?.props as SetSpanActionProps).name}`
       default:
         return a.name
     }
@@ -51,7 +57,7 @@ export default {
   methods: {
     update(actions: ActionNameWithProps[]) {
       this.isEmpty = actions.length === 0
-      // this.label = actionsAsText(actions)
+      this.label = actionsAsText(actions)
       // forward event
       this.$emit('update-actions', actions)
     }

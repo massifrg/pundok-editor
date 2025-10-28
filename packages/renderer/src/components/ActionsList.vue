@@ -3,8 +3,12 @@ import { toRaw } from 'vue';
 import { ActionName, availableAction, availableActionsNames } from '../actions';
 import { ActionNameWithProps } from '../common';
 import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassActionEditor.vue'
+import AddOrRemoveCustomClassActionEditor from './actioneditors/AddOrRemoveCustomClassActionEditor.vue'
 import AddOrRemoveCustomStyleActionEditor from './actioneditors/AddOrRemoveCustomStyleActionEditor.vue'
 import AddOrRemoveMarkActionEditor from './actioneditors/AddOrRemoveMarkActionEditor.vue'
+// import SetSpanActionEditor from './actioneditors/SetSpanActionEditor.vue'
+import { defaultPropsFor } from '../actions/defaultProps';
+import { getEditorConfiguration } from '../schema';
 
 export default {
   props: ['editor', 'startActions'],
@@ -16,9 +20,15 @@ export default {
     }
   },
   computed: {
+    configuration() {
+      return getEditorConfiguration(this.editor)
+    },
+    customStyles() {
+      return this.configuration?.customStyles
+    },
     availableActions() {
       return availableActionsNames()
-    }
+    },
   },
   watch: {
     actions(value) {
@@ -27,8 +37,10 @@ export default {
   },
   components: {
     AddOrRemoveClassActionEditor,
+    AddOrRemoveCustomClassActionEditor,
     AddOrRemoveCustomStyleActionEditor,
     AddOrRemoveMarkActionEditor,
+    // SetSpanActionEditor,
   },
   methods: {
     getAction(actionName: string) {
@@ -48,15 +60,26 @@ export default {
       const name = a.name as ActionName
       return name === 'add-custom-style' || name === 'remove-custom-style'
     },
+    isAddOrRemoveCustomClassAction(a: ActionNameWithProps) {
+      const name = a.name as ActionName
+      return name === 'add-custom-class' || name === 'remove-custom-class'
+    },
     isAddOrRemoveMarkAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
       return name === 'add-mark' || name === 'remove-mark'
     },
-    newActionItem(name?: string) {
-      this.actions.push({
-        name: name || this.availableActions[0],
-        props: {}
-      })
+    isSetSpanAction(a: ActionNameWithProps) {
+      return (a.name as ActionName) === 'set-span'
+    },
+    newActionItem(_name?: string) {
+      const name = _name || this.availableActions[0]
+      console.log(`name=${name}`)
+      const newAction = {
+        name,
+        props: defaultPropsFor(name as ActionName, this.configuration) as Record<string, any>
+      }
+      this.actions.push(newAction)
+      console.log(newAction)
       this.notifyActions(this.actions)
     },
     setActionItem(index: number, name: string) {
@@ -140,6 +163,9 @@ export default {
               :action='a' @set-props="setActionProps" />
             <AddOrRemoveMarkActionEditor v-if="isAddOrRemoveMarkAction(a)" :index="index" :action='a'
               @set-props="setActionProps" />
+            <AddOrRemoveCustomClassActionEditor v-if="isAddOrRemoveCustomClassAction(a)" :editor="editor" :index="index"
+              :action='a' @set-props="setActionProps" />
+            <!-- <SetSpanActionEditor v-if="isSetSpanAction(a)" :index="index" :action='a' @set-props="setActionProps" /> -->
           </q-item-section>
         </q-item>
         <q-item>

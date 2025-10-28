@@ -126,7 +126,12 @@ export interface AddOrRemoveCustomStyleActionProps {
   styleName: string,
 }
 
-export interface AddSpanActionProps {
+export interface AddOrRemoveCustomClassActionProps {
+  className: string,
+  attrs?: Record<string, string>,
+}
+
+export interface SetSpanActionProps {
   name: string,
   classes: string[],
   attributes: Record<string, string>,
