@@ -1,6 +1,7 @@
 import { PundokEditorConfig } from './editorConfiguration';
 import { Capitalize } from '../capitalize';
 import { ActionNameWithProps } from '../actions';
+import { CustomSpan } from './customSpan';
 
 /**
  * Types of automations available:
@@ -45,21 +46,6 @@ export type SearchAndReplaceMark =
   | 'doubleQuoted';
 
 /**
- * A `Span`, with eventual `Attr`'s classes and attributes that can be added as a result
- * of a replacement in search/replace operations.
- * It's an extendend version of applying a custom style `Span` to selected portions of text.
- */
-export interface SearchAndReplaceSpan {
-  name: string;
-  description?: string;
-  icon?: string;
-  /** The classes that the `Span` will have. */
-  classes?: string[];
-  /** The attributes that the `Span` will have. */
-  kv?: Record<string, string>;
-}
-
-/**
  * Definition of predefined search/replace operations.
  * You can search exact text, regular expressions or by Mark or custom style.
  * You can replace with exact text or regexes.
@@ -89,7 +75,7 @@ export interface SearchAndReplace extends Automation {
   /** Custom styles to add to replaced text. (TODO: replace with actions) */
   addStyles?: string[];
   /** Custom `Span` Marks to add to replaced text. (TODO: replace with actions) */
-  addSpans?: SearchAndReplaceSpan[];
+  addSpans?: CustomSpan[];
   /** SearchAndReplaceAction */
   actions?: ActionNameWithProps[];
 }

@@ -1,7 +1,7 @@
 import {
   CustomStyleInstance,
   SearchAndReplaceMark,
-  SearchAndReplaceSpan,
+  CustomSpan,
 } from '../common';
 import { SearchMarkSpec } from '../schema';
 
@@ -77,8 +77,8 @@ export function customStylesToAddableMarks(
   return result;
 }
 
-export function searchAndReplaceSpanToAddableMarks(
-  spans: SearchAndReplaceSpan[],
+export function customSpanToAddableMarks(
+  spans: CustomSpan[],
   actives?: string[],
   acc?: AddableMark[],
 ): AddableMark[] {

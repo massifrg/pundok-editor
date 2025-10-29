@@ -1,4 +1,5 @@
 import {
+  CustomSpan,
   InputConverter,
   OutputConverter,
   PandocFilterTransform,
@@ -127,13 +128,14 @@ export interface AddOrRemoveCustomStyleActionProps {
 }
 
 export interface AddOrRemoveCustomClassActionProps {
-  name?: string,
+  shortDesc?: string,
   className: string,
   attrs?: Record<string, string>,
 }
 
 export interface SetSpanActionProps {
-  name: string,
   classes: string[],
-  attributes: Record<string, string>,
+  attrs: Record<string, string>,
+  alternativeIndex: number,
+  alternatives?: CustomSpan[],
 }

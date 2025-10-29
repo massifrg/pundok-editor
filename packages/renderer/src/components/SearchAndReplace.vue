@@ -30,11 +30,11 @@
             <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
               stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
             <!-- <q-space /> -->
-            <MarksPaletteDropdown :editor="editor" title="add/remove Mark(s) or custom style(s) to replaced text"
+            <!-- <MarksPaletteDropdown :editor="editor" title="add/remove Mark(s) or custom style(s) to replaced text"
               :addableMarks="marksOnReplacedText" :operations="(['add', 'remove', 'remove all'] as MarkOperationType[])"
               :default-operation="selectedMarkOperationTypeOnReplacedText" @selected-marks="setMarksOnReplacedText"
               @selected-operation="selectMarkOperationOnReplacedText" menu-anchor="bottom end"
-              menu-self="bottom start" />
+              menu-self="bottom start" /> -->
             <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace" @update-actions="updateActions" />
           </q-card-section>
         </div>
@@ -66,7 +66,7 @@
           title="search only for marks" @click="optionSearchType = optionSearchType === 'marks' ? 'text' : 'marks'" /> -->
         <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionChangeMarksOnly" icon="mdi-tag"
           title="change only marks, don't touch text" @click="optionChangeMarksOnly = !optionChangeMarksOnly" />
-        <q-space />
+        <!-- <q-space />
         <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionCapitalize !== 'lower'"
           icon="mdi-format-letter-case-lower" title="lowercase replaced text"
           @click="optionCapitalize = optionCapitalize !== 'lower' ? 'lower' : 'none'" />
@@ -76,7 +76,7 @@
         <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionCapitalize !== 'first'" label="Abc"
           no-caps title="uppercase words' first letter in replaced text"
           @click="optionCapitalize = optionCapitalize !== 'first' ? 'first' : 'none'">
-        </q-btn>
+        </q-btn> -->
       </q-card-section>
       <q-card-section horizontal class="q-ma-xs">
         <q-chip :color="foundItemsColor" text-color="white" icon="mdi-text-search" :title="foundItemsText">{{
@@ -117,12 +117,11 @@ import {
   ActionNameWithProps,
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
-  SetSpanActionProps,
   Capitalize,
   CustomStyleInstance,
-  SearchAndReplace,
   getSearchAndReplaces,
-  AddOrRemoveCustomClassActionProps
+  SearchAndReplace,
+  SetSpanActionProps,
 } from '../common';
 import {
   CapitalizeTransform,
@@ -138,7 +137,7 @@ import {
   AddableMark,
   baseAddableMarks,
   customStylesToAddableMarks,
-  searchAndReplaceSpanToAddableMarks
+  customSpanToAddableMarks
 } from '.';
 import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import MarksPaletteDropdown from './MarksPaletteDropdown.vue'
@@ -410,7 +409,8 @@ export default {
     replaceSelected() {
       this.editor.chain()
         .replaceSelectedText()
-        .applyTextTransforms(this.textTransforms)
+        // .applyTextTransforms(this.textTransforms)
+        .applyActions(this.actionsOnReplace)
         .focus().run()
       this.updateCountAndIndex()
 
@@ -418,7 +418,8 @@ export default {
     replaceNextText() {
       this.editor.chain()
         .replaceSelectedText()
-        .applyTextTransforms(this.textTransforms)
+        // .applyTextTransforms(this.textTransforms)
+        .applyActions(this.actionsOnReplace)
         .selectNextFoundText()
         .focus().run()
       this.updateCountAndIndex()
@@ -481,26 +482,21 @@ export default {
           } as AddOrRemoveCustomStyleActionProps
         } as ActionNameWithProps)
       })
-      sar.addSpans?.forEach(s => {
-        const classes = s.classes || []
-        const kventries = Object.entries(s.kv || {})
-        const name = s.name ||
-          classes.map(c => '.' + c).join('')
-          + (classes.length > 0 ? ',' : '')
-          + kventries.map(([an, av]) => `@${an}=${av}`).join(',')
-        actionsOnReplace.push({
-          name: 'add-custom-class' as ActionName,
-          props: {
-            className: classes[0] || 'class-name',
-            attrs: s.kv,
-          } as AddOrRemoveCustomClassActionProps
-        } as ActionNameWithProps)
-      })
-      this.actionsOnReplace = actionsOnReplace
+      const firstAlternative = sar.addSpans && sar.addSpans[0]
+      actionsOnReplace.push({
+        name: 'set-span' as ActionName,
+        props: {
+          classes: firstAlternative?.classes || [],
+          attrs: firstAlternative?.kv || {},
+          alternatives: sar.addSpans,
+          alternativeIndex: firstAlternative ? 0 : -1,
+        } as SetSpanActionProps
+      } as ActionNameWithProps)
+      this.actionsOnReplace = [...actionsOnReplace]
       const am: AddableMark[] = baseAddableMarks(sar.addMarks || [])
       customStylesToAddableMarks(this.customStyles, sar.addStyles, am)
       if (sar.addSpans && sar.addSpans.length > 0) {
-        searchAndReplaceSpanToAddableMarks(sar.addSpans, [sar.addSpans[0].name], am)
+        customSpanToAddableMarks(sar.addSpans, [sar.addSpans[0].name], am)
       }
       this.marksOnReplacedText = am
       this.selectedMarksOnReplacedText = am.filter(m => m.active)
@@ -527,7 +523,7 @@ export default {
       this.optionMarksLogicalOperator = operator
     },
     updateActions(actions: ActionNameWithProps[]) {
-      console.log(toRaw(actions))
+      // console.log(toRaw(actions))
       this.actionsOnReplace = actions
     }
   },

@@ -6,7 +6,7 @@ import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassAction
 import AddOrRemoveCustomClassActionEditor from './actioneditors/AddOrRemoveCustomClassActionEditor.vue'
 import AddOrRemoveCustomStyleActionEditor from './actioneditors/AddOrRemoveCustomStyleActionEditor.vue'
 import AddOrRemoveMarkActionEditor from './actioneditors/AddOrRemoveMarkActionEditor.vue'
-// import SetSpanActionEditor from './actioneditors/SetSpanActionEditor.vue'
+import SetSpanActionEditor from './actioneditors/SetSpanActionEditor.vue'
 import { defaultPropsFor } from '../actions/defaultProps';
 import { getEditorConfiguration } from '../schema';
 
@@ -26,7 +26,7 @@ export default {
     customStyles() {
       return this.configuration?.customStyles
     },
-    availableActions() {
+    availableActionsNames() {
       return availableActionsNames()
     },
   },
@@ -40,7 +40,7 @@ export default {
     AddOrRemoveCustomClassActionEditor,
     AddOrRemoveCustomStyleActionEditor,
     AddOrRemoveMarkActionEditor,
-    // SetSpanActionEditor,
+    SetSpanActionEditor,
   },
   methods: {
     getAction(actionName: string) {
@@ -51,6 +51,9 @@ export default {
     },
     actionIcon(actionName: string) {
       return this.getAction(actionName)?.icon
+    },
+    actionLabel(actionName: string) {
+      return availableAction(actionName)?.label
     },
     isAddOrRemoveClassAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
@@ -72,7 +75,7 @@ export default {
       return (a.name as ActionName) === 'set-span'
     },
     newActionItem(_name?: string) {
-      const name = _name || this.availableActions[0]
+      const name = _name || this.availableActionsNames[0]
       console.log(`name=${name}`)
       const newAction = {
         name,
@@ -121,12 +124,16 @@ export default {
 
 <template>
   <q-card>
-    <q-card-section class="q-px-xs" style="min-width: 640px">
+    <q-card-section class="q-px-xs">
       <div class="q-text-h6 q-ma-md">Operations on the replaced text:</div>
       <q-list>
         <q-item v-for="(a, index) in actions" dense>
           <q-item-section side>
             <q-chip>{{ index + 1 }}</q-chip>
+          </q-item-section>
+          <q-item-section side>
+            <!-- <q-btn size="xs" icon="mdi-trash-can" @click="removeActionItem(index)" /> -->
+            <q-icon size="xs" name="mdi-trash-can" @click="removeActionItem(index)" @click.stop.prevent />
           </q-item-section>
           <q-item-section side>
             <q-icon v-if="index > 0" size="xs" name="mdi-arrow-up" @click="moveActionItemUp(index)"
@@ -135,23 +142,23 @@ export default {
               @click.stop.prevent />
           </q-item-section>
           <q-item-section>
-            <q-btn-dropdown :label="a.name" :icon="actionIcon(a.name)">
-              <q-item v-for="action_name in availableActions" clickable @click="setActionItem(index, action_name)"
-                v-close-popup>
-                <q-item-section side>
-                  <q-icon :name="actionIcon(action_name)"></q-icon>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ action_name }}</q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-separator />
+            <q-btn-dropdown :label="a.name" :title="actionLabel(a.name)" :icon="actionIcon(a.name)">
               <q-item clickable @click="removeActionItem(index)" v-close-popup>
                 <q-item-section side>
                   <q-icon name="mdi-trash-can" />
                 </q-item-section>
                 <q-item-section color="negative">
                   <q-item-label>remove action</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator />
+              <q-item v-for="action_name in availableActionsNames" clickable @click="setActionItem(index, action_name)"
+                v-close-popup>
+                <q-item-section side>
+                  <q-icon :name="actionIcon(action_name)"></q-icon>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ actionLabel(action_name) }}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-btn-dropdown>
@@ -165,15 +172,14 @@ export default {
               @set-props="setActionProps" />
             <AddOrRemoveCustomClassActionEditor v-if="isAddOrRemoveCustomClassAction(a)" :editor="editor" :index="index"
               :action='a' @set-props="setActionProps" />
-            <!-- <SetSpanActionEditor v-if="isSetSpanAction(a)" :index="index" :action='a' @set-props="setActionProps" /> -->
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section>
-            <q-btn size="sm" icon="mdi-plus" label="append new" @click="newActionItem()" />
+            <SetSpanActionEditor v-if="isSetSpanAction(a)" :editor="editor" :index="index" :action='a'
+              @set-props="setActionProps" />
           </q-item-section>
         </q-item>
       </q-list>
     </q-card-section>
+    <q-card-actions align="center">
+      <q-btn size="sm" icon="mdi-plus" label="append new" @click="newActionItem()" />
+    </q-card-actions>
   </q-card>
 </template>

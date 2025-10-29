@@ -2,8 +2,10 @@
   <q-card-actions style="min-width: 300px">
     <q-btn-dropdown no-caps>
       <template v-slot:label>
-        <div>{{ className }}</div>
-        <div v-html="attrsLabel" style="font-size: smaller; text-align: left"></div>
+        <div>
+          <div>{{ className }}</div>
+          <div v-html="attrsLabel" />
+        </div>
       </template>
       <q-list>
         <q-item v-for="c in customClasses" dense clickable v-close-popup :title="c.description"
@@ -29,7 +31,6 @@ import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { getEditorConfiguration } from '../../schema';
 import { defaultPropsFor } from '../../actions';
 import OtherAttributesEditor from '../attreditors/OtherAttributesEditor.vue';
-import { toRaw } from 'vue';
 
 export default {
   props: ['editor', 'index', 'action'],
@@ -40,9 +41,10 @@ export default {
       || defaultPropsFor(this.action.name)
       || { className: 'class-name', attrs: {} }
     return {
+      shortDesc: '',
       className: props.className,
       attrs: props.attrs
-    }
+    } as AddOrRemoveCustomClassActionProps
   },
   computed: {
     configuration() {
@@ -66,13 +68,14 @@ export default {
       this.customAttributes.filter(ca => !attrs[ca.name]).forEach(ca => {
         entries.push({ ...ca, key: ca.name })
       })
-      console.log(entries)
       return entries
     },
     attrsLabel() {
       const ae = this.attrs && Object.entries(this.attrs)
       if (ae)
-        return ae.map(([k, v]) => '-&nbsp;' + k + '=' + v).join('<br>')
+        return '<ul class="attrs-list">'
+          + ae.map(([k, v]) => '<li>' + k + '=' + v + '</li>').join('')
+          + '</ul>'
     }
   },
   setup() {
@@ -101,3 +104,18 @@ export default {
   }
 }
 </script>
+
+<style>
+ul.attrs-list {
+  margin: 0px;
+  padding: 1px;
+  list-style-position: inside;
+}
+
+ul.attrs-list li {
+  font-size: smaller;
+  line-height: 70%;
+  text-align: left;
+  font-weight: normal;
+}
+</style>

@@ -40,7 +40,8 @@ import { IncludeDocCustomClass, getEditorConfiguration } from '../../schema';
 
 export default {
   props: ['editor', 'nodeOrMark', 'startValue', 'importantClasses', 'forbiddenClasses'],
-  emits: ['update-attribute', 'remove-class', 'add-class'],
+  // emits: ['update-attribute', 'remove-class', 'add-class'],
+  emits: ['remove-class', 'add-class'],
   data() {
     return {
       oldClasses: this.startValue || [] as string[],

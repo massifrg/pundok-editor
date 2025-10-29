@@ -1,46 +1,69 @@
 <script lang="ts">
-import { ActionName } from '../actions';
+import { toRaw } from 'vue';
+import { ActionName, defaultPropsFor } from '../actions';
 import {
   ActionNameWithProps,
   AddOrRemoveClassActionProps,
   AddOrRemoveCustomClassActionProps,
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
+  attrsToCssSelectorString,
+  PundokEditorConfig,
   SetSpanActionProps
 } from '../common';
 import ActionsList from './ActionsList.vue';
+import { getEditorConfiguration } from '../schema';
 
-function actionsAsText(actions: ActionNameWithProps[]) {
+function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConfig) {
   if (!actions || actions.length === 0)
     return 'no actions'
   return actions.map(a => {
-    const prefix = a.name.startsWith('add')
+    const actionName = a.name as ActionName
+    const prefix = actionName.startsWith('add')
       ? '+'
-      : a.name.startsWith('remove')
+      : actionName.startsWith('remove')
         ? '-'
         : ''
-    switch (a.name as ActionName) {
+    const props = a?.props || defaultPropsFor(actionName)
+    switch (actionName) {
       case 'add-mark':
       case 'remove-mark':
-        return `${prefix}${(a?.props as AddOrRemoveMarkActionProps).markType}`
+        {
+          const { markType } = props as AddOrRemoveMarkActionProps
+          return `${prefix}${markType}`
+        }
       case 'add-custom-style':
       case 'remove-custom-style':
-        return `${prefix}${(a?.props as AddOrRemoveCustomStyleActionProps).styleName}`
+        {
+          const { styleName } = props as AddOrRemoveCustomStyleActionProps
+          return `${prefix}${styleName}`
+        }
       case 'add-custom-class':
-      case 'remove-custom-class': {
-        const { name, className, attrs } = (a?.props || {}) as AddOrRemoveCustomClassActionProps
-        const attrstext = !name && attrs
-          ? '[' + Object.entries(attrs).map(([k, v]) => `${k}=${v}`).join(',') + ']'
-          : ''
-        return `${prefix}${name || className + attrstext}`
-      }
+      case 'remove-custom-class':
+        {
+          const { shortDesc, className, attrs } = props as AddOrRemoveCustomClassActionProps
+          const attrstext = !shortDesc && attrs
+            ? attrsToCssSelectorString({ attributes: attrs })
+            : ''
+          return `${prefix}${shortDesc || className + attrstext}`
+        }
       case 'add-class':
       case 'remove-class':
-        return `${prefix}.${(a?.props as AddOrRemoveClassActionProps).className}`
+        {
+          const { className } = props as AddOrRemoveClassActionProps
+          return `${prefix}.${className}`
+        }
       case 'set-span':
-        return `${prefix}${(a?.props as SetSpanActionProps).name}`
+        {
+          const { alternativeIndex, alternatives, classes, attrs } = toRaw(props) as SetSpanActionProps
+          const altCount = alternatives && alternatives.length || 0
+          const altIndex = alternativeIndex !== undefined ? alternativeIndex : -1
+          return altIndex >= 0 && altIndex < altCount
+            ? `+${alternatives![alternativeIndex].name}`
+            : `+${attrsToCssSelectorString({ classes, attributes: attrs })}`
+        }
       default:
-        return a.name
+        return actionName
     }
   }).join(',')
 }
@@ -48,16 +71,21 @@ function actionsAsText(actions: ActionNameWithProps[]) {
 export default {
   props: ['editor', 'actions'],
   emits: ['update-actions'],
+  computed: {
+    configuration() {
+      return getEditorConfiguration(this.editor)
+    }
+  },
   data() {
     return {
       isEmpty: true,
-      label: actionsAsText(this.actions)
+      label: actionsAsText(this.actions, getEditorConfiguration(this.editor))
     }
   },
   watch: {
     actions(value) {
       this.isEmpty = !value || value.length === 0
-      this.label = actionsAsText(value)
+      this.label = actionsAsText(value, this.configuration)
     }
   },
   components: {
@@ -66,7 +94,7 @@ export default {
   methods: {
     update(actions: ActionNameWithProps[]) {
       this.isEmpty = actions.length === 0
-      this.label = actionsAsText(actions)
+      this.label = actionsAsText(actions, this.configuration)
       // forward event
       this.$emit('update-actions', actions)
     }
@@ -77,6 +105,6 @@ export default {
   <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty" :label="label"
     title="Actions on replaced text">
     <!-- :no-caps="noneActive || operation === 'remove all'" :menu-anchor="menuAnchor" :menu-self="menuSelf" -->
-    <ActionsList :editor="editor" :start-actions="actions" @update-actions="update" />
+    <ActionsList :editor="editor" :start-actions="actions" @update-actions="update" style="min-width: 100%;" />
   </q-btn-dropdown>
 </template>
