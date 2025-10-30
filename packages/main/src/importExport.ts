@@ -126,12 +126,10 @@ async function exportWithExternalProgram(
 ): Promise<ExternalProgramResult> {
   const { callback, cwd, resultFile } = exportOptions;
   const commandLine = `${command}${args ? ' ' + args.join(' ') : ''}`;
-  console.log(
-    `RUNNING ${commandLine}${cwd ? ' in directory "' + cwd + '"' : ''}`,
-  );
+  console.log(`RUNNING ${commandLine}${cwd ? ' in directory "' + cwd + '"' : ''}`);
   try {
     const options = {
-      // shell: true,
+      shell: true,
       cwd,
     }
     const { childProcess, result } = runExternalProgram(
@@ -187,6 +185,7 @@ export function exportWithPandoc(
   }
   /* --output pandoc option */
   if (resultFile) pandocOpts.push(`--output=${encloseInDblQuotes(resultFile)}`);
+
   /** --filter and --lua-filter pandoc options */
   const pandocFilters = (converter as PandocOutputConverter).filters || [];
   pandocFilters.forEach((pf) => {
