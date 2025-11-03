@@ -1,4 +1,4 @@
-import { EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
+import { Command, EditorState, Plugin, PluginKey, Transaction } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import { Extension } from '@tiptap/core';
@@ -256,58 +256,7 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
     return {
       addIndexRef:
         (optIndex?: Index | string) =>
-          ({ tr, state, dispatch }) => {
-            const indexRefType = state.schema.nodes[NODE_NAME_INDEX_REF];
-            if (!indexRefType) return false;
-            const docState = getDocState(state)
-            const indices: Index[] = docState?.project?.computedConfig?.indices || docState?.configuration?.indices || []
-            const index = isString(optIndex)
-              ? indices?.find(i => i.indexName === optIndex)
-              : optIndex || indexingPluginKey.getState(state).lastReferenced
-            if (!index) return false
-            const indexName = index.indexName || DEFAULT_INDEX_NAME;
-            const { from, to, empty } = state.selection;
-            const marks = state.doc.resolve(from).marks();
-            if (empty) {
-              if (!index.onlyEmpty === true) return false;
-              if (dispatch) {
-                const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
-                const indexRef = indexRefType.create(
-                  {
-                    classes: [refClass],
-                    kv: { [INDEX_NAME_ATTR]: indexName },
-                  },
-                  null,
-                  marks,
-                );
-                tr.insert(from, indexRef)
-                  .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
-              }
-            } else {
-              if (index.onlyEmpty === true) return false;
-              const indexedText = indexedTextWithoutAtoms(state.doc, from, to);
-              if (!indexedText) return false;
-              if (dispatch) {
-                const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
-                const indexRef = indexRefType.create(
-                  {
-                    classes: [refClass],
-                    kv: {
-                      [INDEX_NAME_ATTR]: indexName,
-                      [INDEXED_TEXT_ATTR]: indexedText,
-                    },
-                  },
-                  null,
-                  marks,
-                );
-                const where: IndexRefPlacement =
-                  index.putIndexRef || DEFAULT_PUT_INDEX_REF;
-                tr.insert(where === 'before' ? from : to, indexRef)
-                  .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
-              }
-            }
-            return true;
-          },
+          ({ state, dispatch }) => setIndexRefCommand(optIndex)(state, dispatch),
       redecorateIndexRefs:
         () =>
           ({ tr, dispatch }) => {
@@ -364,4 +313,63 @@ function indexedTextWithoutAtoms(
     tfrom += child.nodeSize;
   }
   return texts.join('');
+}
+
+export function setIndexRefCommand(optIndex?: Index | string): Command {
+  return (state, dispatch, view) => {
+    const indexRefType = state.schema.nodes[NODE_NAME_INDEX_REF];
+    if (!indexRefType) return false;
+    const docState = getDocState(state)
+    const indices: Index[] = docState?.project?.computedConfig?.indices || docState?.configuration?.indices || []
+    const index = isString(optIndex)
+      ? indices?.find(i => i.indexName === optIndex)
+      : optIndex || indexingPluginKey.getState(state).lastReferenced
+    if (!index) return false
+    const indexName = index.indexName || DEFAULT_INDEX_NAME;
+    const { from, to, empty } = state.selection;
+    const marks = state.doc.resolve(from).marks();
+    if (empty) {
+      if (!index.onlyEmpty === true) return false;
+      if (dispatch) {
+        const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
+        const indexRef = indexRefType.create(
+          {
+            classes: [refClass],
+            kv: { [INDEX_NAME_ATTR]: indexName },
+          },
+          null,
+          marks,
+        );
+        dispatch(state.tr
+          .insert(from, indexRef)
+          .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
+        )
+      }
+    } else {
+      if (index.onlyEmpty === true) return false;
+      const indexedText = indexedTextWithoutAtoms(state.doc, from, to);
+      if (!indexedText) return false;
+      if (dispatch) {
+        const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
+        const indexRef = indexRefType.create(
+          {
+            classes: [refClass],
+            kv: {
+              [INDEX_NAME_ATTR]: indexName,
+              [INDEXED_TEXT_ATTR]: indexedText,
+            },
+          },
+          null,
+          marks,
+        );
+        const where: IndexRefPlacement =
+          index.putIndexRef || DEFAULT_PUT_INDEX_REF;
+        dispatch(state.tr
+          .insert(where === 'before' ? from : to, indexRef)
+          .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
+        )
+      }
+    }
+    return true;
+  }
 }
