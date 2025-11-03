@@ -29,6 +29,7 @@ import {
   ACTION_REMOVE_CUSTOM_CLASS,
   ACTION_REMOVE_CUSTOM_STYLE,
   ACTION_REMOVE_MARK,
+  ACTION_SET_INDEX_REF,
   ACTION_SET_SPAN,
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
@@ -215,6 +216,8 @@ function actionNameWithPropsToTextTransform(
         } as MarkTransform
       }
       break
+    case ACTION_SET_INDEX_REF.name:
+
     case ACTION_ADD_CUSTOM_CLASS.name:
     case ACTION_REMOVE_CUSTOM_CLASS.name:
     case ACTION_ADD_CLASS.name:

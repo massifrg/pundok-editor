@@ -17,7 +17,8 @@ import {
 } from '../../common';
 import { DEFAULT_INDEX_NAME } from '../../common';
 import { documentIndices, mergeIndices } from '../helpers/indices';
-import { DocStateUpdate, META_UPDATE_DOC_STATE } from '../helpers';
+import { DocStateUpdate, getDocState, META_UPDATE_DOC_STATE } from '../helpers';
+import { isString } from 'lodash';
 
 const INDEXING_PLUGIN = 'indexing-plugin';
 
@@ -31,7 +32,7 @@ export interface IndexingOptions { }
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     indexing: {
-      addIndexRef: (index?: Index) => ReturnType;
+      addIndexRef: (index?: Index | string) => ReturnType;
       redecorateIndexRefs: () => ReturnType;
       detectDocumentIndices: () => ReturnType;
     };
@@ -254,11 +255,15 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
   addCommands() {
     return {
       addIndexRef:
-        (optIndex?: Index) =>
+        (optIndex?: Index | string) =>
           ({ tr, state, dispatch }) => {
             const indexRefType = state.schema.nodes[NODE_NAME_INDEX_REF];
             if (!indexRefType) return false;
-            const index = optIndex || indexingPluginKey.getState(state).lastReferenced
+            const docState = getDocState(state)
+            const indices: Index[] = docState?.project?.computedConfig?.indices || docState?.configuration?.indices || []
+            const index = isString(optIndex)
+              ? indices?.find(i => i.indexName === optIndex)
+              : optIndex || indexingPluginKey.getState(state).lastReferenced
             if (!index) return false
             const indexName = index.indexName || DEFAULT_INDEX_NAME;
             const { from, to, empty } = state.selection;

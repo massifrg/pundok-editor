@@ -2,45 +2,18 @@
   <q-dialog :model-value="visible" :position="dialogPosition" seamless>
     <q-card style="max-width: 60vw">
       <q-card-section class="q-ma-xs" horizontal>
-        <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="mdi-arrow-up"
-          title="move this dialog to the top" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
-        <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="mdi-arrow-down"
-          title="move this dialog to the bottom" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
-        <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="mdi-arrow-right"
-          title="move this dialog to the right" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
-        <q-btn dense class="q-px-md" :icon="expandIcon" :title="expandTooltip" size="xs"
-          @click="() => { showFields = !showFields }"></q-btn>
-        <q-space />
-        <q-btn dense icon="mdi-reload" size:xs title="reset" @click="resetDialog()" />
-        <q-space />
-        <q-btn dense icon="mdi-close" size:xs title="close" @click="closeDialog()" />
-      </q-card-section>
-      <q-card-section>
-        <div v-if="showFields">
-          <q-card-section horizontal>
-            <q-input autofocus class="search-and-replace-textfield q-mx-xs" :model-value="textToSearch" label="search"
-              stack-label @update:model-value="updateTextToSearch" @keypress="keypressed" @keyup="keyup" />
-            <!-- <q-space /> -->
-            <MarksPaletteDropdown :editor="editor" title="search for this Mark(s) or style(s)"
-              :addableMarks="marksToSearch" :logicalOperator="optionMarksLogicalOperator" showLogicalOperator="true"
-              @selected-logical-operator="selectMarksLogicalOperator" @selected-marks="selectMarksToSearch"
-              menu-anchor="bottom end" menu-self="bottom start" />
-          </q-card-section>
-          <q-card-section v-if="!optionSearchOnly" horizontal>
-            <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
-              stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
-            <!-- <q-space /> -->
-            <!-- <MarksPaletteDropdown :editor="editor" title="add/remove Mark(s) or custom style(s) to replaced text"
-              :addableMarks="marksOnReplacedText" :operations="(['add', 'remove', 'remove all'] as MarkOperationType[])"
-              :default-operation="selectedMarkOperationTypeOnReplacedText" @selected-marks="setMarksOnReplacedText"
-              @selected-operation="selectMarkOperationOnReplacedText" menu-anchor="bottom end"
-              menu-self="bottom start" /> -->
-            <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace" @update-actions="updateActions" />
-          </q-card-section>
+        <div class="flex flex-center">
+          <q-chip :label="currentFoundItemShortText" :color="foundItemsColor" round class="q-pa-md" text-color="white"
+            icon="mdi-text-search" :title="foundItemsText" />
         </div>
-      </q-card-section>
-      <q-card-section v-if="showFields" horizontal class="q-pa-sm">
-        <q-btn v-if="searchAndReplaces.length > 0" class="q-ma-xs" size="sm" rounded color="primary" label=""
+        <q-space />
+        <q-btn round class="q-pa-sm" size="sm" icon="mdi-reload" color="primary" title="reset" outline
+          @click="resetDialog()" />
+        <q-space class="small" />
+        <q-btn round class="q-pa-sm" size="sm" icon="mdi-pencil-lock" color="primary" :outline="!optionSearchOnly"
+          title="just search, don't replace" @click="optionSearchOnly = !optionSearchOnly" />
+        <q-space v-if="searchAndReplaces.length > 0" class="small" />
+        <q-btn v-if="searchAndReplaces.length > 0" round class="q-pa-sm" size="sm" color="primary" label=""
           title="load a predefined search and replace config" icon="mdi-playlist-star">
           <q-menu anchor="bottom start" self="bottom end">
             <q-list>
@@ -51,45 +24,47 @@
             </q-list>
           </q-menu>
         </q-btn>
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCaseInsensitive"
-          icon="mdi-format-letter-case" title="case insensitive search"
-          @click="optionCaseInsensitive = !optionCaseInsensitive" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionRegex" icon="mdi-regex"
-          title="search with regular expressions (Unicode aware)" @click="optionRegex = !optionRegex" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="mdi-find-replace"
-          title="cycle through found texts" @click="optionCycle = !optionCycle" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord" icon="whole_word"
-          title="whole words" @click="optionWholeWord = !optionWholeWord" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionSearchOnly" icon="mdi-pencil-lock"
-          title="just search, don't replace" @click="optionSearchOnly = !optionSearchOnly" />
-        <!-- <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionSearchType !== 'marks'" icon="mdi-marker"
-          title="search only for marks" @click="optionSearchType = optionSearchType === 'marks' ? 'text' : 'marks'" /> -->
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionChangeMarksOnly" icon="mdi-tag"
-          title="change only marks, don't touch text" @click="optionChangeMarksOnly = !optionChangeMarksOnly" />
-        <!-- <q-space />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionCapitalize !== 'lower'"
-          icon="mdi-format-letter-case-lower" title="lowercase replaced text"
-          @click="optionCapitalize = optionCapitalize !== 'lower' ? 'lower' : 'none'" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionCapitalize !== 'upper'"
-          icon="mdi-format-letter-case-upper" title="uppercase replaced text"
-          @click="optionCapitalize = optionCapitalize !== 'upper' ? 'upper' : 'none'" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionCapitalize !== 'first'" label="Abc"
-          no-caps title="uppercase words' first letter in replaced text"
-          @click="optionCapitalize = optionCapitalize !== 'first' ? 'first' : 'none'">
-        </q-btn> -->
-      </q-card-section>
-      <q-card-section horizontal class="q-ma-xs">
-        <q-chip :color="foundItemsColor" text-color="white" icon="mdi-text-search" :title="foundItemsText">{{
-          currentFoundItemText }}</q-chip>
+        <q-space class="small" />
+        <!-- <q-toggle v-model="showIndicesButtons" icon="mdi-cursor-pointer" title="show buttons for indices" /> -->
+        <q-btn round class="q-pa-sm" size="sm" color="primary" :outline="!showIndicesButtons" icon="mdi-cursor-pointer"
+          title="show buttons for indices" @click="showIndicesButtons = !showIndicesButtons" />
         <q-space />
-        <q-toggle v-model="showIndicesButtons" icon="mdi-cursor-pointer" title="show buttons for indices" />
+        <q-btn dense class="q-px-md" :icon="expandIcon" :title="expandTooltip" size="xs"
+          @click="() => { showFields = !showFields }"></q-btn>
+        <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="mdi-arrow-up"
+          title="move this dialog to the top" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
+        <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="mdi-arrow-down"
+          title="move this dialog to the bottom" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
+        <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="mdi-arrow-right"
+          title="move this dialog to the right" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
+        <q-space />
+        <q-btn icon="mdi-close" size="xs" title="close" @click="closeDialog()" />
+      </q-card-section>
+      <q-card-section v-if="showFields">
+        <q-card-section horizontal>
+          <q-input autofocus class="search-and-replace-textfield q-mx-xs" :model-value="textToSearch" label="search"
+            stack-label @update:model-value="updateTextToSearch" @keypress="keypressed" @keyup="keyup" />
+          <div class="q-pt-md q-gutter-none">
+            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCaseInsensitive"
+              icon="mdi-format-letter-case" title="case insensitive search"
+              @click="optionCaseInsensitive = !optionCaseInsensitive" />
+            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionRegex" icon="mdi-regex"
+              title="search with regular expressions (Unicode aware)" @click="optionRegex = !optionRegex" />
+            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="mdi-find-replace"
+              title="cycle through found texts" @click="optionCycle = !optionCycle" />
+            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord" icon="whole_word"
+              title="whole words" @click="optionWholeWord = !optionWholeWord" />
+          </div>
+        </q-card-section>
+        <q-card-section v-if="!optionSearchOnly" horizontal>
+          <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
+            stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
+          <ActionsOnReplaceDropdown v-if="!optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
+            @update-actions="updateActions" />
+        </q-card-section>
       </q-card-section>
       <q-card-actions>
         <q-btn icon="mdi-magnify" title="search" size="md" padding="md" @click="startSearch()" />
-        <!-- <q-btn :disabled="foundCount === 0 || (!optionCycle && foundIndex <= 0)" icon="mdi-chevron-left" size="md"
-          padding="md" title="select previous found" @click="prevFound()" />
-        <q-btn :disabled="foundCount === 0 || (!optionCycle && foundIndex >= foundCount - 1)" icon="mdi-chevron-right"
-          size="md" padding="md" title="select next found" @click="nextFound()" /> -->
         <q-btn icon="mdi-chevron-left" size="md" padding="md" title="select previous found" @click="prevFound()" />
         <q-btn icon="mdi-chevron-right" size="md" padding="md" title="select next found" @click="nextFound()" />
         <q-btn v-if="!optionSearchOnly" :disabled="!editor.can().replaceSelectedText()" icon="mdi-autorenew" size="md"
@@ -124,13 +99,7 @@ import {
   SetSpanActionProps,
 } from '../common';
 import {
-  CapitalizeTransform,
   FoundTextRange,
-  MarkOperationType,
-  MarkTransform,
-  MarksLogicalOperator,
-  SearchMarkSpec,
-  TextTransform,
   getEditorConfiguration,
 } from '../schema';
 import {
@@ -140,11 +109,9 @@ import {
   customSpanToAddableMarks
 } from '.';
 import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
-import MarksPaletteDropdown from './MarksPaletteDropdown.vue'
 import IndicesButtons from './IndicesButtons.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 import { SearchQuery, SearchResultFilter, getMatchHighlights } from '../schema/helpers';
-import { Mark } from '@tiptap/pm/model';
 import { useActions } from '../stores';
 import { mapState } from 'pinia';
 import {
@@ -157,27 +124,10 @@ import { toRaw } from 'vue';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
 
-const allMarksFilter: (marks: Mark[]) => SearchResultFilter = (marks) => (state, result) => {
-  if (marks) {
-    const { from, to } = result
-    return marks.every(mark => state.doc.rangeHasMark(from, to, mark))
-  }
-  return true
-}
-
-const oneOfMarksFilter: (marks: Mark[]) => SearchResultFilter = (marks) => (state, result) => {
-  if (marks) {
-    const { from, to } = result
-    return !!marks.find(mark => state.doc.rangeHasMark(from, to, mark))
-  }
-  return true
-}
-
 export default {
   components: {
     ActionsOnReplaceDropdown,
     IndicesButtons,
-    MarksPaletteDropdown
   },
   props: ['visible', 'editor'],
   emits: ['hideSearchAndReplaceDialog'],
@@ -201,14 +151,7 @@ export default {
       optionRegex: false,
       optionCycle: false,
       optionWholeWord: false,
-      marksToSearch: [] as AddableMark[],
-      selectedMarksToSearch: [] as SearchMarkSpec[],
-      actionsListVisible: false,
-      optionMarksLogicalOperator: 'and' as MarksLogicalOperator, // to be DEPRECATED
-      marksOnReplacedText: [] as AddableMark[], // to be DEPRECATED
-      selectedMarksOnReplacedText: [] as AddableMark[], // to be DEPRECATED
       actionsOnReplace: [] as ActionNameWithProps[],
-      selectedMarkOperationTypeOnReplacedText: 'none',
       foundIndex: -1,
     };
   },
@@ -255,49 +198,22 @@ export default {
       }
       return 'press the "search" button to start searching'
     },
+    currentFoundItemShortText() {
+      if (this.searchStarted) {
+        const which = this.foundIndex >= 0 ? `${this.foundIndex + 1}/` : ''
+        const total = this.foundCount || 0
+        return total > 0 && `${which}${total}` || '0'
+      }
+      return ''
+    },
     expandIcon() {
       return this.showFields ? 'mdi-arrow-collapse-vertical' : 'mdi-arrow-expand-vertical'
     },
     expandTooltip() {
       return `show ${this.showFields ? 'less' : 'more'}`
     },
-    textTransforms(): TextTransform[] {
-      const transforms: TextTransform[] = []
-      const op = this.selectedMarkOperationTypeOnReplacedText
-      const marks = this.selectedMarksOnReplacedText
-      const capitalize = this.optionCapitalize
-      if (marks || capitalize) {
-        const schema = this.editor.state.schema
-        marks.forEach(({ markspec }) => {
-          const { typeName, attrs } = markspec
-          const mark = schema.marks[typeName].create(attrs)
-          if (mark) {
-            if (op === 'add')
-              transforms.push({ type: 'add-mark', mark: typeName, attrs } as MarkTransform)
-            else if (op === 'remove')
-              transforms.push({ type: 'remove-mark', mark: typeName, attrs } as MarkTransform)
-          }
-        })
-        switch (capitalize) {
-          case 'lower':
-            transforms.push({ type: 'lowercase' } as CapitalizeTransform)
-            break
-          case 'upper':
-            transforms.push({ type: 'uppercase' } as CapitalizeTransform)
-            break
-          case 'first':
-          // TODO:
-          default:
-        }
-      }
-      return transforms
-    },
   },
   watch: {
-    customStyles() {
-      this.marksOnReplacedText = this.baseMarksAndCustomStyles()
-      this.marksToSearch = this.baseMarksAndCustomStyles()
-    },
     optionMarksLogicalOperator() {
       this.startSearch()
     },
@@ -346,13 +262,6 @@ export default {
     startSearch() {
       const editor = this.editor
       if (editor) {
-        const schema = editor.state.schema
-        const marks: Mark[] = []
-        this.selectedMarksToSearch.forEach(({ typeName, attrs }) => {
-          const a = !!attrs ? attrs : null
-          const mark = schema.marks[typeName].create(a)
-          if (mark) marks.push(mark)
-        })
         const query = new SearchQuery({
           search: this.textToSearch,
           caseSensitive: !this.optionCaseInsensitive,
@@ -360,9 +269,7 @@ export default {
           regexp: !!this.optionRegex,
           replace: this.textToReplace,
           wholeWord: !!this.optionWholeWord,
-          filterResult: this.optionMarksLogicalOperator === 'and'
-            ? allMarksFilter(marks)
-            : oneOfMarksFilter(marks)
+          // filterResult: 
         })
         editor.chain().startSearch(query).focus().selectNextFoundText().run();
         this.query = query
@@ -447,11 +354,6 @@ export default {
       this.optionRegex = false
       this.optionCycle = false
       this.optionWholeWord = false
-      this.marksToSearch = [] as AddableMark[]
-      this.optionMarksLogicalOperator = 'and' as MarksLogicalOperator
-      this.selectedMarksToSearch = [] as SearchMarkSpec[]
-      this.selectedMarksOnReplacedText = [] as AddableMark[]
-      this.selectedMarkOperationTypeOnReplacedText = 'none'
       this.foundIndex = -1
     },
     loadSearchAndReplace(sar: SearchAndReplace) {
@@ -483,44 +385,26 @@ export default {
         } as ActionNameWithProps)
       })
       const firstAlternative = sar.addSpans && sar.addSpans[0]
-      actionsOnReplace.push({
-        name: 'set-span' as ActionName,
-        props: {
-          classes: firstAlternative?.classes || [],
-          attrs: firstAlternative?.kv || {},
-          alternatives: sar.addSpans,
-          alternativeIndex: firstAlternative ? 0 : -1,
-        } as SetSpanActionProps
-      } as ActionNameWithProps)
+      if (firstAlternative)
+        actionsOnReplace.push({
+          name: 'set-span' as ActionName,
+          props: {
+            classes: firstAlternative?.classes || [],
+            attrs: firstAlternative?.kv || {},
+            alternatives: sar.addSpans,
+            alternativeIndex: firstAlternative ? 0 : -1,
+          } as SetSpanActionProps
+        } as ActionNameWithProps)
       this.actionsOnReplace = [...actionsOnReplace]
       const am: AddableMark[] = baseAddableMarks(sar.addMarks || [])
       customStylesToAddableMarks(this.customStyles, sar.addStyles, am)
       if (sar.addSpans && sar.addSpans.length > 0) {
         customSpanToAddableMarks(sar.addSpans, [sar.addSpans[0].name], am)
       }
-      this.marksOnReplacedText = am
-      this.selectedMarksOnReplacedText = am.filter(m => m.active)
-      this.selectedMarkOperationTypeOnReplacedText = 'add'
       if (this.editor) {
         this.editor.chain().hideFoundTexts().run()
         this.searchStarted = false
       }
-    },
-    markspecsOnReplacedText(): SearchMarkSpec[] {
-      return this.selectedMarksOnReplacedText.map(am => am.markspec)
-    },
-    setMarksOnReplacedText(marks: AddableMark[]) {
-      this.selectedMarksOnReplacedText = marks
-    },
-    selectMarksToSearch(marks: AddableMark[]) {
-      this.selectedMarksToSearch = marks.map(m => m.markspec)
-      // console.log(this.selectedMarksToSearch)
-    },
-    selectMarkOperationOnReplacedText(operation: MarkOperationType) {
-      this.selectedMarkOperationTypeOnReplacedText = operation
-    },
-    selectMarksLogicalOperator(operator: MarksLogicalOperator) {
-      this.optionMarksLogicalOperator = operator
     },
     updateActions(actions: ActionNameWithProps[]) {
       // console.log(toRaw(actions))
@@ -533,5 +417,9 @@ export default {
 <style lang="scss">
 .search-and-replace-textfield {
   min-width: 300px;
+}
+
+.small {
+  max-width: 0.5rem;
 }
 </style>

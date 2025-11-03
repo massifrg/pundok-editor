@@ -9,6 +9,7 @@ import {
   ActionName,
   ACTION_REMOVE_CUSTOM_CLASS,
   ACTION_ADD_CUSTOM_CLASS,
+  ACTION_SET_INDEX_REF,
 } from "./actions";
 import {
   AddOrRemoveClassActionProps,
@@ -16,7 +17,10 @@ import {
   AddOrRemoveMarkActionProps,
   SetSpanActionProps,
   PundokEditorConfig,
-  AddOrRemoveCustomClassActionProps
+  AddOrRemoveCustomClassActionProps,
+  SetIndexRefActionProps,
+  DEFAULT_INDEX_NAME,
+  Index,
 } from "../common";
 
 export function defaultPropsFor(actionName: ActionName, config?: PundokEditorConfig): object {
@@ -60,6 +64,13 @@ export function defaultPropsFor(actionName: ActionName, config?: PundokEditorCon
         return {
           className: firstClass?.name || 'class-name'
         } as AddOrRemoveClassActionProps
+      }
+    case ACTION_SET_INDEX_REF.name:
+      {
+        const firstIndex: Index | undefined = config?.indices && config.indices[0]
+        return {
+          indexName: firstIndex?.indexName || DEFAULT_INDEX_NAME
+        } as SetIndexRefActionProps
       }
     default:
       return {}

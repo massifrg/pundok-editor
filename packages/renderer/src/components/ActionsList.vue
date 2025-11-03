@@ -6,6 +6,7 @@ import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassAction
 import AddOrRemoveCustomClassActionEditor from './actioneditors/AddOrRemoveCustomClassActionEditor.vue'
 import AddOrRemoveCustomStyleActionEditor from './actioneditors/AddOrRemoveCustomStyleActionEditor.vue'
 import AddOrRemoveMarkActionEditor from './actioneditors/AddOrRemoveMarkActionEditor.vue'
+import SetIndexRefActionEditor from './actioneditors/SetIndexRefActionEditor.vue';
 import SetSpanActionEditor from './actioneditors/SetSpanActionEditor.vue'
 import { defaultPropsFor } from '../actions/defaultProps';
 import { getEditorConfiguration } from '../schema';
@@ -40,6 +41,7 @@ export default {
     AddOrRemoveCustomClassActionEditor,
     AddOrRemoveCustomStyleActionEditor,
     AddOrRemoveMarkActionEditor,
+    SetIndexRefActionEditor,
     SetSpanActionEditor,
   },
   methods: {
@@ -73,6 +75,9 @@ export default {
     },
     isSetSpanAction(a: ActionNameWithProps) {
       return (a.name as ActionName) === 'set-span'
+    },
+    isSetIndexRefAction(a: ActionNameWithProps) {
+      return (a.name as ActionName) === 'set-index-ref'
     },
     newActionItem(_name?: string) {
       const name = _name || this.availableActionsNames[0]
@@ -173,6 +178,8 @@ export default {
             <AddOrRemoveCustomClassActionEditor v-if="isAddOrRemoveCustomClassAction(a)" :editor="editor" :index="index"
               :action='a' @set-props="setActionProps" />
             <SetSpanActionEditor v-if="isSetSpanAction(a)" :editor="editor" :index="index" :action='a'
+              @set-props="setActionProps" />
+            <SetIndexRefActionEditor v-if="isSetIndexRefAction(a)" :editor="editor" :index="index" :action='a'
               @set-props="setActionProps" />
           </q-item-section>
         </q-item>

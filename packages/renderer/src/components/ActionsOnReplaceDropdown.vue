@@ -93,7 +93,7 @@ export default {
   },
   methods: {
     update(actions: ActionNameWithProps[]) {
-      this.isEmpty = actions.length === 0
+      this.isEmpty = !actions || actions.length === 0
       this.label = actionsAsText(actions, this.configuration)
       // forward event
       this.$emit('update-actions', actions)

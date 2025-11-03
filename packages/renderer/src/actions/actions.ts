@@ -66,6 +66,7 @@ export type ActionName =
   | 'add-mark'
   | 'remove-mark'
   | 'set-span'
+  | 'set-index-ref'
   | 'add-custom-style'
   | 'remove-custom-style'
   | 'add-custom-class'
@@ -379,6 +380,12 @@ export const ACTION_REMOVE_CUSTOM_CLASS: BaseActionForNodeOrMark = {
   icon: 'remove_custom_class'
 }
 
+export const ACTION_SET_INDEX_REF: BaseActionForNodeOrMark = {
+  name: 'set-index-ref',
+  label: 'set an index reference at selection',
+  icon: 'mdi-cursor-pointer',
+}
+
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
   name: 'setup-viewer',
   label: 'setup viewer',
@@ -477,8 +484,9 @@ const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEn
   ACTION_SET_SPAN,
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_REMOVE_CUSTOM_CLASS,
-  ACTION_ADD_CLASS,
-  ACTION_REMOVE_CLASS,
+  // ACTION_ADD_CLASS,
+  // ACTION_REMOVE_CLASS,
+  ACTION_SET_INDEX_REF,
 ].map(action => [action.name, action]))
 
 export function availableActionsNames(): string[] {

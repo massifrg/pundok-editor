@@ -139,3 +139,7 @@ export interface SetSpanActionProps {
   alternativeIndex: number,
   alternatives?: CustomSpan[],
 }
+
+export interface SetIndexRefActionProps {
+  indexName: string,
+}
