@@ -1,7 +1,7 @@
 <script lang="ts">
 import { toRaw } from 'vue';
 import { ActionName, availableAction, availableActionsNames } from '../actions';
-import { ActionNameWithProps } from '../common';
+import { ActionNameWithProps, isOppositeAction } from '../common';
 import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassActionEditor.vue'
 import AddOrRemoveCustomClassActionEditor from './actioneditors/AddOrRemoveCustomClassActionEditor.vue'
 import AddOrRemoveCustomStyleActionEditor from './actioneditors/AddOrRemoveCustomStyleActionEditor.vue'
@@ -92,8 +92,13 @@ export default {
     },
     setActionItem(index: number, name: string) {
       if (index >= 0 && index < this.actions.length) {
-        if (this.actions[index].name !== name)
-          this.actions = this.actions.map((a, i) => i === index ? { name } : a)
+        const currentAction = this.actions[index]
+        if (currentAction.name !== name) {
+          const props = isOppositeAction(this.actions[index].name, name)
+            ? currentAction.props
+            : defaultPropsFor(name as ActionName, this.configuration)
+          this.actions = this.actions.map((a, i) => i === index ? { name, props } : a)
+        }
       }
     },
     moveActionItemUp(index: number) {
@@ -168,7 +173,7 @@ export default {
               </q-item>
             </q-btn-dropdown>
           </q-item-section>
-          <q-item-section>
+          <q-item-section side>
             <AddOrRemoveClassActionEditor v-if="isAddOrRemoveClassAction(a)" :index="index" :action='a'
               @set-props="setActionProps" />
             <AddOrRemoveCustomStyleActionEditor v-if="isAddOrRemoveCustomStyleAction(a)" :editor="editor" :index="index"

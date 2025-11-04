@@ -32,9 +32,9 @@ export function defaultPropsFor(actionName: ActionName, config?: PundokEditorCon
       } as AddOrRemoveMarkActionProps
     case ACTION_ADD_CUSTOM_STYLE.name:
     case ACTION_REMOVE_CUSTOM_STYLE.name:
-      const styles = config?.customStyles || []
+      const firstStyle = config?.customStyles && config.customStyles[0]
       return {
-        styleName: styles[0].name || 'style-name'
+        styleName: firstStyle?.name || 'style-name'
       } as AddOrRemoveCustomStyleActionProps
     case ACTION_ADD_CUSTOM_CLASS.name:
     case ACTION_REMOVE_CUSTOM_CLASS.name:

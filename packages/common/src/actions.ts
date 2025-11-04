@@ -143,3 +143,14 @@ export interface SetSpanActionProps {
 export interface SetIndexRefActionProps {
   indexName: string,
 }
+
+/**
+ * Check if two action (names) do the opposite (e.g. "add-mark" and "remove-mark").
+ * @param n1 The name of the first action.
+ * @param n2 The name of the second action.
+ * @returns 
+ */
+export function isOppositeAction(n1: string, n2: string): boolean {
+  return n1 !== n2
+    && n1.replace(/^(add|remove)/, '') === n2.replace(/^(add|remove)/, '')
+}
