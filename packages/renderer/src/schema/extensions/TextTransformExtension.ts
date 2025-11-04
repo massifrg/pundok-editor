@@ -7,7 +7,7 @@ import {
   upperCaseFirstTransaction,
   upperCaseTransaction,
 } from '../../commands';
-import { Attrs, Mark, MarkType, Schema } from '@tiptap/pm/model';
+import { Attrs, Mark, MarkType } from '@tiptap/pm/model';
 import { getMark } from '../helpers';
 import {
   ActionNameWithProps,
@@ -38,7 +38,6 @@ import {
 import { updateAttributesCommand } from './HelperCommandsExtension';
 import { Command } from '@tiptap/pm/state';
 import { setIndexRefCommand } from './IndexingExtension';
-import { chainCommands } from '@tiptap/pm/commands';
 
 export type TextTransformType =
   | 'add-mark'
@@ -92,6 +91,7 @@ export const TextTransformExtension = Extension.create({
           ({ dispatch, state }) =>
             upperCaseFirstCommand(locales)(state, dispatch),
       applyTextTransforms,
+      // TODO: the next one should go in a file of its own
       applyActions:
         (actions: ActionNameWithProps[]) =>
           ({ state, dispatch, view }) => applyActions(actions)(state, dispatch, view),
@@ -161,72 +161,6 @@ const applyTextTransforms: (transforms: TextTransform[]) => (cp: CommandProps) =
       return true;
     }
 
-const applyActions: (actions: ActionNameWithProps[]) => Command =
-  (actions: ActionNameWithProps[]) => {
-    const commands = actions.map(a => actionNameWithPropsToCommand(a))
-    return chainCommands(...commands)
-  }
-
-function actionNameWithPropsToTextTransform(
-  action: ActionNameWithProps,
-): TextTransform | undefined {
-  const { name, props } = action
-  switch (name) {
-    case ACTION_ADD_MARK.name:
-    case ACTION_REMOVE_MARK.name:
-      {
-        const { markType, attrs } = props as AddOrRemoveMarkActionProps
-        return {
-          type: ACTION_ADD_MARK.name === name ? 'add-mark' : 'remove-mark',
-          mark: markType,
-          attrs: attrs
-        } as MarkTransform
-      }
-      break
-    case ACTION_ADD_CUSTOM_STYLE.name:
-    case ACTION_REMOVE_CUSTOM_STYLE.name:
-      {
-        const { styleName } = props as AddOrRemoveCustomStyleActionProps
-        const attrs = {
-          customStyle: styleName,
-          kv: {
-            'custom-style': styleName,
-          }
-        }
-        return {
-          type: ACTION_ADD_CUSTOM_STYLE.name === name ? 'add-mark' : 'remove-mark',
-          mark: MARK_NAME_SPAN,
-          attrs
-        } as MarkTransform
-      }
-      break
-    case ACTION_LOWERCASE.name:
-      return { type: 'lowercase' } as CapitalizeTransform
-    case ACTION_UPPERCASE.name:
-      return { type: 'uppercase' } as CapitalizeTransform
-    case ACTION_UPPERCASE_FIRST.name:
-      return { type: 'uppercase-first' } as CapitalizeTransform
-    case ACTION_SET_SPAN.name:
-      {
-        const { classes, attrs } = props as SetSpanActionProps
-        return {
-          type: 'add-mark',
-          mark: MARK_NAME_SPAN,
-          attrs: { classes, kv: attrs }
-        } as MarkTransform
-      }
-      break
-    case ACTION_SET_INDEX_REF.name:
-
-    case ACTION_ADD_CUSTOM_CLASS.name:
-    case ACTION_REMOVE_CUSTOM_CLASS.name:
-    case ACTION_ADD_CLASS.name:
-    case ACTION_REMOVE_CLASS.name:
-    default:
-      return undefined
-  }
-}
-
 function applyTextTransformsCommand(transforms: TextTransform[]): Command {
   return (state, dispatch, view) => {
     const { empty, from, to } = state.selection;
@@ -291,7 +225,7 @@ function actionNameWithPropsToCommand(
     case ACTION_ADD_MARK.name:
     case ACTION_REMOVE_MARK.name:
       {
-        const { markType, attrs } = props as AddOrRemoveMarkActionProps
+        const { markType, attrs } = (props || {}) as AddOrRemoveMarkActionProps
         return applyTextTransformsCommand([{
           type: ACTION_ADD_MARK.name === name ? 'add-mark' : 'remove-mark',
           mark: markType,
@@ -302,7 +236,7 @@ function actionNameWithPropsToCommand(
     case ACTION_ADD_CUSTOM_STYLE.name:
     case ACTION_REMOVE_CUSTOM_STYLE.name:
       {
-        const { styleName } = props as AddOrRemoveCustomStyleActionProps
+        const { styleName } = (props || {}) as AddOrRemoveCustomStyleActionProps
         const attrs = {
           customStyle: styleName,
           kv: {
@@ -324,7 +258,7 @@ function actionNameWithPropsToCommand(
       return applyTextTransformsCommand([{ type: 'uppercase-first' } as CapitalizeTransform])
     case ACTION_SET_SPAN.name:
       {
-        const { classes, attrs } = props as SetSpanActionProps
+        const { classes, attrs } = (props || {}) as SetSpanActionProps
         return applyTextTransformsCommand([{
           type: 'add-mark',
           mark: MARK_NAME_SPAN,
@@ -347,3 +281,11 @@ function actionNameWithPropsToCommand(
       return () => true
   }
 }
+
+const applyActions: (actions: ActionNameWithProps[]) => Command =
+  (actions: ActionNameWithProps[]) => {
+    const commands = actions.map(a => actionNameWithPropsToCommand(a))
+    return (state, dispatch, view) => {
+      return commands.every(cmd => cmd(state, dispatch, view))
+    }
+  }
