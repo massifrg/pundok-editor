@@ -9,6 +9,7 @@ import {
   AddOrRemoveMarkActionProps,
   attrsToCssSelectorString,
   PundokEditorConfig,
+  SetIndexRefActionProps,
   SetSpanActionProps
 } from '../common';
 import ActionsList from './ActionsList.vue';
@@ -61,6 +62,11 @@ function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConf
           return altIndex >= 0 && altIndex < altCount
             ? `+${alternatives![alternativeIndex].name}`
             : `+${attrsToCssSelectorString({ classes, attributes: attrs })}`
+        }
+      case 'set-index-ref':
+        {
+          const { indexName } = toRaw(props) as SetIndexRefActionProps
+          return `index as ${indexName}`
         }
       default:
         return actionName
