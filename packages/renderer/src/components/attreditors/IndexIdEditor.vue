@@ -237,9 +237,11 @@ export default {
       switch (this.currentSource.type) {
         case 'document':
           this.refreshDocumentIndices()
+          this.doSearch()
           break
         case 'project':
           this.refreshProjectIndices()
+          this.doSearch()
           break
         default:
       }
