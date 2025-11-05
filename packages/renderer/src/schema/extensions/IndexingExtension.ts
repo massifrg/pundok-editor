@@ -11,14 +11,19 @@ import {
   INDEX_NAME_ATTR,
   Index,
   IndexRefPlacement,
+  IndexTermQuery,
+  NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_REF,
+  NODE_NAME_INDEX_TERM,
   SK_SET_INDEX_REF,
   indexRefDecorationCss,
 } from '../../common';
 import { DEFAULT_INDEX_NAME } from '../../common';
 import { documentIndices, mergeIndices } from '../helpers/indices';
-import { DocStateUpdate, getDocState, META_UPDATE_DOC_STATE } from '../helpers';
+import { DocStateUpdate, getDocState, innerNodeDepth, META_UPDATE_DOC_STATE } from '../helpers';
 import { isString } from 'lodash';
+import { Backend } from '../../backend';
+import { IndexDiv } from '../nodes';
 
 const INDEXING_PLUGIN = 'indexing-plugin';
 
@@ -371,5 +376,141 @@ export function setIndexRefCommand(optIndex?: Index | string): Command {
       }
     }
     return true;
+  }
+}
+
+export async function indexTermsIdAutoAssignFromJsonTransaction(
+  state: EditorState,
+  pos: number,
+  backend: Backend,
+  searchTextVariant: 'first-2-words' | 'first-3-words',
+  callback: (terms: number, withoutId: number, autoId: number) => void,
+): Promise<Transaction> {
+  const indexDiv = state.doc.nodeAt(pos)
+  if (indexDiv?.type.name !== NODE_NAME_INDEX_DIV)
+    return Promise.reject('not an index node')
+  const wordsCount = searchTextVariant === 'first-2-words'
+    ? 2
+    : searchTextVariant === 'first-3-words'
+      ? 3
+      : 2
+  const docState = getDocState(state)
+  let query: IndexTermQuery = {
+    type: 'index-term',
+    indexName: indexDiv?.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
+    searchText: '',
+    options: {
+      kind: 'index',
+      project: docState?.project,
+      configurationName: docState?.configuration?.name,
+    }
+  }
+  // check with dummy search
+  try {
+    await backend?.queryDatabase({ ...query, searchText: 'dummy' })
+  } catch (err) {
+    return Promise.reject(err)
+  }
+  const tr = state.tr
+  let p = pos + 1
+  let withoutIdCount = 0
+  let termsCount = 0
+  let autoAssignedCount = 0
+  for (let i = 0; i < indexDiv.childCount; i++) {
+    const child = indexDiv.child(i)
+    if (child) {
+      if (child.type.name === NODE_NAME_INDEX_TERM) {
+        termsCount++
+        if (!child.attrs.id) {
+          withoutIdCount++
+          const content = child.textContent || ''
+          const searchText = content
+            .split(/\P{Letter}+/u)
+            .filter(t => t.length > 0)
+            .slice(0, wordsCount)
+            .join(' ')
+          try {
+            const results = await backend?.queryDatabase({ ...query, searchText })
+            if (results.length === 1) {
+              const id = results[0].id
+              tr.setNodeMarkup(p, null, { ...child.attrs, id })
+              autoAssignedCount++
+            }
+          } catch (err) {
+            return Promise.reject(err)
+          }
+        }
+        callback(termsCount, withoutIdCount, autoAssignedCount)
+      }
+      p = p + child.nodeSize
+    } else
+      break
+  }
+  return tr
+}
+
+function getIndexTermInSelection(state: EditorState): NodeWithPos | undefined {
+  const { doc, selection } = state
+  const $pos = selection.$anchor
+  const indexDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_DIV)
+  const termDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_TERM)
+  if (!indexDepth || !termDepth || termDepth < indexDepth)
+    return undefined
+  const indexDiv = $pos.node(indexDepth)
+  const indexTerm = $pos.node(termDepth)
+  return {
+    node: $pos.node(termDepth),
+    pos: $pos.start(termDepth) - 1
+  }
+}
+
+export async function indexTermIdAutoAssignFromJson(
+  state: EditorState,
+  backend: Backend,
+  searchTextVariant: 'first-2-words' | 'first-3-words',
+): Promise<Command> {
+  const { doc, selection } = state
+  const $pos = selection.$anchor
+  const indexDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_DIV)
+  const termDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_TERM)
+  if (!indexDepth || !termDepth || termDepth < indexDepth)
+    return () => false
+  const indexDiv = $pos.node(indexDepth)
+  const { node: indexTerm, pos } = getIndexTermInSelection(state) || {}
+  if (!indexTerm) return () => false
+  const wordsCount = searchTextVariant === 'first-2-words'
+    ? 2
+    : searchTextVariant === 'first-3-words'
+      ? 3
+      : 2
+  const docState = getDocState(state)
+  const content = indexTerm.textContent || ''
+  const searchText = content
+    .split(/\P{Letter}+/u)
+    .filter(t => t.length > 0)
+    .slice(0, wordsCount)
+    .join(' ')
+  const query: IndexTermQuery = {
+    type: 'index-term',
+    indexName: indexDiv.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
+    searchText,
+    options: {
+      kind: 'index',
+      project: docState?.project,
+      configurationName: docState?.configuration?.name,
+    }
+  }
+  try {
+    const results = await backend?.queryDatabase({ ...query, searchText })
+    if (results.length === 1) {
+      const id = results[0].id
+      return (state, dispatch, view) => {
+        // TODO: state.tr.setNodeMarkup(p, null, { ...child.attrs, id })
+        return true
+      }
+    }
+    return () => false
+  } catch (err) {
+    return Promise.reject(err)
   }
 }
