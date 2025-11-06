@@ -1,5 +1,5 @@
 import { Editor } from '@tiptap/core';
-import { currentRepeatableCommandTooltip } from '../schema';
+import { currentRepeatableCommandTooltip, SearchTextVariant } from '../schema';
 import { SelectedNodeOrMark } from '../schema/helpers';
 import {
   AddOrRemoveClassActionProps,
@@ -74,6 +74,7 @@ export type ActionName =
   | 'lowercase'
   | 'uppercase'
   | 'uppercase-first'
+  | 'auto-set-index-term-id'
 
 export type TooltipForAction =
   | string
@@ -336,6 +337,23 @@ export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return typ && className && editor.commands.removePandocAttrClass(typ, className) || false
   }
+}
+
+export interface SearchIndexTermActionProps {
+  searchTextVariant: SearchTextVariant
+}
+
+export const ACTION_AUTO_SET_INDEX_TERM_ID: BaseActionForNodeOrMark = {
+  name: 'auto-set-index-term-id',
+  label: 'search and set the id of the index term automatically',
+  icon: 'mdi-database-search',
+  canDo: (editor, action) => editor.can().setIndexTermAutoId(
+    (action?.props as SearchIndexTermActionProps)?.searchTextVariant),
+  do: (editor, action) => editor.commands.runRepeatableCommand(
+    'setIndexTermAutoId',
+    'search and set the id of the current index term automatically',
+    (action?.props as SearchIndexTermActionProps)?.searchTextVariant
+  )
 }
 
 export const ACTION_ADD_MARK: BaseActionForNodeOrMark = {

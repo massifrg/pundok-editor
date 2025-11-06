@@ -20,12 +20,20 @@ import {
 } from '../../common';
 import { DEFAULT_INDEX_NAME } from '../../common';
 import { documentIndices, mergeIndices } from '../helpers/indices';
-import { DocStateUpdate, getDocState, innerNodeDepth, META_UPDATE_DOC_STATE } from '../helpers';
+import {
+  DocStateUpdate,
+  getDocState,
+  innerNodeDepth,
+  META_UPDATE_DOC_STATE
+} from '../helpers';
 import { isString } from 'lodash';
 import { Backend } from '../../backend';
-import { IndexDiv } from '../nodes';
+import { useBackend } from '../../stores';
 
 const INDEXING_PLUGIN = 'indexing-plugin';
+export type SearchTextVariant =
+  | 'first-3-words'
+  | 'first-2-words'
 
 export const INDEXING_DECORATION_PREFIX = 'indexing';
 const META_REDECORATE_INDEX_REFS = 'redecorate-index-refs';
@@ -40,6 +48,7 @@ declare module '@tiptap/core' {
       addIndexRef: (index?: Index | string) => ReturnType;
       redecorateIndexRefs: () => ReturnType;
       detectDocumentIndices: () => ReturnType;
+      setIndexTermAutoId: (stv?: SearchTextVariant) => ReturnType;
     };
   }
 }
@@ -278,6 +287,20 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
             }
             return true;
           },
+      setIndexTermAutoId: (stv) => ({ dispatch, editor, state }) => {
+        const backend = useBackend().backend
+        if (!backend) return false
+        if (!innerNodeDepth(state.selection.$anchor, n => n.type.name === NODE_NAME_INDEX_TERM))
+          return false;
+        if (dispatch) {
+          (async () => {
+            const command = await indexTermIdAutoSetCommand(state, backend, stv || 'first-2-words')
+            const { state: maybeUpdatedState, view } = editor
+            command(maybeUpdatedState, view.dispatch, view)
+          })()
+        }
+        return true
+      }
     };
   },
 
@@ -450,33 +473,29 @@ export async function indexTermsIdAutoAssignFromJsonTransaction(
 }
 
 function getIndexTermInSelection(state: EditorState): NodeWithPos | undefined {
-  const { doc, selection } = state
-  const $pos = selection.$anchor
+  const $pos = state.selection.$anchor
   const indexDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_DIV)
   const termDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_TERM)
   if (!indexDepth || !termDepth || termDepth < indexDepth)
     return undefined
-  const indexDiv = $pos.node(indexDepth)
-  const indexTerm = $pos.node(termDepth)
   return {
     node: $pos.node(termDepth),
     pos: $pos.start(termDepth) - 1
   }
 }
 
-export async function indexTermIdAutoAssignFromJson(
+export async function indexTermIdAutoSetCommand(
   state: EditorState,
   backend: Backend,
   searchTextVariant: 'first-2-words' | 'first-3-words',
 ): Promise<Command> {
-  const { doc, selection } = state
-  const $pos = selection.$anchor
+  const $pos = state.selection.$anchor
   const indexDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_DIV)
   const termDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_TERM)
   if (!indexDepth || !termDepth || termDepth < indexDepth)
     return () => false
   const indexDiv = $pos.node(indexDepth)
-  const { node: indexTerm, pos } = getIndexTermInSelection(state) || {}
+  const { node: indexTerm, pos: indexTermPos } = getIndexTermInSelection(state) || {}
   if (!indexTerm) return () => false
   const wordsCount = searchTextVariant === 'first-2-words'
     ? 2
@@ -489,10 +508,10 @@ export async function indexTermIdAutoAssignFromJson(
     .split(/\P{Letter}+/u)
     .filter(t => t.length > 0)
     .slice(0, wordsCount)
-    .join(' ')
+  const indexName = indexDiv.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME
   const query: IndexTermQuery = {
     type: 'index-term',
-    indexName: indexDiv.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
+    indexName,
     searchText,
     options: {
       kind: 'index',
@@ -505,8 +524,13 @@ export async function indexTermIdAutoAssignFromJson(
     if (results.length === 1) {
       const id = results[0].id
       return (state, dispatch, view) => {
-        // TODO: state.tr.setNodeMarkup(p, null, { ...child.attrs, id })
-        return true
+        const { node, pos } = getIndexTermInSelection(state) || {}
+        if (node === indexTerm && pos === indexTermPos && content === node!.textContent) {
+          if (dispatch)
+            dispatch(state.tr.setNodeMarkup(pos!, null, { ...node!.attrs, id }))
+          return true
+        }
+        return false
       }
     }
     return () => false

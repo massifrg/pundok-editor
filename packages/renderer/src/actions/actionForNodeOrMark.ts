@@ -15,6 +15,7 @@ import {
   DocumentOpenActionProps,
   InputConverter,
   NODE_NAME_INDEX_DIV,
+  NODE_NAME_INDEX_TERM,
   NODE_NAME_PANDOC_TABLE,
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_CELL,
@@ -23,6 +24,7 @@ import {
 } from '../common';
 import { toRaw } from 'vue';
 import {
+  ACTION_AUTO_SET_INDEX_TERM_ID,
   ACTION_DOCUMENT_OPEN,
   ACTION_EDIT_ATTRIBUTES,
   ACTION_REPEAT_CHANGE,
@@ -283,6 +285,12 @@ export function actionsForNodeOrMark(
         do: (editor) => editor.commands.propagateIndexNameToTerms(),
         nodeOrMark,
       });
+    } else if (nodeTypeName === NODE_NAME_INDEX_TERM) {
+      actions.push({
+        ...ACTION_AUTO_SET_INDEX_TERM_ID,
+        editorKey,
+        nodeOrMark,
+      })
     }
 
     if (node?.attrs.classes?.includes(INCLUDE_DOC_CLASS)) {
