@@ -260,6 +260,11 @@
 
       <ElementSelectionButton :editor="editor" />
 
+      <ToolbarButton icon="mdi-cog-play" title="procedures on the whole document"
+        @click="globalProceduresDialogVisible = !globalProceduresDialogVisible">
+        <GlobalProceduresDialog :visible="globalProceduresDialogVisible" :editor="editor"
+          @show="globalProceduresDialogVisible = true" @hide="globalProceduresDialogVisible = false" />
+      </ToolbarButton>
       <!-- <ToolbarButton icon="mdi-bug-check" @click="debug()" /> -->
 
       <q-space />
@@ -291,6 +296,7 @@ import CustomWrapperMenu from './CustomWrapperMenu.vue';
 // import CustomMarkMenu from './CustomMarkMenu.vue'
 // import CustomBlocksButtons from './CustomBlocksButtons.vue';
 import ElementSelectionButton from './ElementSelectionButton.vue';
+import GlobalProceduresDialog from './GlobalProceduresDialog.vue';
 import ImageButton from './ImageButton.vue';
 import IndicesButtons from './IndicesButtons.vue';
 import InsertNoteButton from './InsertNoteButton.vue';
@@ -331,6 +337,8 @@ import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
+import { readFileSync } from 'original-fs';
+import { Component } from 'vue';
 
 export default {
   components: {
@@ -344,6 +352,7 @@ export default {
     ElementSelectionButton,
     ExportProgress,
     ExportToolbarButton,
+    GlobalProceduresDialog,
     ImageButton,
     IndicesButtons,
     InsertNoteButton,
@@ -377,6 +386,7 @@ export default {
     return {
       version: getPundokVersion(),
       configSummaries: [] as ConfigurationSummary[],
+      globalProceduresDialogVisible: false,
       // actions: useActions(),
     };
   },
