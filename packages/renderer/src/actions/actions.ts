@@ -440,10 +440,10 @@ export const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
   icon: 'mdi-wrap-disabled',
   canDo: (editor, action) =>
     !!action?.nodeOrMark?.pos &&
-    editor.can().unwrapNodeAtPos(action.nodeOrMark.pos),
+    editor.can().unwrapNode(action.nodeOrMark.pos),
   do: (editor, action) =>
     !!action?.nodeOrMark?.pos &&
-    editor.commands.unwrapNodeAtPos(action.nodeOrMark.pos),
+    editor.commands.unwrapNode(action.nodeOrMark.pos),
 };
 
 export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];

@@ -55,6 +55,8 @@ export const SK_INCLUDE_DOC = 'Alt-i';
 export const SK_SHOW_SEARCH_DIALOG = 'Mod-f';
 /** Shortcut key to duplicate the current node. */
 export const SK_DUPLICATE_NODE = 'Alt-d';
+/** Shortcut key to unwrap the current or selected node. */
+export const SK_UNWRAP_NODE = 'Alt-u';
 
 /** Shortcut key to select the "alternative 0" in a particular context. */
 export const SK_SET_ALTERNATIVE_0 = 'Alt-0';
