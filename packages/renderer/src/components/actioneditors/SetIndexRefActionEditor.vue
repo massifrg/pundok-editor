@@ -45,6 +45,7 @@ export default {
   methods: {
     setIndexName(i: Index) {
       this.indexName = i.indexName
+      this.updateProps()
     },
     updateProps() {
       this.$emit('set-props', this.index, {
