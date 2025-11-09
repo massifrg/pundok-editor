@@ -48,12 +48,12 @@ export const CssSelectionExtension = Extension.create({
     return {
       cssSelect:
         (selector, options) =>
-        ({ dispatch, tr }) => {
-          if (dispatch) {
-            dispatch(tr.setMeta(META_SET_CSS_SELECTOR, { selector, options }));
-          }
-          return true;
-        },
+          ({ dispatch, tr }) => {
+            if (dispatch) {
+              dispatch(tr.setMeta(META_SET_CSS_SELECTOR, { selector, options }));
+            }
+            return true;
+          },
     };
   },
 });
