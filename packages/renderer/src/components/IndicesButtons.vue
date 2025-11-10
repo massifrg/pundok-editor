@@ -16,8 +16,7 @@ import { useActions } from '../stores';
 import { mapState } from 'pinia';
 import { DEFAULT_INDEX_COLOR, Index, SetAlternativeActionProps } from '../common'
 import { getEditorConfiguration } from '../schema';
-import { mergeIndices } from '../schema/helpers/indices';
-import { getIndexingState } from '../schema/extensions/IndexingExtension';
+import { getAllIndices } from '../schema/extensions/IndexingExtension';
 import ToolbarButton from './ToolbarButton.vue';
 import { ACTION_SET_ALTERNATIVE, EditorAction } from '../actions';
 
@@ -33,12 +32,7 @@ export default {
       return this.configuration?.indices || []
     },
     allIndices(): Index[] {
-      if (this.editor) {
-        const indexingState = getIndexingState(this.editor.state)
-        if (indexingState)
-          return mergeIndices(indexingState.indices, indexingState.docIndices)
-      }
-      return []
+      return getAllIndices(this.editor?.state)
     },
   },
   watch: {

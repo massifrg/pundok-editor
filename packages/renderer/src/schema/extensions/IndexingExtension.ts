@@ -538,3 +538,12 @@ export async function indexTermIdAutoSetCommand(
     return Promise.reject(err)
   }
 }
+
+export function getAllIndices(state?: EditorState): Index[] {
+  if (state) {
+    const indexingState = getIndexingState(state)
+    if (indexingState)
+      return mergeIndices(indexingState.indices, indexingState.docIndices)
+  }
+  return []
+}
