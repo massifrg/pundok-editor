@@ -44,6 +44,8 @@ export interface PundokEditorConfigInit extends Record<string, any> {
   customCss?: string[];
   /** indices' definitions */
   indices?: Index[];
+  /** Default format when creating RawInline and RawBlock elements. */
+  defaultRawFormat?: string;
   /** `RawInline samples to be made available through the editor interface */
   rawInlines?: InsertableRaw[];
   /** `RawBlock samples to be made available through the editor interface */

@@ -126,6 +126,7 @@ import {
   INDEXED_TEXT_ATTR,
   NODE_NAME_INDEX_REF,
   SearchAndReplace,
+  serializeConfiguration,
   SetSpanActionProps,
 } from '../common';
 import {
@@ -637,6 +638,7 @@ export default {
           // TODO: add all the settings
         } as SearchAndReplace
       }
+      console.log(serializeConfiguration(this.configuration!))
       this.backend?.storeInConfiguration('automations', obj, configName)
     }
   },
