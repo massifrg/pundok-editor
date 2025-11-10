@@ -369,9 +369,7 @@ export class LocalBackend implements Backend {
 
   async queryDatabase(query: Query): Promise<QueryResult[]> {
     try {
-      return this.invokeIpc('query', JSON.stringify(query)) as Promise<
-        QueryResult[]
-      >;
+      return this.invokeIpc('query', JSON.stringify(query)) as Promise<QueryResult[]>;
     } catch (err) {
       return Promise.reject(err);
     }
@@ -458,6 +456,9 @@ export class LocalBackend implements Backend {
     return job_as_string && JSON.parse(job_as_string) as ExportJob || undefined
   }
 
+  async storeInConfiguration(what: string, obj: object, configName?: string): Promise<void> {
+
+  }
 }
 
 function getConfigurationFunction(ipc: any) {

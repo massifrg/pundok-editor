@@ -198,6 +198,8 @@ export interface Backend {
   exportAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 
   getExportJob(hash: string): Promise<ExportJob | undefined>;
+
+  storeInConfiguration(what: string, obj: object, configName?: string): Promise<void>;
 }
 
 export function createBackend(config: BackendConfig): Backend {

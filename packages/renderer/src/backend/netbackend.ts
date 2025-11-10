@@ -158,6 +158,10 @@ export class NetBackend implements Backend {
   async getExportJob(hash: string): Promise<ExportJob | undefined> {
     return Promise.reject('method non implemented');
   }
+
+  async storeInConfiguration(what: string, obj: object, configName?: string): Promise<void> {
+    return Promise.reject('method non implemented');
+  }
 }
 
 function dummyQueryHandler(query: IndexTermQuery): QueryResult[] {
