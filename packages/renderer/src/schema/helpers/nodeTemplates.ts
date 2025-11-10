@@ -44,6 +44,7 @@ import {
 import { createPandocTable, innerNodeDepth } from '.';
 import { isString } from 'lodash';
 import { EditorState } from '@tiptap/pm/state';
+import { RawBlock } from '../nodes';
 
 export function nodesWithTemplate(): string[] {
   return [
@@ -164,7 +165,9 @@ export function templateNode(
       break;
     case NODE_NAME_RAW_BLOCK:
       node = nodeType.create({
-        format: config?.defaultRawFormat || DEFAULT_RAW_BLOCK_FORMAT,
+        format: config?.defaultRawFormat
+          || RawBlock.options?.defaultFormat
+          || DEFAULT_RAW_BLOCK_FORMAT,
         text: '',
       });
       break;
@@ -378,7 +381,7 @@ export function attrsForConversionTo(
     const format =
       fromTypeName === NODE_NAME_CODE_BLOCK
         ? fromNode.attrs.classes[0]
-        : config?.defaultRawFormat;
+        : config?.defaultRawFormat || RawBlock.options?.defaultFormat || DEFAULT_RAW_BLOCK_FORMAT;
     if (format) return { format };
   } else if (fromTypeName === NODE_NAME_RAW_BLOCK && toTypeName === NODE_NAME_CODE_BLOCK) {
     return { classes: [fromNode.attrs.format] };

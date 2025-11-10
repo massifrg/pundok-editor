@@ -374,7 +374,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                 node.attrs?.format ||
                 node.attrs?.kv?.format ||
                 config?.defaultRawFormat ||
-                this.options.defaultFormat ||
+                this.options?.defaultFormat ||
                 DEFAULT_RAW_BLOCK_FORMAT;
               const rawBlock = state.schema.nodes[NODE_NAME_RAW_BLOCK].create(
                 { format: format || currentFormat },

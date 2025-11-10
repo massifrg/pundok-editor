@@ -10,6 +10,7 @@ import {
   ACTION_REMOVE_CUSTOM_CLASS,
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_SET_INDEX_REF,
+  ACTION_INSERT_RAW_INLINE,
 } from "./actions";
 import {
   AddOrRemoveClassActionProps,
@@ -21,7 +22,11 @@ import {
   SetIndexRefActionProps,
   DEFAULT_INDEX_NAME,
   Index,
+  InsertRawInlineActionProps,
+  DEFAULT_RAW_INLINE_FORMAT,
+  InsertableRaw,
 } from "../common";
+import { RawInline } from "../schema";
 
 export function defaultPropsFor(actionName: ActionName, config?: PundokEditorConfig): object {
   switch (actionName) {
@@ -71,6 +76,16 @@ export function defaultPropsFor(actionName: ActionName, config?: PundokEditorCon
         return {
           indexName: firstIndex?.indexName || DEFAULT_INDEX_NAME
         } as SetIndexRefActionProps
+      }
+    case ACTION_INSERT_RAW_INLINE.name:
+      {
+        const firstRawInline: InsertableRaw | {} = config?.rawInlines && config.rawInlines[0] || {}
+        return {
+          format: config?.defaultRawFormat || RawInline.options.defaultFormat || DEFAULT_RAW_INLINE_FORMAT,
+          where: 'before',
+          content: ' ',
+          ...firstRawInline
+        } as InsertRawInlineActionProps
       }
     default:
       return {}

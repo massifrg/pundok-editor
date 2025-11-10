@@ -75,6 +75,7 @@ export type ActionName =
   | 'uppercase'
   | 'uppercase-first'
   | 'auto-set-index-term-id'
+  | 'insert-raw-inline'
 
 export type TooltipForAction =
   | string
@@ -404,6 +405,12 @@ export const ACTION_SET_INDEX_REF: BaseActionForNodeOrMark = {
   icon: 'mdi-cursor-pointer',
 }
 
+export const ACTION_INSERT_RAW_INLINE: BaseActionForNodeOrMark = {
+  name: 'insert-raw-inline',
+  label: 'insert a RawInline before/after/around selection',
+  icon: 'mdi-code-tags',
+}
+
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
   name: 'setup-viewer',
   label: 'setup viewer',
@@ -505,6 +512,7 @@ const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEn
   // ACTION_ADD_CLASS,
   // ACTION_REMOVE_CLASS,
   ACTION_SET_INDEX_REF,
+  ACTION_INSERT_RAW_INLINE,
 ].map(action => [action.name, action]))
 
 export function availableActionsNames(): string[] {

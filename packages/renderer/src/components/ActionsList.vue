@@ -6,6 +6,7 @@ import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassAction
 import AddOrRemoveCustomClassActionEditor from './actioneditors/AddOrRemoveCustomClassActionEditor.vue'
 import AddOrRemoveCustomStyleActionEditor from './actioneditors/AddOrRemoveCustomStyleActionEditor.vue'
 import AddOrRemoveMarkActionEditor from './actioneditors/AddOrRemoveMarkActionEditor.vue'
+import InsertRawInlineActionEditor from './actioneditors/InsertRawInlineActionEditor.vue'
 import SetIndexRefActionEditor from './actioneditors/SetIndexRefActionEditor.vue';
 import SetSpanActionEditor from './actioneditors/SetSpanActionEditor.vue'
 import { defaultPropsFor } from '../actions/defaultProps';
@@ -41,6 +42,7 @@ export default {
     AddOrRemoveCustomClassActionEditor,
     AddOrRemoveCustomStyleActionEditor,
     AddOrRemoveMarkActionEditor,
+    InsertRawInlineActionEditor,
     SetIndexRefActionEditor,
     SetSpanActionEditor,
   },
@@ -78,6 +80,9 @@ export default {
     },
     isSetIndexRefAction(a: ActionNameWithProps) {
       return (a.name as ActionName) === 'set-index-ref'
+    },
+    isInsertRawInlineAction(a: ActionNameWithProps) {
+      return (a.name as ActionName) === 'insert-raw-inline'
     },
     newActionItem(_name?: string) {
       const name = _name || this.availableActionsNames[0]
@@ -185,6 +190,8 @@ export default {
             <SetSpanActionEditor v-if="isSetSpanAction(a)" :editor="editor" :index="index" :action='a'
               @set-props="setActionProps" />
             <SetIndexRefActionEditor v-if="isSetIndexRefAction(a)" :editor="editor" :index="index" :action='a'
+              @set-props="setActionProps" />
+            <InsertRawInlineActionEditor v-if="isInsertRawInlineAction(a)" :editor="editor" :index="index" :action='a'
               @set-props="setActionProps" />
           </q-item-section>
         </q-item>

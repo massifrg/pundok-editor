@@ -5,7 +5,7 @@ import {
   SK_TOGGLE_RAWINLINE
 } from '../../common';
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
-import { NodeSelection } from '@tiptap/pm/state';
+import { Command, NodeSelection } from '@tiptap/pm/state';
 import { getEditorConfiguration, marksEnding, marksStarting, textNode } from '../helpers';
 import { intersection } from 'lodash';
 
@@ -90,80 +90,8 @@ export const RawInline = Node.create<RawInlineOptions>({
   addCommands() {
     return {
       insertRawInline:
-        (rawformat?: string, rawtext?: string | string[]) =>
-          ({ state, dispatch }) => {
-            const rawInlineType = state.schema.nodes[NODE_NAME_RAW_INLINE];
-            const { empty, from, to } = state.selection;
-            if (empty && !rawtext) return false;
-            const isarray = Array.isArray(rawtext);
-            if (isarray && rawtext.length < 1) return false;
-            const raw1: string | undefined = isarray ? rawtext[0] : rawtext;
-            const raw2: string | undefined = isarray ? rawtext[1] : undefined;
-            const doc = state.doc;
-            if (dispatch) {
-              const config = getEditorConfiguration(state);
-              const format =
-                rawformat ||
-                config?.defaultRawFormat ||
-                this.options.defaultFormat ||
-                DEFAULT_RAW_INLINE_FORMAT;
-
-              // the first RawInline to be inserted
-              let rawInline1: ProsemirrorNode | null;
-              // the marks for the first RawInline
-              let marks1: readonly Mark[] = doc.resolve(from).marks();
-
-              let tr = state.tr;
-
-              if (raw2) {
-                let marks2 = doc.resolve(to).marks();
-
-                // when a mark range matches the selection, the ending RawInline
-                // could have the mark while the starting RawInline has not
-                const sameRangeMarks = intersection(
-                  marksEnding(doc, to),
-                  marksStarting(doc, from),
-                );
-                // remove the marks matching the selection range from the second RawInline
-                if (sameRangeMarks.length > 0)
-                  marks2 = marks2.filter((m) => sameRangeMarks.indexOf(m) < 0);
-
-                // do the same with marks starting at selection.from, that are already
-                // present at selection.to, to prevent the first RawInline from having
-                // the starting marks
-                const marksStartingAtFrom = intersection(
-                  marksStarting(doc, from),
-                  marks2,
-                );
-                if (marksStarting.length > 0)
-                  marks1 = [...marks1, ...marksStartingAtFrom];
-
-                const rawInline2 = rawInlineType.create(
-                  { format, text: raw2 },
-                  null,
-                  marks2,
-                );
-                if (rawInline2) tr = tr.insert(to, rawInline2);
-              }
-
-              rawInline1 =
-                (raw1 &&
-                  rawInlineType.create({ format, text: raw1 }, null, marks1)) ||
-                null;
-
-              if (rawInline1) {
-                tr = tr.insert(from, rawInline1);
-              } else {
-                const text = doc.textBetween(from, to, ' ', (node) =>
-                  node.type.name === NODE_NAME_RAW_INLINE ? node.attrs.text : '',
-                );
-                const rawInline = rawInlineType.create({ format, text });
-                tr = tr.replaceSelectionWith(rawInline, true);
-              }
-              dispatch(tr);
-            }
-            return true;
-          },
+        (rawformat?: string, rawtext?: string | string[]) => ({ state, dispatch, view }) =>
+          insertRawInlineCommand(rawformat || this.options?.defaultFormat, rawtext)(state, dispatch, view),
       rawInlineToText:
         () =>
           ({ state, dispatch }) => {
@@ -213,3 +141,79 @@ export const RawInline = Node.create<RawInlineOptions>({
     };
   },
 });
+
+export function insertRawInlineCommand(rawformat?: string, rawtext?: string | string[]): Command {
+  return (state, dispatch, view) => {
+    const rawInlineType = state.schema.nodes[NODE_NAME_RAW_INLINE];
+    const { empty, from, to } = state.selection;
+    if (empty && !rawtext) return false;
+    const isarray = Array.isArray(rawtext);
+    if (isarray && rawtext.length < 1) return false;
+    const raw1: string | undefined = isarray ? rawtext[0] : rawtext;
+    const raw2: string | undefined = isarray ? rawtext[1] : undefined;
+    const doc = state.doc;
+    if (dispatch) {
+      const config = getEditorConfiguration(state);
+      const format = rawformat || config?.defaultRawFormat || DEFAULT_RAW_INLINE_FORMAT;
+
+      // the first RawInline to be inserted
+      let rawInline1: ProsemirrorNode | null;
+      // the marks for the first RawInline
+      let marks1: readonly Mark[] = doc.resolve(from).marks();
+
+      let tr = state.tr;
+
+      if (raw2) {
+        let marks2 = doc.resolve(to).marks();
+
+        // when a mark range matches the selection, the ending RawInline
+        // could have the mark while the starting RawInline has not
+        const sameRangeMarks = intersection(
+          marksEnding(doc, to),
+          marksStarting(doc, from),
+        );
+        // remove the marks matching the selection range from the second RawInline
+        if (sameRangeMarks.length > 0)
+          marks2 = marks2.filter((m) => sameRangeMarks.indexOf(m) < 0);
+
+        // do the same with marks starting at selection.from, that are already
+        // present at selection.to, to prevent the first RawInline from having
+        // the starting marks
+        const marksStartingAtFrom = intersection(
+          marksStarting(doc, from),
+          marks2,
+        );
+        if (marksStarting.length > 0)
+          marks1 = [...marks1, ...marksStartingAtFrom];
+
+        const rawInline2 = rawInlineType.create(
+          { format, text: raw2 },
+          null,
+          marks2,
+        );
+        if (rawInline2) tr = tr.insert(to, rawInline2);
+      }
+
+      rawInline1 =
+        (raw1 &&
+          rawInlineType.create({ format, text: raw1 }, null, marks1)) ||
+        null;
+
+      if (!rawInline1) {
+        if (!raw2) {
+          const text = doc.textBetween(from, to, ' ', (node) =>
+            node.type.name === NODE_NAME_RAW_INLINE ? node.attrs.text : '',
+          );
+          const rawInline = rawInlineType.create({ format, text });
+          tr = tr.replaceSelectionWith(rawInline, true);
+        } else {
+          return false
+        }
+      } else {
+        tr = tr.insert(from, rawInline1);
+      }
+      dispatch(tr);
+    }
+    return true;
+  }
+}

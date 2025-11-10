@@ -13,6 +13,7 @@ import {
   ActionNameWithProps,
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
+  InsertRawInlineActionProps,
   MARK_NAME_SPAN,
   SetIndexRefActionProps,
   SetSpanActionProps,
@@ -25,6 +26,7 @@ import {
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_ADD_CUSTOM_STYLE,
   ACTION_ADD_MARK,
+  ACTION_INSERT_RAW_INLINE,
   ACTION_LOWERCASE,
   ACTION_REMOVE_CLASS,
   ACTION_REMOVE_CUSTOM_CLASS,
@@ -35,9 +37,11 @@ import {
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
 } from '../../actions';
-import { updateAttributesCommand } from './HelperCommandsExtension';
+// import { updateAttributesCommand } from './HelperCommandsExtension';
 import { Command } from '@tiptap/pm/state';
 import { setIndexRefCommand } from './IndexingExtension';
+import { insertRawInlineCommand } from '../nodes/RawInline';
+import { isString } from 'lodash';
 
 export type TextTransformType =
   | 'add-mark'
@@ -270,6 +274,13 @@ function actionNameWithPropsToCommand(
       {
         const { indexName } = (props || {}) as SetIndexRefActionProps
         return setIndexRefCommand(indexName)
+      }
+      break
+    case ACTION_INSERT_RAW_INLINE.name:
+      {
+        const { format, where, content } = (props || {}) as InsertRawInlineActionProps
+        const isSingleAfter = where === 'after' && isString(content)
+        return insertRawInlineCommand(format, isSingleAfter ? ['', content] : content)
       }
       break
     case ACTION_ADD_CUSTOM_CLASS.name:

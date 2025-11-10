@@ -1,6 +1,8 @@
 import type { Node, Mark, NodeType, MarkType, Schema } from '@tiptap/pm/model';
 import {
   CustomStyleDef,
+  DEFAULT_RAW_BLOCK_FORMAT,
+  DEFAULT_RAW_INLINE_FORMAT,
   INDEX_NAME_ATTR,
   MARK_NAME_CITE,
   MARK_NAME_CODE,
@@ -152,14 +154,16 @@ export function nodeOrMarkToPandocName(
     case 'pandocNull':
       return 'Null';
     case NODE_NAME_RAW_INLINE:
-      return `RawInline(${attrs.format ||
-        config?.defaultRawFormat ||
-        RawInline.options.defaultFormat
+      return `RawInline(${attrs.format
+        || config?.defaultRawFormat
+        || RawInline.options.defaultFormat
+        || DEFAULT_RAW_INLINE_FORMAT
         })`;
     case NODE_NAME_RAW_BLOCK:
-      return `RawBlock(${attrs.format ||
-        config?.defaultRawFormat ||
-        RawBlock.options.defaultFormat
+      return `RawBlock(${attrs.format
+        || config?.defaultRawFormat
+        || RawBlock.options.defaultFormat
+        || DEFAULT_RAW_BLOCK_FORMAT
         })`;
     case NODE_NAME_PANDOC_TABLE:
       return `Table`;

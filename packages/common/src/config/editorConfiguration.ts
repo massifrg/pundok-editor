@@ -397,3 +397,11 @@ export async function computeDerivedConfiguration(
   }
   return Promise.resolve(derived);
 }
+
+export function getRawInlineFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
+  return uniq(config?.rawInlines?.map((r) => r.format)) || [];
+}
+
+export function getRawBlockFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
+  return uniq(config?.rawBlocks?.map((r) => r.format)) || [];
+}

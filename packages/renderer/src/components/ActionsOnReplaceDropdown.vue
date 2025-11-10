@@ -8,6 +8,7 @@ import {
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
   attrsToCssSelectorString,
+  InsertRawInlineActionProps,
   PundokEditorConfig,
   SetIndexRefActionProps,
   SetSpanActionProps
@@ -17,7 +18,7 @@ import { getEditorConfiguration } from '../schema';
 
 function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConfig) {
   if (!actions || actions.length === 0)
-    return 'no actions'
+    return '(no actions)'
   return actions.map(a => {
     const actionName = a.name as ActionName
     const prefix = actionName.startsWith('add')
@@ -68,6 +69,14 @@ function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConf
           const { indexName } = toRaw(props) as SetIndexRefActionProps
           return `index as ${indexName}`
         }
+      case 'insert-raw-inline':
+        {
+          const { format, content, where } = toRaw(props) as InsertRawInlineActionProps
+          const isPair = content && Array.isArray(content) && content.length > 1
+          const what = isPair ? content.join('...') : content || '??'
+          const _where = isPair ? '' : ' ' + where.toUpperCase()
+          return `+RawInline(${format}) ${what}${_where}`
+        }
       default:
         return actionName
     }
@@ -108,7 +117,7 @@ export default {
 }
 </script>
 <template>
-  <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty" :label="label"
+  <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty" :label="label" no-caps
     title="Actions on replaced text">
     <!-- :no-caps="noneActive || operation === 'remove all'" :menu-anchor="menuAnchor" :menu-self="menuSelf" -->
     <ActionsList :editor="editor" :start-actions="actions" @update-actions="update" style="min-width: 100%;" />

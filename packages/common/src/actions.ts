@@ -144,6 +144,12 @@ export interface SetIndexRefActionProps {
   indexName: string,
 }
 
+export interface InsertRawInlineActionProps {
+  format: string,
+  where: 'before' | 'after',
+  content: string | string[],
+}
+
 /**
  * Check if two action (names) do the opposite (e.g. "add-mark" and "remove-mark").
  * @param n1 The name of the first action.
