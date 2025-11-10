@@ -242,7 +242,7 @@
 
       <span class="button-separator" />
 
-      <RawInlineMenu :editor="editor" :sortable="true" />
+      <RawInlineButton :editor="editor" :sortable="true" />
       <RawBlockMenu :editor="editor" :sortable="true" />
 
       <span class="button-separator" />
@@ -303,7 +303,7 @@ import InsertNoteButton from './InsertNoteButton.vue';
 import ImportToolbarButton from './ImportToolbarButton.vue';
 import ExportToolbarButton from './ExportToolbarButton.vue';
 import NewDocumentButton from './NewDocumentButton.vue';
-import RawInlineMenu from './RawInlineMenu.vue';
+import RawInlineButton from './RawInlineButton.vue';
 import RawBlockMenu from './RawBlockMenu.vue';
 import TableTools from './TableTools.vue';
 import ToolbarButton from './ToolbarButton.vue';
@@ -358,7 +358,7 @@ export default {
     InsertNoteButton,
     ImportToolbarButton,
     NewDocumentButton,
-    RawInlineMenu,
+    RawInlineButton,
     RawBlockMenu,
     // TextAlignMenubarItem,
     // VerticalAlignMenubarItem,
