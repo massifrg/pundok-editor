@@ -87,7 +87,7 @@
     "happy-dom": "^20.0.0",
     "madge": "^8.0.0",
     "nano-staged": "^0.8.0",
-    "playwright": "1.47.0",
+    "playwright": "^1.56.1",
     "postcss": "^8.4.45",
     "prettier": "^3.5.3",
     "prosemirror-test-builder": "^1.1.1",
