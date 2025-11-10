@@ -117,8 +117,7 @@ export default {
 }
 </script>
 <template>
-  <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty" :label="label" no-caps
-    title="Actions on replaced text">
+  <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty" :label="label" no-caps>
     <!-- :no-caps="noneActive || operation === 'remove all'" :menu-anchor="menuAnchor" :menu-self="menuSelf" -->
     <ActionsList :editor="editor" :start-actions="actions" @update-actions="update" style="min-width: 100%;" />
   </q-btn-dropdown>

@@ -74,12 +74,14 @@
               @click="optionRegex = !optionRegex" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord"
               icon="whole_word" title="whole words" @click="optionWholeWord = !optionWholeWord" />
+            <ActionsOnReplaceDropdown v-if="optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
+              title="actions on selected text" @update-actions="updateActions" />
           </div>
         </q-card-section>
         <q-card-section v-if="!optionSearchOnly" horizontal>
           <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
             stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
-          <ActionsOnReplaceDropdown v-if="!optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
+          <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace" title="actions on replaced text"
             @update-actions="updateActions" />
         </q-card-section>
       </q-card-section>
@@ -87,15 +89,12 @@
         <q-btn icon="mdi-magnify" title="search" size="md" padding="md" @click="startSearch()" />
         <q-btn icon="mdi-chevron-left" size="md" padding="md" title="select previous found" @click="prevFound()" />
         <q-btn icon="mdi-chevron-right" size="md" padding="md" title="select next found" @click="nextFound()" />
-        <q-btn v-if="!optionSearchOnly" :disabled="disabledReplace" icon="mdi-autorenew" size="md" padding="md"
-          title="replace selected" @click="replaceSelected" />
-        <q-btn v-if="!optionSearchOnly" :disabled="disabledReplaceAndGotoNext" size="md" padding="md"
-          title="replace & select next found" @click="replaceNextText">
+        <q-btn icon="mdi-autorenew" size="md" padding="md" title="replace selected" @click="replaceSelected" />
+        <q-btn size="md" padding="md" title="replace & select next found" @click="replaceNextText">
           <q-icon name="mdi-autorenew"></q-icon>
           <q-icon name="mdi-chevron-right"></q-icon>
         </q-btn>
-        <q-btn v-if="!optionSearchOnly" :disabled="!editor.can().replaceAll()" size="md" padding="md"
-          title="replace all" @click="replaceAll">
+        <q-btn size="md" padding="md" title="replace all" @click="replaceAll">
           <q-icon name="mdi-autorenew"></q-icon>
           <q-icon name="mdi-chevron-double-right"></q-icon>
         </q-btn>
@@ -308,12 +307,6 @@ export default {
     expandTooltip() {
       return `show ${this.showFields ? 'less' : 'more'}`
     },
-    disabledReplace() {
-      return this.cssMode ? false : !this.editor.can().replaceSelectedText()
-    },
-    disabledReplaceAndGotoNext() {
-      return this.cssMode ? false : !this.editor.can().replaceNextText()
-    }
   },
   watch: {
     cssMode(css_mode: boolean, prev_mode: boolean) {
@@ -506,7 +499,7 @@ export default {
       }
     },
     replaceSelected() {
-      if (this.cssMode) {
+      if (this.cssMode || this.optionSearchOnly) {
         this.editor.chain()
           .applyActions(this.actionsOnReplace)
           .focus().run()
@@ -519,30 +512,21 @@ export default {
       this.updateCountAndIndex()
     },
     replaceNextText() {
-      if (this.cssMode) {
-        this.replaceSelected()
-        this.nextFound()
-      } else {
-        this.editor.chain()
-          .replaceSelectedText()
-          .applyActions(this.actionsOnReplace)
-          .selectNextFoundText()
-          .focus().run()
-      }
-      this.updateCountAndIndex()
+      this.replaceSelected()
+      this.nextFound()
     },
     replaceAll() {
-      if (this.cssMode) {
-        const startIndex = this.foundIndex
-        let prevIndex: number
-        do {
-          prevIndex = this.foundIndex
-          this.replaceNextText()
-        } while (this.foundIndex !== prevIndex && this.foundIndex !== startIndex)
-      } else {
-        this.editor.chain().replaceAll().focus().run()
-      }
-      this.updateCountAndIndex()
+      // if (this.cssMode) {
+      const startIndex = this.foundIndex
+      let prevIndex: number
+      do {
+        prevIndex = this.foundIndex
+        this.replaceNextText()
+      } while (this.foundIndex !== prevIndex && this.foundIndex !== startIndex)
+      // } else {
+      //   this.editor.chain().replaceAll().focus().run()
+      // }
+      // this.updateCountAndIndex()
     },
     baseMarksAndCustomStyles(selected?: string[]): AddableMark[] {
       const editor = this.editor
