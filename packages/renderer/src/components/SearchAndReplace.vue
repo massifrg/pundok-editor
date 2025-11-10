@@ -7,9 +7,14 @@
             icon="mdi-text-search" :title="foundItemsText" />
         </div>
         <q-space />
-        <q-btn round class="q-pa-sm" size="sm" icon="mdi-reload" color="primary" title="reset" outline
-          @click="resetDialog()" />
+        <q-btn dense class="q-px-md" size="xs" icon="mdi-reload" title="reset" @click="resetSettings()" />
         <q-space class="small" />
+        <q-btn dense class="q-px-md" size="xs" icon="mdi-content-save"
+          title="save the current search and replace settings">
+          <SaveConfigurationElementPopup :editor="editor" :existing-ones="knownSettings"
+            @save-settings="saveSettings" />
+        </q-btn>
+        <q-space class="big" />
         <q-btn round class="q-pa-sm" size="sm" icon="mdi-pencil-lock" color="primary" :outline="!optionSearchOnly"
           title="just search, don't replace" @click="optionSearchOnly = !optionSearchOnly" />
         <q-space class="small" />
@@ -41,9 +46,10 @@
         </q-btn>
         <q-space class="small" />
         <!-- <q-toggle v-model="showIndicesButtons" icon="mdi-cursor-pointer" title="show buttons for indices" /> -->
-        <q-btn round class="q-pa-sm" size="sm" color="primary" :outline="!showIndicesButtons" icon="mdi-cursor-pointer"
-          title="show buttons for indices" @click="showIndicesButtons = !showIndicesButtons" />
-        <q-space />
+        <q-btn v-if="indices.length > 0" round class="q-pa-sm" size="sm" color="primary" :outline="!showIndicesButtons"
+          icon="mdi-cursor-pointer" title="show buttons for indices"
+          @click="showIndicesButtons = !showIndicesButtons" />
+        <q-space class="big" />
         <q-btn dense class="q-px-md" :icon="expandIcon" :title="expandTooltip" size="xs"
           @click="() => { showFields = !showFields }"></q-btn>
         <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="mdi-arrow-up"
@@ -111,6 +117,7 @@ import {
   ActionNameWithProps,
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
+  Automation,
   Capitalize,
   CustomStyleInstance,
   ElementsSelection,
@@ -123,6 +130,7 @@ import {
 } from '../common';
 import {
   FoundTextRange,
+  getAllIndices,
   getCssSelected,
   getEditorConfiguration,
 } from '../schema';
@@ -134,6 +142,7 @@ import {
 } from '.';
 import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
+import SaveConfigurationElementPopup from './SaveConfigurationElementPopup.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
   LabeledNodeOrMark,
@@ -145,7 +154,7 @@ import {
   nodeOrMarkToPandocName
 } from '../schema/helpers';
 import { mapState } from 'pinia';
-import { useActions } from '../stores';
+import { useActions, useBackend } from '../stores';
 import {
   ACTION_REPLACE_AND_SELECT_NEXT,
   ACTION_SELECT_NEXT,
@@ -185,6 +194,7 @@ export default {
   components: {
     ActionsOnReplaceDropdown,
     IndicesButtons,
+    SaveConfigurationElementPopup,
   },
   props: ['visible', 'editor', 'nodeOrMarkToLabel'],
   emits: ['hideSearchAndReplaceDialog'],
@@ -225,6 +235,10 @@ export default {
   },
   computed: {
     ...mapState(useActions, ['lastAction']),
+    ...mapState(useBackend, ['backend']),
+    indices() {
+      return getAllIndices(this.editor?.state)
+    },
     configuration() {
       return getEditorConfiguration(this.editor)
     },
@@ -245,6 +259,12 @@ export default {
       const config = this.configuration
       const sels = config && getElementsSelections(config) || []
       return sels
+    },
+    knownSettings(): Automation[] {
+      if (this.cssMode)
+        return this.cssSelections
+      else
+        return this.searchAndReplaces
     },
     cssSelected(): LabeledNodeOrMark[] {
       const state = this.editor?.state
@@ -537,7 +557,7 @@ export default {
       }
       return []
     },
-    resetDialog() {
+    resetSettings() {
       this.searchInput = ''
       this.textToReplace = ''
       this.optionSearchOnly = false
@@ -601,6 +621,23 @@ export default {
     updateActions(actions: ActionNameWithProps[]) {
       // console.log(toRaw(actions))
       this.actionsOnReplace = actions
+    },
+    saveSettings(name: string, description: string, configName?: string) {
+      let obj
+      if (this.cssMode) {
+        obj = {
+          name,
+          description,
+          // TODO: add all the settings
+        } as ElementsSelection
+      } else {
+        obj = {
+          name,
+          description,
+          // TODO: add all the settings
+        } as SearchAndReplace
+      }
+      this.backend?.storeInConfiguration('automations', obj, configName)
     }
   },
 };
@@ -612,6 +649,11 @@ export default {
 }
 
 .small {
+  min-width: 0.3rem;
   max-width: 0.5rem;
+}
+
+.big {
+  min-width: 1rem;
 }
 </style>
