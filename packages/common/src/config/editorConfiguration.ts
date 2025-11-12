@@ -19,7 +19,7 @@ import {
 } from './customStyles';
 import { PundokEditorConfigInit } from './editorConfigInit';
 
-export class PundokEditorConfig {
+export class PundokEditorConfig implements PundokEditorConfigInit {
   /** The name of this configuration of the editor. */
   name: string;
   /** The version of this configuration (it's meant for compatibility, but it's not used yet). */

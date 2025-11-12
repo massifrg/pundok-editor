@@ -150,6 +150,7 @@ import {
   SearchQuery,
   SearchResultFilter,
   SelectedNodeOrMark,
+  getEditorProject,
   getMatchHighlights,
   mergeAdjacentMarks,
   nodeOrMarkToPandocName
@@ -242,6 +243,9 @@ export default {
     },
     configuration() {
       return getEditorConfiguration(this.editor)
+    },
+    project() {
+      return getEditorProject(this.editor)
     },
     customStyles(): CustomStyleInstance[] {
       return this.configuration?.customStylesInstances || []
@@ -639,7 +643,17 @@ export default {
         } as SearchAndReplace
       }
       console.log(serializeConfiguration(this.configuration!))
-      this.backend?.storeInConfiguration('automations', obj, configName)
+      const project = this.project
+      if (configName || project) {
+        const isProject = !configName
+        if (isProject && !this.project)
+          this.backend?.storeInConfiguration(
+            'automations',
+            obj,
+            !isProject,
+            isProject ? project?.path! : configName
+          )
+      }
     }
   },
 };

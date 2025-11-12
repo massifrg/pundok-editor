@@ -78,6 +78,7 @@ import { rememberDocumentHash } from './documentHash';
 import { expandCommandArgs } from './expandCommandArgs';
 import { getExportJobHandler } from './getExportJobHandler';
 import { showAgainHandler } from './showAgainHandler';
+import { updateConfigHandler } from './updateConfigHandler';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -142,6 +143,7 @@ export class IpcHub {
     ipcMain.handle('show-again', showAgainHandler(this));
     ipcMain.handle('export-again', exportAgainHandler(this));
     ipcMain.handle('get-export-job', getExportJobHandler(this));
+    ipcMain.handle('update-config', updateConfigHandler(this))
   }
 
   async openDocument(

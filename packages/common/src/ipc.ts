@@ -49,6 +49,7 @@ export type IpcRendererToMainChannel =
   | 'show-again'
   | 'export-again'
   | 'get-export-job'
+  | 'update-config'
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
@@ -178,6 +179,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'r2m',
     description: 'open the source file corresponding to a point in a page of a result (PDF) file',
   },
+  'update-config': {
+    dir: 'r2m',
+    description: 'update a configuration or project JSON file adding/updating an object (e.g. automation, custom style)'
+  }
 };
 
 export const IPC_VALUE_NEW_PROJECT_NAME = 'new-project-name';

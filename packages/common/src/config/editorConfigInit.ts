@@ -12,7 +12,7 @@ import { InsertableRaw } from './rawElements';
 /**
  * A configuration (customization) of PundokEditor.
  */
-export interface PundokEditorConfigInit extends Record<string, any> {
+export interface PundokEditorConfigInit {
   /** the name of the configuration (please only letters, numbers and underscore) */
   name: string;
   /** the minimal suitable version of the editor */
@@ -57,3 +57,6 @@ export interface PundokEditorConfigInit extends Record<string, any> {
   /** predefined search&replace, macro, whatever related to automation tools */
   automations?: Automation[];
 }
+
+/** The fields allowed in a configuration init object. */
+export type ConfigInitField = keyof PundokEditorConfigInit

@@ -12,7 +12,7 @@ export interface PundokEditorProject {
   /** The names of configurations to inherit */
   configurations?: string[];
   /** A complement to the inherited configurations */
-  editorConfig: Partial<PundokEditorConfig>;
+  editorConfig: Partial<PundokEditorConfigInit>;
   /** The actual configuration computed from the inherited configurations and complemented with editorConfig  */
   computedConfig: PundokEditorConfig;
 }

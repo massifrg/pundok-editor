@@ -44,6 +44,7 @@ import {
   BackendSetContentActionProps,
   BackendSetContentWithProjectActionProps,
   DocumentOpenActionProps,
+  ConfigInitField,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -456,8 +457,8 @@ export class LocalBackend implements Backend {
     return job_as_string && JSON.parse(job_as_string) as ExportJob || undefined
   }
 
-  async storeInConfiguration(what: string, obj: object, configName?: string): Promise<void> {
-
+  async storeInConfiguration(where: ConfigInitField, obj: object, isProject: boolean, configNameOrProjectPath: string): Promise<void> {
+    this.invokeIpc('update-config', where, JSON.stringify(obj), isProject, configNameOrProjectPath)
   }
 }
 

@@ -122,9 +122,7 @@ export function checkAndCreateAppDataDir() {
   checkAndAddFolder(configsDir());
 }
 
-export async function parseConfigurationFiles(): Promise<
-  PundokEditorConfigInit[]
-> {
+export async function parseConfigurationFiles(): Promise<PundokEditorConfigInit[]> {
   const path = configsDir();
   const filenames = (await readdir(path)).filter((f) =>
     f.endsWith('.config.json'),
