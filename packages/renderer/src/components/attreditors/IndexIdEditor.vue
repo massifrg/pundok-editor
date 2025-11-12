@@ -237,7 +237,7 @@ export default {
           this.doSearch()
           break
         case 'project':
-          this.refreshProjectIndices()
+          await this.refreshProjectIndices()
           this.doSearch()
           break
         default:
