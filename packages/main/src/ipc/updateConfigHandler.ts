@@ -8,7 +8,7 @@ import {
 } from '../common';
 import { getConfigurationInit } from './configurationHandlers';
 import { loadProjectFromDocFile } from './getProjectHandler';
-import { stringify } from 'src/utils';
+import { stringify } from '../utils';
 
 export const updateConfigHandler =
   (hub: IpcHub) =>
