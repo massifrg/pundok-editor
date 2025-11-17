@@ -1,6 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
-import { SK_BREAK_PLAIN, SK_TOGGLE_PLAIN } from '../../common';
+import { NODE_NAME_PLAIN, NODE_PLAIN_CLASS, SK_BREAK_PLAIN, SK_TOGGLE_PLAIN } from '../../common';
 import { isCellSelection } from '../helpers/pandocTable';
 
 export interface PlainOptions {
@@ -27,14 +27,14 @@ declare module '@tiptap/core' {
 }
 
 export const Plain = Node.create<PlainOptions>({
-  name: 'plain',
+  name: NODE_NAME_PLAIN,
 
   priority: 100,
 
   addOptions() {
     return {
       HTMLAttributes: {
-        class: 'plain',
+        class: NODE_PLAIN_CLASS,
       },
     };
   },

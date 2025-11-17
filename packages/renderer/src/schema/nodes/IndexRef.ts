@@ -14,6 +14,7 @@ import {
   NODE_NAME_INDEX_REF,
 } from '../../common';
 import { documentIndices } from '../helpers/indices';
+import { getSpanAttrs } from '../helpers';
 
 export const INDEX_RANGE_START_CLASS = 'index-start';
 export const INDEX_RANGE_STOP_CLASS = 'index-stop';
@@ -109,7 +110,7 @@ export const IndexRef = Node.create<IndexRefOptions>({
     return [
       {
         tag: 'span',
-        getAttrs: (e) => ((e as HTMLElement).hasChildNodes() ? false : null),
+        getAttrs: (e) => getSpanAttrs(this.name, e, this.editor?.state),
       },
     ];
   },

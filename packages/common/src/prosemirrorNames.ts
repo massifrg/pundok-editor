@@ -75,3 +75,9 @@ export const MARK_NAME_STRONG = 'strong'
 export const MARK_NAME_SUPERSCRIPT = 'superscript'
 export const MARK_NAME_SUBSCRIPT = 'subscript'
 export const MARK_NAME_UNDERLINE = 'underline'
+
+// classes for certain nodes or marks
+export const NODE_BREAK_CLASS = 'br'
+export const NODE_BREAK_SOFT_CLASS = 'soft'
+export const NODE_PLAIN_CLASS = 'plain'
+export const MARK_LINK_CLASS = 'pandoc-link'
