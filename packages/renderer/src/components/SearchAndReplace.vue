@@ -158,9 +158,12 @@ import {
 import { mapState } from 'pinia';
 import { useActions, useBackend } from '../stores';
 import {
+  ACTION_LOWERCASE,
   ACTION_REPLACE_AND_SELECT_NEXT,
   ACTION_SELECT_NEXT,
   ACTION_SELECT_PREV,
+  ACTION_UPPERCASE,
+  ACTION_UPPERCASE_FIRST,
   ActionName
 } from '../actions';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model'
@@ -227,7 +230,7 @@ export default {
       optionSearchOnly: false,
       // in text mode, search is case insensitive
       optionCaseInsensitive: false,
-      optionCapitalize: 'none' as Capitalize,
+      // optionCapitalize: 'none' as Capitalize,
       optionRegex: false,
       optionCycle: false,
       optionWholeWord: false,
@@ -567,10 +570,10 @@ export default {
       this.textToReplace = ''
       this.optionSearchOnly = false
       this.optionCaseInsensitive = false
-      this.optionCapitalize = 'none' as Capitalize
       this.optionRegex = false
       this.optionCycle = false
       this.optionWholeWord = false
+      this.actionsOnReplace = []
       this.foundIndex = -1
     },
     loadSearchAndReplace(sar: SearchAndReplace) {
@@ -582,9 +585,17 @@ export default {
       this.optionCaseInsensitive = !!sar.optionCaseInsensitive
       this.optionRegex = !!sar.optionRegex;
       this.optionCycle = !!sar.optionCycle;
-      this.optionCapitalize = sar.capitalize || 'none';
+      // this.optionCapitalize = sar.capitalize || 'none';
       this.optionWholeWord = !!sar.optionWholeWord;
+      // capitalization
       const actionsOnReplace: ActionNameWithProps[] = []
+      if (sar.capitalize === 'upper')
+        actionsOnReplace.push(ACTION_UPPERCASE)
+      else if (sar.capitalize === 'lower')
+        actionsOnReplace.push(ACTION_LOWERCASE)
+      else if (sar.capitalize === 'first')
+        actionsOnReplace.push(ACTION_UPPERCASE_FIRST)
+      // marks
       sar.addMarks?.forEach(m => {
         actionsOnReplace.push({
           name: 'add-mark' as ActionName,
@@ -593,6 +604,7 @@ export default {
           } as AddOrRemoveMarkActionProps
         } as ActionNameWithProps)
       })
+      // styles
       sar.addStyles?.forEach(s => {
         actionsOnReplace.push({
           name: 'add-custom-style' as ActionName,
@@ -601,6 +613,7 @@ export default {
           } as AddOrRemoveCustomStyleActionProps
         } as ActionNameWithProps)
       })
+      // spans
       const firstAlternative = sar.addSpans && sar.addSpans[0]
       if (firstAlternative)
         actionsOnReplace.push({
@@ -613,11 +626,11 @@ export default {
           } as SetSpanActionProps
         } as ActionNameWithProps)
       this.actionsOnReplace = [...actionsOnReplace]
-      const am: AddableMark[] = baseAddableMarks(sar.addMarks || [])
-      customStylesToAddableMarks(this.customStyles, sar.addStyles, am)
-      if (sar.addSpans && sar.addSpans.length > 0) {
-        customSpanToAddableMarks(sar.addSpans, [sar.addSpans[0].name], am)
-      }
+      // const am: AddableMark[] = baseAddableMarks(sar.addMarks || [])
+      // customStylesToAddableMarks(this.customStyles, sar.addStyles, am)
+      // if (sar.addSpans && sar.addSpans.length > 0) {
+      //   customSpanToAddableMarks(sar.addSpans, [sar.addSpans[0].name], am)
+      // }
       if (this.editor) {
         this.editor.chain().hideFoundTexts().run()
         this.searchStarted = false
