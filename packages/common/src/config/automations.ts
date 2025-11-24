@@ -117,7 +117,7 @@ export interface PandocFilterTransform extends Automation {
   /** Metadata to be passed to the filter via --metadata */
   metadata?: PandocMetadata;
   /** Input format (default: json) */
-  fromFormat?: 'json' | 'markdown';
+  fromFormat?: string;
   /** Output format (default: json) */
   toFormat?: 'json' | 'markdown';
   /** Extra pandoc options */
