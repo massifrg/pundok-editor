@@ -18,8 +18,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, shallowRef, toRaw } from 'vue';
-import { Codemirror } from 'vue-codemirror';
+import {
+  defineAsyncComponent,
+  defineComponent,
+  ref,
+  shallowRef,
+  toRaw
+} from 'vue';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { markdown } from '@codemirror/lang-markdown';
@@ -39,7 +44,7 @@ import { setupQuasarIcons } from './helpers/quasarIcons';
 export default defineComponent({
   props: ['editor'],
   components: {
-    Codemirror,
+    "Codemirror": defineAsyncComponent(() => import('vue-codemirror').then(m => m.Codemirror)),
     ToolbarButton,
   },
   setup() {
