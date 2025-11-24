@@ -325,11 +325,11 @@ export async function transformWithPandoc(
     // find input source
     if (sources) {
       sources.forEach((s) => {
-        const sourceFile = findResourceFile(s, {
-          ...context,
-          kind: 'document',
-        });
-        if (sourceFile) args.push(sourceFile);
+        const sourceFile = isReadableFile(s)
+          ? s
+          : findResourceFile(s, { ...context, kind: 'document' })
+        if (sourceFile)
+          args.push(sourceFile);
         else
           return Promise.reject(
             `source "${s}" not found (it's needed for transformation)`,
