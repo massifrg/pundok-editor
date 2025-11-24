@@ -41,35 +41,6 @@ function checkAndAddFolder(path: string) {
   }
 }
 
-// function checkContextPath() {
-//   /*var finder = new FindFiles({
-//       rootFolder : "c:",
-//       //fileName : d
-//   });
-
-//   finder.on("match", function(strPath: any, stat: any) {
-//       console.log(strPath + " - " + stat.mtime);
-//   })
-//   finder.on("complete", function() {
-//       console.log("Finished")
-//   })
-//   finder.on("patherror", function(err: any, strPath: any) {
-//       console.log("Error for Path " + strPath + " " + err)  // Note that an error in accessing a particular file does not stop the whole show
-//   })
-//   finder.on("error", function(err: any) {
-//       console.log("Global Error " + err);
-//   })
-//   finder.startSearch();*/
-
-//   const finder = require('findit').find(__dirname);
-//   finder.on('file', function (file: any) {
-//     // console.log('File: ' + file);
-//   });
-// }
-
-// type DirName = "appData" | "userData" | "exe" | "temp" | "documents" | "desktop" | "downloads" | "home" | "sessionData" | "module" | "music" | "pictures" | "videos" | "recent" | "logs" | "crashDumps"
-// const DIRS: DirName[] = ['appData', 'userData', 'exe', 'temp', 'documents', 'desktop', 'downloads']
-
 export function staticResourcesDir() {
   // DIRS.forEach(name => {
   //   console.log(`getPath('${name}'): ${app.getPath(name)}`)
