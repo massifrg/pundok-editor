@@ -5,6 +5,7 @@ import {
   mdiArrowUp,
   mdiChevronLeft,
   mdiChevronRight,
+  mdiFileDocumentPlus,
   mdiFilePdfBox,
   mdiImageCheck,
   mdiImageCheckOutline,
@@ -21,6 +22,7 @@ import {
 const icons: Record<string, string> = {
   add_class: mdiOctagramPlus,
   add_custom_class: mdiOctagramPlusOutline,
+  add_document: mdiFileDocumentPlus,
   arrow_upward: mdiArrowUp,
   arrow_downward: mdiArrowDown,
   arrow_drop_down: mdiMenuDown,

@@ -16,6 +16,10 @@
 
       <span class="button-separator" />
 
+      <IncludeDocumentButton :editor="editor" />
+
+      <span class="button-separator" />
+
       <ToolbarButton icon="mdi-undo" :disabled="!editor.can().undo()" title="undo" shortcut="SK_UNDO"
         @click="editor.chain().undo().redecorateIndexRefs().run()" />
       <ToolbarButton icon="mdi-redo" :disabled="!editor.can().redo()" title="redo" shortcut="SK_REDO"
@@ -298,6 +302,7 @@ import CustomWrapperMenu from './CustomWrapperMenu.vue';
 import ElementSelectionButton from './ElementSelectionButton.vue';
 import GlobalProceduresDialog from './GlobalProceduresDialog.vue';
 import ImageButton from './ImageButton.vue';
+import IncludeDocumentButton from './IncludeDocumentButton.vue';
 import IndicesButtons from './IndicesButtons.vue';
 import InsertNoteButton from './InsertNoteButton.vue';
 import ImportToolbarButton from './ImportToolbarButton.vue';
@@ -354,6 +359,7 @@ export default {
     ExportToolbarButton,
     GlobalProceduresDialog,
     ImageButton,
+    IncludeDocumentButton,
     IndicesButtons,
     InsertNoteButton,
     ImportToolbarButton,
