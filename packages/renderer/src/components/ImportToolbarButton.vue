@@ -50,4 +50,4 @@ export default {
     }
   }
 }
-</script>../actions/actionCommands
+</script>
