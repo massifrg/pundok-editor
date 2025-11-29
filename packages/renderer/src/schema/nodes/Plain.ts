@@ -1,6 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
-import { NODE_NAME_PLAIN, NODE_PLAIN_CLASS, SK_BREAK_PLAIN, SK_TOGGLE_PLAIN } from '../../common';
+import { NODE_NAME_PLAIN, NODE_PLAIN_CLASS, SK } from '../../common';
 import { isCellSelection } from '../helpers/pandocTable';
 
 export interface PlainOptions {
@@ -120,8 +120,8 @@ export const Plain = Node.create<PlainOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_BREAK_PLAIN]: () => this.editor.commands.setBreakInPlain(),
-      [SK_TOGGLE_PLAIN]: () => this.editor.commands.togglePlain(),
+      [SK.BREAK_PLAIN]: () => this.editor.commands.setBreakInPlain(),
+      [SK.TOGGLE_PLAIN]: () => this.editor.commands.togglePlain(),
     };
   },
 });

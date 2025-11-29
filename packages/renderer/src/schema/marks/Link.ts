@@ -1,10 +1,9 @@
 import {
-  isAllowedUri,
   Link as TiptapLink,
   type LinkOptions as TiptapLinkOptions,
 } from '@tiptap/extension-link';
 import { mergeAttributes } from '@tiptap/vue-3';
-import { MARK_LINK_CLASS, SK_TOGGLE_LINK } from '../../common';
+import { MARK_LINK_CLASS, SK } from '../../common';
 import { getSpanAttrs } from '../helpers';
 
 export type LinkOptions = TiptapLinkOptions;
@@ -93,7 +92,7 @@ export const Link = TiptapLink.extend<LinkOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_LINK]: () =>
+      [SK.TOGGLE_LINK]: () =>
         this.editor.commands.toggleLink({ href: '#anchor' }),
     };
   },

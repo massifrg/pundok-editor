@@ -1,9 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core';
-import {
-  DEFAULT_RAW_INLINE_FORMAT,
-  NODE_NAME_RAW_INLINE,
-  SK_TOGGLE_RAWINLINE
-} from '../../common';
+import { DEFAULT_RAW_INLINE_FORMAT, NODE_NAME_RAW_INLINE, SK } from '../../common';
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { Command, NodeSelection } from '@tiptap/pm/state';
 import { getEditorConfiguration, marksEnding, marksStarting, textNode } from '../helpers';
@@ -137,7 +133,7 @@ export const RawInline = Node.create<RawInlineOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_RAWINLINE]: () => this.editor.commands.toggleRawInline(),
+      [SK.TOGGLE_RAWINLINE]: () => this.editor.commands.toggleRawInline(),
     };
   },
 });

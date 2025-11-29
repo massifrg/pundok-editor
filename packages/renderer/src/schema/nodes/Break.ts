@@ -1,13 +1,6 @@
 import { mergeAttributes } from '@tiptap/core';
 import { HardBreak, type HardBreakOptions } from '@tiptap/extension-hard-break';
-import {
-  NODE_BREAK_CLASS,
-  NODE_BREAK_SOFT_CLASS,
-  NODE_NAME_BREAK,
-  SK_SET_LINEBREAK,
-  SK_SET_LINEBREAK_ALT,
-  SK_SET_SOFTBREAK,
-} from '../../common';
+import { NODE_BREAK_CLASS, NODE_BREAK_SOFT_CLASS, NODE_NAME_BREAK, SK } from '../../common';
 import { getSpanAttrs } from '../helpers';
 
 export type BreakOptions = HardBreakOptions;
@@ -98,9 +91,9 @@ export const Break = HardBreak.extend<BreakOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_SET_LINEBREAK]: () => this.editor.commands.setBreak(),
-      [SK_SET_LINEBREAK_ALT]: () => this.editor.commands.setBreak(),
-      [SK_SET_SOFTBREAK]: () => this.editor.commands.setBreak(true),
+      [SK.SET_LINEBREAK]: () => this.editor.commands.setBreak(),
+      [SK.SET_LINEBREAK_ALT]: () => this.editor.commands.setBreak(),
+      [SK.SET_SOFTBREAK]: () => this.editor.commands.setBreak(true),
     };
   },
 });

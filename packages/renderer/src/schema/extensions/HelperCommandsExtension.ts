@@ -43,11 +43,7 @@ import {
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_FOOT,
   NODE_NAME_TABLE_HEAD,
-  SK_MOVE_NODE_DOWN,
-  SK_MOVE_NODE_DOWN_INSIDE,
-  SK_MOVE_NODE_UP,
-  SK_MOVE_NODE_UP_INSIDE,
-  SK_UNWRAP_NODE,
+  SK,
   typeNameOfElement,
 } from '../../common';
 
@@ -312,11 +308,11 @@ export const HelperCommandsExtension = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      [SK_MOVE_NODE_UP]: () => this.editor.commands.moveChild('up'),
-      [SK_MOVE_NODE_DOWN]: () => this.editor.commands.moveChild('down'),
-      [SK_MOVE_NODE_UP_INSIDE]: () => this.editor.commands.moveChild('up-inside'),
-      [SK_MOVE_NODE_DOWN_INSIDE]: () => this.editor.commands.moveChild('down-inside'),
-      [SK_UNWRAP_NODE]: () => this.editor.commands.unwrapNode(),
+      [SK.MOVE_NODE_UP]: () => this.editor.commands.moveChild('up'),
+      [SK.MOVE_NODE_DOWN]: () => this.editor.commands.moveChild('down'),
+      [SK.MOVE_NODE_UP_INSIDE]: () => this.editor.commands.moveChild('up-inside'),
+      [SK.MOVE_NODE_DOWN_INSIDE]: () => this.editor.commands.moveChild('down-inside'),
+      [SK.UNWRAP_NODE]: () => this.editor.commands.unwrapNode(),
     };
   },
 

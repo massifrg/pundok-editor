@@ -180,8 +180,8 @@ import {
   NODE_NAME_FIGURE_CAPTION,
   NODE_NAME_METADATA,
   NODE_NAME_RAW_BLOCK,
-  SK_REMOVE_MARKS,
-  SK_SHOW_SEARCH_DIALOG,
+  SK.REMOVE_MARKS,
+  SK.SHOW_SEARCH_DIALOG,
 } from '../../common';
 import { setActionShowSearchDialog } from '../../actions';
 
@@ -492,8 +492,8 @@ export const Pandoc = Document.extend<PandocOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_REMOVE_MARKS]: () => this.editor.commands.removeAllMarks(),
-      [SK_SHOW_SEARCH_DIALOG]: () => {
+      [SK.REMOVE_MARKS]: () => this.editor.commands.removeAllMarks(),
+      [SK.SHOW_SEARCH_DIALOG]: () => {
         setActionShowSearchDialog(this.editor.state)
         return true
       }

@@ -15,7 +15,7 @@ import {
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_REF,
   NODE_NAME_INDEX_TERM,
-  SK_SET_INDEX_REF,
+  SK,
   indexRefDecorationCss,
 } from '../../common';
 import { DEFAULT_INDEX_NAME } from '../../common';
@@ -306,7 +306,7 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_SET_INDEX_REF]: () => this.editor.commands.addIndexRef()
+      [SK.SET_INDEX_REF]: () => this.editor.commands.addIndexRef()
     }
   }
 });

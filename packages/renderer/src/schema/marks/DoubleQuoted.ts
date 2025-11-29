@@ -5,7 +5,7 @@ import {
   mergeAttributes,
 } from '@tiptap/core';
 import { DOUBLE_QUOTED_CLASS } from '../helpers/quoted';
-import { MARK_NAME_DOUBLE_QUOTED, SK_TOGGLE_DOUBLEQUOTE } from '../../common';
+import { MARK_NAME_DOUBLE_QUOTED, SK } from '../../common';
 
 export interface DoubleQuotedOptions {
   HTMLAttributes: Record<string, any>;
@@ -87,7 +87,7 @@ export const DoubleQuoted = Mark.create<DoubleQuotedOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_DOUBLEQUOTE]: () => this.editor.commands.toggleDoubleQuoted(),
+      [SK.TOGGLE_DOUBLEQUOTE]: () => this.editor.commands.toggleDoubleQuoted(),
     };
   },
 

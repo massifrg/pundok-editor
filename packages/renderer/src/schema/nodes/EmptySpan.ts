@@ -1,7 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { EmptySpanView } from '../index';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { NODE_NAME_EMPTY_SPAN, SK_INSERT_ANCHOR } from '../../common';
+import { NODE_NAME_EMPTY_SPAN, SK } from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -76,7 +76,7 @@ export const EmptySpan = Node.create<EmptySpanOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_INSERT_ANCHOR]: () =>
+      [SK.INSERT_ANCHOR]: () =>
         this.editor.commands.insertEmptySpan({ classes: ['anchor'] }),
     };
   },

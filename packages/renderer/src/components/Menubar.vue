@@ -20,9 +20,9 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-undo" :disabled="!editor.can().undo()" title="undo" shortcut="SK_UNDO"
+      <ToolbarButton icon="mdi-undo" :disabled="!editor.can().undo()" title="undo" :shortcut="SK.UNDO"
         @click="editor.chain().undo().redecorateIndexRefs().run()" />
-      <ToolbarButton icon="mdi-redo" :disabled="!editor.can().redo()" title="redo" shortcut="SK_REDO"
+      <ToolbarButton icon="mdi-redo" :disabled="!editor.can().redo()" title="redo" :shortcut="SK.REDO"
         @click="editor.commands.redo()" />
 
       <span class="button-separator" />
@@ -31,7 +31,7 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-format-paragraph" :disabled="!editor.can().togglePlain()" shortcut="SK_TOGGLE_PLAIN"
+      <ToolbarButton icon="mdi-format-paragraph" :disabled="!editor.can().togglePlain()" :shortcut="SK.TOGGLE_PLAIN"
         @click="
           editor.commands.runRepeatableCommand('togglePlain', 'Plain ↔ Para')
           " title="toggle Plain/Para" />
@@ -53,18 +53,18 @@
 
       <!-- <span class="button-separator" /> -->
 
-      <CustomWrapperMenu :editor="editor" wrapper-type-name="div" pandoc-type="Div" shortcut="SK_TOGGLE_DIV" />
+      <CustomWrapperMenu :editor="editor" wrapper-type-name="div" pandoc-type="Div" :shortcut="SK.TOGGLE_DIV" />
 
       <span class="button-separator" />
 
-      <CustomWrapperMenu :editor="editor" wrapper-type-name="figure" pandoc-type="Figure" shortcut="SK_TOGGLE_FIGURE"
+      <CustomWrapperMenu :editor="editor" wrapper-type-name="figure" pandoc-type="Figure" :shortcut="SK.TOGGLE_FIGURE"
         wrap-icon="mdi-application-import" unwrap-icon="mdi-application-export" />
       <ToolbarButton v-if="inFigure()" icon="mdi-page-layout-header" title="wrap selection in Caption"
         @click="wrapInFigureCaption()" />
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-format-quote-close" title="toggle blockquote" shortcut="SK_TOGGLE_BLOCKQUOTE"
+      <ToolbarButton icon="mdi-format-quote-close" title="toggle blockquote" :shortcut="SK.TOGGLE_BLOCKQUOTE"
         :disabled="!editor.can().toggleBlockquote()" @click="
           editor
             .chain()
@@ -79,7 +79,7 @@
 
       <span class="button-separator" />
 
-      <InsertNoteButton :editor="editor" :disabled="!editor.can().insertNote()" shortcut="SK_INSERT_NOTE"
+      <InsertNoteButton :editor="editor" :disabled="!editor.can().insertNote()" :shortcut="SK.INSERT_NOTE"
         @insert-note="insertNote" />
 
       <span class="button-separator" />
@@ -107,9 +107,9 @@
     </q-bar>
     <q-bar v-if="editor" class="q-py-xs">
       <ToolbarButton icon="mdi-tag-remove" :disabled="!editor.can().removeAllMarks()"
-        title="clear all marks in selection" shortcut="SK_REMOVE_MARKS"
+        title="clear all marks in selection" :shortcut="SK.REMOVE_MARKS"
         @click="editor.chain().removeAllMarks().focus().run()" />
-      <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" title="emphasis" shortcut="SK_TOGGLE_EMPH"
+      <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" title="emphasis" :shortcut="SK.TOGGLE_EMPH"
         @click="
           editor
             .chain()
@@ -118,7 +118,7 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('Strong')" :styleactive="isActive('strong')" title="strong"
-        shortcut="SK_TOGGLE_STRONG" @click="
+        :shortcut="SK.TOGGLE_STRONG" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleStrong', 'toggle Strong')
@@ -126,7 +126,7 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('Underline')" :styleactive="isActive('underline')" title="underline"
-        shortcut="SK_TOGGLE_UNDERLINE" @click="
+        :shortcut="SK.TOGGLE_UNDERLINE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleUnderline', 'toggle Underline')
@@ -134,7 +134,7 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('Strikeout')" :styleactive="isActive('strikeout')" title="strikeout"
-        shortcut="SK_TOGGLE_STRIKEOUT" @click="
+        :shortcut="SK.TOGGLE_STRIKEOUT" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleStrikeout', 'toggle Strikeout')
@@ -142,7 +142,7 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('Superscript')" :styleactive="isActive('superscript')" title="superscript"
-        shortcut="SK_TOGGLE_SUPERSCRIPT" @click="
+        :shortcut="SK.TOGGLE_SUPERSCRIPT" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleSuperscript', 'toggle Superscript')
@@ -150,15 +150,10 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('Subscript')" :styleactive="isActive('subscript')" title="subscript"
-        shortcut="SK_TOGGLE_SUBSCRIPT" @click="
-          editor
-            .chain()
-            .runRepeatableCommand('toggleSubscript', 'toggle Subscript')
-            .focus()
-            .run()
-          " />
+        :shortcut="SK.TOGGLE_SUBSCRIPT"
+        @click="editor.chain().runRepeatableCommand('toggleSubscript', 'toggle Subscript').focus().run()" />
       <ToolbarButton :icon="iconFor('smallcaps')" :styleactive="isActive('smallcaps')" title="small caps"
-        shortcut="SK_TOGGLE_SMALLCAPS" @click="
+        :shortcut="SK.TOGGLE_SMALLCAPS" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleSmallcaps', 'toggle Smallcaps')
@@ -166,7 +161,7 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('singleQuoted')" :styleactive="isActive('quoted', { quoteType: 'SingleQuote' })"
-        title="single quoted" shortcut="SK_TOGGLE_SINGLEQUOTE" @click="
+        title="single quoted" :shortcut="SK.TOGGLE_SINGLEQUOTE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleSingleQuoted', 'toggle SingleQuoted')
@@ -174,7 +169,7 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('doubleQuoted')" :styleactive="isActive('quoted', { quoteType: 'DoubleQuote' })"
-        title="double quoted" shortcut="SK_TOGGLE_DOUBLEQUOTE" @click="
+        title="double quoted" :shortcut="SK.TOGGLE_DOUBLEQUOTE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleDoubleQuoted', 'toggle DoubleQuoted')
@@ -182,7 +177,7 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('Code')" :styleactive="isActive('code')" title="toggle Code"
-        shortcut="SK_TOGGLE_CODE" @click="
+        :shortcut="SK.TOGGLE_CODE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleCode', 'toggle Code')
@@ -190,7 +185,7 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('Link')" :styleactive="isActive('link')" title="toggle Link"
-        shortcut="SK_TOGGLE_LINK" @click="
+        :shortcut="SK.TOGGLE_LINK" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleLink', 'toggle Link')
@@ -198,14 +193,14 @@
             .run()
           " />
       <ToolbarButton :icon="iconFor('Cite')" :styleactive="isActive('cite')" title="toggle Cite"
-        shortcut="SK_TOGGLE_CITE" @click="
+        :shortcut="SK.TOGGLE_CITE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleCite', 'toggle Cite')
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Math')" :styleactive="isActive('math')" title="math" shortcut="SK_TOGGLE_MATH"
+      <ToolbarButton :icon="iconFor('Math')" :styleactive="isActive('math')" title="math" :shortcut="SK.TOGGLE_MATH"
         @click="
           editor
             .chain()
@@ -218,14 +213,14 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-format-letter-case-lower" title="convert to lower case" shortcut="SK_LOWERCASE" @click="
+      <ToolbarButton icon="mdi-format-letter-case-lower" title="convert to lower case" :shortcut="SK.LOWERCASE" @click="
         editor
           .chain()
           .runRepeatableCommand('toLowercase', 'convert to lower case')
           .focus()
           .run()
         " />
-      <ToolbarButton icon="mdi-format-letter-case-upper" title="convert to upper case" shortcut="SK_UPPERCASE" @click="
+      <ToolbarButton icon="mdi-format-letter-case-upper" title="convert to upper case" :shortcut="SK.UPPERCASE" @click="
         editor
           .chain()
           .runRepeatableCommand('toUppercase', 'convert to upper case')
@@ -233,7 +228,7 @@
           .run()
         " />
       <ToolbarButton icon="mdi-format-letter-case" title="convert to upper case the first letter of every word"
-        shortcut="SK_UPPERCASEFIRST" @click="
+        :shortcut="SK.UPPERCASEFIRST" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -255,7 +250,7 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-magnify" title="search and replace" shortcut="SK_SHOW_SEARCH_DIALOG"
+      <ToolbarButton icon="mdi-magnify" title="search and replace" :shortcut="SK.SHOW_SEARCH_DIALOG"
         @click="$emit('toggleSearchAndReplaceDialog')" />
 
       <WholeDocTransformsButton :editor="editor" />
@@ -288,6 +283,10 @@
       @edit-node-or-mark-attributes="editNodeOrMarkAttributes" />
   </div>
 </template>
+
+<script setup lang="ts">
+import { SK } from '../common'
+</script>
 
 <script lang="ts">
 import type { Node, Mark } from '@tiptap/pm/model';
@@ -342,8 +341,7 @@ import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
-import { readFileSync } from 'original-fs';
-import { Component } from 'vue';
+// import { SK } from '../common'
 
 export default {
   components: {

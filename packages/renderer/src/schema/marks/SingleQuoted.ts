@@ -5,7 +5,7 @@ import {
   mergeAttributes,
 } from '@tiptap/core';
 import { SINGLE_QUOTED_CLASS } from '../helpers/quoted';
-import { MARK_NAME_SINGLE_QUOTED, SK_TOGGLE_SINGLEQUOTE } from '../../common';
+import { MARK_NAME_SINGLE_QUOTED, SK } from '../../common';
 
 export interface SingleQuotedOptions {
   HTMLAttributes: Record<string, any>;
@@ -87,7 +87,7 @@ export const SingleQuoted = Mark.create<SingleQuotedOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_SINGLEQUOTE]: () => this.editor.commands.toggleSingleQuoted(),
+      [SK.TOGGLE_SINGLEQUOTE]: () => this.editor.commands.toggleSingleQuoted(),
     };
   },
 

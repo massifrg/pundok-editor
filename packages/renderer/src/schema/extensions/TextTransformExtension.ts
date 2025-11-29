@@ -17,9 +17,7 @@ import {
   MARK_NAME_SPAN,
   SetIndexRefActionProps,
   SetSpanActionProps,
-  SK_LOWERCASE,
-  SK_UPPERCASE,
-  SK_UPPERCASEFIRST
+  SK
 } from '../../common';
 import {
   ACTION_ADD_CLASS,
@@ -103,9 +101,9 @@ export const TextTransformExtension = Extension.create({
   },
   addKeyboardShortcuts() {
     return {
-      [SK_LOWERCASE]: () => this.editor.commands.toLowercase(),
-      [SK_UPPERCASE]: () => this.editor.commands.toUppercase(),
-      [SK_UPPERCASEFIRST]: () => this.editor.commands.toUppercaseFirst()
+      [SK.LOWERCASE]: () => this.editor.commands.toLowercase(),
+      [SK.UPPERCASE]: () => this.editor.commands.toUppercase(),
+      [SK.UPPERCASEFIRST]: () => this.editor.commands.toUppercaseFirst()
     }
   }
 });

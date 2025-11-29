@@ -18,17 +18,7 @@ import {
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
   SetAlternativeActionProps,
-  SK_EDIT_ATTRIBUTES,
-  SK_SET_ALTERNATIVE_0,
-  SK_SET_ALTERNATIVE_1,
-  SK_SET_ALTERNATIVE_2,
-  SK_SET_ALTERNATIVE_3,
-  SK_SET_ALTERNATIVE_4,
-  SK_SET_ALTERNATIVE_5,
-  SK_SET_ALTERNATIVE_6,
-  SK_SET_ALTERNATIVE_7,
-  SK_SET_ALTERNATIVE_8,
-  SK_SET_ALTERNATIVE_9
+  SK
 } from '../../common';
 import {
   DocState,
@@ -358,17 +348,17 @@ export const PundokEditorUtilsExtension =
         { alternative: n } as SetAlternativeActionProps
       )
       return {
-        [SK_EDIT_ATTRIBUTES]: () => this.editor.commands.editAttributes(),
-        [SK_SET_ALTERNATIVE_0]: () => altCmd(0),
-        [SK_SET_ALTERNATIVE_1]: () => altCmd(1),
-        [SK_SET_ALTERNATIVE_2]: () => altCmd(2),
-        [SK_SET_ALTERNATIVE_3]: () => altCmd(3),
-        [SK_SET_ALTERNATIVE_4]: () => altCmd(4),
-        [SK_SET_ALTERNATIVE_5]: () => altCmd(5),
-        [SK_SET_ALTERNATIVE_6]: () => altCmd(6),
-        [SK_SET_ALTERNATIVE_7]: () => altCmd(7),
-        [SK_SET_ALTERNATIVE_8]: () => altCmd(8),
-        [SK_SET_ALTERNATIVE_9]: () => altCmd(9),
+        [SK.EDIT_ATTRIBUTES]: () => this.editor.commands.editAttributes(),
+        [SK.SET_ALTERNATIVE_0]: () => altCmd(0),
+        [SK.SET_ALTERNATIVE_1]: () => altCmd(1),
+        [SK.SET_ALTERNATIVE_2]: () => altCmd(2),
+        [SK.SET_ALTERNATIVE_3]: () => altCmd(3),
+        [SK.SET_ALTERNATIVE_4]: () => altCmd(4),
+        [SK.SET_ALTERNATIVE_5]: () => altCmd(5),
+        [SK.SET_ALTERNATIVE_6]: () => altCmd(6),
+        [SK.SET_ALTERNATIVE_7]: () => altCmd(7),
+        [SK.SET_ALTERNATIVE_8]: () => altCmd(8),
+        [SK.SET_ALTERNATIVE_9]: () => altCmd(9),
       };
     },
   });

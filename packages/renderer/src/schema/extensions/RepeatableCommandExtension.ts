@@ -17,14 +17,9 @@ import {
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
 import { NodeWithPos, RawCommands, UnionCommands } from '@tiptap/vue-3';
 import {
-  NODE_NAME_TABLE_CELL,
-  NODE_NAME_TABLE_HEADER,
-  NODE_NAME_TABLE_ROW,
-  shortcutSuffix,
-  SK_REPEAT_COMMAND
+  NODE_NAME_TABLE_CELL, NODE_NAME_TABLE_HEADER, NODE_NAME_TABLE_ROW, shortcutSuffix, SK
 } from '../../common';
 import { isString } from 'lodash';
-import { isConstructorDeclaration } from 'typescript';
 
 const REPEATABLE_COMMAND_PLUGIN = 'repeatable-command-plugin';
 const SET_REPEATABLE_COMMAND = 'set-repeatable-command';
@@ -99,7 +94,7 @@ export const RepeatableCommandExtension = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      [SK_REPEAT_COMMAND]: () => {
+      [SK.REPEAT_COMMAND]: () => {
         // console.log(`repeat last change`);
         return this.editor.commands.repeatCommand();
       },
@@ -373,7 +368,7 @@ export function getCurrentRepeatableCommand(
 }
 
 export function currentRepeatableCommandTooltip(state: EditorState): string {
-  let tooltip = 'repeat last command' + shortcutSuffix('SK_REPEAT_COMMAND');
+  let tooltip = 'repeat last command' + shortcutSuffix('SK.REPEAT_COMMAND');
   const repeatable = getCurrentRepeatableCommand(state);
   if (repeatable) tooltip += `: ${describeRepeatableCommand(repeatable)}`;
   return tooltip;

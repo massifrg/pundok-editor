@@ -6,7 +6,7 @@ import {
   CustomClass,
   EditAttributesActionProps,
   NODE_NAME_DIV,
-  SK_INCLUDE_DOC
+  SK
 } from '../../common';
 import { ACTION_ADD_CLASS } from '../../actions';
 
@@ -67,7 +67,7 @@ export const IncludeDivExtension = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      [SK_INCLUDE_DOC]: () => {
+      [SK.INCLUDE_DOC]: () => {
         return this.editor.commands.editAttributes({
           tab: 'classes',
           action: {
