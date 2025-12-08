@@ -180,8 +180,7 @@ import {
   NODE_NAME_FIGURE_CAPTION,
   NODE_NAME_METADATA,
   NODE_NAME_RAW_BLOCK,
-  SK.REMOVE_MARKS,
-  SK.SHOW_SEARCH_DIALOG,
+  SK,
 } from '../../common';
 import { setActionShowSearchDialog } from '../../actions';
 
