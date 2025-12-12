@@ -2,7 +2,7 @@ import { WebContentsView } from "electron";
 import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import { parse } from 'path';
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { runExternalProgram } from "./runExternal";
 
 type BufferLoader = (filepath: string, params: Record<string, any>) => Promise<Buffer>
 
@@ -46,12 +46,6 @@ export function handleImagesFor(view: WebContentsView) {
   })
 }
 
-GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString()
-
-
 /**
  * Render a PDF on a PNG image (see `https://github.com/mozilla/pdf.js/blob/master/examples/node/pdf2png/pdf2png.mjs`).
  * @param filepath
@@ -59,33 +53,34 @@ GlobalWorkerOptions.workerSrc = new URL(
  * @returns 
  */
 async function pdfToImage(filepath: string, params: Record<string, any>): Promise<Buffer> {
+  const dpi = 150
+  const page = params?.page || 0
   try {
-    const content = await readFile(filepath)
-    const loadingTask = getDocument({
-      data: new Uint8Array(content),
-    })
-    const pdfDocument = await loadingTask.promise;
-    // Get the first page.
-    const page = await pdfDocument.getPage(1);
-    // Render the page on a Node canvas with 100% scale.
-    const canvasFactory = pdfDocument.canvasFactory;
-    const viewport = page.getViewport({ scale: 1.0 });
-    /** @ts-ignore-error */
-    const canvasAndContext = canvasFactory.create(
-      viewport.width,
-      viewport.height
-    );
-    const renderContext = {
-      canvasContext: canvasAndContext.context,
-      viewport,
-    };
-    // comment the following line if PDF preview crashes Chrome
-    await page.render(renderContext).promise // TODO: make this skippable with an option
-    // Convert the canvas to an image buffer.
-    const image = canvasAndContext.canvas.toBuffer(params.mimeType || "image/jpeg");
-    // Release page resources.
-    page.cleanup();
-    return image
+    const chunks: Buffer[] = []
+    const spawned = runExternalProgram("magick",
+      [
+        `-density ${dpi}`,
+        `${filepath}[${page}]`,
+        "-background", "white",
+        "-alpha", "remove",
+        "-alpha", "off",
+        "jpg:-"
+      ],
+      {
+        shell: true,
+      },
+      (source, chunk) => {
+        if (source === 'out') chunks.push(chunk)
+      }
+    )
+    const result = await spawned.result
+    const { exitCode, error } = result
+    if (exitCode === 0) {
+      return Buffer.concat(chunks)
+    } else {
+      console.log(error)
+      return Promise.reject(error)
+    }
   } catch (reason) {
     console.log(reason);
     return Promise.reject(reason)
