@@ -90,6 +90,8 @@ export interface ElementsSelection extends Automation {
   cssSelector: string;
   /** The default tab on which to open the element attributes dialog. */
   tab?: string;
+  /** The text to replace the selected element with. */
+  replace?: string;
 }
 
 /** What to do with the result of a document transformation. */
