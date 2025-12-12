@@ -93,8 +93,10 @@
       </q-card-section>
       <q-card-actions>
         <q-btn icon="mdi-magnify" title="search" size="md" padding="md" @click="startSearch()" />
-        <q-btn icon="mdi-chevron-left" size="md" padding="md" title="select previous found" @click="prevFound()" />
-        <q-btn icon="mdi-chevron-right" size="md" padding="md" title="select next found" @click="nextFound()" />
+        <q-btn :disabled="!canPrevFound()" icon="mdi-chevron-left" size="md" padding="md" title="select previous found"
+          @click="prevFound()" />
+        <q-btn :disabled="!canNextFound()" icon="mdi-chevron-right" size="md" padding="md" title="select next found"
+          @click="nextFound()" />
         <q-btn icon="mdi-autorenew" size="md" padding="md" title="replace selected" @click="replaceSelected" />
         <q-btn size="md" padding="md" title="replace & select next found" @click="replaceNextText">
           <q-icon name="mdi-autorenew"></q-icon>
@@ -133,6 +135,8 @@ import {
   FoundTextRange,
   getAllIndices,
   getCssSelected,
+  getCssSelectionIndex,
+  getCssSelectionCount,
   getEditorConfiguration,
 } from '../schema';
 import {
@@ -235,12 +239,24 @@ export default {
       optionCycle: false,
       optionWholeWord: false,
       actionsOnReplace: [] as ActionNameWithProps[],
-      foundIndex: -1,
     };
   },
   computed: {
     ...mapState(useActions, ['lastAction']),
     ...mapState(useBackend, ['backend']),
+    foundIndex(): number {
+      const state = this.editor?.state
+      if (state) {
+        if (this.cssMode) {
+          return getCssSelectionIndex(state)
+        } else {
+          const ranges = getMatchHighlights(state).find();
+          const { from: selFrom, to: selTo } = state.selection;
+          return ranges.findIndex(({ from, to }) => from === selFrom && to === selTo)
+        }
+      }
+      return -1
+    },
     indices() {
       return getAllIndices(this.editor?.state)
     },
@@ -391,11 +407,19 @@ export default {
     },
     setCssSelector(sel: ElementsSelection) {
       this.updateSearchInput(sel.cssSelector)
+      if (sel.replace) {
+        this.optionSearchOnly = false
+        this.updateTextToReplace(sel.replace)
+      } else {
+        this.optionSearchOnly = true
+      }
       this.startSearch()
       // this.editorAttributesTab = sel.tab
     },
-    scrollAtCssSelected(e: LabeledNodeOrMark) {
-      console.log(`scroll to ${e.label} at pos ${e.pos}`)
+    scrollAtSelectedCss() {
+      if (this.foundCount <= 0 || this.foundIndex < 0) return
+      const e: LabeledNodeOrMark = this.cssSelected[this.foundIndex]
+      // console.log(`scroll to ${e.label} at pos ${e.pos}`)
       const editor = this.editor
       const { node, mark, pos, from, to } = e
       const nom = node || mark
@@ -403,7 +427,7 @@ export default {
       if (is_text) {
         // console.log(`scroll to a text`)
         editor.chain()
-          .setTextSelection(pos)
+          // .setTextSelection(pos)
           .scrollPosToCenterIfNotVisible(pos)
           // .scrollIntoView()
           .focus()
@@ -411,7 +435,7 @@ export default {
       } else if (!!node) {
         // console.log(`scroll to a node`)
         editor.chain()
-          .setNodeSelection(pos)
+          // .setNodeSelection(pos)
           .scrollPosToCenterIfNotVisible(pos)
           // .scrollIntoView()
           .focus()
@@ -419,7 +443,7 @@ export default {
       } else if (!!mark) { // it's a Mark
         // console.log(`scroll to a mark`)
         editor.chain()
-          .setTextSelection({ from, to })
+          // .setTextSelection({ from, to })
           .scrollPosToCenterIfNotVisible(from)
           // .scrollIntoView()
           .focus()
@@ -450,7 +474,10 @@ export default {
       const editor = this.editor
       if (editor) {
         try {
-          editor.commands.cssSelect(this.searchInput, this.optionMergeAdjacentMarks)
+          editor.commands.cssSelect(this.searchInput, {
+            mergeAdjacentMarks: this.optionMergeAdjacentMarks,
+            sort: true
+          })
           return true
         } catch (err: any) {
           // TODO: this.errorMessage = err.message
@@ -461,26 +488,8 @@ export default {
     },
     startSearch() {
       const started = this.cssMode ? this.startSearchCss() : this.startSearchText()
-      this.searchStarted = true
-      if (started)
-        this.updateCountAndIndex()
-    },
-    updateCountAndIndex() {
-      if (this.cssMode) {
-        this.foundCount = this.cssSelected.length
-        this.foundIndex = this.foundIndex >= this.foundCount ? this.foundCount : this.foundIndex
-      } else {
-        const state = this.editor?.state
-        if (state) {
-          const ranges = getMatchHighlights(state).find();
-          this.foundCount = ranges.length
-          const { from: selFrom, to: selTo } = state.selection;
-          this.foundIndex = ranges.findIndex(({ from, to }) => from === selFrom && to === selTo)
-        } else {
-          this.foundCount = 0
-          this.foundIndex = -1
-        }
-      }
+      this.searchStarted = started
+      return started
     },
     hideDialog() {
       if (this.editor) {
@@ -498,46 +507,49 @@ export default {
       const newValue = v ? v.toString() : ''
       this.textToReplace = newValue;
     },
+    canPrevFound() {
+      return this.cssMode
+        ? this.editor.can().selectPrevCss(this.optionCycle)
+        : this.editor.can().selectPrevFoundText(this.optionCycle)
+    },
+    canNextFound() {
+      return this.cssMode
+        ? this.editor.can().selectNextCss(this.optionCycle)
+        : this.editor.can().selectNextFoundText(this.optionCycle)
+    },
     prevFound() {
       if (this.cssMode) {
-        let index = this.foundIndex
-        index = index > 0
-          ? index - 1
-          : this.optionCycle ? index = this.foundCount - 1 : 0
-        this.foundIndex = index
-        this.scrollAtCssSelected(this.cssSelected[index])
+        this.editor.commands.selectPrevCss(this.optionCycle)
+        this.scrollAtSelectedCss()
       } else {
         this.editor.chain().selectPrevFoundText(this.optionCycle).focus().run()
-        this.updateCountAndIndex()
       }
     },
     nextFound() {
       if (this.cssMode) {
-        const count = this.foundCount
-        let index = this.foundIndex
-        index = index < count - 1
-          ? index + 1
-          : this.optionCycle ? index = 0 : index = count - 1
-        this.foundIndex = index
-        if (index >= 0 && index < count)
-          this.scrollAtCssSelected(this.cssSelected[index])
+        this.editor.commands.selectNextCss(this.optionCycle)
+        this.scrollAtSelectedCss()
       } else {
         this.editor.chain().selectNextFoundText(this.optionCycle).focus().run()
-        this.updateCountAndIndex()
       }
     },
     replaceSelected() {
-      if (this.cssMode || this.optionSearchOnly) {
+      if (this.optionSearchOnly) {
         this.editor.chain()
           .applyActions(this.actionsOnReplace)
           .focus().run()
       } else {
-        this.editor.chain()
-          .replaceSelectedText()
-          .applyActions(this.actionsOnReplace)
-          .focus().run()
+        if (this.cssMode)
+          this.editor.chain()
+            .replaceWithText(this.textToReplace)
+            .applyActions(this.actionsOnReplace)
+            .focus().run()
+        else
+          this.editor.chain()
+            .replaceSelectedText()
+            .applyActions(this.actionsOnReplace)
+            .focus().run()
       }
-      this.updateCountAndIndex()
     },
     replaceNextText() {
       this.replaceSelected()

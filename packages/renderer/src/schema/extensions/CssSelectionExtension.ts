@@ -1,12 +1,24 @@
-import { EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
+import {
+  EditorState,
+  NodeSelection,
+  Plugin,
+  PluginKey,
+  Selection,
+  TextSelection,
+  Transaction
+} from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import { CssSelectOptions, SelectedNodeOrMark, cssSelect } from '../helpers';
 import { Mapping } from '@tiptap/pm/transform';
+import { NODE_NAME_PARAGRAPH } from '/@/common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     cssSelection: {
       cssSelect: (selector: string, options: CssSelectOptions) => ReturnType;
+      selectNextCss: (wrap?: boolean) => ReturnType;
+      selectPrevCss: (wrap?: boolean) => ReturnType;
+      replaceWithText: (text: string) => ReturnType;
     };
   }
 }
@@ -37,6 +49,7 @@ export const CssSelectionExtension = Extension.create({
                 .map((s) => mapSelectedNodeOrMark(s, mapping))
                 .filter((s) => !!s) as SelectedNodeOrMark[];
             }
+            // console.log(selected)
             return selected;
           },
         },
@@ -54,6 +67,63 @@ export const CssSelectionExtension = Extension.create({
             }
             return true;
           },
+      selectPrevCss: (wrap) => ({ dispatch, state, tr }) => {
+        const selections = getCssSelected(state)
+        const count = selections.length
+        if (count === 0) return false
+        const from = state.selection.$anchor.pos
+        const lastIndex = count - 1
+        let index = lastIndex
+        while (index > 0 && selections[index].from >= from)
+          index -= 1
+        index = (index < 0 && wrap) ? lastIndex : index
+        if (index < 0 || index >= count) return false
+        if (dispatch)
+          dispatch(setCssSelection(tr, selections[index]))
+        return true
+      },
+      selectNextCss: (wrap) => ({ dispatch, state, tr }) => {
+        const selections = getCssSelected(state)
+        const count = selections.length
+        if (count === 0) return false
+        const from = state.selection.$anchor.pos
+        const lastIndex = count - 1
+        let index = 0
+        while (index < lastIndex && selections[index].from <= from)
+          index += 1
+        index = (index >= count && wrap) ? 0 : index
+        if (index < 0 || index >= count) return false
+        if (dispatch)
+          dispatch(setCssSelection(tr, selections[index]))
+        return true
+      },
+      replaceWithText: (text: string) => ({ dispatch, state, tr }) => {
+        const { selection } = state
+        if (selection.empty) return false
+        if (dispatch) {
+          if (selection instanceof TextSelection) {
+            tr.insertText(text)
+          } else {
+            const { $anchor } = selection
+            const content = $anchor.node().type.spec.content
+            if (content?.match(/\b(text|inline)\b/)) {
+              tr.insertText(text)
+            } else {
+              if (text.length === 0)
+                tr.deleteSelection()
+              else {
+                const { schema } = state
+                const paragraph = schema.nodes[NODE_NAME_PARAGRAPH].createAndFill(null, schema.text(text))
+                if (paragraph)
+                  tr.replaceSelectionWith(paragraph, true)
+              }
+            }
+          }
+          if (tr.docChanged)
+            dispatch(tr)
+        }
+        return true
+      }
     };
   },
 });
@@ -62,20 +132,31 @@ function mapSelectedNodeOrMark(
   selected: SelectedNodeOrMark,
   mapping: Mapping
 ): SelectedNodeOrMark | undefined {
-  const isNode = !!selected.node;
-  const coords = isNode ? [selected.pos] : [selected.from, selected.to];
+  const coords = [selected.pos, selected.from, selected.to];
   const results = coords.map((c) => mapping.mapResult(c));
   if (results.find((r) => r.deleted)) return undefined;
-  if (isNode) {
-    const pos = results[0].pos;
-    return { ...selected, pos, from: pos, to: pos };
-  } else {
-    const from = results[0].pos;
-    const to = results[1].pos;
-    return { ...selected, from, to, pos: from };
-  }
+  const pos = results[0].pos;
+  const from = results[1].pos;
+  const to = results[2].pos;
+  return { ...selected, from, to, pos };
 }
 
 export function getCssSelected(state: EditorState): SelectedNodeOrMark[] {
-  return cssSelectionPluginKey.getState(state);
+  return cssSelectionPluginKey.getState(state) || [];
+}
+
+export function getCssSelectionCount(state: EditorState): number {
+  return getCssSelected(state).length;
+}
+
+export function getCssSelectionIndex(state: EditorState): number {
+  const { from, to } = state.selection
+  return getCssSelected(state).findIndex(sel => sel.from === from && sel.to === to)
+}
+
+function setCssSelection(tr: Transaction, sel: SelectedNodeOrMark): Transaction {
+  const selection: Selection = sel.mark
+    ? TextSelection.create(tr.doc, sel.from, sel.to)
+    : NodeSelection.create(tr.doc, sel.from)
+  return tr.setSelection(selection)
 }
