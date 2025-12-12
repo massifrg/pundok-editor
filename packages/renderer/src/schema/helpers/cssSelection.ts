@@ -8,12 +8,31 @@ import {
   Complex,
 } from 'parsel-js';
 import { SelectedNodeOrMark } from './selection';
+import { isString } from 'lodash';
+import {
+  NODE_NAME_BREAK,
+  NODE_NAME_HEADING,
+  NODE_NAME_HORIZONTAL_RULE,
+  NODE_NAME_PARAGRAPH
+} from '../../common';
 
-const NORMALIZED_NAME: Record<string, string> = {
-  p: 'paragraph',
-  para: 'paragraph',
-  header: 'heading',
+type MatchNameWithNodeOrMarkFunction = (nom: Node | Mark) => boolean
+
+const NORMALIZED_NAME: Record<string, string | MatchNameWithNodeOrMarkFunction> = {
+  p: NODE_NAME_PARAGRAPH.toLowerCase(),
+  para: NODE_NAME_PARAGRAPH.toLowerCase(),
+  header: NODE_NAME_HEADING.toLowerCase(),
+  h1: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 1,
+  h2: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 2,
+  h3: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 3,
+  h4: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 4,
+  h5: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 5,
+  h6: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 6,
+  hr: NODE_NAME_HORIZONTAL_RULE.toLowerCase(),
   '§': 'custom-style',
+  br: NODE_NAME_BREAK.toLowerCase(),
+  linebreak: (n) => n.type.name === NODE_NAME_BREAK && !n.attrs.soft,
+  softbreak: (n) => n.type.name === NODE_NAME_BREAK && !!n.attrs.soft,
 };
 
 type CombinatorSelector =
@@ -24,6 +43,7 @@ type CombinatorSelector =
 
 export interface CssSelectOptions {
   mergeSameAdjacentMarks: boolean;
+  sort: boolean;
 }
 
 interface NodeRef {
@@ -32,6 +52,12 @@ interface NodeRef {
   parent?: Node;
   index: number;
   mark?: Mark;
+}
+
+function sortSelectedNodeOrMark(snom1: SelectedNodeOrMark, snom2: SelectedNodeOrMark) {
+  const fromDiff = snom1.from - snom2.from
+  if (fromDiff !== 0) return fromDiff
+  return snom2.to - snom1.to
 }
 
 /**
@@ -54,7 +80,7 @@ export function cssSelect(
   const bases: NodeRef[] = [{ node: doc, pos: 0, index: 0 }];
   const refs = ast ? applyRule(ast, bases, 'descendant') : [];
   // console.log(refs);
-  const selected: SelectedNodeOrMark[] = []
+  let selected: SelectedNodeOrMark[] = []
   refs.forEach(({ node, pos, parent, index, mark }) => {
     selected.push({
       name: mark?.type.name || node.type.name,
@@ -67,9 +93,9 @@ export function cssSelect(
       index
     })
   })
-  return options?.mergeSameAdjacentMarks
-    ? mergeAdjacentMarks(selected)
-    : selected;
+  selected = options?.mergeSameAdjacentMarks && mergeAdjacentMarks(selected) || selected
+  selected = options?.sort && selected.sort(sortSelectedNodeOrMark) || selected
+  return selected
 }
 
 function applyRule(
@@ -196,22 +222,32 @@ function applyNotComplexRule(
   return acc;
 }
 
-function normalizeName(name: string): string {
+function normalizeName(name: string, nom?: Node | Mark): string | false {
   const lowered = name.toLowerCase();
+  if (!nom)
+    return lowered
   const normalized = NORMALIZED_NAME[lowered];
-  return normalized || lowered;
+  if (!normalized)
+    return lowered
+  if (isString(normalized))
+    return normalized
+  return normalized(nom) && nom.type.name.toLowerCase() || false
 }
 
 function nomMatchesAST(nom: Node | Mark, ast: AST): boolean {
   switch (ast.type) {
-    case 'type':
-      return nomMatchesName(nom, normalizeName(ast.name));
+    case 'type': {
+      const normalized = normalizeName(ast.name, nom)
+      return !!normalized && nomMatchesName(nom, normalized);
+    }
     case 'id':
       return nomMatchesId(nom, ast.name);
     case 'class':
       return nomHasClass(nom, ast.name);
-    case 'attribute':
-      return nomHasAttribute(nom, normalizeName(ast.name), ast);
+    case 'attribute': {
+      const normalized = normalizeName(ast.name, nom)
+      return !!normalized && nomHasAttribute(nom, normalized, ast);
+    }
     case 'compound':
       return nomMatchesCompound(nom, ast.list);
     case 'list':
