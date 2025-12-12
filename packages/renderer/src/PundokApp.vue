@@ -602,8 +602,11 @@ $color-fg-index: #dc7200;
     border: 2px solid #3584e4;
   }
 
-  // start of gapcursor.css
+  hr.ProseMirror-selectednode {
+    border-color: #3584e4 !important;
+  }
 
+  // start of gapcursor.css
   .ProseMirror-gapcursor {
     display: none;
     pointer-events: none;
