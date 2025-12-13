@@ -349,6 +349,10 @@ function nomMatchesPseudoClass(
   switch (ast.name) {
     case 'not':
       return !!ast.subtree && !nomMatchesAST(nom, ast.subtree);
+    case 'text':
+      const { argument } = ast
+      const text = (nom as Node).textContent || nom.attrs.text
+      return argument && text && text.indexOf(argument) >= 0
     default:
       console.log(ast);
       throw new Error(
