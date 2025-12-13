@@ -155,12 +155,12 @@ function applyNotComplexRule(
         const basePos = curBase.pos > 0 ? curBase.pos + 1 : 0
         if (mark) {
           const child = parent?.child(parentIndex)
-          const m = child?.marks.find((m) => nomMatchesAST(m, ast))
+          const m = child?.marks.find((m) => nomMatchesAST(m, ast, parent, parentIndex))
           if (m) acc.push({ ...curBase, mark: m })
         } else {
           base.descendants((node, p, parent, index) => {
             const pos = basePos + p;
-            if (nomMatchesAST(node, ast))
+            if (nomMatchesAST(node, ast, parent, index))
               acc.push({
                 node,
                 pos,
@@ -194,7 +194,7 @@ function applyNotComplexRule(
           for (let i = index + 1; i < limit; i++) {
             const sibling = parent.child(i);
             const nextPos = curPos + sibling.nodeSize;
-            if (nomMatchesAST(sibling, ast)) {
+            if (nomMatchesAST(sibling, ast, parent, index)) {
               acc.push({
                 node: sibling,
                 pos: curPos,
@@ -202,7 +202,7 @@ function applyNotComplexRule(
                 index: i,
               });
             } else {
-              const mark = sibling.marks.find(m => nomMatchesAST(m, ast))
+              const mark = sibling.marks.find(m => nomMatchesAST(m, ast, parent, index))
               if (mark) {
                 acc.push({
                   mark,
@@ -234,7 +234,7 @@ function normalizeName(name: string, nom?: Node | Mark): string | false {
   return normalized(nom) && nom.type.name.toLowerCase() || false
 }
 
-function nomMatchesAST(nom: Node | Mark, ast: AST): boolean {
+function nomMatchesAST(nom: Node | Mark, ast: AST, parent?: Node | null, index?: number): boolean {
   switch (ast.type) {
     case 'type': {
       const normalized = normalizeName(ast.name, nom)
@@ -249,13 +249,13 @@ function nomMatchesAST(nom: Node | Mark, ast: AST): boolean {
       return !!normalized && nomHasAttribute(nom, normalized, ast);
     }
     case 'compound':
-      return nomMatchesCompound(nom, ast.list);
+      return nomMatchesCompound(nom, ast.list, parent, index);
     case 'list':
-      return nomMatchesList(nom, ast.list);
+      return nomMatchesList(nom, ast.list, parent, index);
     case 'universal':
       return true;
     case 'pseudo-class':
-      return nomMatchesPseudoClass(nom, ast);
+      return nomMatchesPseudoClass(nom, ast, parent, index);
     case 'complex':
     case 'combinator':
     case 'comma':
@@ -267,18 +267,18 @@ function nomMatchesAST(nom: Node | Mark, ast: AST): boolean {
   return false;
 }
 
-function nomMatchesCompound(nom: Node | Mark, list: AST[]): boolean {
+function nomMatchesCompound(nom: Node | Mark, list: AST[], parent?: Node | null, index?: number): boolean {
   for (let i = 0; i < list.length; i++) {
     const ast = list[i];
-    if (!nomMatchesAST(nom, ast)) return false;
+    if (!nomMatchesAST(nom, ast, parent, index)) return false;
   }
   return true;
 }
 
-function nomMatchesList(nom: Node | Mark, list: AST[]): boolean {
+function nomMatchesList(nom: Node | Mark, list: AST[], parent?: Node | null, index?: number): boolean {
   for (let i = 0; i < list.length; i++) {
     const ast = list[i];
-    if (nomMatchesAST(nom, ast)) return true;
+    if (nomMatchesAST(nom, ast, parent, index)) return true;
   }
   return false;
 }
@@ -344,7 +344,9 @@ function nomHasAttribute(
 
 function nomMatchesPseudoClass(
   nom: Node | Mark,
-  ast: PseudoClassToken
+  ast: PseudoClassToken,
+  parent?: Node | null,
+  index?: number,
 ): boolean {
   switch (ast.name) {
     case 'not':
@@ -353,6 +355,14 @@ function nomMatchesPseudoClass(
       const { argument } = ast
       const text = (nom as Node).textContent || nom.attrs.text
       return argument && text && text.indexOf(argument) >= 0
+    case 'first-child':
+      return index === 0
+    case 'last-child':
+      return !!parent && !!index && parent.childCount === index + 1
+    case 'nth-child':
+      const order = parseInt(ast.argument || '')
+      return !!index && order === index + 1
+
     default:
       console.log(ast);
       throw new Error(
