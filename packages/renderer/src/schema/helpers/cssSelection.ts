@@ -237,8 +237,7 @@ function normalizeName(name: string, nom?: Node | Mark): string | false {
 function nomMatchesAST(nom: Node | Mark, ast: AST, parent?: Node | null, index?: number): boolean {
   switch (ast.type) {
     case 'type': {
-      const normalized = normalizeName(ast.name, nom)
-      return !!normalized && nomMatchesName(nom, normalized);
+      return nomMatchesName(nom, ast.name);
     }
     case 'id':
       return nomMatchesId(nom, ast.name);
@@ -284,8 +283,9 @@ function nomMatchesList(nom: Node | Mark, list: AST[], parent?: Node | null, ind
 }
 
 function nomMatchesName(nom: Node | Mark, name: string): boolean {
+  const normalized = normalizeName(name, nom) || name
   const typeName = nom.type.name;
-  return typeName.toLowerCase() === name;
+  return typeName.toLowerCase() === normalized;
 }
 
 function nomMatchesId(nom: Node | Mark, id: string): boolean {
@@ -342,27 +342,87 @@ function nomHasAttribute(
   return retValue;
 }
 
+/**
+ * Count the children of `parent` that match `nom` name in a range of indexes (extremes included).
+ * @param nom 
+ * @param parent 
+ * @param _from starting index.
+ * @param _to ending index (included).
+ * @returns 
+ */
+function countChildrenOfType(nom: Node | Mark, parent?: Node | null, _from?: number, _to?: number): number {
+  if (!parent)
+    return 0
+  const from = _from || 0
+  const to = _to || parent.childCount - 1
+  let countOfType = 0
+  for (let i = from; i <= to; i++)
+    if (nomMatchesName(nom, parent.child(i).type.name)) countOfType++
+  return countOfType
+}
+
+function isNthOfType(nom: Node | Mark, nth: number, parent?: Node | null, index?: number): boolean {
+  if (isNaN(nth) || index === undefined)
+    return false
+  return countChildrenOfType(nom, parent, 0, index) === nth
+}
+
+function isNthLastOfType(nom: Node | Mark, nth: number, parent?: Node | null, index?: number): boolean {
+  if (isNaN(nth) || !parent || index === undefined)
+    return false
+  let countOfType = 0
+  for (let i = index; i < parent.childCount; i++) {
+    if (nomMatchesName(nom, parent.child(i).type.name)) countOfType++
+    if (countOfType > nth) return false
+  }
+  return countOfType === nth
+}
+
 function nomMatchesPseudoClass(
   nom: Node | Mark,
   ast: PseudoClassToken,
   parent?: Node | null,
   index?: number,
 ): boolean {
+  const { argument } = ast
   switch (ast.name) {
     case 'not':
       return !!ast.subtree && !nomMatchesAST(nom, ast.subtree);
     case 'text':
-      const { argument } = ast
       const text = (nom as Node).textContent || nom.attrs.text
-      return argument && text && text.indexOf(argument) >= 0
+      return !!argument && text && text.indexOf(argument) >= 0
     case 'first-child':
       return index === 0
     case 'last-child':
       return !!parent && !!index && parent.childCount === index + 1
-    case 'nth-child':
-      const order = parseInt(ast.argument || '')
-      return !!index && order === index + 1
-
+    case 'nth-child': {
+      const nth = parseInt(argument || '')
+      return !!index && nth === index + 1
+    }
+    case 'only-child':
+      return !!parent && parent.childCount === 1
+    case 'only-of-type': {
+      return countChildrenOfType(nom, parent) === 1
+    }
+    case 'nth-last-child': {
+      const nth = parseInt(argument || '')
+      return !!parent && parent.childCount - nth === index
+    }
+    case 'first-of-type':
+      return isNthOfType(nom, 1, parent, index)
+    case 'last-of-type':
+      return !!parent && isNthLastOfType(nom, 1, parent, index)
+    case 'nth-of-type': {
+      const nth = parseInt(argument || '')
+      return isNthOfType(nom, nth, parent, index)
+    }
+    case 'nth-last-of-type': {
+      const nth = parseInt(argument || '')
+      return isNthLastOfType(nom, nth, parent, index)
+    }
+    case 'where':
+      const types = argument?.split(',')
+      return !!(types && types.find(t => nomMatchesName(nom, t)))
     default:
       console.log(ast);
       throw new Error(
