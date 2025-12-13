@@ -94,6 +94,7 @@ export default {
         ? Object.entries(this.attrs as object).filter(([a, _]) => c.attributes?.find(attr => attr.name === a))
         : []
       this.attrs = Object.fromEntries(entries)
+      this.updateProps()
     },
     updateProps() {
       this.$emit('set-props', this.index, {
