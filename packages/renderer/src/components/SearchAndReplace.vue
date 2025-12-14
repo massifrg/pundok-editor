@@ -120,7 +120,6 @@ import {
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
   Automation,
-  Capitalize,
   CustomStyleInstance,
   ElementsSelection,
   getElementsSelections,
@@ -222,8 +221,6 @@ export default {
       searchInput: '',
       // in CSS selection mode, the CSS selector
       cssSelector: '',
-      // the CSS-selected elements
-      // cssSelected: [] as LabeledNodeOrMark[],
       // in CSS selection mode, merge adjacent text nodes with the same marks
       optionMergeAdjacentMarks: true,
       // in text mode, the text or the regex to be searched
@@ -234,10 +231,13 @@ export default {
       optionSearchOnly: false,
       // in text mode, search is case insensitive
       optionCaseInsensitive: false,
-      // optionCapitalize: 'none' as Capitalize,
+      // search as regular expression (only in text search)
       optionRegex: false,
+      // start again from the top after last found, or go to the bottom going back from first found
       optionCycle: false,
+      // search a whole word
       optionWholeWord: false,
+      // actions to be performed on replaced text or selected with CSS
       actionsOnReplace: [] as ActionNameWithProps[],
     };
   },

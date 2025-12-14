@@ -10,14 +10,14 @@ import {
 import { Extension } from '@tiptap/core';
 import { CssSelectOptions, SelectedNodeOrMark, cssSelect } from '../helpers';
 import { Mapping } from '@tiptap/pm/transform';
-import { NODE_NAME_PARAGRAPH } from '/@/common';
+import { NODE_NAME_PARAGRAPH } from '../../common';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     cssSelection: {
       cssSelect: (selector: string, options: CssSelectOptions) => ReturnType;
-      selectNextCss: (wrap?: boolean) => ReturnType;
       selectPrevCss: (wrap?: boolean) => ReturnType;
+      selectNextCss: (wrap?: boolean) => ReturnType;
       replaceWithText: (text: string) => ReturnType;
     };
   }
@@ -76,7 +76,8 @@ export const CssSelectionExtension = Extension.create({
         let index = lastIndex
         while (index > 0 && selections[index].from >= from)
           index -= 1
-        index = (index < 0 && wrap) ? lastIndex : index
+        if (index === 0 && selections[0].from >= from)
+          index = wrap ? lastIndex : -1
         if (index < 0 || index >= count) return false
         if (dispatch)
           dispatch(setCssSelection(tr, selections[index]))
@@ -91,7 +92,8 @@ export const CssSelectionExtension = Extension.create({
         let index = 0
         while (index < lastIndex && selections[index].from <= from)
           index += 1
-        index = (index >= count && wrap) ? 0 : index
+        if (index === lastIndex && selections[lastIndex].from <= from)
+          index = wrap ? 0 : count
         if (index < 0 || index >= count) return false
         if (dispatch)
           dispatch(setCssSelection(tr, selections[index]))
