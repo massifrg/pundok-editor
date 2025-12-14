@@ -3,6 +3,7 @@ import {
   delimiter,
   join as joinPath,
   parse as parsePath,
+  resolve,
   sep as pathSeparator,
 } from 'path';
 import { isString } from 'lodash';
@@ -29,11 +30,21 @@ import { archiveFolder } from 'zip-lib';
 import { STATIC_RESOURCES_DIR } from './staticResources';
 import { stringify } from './utils';
 
-//var FindFiles = require("node-find-files").default;
-
 const APP_DATA_DIR = 'pundok-editor';
 const CONFIGS_DIR = 'configs';
 const STARTUP_FILENAME = 'startup.json';
+
+/**
+ * The structure of `startup.json`, the first file that is read in the app directory.
+ */
+export interface StartupConfiguration {
+  /** The version of pundok-editor. */
+  version: string;
+  /** The name of the configuration to start with. */
+  configuration: string;
+  /** A complement for the variables in the process environment. */
+  env: Record<string, string>;
+}
 
 function checkAndAddFolder(path: string) {
   if (!existsSync(path)) {
@@ -41,25 +52,29 @@ function checkAndAddFolder(path: string) {
   }
 }
 
-export function staticResourcesDir() {
-  // DIRS.forEach(name => {
-  //   console.log(`getPath('${name}'): ${app.getPath(name)}`)
-  // })
+/**
+ * The directory of the static resources of the program.
+ */
+export function staticResourcesDir(): string {
   let basePath = app.getAppPath();
   let prevPath = undefined;
   while (
     basePath !== prevPath &&
-    !existsSync(basePath + pathSeparator + STATIC_RESOURCES_DIR)
+    !existsSync(resolve(basePath, STATIC_RESOURCES_DIR))
   ) {
     prevPath = basePath;
     basePath = parsePath(basePath).dir;
   }
-  const staticPath = (basePath += pathSeparator + STATIC_RESOURCES_DIR);
+  const staticPath = resolve(basePath, STATIC_RESOURCES_DIR);
   console.log(`static resources path: ${staticPath}`);
   return staticPath;
 }
 
-export function userAppDataDir() {
+/**
+ * The app data directory in the user's directories.
+ * @returns
+ */
+export function userAppDataDir(): string {
   // return app.getPath('userData')
   const homedir = process.env.HOME;
   switch (process.platform) {
@@ -80,19 +95,34 @@ export function userAppDataDir() {
   }
 }
 
-export function configsDir() {
-  return `${userAppDataDir()}${pathSeparator}${CONFIGS_DIR}`;
+/**
+ * The directory containing all the configurations.
+ * @returns 
+ */
+export function configsDir(): string {
+  return resolve(userAppDataDir(), CONFIGS_DIR);
 }
 
+/**
+ * The path of the a configuration directory.
+ * @param configurationName The name of the configuration.
+ */
 export function configDir(configurationName: string) {
-  return `${configsDir()}${pathSeparator}${configurationName}`;
+  return resolve(configsDir(), configurationName);
 }
 
+/**
+ * Creates user's and app directories.
+ */
 export function checkAndCreateAppDataDir() {
   checkAndAddFolder(userAppDataDir());
   checkAndAddFolder(configsDir());
 }
 
+/**
+ * Read and parse all the configurations in the configuration's directory.
+ * @returns
+ */
 export async function parseConfigurationFiles(): Promise<PundokEditorConfigInit[]> {
   const path = configsDir();
   const filenames = (await readdir(path)).filter((f) =>
@@ -100,7 +130,7 @@ export async function parseConfigurationFiles(): Promise<PundokEditorConfigInit[
   );
   // console.log(filenames);
   const parsed = filenames
-    .map((fn) => readFileSync(`${path}${pathSeparator}${fn}`).toString())
+    .map((fn) => readFileSync(resolve(path, fn)).toString())
     .map((content) => {
       try {
         return JSON.parse(content);
@@ -112,32 +142,51 @@ export async function parseConfigurationFiles(): Promise<PundokEditorConfigInit[
   return valid;
 }
 
+/**
+ * All the paths where a particular kind of resource may be found.
+ * @param base The base directory (usually of a configuration).
+ * @param kind The kind of resources you are looking for. 
+ * @returns 
+ */
 function resourcePaths(base: string, kind?: ResourceType): string[] {
   let dd: string[] = [base];
   if (kind)
-    dd = dd.concat(
-      (RESOURCE_SUBPATHS[kind] || []).map(
-        (subdir) => `${base}${pathSeparator}${subdir}`,
-      ),
-    );
+    dd = dd.concat((RESOURCE_SUBPATHS[kind] || []).map((subdir) => resolve(base, subdir)));
   return dd;
 }
 
-export function isReadableFile(filename: string) {
+/**
+ * Check whether a file (not a directory!) path exists and it's readable.
+ * @param filename
+ * @returns 
+ */
+export function isReadableFile(filename: string): boolean {
   return existsSync(filename) && statSync(filename).isFile();
 }
 
+/**
+ * Check whether a directory (not a file!) path exists and it's readable.
+ * @param dir 
+ */
+export function isReadableDir(dir: string): boolean {
+  return existsSync(dir) && statSync(dir).isDirectory()
+}
+
+/**
+ * Lists all the paths where a resource file of a particular kind may be found.
+ * @param kind The type of resource you are looking for.
+ * @param project The optional project.
+ * @param configurationName The name of an optional configuration.
+ * @returns 
+ */
 export function validResourcePaths(
   kind?: ResourceType,
   project?: PundokEditorProject,
   configurationName?: string,
 ): string[] {
   const findValidPaths = (base?: string) =>
-    (base &&
-      resourcePaths(base, kind).filter(
-        (d) => existsSync(d) && statSync(d).isDirectory(),
-      )) ||
-    [];
+    (base && resourcePaths(base, kind).filter((d) => isReadableDir(d)))
+    || [];
 
   const configsdir = configsDir();
   let searchpaths: string[] = [];
@@ -147,16 +196,14 @@ export function validResourcePaths(
   // 2. try the configurationName when there's no project
   if (!project?.path && configurationName)
     searchpaths = searchpaths.concat(
-      findValidPaths(`${configsdir}${pathSeparator}${configurationName}`),
+      findValidPaths(resolve(configsdir, configurationName)),
     );
   // 3. try the configurations inherited by the project, in reverse order
   if (project?.configurations) {
     console.log(`inherited configurations: ${project.configurations.join()}`);
     const reversed = project.configurations.map((c) => c).reverse();
     reversed.forEach((configName) => {
-      searchpaths = searchpaths.concat(
-        findValidPaths(`${configsdir}${pathSeparator}${configName}`),
-      );
+      searchpaths = searchpaths.concat(findValidPaths(resolve(configsdir, configName)));
     });
   }
   // 4. try the application data dir
@@ -164,6 +211,12 @@ export function validResourcePaths(
   return searchpaths;
 }
 
+/**
+ * Given a list of paths, makes a list of subpaths where a particular kind of resource may be found.
+ * @param baseResourcePaths The list of base paths.
+ * @param kind The kind of resource you are looking for.
+ * @returns 
+ */
 export function validResourceSubpaths(
   baseResourcePaths: string[],
   kind?: ResourceType,
@@ -171,17 +224,21 @@ export function validResourceSubpaths(
   let paths: string[] = [];
   baseResourcePaths.forEach((basepath) => {
     const subdirs = (kind && RESOURCE_SUBPATHS[kind]) || [];
-    paths = paths.concat(
-      subdirs.map((subdir) => `${basepath}${pathSeparator}${subdir}`),
-    );
+    paths = paths.concat(subdirs.map((subdir) => resolve(basepath, subdir)));
   });
-  return paths.filter((p) => existsSync(p) && statSync(p).isDirectory());
+  return paths.filter((p) => isReadableDir(p));
 }
 
 export interface FindResourceFileOptions extends FindResourceOptions {
   baseResourcePaths: string[];
 }
 
+/**
+ * Look for a resource file with a given filename (without directory path).
+ * @param filename The name of the file to look for.
+ * @param options Kind of file, base paths, project, configuration name.
+ * @returns The first path found with that name, or `undefined` if not found.
+ */
 export function findResourceFile(
   filename: string,
   options?: Partial<FindResourceFileOptions>,
@@ -189,18 +246,15 @@ export function findResourceFile(
   const { kind, baseResourcePaths, project, configurationName } = options || {};
 
   const findFilename = (base?: string) =>
-    base && isReadableFile(`${base}${pathSeparator}${filename}`);
+    base && isReadableFile(resolve(base, filename));
 
   let resourcePath: string | undefined = undefined;
   if (baseResourcePaths && kind) {
     resourcePath = validResourceSubpaths(baseResourcePaths, kind).find((d) =>
-      isReadableFile(`${d}${pathSeparator}${filename}`),
+      isReadableFile(resolve(d, filename)),
     );
-    resourcePath =
-      resourcePath ||
-      baseResourcePaths.find((d) =>
-        isReadableFile(`${d}${pathSeparator}${filename}`),
-      );
+    resourcePath = resourcePath ||
+      baseResourcePaths.find((d) => isReadableFile(resolve(d, filename)));
   }
   console.log('VALID RESOURCE PATHS');
   const projectInstance = (
@@ -215,21 +269,17 @@ export function findResourceFile(
       findFilename(p),
     );
   console.log(`resourcePath=${resourcePath}`);
-  return resourcePath && `${resourcePath}${pathSeparator}${filename}`;
+  return resourcePath && resolve(resourcePath, filename);
 }
 
-export interface StartupConfiguration {
-  version: string;
-  configuration: string;
-  env: Record<string, string>;
-}
-
+/**
+ * Get the contents of the program's startup file.
+ * @returns 
+ */
 export async function getStartup(): Promise<StartupConfiguration> {
   console.log(`app.getAppPath(): ${app.getAppPath()}`);
   try {
-    const buf = await readFile(
-      `${userAppDataDir()}${pathSeparator}${STARTUP_FILENAME}`,
-    );
+    const buf = await readFile(resolve(userAppDataDir(), STARTUP_FILENAME));
     const startup = JSON.parse(buf.toString()) as StartupConfiguration;
     return startup;
   } catch (err) {
@@ -241,9 +291,14 @@ export async function getStartup(): Promise<StartupConfiguration> {
   }
 }
 
+/**
+ * Overwrites the program's startup file.
+ * @param startup 
+ * @returns 
+ */
 export async function updateStartup(startup: StartupConfiguration) {
   return await writeFile(
-    `${userAppDataDir()}${pathSeparator}${STARTUP_FILENAME}`,
+    resolve(userAppDataDir(), STARTUP_FILENAME),
     JSON.stringify(startup, undefined, 2)
   )
 }
@@ -297,18 +352,18 @@ function fixOlderConfigsFilename(outPath: string): string | undefined {
   return p;
 }
 
+/**
+ * Unpack all the configurations from a zip file into the configurations' directory.
+ * @param filename The name of the file with the configurations
+ *                 (eventually saved with {@link saveConfigurationsToFile}).
+ */
 export async function loadConfigurationsFromFile(filename: string) {
   createReadStream(filename)
     .pipe(ParseZipStream())
     .on('entry', function (entry) {
       let fixedPath = fixOlderConfigsFilename(entry.path);
       if (fixedPath) {
-        fixedPath =
-          userAppDataDir() +
-          pathSeparator +
-          CONFIGS_DIR +
-          pathSeparator +
-          fixedPath;
+        fixedPath = resolve(userAppDataDir(), CONFIGS_DIR, fixedPath)
         // console.log(`"${entry.path}" -> "${fixedPath}"`);
         switch (entry.type) {
           case 'File':
@@ -330,6 +385,10 @@ export async function loadConfigurationsFromFile(filename: string) {
     });
 }
 
+/**
+ * Ask the name of a zip file containing a backup of the configurations.
+ * When the file is valid, it unpacks its contents in the configurations' directory.
+ */
 export async function askAndLoadConfFromFile() {
   try {
     const res = await dialog.showOpenDialog({
@@ -349,12 +408,20 @@ export async function askAndLoadConfFromFile() {
   }
 }
 
+/**
+ * Save a backup of all the configurations' files into zip file.
+ * See also {@link loadConfigurationsFromFile}.
+ * @param filename 
+ */
 export async function saveConfigurationsToFile(filename: string) {
   const dir = configsDir();
   console.log(`dir=${dir}, zipfile=${filename}`);
   await archiveFolder(dir, filename);
 }
 
+/**
+ * Ask the name of a zip file where to store a backup of the configurations.
+ */
 export async function askAndSaveConfToFile() {
   try {
     const res = await dialog.showSaveDialog({
