@@ -20,9 +20,7 @@
         <q-tab-panel v-if="hasAttribute('level')" name="level">
           <LevelEditor :editor="editor" :start-value="attrs.level" @update-attribute="updateAttribute" />
           <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset level" size="xs" @click="resetAttribute('level')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="level" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('id')" name="id">
           <TextAttrEditor v-if="!isIndexTerm" :start-value="attrs.id" attr-name="id" @update-attribute="updateAttribute"
@@ -32,106 +30,79 @@
             search-every-word="true" :starting-search-text-variant="searchTextVariant"
             @change-search-text-variant="changeSearchTextVariant" @update-attribute="updateAttribute" @commit="doChange"
             @cancel="doCancel" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset id" size="xs" @click="resetAttribute('id')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="id" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('classes')" name="classes">
           <ClassesEditor :editor="editor" :node-or-mark="nodeOrMark" :start-value="attrs.classes"
             :important-classes="importantClasses" @update-attribute="updateAttribute" @add-class="addClass"
             @remove-class="removeClass" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset classes" size="xs" @click="resetAttribute('classes')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="classes" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('kv')" name="kv">
           <OtherAttributesEditor :editor="editor" :node-or-mark="nodeOrMark" attr-name="kv"
             :original-entries="objectEntries('kv', originalAttrs)" :initial-entries="objectEntries('kv', attrs)"
             :classes="attrs.classes || []" @update-attribute="updateAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset other attributes" size="xs" @click="resetAttribute('kv')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="kv" attribute-desc="other attributes"
+            @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('customStyle')" name="customStyle">
           <CustomStyleEditor :editor="editor" :original-value="attrs.customStyle" :type="nodeOrMarkName"
             :level="nodeOrMark?.attrs?.level" @update-attribute="updateAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset custom style" size="xs" @click="resetAttribute('customStyle')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="customStyle" attribute-desc="custom style"
+            @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('noteType')" name="noteType">
           <NoteTypeEditor :editor="editor" :original-value="attrs.noteType" :type="nodeOrMarkName"
             @update-attribute="updateAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset note type" size="xs" @click="resetAttribute('noteType')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="noteType" attribute-desc="note type"
+            @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('headRows')" name="headRows">
           <IntegerEditor :editor="editor" attr-name="headRows" :start-value="attrs.headRows" :min-value="0 + 0"
             :max-value="rowsOfTableBody" @update-attribute="updateAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset headRows" size="xs" @click="resetAttribute('headRows')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="headRows" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('rowHeadColumns')" name="rowHeadColumns">
           <IntegerEditor :editor="editor" attr-name="rowHeadColumns" :start-value="attrs.rowHeadColumns"
             :min-value="0 + 0" :max-value="columnsOfTableBody" @update-attribute="updateAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset rowHeadColumns" size="xs" @click="resetAttribute('rowHeadColumns')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="rowHeadColumns" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('sort-key')" name="sort-key">
           <TextAttrEditor :start-value="attrs.kv['sort-key']" attr-name="sort-key" @update-attribute="updateKvAttribute"
             enter-commits @commit="doChange" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset sort key for this term" size="xs"
-              @click="resetAttribute('sortKey')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="sortKey" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('ref-class')" name="ref-class">
           <TextAttrEditor :start-value="attrs.kv['ref-class']" attr-name="ref-class" enter-commits
             @update-attribute="updateKvAttribute" @commit="doChange" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset class for references" size="xs" @click="resetAttribute('refClass')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="refClass" attribute-desc="class for index references"
+            @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('put-index-ref')" name="put-index-ref">
           <SelectValueEditor :start-value="attrs.putIndexRef" attr-name="put-index-ref" :options="[
-            { label: 'before', value: 'before' },
-            { label: 'after', value: 'after' }
+            { label: 'Before', value: 'before', title: 'index reference is put before the selected text' },
+            { label: 'After', value: 'after', title: 'index reference is put after the selected text' }
           ]" @update-attribute="updateKvAttribute" />
+          <ResetAttributeActions attribute-name="putIndexRef" attribute-desc="index ref placement"
+            @reset-attribute="resetAttribute" />
+          <!-- 
           <q-space />
           <q-card-actions align="center">
             <q-btn icon="mdi-reload" title="reset index ref placement" size="xs"
               @click="resetAttribute('putIndexRef')" />
-          </q-card-actions>
+          </q-card-actions> -->
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('text') && !isRawElement" name="text">
           <TextAttrEditor :start-value="attrs.text" attr-name="text" @update-attribute="updateAttribute"
             @commit="doChange" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset id" size="xs" @click="resetAttribute('text')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="text" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('text') && isRawElement" name="text">
           <div style="background-color: black">
             <RawTextEditor :start-value="attrs.text" :format="attrs.format" :is-block="isRawBlock"
               @update-attribute="updateAttribute" @cancel="doCancel" @commit="doChange" />
           </div>
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset id" size="xs" @click="resetAttribute('text')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="text" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('format') && isRawElement" name="format">
           <q-card-actions align="center">
@@ -149,10 +120,7 @@
               </q-menu>
             </q-btn>
           </q-card-actions>
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset format" size="xs" @click="resetAttribute('format')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="format" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('language') && isCode" name="language">
           <q-card-actions align="center">
@@ -169,65 +137,74 @@
               </q-menu>
             </q-btn>
           </q-card-actions>
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset format" size="xs" @click="resetAttribute('format')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="language" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-for="a in cellSpanAttributes" :name="a">
           <IntegerEditor :attr-name="a" :min-value="1" :max-value="30" :start-value="originalAttrs[a]"
             @update-attribute="updateAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" :title="`reset ${a}`" size="xs" @click="resetAttribute(a)" />
-          </q-card-actions>
+          <ResetAttributeActions :attribute-name="a" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="isIndexRef" name="idref">
           <IndexRefEditor :editor="editor" :node-or-mark="nodeOrMark"
             :original-entries="objectEntries('kv', originalAttrs)" :initial-entries="objectEntries('kv', attrs)"
             @update-attribute="updateAttribute" @commit="doChange" @cancel="doCancel" />
           <q-toggle v-model="optionPropagateIdref" label="propagate idref to the refs with the same indexed text" />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset idref" size="xs" @click="resetKvAttribute('idref')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="idref" @reset-attribute="resetKvAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute(indexNameAttr())" :name="indexNameAttr()">
           <IndexNameEditor :indices-names="availableIndicesNames"
             :start-value="attrs.kv[indexNameAttr()] || availableIndicesNames[0]"
             @update-attribute="updateKvAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" :title="`reset ${indexNameAttr()}`" size="xs"
-              @click="resetAttribute('indexName')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="indexName" attribute-desc="index name"
+            @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('mathType')" name="mathType">
           <SelectValueEditor :start-value="attrs.mathType" attr-name="mathType" :options="[
-            { label: 'InlineMath', value: 'InlineMath' },
-            { label: 'DisplayMath', value: 'DisplayMath' }
+            { label: 'Inline', value: 'InlineMath', title: 'inline math' },
+            { label: 'Display', value: 'DisplayMath', title: 'display math' }
           ]" @update-attribute="updateAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset MathType" size="xs" @click="resetAttribute('mathType')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="mathType" attribute-desc="math type"
+            @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="isImage || isLink" name="target">
           <TargetEditor :editor="editor" :node-or-mark="nodeOrMark" :url-attr-name="isImage ? 'src' : 'href'"
             :url="isImage ? attrs.src : attrs.href" :title="attrs.title" @update-attribute="updateAttribute" />
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset target" size="xs" @click="resetAttribute('target')" />
-          </q-card-actions>
+          <ResetAttributeActions attribute-name="target" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasContentVirtualAttr" :name="contentVirtualAttrName">
           <div style="background-color: black">
             <RawTextEditor :start-value="contentVirtualAttrValue" :format="contentVirtualAttrFormat" :is-block="true"
               @update-attribute="updateContent" @cancel="doCancel" @commit="doChange" />
           </div>
-          <q-space />
-          <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset id" size="xs" @click="resetAttribute('text')" />
-          </q-card-actions>
+        </q-tab-panel>
+        <q-tab-panel v-if="hasAttribute('start')" name="start">
+          <IntegerEditor attr-name="start" :start-value="attrs.start" :min-value="1" :max-value="100"
+            @update-attribute="updateAttribute" />
+          <ResetAttributeActions attribute-name="start" attribute-desc="list start number"
+            @reset-attribute="resetAttribute" />
+        </q-tab-panel>
+        <q-tab-panel v-if="hasAttribute('numberStyle')" name="numberStyle">
+          <SelectValueEditor attr-name="numberStyle" :start-value="attrs.numberStyle" :options="[
+            { label: 'default', value: 'DefaultStyle', title: 'default style' },
+            { label: 'example', value: 'Example', title: 'example style' },
+            { label: '1, 2, 3', value: 'Decimal', title: 'decimal numbers' },
+            { label: 'i, ii, iii, ...', value: 'LowerRoman', title: 'lower case roman numbers' },
+            { label: 'I, II, III, ...', value: 'UpperRoman', title: 'upper case roman numbers' },
+            { label: 'a, b, c, ...', value: 'LowerAlpha', title: 'lower case letters' },
+            { label: 'A, B, C, ...', value: 'UpperAlpha', title: 'upper case letters' }
+          ]" @update-attribute="updateAttribute" />
+          <ResetAttributeActions attribute-name="numberStyle" attribute-desc="number style"
+            @reset-attribute="resetAttribute" />
+        </q-tab-panel>
+        <q-tab-panel v-if="hasAttribute('numberDelim')" name="numberDelim">
+          <SelectValueEditor attr-name="numberDelim" :start-value="attrs.numberDelim" :options="[
+            { label: 'default', value: 'DefaultDelim', title: 'default delimiter' },
+            { label: '.', value: 'Period', title: 'period' },
+            { label: ')', value: 'OneParen', title: 'one parenthesis' },
+            { label: '))', value: 'TwoParens', title: 'two parentheses' }
+          ]" @update-attribute="updateAttribute" />
+          <ResetAttributeActions attribute-name="numberDelim" attribute-desc="number delimiter"
+            @reset-attribute="resetAttribute" />
         </q-tab-panel>
       </q-tab-panels>
       <q-card-actions>
@@ -266,12 +243,13 @@ import RawTextEditor from './attreditors/RawTextEditor.vue';
 import IndexRefEditor from './attreditors/IndexRefEditor.vue';
 import IndexTermIdEditor from './attreditors/IndexTermIdEditor.vue';
 import IndexNameEditor from './attreditors/IndexNameEditor.vue';
-import { SearchTextVariant } from './attreditors/IndexIdEditor.vue';
+import ResetAttributeActions from './attreditors/ResetAttributeActions.vue';
 import TargetEditor from './attreditors/TargetEditor.vue';
 import {
   INCLUDE_DOC_CLASS,
   INCLUDE_FORMAT_ATTR,
   INCLUDE_SRC_ATTR,
+  SearchTextVariant,
   getDocState,
   getEditorConfiguration
 } from '../schema';
@@ -330,6 +308,7 @@ export default {
     IndexRefEditor,
     IndexNameEditor,
     IndexTermIdEditor,
+    ResetAttributeActions,
     TargetEditor,
   },
   setup() {
@@ -722,7 +701,7 @@ export default {
       if (e.code === 'Escape') this.doCancel()
     },
     updateAttribute(attrName: string, newValue: any, dontSearchMatchingAttribute?: boolean) {
-      if (attrName === 'classes') return
+      // if (attrName === 'classes') return
       if (this.hasAttribute(attrName)) {
         console.log(`updateAttribute: ${attrName}=${JSON.stringify(newValue)}`);
         this.attrs[attrName] = newValue;
