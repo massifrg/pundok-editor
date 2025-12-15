@@ -28,8 +28,8 @@ import {
   extname,
   format as formatPath,
   parse as parsePath,
-  sep as pathSeparator,
   isAbsolute,
+  resolve,
 } from 'path';
 import { encloseInDblQuotes } from './utils';
 import { existsSync } from 'fs';
@@ -75,7 +75,7 @@ export function importJsonWithPandoc(
     if (dir) {
       pandocOpts.push(`--data-dir=${encloseInDblQuotes(dir)}`);
       if (formatOrReader.endsWith('.lua'))
-        format = encloseInDblQuotes(`${dir}${pathSeparator}${formatOrReader}`);
+        format = encloseInDblQuotes(resolve(dir, formatOrReader));
     }
   }
   return importWithPandoc(filename, format, pandocOpts);
@@ -171,7 +171,7 @@ export function exportWithPandoc(
   let cfgdir = resourcesPaths && resourcesPaths[0];
   if (!cfgdir)
     cfgdir = configurationName
-      ? `${configsDir()}${pathSeparator}${configurationName}`
+      ? resolve(configsDir(), configurationName)
       : undefined;
   if (cfgdir) {
     pandocOpts.push(`--data-dir=${encloseInDblQuotes(cfgdir)}`);
@@ -372,7 +372,7 @@ export async function runWriterOnMasterFile(
       editorProject && isString(editorProject)
         ? JSON.parse(editorProject)
         : editorProject;
-    let src = `${project.path}${pathSeparator}${project.rootDocument}`;
+    let src = resolve(project.path, project.rootDocument);
     if (!isAbsolute(src))
       return Promise.reject(`"${src}" is not an absolute path`);
     if (!isReadableFile(src))

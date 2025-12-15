@@ -457,8 +457,15 @@ export class LocalBackend implements Backend {
     return job_as_string && JSON.parse(job_as_string) as ExportJob || undefined
   }
 
-  async storeInConfiguration(where: ConfigInitField, obj: object, isProject: boolean, configNameOrProjectPath: string): Promise<void> {
-    this.invokeIpc('update-config', where, JSON.stringify(obj), isProject, configNameOrProjectPath)
+  async storeInConfiguration(
+    where: ConfigInitField,
+    obj: object,
+    isDeletion: boolean,
+    isProject: boolean,
+    configNameOrProjectPath: string
+  ): Promise<void> {
+    console.log(`calling backend to update configuration`)
+    return this.invokeIpc('update-config', where, JSON.stringify(obj), isDeletion, isProject, configNameOrProjectPath)
   }
 }
 

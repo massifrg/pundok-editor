@@ -19,7 +19,11 @@
         <q-input outlined v-model="description" type="textarea" label="description" :shadow-text="shadowDescription" />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn :disabled="!saveEnabled" color="primary" label="save" @click="emitSaveSettings()" v-close-popup />
+        <q-btn :disabled="!isExistingName" color="primary" label="delete" :title="deleteTitle"
+          @click="emitDeleteSettings()" v-close-popup />
+        <q-space />
+        <q-btn :disabled="!saveEnabled" color="primary" :label="storeLabel" :title="storeTitle"
+          @click="emitSaveSettings()" v-close-popup />
         <q-btn color="primary" label="cancel" v-close-popup />
       </q-card-actions>
     </q-card>
@@ -37,7 +41,7 @@ interface SaveDestination {
 
 export default {
   props: ['editor', 'startValue', 'existingOnes'],
-  emits: ['save-settings'],
+  emits: ['save-settings', 'delete-settings'],
   data() {
     return {
       name: this.startValue || '',
@@ -68,10 +72,31 @@ export default {
       }
       return dests
     },
+    existingNames(): string[] {
+      return (this.existingOnes as Automation[]).map(e => e.name)
+    },
     saveEnabled(): boolean {
       const count = this.saveDestinations.length
       const index = this.destinationIndex
       return this.name && this.name.length > 0 && count > 0 && index >= 0 && index < count
+    },
+    isExistingName(): boolean {
+      return this.existingNames.indexOf(this.name) >= 0
+    },
+    storeLabel(): string {
+      return this.isExistingName ? 'update' : 'save'
+    },
+    storageDescription(): string | undefined {
+      if (this.destinationIndex >= 0) {
+        const sd = this.saveDestinations[this.destinationIndex]
+        return this.destinationLabel(sd)
+      }
+    },
+    deleteTitle(): string {
+      return `delete item "${this.name}" from ${this.storageDescription}`
+    },
+    storeTitle(): string {
+      return `${this.storeLabel} item "${this.name}" in ${this.storageDescription || '?'}`
     },
     shadowDescription() {
       return this.description.length > 0 ? '' : "Write here a description of the settings"
@@ -89,6 +114,7 @@ export default {
   methods: {
     destinationLabel(sd: SaveDestination): string {
       const { name, isProject } = sd
+      console.log(isProject && this.project!.path)
       return isProject ? `project ${name}` : name
     },
     destinationTitle(sd: SaveDestination): string {
@@ -99,15 +125,19 @@ export default {
       this.name = settings.name
       this.description = settings.description || ''
     },
-    emitSaveSettings() {
+    emitDeleteSettings() {
+      this.emitSaveSettings(true)
+    },
+    emitSaveSettings(isDeletion?: boolean) {
       const count = this.saveDestinations.length
       const index = this.destinationIndex
       const dest = this.saveDestinations[this.destinationIndex]
       if (index >= 0 && index < count && this.name.length > 0 && dest)
         this.$emit(
-          'save-settings',
+          isDeletion ? 'delete-settings' : 'save-settings',
           this.name,
           this.description.length > 0 ? this.description : undefined,
+          dest.isProject,
           dest.isProject ? undefined : dest.name
         )
     },

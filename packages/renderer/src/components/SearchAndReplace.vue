@@ -11,8 +11,8 @@
         <q-space class="small" />
         <q-btn dense class="q-px-md" size="xs" icon="mdi-content-save"
           title="save the current search and replace settings">
-          <SaveConfigurationElementPopup :editor="editor" :existing-ones="knownSettings"
-            @save-settings="saveSettings" />
+          <SaveConfigurationElementPopup :editor="editor" :existing-ones="knownSettings" @save-settings="saveSettings"
+            @delete-settings="deleteSettings" />
         </q-btn>
         <q-space class="big" />
         <q-btn round class="q-pa-sm" size="sm" icon="mdi-pencil-lock" color="primary" :outline="!optionSearchOnly"
@@ -127,7 +127,6 @@ import {
   INDEXED_TEXT_ATTR,
   NODE_NAME_INDEX_REF,
   SearchAndReplace,
-  serializeConfiguration,
   SetSpanActionProps,
 } from '../common';
 import {
@@ -135,14 +134,12 @@ import {
   getAllIndices,
   getCssSelected,
   getCssSelectionIndex,
-  getCssSelectionCount,
   getEditorConfiguration,
 } from '../schema';
 import {
   AddableMark,
   baseAddableMarks,
   customStylesToAddableMarks,
-  customSpanToAddableMarks
 } from '.';
 import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
@@ -155,7 +152,6 @@ import {
   SelectedNodeOrMark,
   getEditorProject,
   getMatchHighlights,
-  mergeAdjacentMarks,
   nodeOrMarkToPandocName
 } from '../schema/helpers';
 import { mapState } from 'pinia';
@@ -225,7 +221,7 @@ export default {
       optionMergeAdjacentMarks: true,
       // in text mode, the text or the regex to be searched
       textToSearch: '',
-      // in text mode, the the replacing text
+      // the the replacing text (text and CSS)
       textToReplace: '',
       // just search, don't replace
       optionSearchOnly: false,
@@ -470,7 +466,6 @@ export default {
       return false
     },
     startSearchCss(): boolean {
-      // TODO: this.errorMessage = undefined
       const editor = this.editor
       if (editor) {
         try {
@@ -480,7 +475,6 @@ export default {
           })
           return true
         } catch (err: any) {
-          // TODO: this.errorMessage = err.message
           console.log(err.message)
         }
       }
@@ -600,7 +594,7 @@ export default {
       // this.optionCapitalize = sar.capitalize || 'none';
       this.optionWholeWord = !!sar.optionWholeWord;
       // capitalization
-      const actionsOnReplace: ActionNameWithProps[] = []
+      let actionsOnReplace: ActionNameWithProps[] = []
       if (sar.capitalize === 'upper')
         actionsOnReplace.push(ACTION_UPPERCASE)
       else if (sar.capitalize === 'lower')
@@ -637,6 +631,8 @@ export default {
             alternativeIndex: firstAlternative ? 0 : -1,
           } as SetSpanActionProps
         } as ActionNameWithProps)
+      if (sar.actions)
+        actionsOnReplace = [...actionsOnReplace, ...sar.actions]
       this.actionsOnReplace = [...actionsOnReplace]
       // const am: AddableMark[] = baseAddableMarks(sar.addMarks || [])
       // customStylesToAddableMarks(this.customStyles, sar.addStyles, am)
@@ -652,33 +648,48 @@ export default {
       // console.log(toRaw(actions))
       this.actionsOnReplace = actions
     },
-    saveSettings(name: string, description: string, configName?: string) {
+    deleteSettings(name: string, description: string, isProject: boolean, configName?: string) {
+      this.saveSettings(name, description, isProject, configName, true)
+    },
+    saveSettings(name: string, description: string, isProject: boolean, configName?: string, isDeletion?: boolean) {
       let obj
       if (this.cssMode) {
         obj = {
+          type: 'elements-selection',
           name,
           description,
-          // TODO: add all the settings
+          cssSelector: toRaw(this.cssSelector),
+          replace: toRaw(this.textToReplace),
+          // tab,
         } as ElementsSelection
       } else {
         obj = {
+          type: 'search-replace',
           name,
           description,
-          // TODO: add all the settings
+          search: toRaw(this.searchInput),
+          replace: this.optionSearchOnly ? undefined : toRaw(this.textToReplace),
+          actions: toRaw(this.actionsOnReplace),
+          optionCaseInsensitive: toRaw(this.optionCaseInsensitive),
+          optionCycle: toRaw(this.optionCycle),
+          optionSearchOnly: toRaw(this.optionSearchOnly),
+          optionRegex: toRaw(this.optionRegex),
+          optionWholeWord: toRaw(this.optionWholeWord),
+          // capitalize, -- DEPRECATED
+          // addMarks, -- DEPRECATED
+          // addSpans, -- DEPRECATED
+          // addStyles, -- DEPRECATED
         } as SearchAndReplace
       }
-      console.log(serializeConfiguration(this.configuration!))
-      const project = this.project
-      if (configName || project) {
-        const isProject = !configName
-        if (isProject && !this.project)
-          this.backend?.storeInConfiguration(
-            'automations',
-            obj,
-            !isProject,
-            isProject ? project?.path! : configName
-          )
-      }
+      // console.log(serializeConfiguration(this.configuration!))
+      if (isProject && this.project)
+        this.backend?.storeInConfiguration(
+          'automations',
+          obj,
+          !!isDeletion,
+          isProject,
+          this.project.path
+        )
     }
   },
 };

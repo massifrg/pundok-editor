@@ -160,7 +160,13 @@ export class NetBackend implements Backend {
     return Promise.reject('method non implemented');
   }
 
-  async storeInConfiguration(where: ConfigInitField, obj: object, isProject: boolean, configNameOrProjectPath: string): Promise<void> {
+  async storeInConfiguration(
+    where: ConfigInitField,
+    obj: object,
+    isDeletion: boolean,
+    isProject: boolean,
+    configNameOrProjectPath: string
+  ): Promise<void> {
     return Promise.reject('method non implemented');
   }
 }

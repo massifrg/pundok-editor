@@ -1,6 +1,7 @@
 import { PundokEditorConfig } from "./editorConfiguration"
 import { PundokEditorConfigInit } from "./editorConfigInit"
 import { PundokEditorProject } from "./project"
+import { isString } from "lodash"
 
 /** A `PrecedenceObject` maps a key in a JSON file to its precedence
  * (order in the stringified JSON) */
@@ -8,6 +9,7 @@ type PrecedenceObject = Record<string, number>
 
 /** An object to order the keys in configuration files. */
 const CONFIG_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
+  '$schema',
   'name',
   'version',
   'description',
@@ -18,6 +20,8 @@ const CONFIG_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
   'noteStyles',
   'indices',
   'documentTemplate',
+  'inputConverters',
+  'outputConverters',
   'customStyles',
   'customClasses',
   'customAttributes',
@@ -25,8 +29,6 @@ const CONFIG_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
   'defaultRawFormat',
   'rawInlines',
   'rawBlocks',
-  'inputConverters',
-  'outputConverters',
   'automations',
 ].map((k, i) => [k, i + 1]))
 
@@ -43,10 +45,11 @@ const PROJECT_CONFIG_CONTEXT_KEY = 'editorConfig'
 
 /** An object to order the keys in pundok project files. */
 const PROJECT_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
+  '$schema',
   'name',
+  'description',
   'path',
   'rootDocument',
-  'description',
   'configurations',
   PROJECT_CONFIG_CONTEXT_KEY,
 ].map((k, i) => [k, i + 1]))
@@ -57,7 +60,7 @@ const AUTOMATION_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
   'name',                  // common to all automations types
   'description',           // common to all automations types
   'search',                // search-replace type
-  'replace',               // search-replace type
+  'replace',               // search-replace and elements-selection types
   'optionSearchOnly',      // search-replace type
   'optionCaseInsensitive', // search-replace type
   'optionRegex',           // search-replace type
@@ -154,8 +157,16 @@ function sortOnFields(fields: string[]): (o1: object, o2: object) => number {
       field = fields[i]
       const v1 = (o1 as Record<string, any>)[field]
       const v2 = (o2 as Record<string, any>)[field]
-      if (v1 < v2) return -1
-      if (v1 > v2) return 1
+      let cmp
+      if (isString(v1) && isString(v2))
+        cmp = v1.localeCompare(v2)
+      else
+        cmp = v1 < v2
+          ? -1
+          : v1 > v2
+            ? 1
+            : 0
+      if (cmp !== 0) return cmp
     }
     return 0
   }

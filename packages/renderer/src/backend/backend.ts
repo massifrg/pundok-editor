@@ -211,6 +211,7 @@ export interface Backend {
   storeInConfiguration(
     where: ConfigInitField,
     obj: object,
+    isDeletion: boolean,
     isProject: boolean,
     configNameOrProjectPath: string
   ): Promise<void>;
