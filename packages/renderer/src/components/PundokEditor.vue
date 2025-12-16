@@ -57,7 +57,8 @@
         <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
           :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
         <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
-          :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog" />
+          :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
+          @new-editor="newSubEditor" />
         <ContextMenu :editor="editor" />
         <!-- <q-page-sticky expand position="top">
           <q-toolbar class="text-white q-pa-none">
@@ -285,6 +286,7 @@ export default {
       visibleSearchAndReplaceDialog: false,
       visibleInputTextDialog: false,
       visibleProjectStructureDialog: false,
+      projectStructureEditorKey: undefined as EditorKeyType | undefined,
       inputTextDialogLabel: DEFAULT_INPUT_TEXT_DIALOG_LABEL,
       inputTextDialogStartValue: DEFAULT_INPUT_TEXT_DIALOG_START_VALUE,
       inputTextDialogCallback: undefined as
@@ -377,10 +379,16 @@ export default {
             }
             break;
           case ACTION_DOCUMENT_SAVE.name:
-            this.saveToStoredPath();
+            if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
+              setActionCommand(this.projectStructureEditorKey, action, props)
+            else
+              this.saveToStoredPath();
             break;
           case ACTION_DOCUMENT_SAVE_AS.name:
-            this.save();
+            if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
+              setActionCommand(this.projectStructureEditorKey, action, props)
+            else
+              this.save();
             break;
           case ACTION_DOCUMENT_GO_TO_LINE.name:
             {
@@ -564,6 +572,9 @@ export default {
     editorKey(): EditorKeyType | undefined {
       return this.docState()?.editorKey;
     },
+    newSubEditor(editorKey: EditorKeyType) {
+      this.projectStructureEditorKey = editorKey
+    },
     async newEditor() {
       const editor = new Editor({
         extensions: [
@@ -594,6 +605,7 @@ export default {
           nativeUnsavedChanges: false,
           unsavedChanges: false,
         });
+        this.$emit('new-editor', this.editorKey())
       }
     },
     async newDocument(
@@ -1260,7 +1272,7 @@ export default {
     },
     stopSettingLeftDrawerWidth(e: MouseEvent) {
       this.leftDrawerHandleStart = undefined
-    }
+    },
   },
 } as Component;
 </script>
