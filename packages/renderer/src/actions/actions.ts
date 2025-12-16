@@ -22,7 +22,8 @@ export type ActionName =
   | 'backend-set-content-with-project'
   | 'open-document'
   | 'save-document'
-  | 'save-document-sa'
+  | 'save-document-as'
+  | 'new-project'
   | 'import-document'
   | 'export-document'
   | 'transform-document'
@@ -138,6 +139,11 @@ export const ACTION_SHOW_PROJECT_STRUCTURE_DIALOG: BaseEditorAction = {
   label: 'show project structure',
 };
 
+export const ACTION_PROJECT_NEW: BaseEditorAction = {
+  name: 'new-project',
+  label: 'create new project',
+}
+
 export const ACTION_BACKEND_SET_CONFIG_NAME: BaseEditorAction = {
   name: 'backend-set-configuration-name',
   label: 'set the configuration name',
@@ -183,7 +189,7 @@ export const ACTION_DOCUMENT_SAVE: BaseEditorAction = {
 };
 
 export const ACTION_DOCUMENT_SAVE_AS: BaseEditorAction = {
-  name: 'save-document-sa',
+  name: 'save-document-as',
   label: 'save document with a different name',
 };
 

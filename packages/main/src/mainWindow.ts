@@ -242,19 +242,15 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
             ipcHub.fireEventExportCurrentDocument();
           },
         },
-        // {
-        //   type: 'separator',
-        // },
-        // {
-        //   label: 'New project',
-        //   click: async () => {
-        //     // sendCommandToRenderer(
-        //     //   browserWindow,
-        //     //   'ask-value',
-        //     //   IPC_VALUE_NEW_PROJECT_NAME
-        //     // );
-        //   },
-        // },
+        {
+          type: 'separator',
+        },
+        {
+          label: 'New/Edit project',
+          click: () => {
+            ipcHub.fireEventCreateNewProject();
+          },
+        },
         // {
         //   label: 'Open project',
         // },

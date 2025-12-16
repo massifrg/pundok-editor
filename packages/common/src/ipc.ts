@@ -236,7 +236,8 @@ export type CommandToRenderer =
   | 'save'
   | 'save-as'
   | 'import'
-  | 'export';
+  | 'export'
+  | 'new-project';
 
 /** A message from Main to Renderer to issue a command inside the editor. */
 export interface ServerMessageCommand extends ServerMessage {

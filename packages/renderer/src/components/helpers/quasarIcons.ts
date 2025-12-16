@@ -7,6 +7,7 @@ import {
   mdiChevronRight,
   mdiFileDocumentPlus,
   mdiFilePdfBox,
+  mdiFileStarFourPoints,
   mdiImageCheck,
   mdiImageCheckOutline,
   mdiMenuDown,
@@ -49,6 +50,7 @@ const icons: Record<string, string> = {
   paragraph_style:
     'm 6.27,1.93 c -2.59,0.2 -4.69,2.68 -4.5,5.28 -0.1,1.58 0,3.29 1.14,4.59 1.13,1.4 3.01,2 4.77,1.8 0.88,0 1.75,0 2.62,0 0,2.4 0,4.8 0,7.2 0.2,1.4 2.2,1.7 2.9,0.6 0.6,-0.9 0.2,-2 0.3,-3 0,-4.4 0,-8.87 0,-13.3 1.2,0 2.4,0 3.6,0 0,5.2 0,10.5 0,15.7 0.2,1.4 2.3,1.7 3,0.5 0.4,-0.9 0.1,-2 0.2,-3 0,-4.4 0,-8.8 0,-13.2 1.2,0.13 2.2,-1.42 1.4,-2.45 C 21,1.53 19.6,2 18.5,1.9 c -4.1,0 -8.2,-0 -12.23,0 z M 6.78,5.1 c 1.17,0 2.35,0 3.52,0 0,1.77 0,3.53 0,5.3 C 8.95,10.3 7.58,10.5 6.24,10.3 5.26,10 4.81,8.96 4.97,8.01 4.92,7.1 4.87,5.95 5.77,5.4 6.07,5.21 6.42,5.1 6.78,5.1 Z',
   play_arrow: mdiPlay,
+  root_document: mdiFileStarFourPoints,
   remove_class: mdiOctagramMinus,
   remove_custom_class: mdiOctagramMinusOutline,
   singlequoted:

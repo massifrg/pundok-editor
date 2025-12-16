@@ -40,7 +40,11 @@ export interface BackendConfig {
   ipc?: Ipc;
 }
 
-export type WhyAskingForIdOrPath = 'edit' | 'inclusion' | 'image';
+export type WhyAskingForIdOrPath =
+  | 'edit'      // document to open and edit
+  | 'inclusion' // inclusion of a (sub-)document
+  | 'image'     // image file path
+  | 'project'   // directory for a new project
 
 /**
  * An interface to connect to the backend, to get the documents' data.
@@ -106,6 +110,13 @@ export interface Backend {
    * @param context
    */
   getProject(context: Record<string, any>): Promise<PundokEditorProject>;
+
+  /**
+   * Create a new project in a directory.
+   * @param path
+   * @param project 
+   */
+  createProject(path: string, project: Partial<PundokEditorProject>): Promise<void>;
 
   /**
    * Retrieves a tree-structure of a document made of multiple documents.

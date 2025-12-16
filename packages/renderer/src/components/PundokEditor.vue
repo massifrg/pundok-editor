@@ -59,6 +59,7 @@
         <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
           :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
           @new-editor="newSubEditor" />
+        <NewProjectDialog :visible="visibleNewProjectDialog" @close="visibleNewProjectDialog = false" />
         <ContextMenu :editor="editor" />
         <!-- <q-page-sticky expand position="top">
           <q-toolbar class="text-white q-pa-none">
@@ -140,6 +141,7 @@ import {
   ExportDialog,
   ImportDialog,
   InputTextDialog,
+  NewProjectDialog,
   NodeOrMarkContextMenu,
   PendingOperation,
   PendingOperationDialog,
@@ -183,6 +185,7 @@ import {
   setActionCommand,
   ACTION_DOCUMENT_GO_TO_LINE,
   ACTION_SETUP_VIEWER,
+  ACTION_PROJECT_NEW,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -230,6 +233,7 @@ export default {
     CustomStylesPanel,
     NodeOrMarkContextMenu,
     PendingOperationDialog,
+    NewProjectDialog,
     "ProjectStructureDialog": defineAsyncComponent(() => import('./ProjectStructureDialog.vue')),
     "PdfViewer": defineAsyncComponent(() => import('./PdfViewer.vue'))
   },
@@ -287,6 +291,7 @@ export default {
       visibleInputTextDialog: false,
       visibleProjectStructureDialog: false,
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
+      visibleNewProjectDialog: false,
       inputTextDialogLabel: DEFAULT_INPUT_TEXT_DIALOG_LABEL,
       inputTextDialogStartValue: DEFAULT_INPUT_TEXT_DIALOG_START_VALUE,
       inputTextDialogCallback: undefined as
@@ -372,6 +377,10 @@ export default {
               this.visibleProjectStructureDialog = true;
             }
             break;
+          case ACTION_PROJECT_NEW.name:
+            this.visibleProjectStructureDialog = false;
+            this.visibleNewProjectDialog = true;
+            break
           case ACTION_DOCUMENT_OPEN.name:
             {
               const { context, atLine } = props as DocumentOpenActionProps

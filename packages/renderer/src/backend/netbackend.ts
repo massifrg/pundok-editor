@@ -67,6 +67,10 @@ export class NetBackend implements Backend {
     throw new Error('Method not implemented.');
   }
 
+  async createProject(path: string, project: Partial<PundokEditorProject>): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
   async availableConfigurations(): Promise<ConfigurationSummary[]> {
     return [
       {

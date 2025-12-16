@@ -14,7 +14,7 @@ export interface PundokEditorProject {
   /** A complement to the inherited configurations */
   editorConfig: Partial<PundokEditorConfigInit>;
   /** The actual configuration computed from the inherited configurations and complemented with editorConfig  */
-  computedConfig: PundokEditorConfig;
+  computedConfig?: PundokEditorConfig;
 }
 
 interface AbstractProjectComponent {

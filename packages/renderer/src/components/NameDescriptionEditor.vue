@@ -1,5 +1,5 @@
 <template>
-  <q-input outlined v-model="name" type="text" label="settings name" @change="emitSetName">
+  <q-input outlined v-model="name" type="text" label="name">
     <template v-slot:append>
       <q-btn-dropdown v-if="library && library.length > 0" size="sm" color="primary" outline>
         <q-list>
@@ -11,8 +11,7 @@
       </q-btn-dropdown>
     </template>
   </q-input>
-  <q-input outlined v-model="description" type="textarea" label="description" :shadow-text="shadowDescription"
-    @change="emitSetDescription" />
+  <q-input outlined v-model="description" type="textarea" label="description" :shadow-text="shadowDescription" />
 </template>
 
 <script lang="ts">
@@ -44,6 +43,12 @@ export default {
     },
     startDescription(desc) {
       this.description = desc
+    },
+    name() {
+      this.emitSetName()
+    },
+    description() {
+      this.emitSetDescription()
     }
   },
   methods: {

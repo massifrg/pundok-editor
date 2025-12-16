@@ -57,6 +57,7 @@ import {
   ACTION_DOCUMENT_OPEN,
   ACTION_DOCUMENT_SAVE,
   ACTION_DOCUMENT_SAVE_AS,
+  ACTION_PROJECT_NEW,
   BaseEditorAction,
   EditorAction,
   setActionSetupViewer,
@@ -196,6 +197,9 @@ export class LocalBackend implements Backend {
           case 'export':
             baseAction = ACTION_DOCUMENT_EXPORT;
             break;
+          case 'new-project':
+            baseAction = ACTION_PROJECT_NEW;
+            break
           default:
             return;
         }
@@ -303,6 +307,10 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('get-project', context);
   }
 
+  async createProject(path: string, project: Partial<PundokEditorProject>): Promise<void> {
+    return this.invokeIpc('new-project', path, JSON.stringify(project));
+  }
+
   async availableConfigurations(): Promise<ConfigurationSummary[]> {
     const ipc = this.ipc;
     let configs: ConfigurationSummary[] = [
@@ -404,6 +412,8 @@ export class LocalBackend implements Backend {
     console.log(`asking for a filename relative to ${project?.path}`);
     let title = 'Open document'
     let buttonLabel: string | undefined = undefined
+    let dialogOptions: Partial<OpenDialogOptions> = { ...options?.openDialogOptions }
+    let defaultPath = project?.path
     switch (why) {
       case 'inclusion':
         title = 'Include document'
@@ -415,12 +425,18 @@ export class LocalBackend implements Backend {
         title = 'Set image src attribute'
         buttonLabel = 'Set'
         break
+      case 'project':
+        title = 'Choose project directory'
+        dialogOptions.filters = []
+        dialogOptions.properties = ['openDirectory', 'createDirectory']
+        defaultPath = undefined
+        break
     }
     return this.invokeIpc('ask-for-document', options?.editorKey, options?.id, {
-      defaultPath: project?.path,
+      defaultPath,
       title,
       buttonLabel,
-      ...options?.openDialogOptions
+      ...dialogOptions
     });
   }
 

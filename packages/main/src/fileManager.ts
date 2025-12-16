@@ -66,6 +66,19 @@ class FileManager {
       return Promise.reject(err);
     }
   }
+
+  async chooseDirectory(openDialogOptions: OpenDialogOptions): Promise<string | undefined> {
+    try {
+      const res = await dialog.showOpenDialog(openDialogOptions);
+      if (!res.canceled && res.filePaths.length > 0) {
+        const dirPath = res.filePaths[0];
+        return dirPath;
+      }
+    } catch (err) {
+      console.log(err);
+      return Promise.reject(err);
+    }
+  }
 }
 
 export default FileManager;

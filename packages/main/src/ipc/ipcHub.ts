@@ -60,6 +60,7 @@ import { openDocumentHandler } from './openDocumentHandler';
 import { editorReadyHandler } from './editorReadyHandler';
 import { debugInfoHandler } from './debugInfoHandler';
 import { transformJsonHandler } from './transformJsonHandler';
+import { newProjectHandler } from './newProjectHandler';
 import {
   availableConfigurationsHandler,
   getConfigurationInit,
@@ -134,7 +135,7 @@ export class IpcHub {
     ipcMain.handle('load-configuration', loadConfigurationHandler(this));
     ipcMain.handle('file-contents', fileContentsHandler(this));
     ipcMain.handle('set-value', setValueHandler(this));
-    // ipcMain.handle('new-project', newProjectHandler(this));
+    ipcMain.handle('new-project', newProjectHandler(this));
     ipcMain.handle('transform-json', transformJsonHandler(this));
     ipcMain.handle('pandoc-input-formats', pandocInputFormatsHandler(this));
     ipcMain.handle('pandoc-output-formats', pandocOutputFormatsHandler(this));
@@ -554,5 +555,9 @@ export class IpcHub {
 
   fireEventImportDocument() {
     this.fireEventInRenderer('document', 'import');
+  }
+
+  fireEventCreateNewProject() {
+    this.fireEventInRenderer('document', 'new-project');
   }
 }
