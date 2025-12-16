@@ -31,6 +31,7 @@ import {
   CustomPandocReader,
   IpcMainToRendererChannel,
   ServerMessageForViewer,
+  ServerMessageSetProject,
 } from '../common';
 import { isReadableFile, validResourcePaths } from '../resourcesManager';
 import FileManager from '../fileManager';
@@ -55,7 +56,7 @@ import { stringify } from '../utils';
 import { queryHandler } from './queryHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
-import { computeProjectFromDocFile, getProjectHandler, loadProjectFromDocFile } from './getProjectHandler';
+import { computeProjectFromDocFile, getProjectHandler } from './getProjectHandler';
 import { openDocumentHandler } from './openDocumentHandler';
 import { editorReadyHandler } from './editorReadyHandler';
 import { debugInfoHandler } from './debugInfoHandler';
@@ -312,6 +313,18 @@ export class IpcHub {
       await writeFile(docPath, content!)
       const p = parsePath(docPath)
       const id = doc.id || basename(docPath, '.json');
+
+      // load the project, if the document has been saved in a project directory
+      // TODO: what to do when a file in a project is saved in the directory of another project?
+      if (docPath && !project) {
+        const dirProject = await computeProjectFromDocFile(docPath)
+        console.log(`dirProject is ${dirProject.name}`)
+        if (dirProject) {
+          doc.project = dirProject
+          this.fireEventSetProject(dirProject)
+        }
+      }
+
       return {
         message: 'document saved',
         doc: {
@@ -319,6 +332,7 @@ export class IpcHub {
           content,
           id,
           configurationName: doc.configurationName,
+          project: doc.project,
         },
         resultFile: docPath,
         cwd: p.dir,
@@ -560,5 +574,14 @@ export class IpcHub {
 
   fireEventCreateNewProject() {
     this.fireEventInRenderer('document', 'new-project');
+  }
+
+  fireEventSetProject(project: PundokEditorProject, editorKey?: EditorKeyType) {
+    const message: ServerMessageSetProject = {
+      type: 'project',
+      project,
+      editorKey: editorKey || this.mainEditorKey
+    }
+    this.editorView.webContents.send('set-project', message)
   }
 }
