@@ -5,7 +5,7 @@
         <div class="text-subtitle1">Save settings to:</div>
         <q-radio v-model="destinationIndex" v-for="(sd, i) in saveDestinations" :val="i" :label="destinationLabel(sd)"
           :title="destinationTitle(sd)" />
-        <q-input outlined v-model="name" type="text" label="settings name">
+        <!-- <q-input outlined v-model="name" type="text" label="settings name">
           <template v-slot:append>
             <q-btn-dropdown title="update existing settings" size="sm" color="primary" outline>
               <q-list>
@@ -15,8 +15,10 @@
               </q-list>
             </q-btn-dropdown>
           </template>
-        </q-input>
-        <q-input outlined v-model="description" type="textarea" label="description" :shadow-text="shadowDescription" />
+</q-input>
+<q-input outlined v-model="description" type="textarea" label="description" :shadow-text="shadowDescription" /> -->
+        <name-description-editor :start-name="name" :start-description="description" :library="existingOnes"
+          @set-name="setName" @set-description="setDescription" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn :disabled="!isExistingName" color="primary" label="delete" :title="deleteTitle"
@@ -33,6 +35,7 @@
 <script lang="ts">
 import { Automation, PundokEditorProject } from '../common';
 import { getEditorConfiguration, getEditorProject } from '../schema';
+import NameDescriptionEditor from './NameDescriptionEditor.vue';
 
 interface SaveDestination {
   name: string,
@@ -42,6 +45,7 @@ interface SaveDestination {
 export default {
   props: ['editor', 'startValue', 'existingOnes'],
   emits: ['save-settings', 'delete-settings'],
+  components: { NameDescriptionEditor },
   data() {
     return {
       name: this.startValue || '',
@@ -114,16 +118,17 @@ export default {
   methods: {
     destinationLabel(sd: SaveDestination): string {
       const { name, isProject } = sd
-      console.log(isProject && this.project!.path)
       return isProject ? `project ${name}` : name
     },
     destinationTitle(sd: SaveDestination): string {
       const { name, isProject } = sd
       return `Save settings to ${isProject ? 'project' : 'configuration'} "${name}"`
     },
-    loadExisting(settings: Automation) {
-      this.name = settings.name
-      this.description = settings.description || ''
+    setName(name: string) {
+      this.name = name
+    },
+    setDescription(description: string) {
+      this.description = description
     },
     emitDeleteSettings() {
       this.emitSaveSettings(true)
