@@ -13,7 +13,7 @@ import {
   NODE_NAME_PARAGRAPH,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
-  SK_CONVERT_TO_RAWBLOCK
+  SK
 } from '../../common';
 import { getEditorConfiguration } from '..';
 import {
@@ -157,7 +157,9 @@ export const RawBlock = Node.create<RawBlockOptions>({
           .run();
       },
 
-      [SK_CONVERT_TO_RAWBLOCK]: () => this.editor.commands.convertToRawBlock(),
+      [SK.CONVERT_TO_RAWBLOCK]: () => this.editor.commands.convertToRawBlock(),
+      [SK.INCREMENT]: () => this.editor.commands.nudgeNumericValue(1),
+      [SK.DECREMENT]: () => this.editor.commands.nudgeNumericValue(-1),
     };
   },
 
@@ -370,7 +372,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                 node.attrs?.format ||
                 node.attrs?.kv?.format ||
                 config?.defaultRawFormat ||
-                this.options.defaultFormat ||
+                this.options?.defaultFormat ||
                 DEFAULT_RAW_BLOCK_FORMAT;
               const rawBlock = state.schema.nodes[NODE_NAME_RAW_BLOCK].create(
                 { format: format || currentFormat },

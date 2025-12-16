@@ -1,6 +1,16 @@
 import { PundokEditorConfig } from './editorConfiguration';
+import { Capitalize } from '../capitalize';
+import { ActionNameWithProps } from '../actions';
+import { CustomSpan } from './customSpan';
 
-/** Types of automations available. */
+/**
+ * Types of automations available:
+ * - `elements-selection`: selections of nodes or marks with CSS-like selectors
+ * - `pandoc-filter`: apply a pandoc filter to this document or to another document and
+ *     + replace the current document with the result
+ *     + or append/prepend the result to the current document
+ * - `search-replace`: define a search/replace operation
+ */
 export type AutomationType =
   | 'elements-selection'
   | 'pandoc-filter'
@@ -8,8 +18,10 @@ export type AutomationType =
 
 /**
  * Configuration of the interface of the editor
- * to ease the transformation of the document,
- * like search and replace operations.
+ * to ease the transformation of the document, like:
+ * - selection of nodes or marks with CSS selectors;
+ * - transformation of the current document with Pandoc filters;
+ * - search and replace operations.
  */
 export interface Automation extends Record<string, any> {
   type: AutomationType;
@@ -34,26 +46,6 @@ export type SearchAndReplaceMark =
   | 'doubleQuoted';
 
 /**
- * A `Span`, with eventual `Attr`'s classes and attributes that can be added as a result
- * of a replacement in search/replace operations.
- * It's an extendend version of applying a custom style `Span` to selected portions of text.
- */
-export interface SearchAndReplaceSpan {
-  name: string;
-  description?: string;
-  icon?: string;
-  /** The classes that the `Span` will have. */
-  classes?: string[];
-  /** The attributes that the `Span` will have. */
-  kv?: Record<string, string>;
-}
-
-/**
- * The types of capitalization
- */
-export type Capitalize = 'none' | 'lower' | 'upper' | 'first';
-
-/**
  * Definition of predefined search/replace operations.
  * You can search exact text, regular expressions or by Mark or custom style.
  * You can replace with exact text or regexes.
@@ -76,14 +68,16 @@ export interface SearchAndReplace extends Automation {
   optionCycle?: boolean;
   /** Search for whole words. */
   optionWholeWord?: boolean;
-  /** How to change capitalization on replaced text. */
+  /** How to change capitalization on replaced text. (TODO: replace with actions) */
   capitalize?: Capitalize;
-  /** Marks to add to replaced text. */
+  /** Marks to add to replaced text. (TODO: replace with actions) */
   addMarks?: SearchAndReplaceMark[];
-  /** Custom styles to add to replaced text. */
+  /** Custom styles to add to replaced text. (TODO: replace with actions) */
   addStyles?: string[];
-  /** Custom `Span` Marks to add to replaced text. */
-  addSpans?: SearchAndReplaceSpan[];
+  /** Custom `Span` Marks to add to replaced text. (TODO: replace with actions) */
+  addSpans?: CustomSpan[];
+  /** SearchAndReplaceAction */
+  actions?: ActionNameWithProps[];
 }
 
 /**
@@ -96,6 +90,8 @@ export interface ElementsSelection extends Automation {
   cssSelector: string;
   /** The default tab on which to open the element attributes dialog. */
   tab?: string;
+  /** The text to replace the selected element with. */
+  replace?: string;
 }
 
 /** What to do with the result of a document transformation. */
@@ -123,7 +119,7 @@ export interface PandocFilterTransform extends Automation {
   /** Metadata to be passed to the filter via --metadata */
   metadata?: PandocMetadata;
   /** Input format (default: json) */
-  fromFormat?: 'json' | 'markdown';
+  fromFormat?: string;
   /** Output format (default: json) */
   toFormat?: 'json' | 'markdown';
   /** Extra pandoc options */

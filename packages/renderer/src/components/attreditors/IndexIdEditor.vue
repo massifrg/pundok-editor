@@ -55,13 +55,10 @@ import {
 } from '../../common';
 import { QTableProps } from 'quasar';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
-import { getDocState, termsOfDocumentIndex } from '../../schema';
+import { getDocState, SearchTextVariant, termsOfDocumentIndex } from '../../schema';
 import { Editor } from '@tiptap/vue-3';
 
 const SEARCHTEXT_MIN_LENGTH = 1
-export type SearchTextVariant =
-  | 'first-3-words'
-  | 'first-2-words'
 
 const columns: QTableProps['columns'] = [
   {
@@ -237,9 +234,11 @@ export default {
       switch (this.currentSource.type) {
         case 'document':
           this.refreshDocumentIndices()
+          this.doSearch()
           break
         case 'project':
-          this.refreshProjectIndices()
+          await this.refreshProjectIndices()
+          this.doSearch()
           break
         default:
       }
@@ -305,7 +304,6 @@ export default {
       this.$emit('change-search-text-variant', variant)
     },
     keyup(e: KeyboardEvent) {
-      console.log(e)
       if (e.code === 'Enter' && e.altKey && !this.selected && this.results.length === 1) {
         this.selectResultAndCommit(e, this.results[0], 0)
       } else if (e.code === 'Escape') {

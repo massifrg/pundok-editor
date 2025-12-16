@@ -36,6 +36,16 @@ import {
   IpcMainToRendererChannel,
   ServerMessageForViewer,
   PandocFilterTransform,
+  SynctexInfo,
+  ExportJob,
+  BackendFeedbackActionProps,
+  BackendSetProjectActionProps,
+  BackendSetConfigNameActionProps,
+  BackendSetContentActionProps,
+  BackendSetContentWithProjectActionProps,
+  DocumentOpenActionProps,
+  ConfigInitField,
+  GetProjectOptions,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -48,6 +58,7 @@ import {
   ACTION_DOCUMENT_OPEN,
   ACTION_DOCUMENT_SAVE,
   ACTION_DOCUMENT_SAVE_AS,
+  ACTION_PROJECT_NEW,
   BaseEditorAction,
   EditorAction,
   setActionSetupViewer,
@@ -95,7 +106,7 @@ export class LocalBackend implements Backend {
           const action: EditorAction = {
             ...ACTION_BACKEND_SET_CONFIG_NAME,
             editorKey: editorKey!,
-            props: { configurationName },
+            props: { configurationName } as BackendSetConfigNameActionProps,
           };
           actions.setAction(action);
         },
@@ -113,7 +124,7 @@ export class LocalBackend implements Backend {
           const action: EditorAction = {
             ...ACTION_BACKEND_SET_PROJECT,
             editorKey: editorKey!,
-            props: { project },
+            props: { project } as BackendSetProjectActionProps,
           };
           actions.setAction(action);
         },
@@ -124,7 +135,7 @@ export class LocalBackend implements Backend {
         const action: EditorAction = {
           ...ACTION_BACKEND_FEEDBACK,
           editorKey: editorKey!,
-          props: { feedback },
+          props: { feedback } as BackendFeedbackActionProps,
         };
         actions.setAction(action);
       });
@@ -149,28 +160,31 @@ export class LocalBackend implements Backend {
                 project: project_with_conf,
                 configuration: project_with_conf.computedConfig,
                 content,
-              },
+              } as BackendSetContentWithProjectActionProps,
             }
             : {
               ...ACTION_BACKEND_SET_CONTENT,
               editorKey: editorKey!,
-              props: { content },
+              props: { content } as BackendSetContentActionProps,
             };
           actions.setAction(action);
         },
       );
 
       addListener('document', (e: any, commandMsg: ServerMessageCommand) => {
-        const { editorKey, command, path, configurationName } = commandMsg;
+        const { editorKey, command, path, configurationName, atLine } = commandMsg;
         let props: Record<string, any> = {};
         let baseAction: BaseEditorAction;
         switch (command) {
           case 'open':
             baseAction = ACTION_DOCUMENT_OPEN;
-            props.context = {
-              path,
-              configurationName,
-            } as DocumentContext;
+            props = {
+              context: {
+                path,
+                configurationName,
+              } as DocumentContext,
+              atLine,
+            } as DocumentOpenActionProps
             break;
           case 'save':
             baseAction = ACTION_DOCUMENT_SAVE;
@@ -184,6 +198,9 @@ export class LocalBackend implements Backend {
           case 'export':
             baseAction = ACTION_DOCUMENT_EXPORT;
             break;
+          case 'new-project':
+            baseAction = ACTION_PROJECT_NEW;
+            break
           default:
             return;
         }
@@ -192,6 +209,7 @@ export class LocalBackend implements Backend {
           editorKey: editorKey!,
           props,
         };
+        console.log(`setting DOCUMENT action for editor ${editorKey}`)
         if (action) actions.setAction(action);
       });
 
@@ -286,8 +304,12 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('debug-info');
   }
 
-  async getProject(context: Record<string, any>): Promise<PundokEditorProject> {
-    return this.invokeIpc('get-project', context);
+  async getProject(options: GetProjectOptions): Promise<PundokEditorProject> {
+    return this.invokeIpc('get-project', options);
+  }
+
+  async createProject(path: string, project: Partial<PundokEditorProject>): Promise<void> {
+    return this.invokeIpc('new-project', path, JSON.stringify(project));
   }
 
   async availableConfigurations(): Promise<ConfigurationSummary[]> {
@@ -357,9 +379,7 @@ export class LocalBackend implements Backend {
 
   async queryDatabase(query: Query): Promise<QueryResult[]> {
     try {
-      return this.invokeIpc('query', JSON.stringify(query)) as Promise<
-        QueryResult[]
-      >;
+      return this.invokeIpc('query', JSON.stringify(query)) as Promise<QueryResult[]>;
     } catch (err) {
       return Promise.reject(err);
     }
@@ -368,14 +388,18 @@ export class LocalBackend implements Backend {
   async getInclusionTree(
     project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined> {
-    const structure = await this.invokeIpc(
-      'get-inclusion-tree',
-      JSON.stringify(project),
-    );
-    if (structure) {
-      return JSON.parse(structure) as ProjectComponent;
+    try {
+      const structure = await this.invokeIpc(
+        'get-inclusion-tree',
+        JSON.stringify(project),
+      );
+      if (structure) {
+        return JSON.parse(structure) as ProjectComponent;
+      }
+      return undefined;
+    } catch (err) {
+      return Promise.reject(err)
     }
-    return undefined;
   }
 
   async askForDocumentIdOrPath(
@@ -389,6 +413,8 @@ export class LocalBackend implements Backend {
     console.log(`asking for a filename relative to ${project?.path}`);
     let title = 'Open document'
     let buttonLabel: string | undefined = undefined
+    let dialogOptions: Partial<OpenDialogOptions> = { ...options?.openDialogOptions }
+    let defaultPath = project?.path
     switch (why) {
       case 'inclusion':
         title = 'Include document'
@@ -400,12 +426,18 @@ export class LocalBackend implements Backend {
         title = 'Set image src attribute'
         buttonLabel = 'Set'
         break
+      case 'project':
+        title = 'Choose project directory'
+        dialogOptions.filters = []
+        dialogOptions.properties = ['openDirectory', 'createDirectory']
+        defaultPath = undefined
+        break
     }
     return this.invokeIpc('ask-for-document', options?.editorKey, options?.id, {
-      defaultPath: project?.path,
+      defaultPath,
       title,
       buttonLabel,
-      ...options?.openDialogOptions
+      ...dialogOptions
     });
   }
 
@@ -420,6 +452,37 @@ export class LocalBackend implements Backend {
       JSON.stringify({ ...transform }),
       JSON.stringify(options || {}),
     );
+  }
+
+  async gotoSource(
+    editorKey: EditorKeyType,
+    info: SynctexInfo,
+  ): Promise<void> {
+    this.invokeIpc('get-source-file', editorKey, info)
+  }
+
+  async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    this.invokeIpc('show-again', hash, editorKey)
+  }
+
+  async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    this.invokeIpc('export-again', hash, editorKey)
+  }
+
+  async getExportJob(hash: string): Promise<ExportJob | undefined> {
+    const job_as_string: string | undefined = await this.invokeIpc('get-export-job', hash)
+    return job_as_string && JSON.parse(job_as_string) as ExportJob || undefined
+  }
+
+  async storeInConfiguration(
+    where: ConfigInitField,
+    obj: object,
+    isDeletion: boolean,
+    isProject: boolean,
+    configNameOrProjectPath: string
+  ): Promise<void> {
+    console.log(`calling backend to update configuration`)
+    return this.invokeIpc('update-config', where, JSON.stringify(obj), isDeletion, isProject, configNameOrProjectPath)
   }
 }
 

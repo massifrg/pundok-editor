@@ -11,24 +11,32 @@ import {
   ACTION_CLOSE_EDITOR,
   ACTION_SETUP_VIEWER,
   ACTION_DOCUMENT_TRANSFORM,
-  BaseActionForNodeOrMark,
   ACTION_SHOW_SEARCH_DIALOG,
   BaseEditorAction,
+  ACTION_SHOW_RESULT_MESSAGE,
+  ACTION_SET_META_MAP_TEXT,
 } from './actions';
 import {
   DocumentContext,
+  DocumentOpenActionProps,
+  EditAttributesActionProps,
   EditorKeyType,
+  ExportDocumentActionProps,
+  ImportDocumentActionProps,
   InputConverter,
+  MetaMapTextActionProps,
+  NewEmptyDocumentActionProps,
   OutputConverter,
   PandocFilterTransform,
+  ResultMessageActionProps,
   StoredDoc,
+  TransformDocumentActionProps,
   ViewerSetup,
 } from '../common';
 import { useActions } from '../stores';
 import { editorKeyFromState } from '../schema';
 import { SelectedNodeOrMark } from '../schema/helpers';
 import { EditorState } from '@tiptap/pm/state';
-import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { NotesViewAction } from './viewAction';
 
 function editorKeyFrom(
@@ -45,10 +53,11 @@ export function setActionNewEmptyDocument(
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey) {
+    const props: NewEmptyDocumentActionProps = configurationName ? { configurationName } : {}
     useActions().setAction({
       ...ACTION_NEW_EMPTY_DOCUMENT,
       editorKey,
-      props: configurationName ? { configurationName } : {},
+      props
     });
   }
 }
@@ -56,6 +65,7 @@ export function setActionNewEmptyDocument(
 export function setActionOpenDocument(
   stateOrKey: EditorState | EditorKeyType,
   context: DocumentContext,
+  atLine?: number
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   // console.log(`setActionImportDocument, editorKey=${editorKey}`);
@@ -67,7 +77,8 @@ export function setActionOpenDocument(
         context: {
           ...context,
           editorKey,
-        },
+        } as DocumentOpenActionProps,
+        atLine
       },
     });
   }
@@ -87,7 +98,7 @@ export function setActionImportDocument(
       props: {
         inputConverter,
         storedDoc,
-      },
+      } as ImportDocumentActionProps,
     });
   }
 }
@@ -105,9 +116,22 @@ export function setActionExportDocument(
       props: {
         outputConverter,
         storedDoc,
-      },
+      } as ExportDocumentActionProps,
     });
   }
+}
+
+export function setActionShowResultMessage(
+  stateOrKey: EditorState | EditorKeyType,
+  props: ResultMessageActionProps,
+) {
+  const editorKey = editorKeyFrom(stateOrKey);
+  if (editorKey)
+    useActions().setAction({
+      ...ACTION_SHOW_RESULT_MESSAGE,
+      editorKey,
+      props,
+    });
 }
 
 export function setActionShowImportDialog(
@@ -134,16 +158,10 @@ export function setActionShowSearchDialog(
     useActions().setAction({ ...ACTION_SHOW_SEARCH_DIALOG, editorKey });
 }
 
-export interface ActionEditAttributesProps {
-  tab?: string,
-  action?: BaseActionForNodeOrMark,
-  selectNode?: (node: ProsemirrorNode) => boolean,
-}
-
 export function setActionEditAttributes(
   stateOrKey: EditorState | EditorKeyType,
   nodeOrMark: SelectedNodeOrMark,
-  props?: ActionEditAttributesProps,
+  props?: EditAttributesActionProps,
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey) {
@@ -224,14 +242,14 @@ export function setActionTransformDocument(
     useActions().setAction({
       ...ACTION_DOCUMENT_TRANSFORM,
       editorKey,
-      props: { transform },
+      props: { transform } as TransformDocumentActionProps,
     });
 }
 
 export function setActionCommand(
   stateOrKey: EditorState | EditorKeyType,
   action: BaseEditorAction,
-  props?: Record<string, any>): boolean {
+  props?: object): boolean {
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey) {
     useActions().setAction({
@@ -243,3 +261,28 @@ export function setActionCommand(
   }
   return false
 }
+
+export function actionSetMetaMapText(
+  editorKey: EditorKeyType,
+  nodeOrMark: SelectedNodeOrMark,
+  text?: string,
+  oldText?: string,
+): ActionForNodeOrMark {
+  const action = {
+    ...ACTION_SET_META_MAP_TEXT,
+    editorKey,
+    nodeOrMark,
+    props: { text, oldText } as MetaMapTextActionProps
+  } as ActionForNodeOrMark;
+  return action;
+}
+
+// export function actionNewDocument(
+//   editorKey: EditorKeyType,
+//   content: string,
+//   configurationName?: string,
+// ): EditorAction {
+//   const action = { ...ACTION_NEW_DOCUMENT, editorKey } as EditorAction;
+//   action.props = { content, configurationName };
+//   return action;
+// }

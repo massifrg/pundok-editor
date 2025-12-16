@@ -6,7 +6,7 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { MARK_NAME_STRIKEOUT, SK_TOGGLE_STRIKEOUT } from '../../common';
+import { MARK_NAME_STRIKEOUT, SK } from '../../common';
 
 export interface StrikeoutOptions {
   HTMLAttributes: Record<string, any>;
@@ -98,7 +98,7 @@ export const Strikeout = Mark.create<StrikeoutOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_STRIKEOUT]: () => this.editor.commands.toggleStrikeout(),
+      [SK.TOGGLE_STRIKEOUT]: () => this.editor.commands.toggleStrikeout(),
     };
   },
 

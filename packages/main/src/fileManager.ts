@@ -42,7 +42,7 @@ class FileManager {
     }
   }
 
-  async saveFile(
+  async saveFileDialog(
     saveDialogOptions?: Partial<SaveDialogOptions>
   ): Promise<string> {
     const config: SaveDialogOptions = {
@@ -63,6 +63,19 @@ class FileManager {
         return Promise.reject('no save file path');
       }
     } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
+  async chooseDirectory(openDialogOptions: OpenDialogOptions): Promise<string | undefined> {
+    try {
+      const res = await dialog.showOpenDialog(openDialogOptions);
+      if (!res.canceled && res.filePaths.length > 0) {
+        const dirPath = res.filePaths[0];
+        return dirPath;
+      }
+    } catch (err) {
+      console.log(err);
       return Promise.reject(err);
     }
   }

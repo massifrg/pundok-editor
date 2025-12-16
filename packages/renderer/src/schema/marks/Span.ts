@@ -1,5 +1,6 @@
 import { Mark, mergeAttributes } from '@tiptap/core';
-import { MARK_NAME_SPAN, SK_TOGGLE_SPAN } from '../../common';
+import { MARK_NAME_SPAN, SK } from '../../common';
+import { getSpanAttrs } from '../helpers';
 
 export interface SpanOptions {
   HTMLAttributes: Record<string, any>;
@@ -25,6 +26,15 @@ export const Span = Mark.create<SpanOptions>({
     return {
       HTMLAttributes: {},
     };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'span',
+        getAttrs: (e) => getSpanAttrs(this.name, e, this.editor?.state),
+      },
+    ];
   },
 
   renderHTML({ HTMLAttributes }) {
@@ -64,7 +74,7 @@ export const Span = Mark.create<SpanOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_SPAN]: () => this.editor.commands.toggleSpan(),
+      [SK.TOGGLE_SPAN]: () => this.editor.commands.toggleSpan(),
     };
   },
 });

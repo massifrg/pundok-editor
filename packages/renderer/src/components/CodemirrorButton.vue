@@ -1,5 +1,5 @@
 <template>
-  <ToolbarButton icon="mdi-language-markdown" title="edit this document as Markdown" @click="editorVisible = true">
+  <ToolbarButton icon="markdown" title="edit this document as Markdown" @click="editorVisible = true">
     <q-dialog v-model="editorVisible" full-width full-height no-esc-dismiss>
       <q-card>
         <q-card-section>
@@ -18,8 +18,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, shallowRef, toRaw } from 'vue';
-import { Codemirror } from 'vue-codemirror';
+import {
+  defineAsyncComponent,
+  defineComponent,
+  ref,
+  shallowRef,
+  toRaw
+} from 'vue';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { markdown } from '@codemirror/lang-markdown';
@@ -33,15 +38,17 @@ import {
   ACTION_SET_CONTENT,
   setActionCommand,
 } from '../actions';
-import { FeedbackMessage } from '../common';
+import { BackendFeedbackActionProps, FeedbackMessage, SetContentActionProps } from '../common';
+import { setupQuasarIcons } from './helpers/quasarIcons';
 
 export default defineComponent({
   props: ['editor'],
   components: {
-    Codemirror,
+    "Codemirror": defineAsyncComponent(() => import('vue-codemirror').then(m => m.Codemirror)),
     ToolbarButton,
   },
   setup() {
+    setupQuasarIcons();
     const editorVisible = ref(false);
     const content = ref(`markdown code`);
     const extensions = [markdown(), oneDark, EditorView.lineWrapping];
@@ -111,7 +118,7 @@ export default defineComponent({
             type: 'error',
             message: err.toString(),
           };
-          setActionCommand(state, ACTION_BACKEND_FEEDBACK, { feedback });
+          setActionCommand(state, ACTION_BACKEND_FEEDBACK, { feedback } as BackendFeedbackActionProps);
           this.editorVisible = false;
         }
       }
@@ -138,7 +145,11 @@ export default defineComponent({
           },
         );
         // console.log(content);
-        setActionCommand(state, ACTION_SET_CONTENT, { content });
+        setActionCommand(
+          state,
+          ACTION_SET_CONTENT,
+          { content } as SetContentActionProps
+        );
         this.editorVisible = false;
       }
     },

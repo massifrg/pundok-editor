@@ -4,12 +4,12 @@
 
 <script lang="ts">
 // import './index.css'
-import { defineComponent } from 'vue';
+import { defineAsyncComponent, defineComponent } from 'vue';
 import { useQuasar } from 'quasar'
 import { mapState } from 'pinia';
 import { useBackend } from './stores';
 import { createBackend } from './backend/backend';
-import PundokEditor from './components/PundokEditor.vue';
+// import PundokEditor from './components/PundokEditor.vue';
 import testingContent from './assets/test-pandoc.json?raw';
 import { EditorGUIPropsClass } from './components/EditorGUIProps';
 
@@ -18,7 +18,8 @@ const electronIpc = window && window.ipc;
 export default defineComponent({
   name: 'PandocApp',
   components: {
-    PundokEditor,
+    "PundokEditor": defineAsyncComponent(() => import('./components/PundokEditor.vue'))
+    // PundokEditor
   },
   setup() {
     const backendStore = useBackend();
@@ -601,8 +602,11 @@ $color-fg-index: #dc7200;
     border: 2px solid #3584e4;
   }
 
-  // start of gapcursor.css
+  hr.ProseMirror-selectednode {
+    border-color: #3584e4 !important;
+  }
 
+  // start of gapcursor.css
   .ProseMirror-gapcursor {
     display: none;
     pointer-events: none;

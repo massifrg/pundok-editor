@@ -36,7 +36,8 @@ import { romanize } from 'romanize-deromanize'
 import {
   DEFAULT_NOTE_TYPE,
   DEFAULT_NOTE_TEXT_COLOR,
-  DEFAULT_NOTE_BACKGROUND_COLOR
+  DEFAULT_NOTE_BACKGROUND_COLOR,
+  MarkerConversion
 } from '../../common';
 import { getEditorConfiguration, getEditorDocState } from '../../schema';
 import { mapState } from 'pinia'
@@ -44,7 +45,7 @@ import { useActions, useNotes } from '../../stores';
 import { NotesViewAction, ViewAction, setViewActionCloseNotes } from '../../actions';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 
-const MarkerConversions: Record<string, (n: number) => string> = {
+const MarkerConversions: Record<MarkerConversion, (n: number) => string> = {
   'noConversion': n => n.toString(),
   'lower-alpha': n => String.fromCodePoint((n - 1) % 26 + 97),
   'upper-alpha': n => String.fromCodePoint((n - 1) % 26 + 65),
@@ -112,7 +113,7 @@ export default {
         if (isArray(conv) && conv.length > 0) {
           marker = conv[(n - 1) % conv.length]
         } else {
-          const conversion = conv && MarkerConversions[conv as string] || MarkerConversions.noConversion
+          const conversion = conv && MarkerConversions[conv as MarkerConversion] || MarkerConversions.noConversion
           // console.log(`${conv}: ${n} => ${conversion(n)}`)
           marker = conversion(n)
         }

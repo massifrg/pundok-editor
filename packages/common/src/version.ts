@@ -2,6 +2,10 @@
 import package_json from '../../../package.json?raw';
 const pkg_json = JSON.parse(package_json);
 
-export function version() {
+/**
+ * 
+ * @returns The current version of pundok-editor.
+ */
+export function getPundokVersion() {
   return pkg_json.version;
 }

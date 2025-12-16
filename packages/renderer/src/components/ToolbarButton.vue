@@ -9,6 +9,7 @@
 
 <script lang="ts">
 import { shortcutSuffix } from '../common';
+import { setupQuasarIcons } from './helpers/quasarIcons';
 
 export default {
   props: [
@@ -23,6 +24,9 @@ export default {
     'title',
     'shortcut'
   ],
+  setup() {
+    setupQuasarIcons();
+  },
   computed: {
     tooltip() {
       return (this.title || '') + shortcutSuffix(this.shortcut)

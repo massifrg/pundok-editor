@@ -8,12 +8,31 @@ import {
   Complex,
 } from 'parsel-js';
 import { SelectedNodeOrMark } from './selection';
+import { isString } from 'lodash';
+import {
+  NODE_NAME_BREAK,
+  NODE_NAME_HEADING,
+  NODE_NAME_HORIZONTAL_RULE,
+  NODE_NAME_PARAGRAPH
+} from '../../common';
 
-const NORMALIZED_NAME: Record<string, string> = {
-  p: 'paragraph',
-  para: 'paragraph',
-  header: 'heading',
+type MatchNameWithNodeOrMarkFunction = (nom: Node | Mark) => boolean
+
+const NORMALIZED_NAME: Record<string, string | MatchNameWithNodeOrMarkFunction> = {
+  p: NODE_NAME_PARAGRAPH.toLowerCase(),
+  para: NODE_NAME_PARAGRAPH.toLowerCase(),
+  header: NODE_NAME_HEADING.toLowerCase(),
+  h1: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 1,
+  h2: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 2,
+  h3: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 3,
+  h4: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 4,
+  h5: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 5,
+  h6: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 6,
+  hr: NODE_NAME_HORIZONTAL_RULE.toLowerCase(),
   '§': 'custom-style',
+  br: NODE_NAME_BREAK.toLowerCase(),
+  linebreak: (n) => n.type.name === NODE_NAME_BREAK && !n.attrs.soft,
+  softbreak: (n) => n.type.name === NODE_NAME_BREAK && !!n.attrs.soft,
 };
 
 type CombinatorSelector =
@@ -24,6 +43,7 @@ type CombinatorSelector =
 
 export interface CssSelectOptions {
   mergeSameAdjacentMarks: boolean;
+  sort: boolean;
 }
 
 interface NodeRef {
@@ -32,6 +52,12 @@ interface NodeRef {
   parent?: Node;
   index: number;
   mark?: Mark;
+}
+
+function sortSelectedNodeOrMark(snom1: SelectedNodeOrMark, snom2: SelectedNodeOrMark) {
+  const fromDiff = snom1.from - snom2.from
+  if (fromDiff !== 0) return fromDiff
+  return snom2.to - snom1.to
 }
 
 /**
@@ -54,7 +80,7 @@ export function cssSelect(
   const bases: NodeRef[] = [{ node: doc, pos: 0, index: 0 }];
   const refs = ast ? applyRule(ast, bases, 'descendant') : [];
   // console.log(refs);
-  const selected: SelectedNodeOrMark[] = []
+  let selected: SelectedNodeOrMark[] = []
   refs.forEach(({ node, pos, parent, index, mark }) => {
     selected.push({
       name: mark?.type.name || node.type.name,
@@ -67,9 +93,9 @@ export function cssSelect(
       index
     })
   })
-  return options?.mergeSameAdjacentMarks
-    ? mergeAdjacentMarks(selected)
-    : selected;
+  selected = options?.mergeSameAdjacentMarks && mergeAdjacentMarks(selected) || selected
+  selected = options?.sort && selected.sort(sortSelectedNodeOrMark) || selected
+  return selected
 }
 
 function applyRule(
@@ -129,12 +155,12 @@ function applyNotComplexRule(
         const basePos = curBase.pos > 0 ? curBase.pos + 1 : 0
         if (mark) {
           const child = parent?.child(parentIndex)
-          const m = child?.marks.find((m) => nomMatchesAST(m, ast))
+          const m = child?.marks.find((m) => nomMatchesAST(m, ast, parent, parentIndex))
           if (m) acc.push({ ...curBase, mark: m })
         } else {
           base.descendants((node, p, parent, index) => {
             const pos = basePos + p;
-            if (nomMatchesAST(node, ast))
+            if (nomMatchesAST(node, ast, parent, index))
               acc.push({
                 node,
                 pos,
@@ -168,7 +194,7 @@ function applyNotComplexRule(
           for (let i = index + 1; i < limit; i++) {
             const sibling = parent.child(i);
             const nextPos = curPos + sibling.nodeSize;
-            if (nomMatchesAST(sibling, ast)) {
+            if (nomMatchesAST(sibling, ast, parent, index)) {
               acc.push({
                 node: sibling,
                 pos: curPos,
@@ -176,7 +202,7 @@ function applyNotComplexRule(
                 index: i,
               });
             } else {
-              const mark = sibling.marks.find(m => nomMatchesAST(m, ast))
+              const mark = sibling.marks.find(m => nomMatchesAST(m, ast, parent, index))
               if (mark) {
                 acc.push({
                   mark,
@@ -196,30 +222,39 @@ function applyNotComplexRule(
   return acc;
 }
 
-function normalizeName(name: string): string {
+function normalizeName(name: string, nom?: Node | Mark): string | false {
   const lowered = name.toLowerCase();
+  if (!nom)
+    return lowered
   const normalized = NORMALIZED_NAME[lowered];
-  return normalized || lowered;
+  if (!normalized)
+    return lowered
+  if (isString(normalized))
+    return normalized
+  return normalized(nom) && nom.type.name.toLowerCase() || false
 }
 
-function nomMatchesAST(nom: Node | Mark, ast: AST): boolean {
+function nomMatchesAST(nom: Node | Mark, ast: AST, parent?: Node | null, index?: number): boolean {
   switch (ast.type) {
-    case 'type':
-      return nomMatchesName(nom, normalizeName(ast.name));
+    case 'type': {
+      return nomMatchesName(nom, ast.name);
+    }
     case 'id':
       return nomMatchesId(nom, ast.name);
     case 'class':
       return nomHasClass(nom, ast.name);
-    case 'attribute':
-      return nomHasAttribute(nom, normalizeName(ast.name), ast);
+    case 'attribute': {
+      const normalized = normalizeName(ast.name, nom)
+      return !!normalized && nomHasAttribute(nom, normalized, ast);
+    }
     case 'compound':
-      return nomMatchesCompound(nom, ast.list);
+      return nomMatchesCompound(nom, ast.list, parent, index);
     case 'list':
-      return nomMatchesList(nom, ast.list);
+      return nomMatchesList(nom, ast.list, parent, index);
     case 'universal':
       return true;
     case 'pseudo-class':
-      return nomMatchesPseudoClass(nom, ast);
+      return nomMatchesPseudoClass(nom, ast, parent, index);
     case 'complex':
     case 'combinator':
     case 'comma':
@@ -231,25 +266,26 @@ function nomMatchesAST(nom: Node | Mark, ast: AST): boolean {
   return false;
 }
 
-function nomMatchesCompound(nom: Node | Mark, list: AST[]): boolean {
+function nomMatchesCompound(nom: Node | Mark, list: AST[], parent?: Node | null, index?: number): boolean {
   for (let i = 0; i < list.length; i++) {
     const ast = list[i];
-    if (!nomMatchesAST(nom, ast)) return false;
+    if (!nomMatchesAST(nom, ast, parent, index)) return false;
   }
   return true;
 }
 
-function nomMatchesList(nom: Node | Mark, list: AST[]): boolean {
+function nomMatchesList(nom: Node | Mark, list: AST[], parent?: Node | null, index?: number): boolean {
   for (let i = 0; i < list.length; i++) {
     const ast = list[i];
-    if (nomMatchesAST(nom, ast)) return true;
+    if (nomMatchesAST(nom, ast, parent, index)) return true;
   }
   return false;
 }
 
 function nomMatchesName(nom: Node | Mark, name: string): boolean {
+  const normalized = normalizeName(name, nom) || name
   const typeName = nom.type.name;
-  return typeName.toLowerCase() === name;
+  return typeName.toLowerCase() === normalized;
 }
 
 function nomMatchesId(nom: Node | Mark, id: string): boolean {
@@ -306,13 +342,87 @@ function nomHasAttribute(
   return retValue;
 }
 
+/**
+ * Count the children of `parent` that match `nom` name in a range of indexes (extremes included).
+ * @param nom 
+ * @param parent 
+ * @param _from starting index.
+ * @param _to ending index (included).
+ * @returns 
+ */
+function countChildrenOfType(nom: Node | Mark, parent?: Node | null, _from?: number, _to?: number): number {
+  if (!parent)
+    return 0
+  const from = _from || 0
+  const to = _to || parent.childCount - 1
+  let countOfType = 0
+  for (let i = from; i <= to; i++)
+    if (nomMatchesName(nom, parent.child(i).type.name)) countOfType++
+  return countOfType
+}
+
+function isNthOfType(nom: Node | Mark, nth: number, parent?: Node | null, index?: number): boolean {
+  if (isNaN(nth) || index === undefined)
+    return false
+  return countChildrenOfType(nom, parent, 0, index) === nth
+}
+
+function isNthLastOfType(nom: Node | Mark, nth: number, parent?: Node | null, index?: number): boolean {
+  if (isNaN(nth) || !parent || index === undefined)
+    return false
+  let countOfType = 0
+  for (let i = index; i < parent.childCount; i++) {
+    if (nomMatchesName(nom, parent.child(i).type.name)) countOfType++
+    if (countOfType > nth) return false
+  }
+  return countOfType === nth
+}
+
 function nomMatchesPseudoClass(
   nom: Node | Mark,
-  ast: PseudoClassToken
+  ast: PseudoClassToken,
+  parent?: Node | null,
+  index?: number,
 ): boolean {
+  const { argument } = ast
   switch (ast.name) {
     case 'not':
       return !!ast.subtree && !nomMatchesAST(nom, ast.subtree);
+    case 'text':
+      const text = (nom as Node).textContent || nom.attrs.text
+      return !!argument && text && text.indexOf(argument) >= 0
+    case 'first-child':
+      return index === 0
+    case 'last-child':
+      return !!parent && !!index && parent.childCount === index + 1
+    case 'nth-child': {
+      const nth = parseInt(argument || '')
+      return !!index && nth === index + 1
+    }
+    case 'only-child':
+      return !!parent && parent.childCount === 1
+    case 'only-of-type': {
+      return countChildrenOfType(nom, parent) === 1
+    }
+    case 'nth-last-child': {
+      const nth = parseInt(argument || '')
+      return !!parent && parent.childCount - nth === index
+    }
+    case 'first-of-type':
+      return isNthOfType(nom, 1, parent, index)
+    case 'last-of-type':
+      return !!parent && isNthLastOfType(nom, 1, parent, index)
+    case 'nth-of-type': {
+      const nth = parseInt(argument || '')
+      return isNthOfType(nom, nth, parent, index)
+    }
+    case 'nth-last-of-type': {
+      const nth = parseInt(argument || '')
+      return isNthLastOfType(nom, nth, parent, index)
+    }
+    case 'where':
+      const types = argument?.split(',')
+      return !!(types && types.find(t => nomMatchesName(nom, t)))
     default:
       console.log(ast);
       throw new Error(

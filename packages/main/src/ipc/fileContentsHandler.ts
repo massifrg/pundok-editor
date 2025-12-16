@@ -8,22 +8,23 @@ import {
   extname as pathExtension,
 } from 'path';
 import { readFile } from 'fs/promises';
+import { stringify } from '../utils';
 
 export const fileContentsHandler =
   (hub: IpcHub) =>
-  async (
-    e: IpcMainInvokeEvent,
-    filename: string,
-    context: Partial<FindResourceOptions>,
-  ): Promise<string> => {
-    let kind = context?.kind;
-    if (!kind) {
-      const ext = pathExtension(filename);
-      const types = resourceTypesFromExtension(ext);
-      kind = types[0] || kind;
-    }
-    return getFileContents(filename, { ...context, kind });
-  };
+    async (
+      e: IpcMainInvokeEvent,
+      filename: string,
+      context: Partial<FindResourceOptions>,
+    ): Promise<string> => {
+      let kind = context?.kind;
+      if (!kind) {
+        const ext = pathExtension(filename);
+        const types = resourceTypesFromExtension(ext);
+        kind = types[0] || kind;
+      }
+      return getFileContents(filename, { ...context, kind });
+    };
 
 async function getFileContents(
   filename: string,
@@ -41,6 +42,6 @@ async function getFileContents(
       return Promise.reject(`File not found: ${filename}`);
     }
   } catch (err: any) {
-    return Promise.reject(err.toString);
+    return Promise.reject(stringify(err));
   }
 }

@@ -6,6 +6,9 @@ export type MetaValueName =
   | 'MetaList'
   | 'MetaMap'
 
+/**
+ * A custom metadata field in the Metadata of a Pandoc document.
+ */
 export interface CustomMetadata {
   type: MetaValueName;
   name: string,

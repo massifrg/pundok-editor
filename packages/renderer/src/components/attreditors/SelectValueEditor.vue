@@ -1,7 +1,7 @@
 <template>
   <q-card align="center">
     <q-btn-toggle v-model="value" :options="options" toggle-color="primary" color="white" text-color="primary"
-      @update:model-value="update" />
+      :title="title" no-caps no-wrap @update:model-value="update" />
   </q-card>
 </template>
 
@@ -10,9 +10,16 @@
 export default {
   props: ['attrName', 'startValue', 'options'],
   emits: ['update-attribute'],
+  computed: {
+    title() {
+      const options: { label: string, value: any, title?: string }[] = this.options || []
+      const option = options.find(v => v.value == this.value)
+      return option?.title || option?.label
+    }
+  },
   data() {
     return {
-      value: this.startValue
+      value: this.startValue || this.options[0].value
     }
   },
   watch: {

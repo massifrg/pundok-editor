@@ -58,7 +58,7 @@ npm run dist:win
 to get a Windows executable file that does not need installation.
 
 Those are the only two packages I was able to produce.
-Making the Windows executable works even under my Debian,
+The build of the Windows executable works even under my Debian,
 with the help from the `wine` software.
 If you know how to compile packages for other systems, e.g. for Macs, you are welcome.
 
@@ -79,7 +79,7 @@ though you can do some real work with it.
 
 The editor reads and writes Pandoc's JSON format natively,
 but it can read and write any format supported by the version of Pandoc
-you installed in your system, since it calls `pandoc` to make format conversions.
+you installed in your system, since it calls `pandoc` to make conversions.
 
 I would not advice you to use it to type your documents from scratch.
 This editor, like Pandoc, is more about the semantic structure of texts.
@@ -127,8 +127,8 @@ These are some of the reasons you might find it useful:
   in your documents (e.g. I use the injection of raw elements to tune
   the typesetting with [ConTeXt](https://wiki.contextgarden.net));
 
-- the result of running an external Pandoc filter on the document can be prepended,
-  appended or overwritten to the document itself;
+- the result of running an external Pandoc filter on the current document
+  can be prepended, appended or overwritten to the document itself;
 
 - custom conversions, text styles, CSS files, search/replace operations, CSS-like
   selections, indexes, delimiters, raw elements can be saved in configurations

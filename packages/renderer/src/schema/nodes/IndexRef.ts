@@ -14,6 +14,7 @@ import {
   NODE_NAME_INDEX_REF,
 } from '../../common';
 import { documentIndices } from '../helpers/indices';
+import { getSpanAttrs } from '../helpers';
 
 export const INDEX_RANGE_START_CLASS = 'index-start';
 export const INDEX_RANGE_STOP_CLASS = 'index-stop';
@@ -109,7 +110,7 @@ export const IndexRef = Node.create<IndexRefOptions>({
     return [
       {
         tag: 'span',
-        getAttrs: (e) => ((e as HTMLElement).hasChildNodes() ? false : null),
+        getAttrs: (e) => getSpanAttrs(this.name, e, this.editor?.state),
       },
     ];
   },
@@ -206,12 +207,13 @@ export const IndexRef = Node.create<IndexRefOptions>({
 
 function defaultPropagate(refNode: PmNode, node: PmNode): boolean {
   const refkv = refNode.attrs.kv || {};
-  const indexName = refkv[INDEX_NAME_ATTR];
-  const indexedText = refkv[INDEXED_TEXT_ATTR];
+  const refIndexName = refkv[INDEX_NAME_ATTR];
+  const refIndexedText = refkv[INDEXED_TEXT_ATTR];
   const kv = node.attrs.kv || {};
   return (
     node.type.name === NODE_NAME_INDEX_REF &&
-    indexName &&
-    kv[INDEXED_TEXT_ATTR] === indexedText
+    refIndexName &&
+    refIndexName === kv[INDEX_NAME_ATTR] &&
+    kv[INDEXED_TEXT_ATTR] === refIndexedText
   );
 }

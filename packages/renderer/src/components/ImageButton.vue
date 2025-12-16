@@ -30,7 +30,7 @@ export default {
       return this.editor && getDocState(this.editor)
     },
     title() {
-      const sc = shortcut('SK_INSERT_IMAGE')
+      const sc = shortcut('INSERT_IMAGE')
       return "insert Image" + (sc && sc.length > 0 ? ` [${sc}]` : '')
     },
     basePath() {

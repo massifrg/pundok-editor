@@ -205,9 +205,17 @@ import 'vue-pdf-embed/dist/styles/textLayer.css'
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
-import { ViewerSetup } from '../common';
-import { debounce, throttle } from 'lodash';
-import { createBackend } from '../backend';
+import {
+  EditorKeyType,
+  ExportJob,
+  SetupViewerActionProps,
+  SynctexInfo,
+  ViewerSetup
+} from '../common';
+import { debounce, isString, throttle } from 'lodash';
+import { setupQuasarIcons } from './helpers/quasarIcons';
+import PromptDialog from './helpers/PromptDialog.vue'
+import { toRaw } from 'vue';
 
 interface LoadingProgress {
   loaded: number,
@@ -222,6 +230,7 @@ interface PdfContent {
 }
 
 interface ViewerBookmark {
+  label: string,
   page: number,
   magnify: number,
   scrollTopPerc: number,
@@ -243,34 +252,65 @@ async function createHash(message: string, algo = 'SHA-1'): Promise<string> {
 }
 
 export default {
-  components: {
-    VuePdfEmbed
+  setup() {
+    setupQuasarIcons()
   },
+  components: {
+    PromptDialog,
+    VuePdfEmbed,
+  },
+  props: ['backend'],
   data() {
     return {
-      backend: createBackend({ ipc: window.ipc }),
+      filename: undefined as string | undefined,
+      projectAsJson: undefined as string | undefined,
       pdfSource: undefined as string | undefined,
       debouncedPage: 1,
       page: 1,
       maxPages: 1,
       magnify: 1,
       width: baseWidth,
-      hash: undefined as string | undefined,
+      contentHash: undefined as string | undefined,
       isRendering: false,
+      regeneratingHash: undefined as string | undefined,
       whenRendered: [] as WhenRendered,
       div: undefined as HTMLDivElement | undefined,
       scrollTopPerc: 0,
       scrollLeftPerc: 0,
-      bookmark: undefined as ViewerBookmark | undefined,
+      documentBookmarks: {} as Record<string, ViewerBookmark[]>,
+      currentBookmarkIndex: -1,
+      isUpdated: false,
+      documentHash: undefined as string | undefined,
+      exportJobs: {} as Record<string, ExportJob>,
+      editorKey: undefined as EditorKeyType | undefined,
+      showPageDialog: false,
+      showBookmarkNameDialog: false,
     }
   },
   computed: {
     ...mapState(useActions, ['lastAction']),
+    documentKey(): string | undefined {
+      return this.documentHash || this.filename
+    },
+    bookmarks(): ViewerBookmark[] {
+      const key = this.documentKey
+      if (key) {
+        return this.documentBookmarks[key] || []
+      }
+      return []
+    },
+    isRegeneratingPdf(): boolean {
+      return !!this.regeneratingHash
+    },
   },
   watch: {
     lastAction(action: EditorAction) {
       if (action.name == ACTION_SETUP_VIEWER.name) {
-        this.setupViewer(action.props?.setup)
+        console.log(`PDF viewer: setup action "${action.name}"`)
+        if (action.editorKey)
+          this.editorKey = action.editorKey
+        console.log(action)
+        this.setupViewer((action.props as SetupViewerActionProps)?.setup)
       }
     },
   },
@@ -286,31 +326,65 @@ export default {
     this.loadDefaultPdf()
   },
   methods: {
-    setupViewer(setup?: ViewerSetup) {
+    async setupViewer(setup?: ViewerSetup) {
       if (setup) {
-        const { name: filename, content } = setup
-        this.loadPdf({ filename, content })
+        const {
+          name: filename,
+          content,
+          page,
+          magnify,
+          centerX,
+          centerY,
+          projectAsJson,
+          documentHash,
+        } = setup
+        const hash = documentHash || filename
+        this.isUpdated = this.documentHash !== hash
+        this.documentHash = hash
+        this.rememberExportJob(hash)
+        // if (this.regeneratingHash === hash)
+        this.regeneratingHash = undefined
+        this.projectAsJson = projectAsJson
+        await this.loadPdf({ filename, content })
+      }
+    },
+    async rememberExportJob(hash: string) {
+      if (hash) {
+        const job = await this.backend?.getExportJob(hash)
+        if (job) {
+          this.exportJobs[hash] = job
+        }
       }
     },
     async loadPdf(pdf: PdfContent) {
       try {
         const { filename, content } = pdf
         let pdfContent: string | undefined = undefined
-        if (filename)
+        if (filename) {
+          this.filename = filename
           pdfContent = 'data:application/pdf;base64,' +
             await this.backend?.getFileContents(filename, { base64: true })
+        }
         else if (content)
           pdfContent = content
         if (pdfContent) {
-          const hash = await createHash(pdfContent)
-          if (hash !== this.hash) {
+          const contentHash = await createHash(pdfContent)
+          if (contentHash !== this.contentHash) {
             this.pdfSource = pdfContent
-            this.hash = hash
+            this.contentHash = contentHash
             this.isRendering = true
           }
         }
       } catch (err) {
         alert(err)
+      }
+    },
+    regeneratePdf(hash?: string) {
+      const h = hash || this.documentHash
+      // console.log(`document hash: ${h}`)
+      if (h) {
+        this.regeneratingHash = h
+        this.backend.exportAgain(h, this.editorKey)
       }
     },
     loadDefaultPdf() {
@@ -336,17 +410,31 @@ export default {
         this.page = this.page > this.maxPages ? 1 : this.page
       }
     },
-    setPage(page: number) {
+    setPage(p: number | string) {
+      const page = isString(p) ? parseInt(p) : p
       if (page !== this.page && page >= 1 && page <= this.maxPages) {
         this.page = Math.floor(page)
         this.isRendering = true
       }
+    },
+    firstPage() {
+      this.setPage(1)
     },
     prevPage() {
       this.setPage(this.page - 1)
     },
     nextPage() {
       this.setPage(this.page + 1)
+    },
+    lastPage() {
+      this.setPage(this.maxPages)
+    },
+    validatePage(sp: string) {
+      const page_min = 1
+      const page_max = this.maxPages
+      const p = parseInt(sp)
+      return (p >= page_min && p <= page_max)
+        || `page must be between ${page_min} and ${page_max}`
     },
     setMagnify(magnify: number) {
       if (magnify !== this.magnify && magnify > 0.05 && magnify < 2000) {
@@ -360,20 +448,64 @@ export default {
     increaseScale() {
       this.setMagnify(this.magnify * magnifyFactor)
     },
+    resetScale() {
+      this.magnify = 1
+    },
     clicked(e: PointerEvent) {
       // console.log(e)
-      // const { layerX: x, layerY: y, target } = e
-      // const { clientWidth: w, clientHeight: h } = target as HTMLDivElement || { clientWidth: x, clientHeight: y }
-      // console.log(`${(x / w).toFixed(2)},${(y / h).toFixed(2)}`)
+      let target = e.target
+      let div: HTMLElement | null = target as HTMLElement
+      while (div && div.tagName !== 'DIV') div = div.parentElement
+      if (div) {
+        const bounding = div.getBoundingClientRect()
+        const x = e.clientX - bounding.x
+        const y = e.clientY - bounding.y
+        const { clientWidth: w, clientHeight: h } = div! // || { clientWidth: x, clientHeight: y }
+        const rx = x / w
+        const ry = y / h
+        // console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
+        if (e.ctrlKey && this.filename) {
+          this.backend?.gotoSource(this.editorKey, {
+            outputFile: toRaw(this.filename),
+            page: toRaw(this.page),
+            rx,
+            ry,
+            projectAsJson: toRaw(this.projectAsJson)
+          } as SynctexInfo)
+        }
+      }
     },
     mouseWheel(e: WheelEvent) {
-      if (e.ctrlKey && !this.isRendering) {
-        // console.log(`${e.deltaY}, ${e.clientX}`)
-        if (e.deltaY < 0)
+      const rendering = this.isRendering
+      // console.log(`${e.deltaY}, ${e.clientX}`)
+      if (e.deltaY < 0) {
+        if (e.ctrlKey && !rendering)
           this.increaseScale()
-        else if (e.deltaY > 0)
+        else
+          this.prevPage()
+      } else if (e.deltaY > 0) {
+        if (e.ctrlKey && !rendering)
           this.decreaseScale()
+        else
+          this.nextPage()
       }
+      e.preventDefault()
+    },
+    pageWheel(e: WheelEvent) {
+      if (e.deltaY < 0) {
+        this.setPage(this.page + 1)
+      } else if (e.deltaY > 0) {
+        this.setPage(this.page - 1)
+      }
+      e.preventDefault()
+    },
+    zoomWheel(e: WheelEvent) {
+      if (e.deltaY < 0) {
+        this.increaseScale()
+      } else if (e.deltaY > 0) {
+        this.decreaseScale()
+      }
+      e.preventDefault()
     },
     scrolled(e: Event) {
       const div = e.target as HTMLDivElement
@@ -385,17 +517,33 @@ export default {
         this.scrollTopPerc = scrollTop / scrollHeight
       }
     },
-    setBookmark() {
-      this.bookmark = {
-        page: this.page,
-        magnify: this.magnify,
-        scrollLeftPerc: this.scrollLeftPerc,
-        scrollTopPerc: this.scrollTopPerc,
-      }
+    setBookmarks(bookmarks: ViewerBookmark[]) {
+      const key = this.documentKey
+      // console.log(key)
+      // console.log(bookmarks)
+      if (key)
+        this.documentBookmarks[key] = bookmarks
     },
-    recallBookmark() {
-      if (this.bookmark) {
-        const { page, magnify, scrollLeftPerc, scrollTopPerc } = this.bookmark
+    setBookmark(label?: string) {
+      const page = this.page
+      this.setBookmarks([
+        ...this.bookmarks,
+        {
+          label: label || `p.${page}`,
+          page: page,
+          magnify: this.magnify,
+          scrollLeftPerc: this.scrollLeftPerc,
+          scrollTopPerc: this.scrollTopPerc,
+        }
+      ])
+    },
+    removeBookmark(index: number) {
+      this.setBookmarks(this.bookmarks.filter((_, i) => i !== index))
+    },
+    recallBookmark(index: number) {
+      const bookmark = this.bookmarks[index]
+      if (bookmark) {
+        const { page, magnify, scrollLeftPerc, scrollTopPerc } = bookmark
         this.page = page
         this.magnify = magnify
         const div = this.div
@@ -406,27 +554,90 @@ export default {
           })
         }
       }
+    },
+    editBookmark(index: number) {
+      this.currentBookmarkIndex = index
+      this.showBookmarkNameDialog = true
+    },
+    setBookmarkLabel(label: string) {
+      const index = this.currentBookmarkIndex
+      if (index >= 0) {
+        const bookmarks = this.bookmarks.map((bm, i) => {
+          if (i === index)
+            return { ...bm, label }
+          else
+            return bm
+        })
+        this.setBookmarks(bookmarks)
+      }
+    },
+    stopEditingBookmark() {
+      this.showBookmarkNameDialog = false
+      this.currentBookmarkIndex = -1
+    },
+    showAgain(hash: string) {
+      this.backend.showAgain(hash, this.editorKey)
     }
   }
 }
 </script>
 
 <template>
-  <q-card>
+  <q-card class="lazy-component-wrapper" @wheel="(e: Event) => { e.preventDefault() }">
     <q-card-actions>
+      <!--
       <q-btn label="default pdf" @click="loadDefaultPdf" />
       <q-btn label="load pdf" @click="loadPdf({ filename: 'setup-en.pdf' })" />
-      <q-btn label="prev" :disabled="page <= 1" @click="prevPage" />
-      <q-badge :label="page" />
-      <q-btn label="next" :disabled="page >= maxPages" @click="nextPage" />
-      <q-btn icon="mdi-minus" :disabled="magnify < 0.11" @click="decreaseScale" />
-      <q-badge :label="(magnify * 100).toFixed(0) + '%'" />
-      <q-btn icon="mdi-plus" :disabled="magnify > 9.9" @click="increaseScale" />
-      <q-btn icon="mdi-bookmark" @click="setBookmark" />
-      <q-btn v-if="bookmark" icon="mdi-bookmark-box" @click="recallBookmark" />
+      -->
+      <q-btn size="sm" icon='mdi-page-first' title="go to the first page" :disabled="page <= 1" @click="firstPage" />
+      <q-btn size="sm" icon='mdi-chevron-left' title="go to the previous page" :disabled="page <= 1"
+        @click="prevPage" />
+      <q-chip :label="page" size="md" @wheel="pageWheel" clickable @click="showPageDialog = true" />
+      <PromptDialog :visible="showPageDialog" label="go to page" :start-value="page.toString()" :validate="validatePage"
+        @set-value="setPage" @close-dialog="showPageDialog = false" />
+      <q-btn size="sm" icon='mdi-chevron-right' title="go to the next page" :disabled="page >= maxPages"
+        @click="nextPage" />
+      <q-btn size="sm" icon='mdi-page-last' title="go to the last page" :disabled="page >= maxPages"
+        @click="lastPage" />
+      <q-btn size="sm" icon="mdi-minus" :disabled="magnify < 0.11" title="zoom out" @click="decreaseScale" />
+      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblClick="resetScale" />
+      <q-btn size="sm" icon="mdi-plus" :disabled="magnify > 9.9" title="zoom in" @click="increaseScale" />
+      <q-btn v-if="bookmarks.length === 0" size="sm" icon="mdi-bookmark-plus" title="add bookmark"
+        @click="setBookmark()" />
+      <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="mdi-bookmark-plus" title="add bookmark"
+        @click="setBookmark()">
+        <q-list>
+          <q-item v-for="(bookmark, i) in bookmarks" clickable v-close-popup :label="bookmark.label"
+            @click="recallBookmark(i)">
+            <q-item-section side title="edit bookmark"><q-icon name="mdi-comment-bookmark" color="primary"
+                @click="editBookmark(i)" /></q-item-section>
+            <q-item-section title="remove bookmark"><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
+            <q-item-section side title="remove bookmark"><q-icon name="mdi-bookmark-remove" color="primary"
+                @click="removeBookmark(i)" /></q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
+      <q-btn-dropdown>
+        <q-list>
+          <q-item v-for="[h, j] in Object.entries(exportJobs)" :disable="h === documentHash" clickable v-close-popup
+            :title="h" @click="showAgain(h)">
+            <q-item-section>
+              <q-item-label>{{ j.path }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
+      <PromptDialog :visible="showBookmarkNameDialog" label="rename bookmark"
+        :start-value="bookmarks[currentBookmarkIndex]?.label" @set-value="setBookmarkLabel"
+        @close-dialog="showBookmarkNameDialog = false" />
       <q-space />
-      <q-circular-progress v-if="isRendering" indeterminate rounded size="1.4rem" color="light-blue"
-        class="q-mx-md q-my-xs q-pa-xs" />
+      <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'mdi-reload'" :disable="isRegeneratingPdf"
+        @click="regeneratePdf()">
+        <q-circular-progress v-if="isRegeneratingPdf" indeterminate round size="1rem" />
+      </q-btn>
+      <q-space />
+      <q-circular-progress :indeterminate="isRendering" :value="isRendering ? 100 : undefined" rounded size="1.4rem"
+        color="light-blue" class="q-mx-md q-my-xs q-pa-xs" />
     </q-card-actions>
     <q-card-section>
       <div class="vue-pdf-embed-container q-pa-md" @scroll="scrolled">
@@ -440,6 +651,12 @@ export default {
 
 <style lang="scss">
 @import 'pdfjs-dist/web/pdf_viewer.css';
+
+/** The next one is necessary to prevent the PdfViewer from staying on top even when minified */
+.lazy-component-wrapper {
+  position: relative !important;
+  z-index: auto !important;
+}
 
 .vue-pdf-embed-container {
   overflow: scroll;

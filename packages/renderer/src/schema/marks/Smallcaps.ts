@@ -4,7 +4,7 @@ import {
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { MARK_NAME_SMALLCAPS, SK_TOGGLE_SMALLCAPS } from '../../common';
+import { MARK_NAME_SMALLCAPS, SK } from '../../common';
 
 export interface SmallcapsOptions {
   HTMLAttributes: Record<string, any>;
@@ -94,7 +94,7 @@ export const Smallcaps = Mark.create<SmallcapsOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_SMALLCAPS]: () => this.editor.commands.toggleSmallcaps(),
+      [SK.TOGGLE_SMALLCAPS]: () => this.editor.commands.toggleSmallcaps(),
     };
   },
 

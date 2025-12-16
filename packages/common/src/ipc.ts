@@ -1,13 +1,22 @@
 import { FeedbackMessage, PundokEditorProject, ReadDoc, ViewerSetup } from '.';
 import { EditorKeyType } from './editorKey';
 
+/**
+ * The direction of messages between Main and Renderer in an IPC channel.
+ */
 export type IpcDirection = 'm2r' | 'r2m' | 'both';
 
+/**
+ * The description of an IPC channel of communication between Main and Renderer.
+ */
 interface IpcChannelDescription {
+  /** The direction of messages */
   dir: IpcDirection;
+  /** The description of the channel */
   description: string;
 }
 
+/** Types of IPC channels in the communication from Main to Renderer. */
 export type IpcMainToRendererChannel =
   | 'feedback'
   | 'document'
@@ -18,6 +27,7 @@ export type IpcMainToRendererChannel =
   | 'ask-value'
   | 'show-in-viewer';
 
+/** Types of IPC channels in the communication from Renderer to Main. */
 export type IpcRendererToMainChannel =
   | 'debug-info'
   | 'open-document'
@@ -34,11 +44,16 @@ export type IpcRendererToMainChannel =
   | 'pandoc-input-formats'
   | 'pandoc-output-formats'
   | 'set-value'
-  | 'query';
-// | 'open-viewer'
+  | 'query'
+  | 'get-source-file'
+  | 'show-again'
+  | 'export-again'
+  | 'get-export-job'
+  | 'update-config'
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
+/** The available IPC channels. */
 export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   feedback: {
     dir: 'm2r',
@@ -148,12 +163,33 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'm2r',
     description: 'show some content in the viewer',
   },
+  'show-again': {
+    dir: 'r2m',
+    description: 'show an export job (a PDF) again in the viewer, without recompiling it'
+  },
+  'export-again': {
+    dir: 'r2m',
+    description: 'export (compile PDF) again'
+  },
+  'get-export-job': {
+    dir: 'r2m',
+    description: 'retrieve information about an export job (e.g. a PDF instance of a document)'
+  },
+  'get-source-file': {
+    dir: 'r2m',
+    description: 'open the source file corresponding to a point in a page of a result (PDF) file',
+  },
+  'update-config': {
+    dir: 'r2m',
+    description: 'update a configuration or project JSON file adding/updating an object (e.g. automation, custom style)'
+  }
 };
 
 export const IPC_VALUE_NEW_PROJECT_NAME = 'new-project-name';
 export const IPC_VALUE_WINDOW_TITLE = 'window-title';
 export const IPC_MAIN_EDITOR_KEY = 'main-editor-key';
 
+/** Types of messages from Main to Renderer. */
 export type ServerMessageType =
   | 'command'
   | 'configuration'
@@ -162,44 +198,54 @@ export type ServerMessageType =
   | 'project'
   | 'viewer';
 
+/** A message from Main to Renderer. */
 export interface ServerMessage extends Record<string, any> {
   type: ServerMessageType;
+  /** The identifier key of the recipient editor instance */
   editorKey?: EditorKeyType;
 }
 
+/** A message from Main to Renderer to configure the editor with a certain configuration. */
 export interface ServerMessageSetConfiguration extends ServerMessage {
   type: 'configuration';
   configurationName: string;
 }
 
+/** A feedback message from Main to Renderer.*/
 export interface ServerMessageFeedback extends ServerMessage {
   type: 'feedback';
   feedback: FeedbackMessage;
 }
 
+/** A message from Main to Renderer with the content of a document. */
 export interface ServerMessageContent extends ServerMessage {
   type: 'content';
   content: ReadDoc;
   project?: PundokEditorProject;
 }
 
+/** A message from Main to Renderer to configure the editor according to a certain project. */
 export interface ServerMessageSetProject extends ServerMessage {
   type: 'project';
   project: PundokEditorProject;
 }
 
+/** Kind of command to be executed in the Renderer. */
 export type CommandToRenderer =
   | 'open'
   | 'save'
   | 'save-as'
   | 'import'
-  | 'export';
+  | 'export'
+  | 'new-project';
 
+/** A message from Main to Renderer to issue a command inside the editor. */
 export interface ServerMessageCommand extends ServerMessage {
   type: 'command';
   command: CommandToRenderer;
 }
 
+/** A message from Main to the document (pre)viewer. */
 export interface ServerMessageForViewer extends ServerMessage {
   type: 'viewer';
   setup: ViewerSetup;

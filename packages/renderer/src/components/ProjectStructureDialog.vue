@@ -5,9 +5,11 @@
       <q-card-actions horizontal align="stretch" class="bg-primary">
         <q-btn title="reload/refresh project structure" size="sm" icon="mdi-refresh" @click="reloadStructure()" />
         <q-space />
+        <q-chip>{{ loaded?.id || loaded?.path || '' }}</q-chip>
+        <q-space />
         <q-btn title="open in main editor" size="sm" icon="mdi-open-in-app" :disabled="!selected"
           @click="openInMainEditor" />
-        <q-space />
+        <q-space style="max-width: 2rem" />
         <q-btn :title="maximized ? 'minimize' : 'maximize'" size="sm"
           :icon="maximized ? 'mdi-window-minimize' : 'mdi-window-maximize'" @click="maximizeMinimize()" />
         <q-btn title="close" size="sm" icon="mdi-window-close" @click="closeDialog()" />
@@ -31,7 +33,8 @@
             <q-card class="q-pa-none">
               <q-card-section class="scroll q-pa-none">
                 <PundokEditor :height="height" :mainEditor="false" :gui-props="guiProps"
-                  @document-loaded="documentLoaded" @pending-confirmed="pendingCloseConfirmed" />
+                  @document-loaded="documentLoaded" @pending-confirmed="pendingCloseConfirmed"
+                  @new-editor="forwardEditorKey" />
               </q-card-section>
             </q-card>
           </template>
@@ -47,16 +50,17 @@
 <script lang="ts">
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import { getDocState, getEditorProject } from '../schema';
-import { DocumentContext, ProjectComponent, ReadDoc } from '../common';
+import { DocumentContext, EditorKeyType, ProjectComponent, ReadDoc } from '../common';
 import { QTreeNode } from 'quasar';
 import { Component, defineAsyncComponent } from 'vue';
 import { useBackend, useProjectCache } from '../stores';
 import { mapState } from 'pinia';
 import { EditorGUIPropsClass } from './EditorGUIProps';
-import { setActionOpenDocument, setActionCloseEditor } from '../actions';
+import { setActionOpenDocument, setActionCloseEditor, setActionShowResultMessage } from '../actions';
 import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/vue-3';
 import { PendingOperation } from '.';
+import { isString } from 'lodash';
 
 interface LoadedDocument {
   id?: string,
@@ -97,7 +101,7 @@ function docToTreeNode(doc: ProjectComponent, loaded: LoadedDocument): QTreeNode
 
 const ProjectStructureDialog: Component = {
   props: ['mainEditor', 'project', 'visible'],
-  emits: ['close-project-structure-dialog'],
+  emits: ['close-project-structure-dialog', 'new-editor'],
   components: {
     // see https://vuejs.org/guide/components/async.html#async-components
     "PundokEditor": defineAsyncComponent(() => import('./PundokEditor.vue'))
@@ -154,6 +158,9 @@ const ProjectStructureDialog: Component = {
     }
   },
   methods: {
+    forwardEditorKey(editorKey: EditorKeyType) {
+      this.$emit('new-editor', editorKey)
+    },
     async reloadStructure(): Promise<void> {
       this.dontReloadStructure = false
       this.getDocTree(true)
@@ -175,8 +182,16 @@ const ProjectStructureDialog: Component = {
           this.docTree = [root]
           return
         }
-      } catch (err) {
+      } catch (err: Error | string | unknown) {
         console.log(err)
+        const message: string = err instanceof Error || isString(err) ? err.toString() : ""
+        setActionShowResultMessage(this.mainEditor.state, {
+          success: false,
+          message,
+          caption: "Project structure unavailable",
+          icon: "mdi-file-tree"
+        })
+        this.isLoadingStructure = false
       }
       this.docTree = []
     },

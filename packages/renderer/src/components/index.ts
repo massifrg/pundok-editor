@@ -1,7 +1,7 @@
 import {
   CustomStyleInstance,
   SearchAndReplaceMark,
-  SearchAndReplaceSpan,
+  CustomSpan,
 } from '../common';
 import { SearchMarkSpec } from '../schema';
 
@@ -77,8 +77,8 @@ export function customStylesToAddableMarks(
   return result;
 }
 
-export function searchAndReplaceSpanToAddableMarks(
-  spans: SearchAndReplaceSpan[],
+export function customSpanToAddableMarks(
+  spans: CustomSpan[],
   actives?: string[],
   acc?: AddableMark[],
 ): AddableMark[] {
@@ -122,6 +122,7 @@ export { default as InputTextDialog } from './InputTextDialog.vue';
 export { default as InsertNoteButton } from './InsertNoteButton.vue';
 // export { default as Menubar } from './Menubar.vue'
 export { default as NewDocumentButton } from './NewDocumentButton.vue';
+export { default as NewProjectDialog } from './NewProjectDialog.vue';
 export { default as NodeOrMarkContextMenu } from './NodeOrMarkContextMenu.vue';
 export { default as PendingOperationDialog } from './PendingOperationDialog.vue';
 export type { PendingOperation, PendingOperationType } from './helpers/pending';

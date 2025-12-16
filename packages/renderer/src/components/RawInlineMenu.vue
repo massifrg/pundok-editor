@@ -1,48 +1,43 @@
 <template>
-  <ToolbarButton icon="mdi-code-tags" v-if="formats.length > 0" title="insert or convert RawInline">
-    <q-popup-proxy @update:model-value="popupStateChange">
-      <q-splitter v-model="splitterModel" style="min-width: 400px">
-        <template v-slot:before>
-          <q-tabs v-model="currentTab" vertical dense class="text-grey" active-color="primary" indicator-color="primary"
-            align="justify" size="xs" @update:model-value="changeTab">
-            <q-tab v-for="tab in tabs()" :name="tab" :label="tab" :title="titleForTab(tab)" />
-          </q-tabs>
-        </template>
-        <template v-slot:after>
-          <q-tab-panels v-model="currentTab" animated swipeable vertical transition-prev="jump-up"
-            transition-next="jump-up">
-            <q-tab-panel v-if="!isSelectionEmpty()" :name="allFormatsTabName" class="q-pa-sm">
-              <div>
-                <q-btn v-if="editor.can().rawInlineToText()" color="primary" label="RawInlines to text" size="sm"
-                  class="q-ma-xs" title="convert RawInlines in selection to text"
-                  @click="editor.commands.rawInlineToText()" />
-                <q-space v-if="editor.can().rawInlineToText()" />
-                <q-btn v-for="format in formats" color="secondary" :label="format" size="sm" class="q-ma-xs"
-                  :title='`make current selection a RawInline of format "${format}"`'
-                  @click="editor.commands.insertRawInline(format)" />
-              </div>
-            </q-tab-panel>
-            <q-tab-panel v-for="format in formatsWithRaws" :name="format" class="q-pa-sm">
-              <div>
-                <q-btn v-for="raw in rawsOfFormat[format]" color="secondary" :title="raw.title" :label="labelFor(raw)"
-                  no-caps size="md" class="q-pa-xs q-ma-xs"
-                  :disabled="!editor.can().insertRawInline(format, raw.content)"
-                  @click="insertRawInline(raw.format, raw.content)" />
-              </div>
-            </q-tab-panel>
-          </q-tab-panels>
-        </template>
-      </q-splitter>
-    </q-popup-proxy>
-  </ToolbarButton>
+  <q-popup-proxy @update:model-value="popupStateChange">
+    <q-splitter v-model="splitterModel" style="min-width: 400px">
+      <template v-slot:before>
+        <q-tabs v-model="currentTab" vertical dense class="text-grey" active-color="primary" indicator-color="primary"
+          align="justify" size="xs" @update:model-value="changeTab">
+          <q-tab v-for="tab in tabs()" :name="tab" :label="tab" :title="titleForTab(tab)" />
+        </q-tabs>
+      </template>
+      <template v-slot:after>
+        <q-tab-panels v-model="currentTab" animated swipeable vertical transition-prev="jump-up"
+          transition-next="jump-up">
+          <q-tab-panel v-if="!isSelectionEmpty()" :name="allFormatsTabName" class="q-pa-sm">
+            <div>
+              <q-btn v-if="editor.can().rawInlineToText()" color="primary" label="RawInlines to text" size="sm"
+                class="q-ma-xs" title="convert RawInlines in selection to text"
+                @click="editor.commands.rawInlineToText()" />
+              <q-space v-if="editor.can().rawInlineToText()" />
+              <q-btn v-for="format in formats" color="secondary" :label="format" size="sm" class="q-ma-xs"
+                :title='`make current selection a RawInline of format "${format}"`'
+                @click="editor.commands.insertRawInline(format)" />
+            </div>
+          </q-tab-panel>
+          <q-tab-panel v-for="format in formatsWithRaws" :name="format" class="q-pa-sm">
+            <div>
+              <q-btn v-for="raw in rawsOfFormat[format]" color="secondary" :title="raw.title" :label="labelFor(raw)"
+                no-caps size="md" class="q-pa-xs q-ma-xs" :disabled="!editor.can().insertRawInline(format, raw.content)"
+                @click="rawInlineClicked(raw.format, raw.content)" v-close-popup />
+            </div>
+          </q-tab-panel>
+        </q-tab-panels>
+      </template>
+    </q-splitter>
+  </q-popup-proxy>
 </template>
 
 <script lang="ts">
-import ToolbarButton from './ToolbarButton.vue';
-import { intersection, isArray, isString, union, uniq } from 'lodash';
+import { isArray, isString, uniq } from 'lodash';
 import { DEFAULT_RAW_INLINES, InsertableRaw } from '../common';
 import { getEditorConfiguration } from '../schema';
-import { marksStarting } from '../schema/helpers';
 
 const ALL_FORMATS_TAB_NAME = 'all'
 
@@ -61,10 +56,8 @@ interface RawInlineUsage {
 const rawInlineUsage: Record<string, RawInlineUsage> = {}
 
 export default {
-  components: {
-    ToolbarButton,
-  },
   props: ['editor', 'sortable'],
+  emits: ['raw-inline-selected'],
   data() {
     return {
       tic: 0,
@@ -153,39 +146,9 @@ export default {
       rawUsage.lastHit = tic
       rawInlineUsage[key] = rawUsage
     },
-    insertRawInline(format: string, content: string | string[] | undefined) {
-      const editor = this.editor
-      if (editor && editor.can().insertRawInline(format, content)) {
-        const isPair = Array.isArray(content) && content.length > 1
-        const { doc, selection } = editor.state
-
-        // alert when the two RawInlines don't share the same node or marks
-        if (!selection.empty && isPair) {
-          const { $from, from, $to } = selection
-          const notSameNode = $from.node() !== $to.node()
-          const fromMarks = [...$from.marks(), ...marksStarting(doc, from)]
-          const toMarks = $to.marks()
-          const notSameMarks = fromMarks.length !== toMarks.length
-            || intersection(fromMarks, toMarks).length !== union(fromMarks, toMarks).length
-          if (notSameNode)
-            console.log('NOT THE SAME NODE')
-          if (notSameMarks)
-            console.log('NOT THE SAME MARKS')
-        }
-
-        const description = isPair
-          ? `insert "${content[0]}" and "${content[1]}" RawInlines (format: ${format}) around the selection`
-          : `insert a "${content}" RawInline (format: ${format}) at the cursor`
-        editor.commands.runRepeatableCommand(
-          'insertRawInline',
-          description,
-          format,
-          content
-        )
-
-        // editor.commands.insertRawInline(format, content)
-        this.updateUsageInfoFor(format, content)
-      }
+    rawInlineClicked(format: string, content: string | string[] | undefined) {
+      this.$emit('raw-inline-selected', format, content)
+      this.updateUsageInfoFor(format, content)
     },
     popupStateChange(showing: any) {
       if (!showing && this.sortable)

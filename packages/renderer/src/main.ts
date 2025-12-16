@@ -9,9 +9,11 @@ import '@quasar/extras/mdi-v6/mdi-v6.css';
 
 // Import Quasar css
 import 'quasar/src/css/index.sass';
+import { SK } from './common';
 
 const app = createApp(App);
 const pinia = createPinia();
+app.provide("SK", SK)
 app.use(pinia);
 app.use(Quasar, {
   plugins: {

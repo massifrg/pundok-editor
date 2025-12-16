@@ -24,6 +24,7 @@ import { getEditorConfiguration } from '..';
 import {
   attrsForConversionTo,
   getMarkRangesBetween,
+  innerNodeDepth,
   pandocTableBodies,
   pandocTableSectionRows,
 } from '../helpers';
@@ -42,17 +43,14 @@ import {
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_FOOT,
   NODE_NAME_TABLE_HEAD,
-  SK_MOVE_NODE_DOWN,
-  SK_MOVE_NODE_DOWN_INSIDE,
-  SK_MOVE_NODE_UP,
-  SK_MOVE_NODE_UP_INSIDE,
+  SK,
   typeNameOfElement,
 } from '../../common';
 
 export type TypeOrNode = string | NodeType | ProsemirrorNode | MarkType;
 export const typeOrNodeName: (ton: TypeOrNode) => string = typeNameOfElement;
 
-export interface TransformedNodeOrMark {
+export interface NodeOrMarkMutation {
   nodeType?: NodeType;
   markType?: MarkType;
   attrs: Record<string, any>;
@@ -61,7 +59,7 @@ export interface TransformedNodeOrMark {
 export type UpdateNodeOrMarkCallback = (
   nodeOrMark: ProsemirrorNode | Mark,
   pos?: number,
-) => TransformedNodeOrMark | undefined;
+) => NodeOrMarkMutation | undefined;
 
 export function nodeTypeOf(
   ton: TypeOrNode,
@@ -159,7 +157,7 @@ declare module '@tiptap/core' {
       /**
        * Lift the contents of a container of blocks (Div, Figure, Blockquote, Index)
        */
-      unwrapNodeAtPos: (pos: number) => ReturnType;
+      unwrapNode: (pos?: number) => ReturnType;
 
       /**
        * Try to reset the selection stored in a bookmark
@@ -293,15 +291,28 @@ export function updateAttributesCommand(
   };
 }
 
+function isWrappingNode(n: ProsemirrorNode | NodeType | string) {
+  const name = isString(n)
+    ? n
+    : n instanceof NodeType
+      ? n.name
+      : (n as ProsemirrorNode).type.name
+  return name === NODE_NAME_DIV ||
+    name === NODE_NAME_FIGURE ||
+    name === NODE_NAME_BLOCKQUOTE ||
+    name === NODE_NAME_INDEX_DIV
+}
+
 export const HelperCommandsExtension = Extension.create({
   name: 'helperCommands',
 
   addKeyboardShortcuts() {
     return {
-      [SK_MOVE_NODE_UP]: () => this.editor.commands.moveChild('up'),
-      [SK_MOVE_NODE_DOWN]: () => this.editor.commands.moveChild('down'),
-      [SK_MOVE_NODE_UP_INSIDE]: () => this.editor.commands.moveChild('up-inside'),
-      [SK_MOVE_NODE_DOWN_INSIDE]: () => this.editor.commands.moveChild('down-inside'),
+      [SK.MOVE_NODE_UP]: () => this.editor.commands.moveChild('up'),
+      [SK.MOVE_NODE_DOWN]: () => this.editor.commands.moveChild('down'),
+      [SK.MOVE_NODE_UP_INSIDE]: () => this.editor.commands.moveChild('up-inside'),
+      [SK.MOVE_NODE_DOWN_INSIDE]: () => this.editor.commands.moveChild('down-inside'),
+      [SK.UNWRAP_NODE]: () => this.editor.commands.unwrapNode(),
     };
   },
 
@@ -494,19 +505,23 @@ export const HelperCommandsExtension = Extension.create({
             ? moveChildInside(where, pos)
             : moveChild(where, pos),
 
-      unwrapNodeAtPos:
-        (pos: number) =>
+      unwrapNode:
+        (_pos?: number) =>
           ({ dispatch, state, tr }) => {
-            const doc: ProsemirrorNode = state.doc;
-            const container = doc.nodeAt(pos);
+            const { doc, selection } = state;
+            let pos = !_pos && selection instanceof NodeSelection
+              ? (selection as NodeSelection).from
+              : _pos
+            if (!pos) {
+              const { $anchor } = selection
+              const depth = innerNodeDepth($anchor, isWrappingNode)
+              pos = depth && $anchor.start(depth) - 1
+            }
+            if (!pos) return false
+            let container = doc.nodeAt(pos)
             if (!container) return false;
             const name = container.type.name;
-            if (
-              name === NODE_NAME_DIV ||
-              name === NODE_NAME_FIGURE ||
-              name === NODE_NAME_BLOCKQUOTE ||
-              name === NODE_NAME_INDEX_DIV
-            ) {
+            if (isWrappingNode(name)) {
               // const targetDepth = doc.resolve(pos).depth;
               let content = container.content
               if (name === NODE_NAME_FIGURE && container.childCount > 0) {

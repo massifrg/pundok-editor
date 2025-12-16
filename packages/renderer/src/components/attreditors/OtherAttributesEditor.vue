@@ -3,10 +3,10 @@
     <q-table v-if="allAttributes.length > 0" hide-bottom :rows="allAttributes" :columns="columns" row-key="key"
       v-model:pagination="pagination" :rows-per-page-options="[0]" binary-state-sort dense>
       <template #body="props">
-        <q-tr :props="props">
+        <q-tr :props="props" @wheel="(e: WheelEvent) => onWheel(e, props.row)">
           <q-td v-for="col in (props.cols as Record<string, string>[])" :key="col.name" :props="props">
             <span :class="classForAttributeName(props.row)" :title="props.row.description">{{ truncateValue(col.value)
-              }}</span>
+            }}</span>
             <q-popup-edit v-if="props.row.editable && col.name === 'value'" v-model="props.row.value"
               :title='`Edit the  value of "${props.row.key}" attribute:`' auto-save v-slot="scope"
               @before-show="setAttrBeingEdited(props.row)" @save="setAttrBeingEditedValue">
@@ -82,9 +82,18 @@
 import { QTableProps } from 'quasar'
 import { isString } from 'lodash'
 import { setupQuasarIcons } from '../helpers/quasarIcons'
-import { CustomAttribute, CustomClass, CustomStyleInstance, customAttributesForNodeOrMark } from '../../common'
-import { isDuplicatedKvAttribute, matchingDuplicatedAttribute } from '../../schema/helpers'
-import { getEditorConfiguration } from '../../schema'
+import {
+  CustomAttribute,
+  CustomClass,
+  CustomStyleInstance,
+  customAttributesForNodeOrMark
+} from '../../common'
+import {
+  getEditorConfiguration,
+  isDuplicatedKvAttribute,
+  matchingDuplicatedAttribute,
+  nudgeNumericValue
+} from '../../schema'
 import { ref } from 'vue'
 
 interface OtherAttribute {
@@ -195,12 +204,12 @@ export default {
         return {
           key,
           editable: !isDuplicatedKvAttribute(this.nodeOrMark, e.key),
-          value: e.value || fca?.default || '',
-          addableButNotPresent: false,
-          description: fca?.description,
-          suggestions: fca?.suggestions || [],
-          values: fca?.values || [],
-          default: fca?.default || ''
+          value: e?.value || e?.default || fca?.default || '',
+          addableButNotPresent: e?.addableButNotPresent || false,
+          description: e?.description || fca?.description,
+          suggestions: e?.suggestions || fca?.suggestions || [],
+          values: e?.values || fca?.values || [],
+          default: e?.default || fca?.default || ''
         }
       })
       this.availableCustomAttributes.forEach(aca => {
@@ -239,7 +248,6 @@ export default {
   },
   methods: {
     isEditable(a: OtherAttribute) {
-      if (a.key == 'descrizione') console.log(a)
       return this.isPresent(a) && a.editable && (!a.values || a.values.length === 0)
     },
     isRemovable(a: OtherAttribute) {
@@ -404,6 +412,16 @@ export default {
       this.showEditAttrDialog = false
       this.editedAttrName = ''
       this.attrNewValue = ''
+    },
+    onWheel(e: WheelEvent, row: any) {
+      if (e.altKey) {
+        const sign = e.deltaY !== 0 && (e.deltaY > 0 ? -1 : 1)
+        if (sign) {
+          const modified = nudgeNumericValue(row.value, sign)
+          if (modified)
+            this.setNewValueForAttr(row.key, modified)
+        }
+      }
     }
   },
 };

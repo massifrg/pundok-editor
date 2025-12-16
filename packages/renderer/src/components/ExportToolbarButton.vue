@@ -20,7 +20,7 @@
 <script lang="ts">
 import { OutputConverter, StoredDoc } from '../common';
 import { setActionExportDocument, setActionShowExportDialog } from '../actions';
-import { getEditorDocState } from '../schema';
+import { getEditorConfiguration, getEditorDocState } from '../schema';
 
 export default {
   props: ['editor'],
@@ -29,7 +29,7 @@ export default {
       return getEditorDocState(this.editor)
     },
     configuration() {
-      return this.docState?.configuration
+      return getEditorConfiguration(this.editor)
     },
     documentName() {
       return this.docState?.documentName
@@ -41,7 +41,7 @@ export default {
       return this.configuration?.name
     },
     defaultOutputConverter() {
-      return this.configuration?.defaultOutputConverter
+      return this.configuration?.outputConverters?.find(oc => oc.default === true)
     },
     outputConverters() {
       return this.configuration?.outputConverters || []

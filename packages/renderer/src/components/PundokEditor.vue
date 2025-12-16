@@ -1,126 +1,79 @@
 <template>
-  <q-layout
-    view="hHH lpR fFf"
-    :container="!mainEditor"
-    :style="`height: ${height}`"
-    class="shadow-2 rounded-borders"
-  >
+  <q-layout view="LHH LpR LFf" :container="!mainEditor" :style="`height: ${height}`" class="shadow-2 rounded-borders">
     <q-header>
       <q-toolbar class="text-white q-pa-none">
         <q-toolbar-title>
-          <Menubar
-            :editor="editor"
-            :current-nodes-with-pos="currentNodesWithPos"
-            :gui-props="guiProps"
-            :saved-changes="savedChanges"
-            :exported-changes="exportedChanges"
-            :operation-in-progress="operationInProgress"
-            @new-document="newDocument"
-            @save-content="saveContent()"
+          <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
+            :saved-changes="savedChanges" :exported-changes="exportedChanges"
+            :operation-in-progress="operationInProgress" @new-document="newDocument" @save-content="saveContent()"
             @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
-            @reload-with-configuration="reloadWithConfiguration"
-          />
+            @reload-with-configuration="reloadWithConfiguration" />
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
-    <q-drawer
-      show-if-above
-      behavior="desktop"
-      bordered
-      :v-model="rightDrawerState === 'normal'"
-      side="right"
-      :mini="rightDrawerState === 'mini'"
-      @mouseenter="rightDrawerState = 'normal'"
-      @mouseleave="rightDrawerState = 'mini'"
-      mini-to-overlay
-      :mini-width="60"
-      :width="240"
-      :breakpoint="500"
-      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'"
-    >
-      <CustomStylesPanel
-        :editor="editor"
-        :panel-state="rightDrawerState"
-        :current-blocks="currentNodesWithPos"
-      />
+    <q-drawer v-if="isMainEditor" show-if-above behavior="desktop" bordered :v-model="leftDrawerState === 'normal'"
+      side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="24"
+      :width="leftDrawerWidth" :breakpoint="500">
+      <PdfViewer :backend="backend" class="pdf-viewer" />
+      <div class="q-mini-drawer-only absolute" style="top: 150px; right: 3px">
+        <q-btn dense round unelevated color="secondary" icon="chevron_right" @click="maximizePdfViewer" />
+      </div>
+      <div class="q-mini-drawer-hide absolute" style="top: 150px; right: -17px">
+        <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
+      </div>
+      <div class="q-mini-drawer-hide absolute" style="top: 210px; right: -17px">
+        <q-btn dense round unelevated color="secondary" icon="mdi-arrow-left-right"
+          @mousedown="startSettingLeftDrawerWidth" @mousemove="changeLeftDrawerWidth"
+          @mouseup="stopSettingLeftDrawerWidth" @mouseleave="stopSettingLeftDrawerWidth" />
+      </div>
+    </q-drawer>
+    <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
+      :mini="rightDrawerState === 'mini'" @mouseenter="rightDrawerState = 'normal'"
+      @mouseleave="rightDrawerState = 'mini'" mini-to-overlay :mini-width="60" :width="240" :breakpoint="500"
+      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
+      <CustomStylesPanel :editor="editor" :panel-state="rightDrawerState" :current-blocks="currentNodesWithPos" />
     </q-drawer>
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
-        <PendingOperationDialog
-          :model-value="pending && !savedChanges"
-          :pending-operation="pending"
-          @pending-canceled="cancelPending"
-          @pending-confirmed="confirmPending"
-          @update-value="pendingValueUpdate"
-        />
-        <editor-content :editor="editor as Editor" />
-        <SearchAndReplace
-          :editor="editor"
-          :visible="visibleSearchAndReplaceDialog"
-          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()"
-        />
-        <AttributesEditor
-          :editor="editor"
-          :selected-node-or-mark="nodeOrMarkToEdit"
-          :start-tab="startAttributesTab"
-          :on-attributes-editor-show="onAttributesEditorShow"
-          @closeAttributesEditor="closeAttributesEditor()"
-        >
+        <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
+          @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
+        <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
+          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
+        <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
+          :on-attributes-editor-show="onAttributesEditorShow" @closeAttributesEditor="closeAttributesEditor()">
         </AttributesEditor>
-        <ConfigurationsDialog
-          :editor="editor"
-          :visible="visibleConfigurationDialog"
-          @set-configuration="setConfiguration"
-          @close-configurations-dialog="visibleConfigurationDialog = false"
-        >
+        <ConfigurationsDialog :editor="editor" :visible="visibleConfigurationDialog"
+          @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
         </ConfigurationsDialog>
-        <ExportDialog
-          :editor="editor"
-          :visible="visibleExportDialog"
-          @set-output-converter="setOutputConverter"
-          @close-export-dialog="visibleExportDialog = false"
-        ></ExportDialog>
-        <ImportDialog
-          :editor="editor"
-          :visible="visibleImportDialog"
-          @set-input-converter="setInputConverter"
-          @close-import-dialog="visibleImportDialog = false"
-        ></ImportDialog>
-        <ShowMessageDialog
-          :editor="editor"
-          :visible="!!message"
-          :message="message"
-          @close-show-message-dialog="message = null"
-        />
-        <InputTextDialog
-          :editor="editor"
-          :visible="visibleInputTextDialog"
-          :label="inputTextDialogLabel"
-          :start-value="inputTextDialogStartValue"
-          @close-dialog="closeInputTextDialog"
-        />
-        <ProjectStructureDialog
-          :main-editor="editor"
-          :visible="visibleProjectStructureDialog"
-          :project="docState()?.project"
-          @close-project-structure-dialog="closeProjectStructureDialog"
-        />
+        <ExportDialog :editor="editor" :visible="visibleExportDialog" @set-output-converter="setOutputConverter"
+          @close-export-dialog="visibleExportDialog = false"></ExportDialog>
+        <ImportDialog :editor="editor" :visible="visibleImportDialog" @set-input-converter="setInputConverter"
+          @close-import-dialog="visibleImportDialog = false"></ImportDialog>
+        <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
+          @close-show-message-dialog="message = null" />
+        <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
+          :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
+        <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
+          :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
+          @new-editor="newSubEditor" />
+        <NewProjectDialog :visible="visibleNewProjectDialog" @close="visibleNewProjectDialog = false" />
         <ContextMenu :editor="editor" />
         <!-- <q-page-sticky expand position="top">
           <q-toolbar class="text-white q-pa-none">
             <q-toolbar-title>
               <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
-                :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
-                @save-content="saveContent()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
-                @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
-                @show-configurations-dialog="visibleConfigurationDialog = true"
-                @reload-with-configuration="reloadWithConfiguration" />
+              :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
+              @save-content="saveContent()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+              @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
+              @show-configurations-dialog="visibleConfigurationDialog = true"
+              @reload-with-configuration="reloadWithConfiguration" />
             </q-toolbar-title>
           </q-toolbar>
         </q-page-sticky> -->
+        <editor-content :editor="(editor as Editor)" />
       </q-page>
     </q-page-container>
   </q-layout>
@@ -158,9 +111,27 @@ import {
   IPC_MAIN_EDITOR_KEY,
   COLOR_JUST_EXPORTED,
   PandocFilterTransform,
-  PANDOC_TYPES_VERSION,
   WhatToDoWithResult,
   NODE_NAME_INDEX_TERM,
+  BackendSetProjectActionProps,
+  BackendSetConfigNameActionProps,
+  BackendSetContentActionProps,
+  SetContentActionProps,
+  BackendSetContentWithProjectActionProps,
+  DocumentOpenActionProps,
+  ImportDocumentActionProps,
+  ExportDocumentActionProps,
+  TransformDocumentActionProps,
+  NewEmptyDocumentActionProps,
+  NewDocumentActionProps,
+  GoToLineActionProps,
+  ResultMessageActionProps,
+  ShowExportDialogActionProps,
+  BackendFeedbackActionProps,
+  SetAlternativeActionProps,
+  EditAttributesActionProps,
+  ActionNameWithProps,
+  GetProjectOptions,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import {
@@ -171,10 +142,11 @@ import {
   ExportDialog,
   ImportDialog,
   InputTextDialog,
+  NewProjectDialog,
   NodeOrMarkContextMenu,
   PendingOperation,
   PendingOperationDialog,
-  ProjectStructureDialog,
+  // ProjectStructureDialog,
   SearchAndReplace,
   ShowMessageDialog,
 } from '.';
@@ -188,6 +160,7 @@ import {
   ACTION_DOCUMENT_EXPORT,
   ACTION_DOCUMENT_IMPORT,
   ACTION_NEW_EMPTY_DOCUMENT,
+  ACTION_SHOW_RESULT_MESSAGE,
   ACTION_SHOW_EXPORT_DIALOG,
   ACTION_SHOW_IMPORT_DIALOG,
   ACTION_SHOW_SEARCH_DIALOG,
@@ -206,21 +179,22 @@ import {
   ACTION_SHOW_PROJECT_STRUCTURE_DIALOG,
   ACTION_CLOSE_EDITOR,
   ACTION_DOCUMENT_TRANSFORM,
-  ActionEditAttributesProps,
-  BaseActionForNodeOrMark,
   ACTION_SELECT_NEXT,
   ACTION_SELECT_PREV,
   ACTION_SET_ALTERNATIVE,
   ACTION_SET_CONTENT,
   setActionCommand,
-  ActionPropsSetAlternative,
+  ACTION_DOCUMENT_GO_TO_LINE,
+  ACTION_SETUP_VIEWER,
+  ACTION_PROJECT_NEW,
+  ACTION_GET_PROJECT,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
 import { EditorState } from '@tiptap/pm/state';
 import { CreateDocumentOptions } from '../schema/helpers/createDocument';
 import { useQuasar } from 'quasar';
-import { Component } from 'vue';
+import { Component, defineAsyncComponent } from 'vue';
 import { EditorGUIPropsClass } from './EditorGUIProps';
 import { PendingOperationExtraValue } from './helpers/pending';
 import { mergeIndices } from '../schema/helpers/indices';
@@ -260,8 +234,10 @@ export default {
     AttributesEditor,
     CustomStylesPanel,
     NodeOrMarkContextMenu,
-    ProjectStructureDialog,
     PendingOperationDialog,
+    NewProjectDialog,
+    "ProjectStructureDialog": defineAsyncComponent(() => import('./ProjectStructureDialog.vue')),
+    "PdfViewer": defineAsyncComponent(() => import('./PdfViewer.vue'))
   },
 
   props: {
@@ -305,13 +281,19 @@ export default {
       message: null as FeedbackMessage | null,
       // an operation is in progress
       operationInProgress: false,
-      rightDrawerState: 'mini',
+      leftDrawerState: 'mini' as 'normal' | 'mini',
+      leftDrawerWidth: 640,
+      leftDrawerHandleStart: undefined as number | undefined,
+      prevLeftDrawerWidth: 640,
+      rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
       visibleImportDialog: false,
       visibleExportDialog: false,
       visibleSearchAndReplaceDialog: false,
       visibleInputTextDialog: false,
       visibleProjectStructureDialog: false,
+      projectStructureEditorKey: undefined as EditorKeyType | undefined,
+      visibleNewProjectDialog: false,
       inputTextDialogLabel: DEFAULT_INPUT_TEXT_DIALOG_LABEL,
       inputTextDialogStartValue: DEFAULT_INPUT_TEXT_DIALOG_START_VALUE,
       inputTextDialogCallback: undefined as
@@ -319,11 +301,12 @@ export default {
         | undefined,
       nodeOrMarkToEdit: undefined as SelectedNodeOrMark | undefined,
       startAttributesTab: undefined as string | undefined,
-      onAttributesEditorShow: undefined as BaseActionForNodeOrMark | undefined,
+      onAttributesEditorShow: undefined as ActionNameWithProps | undefined,
       // clickedNodeOrMark: undefined as SelectedNodeOrMark | undefined,
       debugDocTree: undefined as ProjectComponent | undefined,
       $q: useQuasar(),
       jsonSpace: DEFAULT_JSON_SPACE as string | number | undefined,
+      splitterModel: 1,
     };
   },
 
@@ -356,7 +339,6 @@ export default {
       const editor = this.editor as Editor;
       const editorKey = editorKeyFromState(editor.state);
       if (action.editorKey == editorKey) {
-        const editor = this.editor as Editor;
         const nodeMarkAction = action as ActionForNodeOrMark;
         const { name: actionName, nodeOrMark: nom, props } = nodeMarkAction;
         console.log(`action: ${actionName}`);
@@ -365,21 +347,30 @@ export default {
             this.setClosePending();
             break;
           case ACTION_BACKEND_SET_PROJECT.name:
-            this.setProject({ ...props?.project });
+            this.setProject({ ...(props as BackendSetProjectActionProps)?.project });
+            break;
+          case ACTION_GET_PROJECT.name:
+            this.reloadProject(props as GetProjectOptions);
             break;
           case ACTION_BACKEND_SET_CONFIG_NAME.name:
-            const configurationName = props?.configurationName;
+            const configurationName = (props as BackendSetConfigNameActionProps)?.configurationName;
             this.setConfiguration(configurationName);
             break;
           case ACTION_SET_CONTENT.name:
-            if (props?.content) this.setContent(props.content);
+            {
+              const { content } = props as SetContentActionProps
+              if (content) this.setContent(content);
+            }
             break;
           case ACTION_BACKEND_SET_CONTENT.name:
-            if (props?.content) this.loadDocument(props?.content);
+            {
+              const { content } = props as BackendSetContentActionProps
+              if (content) this.loadDocument(content);
+            }
             break;
           case ACTION_BACKEND_SET_CONTENT_WITH_PROJECT.name:
             if (props) {
-              const { content, project, configuration } = props;
+              const { content, project, configuration } = props as BackendSetContentWithProjectActionProps;
               if (project) this.setProject(project);
               else if (configuration) this.setConfiguration(configuration);
               if (content) this.loadDocument(content);
@@ -391,15 +382,39 @@ export default {
               this.visibleProjectStructureDialog = true;
             }
             break;
+          case ACTION_PROJECT_NEW.name:
+            this.visibleProjectStructureDialog = false;
+            this.visibleNewProjectDialog = true;
+            break
           case ACTION_DOCUMENT_OPEN.name:
-            this.openDocument(props?.context);
+            {
+              const { context, atLine } = props as DocumentOpenActionProps
+              this.openDocument(context, atLine);
+            }
             break;
           case ACTION_DOCUMENT_SAVE.name:
-            this.saveToStoredPath();
+            if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
+              setActionCommand(this.projectStructureEditorKey, action, props)
+            else
+              this.saveToStoredPath();
             break;
           case ACTION_DOCUMENT_SAVE_AS.name:
-            this.save();
+            if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
+              setActionCommand(this.projectStructureEditorKey, action, props)
+            else
+              this.save();
             break;
+          case ACTION_DOCUMENT_GO_TO_LINE.name:
+            {
+              const { atLine } = props as GoToLineActionProps
+              if (atLine) console.log("moving to line " + atLine)
+              this.editor?.chain()
+                .gotoDocLine(atLine)
+                .focus()
+                .scrollIntoView()
+                .run()
+            }
+            break
           case ACTION_EDIT_ATTRIBUTES.name:
             if (nom) this.editNodeOrMarkAttributes(nom, props);
             break;
@@ -423,8 +438,7 @@ export default {
             }
             break;
           case ACTION_DOCUMENT_IMPORT.name:
-            const inputConverter: InputConverter | undefined =
-              props?.inputConverter;
+            const { inputConverter } = props as ImportDocumentActionProps
             if (inputConverter) {
               this.importDoc(inputConverter /**, action?.props?.storedDoc */);
             } else {
@@ -432,7 +446,7 @@ export default {
             }
             break;
           case ACTION_DOCUMENT_EXPORT.name:
-            const outputConverter = props?.outputConverter;
+            const { outputConverter } = props as ExportDocumentActionProps;
             let storedDoc: Partial<StoredDoc> | undefined = undefined;
             if (outputConverter) {
               this.exportDoc(outputConverter, storedDoc);
@@ -440,12 +454,18 @@ export default {
               setActionShowExportDialog(this.editorKey()!);
             }
             break;
+          case ACTION_SHOW_RESULT_MESSAGE.name:
+            if (props)
+              this.showResultMessage(props as ResultMessageActionProps)
+            break
           case ACTION_SHOW_EXPORT_DIALOG.name:
-            const converter = props?.outputConverter;
-            if (converter) {
-              this.setOutputConverter(converter);
-            } else {
-              this.visibleExportDialog = true;
+            {
+              const { outputConverter } = props as ShowExportDialogActionProps
+              // FIXME: not clear: only showing or also exporting?
+              if (outputConverter)
+                this.setOutputConverter(outputConverter);
+              else
+                this.visibleExportDialog = true;
             }
             break;
           case ACTION_SHOW_IMPORT_DIALOG.name:
@@ -455,27 +475,43 @@ export default {
             this.visibleSearchAndReplaceDialog = true;
             break;
           case ACTION_NEW_EMPTY_DOCUMENT.name:
-            this.newDocument(action?.props?.configurationName);
+            {
+              const { configurationName } = props as NewEmptyDocumentActionProps
+              this.newDocument(configurationName);
+            }
             break;
           case ACTION_NEW_DOCUMENT.name:
+            const { configurationName: configName, content } = props as NewDocumentActionProps
             this.newDocument(
-              action?.props?.configurationName,
-              action?.props?.content,
+              configName,
+              content,
             );
             break;
           case ACTION_DOCUMENT_TRANSFORM.name:
-            console.log(action?.props?.transform);
-            this.transformDocument(action?.props?.transform);
+            const { transform } = props as TransformDocumentActionProps
+            console.log(transform);
+            this.transformDocument(transform);
             break;
           case ACTION_BACKEND_FEEDBACK.name:
-            const message: FeedbackMessage = action.props?.feedback;
-            if (message?.type === 'success')
-              console.log(`success feedback: ${message.message}`);
-            if (message?.type !== 'progress') {
-              this.message = message;
+            const { feedback } = props as BackendFeedbackActionProps
+            const { message, type } = feedback
+            const isSuccess = type === 'success'
+            if (isSuccess) {
+              // console.log(`success feedback: ${message.message}`);
+              this.$q.notify({
+                message,
+                caption: 'Success',
+                icon: 'mdi-check',
+                position: 'top',
+                color: 'positive',
+                timeout: isSuccess ? 2000 : 5000,
+              })
             } else {
-              console.log(message?.message);
+              if (type !== 'progress') {
+                this.message = feedback;
+              }
             }
+            // console.log(message);
             break;
           case ACTION_SELECT_PREV.name:
             if (!this.visibleSearchAndReplaceDialog) {
@@ -488,15 +524,20 @@ export default {
             }
             break;
           case ACTION_SET_ALTERNATIVE.name:
-            if (!(props as ActionPropsSetAlternative)?.context) {
+            const { context } = props as SetAlternativeActionProps
+            if (!context) {
               // re-dispatch action with the proper context
               if (this.visibleSearchAndReplaceDialog) {
                 setActionCommand(editorKey, action, {
                   ...action.props,
                   ...{ context: 'indices' },
-                } as ActionPropsSetAlternative);
+                } as SetAlternativeActionProps);
               }
             }
+            break;
+          case ACTION_SETUP_VIEWER.name:
+            this.maximizePdfViewer()
+            break;
           default:
             executeEditorAction(action, editor);
             break;
@@ -545,6 +586,9 @@ export default {
     editorKey(): EditorKeyType | undefined {
       return this.docState()?.editorKey;
     },
+    newSubEditor(editorKey: EditorKeyType) {
+      this.projectStructureEditorKey = editorKey
+    },
     async newEditor() {
       const editor = new Editor({
         extensions: [
@@ -575,10 +619,11 @@ export default {
           nativeUnsavedChanges: false,
           unsavedChanges: false,
         });
+        this.$emit('new-editor', this.editorKey())
       }
     },
     async newDocument(
-      configurationName: string,
+      configurationName?: string,
       content?: string,
       ignoreUnsaved?: boolean,
     ) {
@@ -631,7 +676,7 @@ export default {
         this.backend?.setValue(IPC_MAIN_EDITOR_KEY, this.editorKey());
       }
     },
-    setContent(content: string, isNew: boolean) {
+    setContent(content: string, isNew?: boolean) {
       // console.log(`SET CONTENT: ${content}`)
       const editor = this.editor;
       if (isNew) {
@@ -670,7 +715,7 @@ export default {
         console.log(err);
       }
     },
-    async openDocument(context?: DocumentContext) {
+    async openDocument(context?: DocumentContext, atLine?: number) {
       const docState = this.docState();
       const docContext: DocumentContext = context || {};
       const configurationName =
@@ -682,9 +727,9 @@ export default {
         project,
         editorKey: docState?.editorKey,
       });
-      if (doc) this.loadDocument(doc);
+      if (doc) this.loadDocument(doc, false, atLine);
     },
-    async loadDocument(doc: ReadDoc, ignoreUnsaved?: boolean) {
+    async loadDocument(doc: ReadDoc, ignoreUnsaved?: boolean, atLine?: number) {
       if (!ignoreUnsaved && this.askToSaveChanges) {
         const pending: PendingOperation = {
           type: 'loading',
@@ -712,7 +757,8 @@ export default {
         // ex TODO: remove history
         this.editor?.destroy();
         this.newEditor();
-        doc.editorKey = this.editorKey();
+        const editorKey = this.editorKey();
+        doc.editorKey = editorKey
         this.setMainEditorKey();
         console.log(`created new editor for doc:`);
         console.log(doc);
@@ -739,6 +785,9 @@ export default {
         this.detectDocumentIndices();
         this.setDocumentAsNativelySaved();
         this.$emit('document-loaded', doc, this.editor);
+        const action = ACTION_DOCUMENT_GO_TO_LINE
+        if (atLine) action.label += ` ${atLine}`
+        setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps)
       }
     },
     setOperationInProgress(operationInProgress: boolean) {
@@ -822,9 +871,23 @@ export default {
     },
     getDocAsJsonString(): string {
       const state = this.editorState();
-      return getDocAsJsonString(state, {
+      return getDocAsJsonString(state!, { // TODO: check state!
         space: this.jsonSpace,
       });
+    },
+    showResultMessage(props: ResultMessageActionProps) {
+      const { success, message, caption, icon } = props
+      this.$q.notify({
+        message,
+        caption,
+        icon,
+        position: 'top',
+        color: success ? 'positive' : 'negative',
+        timeout: success ? 2000 : 5000,
+      });
+      const resultMessage = `${message}: ${caption}`;
+      console.log(resultMessage);
+      return resultMessage;
     },
     saveContent() {
       this.saveToStoredPath();
@@ -837,25 +900,6 @@ export default {
     },
     async save(path?: string): Promise<SaveResponse> {
       this.beforeSaving();
-
-      const showResultMessage = (
-        success: boolean,
-        message: string,
-        caption: string,
-      ) => {
-        this.$q.notify({
-          message,
-          caption,
-          icon: success ? 'mdi-content-save-check' : 'mdi-content-save-alert',
-          position: 'top',
-          color: success ? 'positive' : 'negative',
-          timeout: success ? 2000 : 5000,
-        });
-        const resultMessage = `${message}: ${caption}`;
-        console.log(resultMessage);
-        return resultMessage;
-      };
-
       const jsonDoc = this.getDocAsJsonString();
       try {
         const docState = this.docState();
@@ -872,21 +916,23 @@ export default {
             this.editorKey(),
           );
           if (response.error) {
-            const errmsg = showResultMessage(
-              false,
-              'SAVE ERROR',
-              JSON.stringify(response.error),
-            );
+            const errmsg = this.showResultMessage({
+              success: false,
+              caption: 'SAVE ERROR',
+              message: JSON.stringify(response.error),
+              icon: 'mdi-content-save-alert'
+            });
             // this.currentState.setLastSaveResponse(undefined)
             this.updateEditorDocState({ lastSaveResponse: null });
             return Promise.reject(errmsg);
           } else {
             this.setDocumentAsNativelySaved();
-            showResultMessage(
-              true,
-              'SAVE SUCCESS',
-              `saved as ${response.doc.path || response.doc.id}`,
-            );
+            this.showResultMessage({
+              success: true,
+              caption: 'SAVE SUCCESS',
+              message: `saved as ${response.doc.path || response.doc.id}`,
+              icon: 'mdi-content-save-check'
+            });
             const prevPath = this.docState()?.lastSaveResponse?.doc.path;
             if (prevPath !== response.doc.path) {
               this.updateEditorDocState({ lastExportResponse: null });
@@ -902,7 +948,12 @@ export default {
       } catch (err) {
         const message =
           err instanceof Error ? err.message : JSON.stringify(err);
-        const errmsg = showResultMessage(false, 'SAVE ERROR', message);
+        const errmsg = this.showResultMessage({
+          success: false,
+          caption: 'SAVE ERROR',
+          message,
+          icon: 'mdi-content-save-alert'
+        });
         console.log(message);
         return Promise.reject(errmsg);
       }
@@ -944,6 +995,11 @@ export default {
         useProjectCache().setIndices();
         // this.updateEditorDocState({ configuration: project.computedConfig })
       }
+    },
+    async reloadProject(options: GetProjectOptions) {
+      const project = await this.backend?.getProject({ ...options, computeConfig: true })
+      if (project)
+        this.setProject(project)
     },
     async setConfiguration(
       name_or_config?: string | PundokEditorConfig,
@@ -1007,6 +1063,7 @@ export default {
           const docState = this.docState();
           if (docState) {
             const { resourcePath, project, configuration } = docState;
+            this.setOperationInProgress(true)
             const response = await backend.save(
               {
                 id: sdoc.id || docState?.documentName,
@@ -1021,6 +1078,9 @@ export default {
               project,
               this.editorKey(),
             );
+            setTimeout(() => {
+              this.setOperationInProgress(false)
+            }, 3000)
             // console.log(response.doc)
             this.setWindowTitleFromDoc(response.doc, 'export');
             if (response.error) {
@@ -1040,7 +1100,7 @@ export default {
                 `saved changes: ${this.savedChanges}, exported changes: ${this.exportedChanges}`,
               );
             }
-            if (response.doc && response.doc.exportedAsPath) {
+            if (response.doc?.exportedAsPath) {
               console.log(`EXPORTED IN: ${response.doc.exportedAsPath}`);
               return response;
             }
@@ -1088,10 +1148,10 @@ export default {
     // methods for attributes editing
     editNodeOrMarkAttributes(
       nodeOrMark: SelectedNodeOrMark,
-      props?: ActionEditAttributesProps,
+      props?: EditAttributesActionProps,
     ) {
       if (nodeOrMark) {
-        let tab = props?.tab;
+        let { tab, action } = props || {}
         const node = nodeOrMark.node;
         if (!tab && node) {
           switch (node.type.name) {
@@ -1102,7 +1162,7 @@ export default {
           }
         }
         this.startAttributesTab = tab;
-        this.onAttributesEditorShow = props?.action;
+        this.onAttributesEditorShow = action;
         this.nodeOrMarkToEdit = nodeOrMark;
       }
     },
@@ -1211,6 +1271,27 @@ export default {
     reloadWithConfiguration(configurationName: string) {
       this.reloadDocumentWithConfiguration(configurationName);
     },
+    maximizePdfViewer() {
+      this.leftDrawerState = 'normal'
+    },
+    minimizePdfViewer() {
+      this.leftDrawerState = 'mini'
+    },
+    startSettingLeftDrawerWidth(e: MouseEvent) {
+      this.leftDrawerHandleStart = e.clientX
+      this.prevLeftDrawerWidth = this.leftDrawerWidth
+    },
+    changeLeftDrawerWidth(e: MouseEvent) {
+      if (this.leftDrawerHandleStart) {
+        const w = this.prevLeftDrawerWidth + e.clientX - this.leftDrawerHandleStart
+        if (w >= 16 && w <= 1024) {
+          this.leftDrawerWidth = w
+        }
+      }
+    },
+    stopSettingLeftDrawerWidth(e: MouseEvent) {
+      this.leftDrawerHandleStart = undefined
+    },
   },
 } as Component;
 </script>
@@ -1218,6 +1299,12 @@ export default {
 <style lang="scss">
 :root {
   --menubar-height: 128;
+}
+
+.pdf-viewer {
+  position: fixed;
+  top: var(--menubar-height);
+  left: 0;
 }
 
 // .editor-panel {

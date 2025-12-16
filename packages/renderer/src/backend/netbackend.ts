@@ -19,6 +19,10 @@ import {
   DocumentContext,
   DocumentCoords,
   PandocFilterTransform,
+  SynctexInfo,
+  ExportJob,
+  ConfigInitField,
+  GetProjectOptions,
 } from '../common';
 import { OpenDialogOptions } from 'electron';
 
@@ -60,7 +64,11 @@ export class NetBackend implements Backend {
     return Promise.resolve({ info: 'no debug info yet for netbackend!' });
   }
 
-  async getProject(context: Record<string, any>): Promise<PundokEditorProject> {
+  async getProject(options: GetProjectOptions): Promise<PundokEditorProject> {
+    throw new Error('Method not implemented.');
+  }
+
+  async createProject(path: string, project: Partial<PundokEditorProject>): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
@@ -135,6 +143,35 @@ export class NetBackend implements Backend {
     transform: PandocFilterTransform,
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
+    return Promise.reject('method non implemented');
+  }
+
+  gotoSource(
+    editorKey: EditorKeyType,
+    info: SynctexInfo,
+  ): Promise<void> {
+    return Promise.reject('method non implemented');
+  }
+
+  async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    return Promise.reject('method non implemented');
+  }
+
+  async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    return Promise.reject('method non implemented');
+  }
+
+  async getExportJob(hash: string): Promise<ExportJob | undefined> {
+    return Promise.reject('method non implemented');
+  }
+
+  async storeInConfiguration(
+    where: ConfigInitField,
+    obj: object,
+    isDeletion: boolean,
+    isProject: boolean,
+    configNameOrProjectPath: string
+  ): Promise<void> {
     return Promise.reject('method non implemented');
   }
 }

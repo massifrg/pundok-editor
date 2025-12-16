@@ -6,7 +6,7 @@ import {
   InputConverter,
   PundokEditorProject,
 } from '../common';
-import { isAbsolute, sep as pathSeparator, parse as parsePath } from 'path';
+import { isAbsolute, parse as parsePath, resolve } from 'path';
 import { isString } from 'lodash';
 import { updateBookmarksFile } from '../bookmarks';
 import { refreshMainMenu } from '../mainWindow';
@@ -37,10 +37,9 @@ export const openDocumentHandler =
         let path = maybePath;
         if (project && maybePath && !isAbsolute(maybePath)) {
           if (project.rootDocument && isAbsolute(project.rootDocument)) {
-            path =
-              parsePath(project.rootDocument).dir + pathSeparator + maybePath;
+            path = resolve(parsePath(project.rootDocument).dir, maybePath);
           } else {
-            path = project.path + pathSeparator + maybePath;
+            path = resolve(project.path, maybePath);
           }
         }
         const readDoc = await hub.openDocument({
@@ -63,8 +62,7 @@ export const openDocumentHandler =
           bookmarks.push({
             type: 'project',
             name: readDoc.project.name,
-            path:
-              readDoc.project.path + pathSeparator + readDoc.project.rootDocument,
+            path: resolve(readDoc.project.path, readDoc.project.rootDocument),
           });
         await updateBookmarksFile(bookmarks);
         refreshMainMenu(hub);

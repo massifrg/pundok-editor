@@ -1,5 +1,5 @@
 <template>
-  <ToolbarButton icon="invoice_list" title="select elements with CSS selectors" @click="showDialog = !showDialog">
+  <ToolbarButton icon="css_selectors" title="select elements with CSS selectors" @click="showDialog = !showDialog">
     <q-dialog v-model="showDialog" :position="dialogPosition"
       :full-height="dialogPosition == 'right' || dialogPosition == 'left'" seamless>
       <q-card>
@@ -88,6 +88,25 @@ import {
 import { setActionEditAttributes } from '../actions';
 import { nodeOrMarkToPandocName } from '../schema/helpers/PandocVsProsemirror';
 
+type DialogPosition = "standard" | "top" | "right" | "bottom" | "left" | undefined
+type AnchorType =
+  | "top left"
+  | "top middle"
+  | "top right"
+  | "top start"
+  | "top end"
+  | "center left"
+  | "center middle"
+  | "center right"
+  | "center start"
+  | "center end"
+  | "bottom left"
+  | "bottom middle"
+  | "bottom right"
+  | "bottom start"
+  | "bottom end"
+  | undefined;
+
 const SELECTED_LABEL_MAX_LENGTH = 64
 
 type NodeOrMarkToLabel = (doc: PmNode, nom: SelectedNodeOrMark | undefined, key: string) => string | undefined
@@ -126,7 +145,7 @@ export default {
     return {
       // elements: [] as LabeledNodeOrMark[],
       showDialog: false,
-      dialogPosition: 'right',
+      dialogPosition: 'right' as DialogPosition,
       errorMessage: undefined as string | undefined,
       selector: '',
       mergeSameAdjacentMarks: true,
@@ -140,10 +159,10 @@ export default {
       const sels = config && getElementsSelections(config) || []
       return sels
     },
-    tooltipAnchor(): string {
+    tooltipAnchor(): AnchorType {
       return this.dialogPosition === 'left' ? "center end" : "center start"
     },
-    tooltipSelf(): string {
+    tooltipSelf(): AnchorType {
       return this.dialogPosition === 'left' ? "center start" : "center end"
     },
     elements(): LabeledNodeOrMark[] {

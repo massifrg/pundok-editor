@@ -15,7 +15,7 @@ import {
   NODE_NAME_METADATA,
   NODE_NAME_PANDOC,
   NODE_NAME_SHORT_CAPTION,
-  SK_DUPLICATE_NODE,
+  SK,
   TABLE_ROLE_CELL,
   TABLE_ROLE_FOOT,
   TABLE_ROLE_HEAD,
@@ -130,7 +130,7 @@ export const ExtraCommandsExtension = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      [SK_DUPLICATE_NODE]: () => this.editor.commands.duplicateNode()
+      [SK.DUPLICATE_NODE]: () => this.editor.commands.duplicateNode()
     }
   }
 });

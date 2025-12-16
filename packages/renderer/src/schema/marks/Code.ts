@@ -1,5 +1,5 @@
 import { Mark, mergeAttributes } from '@tiptap/core'
-import { MARK_NAME_CODE } from '../../common'
+import { MARK_NAME_CODE, SK } from '../../common'
 
 export interface CodeOptions {
   /**
@@ -105,7 +105,7 @@ export const Code = Mark.create<CodeOptions>({
 
   addKeyboardShortcuts() {
     return {
-      'Mod-e': () => this.editor.commands.toggleCode(),
+      [SK.TOGGLE_CODE]: () => this.editor.commands.toggleCode(),
     }
   },
 

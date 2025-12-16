@@ -1,3 +1,7 @@
+/*
+ * The names of Nodes and Marks of pundok's prosemirror schema.
+ */
+
 export const NODE_NAME_PANDOC = 'pandoc'
 export const NODE_NAME_BREAK = 'hardBreak'
 export const NODE_NAME_BLOCKQUOTE = 'blockquote'
@@ -13,7 +17,7 @@ export const NODE_NAME_EMPTY_SPAN = 'emptySpan'
 export const NODE_NAME_FIGURE = 'figure'
 export const NODE_NAME_FIGURE_CAPTION = 'figureCaption'
 export const NODE_NAME_HEADING = 'heading'
-export const NODE_NAME_HORIZONTAL_RULE = 'heading'
+export const NODE_NAME_HORIZONTAL_RULE = 'horizontalRule'
 export const NODE_NAME_IMAGE = 'image'
 export const NODE_NAME_INDEX_DIV = 'indexDiv'
 export const NODE_NAME_INDEX_TERM = 'indexTerm'
@@ -68,3 +72,15 @@ export const MARK_NAME_SMALLCAPS = 'smallcaps'
 export const MARK_NAME_SPAN = 'span'
 export const MARK_NAME_STRIKEOUT = 'strikeout'
 export const MARK_NAME_STRONG = 'strong'
+export const MARK_NAME_SUPERSCRIPT = 'superscript'
+export const MARK_NAME_SUBSCRIPT = 'subscript'
+export const MARK_NAME_UNDERLINE = 'underline'
+
+// classes for certain nodes or marks
+export const NODE_BREAK_CLASS = 'br'
+export const NODE_BREAK_SOFT_CLASS = 'soft'
+export const NODE_PLAIN_CLASS = 'plain'
+export const MARK_LINK_CLASS = 'pandoc-link'
+export const AUTO_DELIMITER_CLASS = 'auto-delimiter'
+export const AUTO_DELIMITER_OPEN_CLASS = 'delimiter-open'
+export const AUTO_DELIMITER_CLOSE_CLASS = 'delimiter-close'

@@ -12,9 +12,9 @@ export interface PundokEditorProject {
   /** The names of configurations to inherit */
   configurations?: string[];
   /** A complement to the inherited configurations */
-  editorConfig: Partial<PundokEditorConfig>;
+  editorConfig: Partial<PundokEditorConfigInit>;
   /** The actual configuration computed from the inherited configurations and complemented with editorConfig  */
-  computedConfig: PundokEditorConfig;
+  computedConfig?: PundokEditorConfig;
 }
 
 interface AbstractProjectComponent {
@@ -79,4 +79,9 @@ export async function computeProjectConfiguration(
   }
   // console.log(computedConfig);
   return computedConfig ? { ...project, computedConfig } : project;
+}
+
+export interface GetProjectOptions {
+  path: string,
+  computeConfig?: boolean,
 }

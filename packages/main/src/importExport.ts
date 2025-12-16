@@ -28,12 +28,13 @@ import {
   extname,
   format as formatPath,
   parse as parsePath,
-  sep as pathSeparator,
   isAbsolute,
+  resolve,
 } from 'path';
 import { encloseInDblQuotes } from './utils';
 import { existsSync } from 'fs';
 import { isArray, isObject, isString } from 'lodash';
+import { expandCommandArgs } from './ipc/expandCommandArgs';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';
 
@@ -74,7 +75,7 @@ export function importJsonWithPandoc(
     if (dir) {
       pandocOpts.push(`--data-dir=${encloseInDblQuotes(dir)}`);
       if (formatOrReader.endsWith('.lua'))
-        format = encloseInDblQuotes(`${dir}${pathSeparator}${formatOrReader}`);
+        format = encloseInDblQuotes(resolve(dir, formatOrReader));
     }
   }
   return importWithPandoc(filename, format, pandocOpts);
@@ -94,7 +95,7 @@ export function runPandocOnFile(
   try {
     return runExternalProgram('pandoc', args, { shell: true, cwd }).result;
   } catch (err) {
-    return Promise.resolve(externalProgramError(err, commandLine));
+    return Promise.resolve(externalProgramError(err, commandLine, cwd));
   }
 }
 
@@ -109,6 +110,8 @@ export interface ExportOptions {
   configurationName: string;
   /** the path(s) where to look for resources */
   resourcesPaths: string[];
+  /** the name of the source document being edited */
+  sourceFile?: string;
   /** the file where the output is exported */
   resultFile: string;
   /** a callback to follow the stdout and stderr of an export operation */
@@ -118,26 +121,24 @@ export interface ExportOptions {
 async function exportWithExternalProgram(
   command: string,
   args: string[],
-  json: string,
+  jsonContent: string,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
   const { callback, cwd, resultFile } = exportOptions;
   const commandLine = `${command}${args ? ' ' + args.join(' ') : ''}`;
-  console.log(
-    `RUNNING ${commandLine}${cwd ? ' in directory "' + cwd + '"' : ''}`,
-  );
+  console.log(`RUNNING ${commandLine}${cwd ? ' in directory "' + cwd + '"' : ''}`);
   try {
+    const options = {
+      shell: true,
+      cwd,
+    }
     const { childProcess, result } = runExternalProgram(
       command,
       args,
-      {
-        shell: true,
-        cwd,
-      },
+      options,
       callback,
+      jsonContent
     );
-    childProcess.stdin.write(json);
-    childProcess.stdin.end();
     const { output, exitCode, error } = await result;
     if (exitCode === 0) {
       // don't save output to file, because pandoc or the file already does
@@ -147,12 +148,12 @@ async function exportWithExternalProgram(
       return Promise.reject(error);
     }
   } catch (err) {
-    return Promise.resolve(externalProgramError(err, commandLine));
+    return Promise.resolve(externalProgramError(err, commandLine, cwd));
   }
 }
 
 export function exportWithPandoc(
-  json: string,
+  jsonContent: string,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
   const { configurationName, converter, resourcesPaths, resultFile, project } =
@@ -170,7 +171,7 @@ export function exportWithPandoc(
   let cfgdir = resourcesPaths && resourcesPaths[0];
   if (!cfgdir)
     cfgdir = configurationName
-      ? `${configsDir()}${pathSeparator}${configurationName}`
+      ? resolve(configsDir(), configurationName)
       : undefined;
   if (cfgdir) {
     pandocOpts.push(`--data-dir=${encloseInDblQuotes(cfgdir)}`);
@@ -184,6 +185,7 @@ export function exportWithPandoc(
   }
   /* --output pandoc option */
   if (resultFile) pandocOpts.push(`--output=${encloseInDblQuotes(resultFile)}`);
+
   /** --filter and --lua-filter pandoc options */
   const pandocFilters = (converter as PandocOutputConverter).filters || [];
   pandocFilters.forEach((pf) => {
@@ -232,7 +234,7 @@ export function exportWithPandoc(
   args = args.concat(pandocOpts || []);
   args = args.concat(['--', '-']);
 
-  return exportWithExternalProgram('pandoc', args, json, exportOptions);
+  return exportWithExternalProgram('pandoc', args, jsonContent, exportOptions);
 }
 
 export async function exportWithPandocLua(
@@ -244,20 +246,21 @@ export async function exportWithPandocLua(
 }
 
 export async function exportWithScript(
-  json: string,
+  jsonContent: string,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
-  const { converter, cwd } = exportOptions;
+  const { converter, cwd, sourceFile, project } = exportOptions;
   if (!converter) return Promise.reject(`no output converter specified`);
   let { command, commandArgs } = converter as ScriptOutputConverter;
   if (!existsSync(command)) {
     command = formatPath({ dir: cwd, name: command });
   }
   if (!command) return Promise.reject(`this converter has no command to run`);
+  const args = expandCommandArgs(commandArgs || [], sourceFile)
   return exportWithExternalProgram(
     command,
-    commandArgs || [],
-    json,
+    args,
+    jsonContent,
     exportOptions,
   );
 }
@@ -322,11 +325,11 @@ export async function transformWithPandoc(
     // find input source
     if (sources) {
       sources.forEach((s) => {
-        const sourceFile = findResourceFile(s, {
-          ...context,
-          kind: 'document',
-        });
-        if (sourceFile) args.push(sourceFile);
+        const sourceFile = isReadableFile(s)
+          ? s
+          : findResourceFile(s, { ...context, kind: 'document' })
+        if (sourceFile)
+          args.push(sourceFile);
         else
           return Promise.reject(
             `source "${s}" not found (it's needed for transformation)`,
@@ -369,7 +372,7 @@ export async function runWriterOnMasterFile(
       editorProject && isString(editorProject)
         ? JSON.parse(editorProject)
         : editorProject;
-    let src = `${project.path}${pathSeparator}${project.rootDocument}`;
+    let src = resolve(project.path, project.rootDocument);
     if (!isAbsolute(src))
       return Promise.reject(`"${src}" is not an absolute path`);
     if (!isReadableFile(src))
@@ -404,6 +407,7 @@ export async function runWriterOnMasterFile(
         return result.output;
       } else {
         console.log(result.error);
+        return Promise.reject(result.error)
       }
     }
   } catch (err) {

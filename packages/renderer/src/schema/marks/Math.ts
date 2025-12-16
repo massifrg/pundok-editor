@@ -13,7 +13,7 @@ import {
   nextMathType,
   MathType,
 } from '../helpers';
-import { MARK_NAME_MATH, SK_TOGGLE_MATH, SK_TOGGLE_MATH_TYPE } from '../../common';
+import { MARK_NAME_MATH, SK } from '../../common';
 
 export interface MathOptions {
   HTMLAttributes: Record<string, any>;
@@ -154,8 +154,8 @@ export const Math = Mark.create<MathOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_MATH]: () => this.editor.commands.toggleMath(),
-      [SK_TOGGLE_MATH_TYPE]: () => this.editor.commands.toggleMathType(),
+      [SK.TOGGLE_MATH]: () => this.editor.commands.toggleMath(),
+      [SK.TOGGLE_MATH_TYPE]: () => this.editor.commands.toggleMathType(),
     };
   },
 

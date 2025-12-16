@@ -1,4 +1,4 @@
-import { EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
+import { Command, EditorState, Plugin, PluginKey, Transaction } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import { Extension } from '@tiptap/core';
@@ -11,15 +11,29 @@ import {
   INDEX_NAME_ATTR,
   Index,
   IndexRefPlacement,
+  IndexTermQuery,
+  NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_REF,
-  SK_SET_INDEX_REF,
+  NODE_NAME_INDEX_TERM,
+  SK,
   indexRefDecorationCss,
 } from '../../common';
 import { DEFAULT_INDEX_NAME } from '../../common';
 import { documentIndices, mergeIndices } from '../helpers/indices';
-import { DocStateUpdate, META_UPDATE_DOC_STATE } from '../helpers';
+import {
+  DocStateUpdate,
+  getDocState,
+  innerNodeDepth,
+  META_UPDATE_DOC_STATE
+} from '../helpers';
+import { isString } from 'lodash';
+import { Backend } from '../../backend';
+import { useBackend } from '../../stores';
 
 const INDEXING_PLUGIN = 'indexing-plugin';
+export type SearchTextVariant =
+  | 'first-3-words'
+  | 'first-2-words'
 
 export const INDEXING_DECORATION_PREFIX = 'indexing';
 const META_REDECORATE_INDEX_REFS = 'redecorate-index-refs';
@@ -31,9 +45,10 @@ export interface IndexingOptions { }
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     indexing: {
-      addIndexRef: (index?: Index) => ReturnType;
+      addIndexRef: (index?: Index | string) => ReturnType;
       redecorateIndexRefs: () => ReturnType;
       detectDocumentIndices: () => ReturnType;
+      setIndexTermAutoId: (stv?: SearchTextVariant) => ReturnType;
     };
   }
 }
@@ -254,55 +269,8 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
   addCommands() {
     return {
       addIndexRef:
-        (optIndex?: Index) =>
-          ({ tr, state, dispatch }) => {
-            const indexRefType = state.schema.nodes[NODE_NAME_INDEX_REF];
-            if (!indexRefType) return false;
-            const index = optIndex || indexingPluginKey.getState(state).lastReferenced
-            if (!index) return false
-            const indexName = index.indexName || DEFAULT_INDEX_NAME;
-            const { from, to, empty } = state.selection;
-            const marks = state.doc.resolve(from).marks();
-            if (empty) {
-              if (!index.onlyEmpty === true) return false;
-              if (dispatch) {
-                const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
-                const indexRef = indexRefType.create(
-                  {
-                    classes: [refClass],
-                    kv: { [INDEX_NAME_ATTR]: indexName },
-                  },
-                  null,
-                  marks,
-                );
-                tr.insert(from, indexRef)
-                  .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
-              }
-            } else {
-              if (index.onlyEmpty === true) return false;
-              const indexedText = indexedTextWithoutAtoms(state.doc, from, to);
-              if (!indexedText) return false;
-              if (dispatch) {
-                const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
-                const indexRef = indexRefType.create(
-                  {
-                    classes: [refClass],
-                    kv: {
-                      [INDEX_NAME_ATTR]: indexName,
-                      [INDEXED_TEXT_ATTR]: indexedText,
-                    },
-                  },
-                  null,
-                  marks,
-                );
-                const where: IndexRefPlacement =
-                  index.putIndexRef || DEFAULT_PUT_INDEX_REF;
-                tr.insert(where === 'before' ? from : to, indexRef)
-                  .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
-              }
-            }
-            return true;
-          },
+        (optIndex?: Index | string) =>
+          ({ state, dispatch }) => setIndexRefCommand(optIndex)(state, dispatch),
       redecorateIndexRefs:
         () =>
           ({ tr, dispatch }) => {
@@ -319,12 +287,26 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
             }
             return true;
           },
+      setIndexTermAutoId: (stv) => ({ dispatch, editor, state }) => {
+        const backend = useBackend().backend
+        if (!backend) return false
+        if (!innerNodeDepth(state.selection.$anchor, n => n.type.name === NODE_NAME_INDEX_TERM))
+          return false;
+        if (dispatch) {
+          (async () => {
+            const command = await indexTermIdAutoSetCommand(state, backend, stv || 'first-2-words')
+            const { state: maybeUpdatedState, view } = editor
+            command(maybeUpdatedState, view.dispatch, view)
+          })()
+        }
+        return true
+      }
     };
   },
 
   addKeyboardShortcuts() {
     return {
-      [SK_SET_INDEX_REF]: () => this.editor.commands.addIndexRef()
+      [SK.SET_INDEX_REF]: () => this.editor.commands.addIndexRef()
     }
   }
 });
@@ -359,4 +341,209 @@ function indexedTextWithoutAtoms(
     tfrom += child.nodeSize;
   }
   return texts.join('');
+}
+
+export function setIndexRefCommand(optIndex?: Index | string): Command {
+  return (state, dispatch, view) => {
+    const indexRefType = state.schema.nodes[NODE_NAME_INDEX_REF];
+    if (!indexRefType) return false;
+    const docState = getDocState(state)
+    const indices: Index[] = docState?.project?.computedConfig?.indices || docState?.configuration?.indices || []
+    const index = isString(optIndex)
+      ? indices?.find(i => i.indexName === optIndex)
+      : optIndex || indexingPluginKey.getState(state).lastReferenced
+    if (!index) return false
+    const indexName = index.indexName || DEFAULT_INDEX_NAME;
+    const { from, to, empty } = state.selection;
+    const marks = state.doc.resolve(from).marks();
+    if (empty) {
+      if (!index.onlyEmpty === true) return false;
+      if (dispatch) {
+        const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
+        const indexRef = indexRefType.create(
+          {
+            classes: [refClass],
+            kv: { [INDEX_NAME_ATTR]: indexName },
+          },
+          null,
+          marks,
+        );
+        dispatch(state.tr
+          .insert(from, indexRef)
+          .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
+        )
+      }
+    } else {
+      if (index.onlyEmpty === true) return false;
+      const indexedText = indexedTextWithoutAtoms(state.doc, from, to);
+      if (!indexedText) return false;
+      if (dispatch) {
+        const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
+        const indexRef = indexRefType.create(
+          {
+            classes: [refClass],
+            kv: {
+              [INDEX_NAME_ATTR]: indexName,
+              [INDEXED_TEXT_ATTR]: indexedText,
+            },
+          },
+          null,
+          marks,
+        );
+        const where: IndexRefPlacement =
+          index.putIndexRef || DEFAULT_PUT_INDEX_REF;
+        dispatch(state.tr
+          .insert(where === 'before' ? from : to, indexRef)
+          .setMeta(META_SET_LAST_REFERENCED_INDEX, index)
+        )
+      }
+    }
+    return true;
+  }
+}
+
+export async function indexTermsIdAutoAssignFromJsonTransaction(
+  state: EditorState,
+  pos: number,
+  backend: Backend,
+  searchTextVariant: 'first-2-words' | 'first-3-words',
+  callback: (terms: number, withoutId: number, autoId: number) => void,
+): Promise<Transaction> {
+  const indexDiv = state.doc.nodeAt(pos)
+  if (indexDiv?.type.name !== NODE_NAME_INDEX_DIV)
+    return Promise.reject('not an index node')
+  const wordsCount = searchTextVariant === 'first-2-words'
+    ? 2
+    : searchTextVariant === 'first-3-words'
+      ? 3
+      : 2
+  const docState = getDocState(state)
+  let query: IndexTermQuery = {
+    type: 'index-term',
+    indexName: indexDiv?.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
+    searchText: '',
+    options: {
+      kind: 'index',
+      project: docState?.project,
+      configurationName: docState?.configuration?.name,
+    }
+  }
+  // check with dummy search
+  try {
+    await backend?.queryDatabase({ ...query, searchText: 'dummy' })
+  } catch (err) {
+    return Promise.reject(err)
+  }
+  const tr = state.tr
+  let p = pos + 1
+  let withoutIdCount = 0
+  let termsCount = 0
+  let autoAssignedCount = 0
+  for (let i = 0; i < indexDiv.childCount; i++) {
+    const child = indexDiv.child(i)
+    if (child) {
+      if (child.type.name === NODE_NAME_INDEX_TERM) {
+        termsCount++
+        if (!child.attrs.id) {
+          withoutIdCount++
+          const content = child.textContent || ''
+          const searchText = content
+            .split(/\P{Letter}+/u)
+            .filter(t => t.length > 0)
+            .slice(0, wordsCount)
+            .join(' ')
+          try {
+            const results = await backend?.queryDatabase({ ...query, searchText })
+            if (results.length === 1) {
+              const id = results[0].id
+              tr.setNodeMarkup(p, null, { ...child.attrs, id })
+              autoAssignedCount++
+            }
+          } catch (err) {
+            return Promise.reject(err)
+          }
+        }
+        callback(termsCount, withoutIdCount, autoAssignedCount)
+      }
+      p = p + child.nodeSize
+    } else
+      break
+  }
+  return tr
+}
+
+function getIndexTermInSelection(state: EditorState): NodeWithPos | undefined {
+  const $pos = state.selection.$anchor
+  const indexDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_DIV)
+  const termDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_TERM)
+  if (!indexDepth || !termDepth || termDepth < indexDepth)
+    return undefined
+  return {
+    node: $pos.node(termDepth),
+    pos: $pos.start(termDepth) - 1
+  }
+}
+
+export async function indexTermIdAutoSetCommand(
+  state: EditorState,
+  backend: Backend,
+  searchTextVariant: 'first-2-words' | 'first-3-words',
+): Promise<Command> {
+  const $pos = state.selection.$anchor
+  const indexDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_DIV)
+  const termDepth = innerNodeDepth($pos, n => n.type.name === NODE_NAME_INDEX_TERM)
+  if (!indexDepth || !termDepth || termDepth < indexDepth)
+    return () => false
+  const indexDiv = $pos.node(indexDepth)
+  const { node: indexTerm, pos: indexTermPos } = getIndexTermInSelection(state) || {}
+  if (!indexTerm) return () => false
+  const wordsCount = searchTextVariant === 'first-2-words'
+    ? 2
+    : searchTextVariant === 'first-3-words'
+      ? 3
+      : 2
+  const docState = getDocState(state)
+  const content = indexTerm.textContent || ''
+  const searchText = content
+    .split(/\P{Letter}+/u)
+    .filter(t => t.length > 0)
+    .slice(0, wordsCount)
+  const indexName = indexDiv.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME
+  const query: IndexTermQuery = {
+    type: 'index-term',
+    indexName,
+    searchText,
+    options: {
+      kind: 'index',
+      project: docState?.project,
+      configurationName: docState?.configuration?.name,
+    }
+  }
+  try {
+    const results = await backend?.queryDatabase({ ...query, searchText })
+    if (results.length === 1) {
+      const id = results[0].id
+      return (state, dispatch, view) => {
+        const { node, pos } = getIndexTermInSelection(state) || {}
+        if (node === indexTerm && pos === indexTermPos && content === node!.textContent) {
+          if (dispatch)
+            dispatch(state.tr.setNodeMarkup(pos!, null, { ...node!.attrs, id }))
+          return true
+        }
+        return false
+      }
+    }
+    return () => false
+  } catch (err) {
+    return Promise.reject(err)
+  }
+}
+
+export function getAllIndices(state?: EditorState): Index[] {
+  if (state) {
+    const indexingState = getIndexingState(state)
+    if (indexingState)
+      return mergeIndices(indexingState.indices, indexingState.docIndices)
+  }
+  return []
 }

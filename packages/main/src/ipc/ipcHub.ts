@@ -1,19 +1,17 @@
 import type {
   BaseWindow,
-  BrowserWindow,
-  Input,
   OpenDialogOptions,
   SaveDialogOptions,
   WebContentsView,
 } from 'electron';
-import { ipcMain } from 'electron';
+import { ipcMain, shell } from 'electron';
 import { readFile, writeFile } from 'fs/promises';
 import {
   basename,
   format as formatPath,
   isAbsolute,
   parse as parsePath,
-  sep as pathSeparator,
+  resolve,
 } from 'path';
 import {
   CommandToRenderer,
@@ -32,6 +30,8 @@ import {
   CUSTOM_PANDOC_READERS,
   CustomPandocReader,
   IpcMainToRendererChannel,
+  ServerMessageForViewer,
+  ServerMessageSetProject,
 } from '../common';
 import { isReadableFile, validResourcePaths } from '../resourcesManager';
 import FileManager from '../fileManager';
@@ -52,14 +52,16 @@ import {
   messageFeedback,
   progressFeedback,
 } from './feedback';
+import { stringify } from '../utils';
 import { queryHandler } from './queryHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
-import { getProjectHandler, loadProjectFromDocFile } from './getProjectHandler';
+import { computeProjectFromDocFile, getProjectHandler } from './getProjectHandler';
 import { openDocumentHandler } from './openDocumentHandler';
 import { editorReadyHandler } from './editorReadyHandler';
 import { debugInfoHandler } from './debugInfoHandler';
 import { transformJsonHandler } from './transformJsonHandler';
+import { newProjectHandler } from './newProjectHandler';
 import {
   availableConfigurationsHandler,
   getConfigurationInit,
@@ -70,7 +72,27 @@ import {
   pandocOutputFormatsHandler,
 } from './pandocFormatsHandler';
 import { fileContentsHandler } from './fileContentsHandler';
-import { askForDocumentHandler, getInclusionTreeHandler } from '.';
+import { askForDocumentHandler } from './askForDocumentHandler';
+import { getInclusionTreeHandler } from './getInclusionTreeHandler';
+import { getSourceFileHandler } from './getSourceFileHandler';
+import { exportAgainHandler } from './exportAgainHandler';
+import { rememberDocumentHash } from './documentHash';
+import { expandCommandArgs } from './expandCommandArgs';
+import { getExportJobHandler } from './getExportJobHandler';
+import { showAgainHandler } from './showAgainHandler';
+import { updateConfigHandler } from './updateConfigHandler';
+
+/** An object describing a document's opening */
+export interface DocumentOpening {
+  /** The path of the document to be opened */
+  path?: string,
+  /** The configuration with which the document must be opened */
+  configurationName?: string,
+  /** After opening, go to line (paragraph)... */
+  atLine?: number,
+  /** If there's no mainEditorKey yet, open when it's set (otherwise cancel the open document operation) */
+  whenEditorReady?: boolean
+}
 
 /**
  * A class to handle the communication between `main` and `renderer` processes.
@@ -78,21 +100,17 @@ import { askForDocumentHandler, getInclusionTreeHandler } from '.';
 export class IpcHub {
   readonly fileManager: FileManager = new FileManager();
   private mainEditorKey: EditorKeyType | undefined = undefined;
+  pendingDocumentOpen: DocumentOpening | undefined = undefined;
 
   constructor(
     readonly baseWindow: BaseWindow,
     readonly editorView: WebContentsView,
-    readonly pdfView: WebContentsView,
   ) {
     this.handleIpcMainEvents();
   }
 
   send(channel: IpcMainToRendererChannel, message: ServerMessage) {
-    const webContents =
-      message.type === 'viewer'
-        ? this.pdfView.webContents
-        : this.editorView.webContents;
-    webContents.send(channel, message);
+    this.editorView.webContents.send(channel, message);
   }
 
   setWindowTitle(title: string) {
@@ -118,11 +136,16 @@ export class IpcHub {
     ipcMain.handle('load-configuration', loadConfigurationHandler(this));
     ipcMain.handle('file-contents', fileContentsHandler(this));
     ipcMain.handle('set-value', setValueHandler(this));
-    // ipcMain.handle('new-project', newProjectHandler(this));
+    ipcMain.handle('new-project', newProjectHandler(this));
     ipcMain.handle('transform-json', transformJsonHandler(this));
     ipcMain.handle('pandoc-input-formats', pandocInputFormatsHandler(this));
     ipcMain.handle('pandoc-output-formats', pandocOutputFormatsHandler(this));
     ipcMain.handle('query', queryHandler(this));
+    ipcMain.handle('get-source-file', getSourceFileHandler(this));
+    ipcMain.handle('show-again', showAgainHandler(this));
+    ipcMain.handle('export-again', exportAgainHandler(this));
+    ipcMain.handle('get-export-job', getExportJobHandler(this));
+    ipcMain.handle('update-config', updateConfigHandler(this))
   }
 
   async openDocument(
@@ -221,6 +244,7 @@ export class IpcHub {
             result = {
               exitCode: 0,
               commandLine: '',
+              cwd: parsePath(filename).dir,
               output: await readFile(filename).then((buf) => buf.toString()),
               error: '',
             };
@@ -233,37 +257,38 @@ export class IpcHub {
     if (!result) {
       errorFeedback(this, `no result reading ${filename}`, editorKey);
     } else {
-      if (result.exitCode === 0) {
+      const { commandLine, error, exitCode, output } = result
+      if (exitCode === 0) {
         const readDoc: ReadDoc = {
           editorKey,
           id: name,
           path: filename,
-          content: result.output,
+          content: output,
           configurationName,
           resourcePath,
         };
-        if (cmdLineFeedback) cmdLineFeedback(result.commandLine);
+        if (cmdLineFeedback) cmdLineFeedback(commandLine);
         let project: PundokEditorProject | undefined = undefined;
         try {
-          project = await loadProjectFromDocFile(filename);
-          if (project) {
-            console.log(`found project for file ${filename}`);
-            project = await computeProjectConfiguration(
-              project,
-              async (configName) => {
-                const cfgInit = await getConfigurationInit(configName);
-                return cfgInit && new PundokEditorConfig(cfgInit);
-              },
-            );
-          }
+          project = await computeProjectFromDocFile(filename)
+          // project = await loadProjectFromDocFile(filename);
+          // if (project) {
+          //   console.log(`found project for file ${filename}`);
+          //   project = await computeProjectConfiguration(
+          //     project,
+          //     async (configName) => {
+          //       const cfgInit = await getConfigurationInit(configName);
+          //       return cfgInit && new PundokEditorConfig(cfgInit);
+          //     },
+          //   );
+          // }
           readDoc.project = project;
         } catch (err) {
           console.log(`error loading project: ${err}`);
         }
         return readDoc;
       } else {
-        const cl = result.commandLine;
-        errorFeedback(this, (cl ? `${cl}\n\n` : '') + result.error, editorKey);
+        errorFeedback(this, (commandLine ? `${commandLine}\n\n` : '') + error, editorKey);
       }
     }
   }
@@ -275,7 +300,7 @@ export class IpcHub {
     const { path, content } = doc;
     const docPath =
       path ||
-      (await this.fileManager.saveFile({
+      (await this.fileManager.saveFileDialog({
         defaultPath: path,
         filters: [
           {
@@ -284,27 +309,41 @@ export class IpcHub {
           },
         ],
       }));
-    return writeFile(docPath, content)
-      .then(() => {
-        const id = doc.id || basename(docPath, '.json');
-        return {
-          message: 'document saved',
-          doc: {
-            path: docPath,
-            content,
-            id,
-            configurationName: doc.configurationName,
-          },
-          resultFile: docPath,
-        };
-      })
-      .catch((error) => {
-        return Promise.reject({
-          error,
-          message: JSON.stringify(error),
-          doc: { content, path: docPath },
-        });
+    try {
+      await writeFile(docPath, content!)
+      const p = parsePath(docPath)
+      const id = doc.id || basename(docPath, '.json');
+
+      // load the project, if the document has been saved in a project directory
+      // TODO: what to do when a file in a project is saved in the directory of another project?
+      if (docPath && !project) {
+        const dirProject = await computeProjectFromDocFile(docPath)
+        console.log(`dirProject is ${dirProject.name}`)
+        if (dirProject) {
+          doc.project = dirProject
+          this.fireEventSetProject(dirProject)
+        }
+      }
+
+      return {
+        message: 'document saved',
+        doc: {
+          path: docPath,
+          content,
+          id,
+          configurationName: doc.configurationName,
+          project: doc.project,
+        },
+        resultFile: docPath,
+        cwd: p.dir,
+      };
+    } catch (error) {
+      return Promise.reject({
+        error,
+        message: JSON.stringify(error),
+        doc: { content, path: docPath },
       });
+    };
   }
 
   async exportDocument(
@@ -322,29 +361,44 @@ export class IpcHub {
           : `${format} files (*.${extension})`;
       saveOpts.filters = [{ name, extensions: [extension] }];
     }
-    const cwd = project?.path;
+    const cwd = project?.path || process.cwd();
 
-    let resultFile = converter?.dontAskForResultFile
-      ? converter.resultFile
+    const sourceFile = doc.path
+    let resultFile = converter?.resultFile
+      ? expandCommandArgs([converter.resultFile], sourceFile)[0]
+      : undefined
+    resultFile = converter?.dontAskForResultFile
+      ? resultFile
       : exportedAsPath;
     if (!converter?.dontAskForResultFile) {
-      if (!resultFile) resultFile = await this.fileManager.saveFile(saveOpts);
+      if (!resultFile) resultFile = await this.fileManager.saveFileDialog(saveOpts);
       if (!resultFile)
         return Promise.resolve({
           error: 'no output file given',
           message: 'export failed',
           doc: { content, configurationName },
           resultFile,
-        });
+        } as SaveResponse);
     }
     if (resultFile && !isAbsolute(resultFile))
-      resultFile = `${cwd}${pathSeparator}${resultFile}`;
+      resultFile = resolve(cwd, resultFile)
 
     const resourcesPaths = validResourcePaths(
       undefined,
       project,
       configurationName,
     );
+
+    // if content comes from a file (doc.path) and not from stdin, remember job
+    let documentHash: string | undefined = undefined
+    if (sourceFile) {
+      documentHash = await rememberDocumentHash({
+        path: sourceFile,
+        converter: doc.converter!,
+        configurationName: doc.configurationName,
+        projectAsJsonString: project ? JSON.stringify(project) : undefined
+      })
+    }
 
     try {
       let result: ExternalProgramResult;
@@ -369,6 +423,7 @@ export class IpcHub {
             project,
             cwd,
             resourcesPaths,
+            sourceFile,
             resultFile,
             callback,
           });
@@ -386,10 +441,11 @@ export class IpcHub {
       }
       const ext = converter?.extension;
       const id = doc.id; // || basename(resultFile, ext && `.${ext}`);
+      const { commandLine, error, exitCode, output } = result
       if (converter?.feedback) {
         switch (converter.feedback) {
           case 'command-line':
-            commandLineFeedback(this, result.commandLine, editorKey);
+            commandLineFeedback(this, commandLine, editorKey);
             break;
           case 'success':
           default:
@@ -400,8 +456,8 @@ export class IpcHub {
             );
         }
       }
-      if (result.exitCode === 0) {
-        return Promise.resolve({
+      if (exitCode === 0) {
+        const response: SaveResponse = {
           message: 'document exported',
           doc: {
             id,
@@ -409,29 +465,54 @@ export class IpcHub {
             configurationName,
             path: doc.path,
             exportedAsPath: resultFile,
-            content: result.output,
+            content: output,
           } as StoredDoc,
           resultFile,
-        });
+          documentHash,
+          commandLine,
+          cwd,
+        }
+        if (resultFile) {
+          const openResult = doc.converter?.openResult;
+          console.log(`openResult = ${openResult}`);
+          if (openResult === 'editor') {
+            this.send('show-in-viewer', {
+              type: 'viewer',
+              editorKey,
+              setup: {
+                name: resultFile,
+                projectAsJson: project ? JSON.stringify(project) : undefined,
+                documentHash: response.documentHash
+              },
+            } as ServerMessageForViewer);
+          } else if (openResult === 'os') {
+            shell.openPath(resultFile).catch((error) => {
+              errorFeedback(this, stringify(error), editorKey);
+            });
+          }
+        }
+        return Promise.resolve(response)
       } else {
-        const message = `export failed with exitCode ${result.exitCode}`;
+        const message = `export failed with exitCode ${exitCode}`;
         const debugMessage = [
           message,
-          result.error,
+          stringify(error),
           'command line:',
-          result.commandLine,
+          commandLine,
         ].join('\n');
         errorFeedback(this, debugMessage, editorKey);
         return Promise.resolve({
-          error: result.error,
+          error,
           message,
           doc: {
             id,
             path: resultFile,
-            content: result.output,
+            content: output,
             configurationName,
           } as StoredDoc,
           resultFile,
+          commandLine,
+          cwd,
         });
       }
     } catch (error) {
@@ -440,6 +521,7 @@ export class IpcHub {
         message: 'export failed',
         doc: { content, configurationName },
         resultFile,
+        cwd,
       });
     }
   }
@@ -465,8 +547,13 @@ export class IpcHub {
     }
   }
 
-  fireEventOpenDocument(path?: string, configurationName?: string) {
-    this.fireEventInRenderer('document', 'open', { path, configurationName });
+  fireEventOpenDocument(docToOpen?: DocumentOpening) {
+    if (this.mainEditorKey) {
+      const { path, configurationName, atLine } = docToOpen || {}
+      this.fireEventInRenderer('document', 'open', { path, configurationName, atLine });
+      this.pendingDocumentOpen = undefined
+    } else if (docToOpen?.whenEditorReady)
+      this.pendingDocumentOpen = docToOpen
   }
 
   fireEventSaveCurrentDocument() {
@@ -483,5 +570,18 @@ export class IpcHub {
 
   fireEventImportDocument() {
     this.fireEventInRenderer('document', 'import');
+  }
+
+  fireEventCreateNewProject() {
+    this.fireEventInRenderer('document', 'new-project');
+  }
+
+  fireEventSetProject(project: PundokEditorProject, editorKey?: EditorKeyType) {
+    const message: ServerMessageSetProject = {
+      type: 'project',
+      project,
+      editorKey: editorKey || this.mainEditorKey
+    }
+    this.editorView.webContents.send('set-project', message)
   }
 }

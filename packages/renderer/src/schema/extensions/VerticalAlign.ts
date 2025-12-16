@@ -1,4 +1,5 @@
 import { Extension } from '@tiptap/core';
+import { updateAttributesCommand } from './HelperCommandsExtension';
 
 export interface VerticalAlignOptions {
   types: string[];
@@ -55,25 +56,19 @@ export const VerticalAlign = Extension.create<VerticalAlignOptions>({
 
   addCommands() {
     return {
-      setVerticalAlign:
-        (alignment: string) =>
-        ({ commands }) => {
-          if (!this.options.alignments.includes(alignment)) {
-            return false;
-          }
-
-          return this.options.types.every((type) =>
-            commands.updateAttributes(type, { verticalAlign: alignment })
-          );
-        },
-
-      unsetVerticalAlign:
-        () =>
-        ({ commands }) => {
-          return this.options.types.every((type) =>
-            commands.resetAttributes(type, 'verticalAlign')
-          );
-        },
+      setVerticalAlign: (alignment: string) => (cp) =>
+        this.options.alignments.includes(alignment)
+        && this.options.types.every(type =>
+          updateAttributesCommand(type, (nodeOrMark) => {
+            return { attrs: { ...nodeOrMark.attrs, verticalAlign: alignment } }
+          })(cp)
+        ),
+      unsetVerticalAlign: () => (cp) => this.options.types.every(type =>
+        updateAttributesCommand(type, (nodeOrMark) => {
+          const { verticalAlign, ...attrs } = nodeOrMark.attrs
+          return { attrs }
+        })(cp)
+      )
     };
   },
 });

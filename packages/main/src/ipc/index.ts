@@ -7,6 +7,7 @@ export * from './fileContentsHandler';
 export * from './getProjectHandler';
 export * from './getInclusionTreeHandler';
 export * from './ipcHub';
+export * from './newProjectHandler';
 export * from './openDocumentHandler';
 export * from './pandocFormatsHandler';
 export * from './queryHandler';

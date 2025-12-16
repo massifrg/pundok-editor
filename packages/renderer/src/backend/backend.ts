@@ -13,6 +13,10 @@ import type {
   StoredDoc,
   DocumentCoords,
   PandocFilterTransform,
+  SynctexInfo,
+  ExportJob,
+  ConfigInitField,
+  GetProjectOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -37,7 +41,11 @@ export interface BackendConfig {
   ipc?: Ipc;
 }
 
-export type WhyAskingForIdOrPath = 'edit' | 'inclusion' | 'image';
+export type WhyAskingForIdOrPath =
+  | 'edit'      // document to open and edit
+  | 'inclusion' // inclusion of a (sub-)document
+  | 'image'     // image file path
+  | 'project'   // directory for a new project
 
 /**
  * An interface to connect to the backend, to get the documents' data.
@@ -102,7 +110,14 @@ export interface Backend {
    * Retrieves the project of a document from the backend.
    * @param context
    */
-  getProject(context: Record<string, any>): Promise<PundokEditorProject>;
+  getProject(options: GetProjectOptions): Promise<PundokEditorProject>;
+
+  /**
+   * Create a new project in a directory.
+   * @param path
+   * @param project 
+   */
+  createProject(path: string, project: Partial<PundokEditorProject>): Promise<void>;
 
   /**
    * Retrieves a tree-structure of a document made of multiple documents.
@@ -185,6 +200,33 @@ export interface Backend {
     transform: PandocFilterTransform,
     options?: Partial<FindResourceOptions>,
   ): Promise<string>;
+
+  gotoSource(
+    editorKey: EditorKeyType,
+    info: SynctexInfo,
+  ): Promise<void>
+
+  showAgain(hash: string, editorKey: EditorKeyType): Promise<void>
+
+  exportAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
+
+  getExportJob(hash: string): Promise<ExportJob | undefined>;
+
+  /**
+   * Update a configuration or project JSON file adding/updating an object
+   * like `CustomStyle`, `Automation`, etc.
+   * @param where The configuration's key where the object must go ("automations", "customStyles", etc.).
+   * @param obj The added/updated object.
+   * @param isProject When `false` the next argument is the configuration name, when `true` it's the project path.
+   * @param configNameOrProjectPath The configuration name or the project path when `isProject` is `true`.
+   */
+  storeInConfiguration(
+    where: ConfigInitField,
+    obj: object,
+    isDeletion: boolean,
+    isProject: boolean,
+    configNameOrProjectPath: string
+  ): Promise<void>;
 }
 
 export function createBackend(config: BackendConfig): Backend {

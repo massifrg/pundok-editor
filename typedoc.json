@@ -5,13 +5,14 @@
     "packages/pandoc/src/index.ts",
     "packages/main/src/*.ts",
     "packages/preload/src/index.ts",
+    "packages/renderer/src/actions/index.ts",
     "packages/renderer/src/backend/index.ts",
+    "packages/renderer/src/commands/index.ts",
     "packages/renderer/src/components/index.ts",
     "packages/renderer/src/schema/index.ts",
-    "packages/renderer/src/stores/index.ts",
-    "packages/readers/src/index.ts"
+    "packages/renderer/src/stores/index.ts"
   ],
-  "name": "Packages Example",
+  "name": "pundok-editor",
   "entryPointStrategy": "expand",
   "includeVersion": true
 }

@@ -1,5 +1,10 @@
 import { PundokEditorProject } from './config';
 
+/**
+ * The types of resources needed to represent and convert a document.
+ * They are usually external files, like CSS stylesheets, pandoc filters,
+ * template or reference documents, indices, custom readers or writers, etc.
+ */
 export type ResourceType =
   | 'document'
   | 'css'
@@ -12,6 +17,10 @@ export type ResourceType =
   | 'index'
   | 'other';
 
+/**
+ * Usually external resources are grouped in subdirectories, e.g. CSS
+ * stylesheets under a "css" or "styles" subdir, lua filters under "lua", etc.
+ */
 export const RESOURCE_SUBPATHS: Record<ResourceType, string[]> = {
   document: ['templates'],
   css: ['styles', 'css'],
@@ -35,6 +44,11 @@ export interface FindResourceOptions {
   // configuration: PundokEditorConfig | string;
 }
 
+/**
+ * Provide an array of possible resource types from the extension of a filename.
+ * @param ext The extension of the filename.
+ * @returns 
+ */
 export function resourceTypesFromExtension(ext: string): ResourceType[] {
   switch (ext) {
     case 'css':

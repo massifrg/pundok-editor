@@ -2,44 +2,26 @@
   <q-dialog :model-value="visible" :position="dialogPosition" seamless>
     <q-card style="max-width: 60vw">
       <q-card-section class="q-ma-xs" horizontal>
-        <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="mdi-arrow-up"
-          title="move this dialog to the top" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
-        <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="mdi-arrow-down"
-          title="move this dialog to the bottom" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
-        <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="mdi-arrow-right"
-          title="move this dialog to the right" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
-        <q-btn dense class="q-px-md" :icon="expandIcon" :title="expandTooltip" size="xs"
-          @click="() => { showFields = !showFields }"></q-btn>
-        <q-space />
-        <q-btn dense icon="mdi-reload" size:xs title="reset" @click="resetDialog()" />
-        <q-space />
-        <q-btn dense icon="mdi-close" size:xs title="close" @click="closeDialog()" />
-      </q-card-section>
-      <q-card-section>
-        <div v-if="showFields">
-          <q-card-section horizontal>
-            <q-input autofocus class="search-and-replace-textfield q-mx-xs" :model-value="textToSearch" label="search"
-              stack-label @update:model-value="updateTextToSearch" @keypress="keypressed" @keyup="keyup" />
-            <!-- <q-space /> -->
-            <MarksPaletteDropdown :editor="editor" title="search for this Mark(s) or style(s)"
-              :addableMarks="marksToSearch" :logicalOperator="optionMarksLogicalOperator" showLogicalOperator="true"
-              @selected-logical-operator="selectMarksLogicalOperator" @selected-marks="selectMarksToSearch"
-              menu-anchor="bottom end" menu-self="bottom start" />
-          </q-card-section>
-          <q-card-section v-if="!optionSearchOnly" horizontal>
-            <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
-              stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
-            <!-- <q-space /> -->
-            <MarksPaletteDropdown :editor="editor" title="add/remove Mark(s) or custom style(s) to replaced text"
-              :addableMarks="marksOnReplacedText" :operations="(['add', 'remove', 'remove all'] as MarkOperationType[])"
-              :default-operation="selectedMarkOperationTypeOnReplacedText" @selected-marks="setMarksOnReplacedText"
-              @selected-operation="selectMarkOperationOnReplacedText" menu-anchor="bottom end"
-              menu-self="bottom start" />
-          </q-card-section>
+        <div class="flex flex-center">
+          <q-chip :label="currentFoundItemShortText" :color="foundItemsColor" round class="q-pa-md" text-color="white"
+            icon="mdi-text-search" :title="foundItemsText" />
         </div>
-      </q-card-section>
-      <q-card-section v-if="showFields" horizontal class="q-pa-sm">
-        <q-btn v-if="searchAndReplaces.length > 0" class="q-ma-xs" size="sm" rounded color="primary" label=""
+        <q-space />
+        <q-btn dense class="q-px-md" size="xs" icon="mdi-reload" title="reset" @click="resetSettings()" />
+        <q-space class="small" />
+        <q-btn dense class="q-px-md" size="xs" icon="mdi-content-save"
+          title="save the current search and replace settings">
+          <SaveConfigurationElementPopup :editor="editor" :existing-ones="knownSettings" @save-settings="saveSettings"
+            @delete-settings="deleteSettings" />
+        </q-btn>
+        <q-space class="big" />
+        <q-btn round class="q-pa-sm" size="sm" icon="mdi-pencil-lock" color="primary" :outline="!optionSearchOnly"
+          title="just search, don't replace" @click="optionSearchOnly = !optionSearchOnly" />
+        <q-space class="small" />
+        <q-btn round class="q-pa-sm" size="sm" icon="css_selectors" color="primary" :outline="!cssMode"
+          title="search with CSS selectors" @click="cssMode = !cssMode" />
+        <q-space v-if="!cssMode && searchAndReplaces.length > 0" class="small" />
+        <q-btn v-if="!cssMode && searchAndReplaces.length > 0" round class="q-pa-sm" size="sm" color="primary" label=""
           title="load a predefined search and replace config" icon="mdi-playlist-star">
           <q-menu anchor="bottom start" self="bottom end">
             <q-list>
@@ -50,56 +32,77 @@
             </q-list>
           </q-menu>
         </q-btn>
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCaseInsensitive"
-          icon="mdi-format-letter-case" title="case insensitive search"
-          @click="optionCaseInsensitive = !optionCaseInsensitive" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionRegex" icon="mdi-regex"
-          title="search with regular expressions (Unicode aware)" @click="optionRegex = !optionRegex" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="mdi-find-replace"
-          title="cycle through found texts" @click="optionCycle = !optionCycle" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord" icon="whole_word"
-          title="whole words" @click="optionWholeWord = !optionWholeWord" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionSearchOnly" icon="mdi-pencil-lock"
-          title="just search, don't replace" @click="optionSearchOnly = !optionSearchOnly" />
-        <!-- <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionSearchType !== 'marks'" icon="mdi-marker"
-          title="search only for marks" @click="optionSearchType = optionSearchType === 'marks' ? 'text' : 'marks'" /> -->
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionChangeMarksOnly" icon="mdi-tag"
-          title="change only marks, don't touch text" @click="optionChangeMarksOnly = !optionChangeMarksOnly" />
-        <q-space />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionCapitalize !== 'lower'"
-          icon="mdi-format-letter-case-lower" title="lowercase replaced text"
-          @click="optionCapitalize = optionCapitalize !== 'lower' ? 'lower' : 'none'" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionCapitalize !== 'upper'"
-          icon="mdi-format-letter-case-upper" title="uppercase replaced text"
-          @click="optionCapitalize = optionCapitalize !== 'upper' ? 'upper' : 'none'" />
-        <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="optionCapitalize !== 'first'" label="Abc"
-          no-caps title="uppercase words' first letter in replaced text"
-          @click="optionCapitalize = optionCapitalize !== 'first' ? 'first' : 'none'">
+        <q-space v-if="cssMode && cssSelections.length > 0" class="small" />
+        <q-btn v-if="cssMode && cssSelections.length > 0" round class="q-pa-sm" size="sm" color="primary" label=""
+          title="load a predefined CSS selector" icon="mdi-playlist-star">
+          <q-menu anchor="bottom start" self="bottom end">
+            <q-list>
+              <q-item v-for="sel in cssSelections" clickable v-close-popup dense :title="sel.description"
+                @click="setCssSelector(sel)">
+                <q-item-section>{{ sel.name }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
         </q-btn>
-      </q-card-section>
-      <q-card-section horizontal class="q-ma-xs">
-        <q-chip :color="foundItemsColor" text-color="white" icon="mdi-text-search" :title="foundItemsText">{{
-          currentFoundItemText }}</q-chip>
+        <q-space class="small" />
+        <!-- <q-toggle v-model="showIndicesButtons" icon="mdi-cursor-pointer" title="show buttons for indices" /> -->
+        <q-btn v-if="indices.length > 0" round class="q-pa-sm" size="sm" color="primary" :outline="!showIndicesButtons"
+          icon="mdi-cursor-pointer" title="show buttons for indices"
+          @click="showIndicesButtons = !showIndicesButtons" />
+        <q-space class="big" />
+        <q-btn dense class="q-px-md" :icon="expandIcon" :title="expandTooltip" size="xs"
+          @click="() => { showFields = !showFields }"></q-btn>
+        <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="mdi-arrow-up"
+          title="move this dialog to the top" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
+        <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="mdi-arrow-down"
+          title="move this dialog to the bottom" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
+        <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="mdi-arrow-right"
+          title="move this dialog to the right" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
         <q-space />
-        <q-toggle v-model="showIndicesButtons" icon="mdi-cursor-pointer" title="show buttons for indices" />
+        <q-btn icon="mdi-close" size="xs" title="close" @click="closeDialog()" />
+      </q-card-section>
+      <q-card-section v-if="showFields">
+        <q-card-section horizontal>
+          <q-input autofocus class="search-and-replace-textfield q-mx-xs" :model-value="searchInput"
+            :label="searchLabel" stack-label @update:model-value="updateSearchInput" @keypress="keypressed"
+            @keyup="keyup" />
+          <div class="q-pt-md q-gutter-none">
+            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="mdi-find-replace"
+              title="cycle through found texts" @click="optionCycle = !optionCycle" />
+            <q-btn v-if="cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionMergeAdjacentMarks"
+              icon="mdi-set-merge" title="merge adjacent text ranges with the same marks"
+              @click="optionMergeAdjacentMarks = !optionMergeAdjacentMarks" />
+            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionCaseInsensitive"
+              icon="mdi-format-letter-case" title="case insensitive search"
+              @click="optionCaseInsensitive = !optionCaseInsensitive" />
+            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionRegex"
+              icon="mdi-regex" title="search with regular expressions (Unicode aware)"
+              @click="optionRegex = !optionRegex" />
+            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord"
+              icon="whole_word" title="whole words" @click="optionWholeWord = !optionWholeWord" />
+            <ActionsOnReplaceDropdown v-if="optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
+              title="actions on selected text" @update-actions="updateActions" />
+          </div>
+        </q-card-section>
+        <q-card-section v-if="!optionSearchOnly" horizontal>
+          <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
+            stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
+          <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace" title="actions on replaced text"
+            @update-actions="updateActions" />
+        </q-card-section>
       </q-card-section>
       <q-card-actions>
         <q-btn icon="mdi-magnify" title="search" size="md" padding="md" @click="startSearch()" />
-        <!-- <q-btn :disabled="foundCount === 0 || (!optionCycle && foundIndex <= 0)" icon="mdi-chevron-left" size="md"
-          padding="md" title="select previous found" @click="prevFound()" />
-        <q-btn :disabled="foundCount === 0 || (!optionCycle && foundIndex >= foundCount - 1)" icon="mdi-chevron-right"
-          size="md" padding="md" title="select next found" @click="nextFound()" /> -->
-        <q-btn icon="mdi-chevron-left" size="md" padding="md" title="select previous found" @click="prevFound()" />
-        <q-btn icon="mdi-chevron-right" size="md" padding="md" title="select next found" @click="nextFound()" />
-        <q-btn v-if="!optionSearchOnly" :disabled="!editor.can().replaceSelectedText()" icon="mdi-autorenew" size="md"
-          padding="md" title="replace selected" @click="replaceSelected" />
-        <q-btn v-if="!optionSearchOnly" :disabled="!editor.can().replaceNextText(optionCycle)" size="md" padding="md"
-          title="replace & select next found" @click="replaceNextText">
+        <q-btn :disabled="!canPrevFound()" icon="mdi-chevron-left" size="md" padding="md" title="select previous found"
+          @click="prevFound()" />
+        <q-btn :disabled="!canNextFound()" icon="mdi-chevron-right" size="md" padding="md" title="select next found"
+          @click="nextFound()" />
+        <q-btn icon="mdi-autorenew" size="md" padding="md" title="replace selected" @click="replaceSelected" />
+        <q-btn size="md" padding="md" title="replace & select next found" @click="replaceNextText">
           <q-icon name="mdi-autorenew"></q-icon>
           <q-icon name="mdi-chevron-right"></q-icon>
         </q-btn>
-        <q-btn v-if="!optionSearchOnly" :disabled="!editor.can().replaceAll()" size="md" padding="md"
-          title="replace all" @click="replaceAll">
+        <q-btn size="md" padding="md" title="replace all" @click="replaceAll">
           <q-icon name="mdi-autorenew"></q-icon>
           <q-icon name="mdi-chevron-double-right"></q-icon>
         </q-btn>
@@ -113,110 +116,199 @@
 
 <script lang="ts">
 import {
-  Capitalize,
+  ActionNameWithProps,
+  AddOrRemoveCustomStyleActionProps,
+  AddOrRemoveMarkActionProps,
+  Automation,
   CustomStyleInstance,
+  ElementsSelection,
+  getElementsSelections,
+  GetProjectOptions,
+  getSearchAndReplaces,
+  INDEXED_TEXT_ATTR,
+  NODE_NAME_INDEX_REF,
   SearchAndReplace,
-  getSearchAndReplaces
+  SetSpanActionProps,
 } from '../common';
 import {
-  CapitalizeTransform,
   FoundTextRange,
-  MarkOperationType,
-  MarkTransform,
-  MarksLogicalOperator,
-  SearchMarkSpec,
-  TextTransform,
+  getAllIndices,
+  getCssSelected,
+  getCssSelectionIndex,
   getEditorConfiguration,
 } from '../schema';
 import {
   AddableMark,
   baseAddableMarks,
   customStylesToAddableMarks,
-  searchAndReplaceSpanToAddableMarks
 } from '.';
-import MarksPaletteDropdown from './MarksPaletteDropdown.vue'
+import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
+import SaveConfigurationElementPopup from './SaveConfigurationElementPopup.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
-import { SearchQuery, SearchResultFilter, getMatchHighlights } from '../schema/helpers';
-import { Mark } from '@tiptap/pm/model';
-import { useActions } from '../stores';
-import { mapState } from 'pinia';
 import {
+  LabeledNodeOrMark,
+  SearchQuery,
+  SearchResultFilter,
+  SelectedNodeOrMark,
+  getEditorProject,
+  getMatchHighlights,
+  nodeOrMarkToPandocName
+} from '../schema/helpers';
+import { mapState } from 'pinia';
+import { useActions, useBackend } from '../stores';
+import {
+  ACTION_GET_PROJECT,
+  ACTION_LOWERCASE,
   ACTION_REPLACE_AND_SELECT_NEXT,
   ACTION_SELECT_NEXT,
-  ACTION_SELECT_PREV
+  ACTION_SELECT_PREV,
+  ACTION_UPPERCASE,
+  ACTION_UPPERCASE_FIRST,
+  ActionName,
+  setActionCommand
 } from '../actions';
+import { Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { toRaw } from 'vue';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
+type NodeOrMarkToLabel = (doc: ProsemirrorNode, nom: SelectedNodeOrMark | undefined, key: string) => string | undefined
+const SELECTED_LABEL_MAX_LENGTH = 64
 
-const allMarksFilter: (marks: Mark[]) => SearchResultFilter = (marks) => (state, result) => {
-  if (marks) {
-    const { from, to } = result
-    return marks.every(mark => state.doc.rangeHasMark(from, to, mark))
+const defaultNodeOrMarkToLabel: NodeOrMarkToLabel = (doc, nom, key) => {
+  if (!nom) return
+  const { node, mark } = nom
+  const typeName = node?.type.name || mark?.type.name
+  const node_or_mark = node || mark
+  const label = node_or_mark && nodeOrMarkToPandocName(node_or_mark) || typeName
+  const textContent = node?.textContent
+  if (node?.isAtom) {
+    if (typeName === NODE_NAME_INDEX_REF && node.attrs.kv[INDEXED_TEXT_ATTR]) {
+      return `${typeName}: ${node.attrs.kv[INDEXED_TEXT_ATTR]}`
+    }
+  } else if (textContent) {
+    return textContent.length < SELECTED_LABEL_MAX_LENGTH
+      ? textContent
+      : textContent.substring(0, SELECTED_LABEL_MAX_LENGTH) + '...'
+    // } else if (mark && to > from) {
+    //   const text = doc.textBetween(from, to)
+    //   if (text) return text
   }
-  return true
-}
-
-const oneOfMarksFilter: (marks: Mark[]) => SearchResultFilter = (marks) => (state, result) => {
-  if (marks) {
-    const { from, to } = result
-    return !!marks.find(mark => state.doc.rangeHasMark(from, to, mark))
-  }
-  return true
+  return label
 }
 
 export default {
   components: {
+    ActionsOnReplaceDropdown,
     IndicesButtons,
-    MarksPaletteDropdown
+    SaveConfigurationElementPopup,
   },
-  props: ['visible', 'editor'],
+  props: ['visible', 'editor', 'nodeOrMarkToLabel'],
   emits: ['hideSearchAndReplaceDialog'],
   setup() {
     setupQuasarIcons()
   },
   data() {
     return {
+      cssMode: false,
       query: undefined as SearchQuery | undefined,
       showIndicesButtons: false,
       searchStarted: false,
       dialogPosition: "top" as DialogPosition,
       showFields: true,
-      // optionSearchType: 'text' as SearchType,
+      // the search text in both modes (text and CSS)
+      searchInput: '',
+      // in CSS selection mode, the CSS selector
+      cssSelector: '',
+      // in CSS selection mode, merge adjacent text nodes with the same marks
+      optionMergeAdjacentMarks: true,
+      // in text mode, the text or the regex to be searched
       textToSearch: '',
+      // the the replacing text (text and CSS)
       textToReplace: '',
+      // just search, don't replace
       optionSearchOnly: false,
-      optionChangeMarksOnly: false,
+      // in text mode, search is case insensitive
       optionCaseInsensitive: false,
-      optionCapitalize: 'none' as Capitalize,
+      // search as regular expression (only in text search)
       optionRegex: false,
+      // start again from the top after last found, or go to the bottom going back from first found
       optionCycle: false,
+      // search a whole word
       optionWholeWord: false,
-      marksToSearch: [] as AddableMark[],
-      optionMarksLogicalOperator: 'and' as MarksLogicalOperator,
-      selectedMarksToSearch: [] as SearchMarkSpec[],
-      marksOnReplacedText: [] as AddableMark[],
-      selectedMarksOnReplacedText: [] as AddableMark[],
-      selectedMarkOperationTypeOnReplacedText: 'none',
-      foundIndex: -1,
+      // actions to be performed on replaced text or selected with CSS
+      actionsOnReplace: [] as ActionNameWithProps[],
     };
   },
   computed: {
     ...mapState(useActions, ['lastAction']),
+    ...mapState(useBackend, ['backend']),
+    foundIndex(): number {
+      const state = this.editor?.state
+      if (state) {
+        if (this.cssMode) {
+          return getCssSelectionIndex(state)
+        } else {
+          const ranges = getMatchHighlights(state).find();
+          const { from: selFrom, to: selTo } = state.selection;
+          return ranges.findIndex(({ from, to }) => from === selFrom && to === selTo)
+        }
+      }
+      return -1
+    },
+    indices() {
+      return getAllIndices(this.editor?.state)
+    },
     configuration() {
       return getEditorConfiguration(this.editor)
+    },
+    project() {
+      return getEditorProject(this.editor)
     },
     customStyles(): CustomStyleInstance[] {
       return this.configuration?.customStylesInstances || []
     },
+    searchLabel(): string {
+      return this.cssMode
+        ? 'CSS selector(s)'
+        : this.optionRegex
+          ? 'search regular expression'
+          : 'search text'
+    },
     searchAndReplaces() {
       return getSearchAndReplaces(this.configuration)
+    },
+    cssSelections(): ElementsSelection[] {
+      const config = this.configuration
+      const sels = config && getElementsSelections(config) || []
+      return sels
+    },
+    knownSettings(): Automation[] {
+      if (this.cssMode)
+        return this.cssSelections
+      else
+        return this.searchAndReplaces
+    },
+    cssSelected(): LabeledNodeOrMark[] {
+      const state = this.editor?.state
+      if (state) {
+        const doc = state.doc
+        const nom2label: NodeOrMarkToLabel = this.nodeOrMarkToLabel || defaultNodeOrMarkToLabel;
+        const els = getCssSelected(state) || []
+        return els.map((el, i) => ({
+          ...el,
+          label: nom2label(doc, el, `sel-${i}`),
+          key: `el-${i + 1}`,
+          class: ''
+        } as LabeledNodeOrMark))
+      } else
+        return []
     },
     ranges(): FoundTextRange[] {
       return this.editor.state && getMatchHighlights(this.editor.state).find()
     },
     foundCount(): number {
-      return this.ranges.length
+      return this.cssMode ? this.cssSelected.length : this.ranges.length
     },
     foundItemsText() {
       if (this.searchStarted) {
@@ -244,53 +336,34 @@ export default {
       }
       return 'press the "search" button to start searching'
     },
+    currentFoundItemShortText() {
+      if (this.searchStarted) {
+        const which = this.foundIndex >= 0 ? `${this.foundIndex + 1}/` : ''
+        const total = this.foundCount || 0
+        return total > 0 && `${which}${total}` || '0'
+      }
+      return ''
+    },
     expandIcon() {
       return this.showFields ? 'mdi-arrow-collapse-vertical' : 'mdi-arrow-expand-vertical'
     },
     expandTooltip() {
       return `show ${this.showFields ? 'less' : 'more'}`
     },
-    textTransforms(): TextTransform[] {
-      const transforms: TextTransform[] = []
-      const op = this.selectedMarkOperationTypeOnReplacedText
-      const marks = this.selectedMarksOnReplacedText
-      const capitalize = this.optionCapitalize
-      if (marks || capitalize) {
-        const schema = this.editor.state.schema
-        marks.forEach(({ markspec }) => {
-          const { typeName, attrs } = markspec
-          const mark = schema.marks[typeName].create(attrs)
-          if (mark) {
-            if (op === 'add')
-              transforms.push({ type: 'add-mark', mark: typeName, attrs } as MarkTransform)
-            else if (op === 'remove')
-              transforms.push({ type: 'remove-mark', mark: typeName, attrs } as MarkTransform)
-          }
-        })
-        switch (capitalize) {
-          case 'lower':
-            transforms.push({ type: 'lowercase' } as CapitalizeTransform)
-            break
-          case 'upper':
-            transforms.push({ type: 'uppercase' } as CapitalizeTransform)
-            break
-          case 'first':
-          // TODO:
-          default:
-        }
-      }
-      return transforms
-    }
   },
   watch: {
-    customStyles() {
-      this.marksOnReplacedText = this.baseMarksAndCustomStyles()
-      this.marksToSearch = this.baseMarksAndCustomStyles()
+    cssMode(css_mode: boolean, prev_mode: boolean) {
+      if (css_mode !== prev_mode) {
+        if (css_mode) {
+          this.textToSearch = this.searchInput
+        } else {
+          this.cssSelector = this.searchInput
+        }
+        this.updateSearchInput(css_mode ? this.cssSelector : this.textToSearch)
+        this.startSearch()
+      }
     },
-    optionMarksLogicalOperator() {
-      this.startSearch()
-    },
-    selectedMarksToSearch() {
+    mergeAdjacentMarks() {
       this.startSearch()
     },
     optionCaseInsensitive() {
@@ -314,7 +387,6 @@ export default {
   methods: {
     keypressed(e: KeyboardEvent) {
       if (this.editor) {
-        console.log(e.key)
         if (e.key === 'Enter') {
           this.startSearch();
         }
@@ -332,16 +404,55 @@ export default {
       this.editor.chain().hideFoundTexts().focus().run()
       this.hideDialog()
     },
-    startSearch() {
+    setCssSelector(sel: ElementsSelection) {
+      this.updateSearchInput(sel.cssSelector)
+      if (sel.replace) {
+        this.optionSearchOnly = false
+        this.updateTextToReplace(sel.replace)
+      } else {
+        this.optionSearchOnly = true
+      }
+      this.startSearch()
+      // this.editorAttributesTab = sel.tab
+    },
+    scrollAtSelectedCss() {
+      if (this.foundCount <= 0 || this.foundIndex < 0) return
+      const e: LabeledNodeOrMark = this.cssSelected[this.foundIndex]
+      // console.log(`scroll to ${e.label} at pos ${e.pos}`)
+      const editor = this.editor
+      const { node, mark, pos, from, to } = e
+      const nom = node || mark
+      const is_text = !!node && (nom as ProsemirrorNode).isText
+      if (is_text) {
+        // console.log(`scroll to a text`)
+        editor.chain()
+          // .setTextSelection(pos)
+          .scrollPosToCenterIfNotVisible(pos)
+          // .scrollIntoView()
+          .focus()
+          .run()
+      } else if (!!node) {
+        // console.log(`scroll to a node`)
+        editor.chain()
+          // .setNodeSelection(pos)
+          .scrollPosToCenterIfNotVisible(pos)
+          // .scrollIntoView()
+          .focus()
+          .run()
+      } else if (!!mark) { // it's a Mark
+        // console.log(`scroll to a mark`)
+        editor.chain()
+          // .setTextSelection({ from, to })
+          .scrollPosToCenterIfNotVisible(from)
+          // .scrollIntoView()
+          .focus()
+          .run()
+      }
+    },
+    startSearchText() {
       const editor = this.editor
       if (editor) {
-        const schema = editor.state.schema
-        const marks: Mark[] = []
-        this.selectedMarksToSearch.forEach(({ typeName, attrs }) => {
-          const a = !!attrs ? attrs : null
-          const mark = schema.marks[typeName].create(a)
-          if (mark) marks.push(mark)
-        })
+        this.textToSearch = this.searchInput
         const query = new SearchQuery({
           search: this.textToSearch,
           caseSensitive: !this.optionCaseInsensitive,
@@ -349,27 +460,33 @@ export default {
           regexp: !!this.optionRegex,
           replace: this.textToReplace,
           wholeWord: !!this.optionWholeWord,
-          filterResult: this.optionMarksLogicalOperator === 'and'
-            ? allMarksFilter(marks)
-            : oneOfMarksFilter(marks)
+          // filterResult: 
         })
         editor.chain().startSearch(query).focus().selectNextFoundText().run();
         this.query = query
-        this.searchStarted = true
-        this.updateCountAndIndex()
+        return true
       }
+      return false
     },
-    updateCountAndIndex() {
-      const state = this.editor?.state
-      if (state) {
-        const ranges = getMatchHighlights(state).find();
-        this.foundCount = ranges.length
-        const { from: selFrom, to: selTo } = state.selection;
-        this.foundIndex = ranges.findIndex(({ from, to }) => from === selFrom && to === selTo)
-      } else {
-        this.foundCount = 0
-        this.foundIndex = -1
+    startSearchCss(): boolean {
+      const editor = this.editor
+      if (editor) {
+        try {
+          editor.commands.cssSelect(this.searchInput, {
+            mergeAdjacentMarks: this.optionMergeAdjacentMarks,
+            sort: true
+          })
+          return true
+        } catch (err: any) {
+          console.log(err.message)
+        }
       }
+      return false
+    },
+    startSearch() {
+      const started = this.cssMode ? this.startSearchCss() : this.startSearchText()
+      this.searchStarted = started
+      return started
     },
     hideDialog() {
       if (this.editor) {
@@ -378,42 +495,75 @@ export default {
       this.showFields = true;
       this.$emit('hideSearchAndReplaceDialog');
     },
-    updateTextToSearch(v: string | number | null) {
+    updateSearchInput(v: string | number | null) {
       const newValue = v ? v.toString() : ''
-      this.textToSearch = newValue;
+      this.searchInput = newValue
       this.searchStarted = false
     },
     updateTextToReplace(v: string | number | null) {
       const newValue = v ? v.toString() : ''
       this.textToReplace = newValue;
     },
+    canPrevFound() {
+      return this.cssMode
+        ? this.editor.can().selectPrevCss(this.optionCycle)
+        : this.editor.can().selectPrevFoundText(this.optionCycle)
+    },
+    canNextFound() {
+      return this.cssMode
+        ? this.editor.can().selectNextCss(this.optionCycle)
+        : this.editor.can().selectNextFoundText(this.optionCycle)
+    },
     prevFound() {
-      this.editor.chain().selectPrevFoundText(this.optionCycle).focus().run()
-      this.updateCountAndIndex()
+      if (this.cssMode) {
+        this.editor.commands.selectPrevCss(this.optionCycle)
+        this.scrollAtSelectedCss()
+      } else {
+        this.editor.chain().selectPrevFoundText(this.optionCycle).focus().run()
+      }
     },
     nextFound() {
-      this.editor.chain().selectNextFoundText(this.optionCycle).focus().run()
-      this.updateCountAndIndex()
+      if (this.cssMode) {
+        this.editor.commands.selectNextCss(this.optionCycle)
+        this.scrollAtSelectedCss()
+      } else {
+        this.editor.chain().selectNextFoundText(this.optionCycle).focus().run()
+      }
     },
     replaceSelected() {
-      this.editor.chain()
-        .replaceSelectedText()
-        .applyTextTransforms(this.textTransforms)
-        .focus().run()
-      this.updateCountAndIndex()
-
+      if (this.optionSearchOnly) {
+        this.editor.chain()
+          .applyActions(this.actionsOnReplace)
+          .focus().run()
+      } else {
+        if (this.cssMode)
+          this.editor.chain()
+            .replaceWithText(this.textToReplace)
+            .applyActions(this.actionsOnReplace)
+            .focus().run()
+        else
+          this.editor.chain()
+            .replaceSelectedText()
+            .applyActions(this.actionsOnReplace)
+            .focus().run()
+      }
     },
     replaceNextText() {
-      this.editor.chain()
-        .replaceSelectedText()
-        .applyTextTransforms(this.textTransforms)
-        .selectNextFoundText()
-        .focus().run()
-      this.updateCountAndIndex()
+      this.replaceSelected()
+      this.nextFound()
     },
     replaceAll() {
-      this.editor.chain().replaceAll().focus().run()
-      this.updateCountAndIndex()
+      // if (this.cssMode) {
+      const startIndex = this.foundIndex
+      let prevIndex: number
+      do {
+        prevIndex = this.foundIndex
+        this.replaceNextText()
+      } while (this.foundIndex !== prevIndex && this.foundIndex !== startIndex)
+      // } else {
+      //   this.editor.chain().replaceAll().focus().run()
+      // }
+      // this.updateCountAndIndex()
     },
     baseMarksAndCustomStyles(selected?: string[]): AddableMark[] {
       const editor = this.editor
@@ -424,62 +574,129 @@ export default {
       }
       return []
     },
-    resetDialog() {
-      this.textToSearch = ''
+    resetSettings() {
+      this.searchInput = ''
       this.textToReplace = ''
       this.optionSearchOnly = false
-      this.optionChangeMarksOnly = false
       this.optionCaseInsensitive = false
-      this.optionCapitalize = 'none' as Capitalize
       this.optionRegex = false
       this.optionCycle = false
       this.optionWholeWord = false
-      this.marksToSearch = [] as AddableMark[]
-      this.optionMarksLogicalOperator = 'and' as MarksLogicalOperator
-      this.selectedMarksToSearch = [] as SearchMarkSpec[]
-      this.selectedMarksOnReplacedText = [] as AddableMark[]
-      this.selectedMarkOperationTypeOnReplacedText = 'none'
+      this.actionsOnReplace = []
       this.foundIndex = -1
     },
     loadSearchAndReplace(sar: SearchAndReplace) {
       this.textToSearch = sar.search;
-      this.updateTextToSearch(this.textToSearch)
+      this.updateSearchInput(this.textToSearch)
       this.textToReplace = sar.replace || '';
       this.updateTextToReplace(this.textToReplace)
       this.optionSearchOnly = !!sar.optionSearchOnly || (!sar.replace && sar.replace !== '')
       this.optionCaseInsensitive = !!sar.optionCaseInsensitive
       this.optionRegex = !!sar.optionRegex;
       this.optionCycle = !!sar.optionCycle;
-      this.optionCapitalize = sar.capitalize || 'none';
+      // this.optionCapitalize = sar.capitalize || 'none';
       this.optionWholeWord = !!sar.optionWholeWord;
-      const am: AddableMark[] = baseAddableMarks(sar.addMarks || [])
-      customStylesToAddableMarks(this.customStyles, sar.addStyles, am)
-      if (sar.addSpans && sar.addSpans.length > 0) {
-        searchAndReplaceSpanToAddableMarks(sar.addSpans, [sar.addSpans[0].name], am)
-      }
-      this.marksOnReplacedText = am
-      this.selectedMarksOnReplacedText = am.filter(m => m.active)
-      this.selectedMarkOperationTypeOnReplacedText = 'add'
+      // capitalization
+      let actionsOnReplace: ActionNameWithProps[] = []
+      if (sar.capitalize === 'upper')
+        actionsOnReplace.push(ACTION_UPPERCASE)
+      else if (sar.capitalize === 'lower')
+        actionsOnReplace.push(ACTION_LOWERCASE)
+      else if (sar.capitalize === 'first')
+        actionsOnReplace.push(ACTION_UPPERCASE_FIRST)
+      // marks
+      sar.addMarks?.forEach(m => {
+        actionsOnReplace.push({
+          name: 'add-mark' as ActionName,
+          props: {
+            markType: m
+          } as AddOrRemoveMarkActionProps
+        } as ActionNameWithProps)
+      })
+      // styles
+      sar.addStyles?.forEach(s => {
+        actionsOnReplace.push({
+          name: 'add-custom-style' as ActionName,
+          props: {
+            styleName: s
+          } as AddOrRemoveCustomStyleActionProps
+        } as ActionNameWithProps)
+      })
+      // spans
+      const firstAlternative = sar.addSpans && sar.addSpans[0]
+      if (firstAlternative)
+        actionsOnReplace.push({
+          name: 'set-span' as ActionName,
+          props: {
+            classes: firstAlternative?.classes || [],
+            attrs: firstAlternative?.kv || {},
+            alternatives: sar.addSpans,
+            alternativeIndex: firstAlternative ? 0 : -1,
+          } as SetSpanActionProps
+        } as ActionNameWithProps)
+      if (sar.actions)
+        actionsOnReplace = [...actionsOnReplace, ...sar.actions]
+      this.actionsOnReplace = [...actionsOnReplace]
+      // const am: AddableMark[] = baseAddableMarks(sar.addMarks || [])
+      // customStylesToAddableMarks(this.customStyles, sar.addStyles, am)
+      // if (sar.addSpans && sar.addSpans.length > 0) {
+      //   customSpanToAddableMarks(sar.addSpans, [sar.addSpans[0].name], am)
+      // }
       if (this.editor) {
         this.editor.chain().hideFoundTexts().run()
         this.searchStarted = false
       }
     },
-    markspecsOnReplacedText(): SearchMarkSpec[] {
-      return this.selectedMarksOnReplacedText.map(am => am.markspec)
+    updateActions(actions: ActionNameWithProps[]) {
+      // console.log(toRaw(actions))
+      this.actionsOnReplace = actions
     },
-    setMarksOnReplacedText(marks: AddableMark[]) {
-      this.selectedMarksOnReplacedText = marks
+    deleteSettings(name: string, description: string, isProject: boolean, configName?: string) {
+      this.saveSettings(name, description, isProject, configName, true)
     },
-    selectMarksToSearch(marks: AddableMark[]) {
-      this.selectedMarksToSearch = marks.map(m => m.markspec)
-      // console.log(this.selectedMarksToSearch)
-    },
-    selectMarkOperationOnReplacedText(operation: MarkOperationType) {
-      this.selectedMarkOperationTypeOnReplacedText = operation
-    },
-    selectMarksLogicalOperator(operator: MarksLogicalOperator) {
-      this.optionMarksLogicalOperator = operator
+    async saveSettings(name: string, description: string, isProject: boolean, configName?: string, isDeletion?: boolean) {
+      let obj
+      if (this.cssMode) {
+        obj = {
+          type: 'elements-selection',
+          name,
+          description,
+          cssSelector: toRaw(this.cssSelector),
+          replace: toRaw(this.textToReplace),
+          // tab,
+        } as ElementsSelection
+      } else {
+        obj = {
+          type: 'search-replace',
+          name,
+          description,
+          search: toRaw(this.searchInput),
+          replace: this.optionSearchOnly ? undefined : toRaw(this.textToReplace),
+          actions: toRaw(this.actionsOnReplace),
+          optionCaseInsensitive: toRaw(this.optionCaseInsensitive),
+          optionCycle: toRaw(this.optionCycle),
+          optionSearchOnly: toRaw(this.optionSearchOnly),
+          optionRegex: toRaw(this.optionRegex),
+          optionWholeWord: toRaw(this.optionWholeWord),
+          // capitalize, -- DEPRECATED
+          // addMarks, -- DEPRECATED
+          // addSpans, -- DEPRECATED
+          // addStyles, -- DEPRECATED
+        } as SearchAndReplace
+      }
+      // console.log(serializeConfiguration(this.configuration!))
+      if (isProject && this.project)
+        await this.backend?.storeInConfiguration(
+          'automations',
+          obj,
+          !!isDeletion,
+          isProject,
+          this.project.path
+        )
+      setActionCommand(this.editor.state, ACTION_GET_PROJECT, {
+        path: this.project?.path,
+        computeConfig: true,
+      } as GetProjectOptions)
     }
   },
 };
@@ -488,5 +705,14 @@ export default {
 <style lang="scss">
 .search-and-replace-textfield {
   min-width: 300px;
+}
+
+.small {
+  min-width: 0.3rem;
+  max-width: 0.5rem;
+}
+
+.big {
+  min-width: 1rem;
 }
 </style>

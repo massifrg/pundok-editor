@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { NODE_NAME_DIV, SK_TOGGLE_DIV } from '../../common';
+import { NODE_NAME_DIV, SK } from '../../common';
 
 export interface DivOptions {
   HTMLAttributes: Record<string, any>;
@@ -62,7 +62,7 @@ export const Div = Node.create<DivOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK_TOGGLE_DIV]: () =>
+      [SK.TOGGLE_DIV]: () =>
         this.editor.commands.toggleDiv(),
     };
   },

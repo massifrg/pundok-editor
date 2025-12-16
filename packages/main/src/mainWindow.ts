@@ -17,7 +17,12 @@ let showPdfView = false;
 let pdfViewRelWidth = 0.6; // 0.35;
 let resizeEditorView: (options?: { refreshDevTools?: boolean }) => void;
 
-async function createWindow() {
+export interface WindowWithIpc {
+  window: BaseWindow,
+  ipcHub: IpcHub
+}
+
+async function createWindow(): Promise<WindowWithIpc> {
   const baseWindow = new BaseWindow({
     width: 800,
     height: 600,
@@ -46,20 +51,10 @@ async function createWindow() {
       // webSecurity: false,
     },
   });
+
   handleImagesFor(editorView)
   baseWindow.contentView.addChildView(editorView);
   editorView.setBounds({ x: 0, y: 0, width: 600, height: 600 });
-
-  const pdfView = new WebContentsView({
-    webPreferences: {
-      preload: join(__dirname, '../../preload/dist/index.cjs'),
-      devTools: true,
-      spellcheck: false,
-    },
-  });
-  baseWindow.contentView.addChildView(pdfView);
-  pdfView.setVisible(showPdfView);
-  pdfView.webContents.openDevTools();
 
   resizeEditorView = (options?: { refreshDevTools?: boolean }) => {
     const { width, height } = baseWindow.getContentBounds();
@@ -70,12 +65,6 @@ async function createWindow() {
       x: 0,
       y: 0,
       width: editwidth,
-      height,
-    });
-    pdfView.setBounds({
-      x: editwidth,
-      y: 0,
-      width: pdfwidth,
       height,
     });
 
@@ -112,14 +101,26 @@ async function createWindow() {
   //   e.preventDefault()
   // })
 
-  const ipcHub = new IpcHub(baseWindow, editorView, pdfView);
+  const ipcHub = new IpcHub(baseWindow, editorView);
   refreshMainMenu(ipcHub);
+
+  // add listeners to intercept dev-tools open/close
+  editorView.webContents.on("devtools-opened", () => {
+    console.log("DevTools opened");
+    showDeveloperTools = true
+    refreshMainMenu(ipcHub)
+  });
+
+  editorView.webContents.on("devtools-closed", () => {
+    console.log("DevTools closed");
+    showDeveloperTools = false
+    refreshMainMenu(ipcHub)
+  });
 
   // await loadEditor(browserWindow);
   await loadEditor(editorView);
-  await loadViewer(pdfView);
 
-  return baseWindow;
+  return { window: baseWindow, ipcHub }
 }
 
 async function loadEditor(win: BrowserWindow | WebContentsView) {
@@ -139,33 +140,19 @@ async function loadEditor(win: BrowserWindow | WebContentsView) {
   await win.webContents.loadURL(pageUrl);
 }
 
-async function loadViewer(win: BrowserWindow | WebContentsView) {
-  /**
-   * URL for viewer window.
-   * Vite dev server for development.
-   * `file://../renderer/viewer.html` for production and test
-   */
-  const pageUrl =
-    import.meta.env.DEV && import.meta.env.VITE_DEV_SERVER_URL !== undefined
-      ? import.meta.env.VITE_DEV_SERVER_URL + 'viewer.html'
-      : new URL(
-        '../renderer/dist/viewer.html',
-        'file://' + __dirname,
-      ).toString();
-  console.log(pageUrl);
-  await win.webContents.loadURL(pageUrl);
-}
-
 /**
  * Restore existing BrowserWindow or Create new BrowserWindow
  */
-export async function restoreOrCreateWindow() {
+export async function restoreOrCreateWindow(): Promise<WindowWithIpc> {
   checkAndCreateAppDataDir();
 
   let window = BaseWindow.getAllWindows().find((w) => !w.isDestroyed());
+  let ipcHub: IpcHub | undefined = undefined
 
   if (window === undefined) {
-    window = await createWindow();
+    const wwipc = await createWindow();
+    window = wwipc.window
+    ipcHub = wwipc.ipcHub
   }
 
   window.show();
@@ -175,27 +162,8 @@ export async function restoreOrCreateWindow() {
   }
 
   window.focus();
+  return { window, ipcHub: ipcHub! }
 }
-
-// import { app } from 'electron'
-
-// let mainWindow: BrowserWindow | null
-
-// app.whenReady().then(() => {
-//   createWindow()
-
-//   app.on('activate', () => {
-//     if (BrowserWindow.getAllWindows().length === 0) {
-//       createWindow()
-//     }
-//   })
-// })
-
-// app.on('window-all-closed', () => {
-//   if (process.platform !== 'darwin') {
-//     app.quit()
-//   }
-// })
 
 export async function refreshMainMenu(ipcHub: IpcHub) {
   const bookmarks = await getBookmarks();
@@ -206,7 +174,10 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
       sublabel: b.path,
       tooltip: b.path,
       click: () => {
-        ipcHub.fireEventOpenDocument(b.path, b.configurationName);
+        ipcHub.fireEventOpenDocument({
+          path: b.path,
+          configurationName: b.configurationName
+        });
       },
     }));
   const recentProjectsMenu = bookmarks
@@ -216,7 +187,7 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
       sublabel: b.path,
       tooltip: b.path,
       click: () => {
-        ipcHub.fireEventOpenDocument(b.path);
+        ipcHub.fireEventOpenDocument({ path: b.path });
       },
     }));
   const recentMenu = [
@@ -271,19 +242,15 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
             ipcHub.fireEventExportCurrentDocument();
           },
         },
-        // {
-        //   type: 'separator',
-        // },
-        // {
-        //   label: 'New project',
-        //   click: async () => {
-        //     // sendCommandToRenderer(
-        //     //   browserWindow,
-        //     //   'ask-value',
-        //     //   IPC_VALUE_NEW_PROJECT_NAME
-        //     // );
-        //   },
-        // },
+        {
+          type: 'separator',
+        },
+        {
+          label: 'New/Edit project',
+          click: () => {
+            ipcHub.fireEventCreateNewProject();
+          },
+        },
         // {
         //   label: 'Open project',
         // },
@@ -358,19 +325,6 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
             if (showDeveloperTools)
               resizeEditorView({ refreshDevTools: showDeveloperTools });
             else ipcHub.editorView.webContents.closeDevTools();
-          },
-        },
-        {
-          type: 'checkbox',
-          label: 'Toggle PDF View',
-          checked: showPdfView,
-          click: async () => {
-            showPdfView = !showPdfView;
-            if (showPdfView) {
-              loadViewer(ipcHub.pdfView);
-              ipcHub.pdfView.setVisible(true);
-            }
-            resizeEditorView({ refreshDevTools: showDeveloperTools });
           },
         },
       ],

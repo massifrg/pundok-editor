@@ -1,14 +1,15 @@
-import { IpcMainInvokeEvent, shell } from 'electron';
+import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
 import {
+  DocBookmark,
   EditorKeyType,
   PundokEditorProject,
   SaveResponse,
-  ServerMessageForViewer,
   StoredDoc,
 } from '../common';
 import { errorFeedback } from './feedback';
 import { stringify } from '../utils';
+import { updateBookmarksFile } from '../bookmarks';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -33,26 +34,22 @@ export const saveDocumentHandler =
         if (doc.converter) {
           response = await hub.exportDocument(doc, project, editorKey);
           console.log(`EXPORT FINISHED`);
-          console.log(doc);
-          if (!response.error && response.resultFile) {
-            const openResult = doc.converter?.openResult;
-            console.log(`openResult=${openResult}`);
-            if (openResult === 'editor') {
-              hub.send('show-in-viewer', {
-                type: 'viewer',
-                editorKey,
-                setup: {
-                  name: response.resultFile,
-                },
-              } as ServerMessageForViewer);
-            } else if (openResult === 'os') {
-              shell.openPath(response.resultFile).catch((error) => {
-                errorFeedback(hub, stringify(error), editorKey);
-              });
-            }
-          }
-        } else {
+          // console.log(doc);
+        } else if (doc.content) {
           response = await hub.saveDocument(doc, project);
+          const bookmark: DocBookmark = {
+            type: 'document',
+            path: doc.path!,
+            configurationName: !project && doc.configurationName || undefined,
+            id: doc.id
+          }
+          await updateBookmarksFile([bookmark]);
+        } else {
+          response = {
+            doc,
+            error: "you provided no content to save",
+            message: "you provided no content to save"
+          }
         }
         if (response.error) {
           const errmsg = stringify(response.error);

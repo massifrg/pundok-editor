@@ -1,30 +1,83 @@
-import { Mark, Node } from '@tiptap/pm/model';
-import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/core';
-import { editableAttrsForNodeOrMark } from '../schema/helpers/attributes';
+import { currentRepeatableCommandTooltip, SearchTextVariant } from '../schema';
+import { SelectedNodeOrMark } from '../schema/helpers';
 import {
-  currentRepeatableCommandTooltip,
-  editorKeyFromState,
-  getEditorConfiguration,
-} from '../schema';
-import { nodeOrMarkToPandocName } from '../schema/helpers/PandocVsProsemirror';
-import {
-  nodeIcon,
-  nodesWithTemplate,
-  compatibleNodes,
-  SelectedNodeOrMark,
-  templateNode,
-} from '../schema/helpers';
-import {
+  AddOrRemoveClassActionProps,
   EditorKeyType,
-  NODE_NAME_INDEX_DIV,
-  NODE_NAME_PANDOC_TABLE,
-  NODE_NAME_TABLE_BODY,
-  NODE_NAME_TABLE_CELL,
-  NODE_NAME_TABLE_HEADER,
-  PundokEditorConfig
+  MetaMapTextActionProps,
+  TableCellVertAlignActionProps,
+  TextAlignmentActionProps
 } from '../common';
-import { toRaw } from 'vue';
+import { ActionsGroup } from './actionGroup';
+import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
+
+export type ActionName =
+  | 'backend-feedback'
+  | 'backend-set-project'
+  | 'close-editor'
+  | 'show-project-structure'
+  | 'backend-set-configuration-name'
+  | 'set-content'
+  | 'backend-set-content'
+  | 'backend-set-content-with-project'
+  | 'open-document'
+  | 'save-document'
+  | 'save-document-as'
+  | 'new-project'
+  | 'get-project'
+  | 'import-document'
+  | 'export-document'
+  | 'transform-document'
+  | 'document-go-to-line'
+  | 'show-result-message'
+  | 'show-export-dialog'
+  | 'show-import-dialog'
+  | 'show-search-dialog'
+  | 'select-prev'
+  | 'select-next'
+  | 'set-alternative'
+  | 'replace-and-select-next'
+  | 'repeat-change'
+  | 'modify-metamap-entry-key'
+  | 'add-class'
+  | 'remove-class'
+  | 'new-empty-document'
+  | 'new-document'
+  | 'setup-viewer'
+  | 'edit-node-or-mark-attributes'
+  | 'edit-meta-map-text'
+  | 'set-meta-map-text'
+  | 'unwrap-blocks'
+  | 'set-text-align'
+  | 'set-vertical-align'
+  | 'select-node'
+  | 'copy-node'
+  | 'delete-node'
+  | 'duplicate-node'
+  | 'add-table-caption'
+  | 'add-table-head'
+  | 'add-table-foot'
+  | 'prepend-table-body'
+  | 'append-table-body'
+  | 'decrease-table-body-header-rows'
+  | 'increase-table-body-header-rows'
+  | 'decrease-table-body-header-columns'
+  | 'increase-table-body-header-columns'
+  | 'propagate-index-name'
+  | 'select-mark-range'
+  | 'add-mark'
+  | 'remove-mark'
+  | 'set-span'
+  | 'set-index-ref'
+  | 'add-custom-style'
+  | 'remove-custom-style'
+  | 'add-custom-class'
+  | 'remove-custom-class'
+  | 'lowercase'
+  | 'uppercase'
+  | 'uppercase-first'
+  | 'auto-set-index-term-id'
+  | 'insert-raw-inline'
 
 export type TooltipForAction =
   | string
@@ -34,8 +87,7 @@ export type TooltipForAction =
   ) => string | undefined);
 
 /** Core properties of actions */
-interface ActionCore {
-  name: string;
+export interface ActionCore {
   label: string;
   tooltip?: TooltipForAction;
   icon?: string;
@@ -45,59 +97,14 @@ interface ActionCore {
 
 /** Editor action that is not linked to an editor instance */
 export interface BaseEditorAction extends ActionCore {
-  // name: string;
-  // label: string;
-  // icon?: string;
-  // iconRight?: string;
-  // order?: number;
-  props?: Record<string, any>;
+  name: ActionName;
+  props?: object;
 }
 
 /** Editor action that is relevant only to the editor having that editorKey */
 export interface EditorAction extends BaseEditorAction {
   editorKey: EditorKeyType;
 }
-
-/** Useful to group actions in sub menus (non linked to an editor instance) */
-interface BaseActionsGroup extends ActionCore {
-  // name: string;
-  // label: string;
-  // icon?: string;
-  // iconRight?: string;
-  // order?: number;
-}
-
-/** Actions group that is relevant only to the editor with that editorKey */
-export interface ActionsGroup extends BaseActionsGroup {
-  editorKey: EditorKeyType;
-}
-
-const insertBeforeGroup: BaseActionsGroup = {
-  name: 'insert-before',
-  label: 'insert before...',
-  icon: 'mdi-select-place',
-  iconRight: 'mdi-square-rounded',
-};
-
-const insertAfterGroup: BaseActionsGroup = {
-  name: 'insert-after',
-  label: 'insert after...',
-  icon: 'mdi-square-rounded',
-  iconRight: 'mdi-select-place',
-};
-
-const convertBlockGroup: BaseActionsGroup = {
-  name: 'convert-block',
-  label: 'convert block...',
-  icon: 'mdi-swap-horizontal',
-};
-
-const moveBlockGroup: BaseActionsGroup = {
-  name: 'move-block',
-  label: 'move block...',
-  icon: 'mdi-select-place',
-  iconRight: 'mdi-swap-vertical',
-};
 
 interface ActionForNodeOrMarkCore {
   canDo?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
@@ -108,26 +115,10 @@ interface ActionForNodeOrMarkCore {
 }
 
 /** Action pertinent to a particular Node or Mark of the document (non linked version) */
-export interface BaseActionForNodeOrMark
-  extends BaseEditorAction,
-  ActionForNodeOrMarkCore {
-  // canDo?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
-  // do?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
-  // nodeOrMark?: SelectedNodeOrMark;
-  // restoreSelection?: boolean;
-  // group?: ActionsGroup;
-}
+export type BaseActionForNodeOrMark = BaseEditorAction & ActionForNodeOrMarkCore
 
 /** Action pertinent to a particular Node or Mark of the document of the editor with that editorKey */
-export interface ActionForNodeOrMark
-  extends EditorAction,
-  ActionForNodeOrMarkCore {
-  // canDo?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
-  // do?: (editor: Editor, action?: ActionForNodeOrMark) => boolean;
-  // nodeOrMark?: SelectedNodeOrMark;
-  // restoreSelection?: boolean;
-  // group?: ActionsGroup;
-}
+export type ActionForNodeOrMark = EditorAction & ActionForNodeOrMarkCore
 
 export const ACTION_BACKEND_FEEDBACK: BaseEditorAction = {
   name: 'backend-feedback',
@@ -139,6 +130,12 @@ export const ACTION_BACKEND_SET_PROJECT: BaseEditorAction = {
   label: 'set project',
 };
 
+/** Used to force a reload of a project. */
+export const ACTION_GET_PROJECT: BaseEditorAction = {
+  name: 'get-project',
+  label: 'get-project',
+}
+
 export const ACTION_CLOSE_EDITOR: BaseEditorAction = {
   name: 'close-editor',
   label: 'close editor',
@@ -148,6 +145,11 @@ export const ACTION_SHOW_PROJECT_STRUCTURE_DIALOG: BaseEditorAction = {
   name: 'show-project-structure',
   label: 'show project structure',
 };
+
+export const ACTION_PROJECT_NEW: BaseEditorAction = {
+  name: 'new-project',
+  label: 'create new project',
+}
 
 export const ACTION_BACKEND_SET_CONFIG_NAME: BaseEditorAction = {
   name: 'backend-set-configuration-name',
@@ -170,9 +172,22 @@ export const ACTION_BACKEND_SET_CONTENT_WITH_PROJECT: BaseEditorAction = {
   label: 'set the content with a project (and a configuration)',
 };
 
+export const ACTION_NEW_EMPTY_DOCUMENT: BaseEditorAction = {
+  name: 'new-empty-document',
+  label: 'new empty document',
+  icon: 'mdi-file-import',
+};
+
+export const ACTION_NEW_DOCUMENT: BaseEditorAction = {
+  name: 'new-document',
+  label: 'new document',
+  icon: 'mdi-file-import',
+};
+
 export const ACTION_DOCUMENT_OPEN: BaseEditorAction = {
   name: 'open-document',
   label: 'open document',
+  icon: 'mdi-file-document-edit'
 };
 
 export const ACTION_DOCUMENT_SAVE: BaseEditorAction = {
@@ -181,7 +196,7 @@ export const ACTION_DOCUMENT_SAVE: BaseEditorAction = {
 };
 
 export const ACTION_DOCUMENT_SAVE_AS: BaseEditorAction = {
-  name: 'save-document-sa',
+  name: 'save-document-as',
   label: 'save document with a different name',
 };
 
@@ -200,6 +215,18 @@ export const ACTION_DOCUMENT_TRANSFORM: BaseEditorAction = {
   label: 'transform document',
   icon: 'mdi-file-replace-outline',
 };
+
+export const ACTION_DOCUMENT_GO_TO_LINE: BaseEditorAction = {
+  name: 'document-go-to-line',
+  label: 'move the cursor to line',
+  icon: 'mdi-debug-step-into'
+}
+
+export const ACTION_SHOW_RESULT_MESSAGE: BaseEditorAction = {
+  name: 'show-result-message',
+  label: 'show message relative to the result of an operation',
+  icon: 'mdi-message-reply-outline',
+}
 
 export const ACTION_SHOW_EXPORT_DIALOG: BaseEditorAction = {
   name: 'show-export-dialog',
@@ -237,11 +264,6 @@ export const ACTION_SET_ALTERNATIVE: BaseEditorAction = {
   icon: 'mdi-numeric-1-box-outline'
 }
 
-export interface ActionPropsSetAlternative {
-  alternative: number,
-  context?: 'indices' // | 'other-context' ... 
-}
-
 export const ACTION_REPLACE_AND_SELECT_NEXT: BaseEditorAction = {
   name: 'replace-and-select-next',
   label: 'replace and select next',
@@ -271,43 +293,135 @@ export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
   },
 };
 
-export const MODIFY_METAMAP_KEY: BaseActionForNodeOrMark = {
-  name: 'modify-metamap-entry-key',
-  label: 'modify MetaMap entry  key',
-  icon: 'mdi-pencil',
-  canDo: (editor, action) =>
-    editor.can().setMetaMapEntryText(action?.props?.text, action?.nodeOrMark?.pos),
-  do: (editor, action) =>
-    editor.commands.setMetaMapEntryText(
-      action?.props?.text,
-      action?.nodeOrMark?.pos,
-    ),
-};
+export const ACTION_LOWERCASE: BaseActionForNodeOrMark = {
+  name: 'lowercase',
+  label: "convert to lower case the selected text",
+  icon: "mdi-format-letter-case-lower",
+  canDo: (editor) => editor.can().toLowercase(),
+  do: (editor) => editor.commands.toLowercase(),
+}
+
+export const ACTION_UPPERCASE: BaseActionForNodeOrMark = {
+  name: 'uppercase',
+  label: "convert to upper case the selected text",
+  icon: "mdi-format-letter-case-upper",
+  canDo: (editor) => editor.can().toUppercase(),
+  do: (editor) => editor.commands.toUppercase(),
+}
+
+export const ACTION_UPPERCASE_FIRST: BaseActionForNodeOrMark = {
+  name: 'uppercase-first',
+  label: "convert to upper case the first letter of every word in selected text",
+  icon: "mdi-format-letter-case",
+  canDo: (editor) => editor.can().toUppercaseFirst(),
+  do: (editor) => editor.commands.toUppercaseFirst(),
+}
 
 export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
   name: 'add-class',
   label: 'add a class',
+  icon: 'add_class',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.can().addPandocAttrClass(typ, className) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.commands.addPandocAttrClass(typ, className) || false
+  }
 }
 
-export const ACTION_NEW_EMPTY_DOCUMENT: BaseEditorAction = {
-  name: 'new-empty-document',
-  label: 'new empty document',
-  icon: 'mdi-file-import',
-};
+export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
+  name: 'remove-class',
+  label: 'remove a class',
+  icon: 'remove_class',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.can().removePandocAttrClass(typ, className) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.commands.removePandocAttrClass(typ, className) || false
+  }
+}
 
-export const ACTION_NEW_DOCUMENT: BaseEditorAction = {
-  name: 'new-document',
-  label: 'new document',
-  icon: 'mdi-file-import',
-};
-export function actionNewDocument(
-  editorKey: EditorKeyType,
-  content: string,
-  configurationName?: string,
-): EditorAction {
-  const action = { ...ACTION_NEW_DOCUMENT, editorKey } as EditorAction;
-  action.props = { content, configurationName };
-  return action;
+export interface SearchIndexTermActionProps {
+  searchTextVariant: SearchTextVariant
+}
+
+export const ACTION_AUTO_SET_INDEX_TERM_ID: BaseActionForNodeOrMark = {
+  name: 'auto-set-index-term-id',
+  label: 'search and set the id of the index term automatically',
+  icon: 'mdi-database-search',
+  canDo: (editor, action) => editor.can().setIndexTermAutoId(
+    (action?.props as SearchIndexTermActionProps)?.searchTextVariant),
+  do: (editor, action) => editor.commands.runRepeatableCommand(
+    'setIndexTermAutoId',
+    'search and set the id of the current index term automatically',
+    (action?.props as SearchIndexTermActionProps)?.searchTextVariant
+  )
+}
+
+export const ACTION_ADD_MARK: BaseActionForNodeOrMark = {
+  name: 'add-mark',
+  label: 'add Mark (Emph, Strong, etc.)',
+  icon: 'mdi-tag-plus',
+}
+
+export const ACTION_REMOVE_MARK: BaseActionForNodeOrMark = {
+  name: 'remove-mark',
+  label: 'remove Mark (Emph, Strong, etc.)',
+  icon: 'mdi-tag-minus',
+}
+
+export const ACTION_ADD_CUSTOM_STYLE: BaseActionForNodeOrMark = {
+  name: 'add-custom-style',
+  label: 'add custom style',
+  icon: 'character_style',
+}
+
+export const ACTION_REMOVE_CUSTOM_STYLE: BaseActionForNodeOrMark = {
+  name: 'remove-custom-style',
+  label: 'remove custom style',
+  icon: 'character_style',
+}
+
+export const ACTION_SET_SPAN: BaseActionForNodeOrMark = {
+  name: 'set-span',
+  label: 'add Span (with optional classes and attributes)',
+  icon: 'mdi-text-box-plus',
+}
+
+export const ACTION_ADD_CUSTOM_CLASS: BaseActionForNodeOrMark = {
+  name: 'add-custom-class',
+  label: 'add a custom class (with its attributes)',
+  icon: 'add_custom_class'
+}
+
+export const ACTION_REMOVE_CUSTOM_CLASS: BaseActionForNodeOrMark = {
+  name: 'remove-custom-class',
+  label: 'remove a custom class (with its attributes)',
+  icon: 'remove_custom_class'
+}
+
+export const ACTION_SET_INDEX_REF: BaseActionForNodeOrMark = {
+  name: 'set-index-ref',
+  label: 'set an index reference at selection',
+  icon: 'mdi-cursor-pointer',
+}
+
+export const ACTION_INSERT_RAW_INLINE: BaseActionForNodeOrMark = {
+  name: 'insert-raw-inline',
+  label: 'insert a RawInline before/after/around selection',
+  icon: 'mdi-code-tags',
 }
 
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
@@ -326,63 +440,53 @@ export const ACTION_EDIT_META_MAP_TEXT: BaseEditorAction = {
   label: 'edit MetaMap text',
   icon: 'mdi-pencil',
 };
+
 export const ACTION_SET_META_MAP_TEXT: BaseActionForNodeOrMark = {
   name: 'set-meta-map-text',
   label: 'set MetaMap text',
-  canDo: (editor, action) =>
-    editor.can().setMetaMapEntryText(action?.props?.text, action?.nodeOrMark?.pos),
-  do: (editor, action) =>
-    editor.commands.setMetaMapEntryText(
-      action?.props?.text,
-      action?.nodeOrMark?.pos,
-    ),
+  canDo: (editor, action) => {
+    const { text } = action?.props as MetaMapTextActionProps
+    return editor.can().setMetaMapEntryText(text, action?.nodeOrMark?.pos)
+  },
+  do: (editor, action) => {
+    const { text } = action?.props as MetaMapTextActionProps
+    return editor.commands.setMetaMapEntryText(text, action?.nodeOrMark?.pos)
+  }
 };
-export function actionSetMetaMapText(
-  editorKey: EditorKeyType,
-  nodeOrMark: SelectedNodeOrMark,
-  text?: string,
-  oldText?: string,
-): ActionForNodeOrMark {
-  const action = {
-    ...ACTION_SET_META_MAP_TEXT,
-    editorKey,
-    nodeOrMark,
-  } as ActionForNodeOrMark;
-  action.props = { text, oldText };
-  return action;
-}
 
-const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
-(['left', 'center', 'right'] as string[]).forEach((where) => {
-  TABLE_CELL_ALIGNMENT_ACTIONS.push({
-    name: 'set-text-align',
-    label: `horizontal ${where} align`,
-    icon: `mdi-format-align-${where}`,
-    canDo: (editor) => editor.can().setTextAlign(where),
-    do: (editor) => editor.commands.setTextAlign(where),
-  });
-});
-(['top', 'middle', 'bottom'] as string[]).forEach((where) => {
-  TABLE_CELL_ALIGNMENT_ACTIONS.push({
-    name: 'set-vertical-align',
-    label: `vertical ${where} align`,
-    icon: `mdi-format-align-${where}`,
-    canDo: (editor) => editor.can().setVerticalAlign(where),
-    do: (editor) => editor.commands.setVerticalAlign(where),
-  });
-});
-
-const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
+export const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
   name: 'unwrap-blocks',
   label: 'unwrap the contents',
   icon: 'mdi-wrap-disabled',
   canDo: (editor, action) =>
     !!action?.nodeOrMark?.pos &&
-    editor.can().unwrapNodeAtPos(action.nodeOrMark.pos),
+    editor.can().unwrapNode(action.nodeOrMark.pos),
   do: (editor, action) =>
     !!action?.nodeOrMark?.pos &&
-    editor.commands.unwrapNodeAtPos(action.nodeOrMark.pos),
+    editor.commands.unwrapNode(action.nodeOrMark.pos),
 };
+
+export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
+(['left', 'center', 'right'] as string[]).forEach((alignment) => {
+  TABLE_CELL_ALIGNMENT_ACTIONS.push({
+    name: `set-text-align`,
+    label: `horizontal ${alignment} align`,
+    icon: `mdi-format-align-${alignment}`,
+    canDo: (editor, action) => editor.can().setTextAlign((action?.props as TextAlignmentActionProps)?.alignment),
+    do: (editor, action) => editor.commands.setTextAlign((action?.props as TextAlignmentActionProps)?.alignment),
+    props: { alignment } as TextAlignmentActionProps
+  });
+});
+(['top', 'middle', 'bottom'] as string[]).forEach((alignment) => {
+  TABLE_CELL_ALIGNMENT_ACTIONS.push({
+    name: 'set-vertical-align',
+    label: `vertical ${alignment} align`,
+    icon: `mdi-format-align-${alignment}`,
+    canDo: (editor, action) => editor.can().setVerticalAlign((action?.props as TableCellVertAlignActionProps)?.alignment),
+    do: (editor, action) => editor.commands.setVerticalAlign((action?.props as TableCellVertAlignActionProps)?.alignment),
+    props: { alignment } as TableCellVertAlignActionProps
+  });
+});
 
 export function canExecuteEditorAction(
   editor: Editor,
@@ -407,450 +511,41 @@ export function executeEditorAction(
   }
 }
 
-export function actionsForNodeOrMark(
-  state: EditorState,
-  nodeOrMark?: SelectedNodeOrMark,
-): ActionForNodeOrMark[] {
-  const editorKey = editorKeyFromState(state);
-  if (!editorKey || !nodeOrMark) return [];
-  let actions: ActionForNodeOrMark[] = [];
-  const { pos, from, to } = nodeOrMark;
-  let { mark, node } = nodeOrMark;
-  mark = mark && (toRaw(mark) as Mark);
-  node = node && (toRaw(node) as Node);
-  const isNode = !!node;
-  const nodeTypeName = node?.type.name;
+const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
+  ACTION_ADD_MARK,
+  ACTION_REMOVE_MARK,
+  ACTION_ADD_CUSTOM_STYLE,
+  ACTION_REMOVE_CUSTOM_STYLE,
+  ACTION_LOWERCASE,
+  ACTION_UPPERCASE,
+  ACTION_UPPERCASE_FIRST,
+  ACTION_SET_SPAN,
+  ACTION_ADD_CUSTOM_CLASS,
+  ACTION_REMOVE_CUSTOM_CLASS,
+  // ACTION_ADD_CLASS,
+  // ACTION_REMOVE_CLASS,
+  ACTION_SET_INDEX_REF,
+  ACTION_INSERT_RAW_INLINE,
+].map(action => [action.name, action]))
 
-  // edit attributes
-  const attrs = editableAttrsForNodeOrMark(node || mark);
-  if (attrs.length > 0)
-    actions.push({
-      ...ACTION_EDIT_ATTRIBUTES,
-      editorKey,
-      nodeOrMark,
-    } as EditorAction);
+export function availableActionsNames(): string[] {
+  return Object.keys(AVAILABLE_ACTIONS)
+}
 
-  if (isNode) {
-    // select node
-    const repeatChangeAction: ActionForNodeOrMark = {
-      ...ACTION_REPEAT_CHANGE,
-      editorKey,
-      nodeOrMark,
-    };
-    actions.push(repeatChangeAction);
-    const selectNodeAction: ActionForNodeOrMark = {
-      editorKey,
-      name: 'select-node',
-      label: `select`,
-      icon: 'mdi-select',
-      canDo: (editor) => editor.can().setNodeSelection(pos),
-      do: (editor) => editor.chain().setNodeSelection(pos).focus().run(),
-      nodeOrMark,
-    };
-    actions.push(selectNodeAction);
+export function availableAction(actionName: string): BaseActionForNodeOrMark | undefined {
+  return AVAILABLE_ACTIONS[actionName]
+}
 
-    // copy node
-    const copyNodeAction: ActionForNodeOrMark = {
-      editorKey,
-      name: 'copy-node',
-      label: `copy`,
-      icon: 'mdi-content-copy',
-      canDo: (editor) => editor.can().copyAsJson(nodeOrMark!.node),
-      do: (editor) => editor.commands.copyAsJson(nodeOrMark!.node),
-      nodeOrMark,
-    };
-    actions.push(copyNodeAction);
-
-    // delete node
-    const deleteAction: ActionForNodeOrMark = {
-      editorKey,
-      name: 'delete-node',
-      label: `delete`,
-      icon: 'mdi-delete',
-      canDo: (editor) => editor.can().deleteNodeAtPos(pos, { ...node } as Node),
-      do: (editor) => editor.commands.deleteNodeAtPos(pos, { ...node } as Node),
-      nodeOrMark,
-    };
-    actions.push(deleteAction);
-
-    // duplicate node
-    const duplicateAction: ActionForNodeOrMark = {
-      editorKey,
-      name: 'duplicate-node',
-      label: 'duplicate',
-      icon: 'mdi-content-duplicate',
-      canDo: (editor) => editor.can().duplicateNode(pos),
-      do: (editor) => editor.commands.duplicateNode(pos),
-      nodeOrMark,
-    }
-    actions.push(duplicateAction);
-
-    // unwrap contents
-    actions.push({ editorKey, ...UNWRAP_BLOCKS_ACTION, nodeOrMark });
-
-    // add table head or foot
-    if (nodeTypeName === NODE_NAME_PANDOC_TABLE) {
-      const addPandocTableCaptionAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'add-table-caption',
-        label: `add table caption`,
-        icon: 'mdi-page-layout-header',
-        canDo: (editor) => editor.can().addTableCaption(),
-        do: (editor) => editor.commands.addTableCaption(),
-        nodeOrMark,
-      };
-      const addPandocTableHeadAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'add-table-head',
-        label: `add table head`,
-        icon: 'mdi-table-row-plus-before',
-        canDo: (editor) => editor.can().addTableHead(),
-        do: (editor) => editor.commands.addTableHead(),
-        nodeOrMark,
-      };
-      const addPandocTableFootAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'add-table-foot',
-        label: `add table foot`,
-        icon: 'mdi-table-row-plus-after',
-        canDo: (editor) => editor.can().addTableFoot(),
-        do: (editor) => editor.commands.addTableFoot(),
-        nodeOrMark,
-      };
-      actions.push(
-        addPandocTableCaptionAction,
-        addPandocTableHeadAction,
-        addPandocTableFootAction,
-      );
-    }
-
-    // add table body
-    if (nodeTypeName === NODE_NAME_TABLE_BODY) {
-      const prependPandocTableBodyAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'prepend-table-body',
-        label: 'new table body before this',
-        icon: 'mdi-table-row-plus-before',
-        canDo: (editor) => editor.can().addTableBodyBefore(),
-        do: (editor) => editor.commands.addTableBodyBefore(),
-        nodeOrMark,
-      };
-      const appendPandocTableBodyAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'append-table-body',
-        label: 'new table body after this',
-        icon: 'mdi-table-row-plus-after',
-        canDo: (editor) => editor.can().addTableBodyAfter(),
-        do: (editor) => editor.commands.addTableBodyAfter(),
-        nodeOrMark,
-      };
-      const decreasePandocTableBodyHeadRowsAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'decrease-table-body-header-rows',
-        label: "decrease body's header rows",
-        icon: 'mdi-table-row',
-        iconRight: 'mdi-arrow-up',
-        canDo: (editor) => editor.can().decreaseTableBodyHeaderRows(),
-        do: (editor) => editor.commands.decreaseTableBodyHeaderRows(),
-        nodeOrMark,
-      };
-      const increasePandocTableBodyHeadRowsAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'increase-table-body-header-rows',
-        label: "increase body's header rows",
-        icon: 'mdi-table-row',
-        iconRight: 'mdi-arrow-down',
-        canDo: (editor) => editor.can().increaseTableBodyHeaderRows(),
-        do: (editor) => editor.commands.increaseTableBodyHeaderRows(),
-        nodeOrMark,
-      };
-      const decreasePandocTableBodyHeadColsAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'decrease-table-body-header-columns',
-        label: "decrease body's header columns",
-        icon: 'mdi-table-column',
-        iconRight: 'mdi-arrow-left',
-        canDo: (editor) => editor.can().decreaseTableBodyHeaderColumns(),
-        do: (editor) => editor.commands.decreaseTableBodyHeaderColumns(),
-        nodeOrMark,
-      };
-      const increasePandocTableBodyHeadColsAction: ActionForNodeOrMark = {
-        editorKey,
-        name: 'increase-table-body-header-columns',
-        label: "increase body's header columns",
-        icon: 'mdi-table-column',
-        iconRight: 'mdi-arrow-right',
-        canDo: (editor) => editor.can().increaseTableBodyHeaderColumns(),
-        do: (editor) => editor.commands.increaseTableBodyHeaderColumns(),
-        nodeOrMark,
-      };
-      actions.push(
-        prependPandocTableBodyAction,
-        appendPandocTableBodyAction,
-        decreasePandocTableBodyHeadRowsAction,
-        increasePandocTableBodyHeadRowsAction,
-        decreasePandocTableBodyHeadColsAction,
-        increasePandocTableBodyHeadColsAction,
-      );
-    }
-
-    // table cell alignment
-    if (nodeTypeName === NODE_NAME_TABLE_CELL || nodeTypeName === NODE_NAME_TABLE_HEADER) {
-      actions = actions.concat(
-        TABLE_CELL_ALIGNMENT_ACTIONS.map((tcaa) => {
-          return { ...tcaa, editorKey } as EditorAction;
-        }),
-      );
-    }
-
-    if (node!.isBlock) {
-      const config = getEditorConfiguration(state);
-      nodesWithTemplate().forEach((typename) => {
-        actions.push(
-          insertBlockAction(
-            editorKey,
-            `insert-${typename}-before`,
-            `insert a ${nodeOrMarkToPandocName(
-              typename,
-              undefined,
-              config,
-            )} before`,
-            pos,
-            typename,
-            'before',
-          ),
-        );
-        actions.push(
-          insertBlockAction(
-            editorKey,
-            `insert-${typename}-after`,
-            `insert a ${nodeOrMarkToPandocName(
-              typename,
-              undefined,
-              config,
-            )} after`,
-            pos,
-            typename,
-            'after',
-          ),
-        );
-      });
-      actions = actions.concat(moveBlockActions(editorKey, pos));
-      const typename = node!.type.name;
-      const compatible = compatibleNodes(typename);
-      compatible.forEach((cb) => {
-        actions.push(convertBlockAction(editorKey, typename, cb, pos, config));
-      });
-    }
-
-    if (nodeTypeName === NODE_NAME_INDEX_DIV) {
-      actions.push({
-        editorKey,
-        name: 'propagate-index-name',
-        label: 'propagate index name to index terms',
-        icon: 'mdi-book-arrow-down',
-        canDo: (editor) => editor.can().propagateIndexNameToTerms(),
-        do: (editor) => editor.commands.propagateIndexNameToTerms(),
-        nodeOrMark,
-      });
-    }
-
-    // if (nodeTypeName === NODE_NAME_META_MAP) {
-    //   actions.push({
-    //     name: 'edit-meta-map-text',
-    //     label: 'edit MetaMap text',
-    //     canDo: (editor, action, props) => editor.can().setMetaMapText(props?.text),
-    //     do: (editor, action, props) => editor.commands.setMetaMapText(props?.text),
-    //     nodeOrMark,
-    //   })
-    // }
-  } else if (mark) {
-    // it's a Mark
-
-    // select mark range
-    const selectMarkRangeAction: ActionForNodeOrMark = {
-      editorKey,
-      name: 'select-mark-range',
-      label: `select`,
-      icon: 'mdi-select',
-      canDo: (editor) => editor.can().setTextSelectionRange(from, to),
-      do: (editor) =>
-        editor.chain().setTextSelectionRange(from, to).focus().run(),
-      nodeOrMark,
-    };
-    actions.push(selectMarkRangeAction);
-
-    // remove mark
-    const removeMarkAction: ActionForNodeOrMark = {
-      editorKey,
-      name: 'remove-mark',
-      label: `remove ${mark?.type.name}`,
-      icon: 'mdi-tag-remove',
-      canDo: (editor) => editor.can().removeMark(from, to, mark),
-      do: (editor) => editor.commands.removeMark(from, to, mark),
-      nodeOrMark,
-      restoreSelection: true,
-    };
-    actions.push(removeMarkAction);
+export function fillAvailableAction(
+  actionName: string,
+  fields: {
+    props?: object,
+    editorKey?: EditorKeyType,
+    nodeOrMark?: SelectedNodeOrMark
   }
-
-  return actions;
-}
-
-function insertBlockAction(
-  editorKey: EditorKeyType,
-  name: string,
-  label: string,
-  pos: number,
-  nodetypename: string,
-  where: 'before' | 'after',
-): ActionForNodeOrMark {
-  const isBefore = where === 'before';
-  const icon = nodeIcon(nodetypename);
-  const beforeGroup = { ...insertBeforeGroup, editorKey } as ActionsGroup;
-  const afterGroup = { ...insertAfterGroup, editorKey } as ActionsGroup;
-  return {
-    editorKey,
-    name,
-    label,
-    icon: isBefore ? icon : 'mdi-square-rounded',
-    iconRight: isBefore ? 'mdi-square-rounded' : icon,
-    group: isBefore ? beforeGroup : afterGroup,
-    canDo: (editor) => {
-      try {
-        const state = editor.state;
-        const $pos = state.doc.resolve(pos);
-        let parentPos = $pos.start() - 1;
-        const index = $pos.index() + (where === 'after' ? 1 : 0);
-        const config = getEditorConfiguration(state);
-        const template = templateNode(state.schema, nodetypename, config, {
-          state,
-          pos,
-          $pos,
-        });
-        if (template) {
-          const { node: block, attrs } = template;
-          return editor
-            .can()
-            .insertChildToNodeAtPos(parentPos, block, index, attrs);
-        }
-      } catch (err) {
-        console.log(err);
-      }
-      return false;
-    },
-    do: (editor, action) => {
-      try {
-        const state = editor.state;
-        const $pos = state.doc.resolve(pos);
-        const parentPos = $pos.start() - 1;
-        const index = $pos.index() + (where === 'after' ? 1 : 0);
-        const config = getEditorConfiguration(state);
-        const template = templateNode(state.schema, nodetypename, config, {
-          state,
-          pos,
-          $pos,
-        });
-        if (template) {
-          const { node: block, attrs } = template;
-          return editor.commands.insertChildToNodeAtPos(
-            parentPos,
-            block,
-            index,
-            attrs,
-          );
-        }
-      } catch (err) {
-        console.log(err);
-      }
-      return false;
-    },
-  };
-}
-
-function convertBlockAction(
-  editorKey: EditorKeyType,
-  fromTypeName: string,
-  toTypeName: string,
-  pos: number,
-  config?: PundokEditorConfig,
-): ActionForNodeOrMark {
-  const convertGroup = { ...convertBlockGroup, editorKey } as ActionsGroup;
-  return {
-    editorKey,
-    name: `convert-${fromTypeName}-to-${toTypeName}`,
-    label: `convert ${nodeOrMarkToPandocName(
-      fromTypeName,
-      undefined,
-      config,
-    )} to ${nodeOrMarkToPandocName(toTypeName, undefined, config)}`,
-    icon: 'mdi-swap-horizontal',
-    iconRight: nodeIcon(toTypeName),
-    group: convertGroup,
-    canDo: (editor) => editor.can().convertNode(toTypeName, pos),
-    do: (editor, action) => editor.commands.convertNode(toTypeName, pos),
-  };
-}
-
-function moveBlockActions(
-  editorKey: EditorKeyType,
-  pos: number,
-): ActionForNodeOrMark[] {
-  const moveGroup = { ...moveBlockGroup, editorKey } as ActionsGroup;
-  return [
-    {
-      editorKey,
-      name: 'move-before-first-sibling',
-      label: 'move before any sibling',
-      icon: 'mdi-arrow-collapse-up',
-      group: moveGroup,
-      canDo: (editor) => editor.can().moveChild('start', pos),
-      do: (editor, action) => editor.commands.moveChild('start', pos),
-    },
-    {
-      editorKey,
-      name: 'move-before-previous-sibling',
-      label: 'move before previous sibling',
-      icon: 'mdi-arrow-up',
-      group: moveGroup,
-      canDo: (editor) => editor.can().moveChild('up', pos),
-      do: (editor, action) => editor.commands.moveChild('up', pos),
-    },
-    {
-      editorKey,
-      name: 'move-after-next-sibling',
-      label: 'move after next sibling',
-      icon: 'mdi-arrow-down',
-      group: moveGroup,
-      canDo: (editor) => editor.can().moveChild('down', pos),
-      do: (editor, action) => editor.commands.moveChild('down', pos),
-    },
-    {
-      editorKey,
-      name: 'move-after-last-sibling',
-      label: 'move after any sibling',
-      icon: 'mdi-arrow-collapse-down',
-      group: moveGroup,
-      canDo: (editor) => editor.can().moveChild('end', pos),
-      do: (editor, action) => editor.commands.moveChild('end', pos),
-    },
-    {
-      editorKey,
-      name: 'move-inside-prev-sibling',
-      label: 'move inside previous sibling',
-      icon: 'mdi-arrow-top-right',
-      group: moveGroup,
-      canDo: (editor) => editor.can().moveChild('up-inside', pos),
-      do: (editor, action) => editor.commands.moveChild('up-inside', pos),
-    },
-    {
-      editorKey,
-      name: 'move-inside-next-sibling',
-      label: 'move inside next sibling',
-      icon: 'mdi-arrow-bottom-right',
-      group: moveGroup,
-      canDo: (editor) => editor.can().moveChild('down-inside', pos),
-      do: (editor, action) => editor.commands.moveChild('down-inside', pos),
-    },
-  ];
+): ActionForNodeOrMark | undefined {
+  const { props, editorKey, nodeOrMark } = fields
+  const available = availableAction(actionName)
+  if (available && editorKey)
+    return { ...available, props, editorKey, nodeOrMark }
 }
