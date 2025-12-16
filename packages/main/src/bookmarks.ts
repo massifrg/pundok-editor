@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'fs/promises';
-import { sep as pathSeparator } from 'path';
+import { resolve } from 'path';
 import { userAppDataDir } from './resourcesManager';
 import { DocBookmark, DocBookmarkType } from './common';
 
@@ -9,9 +9,7 @@ export const MAX_RECENT_PROJECTS = 10;
 
 async function readBookmarksFile(): Promise<DocBookmark[]> {
   try {
-    const buf = await readFile(
-      `${userAppDataDir()}${pathSeparator}${BOOKMARKS_FILENAME}`,
-    );
+    const buf = await readFile(resolve(userAppDataDir(), BOOKMARKS_FILENAME));
     return JSON.parse(buf.toString()) as DocBookmark[];
   } catch (err) {
     return Promise.resolve([]);
@@ -20,10 +18,7 @@ async function readBookmarksFile(): Promise<DocBookmark[]> {
 
 async function saveBookmarksFile(bookmarks: DocBookmark[]): Promise<boolean> {
   try {
-    await writeFile(
-      `${userAppDataDir()}${pathSeparator}${BOOKMARKS_FILENAME}`,
-      JSON.stringify(bookmarks),
-    );
+    await writeFile(resolve(userAppDataDir(), BOOKMARKS_FILENAME), JSON.stringify(bookmarks));
     return true;
   } catch (err) {
     console.log(err);

@@ -1,5 +1,5 @@
 import { default as axios } from 'axios';
-import { sep as pathSep } from 'path';
+import { sep as pathSep, resolve } from 'path';
 import { existsSync, statSync } from 'fs';
 import { cp, mkdir, writeFile } from 'fs/promises';
 import { staticResourcesDir, userAppDataDir } from './resourcesManager';
@@ -170,10 +170,10 @@ export function updateStaticResources(
       try {
         const response = await axios.get(`${baseURL}/${r.file}`);
         const subdir = getResourceSubdir(r.file, r.destPath);
-        const subdirPath = `${resPath}${pathSep}${subdir}`;
+        const subdirPath = resolve(resPath, subdir);
         if (!existsSync(subdirPath))
           await mkdir(subdirPath, { recursive: true });
-        const filename = `${subdirPath}${pathSep}${r.file}`;
+        const filename = resolve(subdirPath, r.file);
         await writeFile(filename, response.data);
       } catch (err: any) {
         log(stringify(err));
