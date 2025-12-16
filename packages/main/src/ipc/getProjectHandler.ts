@@ -2,20 +2,28 @@ import { IpcMainInvokeEvent } from 'electron';
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { IpcHub } from './ipcHub';
-import { DEFAULT_PROJECT_FILENAME, PundokEditorProject } from '../common';
+import { computeProjectConfiguration, DEFAULT_PROJECT_FILENAME, GetProjectOptions, PundokEditorConfig, PundokEditorProject } from '../common';
 import { format as formatPath, parse as parsePath } from 'path';
+import { getConfigurationInit } from '.';
+import { isReadableDir } from '../resourcesManager';
 
 export const getProjectHandler =
   (hub: IpcHub) =>
     async (
       e: IpcMainInvokeEvent,
-      context: Record<string, any>
+      options: GetProjectOptions,
     ): Promise<PundokEditorProject> => {
-      if (context.path) {
-        const { dir } = parsePath(context.path);
+      if (options.path) {
+        // check if the path is the project directory or a document inside it
+        const dir = isReadableDir(options.path)
+          ? options.path
+          : parsePath(options.path).dir;
         const projectFile = formatPath({ dir, name: DEFAULT_PROJECT_FILENAME });
+        console.log(`getProjectHandler, dir=${dir}, project file="${projectFile}"`)
         if (existsSync(projectFile)) {
-          return loadProjectFromDocFile(projectFile);
+          return options.computeConfig
+            ? computeProjectFromFile(projectFile)
+            : loadProjectFromFile(projectFile);
         }
       }
       return Promise.reject(`can't load a project file`);
@@ -73,4 +81,39 @@ export async function loadProjectFromDocFile(filepath: string): Promise<PundokEd
  */
 export async function loadProjectInDirectory(dir: string): Promise<PundokEditorProject> {
   return loadProjectFromFile(projectFileNameInDirectory(dir))
+}
+
+/**
+ * Like {@link loadProjectFromFile}, it loads a project from a project file,
+ * but it also computes the `computedConfig` field of the project.
+ * @param filepath The project file.
+ * @returns 
+ */
+export async function computeProjectFromFile(filepath: string): Promise<PundokEditorProject> {
+  try {
+    let project = await loadProjectFromFile(filepath);
+    if (project) {
+      console.log(`found project for file ${filepath}`);
+      project = await computeProjectConfiguration(
+        project,
+        async (configName) => {
+          const cfgInit = await getConfigurationInit(configName);
+          return cfgInit && new PundokEditorConfig(cfgInit);
+        },
+      );
+    }
+    return project;
+  } catch (err) {
+    return Promise.reject(err)
+  }
+}
+
+/**
+ * Like {@link PundokEditorProject}, it loads a project from a the project file
+ * of a document, but it also computes the `computedConfig` field of the project.
+ * @param filepath The document file path.
+ * @returns 
+ */
+export async function computeProjectFromDocFile(filepath: string): Promise<PundokEditorProject> {
+  return computeProjectFromFile(projectFileNameOfDocument(filepath));
 }

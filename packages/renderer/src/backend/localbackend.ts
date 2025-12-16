@@ -45,6 +45,7 @@ import {
   BackendSetContentWithProjectActionProps,
   DocumentOpenActionProps,
   ConfigInitField,
+  GetProjectOptions,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -303,8 +304,8 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('debug-info');
   }
 
-  async getProject(context: Record<string, any>): Promise<PundokEditorProject> {
-    return this.invokeIpc('get-project', context);
+  async getProject(options: GetProjectOptions): Promise<PundokEditorProject> {
+    return this.invokeIpc('get-project', options);
   }
 
   async createProject(path: string, project: Partial<PundokEditorProject>): Promise<void> {

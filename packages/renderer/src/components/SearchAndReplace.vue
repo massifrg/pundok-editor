@@ -123,6 +123,7 @@ import {
   CustomStyleInstance,
   ElementsSelection,
   getElementsSelections,
+  GetProjectOptions,
   getSearchAndReplaces,
   INDEXED_TEXT_ATTR,
   NODE_NAME_INDEX_REF,
@@ -157,13 +158,15 @@ import {
 import { mapState } from 'pinia';
 import { useActions, useBackend } from '../stores';
 import {
+  ACTION_GET_PROJECT,
   ACTION_LOWERCASE,
   ACTION_REPLACE_AND_SELECT_NEXT,
   ACTION_SELECT_NEXT,
   ACTION_SELECT_PREV,
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
-  ActionName
+  ActionName,
+  setActionCommand
 } from '../actions';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { toRaw } from 'vue';
@@ -651,7 +654,7 @@ export default {
     deleteSettings(name: string, description: string, isProject: boolean, configName?: string) {
       this.saveSettings(name, description, isProject, configName, true)
     },
-    saveSettings(name: string, description: string, isProject: boolean, configName?: string, isDeletion?: boolean) {
+    async saveSettings(name: string, description: string, isProject: boolean, configName?: string, isDeletion?: boolean) {
       let obj
       if (this.cssMode) {
         obj = {
@@ -683,13 +686,17 @@ export default {
       }
       // console.log(serializeConfiguration(this.configuration!))
       if (isProject && this.project)
-        this.backend?.storeInConfiguration(
+        await this.backend?.storeInConfiguration(
           'automations',
           obj,
           !!isDeletion,
           isProject,
           this.project.path
         )
+      setActionCommand(this.editor.state, ACTION_GET_PROJECT, {
+        path: this.project?.path,
+        computeConfig: true,
+      } as GetProjectOptions)
     }
   },
 };

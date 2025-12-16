@@ -96,7 +96,7 @@ export default {
       const path = coords?.path
       if (path) {
         this.path = path
-        const existingProject = await this.backend?.getProject({ path: path + '/asdasd' })
+        const existingProject = await this.backend?.getProject({ path })
         if (existingProject) {
           const { name, description, configurations, rootDocument, editorConfig } = existingProject
           this.setName(name || '')

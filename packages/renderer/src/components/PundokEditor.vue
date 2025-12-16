@@ -131,6 +131,7 @@ import {
   SetAlternativeActionProps,
   EditAttributesActionProps,
   ActionNameWithProps,
+  GetProjectOptions,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import {
@@ -186,6 +187,7 @@ import {
   ACTION_DOCUMENT_GO_TO_LINE,
   ACTION_SETUP_VIEWER,
   ACTION_PROJECT_NEW,
+  ACTION_GET_PROJECT,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -346,6 +348,9 @@ export default {
             break;
           case ACTION_BACKEND_SET_PROJECT.name:
             this.setProject({ ...(props as BackendSetProjectActionProps)?.project });
+            break;
+          case ACTION_GET_PROJECT.name:
+            this.reloadProject(props as GetProjectOptions);
             break;
           case ACTION_BACKEND_SET_CONFIG_NAME.name:
             const configurationName = (props as BackendSetConfigNameActionProps)?.configurationName;
@@ -990,6 +995,11 @@ export default {
         useProjectCache().setIndices();
         // this.updateEditorDocState({ configuration: project.computedConfig })
       }
+    },
+    async reloadProject(options: GetProjectOptions) {
+      const project = await this.backend?.getProject({ ...options, computeConfig: true })
+      if (project)
+        this.setProject(project)
     },
     async setConfiguration(
       name_or_config?: string | PundokEditorConfig,

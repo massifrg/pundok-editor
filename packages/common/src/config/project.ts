@@ -80,3 +80,8 @@ export async function computeProjectConfiguration(
   // console.log(computedConfig);
   return computedConfig ? { ...project, computedConfig } : project;
 }
+
+export interface GetProjectOptions {
+  path: string,
+  computeConfig?: boolean,
+}

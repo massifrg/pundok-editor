@@ -16,6 +16,7 @@ import type {
   SynctexInfo,
   ExportJob,
   ConfigInitField,
+  GetProjectOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -109,7 +110,7 @@ export interface Backend {
    * Retrieves the project of a document from the backend.
    * @param context
    */
-  getProject(context: Record<string, any>): Promise<PundokEditorProject>;
+  getProject(options: GetProjectOptions): Promise<PundokEditorProject>;
 
   /**
    * Create a new project in a directory.

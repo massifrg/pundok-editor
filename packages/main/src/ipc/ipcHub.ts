@@ -55,7 +55,7 @@ import { stringify } from '../utils';
 import { queryHandler } from './queryHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
-import { getProjectHandler, loadProjectFromDocFile } from './getProjectHandler';
+import { computeProjectFromDocFile, getProjectHandler, loadProjectFromDocFile } from './getProjectHandler';
 import { openDocumentHandler } from './openDocumentHandler';
 import { editorReadyHandler } from './editorReadyHandler';
 import { debugInfoHandler } from './debugInfoHandler';
@@ -269,17 +269,18 @@ export class IpcHub {
         if (cmdLineFeedback) cmdLineFeedback(commandLine);
         let project: PundokEditorProject | undefined = undefined;
         try {
-          project = await loadProjectFromDocFile(filename);
-          if (project) {
-            console.log(`found project for file ${filename}`);
-            project = await computeProjectConfiguration(
-              project,
-              async (configName) => {
-                const cfgInit = await getConfigurationInit(configName);
-                return cfgInit && new PundokEditorConfig(cfgInit);
-              },
-            );
-          }
+          project = await computeProjectFromDocFile(filename)
+          // project = await loadProjectFromDocFile(filename);
+          // if (project) {
+          //   console.log(`found project for file ${filename}`);
+          //   project = await computeProjectConfiguration(
+          //     project,
+          //     async (configName) => {
+          //       const cfgInit = await getConfigurationInit(configName);
+          //       return cfgInit && new PundokEditorConfig(cfgInit);
+          //     },
+          //   );
+          // }
           readDoc.project = project;
         } catch (err) {
           console.log(`error loading project: ${err}`);

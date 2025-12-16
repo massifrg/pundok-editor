@@ -22,6 +22,7 @@ import {
   SynctexInfo,
   ExportJob,
   ConfigInitField,
+  GetProjectOptions,
 } from '../common';
 import { OpenDialogOptions } from 'electron';
 
@@ -63,7 +64,7 @@ export class NetBackend implements Backend {
     return Promise.resolve({ info: 'no debug info yet for netbackend!' });
   }
 
-  async getProject(context: Record<string, any>): Promise<PundokEditorProject> {
+  async getProject(options: GetProjectOptions): Promise<PundokEditorProject> {
     throw new Error('Method not implemented.');
   }
 

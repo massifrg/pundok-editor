@@ -24,6 +24,7 @@ export type ActionName =
   | 'save-document'
   | 'save-document-as'
   | 'new-project'
+  | 'get-project'
   | 'import-document'
   | 'export-document'
   | 'transform-document'
@@ -128,6 +129,12 @@ export const ACTION_BACKEND_SET_PROJECT: BaseEditorAction = {
   name: 'backend-set-project',
   label: 'set project',
 };
+
+/** Used to force a reload of a project. */
+export const ACTION_GET_PROJECT: BaseEditorAction = {
+  name: 'get-project',
+  label: 'get-project',
+}
 
 export const ACTION_CLOSE_EDITOR: BaseEditorAction = {
   name: 'close-editor',
