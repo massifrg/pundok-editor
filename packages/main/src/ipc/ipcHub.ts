@@ -317,11 +317,15 @@ export class IpcHub {
       // load the project, if the document has been saved in a project directory
       // TODO: what to do when a file in a project is saved in the directory of another project?
       if (docPath && !project) {
-        const dirProject = await computeProjectFromDocFile(docPath)
-        console.log(`dirProject is ${dirProject.name}`)
-        if (dirProject) {
-          doc.project = dirProject
-          this.fireEventSetProject(dirProject)
+        try {
+          const dirProject = await computeProjectFromDocFile(docPath)
+          console.log(`dirProject is ${dirProject.name}`)
+          if (dirProject) {
+            doc.project = dirProject
+            this.fireEventSetProject(dirProject)
+          }
+        } catch (err) {
+          console.log(`no project file in document folder (${parsePath(docPath).dir})`)
         }
       }
 
