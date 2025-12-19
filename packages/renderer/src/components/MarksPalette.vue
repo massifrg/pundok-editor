@@ -20,14 +20,23 @@
 </template>
 
 <script lang="ts">
+import { isEqual } from 'lodash';
 import { AddableMark } from './helpers/addableMark';
 
 export default {
-  props: ['editor', 'addableMarks'],
+  props: ['editor', 'addableMarks', 'positiveMarks', 'negativeMarks'],
   emits: ['selected-marks'],
   data() {
     return {
-      states: Object.fromEntries(((this.addableMarks || []) as AddableMark[]).map(am => [am.name, 0])),
+      states: Object.fromEntries(((this.addableMarks || []) as AddableMark[])
+        .map(am => {
+          const state = this.positiveMarks && this.positiveMarks.find((p: AddableMark) => isEqual(am, p))
+            ? 1
+            : this.negativeMarks && this.negativeMarks.find((n: AddableMark) => isEqual(am, n))
+              ? -1
+              : 0
+          return [am.name, state]
+        })),
     }
   },
   computed: {

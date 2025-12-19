@@ -89,6 +89,7 @@
         </q-card-section>
         <q-card-section v-if="!cssMode && searchFilterSwitch" horizontal>
           <MarksPaletteDropdown :editor="editor" icon="mdi-filter-outline" :addable-marks="baseMarksAndCustomStyles()"
+            none-selected-label="no filter" :positiveMarks="filterMarkPresence" :negativeMarks="filterMarkAbsence"
             @selected-marks="setMarksFilters" />
         </q-card-section>
         <q-card-section v-if="!optionSearchOnly" horizontal>
@@ -248,8 +249,8 @@ export default {
       optionWholeWord: false,
       // a switch to activate filters on searched text (only in text search)
       searchFilterSwitch: false,
-      // a function to filter search results
-      filterResult: undefined as SearchResultFilter | undefined,
+      filterMarkPresence: [] as AddableMark[],
+      filterMarkAbsence: [] as AddableMark[],
       // actions to be performed on replaced text or selected with CSS
       actionsOnReplace: [] as ActionNameWithProps[],
     };
@@ -361,6 +362,27 @@ export default {
     expandTooltip() {
       return `show ${this.showFields ? 'less' : 'more'}`
     },
+    // a function to filter search results
+    filterResult(): SearchResultFilter | undefined {
+      if (!this.searchFilterSwitch)
+        return undefined
+      const positive = this.filterMarkPresence
+      const negative = this.filterMarkAbsence
+      return (state, result) => {
+        const { doc, schema } = state
+        const { from, to } = result
+        let i, mark
+        for (i = 0; i < positive.length; i++) {
+          mark = addableMarkToMark(schema, positive[i])
+          if (!mark || !doc.rangeHasMark(from, to, mark)) return false
+        }
+        for (i = 0; i < negative.length; i++) {
+          const mark = addableMarkToMark(schema, negative[i])
+          if (mark && doc.rangeHasMark(from, to, mark)) return false
+        }
+        return true
+      }
+    }
   },
   watch: {
     cssMode(css_mode: boolean, prev_mode: boolean) {
@@ -599,25 +621,8 @@ export default {
       return []
     },
     setMarksFilters(positive: AddableMark[], negative: AddableMark[]) {
-      if (positive.length + negative.length === 0) {
-        this.filterResult = undefined
-      } else {
-        const filterResult: SearchResultFilter = (state, result) => {
-          const { doc, schema } = state
-          const { from, to } = result
-          let i, mark
-          for (i = 0; i < positive.length; i++) {
-            mark = addableMarkToMark(schema, positive[i])
-            if (!mark || !doc.rangeHasMark(from, to, mark)) return false
-          }
-          for (i = 0; i < negative.length; i++) {
-            const mark = addableMarkToMark(schema, negative[i])
-            if (mark && doc.rangeHasMark(from, to, mark)) return false
-          }
-          return true
-        }
-        this.filterResult = filterResult
-      }
+      this.filterMarkPresence = positive || []
+      this.filterMarkAbsence = negative || []
     },
     resetSettings() {
       this.searchInput = ''
