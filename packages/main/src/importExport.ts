@@ -385,6 +385,8 @@ export async function runWriterOnMasterFile(
       editorProject && isString(editorProject)
         ? JSON.parse(editorProject)
         : editorProject;
+    if (!project.path || !project.rootDocument)
+      return undefined
     let src = resolve(project.path, project.rootDocument);
     if (!isAbsolute(src))
       return Promise.reject(`"${src}" is not an absolute path`);
