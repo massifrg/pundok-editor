@@ -146,6 +146,19 @@ These are some of the reasons you might find it useful:
 
   to understand how configuration and project files are encoded.
 
+### Decluttering documents
+
+I found it useful also to declutter documents, especially when you copy and paste
+material from a browser.
+
+It's more a merit of Prosemirror than of this software; anyways you can:
+
+- use this editor for decluttering;
+
+- then export your documents to your preferred format through Pandoc;
+
+- then continue editing them with your favourite editor and tools.
+
 ### How it works
 
 A Pandoc document is made of Blocks and Inlines.
