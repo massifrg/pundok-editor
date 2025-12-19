@@ -200,8 +200,7 @@ export class IpcHub {
             result = await importJsonWithPandoc(
               filename,
               inputConverter.format,
-              configurationName,
-              inputConverter,
+              context
             );
             break;
           case 'custom':
@@ -235,10 +234,10 @@ export class IpcHub {
           case 'epub':
           case 'native':
           case 'csv':
-            result = await importJsonWithPandoc(filename, extension);
+            result = await importJsonWithPandoc(filename, extension, {});
             break;
           case 'md':
-            result = await importJsonWithPandoc(filename, 'markdown');
+            result = await importJsonWithPandoc(filename, 'markdown', {});
             break;
           default:
             result = {
