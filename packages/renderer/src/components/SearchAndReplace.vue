@@ -80,9 +80,16 @@
               @click="optionRegex = !optionRegex" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord"
               icon="whole_word" title="whole words" @click="optionWholeWord = !optionWholeWord" />
+            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!searchFilterSwitch"
+              icon="mdi-filter-outline" title="filter searched text styles"
+              @click="searchFilterSwitch = !searchFilterSwitch" />
             <ActionsOnReplaceDropdown v-if="optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
               title="actions on selected text" @update-actions="updateActions" />
           </div>
+        </q-card-section>
+        <q-card-section v-if="!cssMode && searchFilterSwitch" horizontal>
+          <MarksPaletteDropdown :editor="editor" icon="mdi-filter-outline" :addable-marks="baseMarksAndCustomStyles()"
+            @selected-marks="setMarksFilters" />
         </q-card-section>
         <q-card-section v-if="!optionSearchOnly" horizontal>
           <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
@@ -139,11 +146,13 @@ import {
 } from '../schema';
 import {
   AddableMark,
+  addableMarkToMark,
   baseAddableMarks,
   customStylesToAddableMarks,
-} from '.';
+} from './helpers/addableMark';
 import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
+import MarksPaletteDropdown from './MarksPaletteDropdown.vue';
 import SaveConfigurationElementPopup from './SaveConfigurationElementPopup.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
@@ -168,7 +177,7 @@ import {
   ActionName,
   setActionCommand
 } from '../actions';
-import { Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { toRaw } from 'vue';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
@@ -201,6 +210,7 @@ export default {
   components: {
     ActionsOnReplaceDropdown,
     IndicesButtons,
+    MarksPaletteDropdown,
     SaveConfigurationElementPopup,
   },
   props: ['visible', 'editor', 'nodeOrMarkToLabel'],
@@ -236,6 +246,10 @@ export default {
       optionCycle: false,
       // search a whole word
       optionWholeWord: false,
+      // a switch to activate filters on searched text (only in text search)
+      searchFilterSwitch: false,
+      // a function to filter search results
+      filterResult: undefined as SearchResultFilter | undefined,
       // actions to be performed on replaced text or selected with CSS
       actionsOnReplace: [] as ActionNameWithProps[],
     };
@@ -264,9 +278,6 @@ export default {
     },
     project() {
       return getEditorProject(this.editor)
-    },
-    customStyles(): CustomStyleInstance[] {
-      return this.configuration?.customStylesInstances || []
     },
     searchLabel(): string {
       return this.cssMode
@@ -460,7 +471,7 @@ export default {
           regexp: !!this.optionRegex,
           replace: this.textToReplace,
           wholeWord: !!this.optionWholeWord,
-          // filterResult: 
+          filterResult: this.filterResult,
         })
         editor.chain().startSearch(query).focus().selectNextFoundText().run();
         this.query = query
@@ -580,11 +591,33 @@ export default {
     baseMarksAndCustomStyles(selected?: string[]): AddableMark[] {
       const editor = this.editor
       if (editor) {
+        const customStyles: CustomStyleInstance[] = this.configuration?.customStylesInstances || []
         const am: AddableMark[] = baseAddableMarks(selected)
-        customStylesToAddableMarks(this.customStyles, selected, am)
+        customStylesToAddableMarks(customStyles, selected, am)
         return am
       }
       return []
+    },
+    setMarksFilters(positive: AddableMark[], negative: AddableMark[]) {
+      if (positive.length + negative.length === 0) {
+        this.filterResult = undefined
+      } else {
+        const filterResult: SearchResultFilter = (state, result) => {
+          const { doc, schema } = state
+          const { from, to } = result
+          let i, mark
+          for (i = 0; i < positive.length; i++) {
+            mark = addableMarkToMark(schema, positive[i])
+            if (!mark || !doc.rangeHasMark(from, to, mark)) return false
+          }
+          for (i = 0; i < negative.length; i++) {
+            const mark = addableMarkToMark(schema, negative[i])
+            if (mark && doc.rangeHasMark(from, to, mark)) return false
+          }
+          return true
+        }
+        this.filterResult = filterResult
+      }
     },
     resetSettings() {
       this.searchInput = ''
@@ -594,6 +627,7 @@ export default {
       this.optionRegex = false
       this.optionCycle = false
       this.optionWholeWord = false
+      this.searchFilterSwitch = false
       this.actionsOnReplace = []
       this.foundIndex = -1
     },
