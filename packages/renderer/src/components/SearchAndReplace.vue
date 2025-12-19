@@ -522,13 +522,18 @@ export default {
         this.editor.chain().selectPrevFoundText(this.optionCycle).focus().run()
       }
     },
-    nextFound() {
+    nextFound(): boolean {
       if (this.cssMode) {
+        if (!this.editor.can().selectNextCss(this.optionCycle))
+          return false
         this.editor.commands.selectNextCss(this.optionCycle)
         this.scrollAtSelectedCss()
       } else {
+        if (!this.editor.can().selectNextFoundText(this.optionCycle))
+          return false
         this.editor.chain().selectNextFoundText(this.optionCycle).focus().run()
       }
+      return true
     },
     replaceSelected() {
       if (this.optionSearchOnly) {
@@ -553,17 +558,24 @@ export default {
       this.nextFound()
     },
     replaceAll() {
-      // if (this.cssMode) {
-      const startIndex = this.foundIndex
-      let prevIndex: number
-      do {
-        prevIndex = this.foundIndex
-        this.replaceNextText()
-      } while (this.foundIndex !== prevIndex && this.foundIndex !== startIndex)
-      // } else {
-      //   this.editor.chain().replaceAll().focus().run()
-      // }
-      // this.updateCountAndIndex()
+      // if it's just a text replacement without actions, call replaceAll(), because it's faster
+      if (!this.cssMode && this.actionsOnReplace.length === 0) {
+        this.editor.chain().replaceAll().focus().run()
+      } else {
+        // check the position in case optionCycle==true, not to cycle infinitely
+        const startPos = this.editor.state.selection.$anchor.pos
+        let pos = startPos
+        let cycledAround = false
+        this.replaceSelected()
+        while (this.nextFound()) {
+          pos = this.editor.state.selection.$anchor.pos
+          if (!cycledAround) cycledAround = pos <= startPos
+          if (cycledAround && pos >= startPos)
+            break
+          this.replaceSelected()
+        }
+        this.editor.commands.focus()
+      }
     },
     baseMarksAndCustomStyles(selected?: string[]): AddableMark[] {
       const editor = this.editor
