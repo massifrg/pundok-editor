@@ -104,7 +104,7 @@
         <q-btn :disabled="!canPrevFound()" icon="mdi-chevron-left" size="md" padding="md" title="select previous found"
           @click="prevFound()" />
         <q-btn :disabled="!canNextFound()" icon="mdi-chevron-right" size="md" padding="md" title="select next found"
-          @click="nextFound()" />
+          @click="nextFound(true)" />
         <q-btn icon="mdi-autorenew" size="md" padding="md" title="replace selected" @click="replaceSelected" />
         <q-btn size="md" padding="md" title="replace & select next found" @click="replaceNextText">
           <q-icon name="mdi-autorenew"></q-icon>
@@ -555,16 +555,17 @@ export default {
         this.editor.chain().selectPrevFoundText(this.optionCycle).focus().run()
       }
     },
-    nextFound(): boolean {
+    nextFound(scroll?: boolean): boolean {
       if (this.cssMode) {
         if (!this.editor.can().selectNextCss(this.optionCycle))
           return false
         this.editor.commands.selectNextCss(this.optionCycle)
-        this.scrollAtSelectedCss()
+        if (scroll) this.scrollAtSelectedCss()
       } else {
         if (!this.editor.can().selectNextFoundText(this.optionCycle))
           return false
         this.editor.chain().selectNextFoundText(this.optionCycle).focus().run()
+        if (scroll) this.editor.commands.scrollIntoView()
       }
       return true
     },
@@ -588,7 +589,7 @@ export default {
     },
     replaceNextText() {
       this.replaceSelected()
-      this.nextFound()
+      this.nextFound(true)
     },
     replaceAll() {
       // if it's just a text replacement without actions, call replaceAll(), because it's faster
