@@ -21,6 +21,7 @@ import {
   Node as PmNode,
   ResolvedPos,
   Schema,
+  Slice,
 } from '@tiptap/pm/model';
 import {
   createPandocTable,
@@ -73,6 +74,7 @@ import { Alignment } from '../../pandoc';
 import { isEqual } from 'lodash';
 import { updateTableAttrsPlugin } from '../helpers/updateTableAttrsPlugin';
 import {
+  NODE_NAME_BREAK,
   NODE_NAME_PANDOC_TABLE,
   NODE_NAME_PARAGRAPH,
   NODE_NAME_PLAIN,
@@ -87,6 +89,10 @@ import {
   TABLE_ROLE_HEADER_CELL,
   TABLE_ROLE_TABLE
 } from '../../common';
+
+const isPandocTable = (node: PmNode) => node?.type.name === NODE_NAME_PANDOC_TABLE;
+
+type CellContent = { inline: boolean, content: Fragment }
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -147,8 +153,9 @@ declare module '@tiptap/core' {
       tableToFullWidth: () => ReturnType;
       equalizeColumnWidths: () => ReturnType;
       // secureColumnWidths: () => ReturnType;
-      setColumnAlignment: (alignment: Alignment, column?: number) => ReturnType
-      textToTable: (sep?: string) => ReturnType
+      setColumnAlignment: (alignment: Alignment, column?: number) => ReturnType;
+      textToTable: (sep?: string | RegExp) => ReturnType;
+      tableToText: (sep?: string) => ReturnType;
     };
   }
 
@@ -975,6 +982,93 @@ export const PandocTable = Node.create<PandocTableOptions>({
           const table = schema.nodes[NODE_NAME_PANDOC_TABLE].create(null, body)
           tr.replaceWith($anchor.start(depth) - 1, $head.end(depth) + 1, table)
           dispatch(tr)
+        }
+        return true
+      },
+      tableToText: (sep: string = '|') => ({ dispatch, state, tr }) => {
+        const { selection } = state
+        let table: PmNode | null = null
+        let pos: number | undefined
+        if (selection instanceof NodeSelection) {
+          table = isPandocTable(selection.node) && selection.node || null
+          pos = selection.from
+        }
+        else {
+          const { $anchor } = selection
+          const d = innerNodeDepth($anchor, n => isPandocTable(n))
+          table = d && $anchor.node(d) || null
+          pos = d && $anchor.start(d) - 1
+        }
+        if (!table || !pos) return false
+        const { schema } = state
+        const space = schema.text(' ')
+        const sepText = schema.text(sep)
+        const linebreak = schema.nodes[NODE_NAME_BREAK].create() || space
+        const blocks: PmNode[] = []
+        const paraType = schema.nodes[NODE_NAME_PARAGRAPH]
+        if (dispatch) {
+          table.descendants((n) => {
+            if (n.type.name === NODE_NAME_TABLE_ROW) {
+              let cellContents: CellContent[] = []
+              let inline
+              for (let cellIndex = 0; cellIndex < n.childCount; cellIndex++) {
+                const cell = n.child(cellIndex)
+                inline = true
+                let content: Fragment = Fragment.empty
+                for (let i = 0; i < cell.childCount; i++) {
+                  const cBlock = cell.child(i)
+                  switch (cBlock.type.name) {
+                    case NODE_NAME_PARAGRAPH:
+                      if (i > 0) content = content.addToEnd(linebreak)
+                      content = content.append(cBlock.content)
+                      break
+                    case NODE_NAME_PLAIN:
+                      if (i > 0) content = content.addToEnd(space)
+                      content = content.append(cBlock.content)
+                      break
+                    default:
+                      inline = false
+                  }
+                  if (!inline) {
+                    content = cell.content
+                    break
+                  }
+                }
+                cellContents.push({ inline, content })
+              }
+              let paraContents = Fragment.empty
+              for (let i = 0; i < cellContents.length; i++) {
+                const { inline, content } = cellContents[i]
+                if (inline) {
+                  if (i > 0)
+                    paraContents = paraContents.addToEnd(sepText)
+                  paraContents = paraContents.append(content)
+                } else {
+                  if (paraContents !== Fragment.empty) {
+                    if (i > 0) paraContents = paraContents.addToEnd(sepText)
+                    const para = paraType.create(null, paraContents)
+                    if (para) blocks.push(para)
+                    paraContents = Fragment.empty
+                  }
+                  content.content.forEach(block => { blocks.push(block) })
+                }
+              }
+              if (paraContents !== Fragment.empty) {
+                // if (!cellContents.every(c => c.inline))
+                //   paraContents = paraContents.addToStart(sepText)
+                const para = paraType.create(null, paraContents)
+                if (para) blocks.push(para)
+              } else if (!cellContents[cellContents.length - 1].inline) {
+                const para = paraType.create(null, sepText)
+                if (para) blocks.push(para)
+              }
+              return false // don't go deeper than rows
+            }
+          })
+          if (blocks.length === 0) return false
+          dispatch(
+            tr.replaceRange(pos, pos + table.nodeSize, new Slice(Fragment.from(blocks), 0, 0))
+          )
         }
         return true
       }
