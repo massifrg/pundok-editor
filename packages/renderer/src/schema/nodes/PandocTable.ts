@@ -1058,10 +1058,11 @@ export const PandocTable = Node.create<PandocTableOptions>({
                 //   paraContents = paraContents.addToStart(sepText)
                 const para = paraType.create(null, paraContents)
                 if (para) blocks.push(para)
-              } else if (!cellContents[cellContents.length - 1].inline) {
-                const para = paraType.create(null, sepText)
-                if (para) blocks.push(para)
               }
+              // else if (!cellContents[cellContents.length - 1].inline) {
+              //   const para = paraType.create(null, sepText)
+              //   if (para) blocks.push(para)
+              // }
               return false // don't go deeper than rows
             }
           })
