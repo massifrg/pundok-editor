@@ -73,6 +73,24 @@
             .run()
           " />
 
+      <ToolbarButton icon="mdi-format-list-bulleted" title="toggle bullet list" :shortcut="SK.TOGGLE_BULLETLIST"
+        :disabled="!editor.can().toggleBulletList()" @click="
+          editor
+            .chain()
+            .runRepeatableCommand('toggleBulletList', 'toggle BulletList')
+            .focus()
+            .run()
+          " />
+
+      <ToolbarButton icon="mdi-format-list-numbered" title="toggle ordered list" :shortcut="SK.TOGGLE_ORDEREDLIST"
+        :disabled="!editor.can().toggleOrderedList()" @click="
+          editor
+            .chain()
+            .runRepeatableCommand('toggleOrderedList', 'toggle OrderedList')
+            .focus()
+            .run()
+          " />
+
       <span class="button-separator" />
 
       <ImageButton :editor="editor" />
