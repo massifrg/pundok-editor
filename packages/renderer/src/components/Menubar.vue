@@ -275,13 +275,13 @@
 
       <span class="button-separator" />
 
-      <ElementSelectionButton :editor="editor" />
+      <!-- <ElementSelectionButton :editor="editor" /> -->
 
-      <ToolbarButton icon="mdi-cog-play" title="procedures on the whole document"
+      <!-- <ToolbarButton icon="mdi-cog-play" title="procedures on the whole document"
         @click="globalProceduresDialogVisible = !globalProceduresDialogVisible">
         <GlobalProceduresDialog :visible="globalProceduresDialogVisible" :editor="editor"
           @show="globalProceduresDialogVisible = true" @hide="globalProceduresDialogVisible = false" />
-      </ToolbarButton>
+      </ToolbarButton> -->
       <!-- <ToolbarButton icon="mdi-bug-check" @click="debug()" /> -->
 
       <q-space />
