@@ -61,13 +61,13 @@ export default {
       return ((this.addableMarks || []) as AddableMark[]).filter(am => names.includes(am.name))
     },
     addableSimpleMarks(): AddableMark[] {
-      return (this.addableMarks as AddableMark[]).filter(am => am.kind === "base")
+      return (this.addableMarks as AddableMark[]).filter(am => am.markspec.kind === "base")
     },
     addableCustomStyles(): AddableMark[] {
-      return (this.addableMarks as AddableMark[]).filter(am => am.kind === "style")
+      return (this.addableMarks as AddableMark[]).filter(am => am.markspec.kind === "style")
     },
     addableSpans(): AddableMark[] {
-      return (this.addableMarks as AddableMark[]).filter(am => am.kind === 'span')
+      return (this.addableMarks as AddableMark[]).filter(am => am.markspec.kind === 'span')
     },
     labelFor(am: AddableMark) {
       const state = this.getState(am)

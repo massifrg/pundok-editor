@@ -45,6 +45,25 @@ export type SearchAndReplaceMark =
   | 'singleQuoted'
   | 'doubleQuoted';
 
+/** Type of Mark specs: base (`emph`, `strong`, ...), custom style, custom span. */
+export type MarkSpecType = 'base' | 'style' | 'span'
+
+export interface SearchMarkSpec {
+  /** The type of MarkSpec */
+  kind: MarkSpecType;
+  /** The type name of the Mark: (`emph`, `strong`, ...) or `span` (with `custom-style`) or other `span`.*/
+  typeName: string;
+  /** Attributes of the Mark. */
+  attrs?: Record<string, any>;
+}
+
+export interface SearchFilterOnMarks {
+  /** The Marks that must be present. */
+  present: SearchMarkSpec[];
+  /** The Marks that must be absent. */
+  absent: SearchMarkSpec[];
+}
+
 /**
  * Definition of predefined search/replace operations.
  * You can search exact text, regular expressions or by Mark or custom style.
@@ -56,6 +75,8 @@ export interface SearchAndReplace extends Automation {
   type: 'search-replace';
   /** The exact text or regular expression to search. */
   search: string;
+  /** A specification of the Marks that must be present or must be absent in the found texts. */
+  filterOnMarks?: SearchFilterOnMarks,
   /** The replacement text (exact or strings with `$1`, `$2`, etc. for regular expressions). */
   replace?: string;
   /** Just search, don't replace. */
