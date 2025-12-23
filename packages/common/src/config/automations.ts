@@ -12,8 +12,11 @@ import { CustomSpan } from './customSpan';
  * - `search-replace`: define a search/replace operation
  */
 export type AutomationType =
+  /** CSS-like selection (and optional replacement with. */
   | 'elements-selection'
+  /** Process the document with a Pandoc filter: the result can be prepended, appended or used as the modified document. */
   | 'pandoc-filter'
+  /** Search and replace text. */
   | 'search-replace';
 
 /**
