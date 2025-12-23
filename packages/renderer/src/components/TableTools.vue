@@ -32,7 +32,11 @@
           <div class="q-gutter-xs q-mr-md">
             <q-btn color="primary" rounded icon="mdi-table-plus" title="create new table" @click="newTable()" />
             <q-btn color="primary" rounded icon="mdi-table-arrow-left" title="convert text to table"
-              @click="showSeparatorDialog = true" :disabled="!editor.can().textToTable()" />
+              @click="conversionMode = 'text2table'; showConversionDialog = true"
+              :disabled="!editor.can().textToTable()" />
+            <q-btn color="primary" rounded icon="mdi-table-arrow-right" title="convert table to text"
+              @click="conversionMode = 'table2text'; showConversionDialog = true"
+              :disabled="!editor.can().tableToText()" />
             <q-btn color="primary" rounded icon="mdi-table-minus" title="delete table" :disabled="!isCursorInTable"
               @click="deleteTable()" />
             <q-btn color="primary" rounded icon="mdi-table-check" title="check and fix table"
@@ -216,14 +220,15 @@
         </q-card-section>
       </q-card>
     </q-dialog>
-    <q-dialog :model-value="visible && showSeparatorDialog">
+    <q-dialog :model-value="visible && showConversionDialog">
       <q-card>
         <q-card-section horizontal>
           <q-btn class="q-ma-xs" size="sm" rounded color="primary" label="" title="common separators"
             icon="mdi-playlist-star">
             <q-menu anchor="bottom start" self="bottom end" auto-close>
               <q-list>
-                <q-item v-for="sep in predefinedSeparators()" clickable @click="setSeparator(sep.separator, sep.regex)">
+                <q-item v-for="sep in predefinedSeparators(conversionMode === 'table2text')" clickable
+                  @click="setSeparator(sep.separator, sep.regex)">
                   {{ sep.description }}
                 </q-item>
               </q-list>
@@ -232,13 +237,17 @@
           <q-space />
           <q-input :model-value="separator" @update:model-value="setSeparator" />
           <q-space />
-          <q-btn class="q-ma-xs" size="sm" rounded color="primary" label="" :outline="!regexSeparator" icon="mdi-regex"
-            title="separator is a regular expression" @click="regexSeparator = !regexSeparator" />
+          <q-btn v-if="conversionMode === 'text2table'" class="q-ma-xs" size="sm" rounded color="primary" label=""
+            :outline="!regexSeparator" icon="mdi-regex" title="separator is a regular expression"
+            @click="regexSeparator = !regexSeparator" />
         </q-card-section>
         <q-card-actions>
           <q-space />
           <q-btn icon="mdi-cancel" label="cancel" color="primary" @click="showSectionsControls = false" />
-          <q-btn icon="mdi-check" label="convert" color="primary" @click="textToTable()" />
+          <q-btn v-if="conversionMode === 'text2table'" icon="mdi-check" label="convert" color="primary"
+            @click="textToTable()" />
+          <q-btn v-if="conversionMode === 'table2text'" icon="mdi-check" label="convert" color="primary"
+            @click="tableToText()" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -254,11 +263,11 @@ import { Alignment } from '../pandoc';
 import { isString } from 'lodash';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
+type TableConversionMode = 'text2table' | 'table2text'
 
 export default {
   props: ['editor', 'currentNodesWithPos'],
   data() {
-    const sep = this.predefinedSeparators()[0]
     return {
       visible: false,
       dialogPosition: "top" as DialogPosition,
@@ -268,9 +277,10 @@ export default {
       showRowsColsControls: true,
       showAlignControls: true,
       showCellsControls: true,
-      showSeparatorDialog: false,
-      separator: sep.separator,
-      regexSeparator: sep.separator,
+      showConversionDialog: false,
+      conversionMode: 'text2table' as TableConversionMode,
+      separator: undefined as string | undefined,
+      regexSeparator: false,
     }
   },
   components: { ToolbarButton },
@@ -305,6 +315,15 @@ export default {
       return this.currentCell && this.currentCell.node.attrs.rowspan;
     },
   },
+  watch: {
+    showConversionDialog(showing: boolean) {
+      if (showing) {
+        const predef = this.predefinedSeparators(this.conversionMode === 'table2text')[0]
+        this.separator = this.separator || predef.separator
+        this.regexSeparator = this.regexSeparator && this.conversionMode === 'text2table' || predef.regex
+      }
+    }
+  },
   methods: {
     open(where?: DialogPosition) {
       if (where) this.dialogPosition = where
@@ -318,9 +337,13 @@ export default {
         .run()
     },
     textToTable() {
-      const sep = this.regexSeparator ? new RegExp(this.separator) : this.separator
+      const sep = this.regexSeparator ? new RegExp(this.separator!) : this.separator
       this.editor?.commands.textToTable(sep)
-      this.showSeparatorDialog = false
+      this.showConversionDialog = false
+    },
+    tableToText() {
+      this.editor?.commands.tableToText(this.separator)
+      this.showConversionDialog = false
     },
     deleteTable() {
       this.editor?.chain().deleteTable().focus().run()
@@ -479,17 +502,20 @@ export default {
         'split cell'
       )
     },
-    predefinedSeparators(): { separator: string, regex: boolean, description: string }[] {
-      return [
+    predefinedSeparators(noRegex?: boolean): { separator: string, regex: boolean, description: string }[] {
+      return ([
         { separator: "\\s{2,}", regex: true, description: "2 or more spaces" },
         { separator: "\\s+", regex: true, description: "1 or more spaces" },
         { separator: "|", regex: false, description: "vertical bar" },
         { separator: "\\s*,\\s*", regex: true, description: "comma (with eventual spaces around)" },
         { separator: "\\s*;\\s*", regex: true, description: "semicolon (with eventual spaces around)" },
-      ]
+        { separator: "  ", regex: false, description: "double space" },
+        { separator: "; ", regex: false, description: "semicolon and space" },
+      ]).filter(s => !(noRegex && s.regex))
     },
     setSeparator(separator: string | number | null, regex?: boolean) {
       if (isString(separator) && separator.length > 0) {
+        console.log(separator)
         this.separator = separator
         if (regex !== undefined) this.regexSeparator = regex
       }

@@ -168,7 +168,7 @@ function applyNotComplexRule(
                 index,
               });
             node.marks.forEach((mark) => {
-              if (nomMatchesAST(mark, ast))
+              if (nomMatchesAST(mark, ast, node, index))
                 acc.push({
                   mark,
                   node,
@@ -255,10 +255,10 @@ function nomMatchesAST(nom: Node | Mark, ast: AST, parent?: Node | null, index?:
       return true;
     case 'pseudo-class':
       return nomMatchesPseudoClass(nom, ast, parent, index);
+    case 'pseudo-element':
     case 'complex':
     case 'combinator':
     case 'comma':
-    case 'pseudo-element':
     default:
       console.log(ast);
       throw new Error(`unknown AST type: "${ast.type}"`);
@@ -388,8 +388,9 @@ function nomMatchesPseudoClass(
   switch (ast.name) {
     case 'not':
       return !!ast.subtree && !nomMatchesAST(nom, ast.subtree);
-    case 'text':
-      const text = (nom as Node).textContent || nom.attrs.text
+    case 'contains':
+      const n = nom instanceof Node ? nom as Node : parent
+      const text = n?.textContent || n?.attrs.text
       return !!argument && text && text.indexOf(argument) >= 0
     case 'first-child':
       return index === 0

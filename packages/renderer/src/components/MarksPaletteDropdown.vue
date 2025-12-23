@@ -1,65 +1,51 @@
 <template>
-  <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :outline="noneActive" :label="label"
-    :title="title || 'Mark or custom style'" :no-caps="noneActive || operation === 'remove all'"
-    :menu-anchor="menuAnchor" :menu-self="menuSelf">
-    <MarksPalette :editor="editor" :operations="operations" :defaultOperation="defaultOperation"
-      :addableMarks="addableMarks" :logicalOperator="logicalOperator" :showLogicalOperator="showLogicalOperator"
-      @selected-marks="forwardSelectedMarks" @selected-operation="forwardSelectedOperation"
-      @selected-logical-operator="forwardSelectedLogicalOperator" />
+  <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :icon="icon" :outline="isNoneSelected"
+    :label="label" :title="title || 'Select marks or custom styles that must be present or absent'"
+    :no-caps="isNoneSelected" :menu-anchor="menuAnchor" :menu-self="menuSelf">
+    <MarksPalette :editor="editor" :addableMarks="addableMarks" :positiveMarks='positiveMarks'
+      :negativeMarks='negativeMarks' @selected-marks="forwardSelectedMarks" />
   </q-btn-dropdown>
 </template>
 
 <script lang="ts">
-import { AddableMark } from '.';
-import { MarkOperationType, MarksLogicalOperator } from '../schema';
+import { AddableMark } from './helpers/addableMark';
 import MarksPalette from './MarksPalette.vue'
+
+const NONE_SELECTED_LABEL = 'no filter'
 
 export default {
   components: { MarksPalette },
-  props: ['editor', 'title', 'operations', 'defaultOperation', 'addableMarks', 'logicalOperator', 'showLogicalOperator', 'menuAnchor', 'menuSelf'],
-  emits: ['selected-marks', 'selected-operation', 'selected-logical-operator'],
+  props: [
+    'editor',
+    'title',
+    'icon',
+    'addableMarks',      // AddableMark[]
+    'positiveMarks',     // AddableMark[]
+    'negativeMarks',     // AddableMark[]
+    'noneSelectedLabel',
+    'menuAnchor',
+    'menuSelf'
+  ],
+  emits: ['selected-marks'],
   data() {
     return {
-      selectedMarks: ((this.addableMarks || []) as AddableMark[]).filter(m => m.active),
-      operation: this.defaultOperation,
+      label: this.computeLabel(this.positiveMarks || [], this.negativeMarks || []),
     }
   },
   computed: {
-    noneActive() {
-      return this.selectedMarks.length === 0
-    },
-    prefix() {
-      const operation = this.operation
-      if (operation === 'add') return '+'
-      if (operation === 'remove') return '-'
-      return ''
-    },
-    label() {
-      if (this.operation === 'remove all') return 'remove Marks'
-      return this.noneActive
-        ? 'No Mark'
-        : this.selectedMarks.map(m => `${this.prefix}${m.name}`).join(',')
-    }
-  },
-  watch: {
-    addableMarks(marks: AddableMark[]) {
-      this.selectedMarks = marks.filter(m => m.active)
-    },
-    defaultOperation(op: MarkOperationType) {
-      this.operation = op
+    isNoneSelected(): boolean {
+      return (this.positiveMarks?.length || 0) + (this.negativeMarks?.length || 0) === 0
     }
   },
   methods: {
-    forwardSelectedMarks(marks: AddableMark[]) {
-      this.selectedMarks = marks
-      this.$emit('selected-marks', marks)
+    computeLabel(positive: AddableMark[], negative: AddableMark[]) {
+      return (positive?.length || 0) + (negative?.length || 0) === 0
+        ? this.noneSelectedLabel || NONE_SELECTED_LABEL
+        : [...positive.map(p => `+${p.name}`), ...negative.map(n => `-${n.name}`)].join(',')
     },
-    forwardSelectedOperation(operation: MarkOperationType) {
-      this.operation = operation
-      this.$emit('selected-operation', operation)
-    },
-    forwardSelectedLogicalOperator(operator: MarksLogicalOperator) {
-      this.$emit('selected-logical-operator', operator)
+    forwardSelectedMarks(positive: AddableMark[], negative: AddableMark[]) {
+      this.label = this.computeLabel(positive, negative)
+      this.$emit('selected-marks', positive, negative)
     }
   }
 }

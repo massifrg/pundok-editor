@@ -200,8 +200,7 @@ export class IpcHub {
             result = await importJsonWithPandoc(
               filename,
               inputConverter.format,
-              configurationName,
-              inputConverter,
+              context
             );
             break;
           case 'custom':
@@ -235,10 +234,10 @@ export class IpcHub {
           case 'epub':
           case 'native':
           case 'csv':
-            result = await importJsonWithPandoc(filename, extension);
+            result = await importJsonWithPandoc(filename, extension, {});
             break;
           case 'md':
-            result = await importJsonWithPandoc(filename, 'markdown');
+            result = await importJsonWithPandoc(filename, 'markdown', {});
             break;
           default:
             result = {
@@ -317,11 +316,15 @@ export class IpcHub {
       // load the project, if the document has been saved in a project directory
       // TODO: what to do when a file in a project is saved in the directory of another project?
       if (docPath && !project) {
-        const dirProject = await computeProjectFromDocFile(docPath)
-        console.log(`dirProject is ${dirProject.name}`)
-        if (dirProject) {
-          doc.project = dirProject
-          this.fireEventSetProject(dirProject)
+        try {
+          const dirProject = await computeProjectFromDocFile(docPath)
+          console.log(`dirProject is ${dirProject.name}`)
+          if (dirProject) {
+            doc.project = dirProject
+            this.fireEventSetProject(dirProject)
+          }
+        } catch (err) {
+          console.log(`no project file in document folder (${parsePath(docPath).dir})`)
         }
       }
 

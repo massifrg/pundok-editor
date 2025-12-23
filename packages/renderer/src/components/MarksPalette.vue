@@ -2,68 +2,64 @@
   <q-card>
     <span class="q-px-sm q-ma-xs">Marks:</span>
     <q-card-section horizontal>
-      <q-btn v-for="m in addableSimpleMarks()" class="q-ma-xs" size="sm" rounded color="primary" :outline="!m.active"
-        @click="toggleMark(m)" :label="m.label" :icon="m.icon" :title="m.title" />
+      <q-btn v-for="m in addableSimpleMarks()" class="q-ma-xs" size="sm" rounded :color="colorFor(m)"
+        :outline="getState(m) === 0" @click="toggleMark(m)" :label="labelFor(m)" :icon="m.icon" :title="titleFor(m)" />
     </q-card-section>
     <span class="q-px-sm q-ma-xs" v-if="addableCustomStyles().length > 0">Custom styles:</span>
     <q-card-section horizontal>
-      <q-btn v-for="m in addableCustomStyles()" class="q-ma-xs" size="sm" rounded color="primary" :outline="!m.active"
-        @click="toggleMark(m)" :label="m.label" :icon="m.icon" :title="m.title" />
+      <q-btn v-for="m in addableCustomStyles()" class="q-ma-xs" size="sm" rounded :color="colorFor(m)"
+        :outline="getState(m) === 0" @click="toggleMark(m)" :label="labelFor(m)" :icon="m.icon" :title="titleFor(m)" />
     </q-card-section>
     <span class="q-px-sm q-ma-xs" v-if="addableSpans().length > 0">Span with classes and/or
       attributes:</span>
     <q-card-section horizontal>
-      <q-btn v-for="s in addableSpans()" class="q-ma-xs" size="sm" rounded color="primary" :outline="!s.active"
-        @click="toggleMark(s)" :label="s.label" :icon="s.icon" :title="s.title" />
+      <q-btn v-for="s in addableSpans()" class="q-ma-xs" size="sm" rounded :color="colorFor(s)"
+        :outline="getState(s) === 0" @click="toggleMark(s)" :label="labelFor(s)" :icon="s.icon" :title="titleFor(s)" />
     </q-card-section>
-    <q-card-actions v-if="operations || showLogicalOperator" horizontal align="center" class="q-mx-sm">
-      <q-btn-toggle v-if="operations" v-model="operation" toggle-color="primary" size="sm" :options="operationOptions"
-        @update:model-value="$emit('selected-operation', operation)" />
-      <q-btn-toggle v-if="showLogicalOperator" :model-value="selectedLogicalOperator" :options="logicalOperatorOptions"
-        toggle-color="primary" @update:model-value="updateLogicalOperator" size="sm" />
-    </q-card-actions>
   </q-card>
 </template>
 
 <script lang="ts">
-import { AddableMark } from '.';
-import { MarkOperation, MarksLogicalOperator } from '../schema';
+import { isEqual } from 'lodash';
+import { AddableMark } from './helpers/addableMark';
 
 export default {
-  props: ['editor', 'addableMarks', 'operations', 'defaultOperation', 'logicalOperator', 'showLogicalOperator'],
-  emits: ['selected-marks', 'selected-operation', 'selected-logical-operator'],
+  props: ['editor', 'addableMarks', 'positiveMarks', 'negativeMarks'],
+  emits: ['selected-marks'],
   data() {
     return {
-      operation: this.defaultOperation,
-      selectedLogicalOperator: this.logicalOperator || 'and' as MarksLogicalOperator,
-      logicalOperatorOptions: [
-        {
-          label: 'match all',
-          value: 'and' as MarksLogicalOperator
-        },
-        {
-          label: 'match one or more',
-          value: 'or' as MarksLogicalOperator
-        },
-      ]
+      states: Object.fromEntries(((this.addableMarks || []) as AddableMark[])
+        .map(am => {
+          const state = this.positiveMarks && this.positiveMarks.find((p: AddableMark) => isEqual(am, p))
+            ? 1
+            : this.negativeMarks && this.negativeMarks.find((n: AddableMark) => isEqual(am, n))
+              ? -1
+              : 0
+          return [am.name, state]
+        })),
     }
   },
   computed: {
-    selectedMarks(): AddableMark[] {
-      return (this.addableMarks as AddableMark[]).filter(am => am.active)
+    selectedPositive(): AddableMark[] {
+      const names = Object.entries(this.states)
+        .filter(([name, state]) => state > 0)
+        .map(([name, state]) => name)
+      return this.addableMarksWithNames(names)
     },
-    operationOptions() {
-      const operations: MarkOperation[] = this.operations || []
-      return operations.map(o => {
-        const op = o.toString()
-        return {
-          label: op.substring(0, 1).toUpperCase() + op.substring(1),
-          value: o
-        }
-      })
-    },
+    selectedNegative(): AddableMark[] {
+      const names = Object.entries(this.states)
+        .filter(([name, state]) => state < 0)
+        .map(([name, state]) => name)
+      return this.addableMarksWithNames(names)
+    }
   },
   methods: {
+    getState(am: AddableMark) {
+      return this.states[am.name]
+    },
+    addableMarksWithNames(names: string[]): AddableMark[] {
+      return ((this.addableMarks || []) as AddableMark[]).filter(am => names.includes(am.name))
+    },
     addableSimpleMarks(): AddableMark[] {
       return (this.addableMarks as AddableMark[]).filter(am => am.kind === "base")
     },
@@ -73,13 +69,29 @@ export default {
     addableSpans(): AddableMark[] {
       return (this.addableMarks as AddableMark[]).filter(am => am.kind === 'span')
     },
-    toggleMark(addableMark: AddableMark) {
-      addableMark.active = !addableMark.active
-      this.$emit('selected-marks', this.selectedMarks)
+    labelFor(am: AddableMark) {
+      const state = this.getState(am)
+      if (am.icon) return undefined
+      const prefix = state === 0 ? '' : (state > 0 ? '+' : '-')
+      return prefix + (am.label || am.name)
     },
-    updateLogicalOperator(value: MarksLogicalOperator) {
-      this.selectedLogicalOperator = value
-      this.$emit('selected-logical-operator', value)
+    colorFor(am: AddableMark) {
+      const state = this.getState(am)
+      return state === 0 ? 'secondary' : (state > 0 ? 'positive' : 'negative')
+    },
+    titleFor(am: AddableMark) {
+      const state = this.getState(am)
+      const suffix = state === 0 ? '' : (state > 0 ? ' present' : ' absent')
+      return am.title + suffix
+    },
+    toggleMark(addableMark: AddableMark) {
+      let state = this.getState(addableMark)
+      state = state === 0 ? 1 : (state > 0 ? -1 : 0)
+      this.states = { ...this.states, [addableMark.name]: state }
+      this.emitSelectedMarks()
+    },
+    emitSelectedMarks() {
+      this.$emit('selected-marks', this.selectedPositive, this.selectedNegative)
     }
   }
 }

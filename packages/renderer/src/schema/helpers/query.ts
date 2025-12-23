@@ -66,8 +66,8 @@ export class SearchQuery {
     this.impl = !this.valid
       ? nullQuery
       : this.regexp
-      ? new RegExpQuery(this)
-      : new StringQuery(this);
+        ? new RegExpQuery(this)
+        : new StringQuery(this);
   }
 
   /// Compare this query to another query.
@@ -87,7 +87,7 @@ export class SearchQuery {
     from: number = 0,
     to: number = state.doc.content.size
   ) {
-    for (;;) {
+    for (; ;) {
       if (from >= to) return null;
       let result = this.impl.findNext(state, from, to);
       if (!result || this.checkResult(state, result)) return result;
@@ -102,7 +102,7 @@ export class SearchQuery {
     from: number = state.doc.content.size,
     to: number = 0
   ) {
-    for (;;) {
+    for (; ;) {
       if (from <= to) return null;
       let result = this.impl.findPrev(state, from, to);
       if (!result || this.checkResult(state, result)) return result;
@@ -114,7 +114,7 @@ export class SearchQuery {
   checkResult(state: EditorState, result: SearchResult) {
     let ok = this.wholeWord
       ? checkWordBoundary(state, result.from) &&
-        checkWordBoundary(state, result.to)
+      checkWordBoundary(state, result.to)
       : true;
     if (!ok) return false;
     if (this.filter) ok = this.filter(state, result);
@@ -126,8 +126,8 @@ export class SearchQuery {
     return this.literal
       ? string
       : string.replace(/\\([nrt\\])/g, (_, ch) =>
-          ch == 'n' ? '\n' : ch == 'r' ? '\r' : ch == 't' ? '\t' : '\\'
-        );
+        ch == 'n' ? '\n' : ch == 'r' ? '\r' : ch == 't' ? '\t' : '\\'
+      );
   }
 
   /// Get the ranges that should be replaced for this result. This can
@@ -177,7 +177,7 @@ export class SearchQuery {
     }
     if (frag != Fragment.empty || pos < result.to)
       ranges.push({ from: pos, to: result.to, insert: new Slice(frag, 0, 0) });
-    console.log(ranges);
+    // console.log(ranges);
     return ranges;
   }
 }
@@ -227,11 +227,11 @@ class StringQuery implements QueryImpl {
       return index < 0
         ? null
         : {
-            from: off + index,
-            to: off + index + this.string.length,
-            match: null,
-            matchStart: start,
-          };
+          from: off + index,
+          to: off + index + this.string.length,
+          match: null,
+          matchStart: start,
+        };
     });
   }
 
@@ -247,11 +247,11 @@ class StringQuery implements QueryImpl {
       return index < 0
         ? null
         : {
-            from: off + index,
-            to: off + index + this.string.length,
-            match: null,
-            matchStart: start,
-          };
+          from: off + index,
+          to: off + index + this.string.length,
+          match: null,
+          matchStart: start,
+        };
     });
   }
 }
@@ -281,11 +281,11 @@ class RegExpQuery implements QueryImpl {
       let match = this.regexp.exec(content);
       return match
         ? {
-            from: start + match.index,
-            to: start + match.index + match[0].length,
-            match,
-            matchStart: start,
-          }
+          from: start + match.index,
+          to: start + match.index + match[0].length,
+          match,
+          matchStart: start,
+        }
         : null;
     });
   }
@@ -297,7 +297,7 @@ class RegExpQuery implements QueryImpl {
         Math.min(node.content.size, from - start)
       );
       let match;
-      for (let off = 0; ; ) {
+      for (let off = 0; ;) {
         this.regexp.lastIndex = off;
         let next = this.regexp.exec(content);
         if (!next) break;
@@ -306,11 +306,11 @@ class RegExpQuery implements QueryImpl {
       }
       return match
         ? {
-            from: start + match.index,
-            to: start + match.index + match[0].length,
-            match,
-            matchStart: start,
-          }
+          from: start + match.index,
+          to: start + match.index + match[0].length,
+          match,
+          matchStart: start,
+        }
         : null;
     });
   }

@@ -80,9 +80,17 @@
               @click="optionRegex = !optionRegex" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord"
               icon="whole_word" title="whole words" @click="optionWholeWord = !optionWholeWord" />
+            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!searchFilterSwitch"
+              icon="mdi-filter-outline" title="filter searched text styles"
+              @click="searchFilterSwitch = !searchFilterSwitch" />
             <ActionsOnReplaceDropdown v-if="optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
               title="actions on selected text" @update-actions="updateActions" />
           </div>
+        </q-card-section>
+        <q-card-section v-if="!cssMode && searchFilterSwitch" horizontal>
+          <MarksPaletteDropdown :editor="editor" icon="mdi-filter-outline" :addable-marks="baseMarksAndCustomStyles()"
+            none-selected-label="no filter" :positiveMarks="filterMarkPresence" :negativeMarks="filterMarkAbsence"
+            @selected-marks="setMarksFilters" />
         </q-card-section>
         <q-card-section v-if="!optionSearchOnly" horizontal>
           <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
@@ -96,7 +104,7 @@
         <q-btn :disabled="!canPrevFound()" icon="mdi-chevron-left" size="md" padding="md" title="select previous found"
           @click="prevFound()" />
         <q-btn :disabled="!canNextFound()" icon="mdi-chevron-right" size="md" padding="md" title="select next found"
-          @click="nextFound()" />
+          @click="nextFound(true)" />
         <q-btn icon="mdi-autorenew" size="md" padding="md" title="replace selected" @click="replaceSelected" />
         <q-btn size="md" padding="md" title="replace & select next found" @click="replaceNextText">
           <q-icon name="mdi-autorenew"></q-icon>
@@ -139,11 +147,13 @@ import {
 } from '../schema';
 import {
   AddableMark,
+  addableMarkToMark,
   baseAddableMarks,
   customStylesToAddableMarks,
-} from '.';
+} from './helpers/addableMark';
 import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
+import MarksPaletteDropdown from './MarksPaletteDropdown.vue';
 import SaveConfigurationElementPopup from './SaveConfigurationElementPopup.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
@@ -168,7 +178,7 @@ import {
   ActionName,
   setActionCommand
 } from '../actions';
-import { Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { toRaw } from 'vue';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
@@ -201,6 +211,7 @@ export default {
   components: {
     ActionsOnReplaceDropdown,
     IndicesButtons,
+    MarksPaletteDropdown,
     SaveConfigurationElementPopup,
   },
   props: ['visible', 'editor', 'nodeOrMarkToLabel'],
@@ -236,6 +247,10 @@ export default {
       optionCycle: false,
       // search a whole word
       optionWholeWord: false,
+      // a switch to activate filters on searched text (only in text search)
+      searchFilterSwitch: false,
+      filterMarkPresence: [] as AddableMark[],
+      filterMarkAbsence: [] as AddableMark[],
       // actions to be performed on replaced text or selected with CSS
       actionsOnReplace: [] as ActionNameWithProps[],
     };
@@ -264,9 +279,6 @@ export default {
     },
     project() {
       return getEditorProject(this.editor)
-    },
-    customStyles(): CustomStyleInstance[] {
-      return this.configuration?.customStylesInstances || []
     },
     searchLabel(): string {
       return this.cssMode
@@ -350,6 +362,27 @@ export default {
     expandTooltip() {
       return `show ${this.showFields ? 'less' : 'more'}`
     },
+    // a function to filter search results
+    filterResult(): SearchResultFilter | undefined {
+      if (!this.searchFilterSwitch)
+        return undefined
+      const positive = this.filterMarkPresence
+      const negative = this.filterMarkAbsence
+      return (state, result) => {
+        const { doc, schema } = state
+        const { from, to } = result
+        let i, mark
+        for (i = 0; i < positive.length; i++) {
+          mark = addableMarkToMark(schema, positive[i])
+          if (!mark || !doc.rangeHasMark(from, to, mark)) return false
+        }
+        for (i = 0; i < negative.length; i++) {
+          const mark = addableMarkToMark(schema, negative[i])
+          if (mark && doc.rangeHasMark(from, to, mark)) return false
+        }
+        return true
+      }
+    }
   },
   watch: {
     cssMode(css_mode: boolean, prev_mode: boolean) {
@@ -460,7 +493,7 @@ export default {
           regexp: !!this.optionRegex,
           replace: this.textToReplace,
           wholeWord: !!this.optionWholeWord,
-          // filterResult: 
+          filterResult: this.filterResult,
         })
         editor.chain().startSearch(query).focus().selectNextFoundText().run();
         this.query = query
@@ -522,13 +555,19 @@ export default {
         this.editor.chain().selectPrevFoundText(this.optionCycle).focus().run()
       }
     },
-    nextFound() {
+    nextFound(scroll?: boolean): boolean {
       if (this.cssMode) {
+        if (!this.editor.can().selectNextCss(this.optionCycle))
+          return false
         this.editor.commands.selectNextCss(this.optionCycle)
-        this.scrollAtSelectedCss()
+        if (scroll) this.scrollAtSelectedCss()
       } else {
+        if (!this.editor.can().selectNextFoundText(this.optionCycle))
+          return false
         this.editor.chain().selectNextFoundText(this.optionCycle).focus().run()
+        if (scroll) this.editor.commands.scrollIntoView()
       }
+      return true
     },
     replaceSelected() {
       if (this.optionSearchOnly) {
@@ -550,29 +589,41 @@ export default {
     },
     replaceNextText() {
       this.replaceSelected()
-      this.nextFound()
+      this.nextFound(true)
     },
     replaceAll() {
-      // if (this.cssMode) {
-      const startIndex = this.foundIndex
-      let prevIndex: number
-      do {
-        prevIndex = this.foundIndex
-        this.replaceNextText()
-      } while (this.foundIndex !== prevIndex && this.foundIndex !== startIndex)
-      // } else {
-      //   this.editor.chain().replaceAll().focus().run()
-      // }
-      // this.updateCountAndIndex()
+      // if it's just a text replacement without actions, call replaceAll(), because it's faster
+      if (!this.cssMode && this.actionsOnReplace.length === 0) {
+        this.editor.chain().replaceAll().focus().run()
+      } else {
+        // check the position in case optionCycle==true, not to cycle infinitely
+        const startPos = this.editor.state.selection.$anchor.pos
+        let pos = startPos
+        let cycledAround = false
+        this.replaceSelected()
+        while (this.nextFound()) {
+          pos = this.editor.state.selection.$anchor.pos
+          if (!cycledAround) cycledAround = pos <= startPos
+          if (cycledAround && pos >= startPos)
+            break
+          this.replaceSelected()
+        }
+        this.editor.commands.focus()
+      }
     },
     baseMarksAndCustomStyles(selected?: string[]): AddableMark[] {
       const editor = this.editor
       if (editor) {
+        const customStyles: CustomStyleInstance[] = this.configuration?.customStylesInstances || []
         const am: AddableMark[] = baseAddableMarks(selected)
-        customStylesToAddableMarks(this.customStyles, selected, am)
+        customStylesToAddableMarks(customStyles, selected, am)
         return am
       }
       return []
+    },
+    setMarksFilters(positive: AddableMark[], negative: AddableMark[]) {
+      this.filterMarkPresence = positive || []
+      this.filterMarkAbsence = negative || []
     },
     resetSettings() {
       this.searchInput = ''
@@ -582,6 +633,7 @@ export default {
       this.optionRegex = false
       this.optionCycle = false
       this.optionWholeWord = false
+      this.searchFilterSwitch = false
       this.actionsOnReplace = []
       this.foundIndex = -1
     },

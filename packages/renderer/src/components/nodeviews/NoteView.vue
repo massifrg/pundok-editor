@@ -1,8 +1,8 @@
 <template>
   <node-view-wrapper class="inline-wrapper">
     <span style="position: relative; top: -.8rem" draggable="true" contenteditable="false">
-      <q-btn padding="0px 2px" :class="`notetype-${noteType}`" :label="markerText" data-drag-handle size="md" dense
-        fab-mini no-caps :style="{ color, backgroundColor }" @click="toggleShowMode()" />
+      <q-btn padding="0px 2px" :class="`notetype-${noteType}`" :label="markerText" :title="noteTitle" data-drag-handle
+        size="md" dense fab-mini no-caps :style="{ color, backgroundColor }" @click="toggleShowMode()" />
     </span>
     <!-- <span v-if="showId" contenteditable="false" class="note-id">{{ idValue }}</span> -->
     <q-card :contenteditable="isOpen" :class="contentClasses"
@@ -103,6 +103,9 @@ export default {
     },
     noteStyle() {
       return this.noteStyles.find(ns => ns.noteType === this.noteType)
+    },
+    noteTitle() {
+      return this.node.textContent
     },
     markerText() {
       const n = this.noteNumber

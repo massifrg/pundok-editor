@@ -15,6 +15,7 @@ import {
   FindResourceOptions,
   PandocMetadata,
   PandocVariables,
+  DocumentContext,
 } from './common';
 import {
   FindResourceFileOptions,
@@ -58,9 +59,9 @@ export function importWithPandoc(
 export function importJsonWithPandoc(
   filename: string,
   formatOrReader: string,
-  configurationName?: string,
-  inputConverter?: InputConverter,
+  context: DocumentContext,
 ): Promise<ExternalProgramResult> {
+  const { inputConverter, configurationName, project } = context
   console.log(
     `importJsonWithPandoc, configurationName=${JSON.stringify(
       configurationName,
@@ -70,14 +71,26 @@ export function importJsonWithPandoc(
   let pandocOpts: string[] = DEFAULT_IMPORT_PANDOC_OPTIONS;
   if (inputConverter && inputConverter.type === 'pandoc')
     pandocOpts = pandocOpts.concat(inputConverter.pandocOptions || []);
-  if (configurationName) {
-    const dir = configDir(configurationName);
-    if (dir) {
-      pandocOpts.push(`--data-dir=${encloseInDblQuotes(dir)}`);
-      if (formatOrReader.endsWith('.lua'))
-        format = encloseInDblQuotes(resolve(dir, formatOrReader));
-    }
+  const isCustomReader = formatOrReader.toLowerCase().endsWith('.lua')
+  // if it's custom reader, we must find it in the configuration(s) directories
+  if (isCustomReader) {
+    const customReaderFilepath = findResourceFile(formatOrReader, {
+      kind: 'reader',
+      configurationName,
+      project,
+      baseResourcePaths: context.resourcePath
+    })
+    if (!customReaderFilepath)
+      return Promise.reject(`Can't find the "${formatOrReader}" custom reader in document, project or configurations directories!`)
+    const customReaderDir = parsePath(customReaderFilepath).dir
+    const respath = [...(context.resourcePath || []), customReaderDir]
+      .map(rp => encloseInDblQuotes(rp))
+      .join(pathDelimiter)
+    pandocOpts.push(`--resource-path=${respath}`);
+    pandocOpts.push(`--data-dir=${customReaderDir}`)
+    format = encloseInDblQuotes(customReaderFilepath);
   }
+  console.log(`importWithPandoc, format=${format}`)
   return importWithPandoc(filename, format, pandocOpts);
 }
 
@@ -372,6 +385,8 @@ export async function runWriterOnMasterFile(
       editorProject && isString(editorProject)
         ? JSON.parse(editorProject)
         : editorProject;
+    if (!project.path || !project.rootDocument)
+      return undefined
     let src = resolve(project.path, project.rootDocument);
     if (!isAbsolute(src))
       return Promise.reject(`"${src}" is not an absolute path`);
