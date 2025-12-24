@@ -3,15 +3,19 @@ import {
   CustomStyleInstance,
   SearchAndReplaceMark,
   CustomSpan,
+  SearchMarkSpec,
+  PundokEditorConfig,
+  PundokEditorConfigInit,
+  customStylesFromDefs,
 } from '../../common';
-import { iconFor, SearchMarkSpec } from '../../schema';
+import { iconFor } from '../../schema';
+
 
 export interface AddableMark {
   name: string;
   title: string;
   icon?: string;
   label?: string;
-  kind: 'base' | 'style' | 'span';
   markspec: SearchMarkSpec;
 }
 
@@ -35,12 +39,11 @@ export function baseAddableMarks(
   BASE_ADDABLE_MARKS.forEach((bam) => {
     const { name, title, icon, label } = bam;
     result.push({
-      kind: 'base',
+      markspec: { kind: 'base', typeName: bam.name! },
       name: name as SearchAndReplaceMark,
       title: title || (name as string),
       icon: name && iconFor(name) || icon,
       label: label,
-      markspec: { typeName: bam.name! },
     });
   });
   return result;
@@ -57,17 +60,17 @@ export function customStylesToAddableMarks(
     .forEach((s) => {
       const { name, description } = s.styleDef;
       result.push({
-        kind: 'style',
-        name: name,
-        title: description || `custom style "${name}"`,
-        label: name,
         markspec: {
+          kind: 'style',
           typeName: 'span',
           attrs: {
             customStyle: name,
             kv: { 'custom-style': name },
           },
         },
+        name: name,
+        title: description || `custom style "${name}"`,
+        label: name,
       });
     });
   return result;
@@ -82,18 +85,18 @@ export function customSpanToAddableMarks(
   spans.forEach((s) => {
     const { name, description, icon, classes, kv } = s;
     result.push({
-      kind: 'span',
-      name: name,
-      title: description || `"${name}" span`,
-      label: name,
-      icon,
       markspec: {
+        kind: 'span',
         typeName: 'span',
         attrs: {
           classes,
           kv,
         },
       },
+      name: name,
+      title: description || `"${name}" span`,
+      label: name,
+      icon,
     });
   });
   return result;
@@ -103,4 +106,64 @@ export function addableMarkToMark(schema: Schema, am: AddableMark): Mark | undef
   const { typeName, attrs } = am.markspec
   const markType = schema.marks[typeName]
   return markType && markType.create(attrs)
+}
+
+export function searchMarkSpecToAddableMarks(
+  markspecs: SearchMarkSpec[],
+  schema: Schema,
+  config?: PundokEditorConfig | PundokEditorConfigInit,
+): AddableMark[] {
+  const ams: AddableMark[] = []
+  markspecs.forEach(markspec => {
+    const { kind, typeName, attrs } = markspec
+    let styles: CustomStyleInstance[] | undefined = undefined
+    switch (kind) {
+      case 'base':
+        {
+          const markType = schema.marks[typeName]
+          const mark = markType && markType.create(attrs)
+          const bam = BASE_ADDABLE_MARKS.find((bam) => bam.name === typeName)
+          if (mark && bam) {
+            const { name, title, icon, label } = bam;
+            ams.push({
+              markspec,
+              name: name as SearchAndReplaceMark,
+              title: title || (name as string),
+              icon: name && iconFor(name) || icon,
+              label: label,
+            });
+          }
+        }
+        break
+      case 'style':
+        {
+          styles = styles !== undefined ? styles : customStylesFromDefs(config?.customStyles || [])
+          const customStyle = attrs?.customStyle
+          if (styles && customStyle) {
+            const style = styles.find(s => s.styleDef.name === customStyle)
+            if (style) {
+              const { name, description } = style.styleDef;
+              ams.push({
+                markspec: {
+                  kind: 'style',
+                  typeName: 'span',
+                  attrs: {
+                    customStyle: name,
+                    kv: { 'custom-style': name },
+                  },
+                },
+                name: name,
+                title: description || `custom style "${name}"`,
+                label: name,
+              });
+            }
+          }
+        }
+      case 'span':
+        {
+          // TODO: to be implemented in case of custom spans
+        }
+    }
+  })
+  return ams
 }

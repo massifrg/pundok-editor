@@ -1,9 +1,8 @@
 {
-  "$ref": "#/definitions/PundokEditorConfigInit",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "Automation": {
-      "description": "Configuration of the interface of the editor to ease the transformation of the document, like search and replace operations.",
+      "description": "Configuration of the interface of the editor to ease the transformation of the document, like:\n- selection of nodes or marks with CSS selectors;\n- transformation of the current document with Pandoc filters;\n- search and replace operations.",
       "properties": {
         "description": {
           "type": "string"
@@ -22,11 +21,132 @@
       "type": "object"
     },
     "AutomationType": {
-      "description": "Types of automations available.",
+      "description": "Types of automations available:\n- `elements-selection`: selections of nodes or marks with CSS-like selectors\n- `pandoc-filter`: apply a pandoc filter to this document or to another document and     + replace the current document with the result     + or append/prepend the result to the current document\n- `search-replace`: define a search/replace operation",
       "enum": [
         "elements-selection",
         "pandoc-filter",
         "search-replace"
+      ],
+      "type": "string"
+    },
+    "BaseInputConverter": {
+      "additionalProperties": false,
+      "description": "A base type for documents' import.",
+      "properties": {
+        "default": {
+          "description": "true for the default input converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "extensions": {
+          "description": "input file extensions",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "feedback": {
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/InputConverterType",
+          "description": "kind of importer (used by derived types)"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "extensions"
+      ],
+      "type": "object"
+    },
+    "BaseOutputConverter": {
+      "additionalProperties": false,
+      "description": "Definition of a document's converter to a particular format.",
+      "properties": {
+        "default": {
+          "description": "true for the default output converter (only one can be default, otherwise it's the first encountered)",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "description of the converter",
+          "type": "string"
+        },
+        "dontAskForResultFile": {
+          "description": "don't ask for the output file, because the script knows where to save its output",
+          "type": "boolean"
+        },
+        "extension": {
+          "description": "extension of the resulting file",
+          "type": "string"
+        },
+        "feedback": {
+          "$ref": "#/definitions/FeedbackMessageType",
+          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
+        },
+        "format": {
+          "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the filter, use only 0-9a-z_- characters",
+          "type": "string"
+        },
+        "openResult": {
+          "$ref": "#/definitions/ShowOutputConversion",
+          "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
+        },
+        "projectBuild": {
+          "description": "it's the build of a project-wise product",
+          "type": "boolean"
+        },
+        "resultFile": {
+          "description": "the path of the output file",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/OutputConverterType",
+          "description": "converter's type: pandoc, lua script, generic program or internal function"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "format"
+      ],
+      "type": "object"
+    },
+    "ConfigInitField": {
+      "description": "The fields allowed in a configuration init object.",
+      "enum": [
+        "name",
+        "version",
+        "description",
+        "inherits",
+        "tiptap",
+        "documentTemplate",
+        "autoDelimiters",
+        "customStyles",
+        "customClasses",
+        "customAttributes",
+        "customMetadata",
+        "noteStyles",
+        "customCss",
+        "indices",
+        "defaultRawFormat",
+        "rawInlines",
+        "rawBlocks",
+        "inputConverters",
+        "outputConverters",
+        "automations"
       ],
       "type": "string"
     },
@@ -154,6 +274,7 @@
     },
     "CustomMetadata": {
       "additionalProperties": false,
+      "description": "A custom metadata field in the Metadata of a Pandoc document.",
       "properties": {
         "default": {},
         "description": {
@@ -457,12 +578,15 @@
               },
               "type": "array"
             }
-          ]
+          ],
+          "description": "The actual contents of the raw element or of the couple of elements that will go around the selection."
         },
         "format": {
+          "description": "The output format of the RawInline or RawBlock.",
           "type": "string"
         },
         "title": {
+          "description": "The description of the raw element.",
           "type": "string"
         }
       },
@@ -470,6 +594,18 @@
         "format"
       ],
       "type": "object"
+    },
+    "MarkerConversion": {
+      "enum": [
+        "noConversion",
+        "lower-alpha",
+        "upper-alpha",
+        "lower-roman",
+        "upper-roman",
+        "lower-greek",
+        "upper-greek"
+      ],
+      "type": "string"
     },
     "MetaValueName": {
       "enum": [
@@ -486,21 +622,25 @@
       "additionalProperties": false,
       "properties": {
         "backgroundColor": {
+          "description": "The background color of the note in the editor.",
           "type": "string"
         },
         "default": {
+          "description": "This is the default note type, if true.",
           "type": "boolean"
         },
         "markerAfter": {
+          "description": "A text after the note marker, e.g. \")\", \"]\"",
           "type": "string"
         },
         "markerBefore": {
+          "description": "A text before the note marker, e.g. \"(\", \"[\"",
           "type": "string"
         },
         "markerConversion": {
           "anyOf": [
             {
-              "type": "string"
+              "$ref": "#/definitions/MarkerConversion"
             },
             {
               "items": {
@@ -508,12 +648,15 @@
               },
               "type": "array"
             }
-          ]
+          ],
+          "description": "How to convert the note number."
         },
         "noteType": {
+          "description": "The note type, e.g. footnote, endnote, ...",
           "type": "string"
         },
         "textColor": {
+          "description": "The foreground color of the note in the editor.",
           "type": "string"
         }
       },
@@ -537,6 +680,16 @@
           "$ref": "#/definitions/ScriptOutputConverter"
         }
       ]
+    },
+    "OutputConverterType": {
+      "description": "Output conversion can be done:\n- spawning a `pandoc` process\n- a `lua` script\n- a generic external program or `script`\n- `custom` hardcoded function",
+      "enum": [
+        "pandoc",
+        "lua",
+        "custom",
+        "script"
+      ],
+      "type": "string"
     },
     "PandocInputConverter": {
       "additionalProperties": false,
@@ -728,6 +881,7 @@
       "type": "object"
     },
     "PundokEditorConfigInit": {
+      "additionalProperties": false,
       "description": "A configuration (customization) of PundokEditor.",
       "properties": {
         "autoDelimiters": {
@@ -781,6 +935,10 @@
             "$ref": "#/definitions/CustomStyleDef"
           },
           "type": "array"
+        },
+        "defaultRawFormat": {
+          "description": "Default format when creating RawInline and RawBlock elements.",
+          "type": "string"
         },
         "description": {
           "description": "a description of the aim of this configuration of the editor",

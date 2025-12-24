@@ -150,6 +150,7 @@ import {
   addableMarkToMark,
   baseAddableMarks,
   customStylesToAddableMarks,
+  searchMarkSpecToAddableMarks,
 } from './helpers/addableMark';
 import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
@@ -640,6 +641,13 @@ export default {
     loadSearchAndReplace(sar: SearchAndReplace) {
       this.textToSearch = sar.search;
       this.updateSearchInput(this.textToSearch)
+      this.filterMarkPresence = sar.filterOnMarks?.present
+        ? searchMarkSpecToAddableMarks(sar.filterOnMarks.present, this.editor.state.schema, this.configuration)
+        : []
+      this.filterMarkAbsence = sar.filterOnMarks?.absent
+        ? searchMarkSpecToAddableMarks(sar.filterOnMarks.absent, this.editor.state.schema, this.configuration)
+        : []
+      this.searchFilterSwitch = this.filterMarkPresence.length + this.filterMarkAbsence.length > 0
       this.textToReplace = sar.replace || '';
       this.updateTextToReplace(this.textToReplace)
       this.optionSearchOnly = !!sar.optionSearchOnly || (!sar.replace && sar.replace !== '')
@@ -718,11 +726,20 @@ export default {
           // tab,
         } as ElementsSelection
       } else {
+        const present = this.filterMarkPresence.map(am => am.markspec)
+        const absent = this.filterMarkAbsence.map(am => am.markspec)
+        const filterOnMarks = present.length + absent.length === 0
+          ? undefined
+          : {
+            present: present.length === 0 ? undefined : present,
+            absent: absent.length === 0 ? undefined : absent,
+          }
         obj = {
           type: 'search-replace',
           name,
           description,
           search: toRaw(this.searchInput),
+          filterOnMarks,
           replace: this.optionSearchOnly ? undefined : toRaw(this.textToReplace),
           actions: toRaw(this.actionsOnReplace),
           optionCaseInsensitive: toRaw(this.optionCaseInsensitive),

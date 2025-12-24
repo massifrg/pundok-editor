@@ -22,22 +22,6 @@ import {
 
 const SEARCH_AND_REPLACE_EXT_NAME = 'searchAndReplace';
 
-export interface SearchMarkSpec {
-  typeName: string;
-  attrs?: Record<string, any>;
-}
-
-export type SearchType = 'text' | 'marks';
-
-export type MarkOperationType = 'none' | 'add' | 'remove' | 'remove all';
-
-export interface MarkOperation {
-  type: MarkOperationType;
-  markspec: SearchMarkSpec;
-}
-
-export type MarksLogicalOperator = 'and' | 'or';
-
 export interface FoundTextRange {
   from: number;
   to: number;

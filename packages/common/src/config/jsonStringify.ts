@@ -61,6 +61,7 @@ const AUTOMATION_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
   'description',           // common to all automations types
   'search',                // search-replace type
   'replace',               // search-replace and elements-selection types
+  'filterOnMarks',          // search-replace type
   'optionSearchOnly',      // search-replace type
   'optionCaseInsensitive', // search-replace type
   'optionRegex',           // search-replace type
