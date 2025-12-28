@@ -18,7 +18,7 @@ export const useActions = defineStore('actions', {
     lastViewAction(state) {
       return state.viewAction;
     },
-    removeWorkInProgress(state) {
+    remoteWorkInProgress(state) {
       return state.remoteWorkInProgress;
     }
   },
