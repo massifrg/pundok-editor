@@ -4,9 +4,8 @@
       <q-toolbar class="text-white q-pa-none">
         <q-toolbar-title>
           <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
-            :saved-changes="savedChanges" :exported-changes="exportedChanges"
-            :operation-in-progress="operationInProgress" @new-document="newDocument" @save-content="saveContent()"
-            @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+            :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
+            @save-content="saveContent()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
             @reload-with-configuration="reloadWithConfiguration" />
@@ -279,8 +278,6 @@ export default {
       pending: undefined as PendingOperation | undefined,
       configuration: undefined as PundokEditorConfig | undefined,
       message: null as FeedbackMessage | null,
-      // an operation is in progress
-      operationInProgress: false,
       leftDrawerState: 'mini' as 'normal' | 'mini',
       leftDrawerWidth: 640,
       leftDrawerHandleStart: undefined as number | undefined,
@@ -311,7 +308,7 @@ export default {
   },
 
   computed: {
-    ...mapState(useActions, ['lastAction']),
+    ...mapState(useActions, ['lastAction', 'remoteWorkInProgress']),
     ...mapState(useBackend, ['backend']),
     isMainEditor() {
       return !!this.mainEditor;
@@ -790,8 +787,8 @@ export default {
         setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps)
       }
     },
-    setOperationInProgress(operationInProgress: boolean) {
-      this.operationInProgress = operationInProgress;
+    setOperationInProgress(remoteWorkInProgress: boolean) {
+      useActions().setRemoteWorkInProgress(remoteWorkInProgress)
     },
     async transformDocument(transform: PandocFilterTransform) {
       const { sources, withResult } = transform;
