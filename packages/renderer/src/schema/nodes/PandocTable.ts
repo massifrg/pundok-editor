@@ -1203,15 +1203,18 @@ function fixTableSectionCells(
   const { width, height, map } = tableMap
   let cellPos
   const visited: boolean[] = []
+  let sectionStartRow: number | undefined = undefined
   for (let r = 0; r < height; r++) {
     cellPos = tableStart + map[r * width]
     if (cellPos > sectionEnd) break
     if (cellPos > sectionStart) {
+      sectionStartRow = sectionStartRow || r
       for (let c = 0; c < width; c++) {
         cellPos = map[r * width + c]
         if (!visited[cellPos]) {
           const cellNode = table.nodeAt(cellPos);
-          const cellType = isHeadOrFoot || (r < headRows || c < rowHeadColumns) ? header_cell : cell
+          const sectionRow = sectionStartRow ? r - sectionStartRow : 0
+          const cellType = isHeadOrFoot || (sectionRow < headRows || c < rowHeadColumns) ? header_cell : cell
           if (cellNode) {
             const { colspan, textAlign } = cellNode.attrs
             const leftEdge: boolean = cellNode.attrs.leftEdge
