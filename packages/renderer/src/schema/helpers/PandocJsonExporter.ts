@@ -57,7 +57,7 @@ import type { Node, Schema } from '@tiptap/pm/model';
 import { toJsonString } from '../../pandoc';
 import { schema } from './PandocSchema';
 import { flatten, isArray, isEqual, uniq } from 'lodash';
-import { textAlignToPandocAlignment } from './alignments';
+import { TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT, textAlignToPandocAlignment } from './alignments';
 import { colAlignmentsFromSections, PmColSpec } from './colSpec';
 import {
   DEFAULT_INDEX_NAME,
@@ -491,7 +491,10 @@ export class PandocJsonExporter {
     const align = textAlignToPandocAlignment(attrs.textAlign);
     const attr = this.attrFrom(node);
     const verticalAlign = node.attrs?.verticalAlign;
-    if (verticalAlign) attr.attributes['vertical-align'] = verticalAlign;
+    if (verticalAlign && verticalAlign !== TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT)
+      attr.attributes['vertical-align'] = verticalAlign;
+    else
+      delete attr.attributes['vertical-align']
     const cell = new Cell(attr, align, attrs.rowspan, attrs.colspan, []);
     this.appendBlocks(cell, node.content);
     return cell;
@@ -746,8 +749,8 @@ export class PandocJsonExporter {
     return attrs
       ? Attr.from({
         id: attrs.id,
-        classes: attrs.classes,
-        attributes: attrs.kv,
+        classes: [...attrs.classes],
+        attributes: { ...attrs.kv },
       })
       : Attr.empty();
   }

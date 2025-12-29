@@ -297,7 +297,7 @@ export class IpcHub {
     project?: PundokEditorProject,
   ): Promise<SaveResponse> {
     const { path, content } = doc;
-    const docPath =
+    const docFilepath =
       path ||
       (await this.fileManager.saveFileDialog({
         defaultPath: path,
@@ -309,43 +309,44 @@ export class IpcHub {
         ],
       }));
     try {
-      await writeFile(docPath, content!)
-      const p = parsePath(docPath)
-      const id = doc.id || basename(docPath, '.json');
-
-      // load the project, if the document has been saved in a project directory
-      // TODO: what to do when a file in a project is saved in the directory of another project?
-      if (docPath && !project) {
-        try {
-          const dirProject = await computeProjectFromDocFile(docPath)
-          console.log(`dirProject is ${dirProject.name}`)
-          if (dirProject) {
-            doc.project = dirProject
-            this.fireEventSetProject(dirProject)
-          }
-        } catch (err) {
-          console.log(`no project file in document folder (${parsePath(docPath).dir})`)
-        }
-      }
-
-      return {
-        message: 'document saved',
-        doc: {
-          path: docPath,
-          content,
-          id,
-          configurationName: doc.configurationName,
-          project: doc.project,
-        },
-        resultFile: docPath,
-        cwd: p.dir,
-      };
+      await writeFile(docFilepath, content!)
     } catch (error) {
       return Promise.reject({
         error,
         message: JSON.stringify(error),
-        doc: { content, path: docPath },
+        doc: { content, path: docFilepath },
       });
+    };
+
+    const docDir = parsePath(docFilepath).dir
+    const id = doc.id || basename(docFilepath, '.json');
+
+    // load the project, if the document has been saved in a project directory
+    // TODO: what to do when a file in a project is saved in the directory of another project?
+    if (docFilepath && !project) {
+      try {
+        const dirProject = await computeProjectFromDocFile(docFilepath)
+        console.log(`dirProject is ${dirProject.name}`)
+        if (dirProject) {
+          doc.project = dirProject
+          this.fireEventSetProject(dirProject)
+        }
+      } catch (err) {
+        console.log(`no project file in document folder (${parsePath(docFilepath).dir})`)
+      }
+    }
+
+    return {
+      message: 'document saved',
+      doc: {
+        path: docFilepath,
+        content,
+        id,
+        configurationName: doc.configurationName,
+        project: doc.project,
+      },
+      resultFile: docFilepath,
+      cwd: docDir,
     };
   }
 

@@ -15,6 +15,9 @@ export const TABLE_CELL_ALIGNMENTS = [
   'default-right'
 ];
 
+export const TABLE_CELL_VERTICAL_ALIGNMENTS = ['baseline', 'top', 'middle', 'bottom']
+export const TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT = 'baseline'
+
 const CSS_DEFAULT_ALIGNMENT = 'default'
 
 export const ALIGNMENT_MAP: { pandoc: Alignment; css: string | null }[] = [

@@ -12,7 +12,7 @@
       <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
       <ImportToolbarButton v-if="gui.importButton" :editor="editor" />
       <ExportToolbarButton v-if="gui.exportButton" :editor="editor" />
-      <ExportProgress v-if="operationInProgress" :editor-key="editorKey" />
+      <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
 
       <span class="button-separator" />
 
@@ -344,7 +344,7 @@ import {
   NODE_NAME_PARAGRAPH,
   getPundokVersion,
 } from '../common';
-import { useBackend } from '../stores';
+import { useActions, useBackend } from '../stores';
 import {
   setActionNewEmptyDocument,
   setActionShowProjectStructureDialog,
@@ -394,7 +394,6 @@ export default {
     'guiProps',
     'savedChanges',
     'exportedChanges',
-    'operationInProgress',
   ],
   emits: [
     'saveContent',
@@ -414,6 +413,7 @@ export default {
   },
   computed: {
     ...mapState(useBackend, ['backend']),
+    ...mapState(useActions, ['remoteWorkInProgress']),
     gui() {
       console.log(JSON.stringify(this.guiProps));
       return this.guiProps as EditorGUIProps;
