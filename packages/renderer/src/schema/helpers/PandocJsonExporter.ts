@@ -746,8 +746,8 @@ export class PandocJsonExporter {
     return attrs
       ? Attr.from({
         id: attrs.id,
-        classes: attrs.classes,
-        attributes: attrs.kv,
+        classes: [...attrs.classes],
+        attributes: { ...attrs.kv },
       })
       : Attr.empty();
   }
