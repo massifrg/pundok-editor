@@ -171,6 +171,8 @@ import {
   fixPreArrowUpPlugin,
   TABLE_CELL_ALIGNMENTS,
   TABLE_CELL_DEFAULT_ALIGNMENT,
+  TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT,
+  TABLE_CELL_VERTICAL_ALIGNMENTS,
 } from '../helpers';
 import {
   MARK_NAME_CITE,
@@ -395,8 +397,8 @@ export const Pandoc = Document.extend<PandocOptions>({
           object: VerticalAlign,
           config: {
             types: [NODE_NAME_TABLE_CELL, NODE_NAME_TABLE_HEADER],
-            alignments: ['top', 'middle', 'bottom'],
-            defaultAlignment: 'top',
+            alignments: TABLE_CELL_VERTICAL_ALIGNMENTS,
+            defaultAlignment: TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT,
           },
         },
         { name: 'fixDocStructure', object: FixDocStructureExtension },

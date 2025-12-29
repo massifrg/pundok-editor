@@ -30,20 +30,21 @@
           <div class="q-pt-sm q-mr-sm">table:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
-            <q-btn color="primary" rounded icon="mdi-table-plus" title="create new table" @click="newTable()" />
-            <q-btn color="primary" rounded icon="mdi-table-arrow-left" title="convert text to table"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-plus" title="create new table"
+              @click="newTable()" />
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-arrow-left" title="convert text to table"
               @click="conversionMode = 'text2table'; showConversionDialog = true"
               :disabled="!editor.can().textToTable()" />
-            <q-btn color="primary" rounded icon="mdi-table-arrow-right" title="convert table to text"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-arrow-right" title="convert table to text"
               @click="conversionMode = 'table2text'; showConversionDialog = true"
               :disabled="!editor.can().tableToText()" />
-            <q-btn color="primary" rounded icon="mdi-table-minus" title="delete table" :disabled="!isCursorInTable"
-              @click="deleteTable()" />
-            <q-btn color="primary" rounded icon="mdi-table-check" title="check and fix table"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-minus" title="delete table"
+              :disabled="!isCursorInTable" @click="deleteTable()" />
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-check" title="check and fix table"
               :disabled="!editor.can().fixPandocTable()" @click="fixTable()" />
-            <q-btn color="primary" rounded icon="mdi-table-column-width" title="maximise table width"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-column-width" title="maximise table width"
               :disabled="!editor.can().tableToFullWidth()" @click="editor?.commands.tableToFullWidth()" />
-            <q-btn color="primary" rounded icon="mdi-table-sync" title="equalize column widths"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-sync" title="equalize column widths"
               :disabled="!editor.can().equalizeColumnWidths()" @click="editor?.commands.equalizeColumnWidths()" />
             <!-- <q-btn color="primary" rounded icon="mdi-table-lock"
               title="secure current column widths into table column specs (default widths get an actual value)"
@@ -51,7 +52,7 @@
           </div>
           <!-- <div class="q-pt-sm q-mr-sm">caption:</div> -->
           <div class="q-gutter-xs">
-            <q-btn color="primary" rounded :icon="captionIcon()" :title="captionTitle()"
+            <q-btn :size="butSize" color="primary" rounded :icon="captionIcon()" :title="captionTitle()"
               :disabled="captionButtonDisabled()" @click="toggleCaption()" />
           </div>
         </q-card-section>
@@ -130,19 +131,19 @@
           <div class="q-pt-sm q-mr-sm">rows & columns:</div>
           <q-space></q-space>
           <div class="q-gutter-xs q-mr-md">
-            <q-btn color="primary" rounded icon="mdi-table-row-plus-before" title="add a row before"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-row-plus-before" title="add a row before"
               :disabled="!isCursorInTable" @click="addRowBefore()" />
-            <q-btn color="primary" rounded icon="mdi-table-row-plus-after" title="add a row after"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-row-plus-after" title="add a row after"
               :disabled="!isCursorInTable" @click="addRowAfter()" />
-            <q-btn color="primary" rounded icon="mdi-table-row-remove" title="remove row(s)"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-row-remove" title="remove row(s)"
               :disabled="!isCursorInTable" @click="deleteRow()" />
           </div>
           <div class="q-gutter-xs">
-            <q-btn color="primary" rounded icon="mdi-table-column-plus-before" title="add a column before"
-              :disabled="!isCursorInTable" @click="addColumnBefore()" />
-            <q-btn color="primary" rounded icon="mdi-table-column-plus-after" title="add a column after"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-column-plus-before"
+              title="add a column before" :disabled="!isCursorInTable" @click="addColumnBefore()" />
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-column-plus-after" title="add a column after"
               :disabled="!isCursorInTable" @click="addColumnAfter()" />
-            <q-btn color="primary" rounded icon="mdi-table-column-remove" title="remove column(s)"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-column-remove" title="remove column(s)"
               :disabled="!isCursorInTable" @click="deleteColumn()" />
           </div>
         </q-card-section>
@@ -150,23 +151,23 @@
           <div class="q-pt-sm q-mr-sm">columns alignment:</div>
           <q-space />
           <div class="q-gutter-xs">
-            <q-btn :disabled="!isCursorInTable" title="column alignment: AlignDefault" color="primary" rounded
-              @click="setColumnAlignment('AlignDefault')">
+            <q-btn :disabled="!isCursorInTable" :size="butSize" title="column alignment: AlignDefault" color="primary"
+              rounded @click="setColumnAlignment('AlignDefault')">
               <q-icon name="mdi-table-column" />
               <q-icon name="mdi-format-columns" />
             </q-btn>
-            <q-btn :disabled="!isCursorInTable" title="column alignment: AlignLeft" color="primary" rounded
-              @click="setColumnAlignment('AlignLeft')">
+            <q-btn :disabled="!isCursorInTable" :size="butSize" title="column alignment: AlignLeft" color="primary"
+              rounded @click="setColumnAlignment('AlignLeft')">
               <q-icon name="mdi-table-column" />
               <q-icon name="mdi-format-align-left" />
             </q-btn>
-            <q-btn :disabled="!isCursorInTable" title="column alignment: AlignCenter" color="primary" rounded
-              @click="setColumnAlignment('AlignCenter')">
+            <q-btn :disabled="!isCursorInTable" :size="butSize" title="column alignment: AlignCenter" color="primary"
+              rounded @click="setColumnAlignment('AlignCenter')">
               <q-icon name="mdi-table-column" />
               <q-icon name="mdi-format-align-center" />
             </q-btn>
-            <q-btn :disabled="!isCursorInTable" title="column alignment: AlignRight" color="primary" rounded
-              @click="setColumnAlignment('AlignRight')">
+            <q-btn :disabled="!isCursorInTable" :size="butSize" title="column alignment: AlignRight" color="primary"
+              rounded @click="setColumnAlignment('AlignRight')">
               <q-icon name="mdi-table-column" />
               <q-icon name="mdi-format-align-right" />
             </q-btn>
@@ -176,23 +177,26 @@
           <div class="q-pt-sm q-mr-sm">alignment:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
-            <q-btn :disabled="!isCursorInTable" icon="mdi-format-columns"
+            <q-btn :disabled="!isCursorInTable" :size="butSize" icon="mdi-format-columns"
               title="default alignment of the column (see table's ColSpec)" color="primary" rounded
               @click="unsetTextAlign()" />
-            <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-left" title="align left" color="primary" rounded
-              @click="setTextAlign('left')" />
-            <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-center" title="align center" color="primary"
-              rounded @click="setTextAlign('center')" />
-            <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-right" title="align right" color="primary"
-              rounded @click="setTextAlign('right')" />
+            <q-btn :disabled="!isCursorInTable" :size="butSize" icon="mdi-format-align-left" title="align left"
+              color="primary" rounded @click="setTextAlign('left')" />
+            <q-btn :disabled="!isCursorInTable" :size="butSize" icon="mdi-format-align-center" title="align center"
+              color="primary" rounded @click="setTextAlign('center')" />
+            <q-btn :disabled="!isCursorInTable" :size="butSize" icon="mdi-format-align-right" title="align right"
+              color="primary" rounded @click="setTextAlign('right')" />
           </div>
           <div class="q-gutter-xs">
-            <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-top" title="vertical alignment top"
-              color="primary" rounded @click="setVerticalAlign('top')" />
-            <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-middle" title="vertical alignment middle"
-              color="primary" rounded @click="setVerticalAlign('middle')" />
-            <q-btn :disabled="!isCursorInTable" icon="mdi-format-align-bottom" title="vertical alignment bottom"
-              color="primary" rounded @click="setVerticalAlign('bottom')" />
+            <q-btn :disabled="!isCursorInTable" :size="butSize" icon="align_baseline"
+              title="vertical alignment to the base line" color="primary" rounded
+              @click="setVerticalAlign('baseline')" />
+            <q-btn :disabled="!isCursorInTable" :size="butSize" icon="mdi-format-align-top"
+              title="vertical alignment top" color="primary" rounded @click="setVerticalAlign('top')" />
+            <q-btn :disabled="!isCursorInTable" :size="butSize" icon="mdi-format-align-middle"
+              title="vertical alignment middle" color="primary" rounded @click="setVerticalAlign('middle')" />
+            <q-btn :disabled="!isCursorInTable" :size="butSize" icon="mdi-format-align-bottom"
+              title="vertical alignment bottom" color="primary" rounded @click="setVerticalAlign('bottom')" />
           </div>
         </q-card-section>
         <q-card-section v-if="showCellsControls" horizontal class="q-mt-md">
@@ -200,21 +204,23 @@
           <div class="q-pt-sm q-mr-sm">cells:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
-            <q-btn color="primary" rounded icon="mdi-arrow-collapse-horizontal" title="decrease cell's column span"
-              :disabled="!editor.can().decreaseColspan()" @click="decreaseColspan()" />
-            <q-btn color="primary" rounded icon="mdi-arrow-expand-horizontal" title="increase cell's column span"
-              :disabled="!editor.can().increaseColspan()" @click="increaseColspan()" />
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-arrow-collapse-horizontal"
+              title="decrease cell's column span" :disabled="!editor.can().decreaseColspan()"
+              @click="decreaseColspan()" />
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-arrow-expand-horizontal"
+              title="increase cell's column span" :disabled="!editor.can().increaseColspan()"
+              @click="increaseColspan()" />
           </div>
           <div class="q-gutter-xs q-mr-md">
-            <q-btn color="primary" rounded icon="mdi-arrow-collapse-vertical" title="decrease cell's row span"
-              :disabled="!editor.can().decreaseRowspan()" @click="decreaseRowspan()" />
-            <q-btn color="primary" rounded icon="mdi-arrow-expand-vertical" title="increase cell's row span"
-              :disabled="!editor.can().increaseRowspan()" @click="increaseRowspan()" />
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-arrow-collapse-vertical"
+              title="decrease cell's row span" :disabled="!editor.can().decreaseRowspan()" @click="decreaseRowspan()" />
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-arrow-expand-vertical"
+              title="increase cell's row span" :disabled="!editor.can().increaseRowspan()" @click="increaseRowspan()" />
           </div>
           <div class="q-gutter-xs">
-            <q-btn color="primary" rounded icon="mdi-table-merge-cells" title="merge cells"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-merge-cells" title="merge cells"
               :disabled="!editor.can().mergeCells()" @click="mergeCells()" />
-            <q-btn color="primary" rounded icon="mdi-table-split-cell" title="split cell"
+            <q-btn :size="butSize" color="primary" rounded icon="mdi-table-split-cell" title="split cell"
               :disabled="!editor.can().splitCell()" @click="splitCell()" />
           </div>
         </q-card-section>
@@ -271,6 +277,7 @@ export default {
     return {
       visible: false,
       dialogPosition: "top" as DialogPosition,
+      butSize: 'sm',
       showTableControls: true,
       showBodyHeadersControls: false,
       showSectionsControls: false,
