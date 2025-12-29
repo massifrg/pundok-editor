@@ -170,7 +170,7 @@ const ProjectStructureDialog: Component = {
       try {
         if (refresh || (!structure && !this.dontReloadStructure)) {
           this.isLoadingStructure = true
-          structure = await (this.backend?.getInclusionTree(this.project))
+          structure = this.project && await (this.backend?.getInclusionTree(this.project))
           this.isLoadingStructure = false
           if (structure)
             useProjectCache().setStructure(structure)
