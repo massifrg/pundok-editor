@@ -30,6 +30,7 @@ export type IpcMainToRendererChannel =
 /** Types of IPC channels in the communication from Renderer to Main. */
 export type IpcRendererToMainChannel =
   | 'debug-info'
+  | 'get-folder-contents'
   | 'open-document'
   | 'save-document'
   | 'available-configurations'
@@ -67,6 +68,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'm2r',
     description:
       'main tells the renderer to ask for an action on the document (open, save, save-as, import, export)',
+  },
+  'get-folder-contents': {
+    dir: 'r2m',
+    description: 'the renderer asks main the contents of a folder',
   },
   'open-document': {
     dir: 'r2m',

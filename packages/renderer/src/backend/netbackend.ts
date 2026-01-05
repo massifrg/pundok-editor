@@ -23,6 +23,7 @@ import {
   ExportJob,
   ConfigInitField,
   GetProjectOptions,
+  FolderContents,
 } from '../common';
 import { OpenDialogOptions } from 'electron';
 
@@ -46,6 +47,10 @@ export class NetBackend implements Backend {
   }
 
   async editorReady(editorKey?: EditorKeyType) { }
+
+  getFolderContents(path?: string | string[]): Promise<FolderContents> {
+    throw new Error('Method not implemented.');
+  }
 
   open(context: DocumentContext): Promise<ReadDoc> {
     throw new Error('Method not implemented.');

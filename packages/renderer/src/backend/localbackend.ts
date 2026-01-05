@@ -46,6 +46,7 @@ import {
   DocumentOpenActionProps,
   ConfigInitField,
   GetProjectOptions,
+  FolderContents,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -231,7 +232,8 @@ export class LocalBackend implements Backend {
     ...args: any[]
   ): Promise<any> {
     const c = IPC_CHANNELS[channel];
-    if (c && c.dir === 'r2m') return this.ipc?.invoke(channel, ...args);
+    if (c && c.dir === 'r2m')
+      return this.ipc?.invoke(channel, ...args);
     else
       return Promise.reject(
         `"${channel}" is not a valid <Renderer -> Main> channel`,
@@ -252,6 +254,10 @@ export class LocalBackend implements Backend {
 
   async editorReady(editorKey?: EditorKeyType) {
     this.invokeIpc('editor-ready', editorKey);
+  }
+
+  getFolderContents(path?: string | string[]): Promise<FolderContents> {
+    return this.invokeIpc('get-folder-contents', { path })
   }
 
   async open(context: DocumentContext): Promise<ReadDoc> {

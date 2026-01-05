@@ -81,6 +81,7 @@ import { expandCommandArgs } from './expandCommandArgs';
 import { getExportJobHandler } from './getExportJobHandler';
 import { showAgainHandler } from './showAgainHandler';
 import { updateConfigHandler } from './updateConfigHandler';
+import { getFolderContentsHandler } from './getFolderContentsHandler';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -123,6 +124,7 @@ export class IpcHub {
 
   handleIpcMainEvents() {
     ipcMain.handle('editor-ready', editorReadyHandler(this));
+    ipcMain.handle('get-folder-contents', getFolderContentsHandler(this));
     ipcMain.handle('open-document', openDocumentHandler(this));
     ipcMain.handle('save-document', saveDocumentHandler(this));
     ipcMain.handle('debug-info', debugInfoHandler(this));

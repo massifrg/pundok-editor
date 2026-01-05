@@ -17,6 +17,7 @@ import type {
   ExportJob,
   ConfigInitField,
   GetProjectOptions,
+  FolderContents,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -87,6 +88,12 @@ export interface Backend {
    * @param editorKey The editor key of editor.
    */
   editorReady(editorKey?: EditorKeyType): Promise<void>;
+
+  /** 
+   * Get the contents of a folder (a collection of documents and/or sub-folders).
+   * @param path The folders path (an array of the names of the path's folders).
+   */
+  getFolderContents(path?: string | string[]): Promise<FolderContents>;
 
   /**
    * Retrieves a document from the backend.

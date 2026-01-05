@@ -5,7 +5,8 @@
         <q-toolbar-title>
           <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
             :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
-            @save-content="saveContent()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+            @open-document="openDocument()" @save-content="saveContent()"
+            @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
             @reload-with-configuration="reloadWithConfiguration" />
@@ -37,6 +38,8 @@
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
+        <OpenDocumentDialog v-if="visibleOpenDocumentDialog" :editor="editor"
+          @hide="visibleOpenDocumentDialog = false" />
         <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
           @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
         <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
@@ -150,6 +153,7 @@ import {
   ShowMessageDialog,
 } from '.';
 import Menubar from './Menubar.vue';
+import OpenDocumentDialog from './OpenDocumentDialog.vue';
 import {
   ActionForNodeOrMark,
   EditorAction,
@@ -235,6 +239,7 @@ export default {
     NodeOrMarkContextMenu,
     PendingOperationDialog,
     NewProjectDialog,
+    OpenDocumentDialog,
     "ProjectStructureDialog": defineAsyncComponent(() => import('./ProjectStructureDialog.vue')),
     "PdfViewer": defineAsyncComponent(() => import('./PdfViewer.vue'))
   },
@@ -284,6 +289,7 @@ export default {
       prevLeftDrawerWidth: 640,
       rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
+      visibleOpenDocumentDialog: false,
       visibleImportDialog: false,
       visibleExportDialog: false,
       visibleSearchAndReplaceDialog: false,
@@ -718,6 +724,8 @@ export default {
       const configurationName =
         docContext?.configurationName || docState?.configuration?.name;
       const project = docContext?.project || docState?.project;
+      this.visibleOpenDocumentDialog = true;
+      /*
       const doc = await this.backend?.open({
         ...docContext,
         configurationName,
@@ -725,6 +733,7 @@ export default {
         editorKey: docState?.editorKey,
       });
       if (doc) this.loadDocument(doc, false, atLine);
+      */
     },
     async loadDocument(doc: ReadDoc, ignoreUnsaved?: boolean, atLine?: number) {
       if (!ignoreUnsaved && this.askToSaveChanges) {

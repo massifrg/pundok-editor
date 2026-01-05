@@ -123,6 +123,7 @@ const ProjectStructureDialog: Component = {
       dontReloadStructure: false,
       guiProps: new EditorGUIPropsClass({
         newDocument: false,
+        openButton: false,
         importButton: false,
         exportButton: false,
         projectStructure: false,

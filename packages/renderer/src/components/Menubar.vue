@@ -4,7 +4,8 @@
       <NewDocumentButton v-if="gui.newDocument" @new-document="newDocument" />
       <span v-if="gui.newDocument" class="button-separator" />
 
-      <!-- <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)" /> -->
+      <ToolbarButton v-if="gui.openButton" icon="mdi-folder-open" @click="$emit('openDocument')"
+        title="open document" />
       <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)">
         <q-badge v-if="!!savedExportedColor" :color="savedExportedColor" floating rounded />
       </ToolbarButton>
@@ -396,6 +397,7 @@ export default {
     'exportedChanges',
   ],
   emits: [
+    'openDocument',
     'saveContent',
     // 'exportAgain',
     'showConfigurationsDialog',
