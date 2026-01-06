@@ -2,118 +2,209 @@ import { FileFilter } from 'electron';
 import { extname } from 'path-browserify';
 
 export interface PandocFormatDescription {
+  see?: string,
   description?: string;
   priority?: number;
-  input: boolean;
-  output: boolean;
-  extensions: string[];
+  input?: boolean;
+  output?: boolean;
+  extensions?: string[];
 }
 
 const pandocFormats: Record<string, PandocFormatDescription> = {
+  ansi: {
+    description: 'ANSI',
+    extensions: ['ans', 'ansi', 'txt'],
+  },
   asciidoc: {
     description: 'AsciiDoc',
-    input: false,
-    output: true,
     extensions: ['adoc', 'asciidoc'],
+  },
+  asciidoc_legacy: {
+    see: 'asciidoc',
+    extensions: ['asc', 'adoc', 'asciidoc'],
+  },
+  asciidoctor: {
+    see: 'asciidoc'
+  },
+  bbcode: {
+    description: 'Bulletin Board Code',
+    extensions: ['txt', 'bbcode', 'bbc'],
+  },
+  bbcode_fluxbb: {
+    see: 'bbcode',
+  },
+  bbcode_hubzilla: {
+    see: 'bbcode',
+  },
+  bbcode_phpbb: {
+    see: 'bbcode',
+  },
+  bbcode_steam: {
+    see: 'bbcode',
+  },
+  bbcode_xenforo: {
+    see: 'bbcode',
+  },
+  beamer: {
+    description: 'Beamer LaTeX for slides',
+    see: 'latex',
   },
   biblatex: {
     description: 'BibTeX/BibLaTeX',
-    input: true,
-    output: true,
     extensions: ['bib'],
+  },
+  bibtex: {
+    see: 'biblatex',
+  },
+  bits: {
+    description: 'Book Interchange Tag Suite (BITS)',
+    extensions: ['xml'],
+  },
+  chunkedhtml: {
+    description: 'zip archive of multiple linked HTML files',
+    extensions: ['zip'],
+  },
+  commonmark: {
+    description: 'Markdown CommonMark',
+    see: 'markdown',
+  },
+  commonmark_x: {
+    description: 'Markdown CommonMark with extensions',
+    see: 'markdown',
   },
   context: {
     description: 'ConTeXt',
-    input: false,
-    output: true,
     extensions: ['context', 'ctx', 'tex'],
+  },
+  creole: {
+    description: 'Creole Wiki',
+    extensions: ['creole'],
+  },
+  csljson: {
+    description: 'CSL JSON',
+    extensions: ['json', 'csljson'],
   },
   csv: {
     description: 'CSV tables',
-    input: true,
-    output: false,
     extensions: ['csv'],
   },
   djot: {
-    priority: 1,
     description: 'Djot',
-    input: true,
-    output: true,
-    extensions: ['dj'],
+    extensions: ['dj', 'djot'],
   },
   docbook: {
     description: 'DocBook',
-    input: true,
-    output: true,
     extensions: ['db'],
+  },
+  docbook4: {
+    description: 'DocBook v4',
+    see: 'docbook',
+  },
+  docbook5: {
+    description: 'DocBook v5',
+    see: 'docbook',
   },
   docx: {
     priority: 1,
     description: 'Microsoft Word docx',
-    input: true,
-    output: true,
     extensions: ['docx'],
   },
   dokuwiki: {
     description: 'DokuWiki',
-    input: true,
-    output: true,
     extensions: ['dokuwiki'],
+  },
+  dzslides: {
+    description: 'DZSlides',
+    extensions: ['html'],
+  },
+  endnotexml: {
+    // TODO:
   },
   epub: {
     description: 'EPUB v2/v3',
-    input: true,
-    output: true,
     extensions: ['epub'],
+  },
+  epub2: {
+    description: 'EPUB v2',
+    see: 'epub',
+  },
+  epub3: {
+    description: 'EPUB v3',
+    see: 'epub',
   },
   fb2: {
     description: 'FictionBook2',
-    input: true,
-    output: true,
     extensions: ['fb2'],
+  },
+  gfm: {
+    description: 'GitHub Flavored Markdown (GFM)',
+    see: 'markdown',
+  },
+  haddock: {
+    description: 'Haddock',
+    extensions: ['hs', 'lhs'],
   },
   html: {
     priority: 1,
     description: '(X)HTML',
-    input: true,
-    output: true,
     extensions: ['htm', 'html', 'xhtml'],
+  },
+  html4: {
+    description: 'HTML v4',
+    see: 'html',
+  },
+  html5: {
+    description: 'HTML v5',
+    see: 'html',
   },
   icml: {
     description: 'Adobe InDesign/InCopy ICML',
-    input: false,
-    output: true,
     extensions: ['icml'],
   },
   ipynb: {
     description: 'Jupiter notebook',
-    input: true,
-    output: true,
     extensions: ['ipynb'],
+  },
+  jats: {
+    description: 'JATS (Journal Article Tag Suite)',
+    extensions: ['xml', 'jats.xml', 'nxml'],
+  },
+  jats_archiving: {
+    description: 'JATS (Archiving and Interchange Tag Set)',
+    see: 'jats',
+  },
+  jats_articleauthoring: {
+    description: 'JATS (Article Authoring Tag Set)',
+    see: 'jats',
+  },
+  jats_publishing: {
+    description: 'JATS (Journal Publishing Tag Set)',
+    see: 'jats',
+  },
+  jira: {
+    description: 'Jira',
+    extensions: ['xml', 'json'],
   },
   json: {
     priority: 2,
     description: 'Pandoc JSON',
-    input: true,
-    output: true,
     extensions: ['json'],
   },
   latex: {
     description: 'LaTeX',
-    input: true,
-    output: true,
     extensions: ['latex', 'ltx', 'tex'],
+  },
+  man: {
+    // TODO:
   },
   markdown: {
     priority: 1,
-    description: 'Markdown or text file',
-    input: true,
-    output: true,
+    description: 'Pandoc Markdown (or text file)',
     extensions: [
+      'md',
+      'markdown',
       'Rmd',
       'lhs',
-      'markdown',
-      'md',
       'mdown',
       'mdwn',
       'mkd',
@@ -122,133 +213,156 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
       'txt',
     ],
   },
+  markdown_github: {
+    description: 'GitHub flavoured Markdown (deprecated, use gfm)',
+    see: 'markdown',
+  },
+  markdown_mmd: {
+    description: 'Markdown (PHP Extra)',
+    see: 'markdown',
+  },
+  markdown_phpextra: {
+    description: 'Markdown (stric)',
+    see: 'markdown',
+  },
+  markdown_strict: {
+    description: 'Markdown (strict)',
+    see: 'markdown',
+  },
   markua: {
     description: 'Markua',
-    input: false,
-    output: true,
     extensions: ['markua'],
+  },
+  mdoc: {
+    // TODO:
   },
   mediawiki: {
     description: 'MediaWiki',
-    input: true,
-    output: true,
     extensions: ['wiki'],
   },
   ms: {
     description: 'GNU man/roff',
-    input: false,
-    output: true,
     extensions: ['ms', 'roff'],
   },
   muse: {
     description: 'Emacs Muse',
-    input: true,
-    output: true,
     extensions: ['muse'],
   },
   native: {
     description: 'Pandoc native',
-    input: true,
-    output: true,
     extensions: ['native'],
   },
   odt: {
     priority: 1,
     description: 'OpenOffice/LibreOffice docx',
-    input: true,
-    output: true,
     extensions: ['odt'],
+  },
+  opendocument: {
+    description: 'OASIS OpenDocument XML',
+    extensions: ['xml'],
   },
   opml: {
     description: 'Outline Processor Markup Language',
-    input: true,
-    output: true,
     extensions: ['opml'],
   },
   org: {
     description: 'Emacs Org-Mode',
-    input: true,
-    output: true,
     extensions: ['org'],
   },
   plain: {
     description: 'plain text file',
-    input: false,
-    output: true,
     extensions: ['text', 'txt'],
   },
   pdf: {
     description: 'PDF',
-    input: false,
-    output: true,
     extensions: ['pdf'],
+  },
+  pod: {
+    // TODO:
   },
   pptx: {
     description: 'Microsoft PowerPoint',
-    input: false,
-    output: true,
     extensions: ['pptx'],
+  },
+  revealjs: {
+    description: '',
   },
   ris: {
     description: 'RIS',
-    input: true,
-    output: false,
     extensions: ['ris'],
   },
   rst: {
     description: 'reStructuredText',
-    input: true,
-    output: true,
     extensions: ['rst'],
   },
   rtf: {
     priority: 1,
     description: 'Rich Text Format',
-    input: true,
-    output: true,
     extensions: ['rtf'],
   },
   s5: {
     description: 'S5 slide show',
-    input: false,
-    output: true,
     extensions: ['s5'],
+  },
+  slideous: {
+    description: 'Slideous slide show',
+    extensions: ['html']
+  },
+  slidy: {
+    description: 'Slidy slide show',
+    extensions: ['html']
   },
   t2t: {
     description: 'txt2tags',
-    input: true,
-    output: false,
     extensions: ['t2t'],
   },
   tei: {
     description: 'XML:TEI Simple',
-    input: false,
-    output: true,
     extensions: ['tei'],
   },
   texinfo: {
     description: 'GNU TexInfo',
-    input: false,
-    output: true,
     extensions: ['texi', 'texinfo'],
   },
   textile: {
     description: 'Textile',
-    input: true,
-    output: true,
     extensions: ['textile'],
+  },
+  tikiwiki: {
+    // TODO:
   },
   tsv: {
     description: 'TSV tables',
-    input: true,
-    output: false,
     extensions: ['tsv'],
+  },
+  twiki: {
+    // TODO:
   },
   typst: {
     description: 'Typst',
-    input: true,
-    output: true,
     extensions: ['typ'],
+  },
+  vimdoc: {
+    description: 'VimDoc',
+    extensions: ['txt'],
+  },
+  vimwiki: {
+    // TODO:
+  },
+  xlsx: {
+    // TODO:
+  },
+  xml: {
+    description: 'XML native AST',
+    extensions: ['xml'],
+  },
+  xwiki: {
+    description: 'XWiki',
+    extensions: ['xar'],
+  },
+  zimwiki: {
+    description: 'ZimWiki',
+    extensions: ['zim'],
   },
 };
 
@@ -268,7 +382,7 @@ export function pandocInputFileFilters(priority?: number): FileFilter[] {
     )
     .map(([name, f]) => ({
       name: f.description || name,
-      extensions: f.extensions,
+      extensions: f.extensions || [],
     }));
 }
 
@@ -276,7 +390,7 @@ export function pandocFormatsFromExtension(ext: string): string[] {
   if (!ext) return [];
   const ext_without_dot = ext.startsWith('.') ? ext.substring(1) : ext;
   return Object.entries(pandocFormats)
-    .filter(([_, f]) => f.extensions.indexOf(ext_without_dot) >= 0)
+    .filter(([_, f]) => (f.extensions || []).indexOf(ext_without_dot) >= 0)
     .map(([format, _]) => format);
 }
 
