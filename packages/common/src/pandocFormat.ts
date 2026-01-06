@@ -118,7 +118,8 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     extensions: ['html'],
   },
   endnotexml: {
-    // TODO:
+    description: 'EndNote XML',
+    extensions: ['xml'],
   },
   epub: {
     description: 'EPUB v2/v3',
@@ -195,7 +196,8 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     extensions: ['latex', 'ltx', 'tex'],
   },
   man: {
-    // TODO:
+    description: 'man pages',
+    extensions: ['man', '1', '2', '3', '4', '5', '6', '7', '8'],
   },
   markdown: {
     priority: 1,
@@ -234,7 +236,8 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     extensions: ['markua'],
   },
   mdoc: {
-    // TODO:
+    description: 'mdoc man pages',
+    extensions: ['man', '1', '2', '3', '4', '5', '6', '7', '8'],
   },
   mediawiki: {
     description: 'MediaWiki',
@@ -278,14 +281,16 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     extensions: ['pdf'],
   },
   pod: {
-    // TODO:
+    description: 'Perl Pod (Plain Old Documentation)',
+    extensions: ['pod'],
   },
   pptx: {
     description: 'Microsoft PowerPoint',
     extensions: ['pptx'],
   },
   revealjs: {
-    description: '',
+    description: 'reveal.js',
+    extensions: ['html'],
   },
   ris: {
     description: 'RIS',
@@ -329,14 +334,16 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     extensions: ['textile'],
   },
   tikiwiki: {
-    // TODO:
+    description: 'TikiWiki',
+    extensions: [],
   },
   tsv: {
     description: 'TSV tables',
     extensions: ['tsv'],
   },
   twiki: {
-    // TODO:
+    description: 'TikiWiki',
+    extensions: ['txt'],
   },
   typst: {
     description: 'Typst',
@@ -347,10 +354,12 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     extensions: ['txt'],
   },
   vimwiki: {
-    // TODO:
+    description: 'VimWiki',
+    extensions: ['wiki'],
   },
   xlsx: {
-    // TODO:
+    description: 'Excel XLSX',
+    extensions: ['xlsx'],
   },
   xml: {
     description: 'XML native AST',
@@ -365,6 +374,13 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     extensions: ['zim'],
   },
 };
+Object.entries(pandocFormats).forEach(([format, desc]) => {
+  const mainFormat = desc.see
+  if (mainFormat) {
+    const mainDesc = pandocFormats[mainFormat]
+    pandocFormats[format] = { ...mainDesc, ...desc }
+  }
+})
 
 const DEFAULT_FORMAT_PRIORITY = 1;
 
@@ -386,14 +402,48 @@ export function pandocInputFileFilters(priority?: number): FileFilter[] {
     }));
 }
 
-export function pandocFormatsFromExtension(ext: string): string[] {
+/**
+ * List the formats that support a file extension for the `direction` (input or output) specified.
+ * @param ext The file extension.
+ * @param direction "input" | "output".
+ * @returns 
+ */
+export function pandocFormatsFromExtension(ext: string, direction: 'input' | 'output'): string[] {
   if (!ext) return [];
   const ext_without_dot = ext.startsWith('.') ? ext.substring(1) : ext;
   return Object.entries(pandocFormats)
-    .filter(([_, f]) => (f.extensions || []).indexOf(ext_without_dot) >= 0)
+    .filter(([_, desc]) => {
+      const isRightDirection = (direction === 'input' && desc.input === true)
+        || (direction === 'output' && desc.output === true)
+      return isRightDirection && (desc.extensions || []).indexOf(ext_without_dot) >= 0
+    })
     .map(([format, _]) => format);
 }
 
-export function pandocFormatsFromFilename(fn: string): string[] {
-  return pandocFormatsFromExtension(extname(fn))
+/**
+ * List the likely formats of a document, from its file extension.
+ * @param fn The document's file name.
+ * @param direction Is it a document we want to read ("input") or a document we want to write ("output").
+ * @returns 
+ */
+export function pandocFormatsFromFilename(fn: string, direction: 'input' | 'output'): string[] {
+  return pandocFormatsFromExtension(extname(fn), direction)
+}
+
+/**
+ * Checks whether a format is read by pandoc as input.
+ * @param format
+ * @returns 
+ */
+export function isInputFormat(format: string): boolean {
+  return pandocFormats[format].input === true
+}
+
+/**
+ * Checks whether a format is written by pandoc as output.
+ * @param format
+ * @returns 
+ */
+export function isOutputFormat(format: string): boolean {
+  return pandocFormats[format].output === true
 }

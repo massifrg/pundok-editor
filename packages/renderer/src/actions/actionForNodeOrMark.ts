@@ -297,7 +297,7 @@ export function actionsForNodeOrMark(
       const id = node?.attrs.id
       const path = node?.attrs.kv[INCLUDE_SRC_ATTR]
       const format = node?.attrs.kv[INCLUDE_FORMAT_ATTR]
-        || (path && pandocFormatsFromExtension(path)[0])
+        || (path && pandocFormatsFromExtension(path, 'input')[0])
         || 'json'
       console.log(`id=${id}, path=${path}, format=${format}`)
       if ((id || path) && format) {
