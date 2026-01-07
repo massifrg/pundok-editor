@@ -2,12 +2,14 @@ import { FileFilter } from 'electron';
 import { extname } from 'path-browserify';
 
 export interface PandocFormatDescription {
+  name?: string,
   see?: string,
   description?: string;
   priority?: number;
   input?: boolean;
   output?: boolean;
   extensions?: string[];
+  icon?: string;
 }
 
 const pandocFormats: Record<string, PandocFormatDescription> = {
@@ -59,6 +61,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   bits: {
     description: 'Book Interchange Tag Suite (BITS)',
     extensions: ['xml'],
+    icon: 'mdi-xml',
   },
   chunkedhtml: {
     description: 'zip archive of multiple linked HTML files',
@@ -108,6 +111,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     priority: 1,
     description: 'Microsoft Word docx',
     extensions: ['docx'],
+    icon: 'mdi-file-word',
   },
   dokuwiki: {
     description: 'DokuWiki',
@@ -120,6 +124,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   endnotexml: {
     description: 'EndNote XML',
     extensions: ['xml'],
+    icon: 'mdi-xml',
   },
   epub: {
     description: 'EPUB v2/v3',
@@ -144,15 +149,18 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   haddock: {
     description: 'Haddock',
     extensions: ['hs', 'lhs'],
+    icon: 'mdi-language-haskell',
   },
   html: {
     priority: 1,
     description: '(X)HTML',
     extensions: ['htm', 'html', 'xhtml'],
+    icon: 'mdi-language-html5',
   },
   html4: {
     description: 'HTML v4',
     see: 'html',
+    icon: '',
   },
   html5: {
     description: 'HTML v5',
@@ -169,6 +177,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   jats: {
     description: 'JATS (Journal Article Tag Suite)',
     extensions: ['xml', 'jats.xml', 'nxml'],
+    icon: 'mdi-xml',
   },
   jats_archiving: {
     description: 'JATS (Archiving and Interchange Tag Set)',
@@ -185,6 +194,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   jira: {
     description: 'Jira',
     extensions: ['xml', 'json'],
+    icon: 'mdi-xml',
   },
   json: {
     priority: 2,
@@ -214,6 +224,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
       'text',
       'txt',
     ],
+    icon: 'mdi-language-markdown',
   },
   markdown_github: {
     description: 'GitHub flavoured Markdown (deprecated, use gfm)',
@@ -263,6 +274,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   opendocument: {
     description: 'OASIS OpenDocument XML',
     extensions: ['xml'],
+    icon: 'mdi-xml',
   },
   opml: {
     description: 'Outline Processor Markup Language',
@@ -279,6 +291,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   pdf: {
     description: 'PDF',
     extensions: ['pdf'],
+    icon: 'mdi-file-pdf-box'
   },
   pod: {
     description: 'Perl Pod (Plain Old Documentation)',
@@ -360,10 +373,12 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   xlsx: {
     description: 'Excel XLSX',
     extensions: ['xlsx'],
+    icon: 'mdi-file-excel',
   },
   xml: {
     description: 'XML native AST',
     extensions: ['xml'],
+    icon: 'mdi-xml',
   },
   xwiki: {
     description: 'XWiki',
@@ -378,7 +393,9 @@ Object.entries(pandocFormats).forEach(([format, desc]) => {
   const mainFormat = desc.see
   if (mainFormat) {
     const mainDesc = pandocFormats[mainFormat]
-    pandocFormats[format] = { ...mainDesc, ...desc }
+    pandocFormats[format] = { ...mainDesc, ...desc, name: format }
+  } else {
+    pandocFormats[format].name = format
   }
 })
 
@@ -446,4 +463,16 @@ export function isInputFormat(format: string): boolean {
  */
 export function isOutputFormat(format: string): boolean {
   return pandocFormats[format].output === true
+}
+
+export function getPandocFormatDescriptions(input_names: string[], output_names: string[]): PandocFormatDescription[] {
+  input_names.forEach(name => {
+    const pandocFormat = pandocFormats[name]
+    if (pandocFormat) pandocFormat.input = true
+  })
+  output_names.forEach(name => {
+    const pandocFormat = pandocFormats[name]
+    if (pandocFormat) pandocFormat.output = true
+  })
+  return Object.values(pandocFormats)
 }
