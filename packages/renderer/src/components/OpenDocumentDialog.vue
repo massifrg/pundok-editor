@@ -1,11 +1,19 @@
 <script lang="ts">
-import { mapState } from 'pinia';
-import { BackendSetContentActionProps, Document, Folder } from '../common';
-import { useBackend } from '../stores';
-import { QTableColumn } from 'quasar';
-import { ACTION_BACKEND_SET_CONTENT, setActionCommand, setActionOpenDocument } from '../actions';
 import { toRaw } from 'vue';
-import { editorKeyFromState } from '../schema';
+import { mapState } from 'pinia';
+import { QTableColumn } from 'quasar';
+import {
+  BackendSetContentActionProps,
+  Document,
+  Folder,
+  getPandocFormatDescriptions,
+  InputConverter,
+  OutputConverter,
+  PandocFormatDescription
+} from '../common';
+import { useBackend } from '../stores';
+import { ACTION_BACKEND_SET_CONTENT, setActionCommand } from '../actions';
+import { editorKeyFromState, getEditorConfiguration } from '../schema';
 
 interface FileContentRow {
   name: string,
@@ -14,6 +22,10 @@ interface FileContentRow {
   isDocument: boolean,
   isFolder: boolean,
 }
+
+type DocumentFormatType = 'format' | 'reader' | 'writer'
+type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter)
+  & { type: DocumentFormatType }
 
 const cols: QTableColumn[] = [{
   name: 'name',
@@ -26,7 +38,7 @@ const cols: QTableColumn[] = [{
 }]
 
 export default {
-  props: ['editor', 'startFolder'],
+  props: ['editor', 'startFolder', 'direction'],
   emits: ['hide'],
   data() {
     return {
@@ -38,6 +50,8 @@ export default {
       selectedDocument: undefined as string | undefined,
       pagination: { rowsPerPage: 0 },
       selected: [] as FileContentRow[],
+      pandocFormats: [] as PandocFormatDescription[],
+      format: undefined as DocumentFormat | undefined,
     }
   },
   computed: {
@@ -63,6 +77,33 @@ export default {
         }))
       return [...folders, ...documents]
     },
+    configuration() {
+      return getEditorConfiguration(this.editor.state)
+    },
+    inputConverters(): InputConverter[] {
+      return this.configuration?.inputConverters || []
+    },
+    outputConverters(): OutputConverter[] {
+      return this.configuration?.outputConverters || []
+    },
+    documentFormats(): DocumentFormat[] {
+      const isInput = this.direction !== 'output'
+      let converters = isInput
+        ? this.inputConverters.map(ic => ({ ...ic, type: 'reader' as DocumentFormatType }))
+        : this.outputConverters.map(ic => ({ ...ic, type: 'writer' as DocumentFormatType }))
+      let pandocFormats = this.pandocFormats
+        .filter(f => isInput ? f.input === true : f.output === true)
+        .map(f => ({ ...f, type: 'format' as DocumentFormatType }))
+      return [...converters, ...pandocFormats]
+    }
+  },
+  mounted() {
+    const getFormats = async () => {
+      const input_formats: string[] = await this.backend?.pandocInputFormats() || []
+      const output_formats: string[] = await this.backend?.pandocOutputFormats() || []
+      this.pandocFormats = getPandocFormatDescriptions(input_formats, output_formats)
+    }
+    getFormats()
   },
   methods: {
     async getContents() {
@@ -123,6 +164,24 @@ export default {
     },
     onCancel() {
       this.closeDialog()
+    },
+    // isPandocFormat(format: DocumentFormat) {
+    //   return format.type === 'format'
+    // },
+    formatExtensions(format: DocumentFormat): string[] {
+      if (format.type === 'writer') {
+        const ext = ((format as never) as OutputConverter).extension
+        return ext ? [ext] : []
+      } else {
+        return format.extensions || []
+      }
+    },
+    iconForFormat(format?: DocumentFormat): string {
+      if (format?.type === 'reader')
+        return 'mdi-import'
+      if (format?.type === 'writer')
+        return 'mdi-export'
+      return format?.icon || 'mdi-code-tags'
     }
   }
 }
@@ -153,6 +212,21 @@ export default {
             </template>
           </q-table>
         </div>
+      </q-card-section>
+      <q-card-section horizontal>
+        <div class="q-mx-md">Format/Custom {{ direction === 'output' ? 'writer' : 'reader' }}:</div>
+        <q-btn-dropdown :label="format?.name" :icon="iconForFormat(format)" auto-close no-caps>
+          <q-list>
+            <q-item v-for="df in documentFormats" :title="df.description" clickable dense
+              :class="{ 'bg-teal-2': df.type === 'reader', 'bg-amber-2': df.type === 'writer' }" @click="format = df">
+              <q-item-section avatar>
+                <q-icon :name="iconForFormat(df)" />
+              </q-item-section>
+              <q-item-section>{{ df.name }}</q-item-section>
+              <q-item-section>{{formatExtensions(df).map(e => `*.${e}`).join(', ')}}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </q-card-section>
       <q-card-actions>
         <q-btn color="primary" label="Reload" @click="getContents()" />
