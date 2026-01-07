@@ -48,7 +48,7 @@ export class NetBackend implements Backend {
 
   async editorReady(editorKey?: EditorKeyType) { }
 
-  getFolderContents(path?: string | string[]): Promise<FolderContents> {
+  getFolderContents(options: { path?: string }): Promise<FolderContents> {
     throw new Error('Method not implemented.');
   }
 

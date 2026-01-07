@@ -93,7 +93,7 @@ export interface Backend {
    * Get the contents of a folder (a collection of documents and/or sub-folders).
    * @param path The folders path (an array of the names of the path's folders).
    */
-  getFolderContents(path?: string | string[]): Promise<FolderContents>;
+  getFolderContents(options: { path?: string }): Promise<FolderContents>;
 
   /**
    * Retrieves a document from the backend.

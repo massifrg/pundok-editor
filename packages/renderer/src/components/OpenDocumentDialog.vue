@@ -1,9 +1,11 @@
 <script lang="ts">
 import { mapState } from 'pinia';
-import { Document, Folder } from '../common';
+import { BackendSetContentActionProps, Document, Folder } from '../common';
 import { useBackend } from '../stores';
 import { QTableColumn } from 'quasar';
-import { setActionOpenDocument } from '../actions';
+import { ACTION_BACKEND_SET_CONTENT, setActionCommand, setActionOpenDocument } from '../actions';
+import { toRaw } from 'vue';
+import { editorKeyFromState } from '../schema';
 
 interface FileContentRow {
   name: string,
@@ -29,12 +31,13 @@ export default {
   data() {
     return {
       visible: true,
-      currentFolder: this.startFolder || [] as string[],
+      currentFolder: this.startFolder || ['.'],
       folders: [] as Folder[],
       documents: [] as Document[],
       separator: '/',
       selectedDocument: undefined as string | undefined,
       pagination: { rowsPerPage: 0 },
+      selected: [] as FileContentRow[],
     }
   },
   computed: {
@@ -43,25 +46,30 @@ export default {
       return cols
     },
     rows(): FileContentRow[] {
-      return this.folders.map(folder => ({
+      const folders = this.folders.map(folder => ({
         name: folder.name,
         label: folder.name,
         icon: 'mdi-folder',
         isFolder: true,
         isDocument: false,
-      })).concat(this.documents.map(doc => ({
-        name: doc.name,
-        label: doc.name,
-        icon: 'mdi-file-document',
-        isFolder: false,
-        isDocument: true,
-      })))
-    }
+      }))
+      const documents = this.documents
+        .map(doc => ({
+          name: doc.name,
+          label: doc.name,
+          icon: 'mdi-file-document',
+          isFolder: false,
+          isDocument: true,
+        }))
+      return [...folders, ...documents]
+    },
   },
   methods: {
     async getContents() {
       try {
-        const contents = await this.backend?.getFolderContents()
+        const path = toRaw(this.currentFolder).join(this.separator) + this.separator
+        const contents = await this.backend?.getFolderContents({ path })
+        this.currentFolder = contents?.base || this.currentFolder
         this.folders = contents?.folders || this.folders
         this.documents = contents?.documents || this.documents
         this.separator = contents?.separator || this.separator
@@ -73,33 +81,39 @@ export default {
     click(row: FileContentRow) {
       if (row.isDocument) {
         this.selectedDocument = [...this.currentFolder, row.name].join(this.separator)
+        const sel = this.rows.find(r => r.name === row.name)
+        this.selected = sel ? [sel] : []
       }
     },
     doubleClick(row: FileContentRow) {
       if (row.isDocument) {
-        const path = [...this.currentFolder, row.name].join(this.separator)
-        setActionOpenDocument(this.editor.state, {
-          path,
-          // inputConverter: ,
-        })
-        this.closeDialog()
+        this.selectedDocument = row.name
+        this.openSelectedDocument()
       } else if (row.isFolder) {
         const cf = this.currentFolder
         this.currentFolder = row.name === '..'
-          ? [...cf, row.name]
-          : cf.slice(0, cf.length - 1)
+          ? cf.slice(0, cf.length - 1)
+          : [...cf, row.name]
         this.getContents()
       }
     },
-    openSelectedDocument() {
+    async openSelectedDocument() {
       const path = this.selectedDocument
-      if (path) {
-        setActionOpenDocument(this.editor.state, {
+      const editorKey = editorKeyFromState(this.editor.state)
+      if (path && editorKey) {
+        const doc = await this.backend?.open({
           path,
-          // inputConverter: ,
-        })
-        this.closeDialog()
+          // configurationName,
+          // project,
+          editorKey,
+        });
+        if (doc) setActionCommand(
+          editorKey,
+          ACTION_BACKEND_SET_CONTENT,
+          { content: doc } as BackendSetContentActionProps
+        )
       }
+      this.closeDialog()
     },
     closeDialog() {
       this.$emit('hide')
@@ -118,12 +132,20 @@ export default {
   <q-dialog v-model="visible" full-width @before-show="getContents()">
     <q-card>
       <q-card-section>
+        <div>{{ currentFolder.join(separator) }}</div>
+      </q-card-section>
+      <q-card-section>
         <div class="q-pa-md">
           <q-table class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns" row-key="name"
-            style="height: 400px" virtual-scroll v-model:pagination="pagination" :rows-per-page-options="[0]">
+            selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
+            v-model:pagination="pagination" :rows-per-page-options="[0]">
+            <template v-slot:body-selection="scope">
+              <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="mdi-check" />
+            </template>
             <template v-slot:body-cell-name="props">
               <q-td :props="props">
-                <div class="content-name" @dblclick="doubleClick(props.row)">
+                <div class="content-name" @click="click(props.row)" @dblclick="doubleClick(props.row)"
+                  @keypress.enter="doubleClick(props.row)">
                   <q-icon :name="props.row.icon" />
                   {{ props.row.name }}
                 </div>

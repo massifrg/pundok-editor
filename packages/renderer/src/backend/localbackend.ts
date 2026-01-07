@@ -256,8 +256,8 @@ export class LocalBackend implements Backend {
     this.invokeIpc('editor-ready', editorKey);
   }
 
-  getFolderContents(path?: string | string[]): Promise<FolderContents> {
-    return this.invokeIpc('get-folder-contents', { path })
+  getFolderContents(options: { path?: string }): Promise<FolderContents> {
+    return this.invokeIpc('get-folder-contents', options)
   }
 
   async open(context: DocumentContext): Promise<ReadDoc> {
