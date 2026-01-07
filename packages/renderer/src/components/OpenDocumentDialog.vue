@@ -3,11 +3,14 @@ import { mapState } from 'pinia';
 import { Document, Folder } from '../common';
 import { useBackend } from '../stores';
 import { QTableColumn } from 'quasar';
+import { setActionOpenDocument } from '../actions';
 
 interface FileContentRow {
   name: string,
   label: string,
   icon?: string,
+  isDocument: boolean,
+  isFolder: boolean,
 }
 
 const cols: QTableColumn[] = [{
@@ -29,6 +32,8 @@ export default {
       currentFolder: this.startFolder || [] as string[],
       folders: [] as Folder[],
       documents: [] as Document[],
+      separator: '/',
+      selectedDocument: undefined as string | undefined,
       pagination: { rowsPerPage: 0 },
     }
   },
@@ -42,10 +47,14 @@ export default {
         name: folder.name,
         label: folder.name,
         icon: 'mdi-folder',
+        isFolder: true,
+        isDocument: false,
       })).concat(this.documents.map(doc => ({
         name: doc.name,
         label: doc.name,
         icon: 'mdi-file-document',
+        isFolder: false,
+        isDocument: true,
       })))
     }
   },
@@ -55,18 +64,51 @@ export default {
         const contents = await this.backend?.getFolderContents()
         this.folders = contents?.folders || this.folders
         this.documents = contents?.documents || this.documents
+        this.separator = contents?.separator || this.separator
       } catch (err) {
-        // TODO: 
+        console.log(err)
+      }
+      this.selectedDocument = undefined
+    },
+    click(row: FileContentRow) {
+      if (row.isDocument) {
+        this.selectedDocument = [...this.currentFolder, row.name].join(this.separator)
       }
     },
     doubleClick(row: FileContentRow) {
-      console.log(`double click on ${row.name}`)
+      if (row.isDocument) {
+        const path = [...this.currentFolder, row.name].join(this.separator)
+        setActionOpenDocument(this.editor.state, {
+          path,
+          // inputConverter: ,
+        })
+        this.closeDialog()
+      } else if (row.isFolder) {
+        const cf = this.currentFolder
+        this.currentFolder = row.name === '..'
+          ? [...cf, row.name]
+          : cf.slice(0, cf.length - 1)
+        this.getContents()
+      }
+    },
+    openSelectedDocument() {
+      const path = this.selectedDocument
+      if (path) {
+        setActionOpenDocument(this.editor.state, {
+          path,
+          // inputConverter: ,
+        })
+        this.closeDialog()
+      }
+    },
+    closeDialog() {
+      this.$emit('hide')
     },
     onOk() {
-      this.$emit('hide')
+      this.openSelectedDocument()
     },
     onCancel() {
-      this.$emit('hide')
+      this.closeDialog()
     }
   }
 }

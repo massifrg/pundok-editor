@@ -9,4 +9,5 @@ export type Document = {
 export interface FolderContents {
   folders: Folder[],
   documents: Document[],
+  separator: string,
 }
