@@ -1,15 +1,17 @@
 <script lang="ts">
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
-import { QTableColumn } from 'quasar';
+import { QTable, QTableColumn } from 'quasar';
 import {
   BackendSetContentActionProps,
   Document,
+  DocumentBookmark,
   Folder,
   getPandocFormatDescriptions,
   InputConverter,
   OutputConverter,
-  PandocFormatDescription
+  PandocFormatDescription,
+  ProjectBookmark,
 } from '../common';
 import { useBackend } from '../stores';
 import { ACTION_BACKEND_SET_CONTENT, setActionCommand } from '../actions';
@@ -23,9 +25,22 @@ interface FileContentRow {
   isFolder: boolean,
 }
 
-type DocumentFormatType = 'format' | 'reader' | 'writer'
+type DocumentFormatType = 'guess' | 'format' | 'input-converter' | 'output-converter'
+/**
+ * The document format can be a plain Pandoc format or a (input or output) converter.
+ */
 type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter)
   & { type: DocumentFormatType }
+const guessFormat: DocumentFormat = {
+  type: 'guess',
+  name: 'guess',
+  description: 'let the editor guess the format from the file',
+  icon: 'mdi-file-question',
+  input: true,
+  output: false,
+  extensions: [],
+  priority: 1,
+}
 
 const cols: QTableColumn[] = [{
   name: 'name',
@@ -38,7 +53,7 @@ const cols: QTableColumn[] = [{
 }]
 
 export default {
-  props: ['editor', 'startFolder', 'direction'],
+  props: ['editor', 'startFolder', 'direction', 'prompt'],
   emits: ['hide'],
   data() {
     return {
@@ -52,6 +67,11 @@ export default {
       selected: [] as FileContentRow[],
       pandocFormats: [] as PandocFormatDescription[],
       format: undefined as DocumentFormat | undefined,
+      extensions: [] as string[],
+      docBookmarks: [] as DocumentBookmark[],
+      projectBookmarks: [] as ProjectBookmark[],
+      hideFolders: false,
+      showAllFormats: false,
     }
   },
   computed: {
@@ -60,14 +80,14 @@ export default {
       return cols
     },
     rows(): FileContentRow[] {
-      const folders = this.folders.map(folder => ({
+      const folders = this.hideFolders ? [] : this.folders.map(folder => ({
         name: folder.name,
         label: folder.name,
         icon: 'mdi-folder',
         isFolder: true,
         isDocument: false,
       }))
-      const documents = this.documents
+      let documents = this.documents
         .map(doc => ({
           name: doc.name,
           label: doc.name,
@@ -75,7 +95,14 @@ export default {
           isFolder: false,
           isDocument: true,
         }))
+      if (this.extensions.length > 0) {
+        const exts = this.extensions.map(e => '.' + e)
+        documents = documents.filter(d => !!exts.find(e => d.name.endsWith(e)))
+      }
       return [...folders, ...documents]
+    },
+    dialogPrompt() {
+      return this.prompt || (this.direction === 'output' ? 'Write to document:' : 'Open document:')
     },
     configuration() {
       return getEditorConfiguration(this.editor.state)
@@ -89,21 +116,32 @@ export default {
     documentFormats(): DocumentFormat[] {
       const isInput = this.direction !== 'output'
       let converters = isInput
-        ? this.inputConverters.map(ic => ({ ...ic, type: 'reader' as DocumentFormatType }))
-        : this.outputConverters.map(ic => ({ ...ic, type: 'writer' as DocumentFormatType }))
+        ? this.inputConverters.map(ic => ({ ...ic, type: 'input-converter' as DocumentFormatType }))
+        : this.outputConverters.map(ic => ({ ...ic, type: 'output-converter' as DocumentFormatType }))
       let pandocFormats = this.pandocFormats
         .filter(f => isInput ? f.input === true : f.output === true)
         .map(f => ({ ...f, type: 'format' as DocumentFormatType }))
-      return [...converters, ...pandocFormats]
+      if (!this.showAllFormats)
+        pandocFormats = pandocFormats.filter(f => (f.priority || 0) >= 1)
+      let formats = [...converters, ...pandocFormats]
+      if (isInput && formats[0].type !== 'guess')
+        formats.unshift(guessFormat)
+      return formats
     }
   },
   mounted() {
-    const getFormats = async () => {
+    const getFormatsAndBookmarks = async () => {
       const input_formats: string[] = await this.backend?.pandocInputFormats() || []
       const output_formats: string[] = await this.backend?.pandocOutputFormats() || []
-      this.pandocFormats = getPandocFormatDescriptions(input_formats, output_formats)
+      this.pandocFormats = [
+        ...this.pandocFormats,
+        ...getPandocFormatDescriptions(input_formats, output_formats)
+      ]
+      this.format = guessFormat
+      this.docBookmarks = (await this.backend?.getBookmarks('document') || []) as DocumentBookmark[]
+      this.projectBookmarks = (await this.backend?.getBookmarks('project') || []) as ProjectBookmark[]
     }
-    getFormats()
+    getFormatsAndBookmarks()
   },
   methods: {
     async getContents() {
@@ -169,7 +207,7 @@ export default {
     //   return format.type === 'format'
     // },
     formatExtensions(format: DocumentFormat): string[] {
-      if (format.type === 'writer') {
+      if (format.type === 'output-converter') {
         const ext = ((format as never) as OutputConverter).extension
         return ext ? [ext] : []
       } else {
@@ -177,11 +215,39 @@ export default {
       }
     },
     iconForFormat(format?: DocumentFormat): string {
-      if (format?.type === 'reader')
+      if (format?.type === 'input-converter')
         return 'mdi-import'
-      if (format?.type === 'writer')
+      if (format?.type === 'output-converter')
         return 'mdi-export'
       return format?.icon || 'mdi-code-tags'
+    },
+    selectFormat(format: DocumentFormat) {
+      this.format = format
+      this.extensions = format.extensions || []
+    },
+    splitFolderAndDoc(path: string) {
+      const folder = path.split(this.separator)
+      const document = folder.pop()
+      return {
+        folder: folder.join(this.separator),
+        document
+      }
+    },
+    async gotoPath(path: string) {
+      const folder = path.split(this.separator)
+      const name = folder.pop()
+      if (folder.length > 0) {
+        this.currentFolder = folder;
+        await this.getContents()
+        this.selectedDocument = path
+        if (name)
+          this.scrollToSelectedDocument(name, 500)
+      }
+    },
+    scrollToSelectedDocument(name: string, delay?: number) {
+      const selIndex = this.rows.findIndex(r => r.isDocument && r.name === name)
+      this.selected = selIndex >= 0 ? [this.rows[selIndex]] : [];
+      setTimeout(() => { (this.$refs.docsTable as QTable).scrollTo(selIndex) }, delay || 500)
     }
   }
 }
@@ -190,35 +256,62 @@ export default {
 <template>
   <q-dialog v-model="visible" full-width @before-show="getContents()">
     <q-card>
-      <q-card-section>
-        <div>{{ currentFolder.join(separator) }}</div>
+      <q-card-section horizontal class="q-pa-sm q-pb-none q-mb-none">
+        <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
+        <q-space />
+        <span class="q-pa-md">Go to a recent:</span>
+        <q-space style="max-width: .1rem;" />
+        <q-btn-dropdown label="project" no-caps auto-close dense class="q-my-xs">
+          <q-list>
+            <q-item v-for="pb in projectBookmarks" clickable @click="gotoPath(pb.path)">
+              <q-item-section>{{ pb.name }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+        &nbsp;
+        <q-btn-dropdown label="document" no-caps auto-close dense class="q-my-xs">
+          <q-list>
+            <q-item v-for="db in docBookmarks" clickable @click="gotoPath(db.path)">
+              <q-item-section>
+                <q-item-label :title="db.path">{{ splitFolderAndDoc(db.path).document }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </q-card-section>
-      <q-card-section>
-        <div class="q-pa-md">
-          <q-table class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns" row-key="name"
-            selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
-            v-model:pagination="pagination" :rows-per-page-options="[0]">
-            <template v-slot:body-selection="scope">
-              <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="mdi-check" />
-            </template>
-            <template v-slot:body-cell-name="props">
-              <q-td :props="props">
-                <div class="content-name" @click="click(props.row)" @dblclick="doubleClick(props.row)"
-                  @keypress.enter="doubleClick(props.row)">
-                  <q-icon :name="props.row.icon" />
-                  {{ props.row.name }}
-                </div>
-              </q-td>
-            </template>
-          </q-table>
+      <q-card-section class="q-px-md q-ma-none">
+        <div class="row q-ma-none q-pa-none">
+          <div class="text-body2 self-end">{{ currentFolder.join(separator) }} </div>
+          <q-space />
+          <q-toggle v-model="hideFolders" size="sm" title="hide/show folders" label="hide folders:" left-label />
         </div>
+        <q-table ref="docsTable" class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns"
+          row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
+          v-model:pagination="pagination" :rows-per-page-options="[0]">
+          <template v-slot:body-selection="scope">
+            <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="mdi-check" />
+          </template>
+          <template v-slot:body-cell-name="props">
+            <q-td :props="props">
+              <div class="content-name" @click="click(props.row)" @dblclick="doubleClick(props.row)"
+                @keypress.enter="doubleClick(props.row)">
+                <q-icon :name="props.row.icon" />
+                <span class="text-body1 q-pl-sm">{{ props.row.name }}</span>
+              </div>
+            </q-td>
+          </template>
+        </q-table>
       </q-card-section>
       <q-card-section horizontal>
-        <div class="q-mx-md">Format/Custom {{ direction === 'output' ? 'writer' : 'reader' }}:</div>
-        <q-btn-dropdown :label="format?.name" :icon="iconForFormat(format)" auto-close no-caps>
+        <div class="q-pa-md">Format/Custom {{ direction === 'output' ? 'writer' : 'reader' }}:</div>
+        <q-btn-dropdown :label="format?.name" :icon="iconForFormat(format)" :title="format?.description" auto-close
+          no-caps class="q-my-sm">
           <q-list>
-            <q-item v-for="df in documentFormats" :title="df.description" clickable dense
-              :class="{ 'bg-teal-2': df.type === 'reader', 'bg-amber-2': df.type === 'writer' }" @click="format = df">
+            <q-item v-for="df in documentFormats" :title="df.description" clickable dense :class="{
+              'bg-brown-2': df.type === 'guess',
+              'bg-teal-2': df.type === 'input-converter',
+              'bg-amber-2': df.type === 'output-converter'
+            }" @click="selectFormat(df)">
               <q-item-section avatar>
                 <q-icon :name="iconForFormat(df)" />
               </q-item-section>
@@ -227,6 +320,9 @@ export default {
             </q-item>
           </q-list>
         </q-btn-dropdown>
+        &nbsp;
+        <q-toggle v-model="showAllFormats" title="show all formats" label="show all formats" />
+        <q-space />
       </q-card-section>
       <q-card-actions>
         <q-btn color="primary" label="Reload" @click="getContents()" />

@@ -70,10 +70,12 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   commonmark: {
     description: 'Markdown CommonMark',
     see: 'markdown',
+    priority: 0,
   },
   commonmark_x: {
     description: 'Markdown CommonMark with extensions',
     see: 'markdown',
+    priority: 0,
   },
   context: {
     description: 'ConTeXt',
@@ -229,18 +231,22 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   markdown_github: {
     description: 'GitHub flavoured Markdown (deprecated, use gfm)',
     see: 'markdown',
+    priority: 0,
   },
   markdown_mmd: {
     description: 'Markdown (PHP Extra)',
     see: 'markdown',
+    priority: 0,
   },
   markdown_phpextra: {
     description: 'Markdown (stric)',
     see: 'markdown',
+    priority: 0,
   },
   markdown_strict: {
     description: 'Markdown (strict)',
     see: 'markdown',
+    priority: 0,
   },
   markua: {
     description: 'Markua',
