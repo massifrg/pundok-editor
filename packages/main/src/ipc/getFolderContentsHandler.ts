@@ -1,10 +1,7 @@
 import { IpcMainInvokeEvent } from "electron";
 import {
   dirname,
-  isAbsolute,
-  join as joinPath,
   normalize,
-  parse,
   resolve,
   sep as separator
 } from "path";
@@ -22,7 +19,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
   try {
     const folder = resolve(normalize(options.path))
     const contents = await readdir(folder, { withFileTypes: true })
-    const base = normalize(folder).split(separator)//.filter(x => x.length > 0)
+    const base = normalize(folder).split(separator)
     const folders: Folder[] = []
     const documents: Document[] = []
     if (!isRoot(folder))
@@ -36,7 +33,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
     // maybe we could add bookmarks found in Linux at:
     // ~/.local/share/user-places.xbel
     // ~/.config/gtk-3.0/bookmarks
-    // or the drives, known folders and quick access bookmarks in Windows
+    // or drives, known folders and quick access bookmarks in Windows
     return { base, folders, documents, separator } as FolderContents
   } catch (err) {
     console.log(err)
