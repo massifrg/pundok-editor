@@ -1,13 +1,13 @@
-export type DocBookmarkType = 'document' | 'project';
+export type PundokBookmarkType = 'document' | 'project';
 
-interface FileBookmark {
+export interface DocumentBookmark {
   type: 'document';
   id?: string;
   path: string;
   configurationName?: string;
 }
 
-interface ProjectBookmark {
+export interface ProjectBookmark {
   type: 'project';
   name: string;
   path: string;
@@ -16,4 +16,4 @@ interface ProjectBookmark {
 /**
  * A document or a project recently opened.
  */
-export type DocBookmark = FileBookmark | ProjectBookmark;
+export type PundokBookmark = DocumentBookmark | ProjectBookmark;

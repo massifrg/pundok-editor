@@ -24,6 +24,8 @@ import {
   ConfigInitField,
   GetProjectOptions,
   FolderContents,
+  PundokBookmarkType,
+  PundokBookmark,
 } from '../common';
 import { OpenDialogOptions } from 'electron';
 
@@ -49,6 +51,10 @@ export class NetBackend implements Backend {
   async editorReady(editorKey?: EditorKeyType) { }
 
   getFolderContents(options: { path?: string }): Promise<FolderContents> {
+    throw new Error('Method not implemented.');
+  }
+
+  async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
     throw new Error('Method not implemented.');
   }
 

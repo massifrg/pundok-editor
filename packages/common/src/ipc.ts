@@ -33,6 +33,7 @@ export type IpcRendererToMainChannel =
   | 'get-folder-contents'
   | 'open-document'
   | 'save-document'
+  | 'get-bookmarks'
   | 'available-configurations'
   | 'editor-ready'
   | 'load-configuration'
@@ -84,6 +85,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'new-empty-document': {
     dir: 'm2r',
     description: 'main asks the renderer to show a new empty editor',
+  },
+  'get-bookmarks': {
+    dir: 'r2m',
+    description: 'the renderer asks main the list of bookmarks (projects and documents)'
   },
   content: {
     dir: 'm2r',

@@ -2,7 +2,7 @@ import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
 import {
   CompatibleDocumentContext,
-  DocBookmark,
+  PundokBookmark,
   InputConverter,
   PundokEditorProject,
 } from '../common';
@@ -49,7 +49,7 @@ export const openDocumentHandler =
           inputConverter,
           project,
         });
-        const bookmarks: DocBookmark[] = [];
+        const bookmarks: PundokBookmark[] = [];
         if (readDoc?.path)
           bookmarks.push({
             type: 'document',

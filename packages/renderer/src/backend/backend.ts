@@ -18,6 +18,8 @@ import type {
   ConfigInitField,
   GetProjectOptions,
   FolderContents,
+  PundokBookmarkType,
+  PundokBookmark,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -94,6 +96,12 @@ export interface Backend {
    * @param path The folders path (an array of the names of the path's folders).
    */
   getFolderContents(options: { path?: string }): Promise<FolderContents>;
+
+  /**
+   * Get the bookmarks (projects and documents).
+   * @param bookmarkType 
+   */
+  getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]>;
 
   /**
    * Retrieves a document from the backend.

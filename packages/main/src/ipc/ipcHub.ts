@@ -82,6 +82,7 @@ import { getExportJobHandler } from './getExportJobHandler';
 import { showAgainHandler } from './showAgainHandler';
 import { updateConfigHandler } from './updateConfigHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
+import { getBookmarksHandler } from './getBookmarksHandler';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -131,6 +132,7 @@ export class IpcHub {
     ipcMain.handle('get-project', getProjectHandler(this));
     ipcMain.handle('get-inclusion-tree', getInclusionTreeHandler(this));
     ipcMain.handle('ask-for-document', askForDocumentHandler(this));
+    ipcMain.handle('get-bookmarks', getBookmarksHandler(this));
     ipcMain.handle(
       'available-configurations',
       availableConfigurationsHandler(this),

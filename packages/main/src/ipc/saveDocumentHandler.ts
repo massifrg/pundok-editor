@@ -1,7 +1,7 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
 import {
-  DocBookmark,
+  PundokBookmark,
   EditorKeyType,
   PundokEditorProject,
   SaveResponse,
@@ -37,7 +37,7 @@ export const saveDocumentHandler =
           // console.log(doc);
         } else if (doc.content) {
           response = await hub.saveDocument(doc, project);
-          const bookmark: DocBookmark = {
+          const bookmark: PundokBookmark = {
             type: 'document',
             path: doc.path!,
             configurationName: !project && doc.configurationName || undefined,

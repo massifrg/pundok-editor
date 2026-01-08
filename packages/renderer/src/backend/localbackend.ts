@@ -47,6 +47,8 @@ import {
   ConfigInitField,
   GetProjectOptions,
   FolderContents,
+  PundokBookmarkType,
+  PundokBookmark,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -258,6 +260,10 @@ export class LocalBackend implements Backend {
 
   getFolderContents(options: { path?: string }): Promise<FolderContents> {
     return this.invokeIpc('get-folder-contents', options)
+  }
+
+  async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
+    return this.invokeIpc('get-bookmarks', bookmarkType)
   }
 
   async open(context: DocumentContext): Promise<ReadDoc> {
