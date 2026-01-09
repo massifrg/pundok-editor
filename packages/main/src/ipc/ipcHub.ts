@@ -180,6 +180,7 @@ export class IpcHub {
                 'native',
                 'md',
                 'csv',
+                'xml',
               ],
             },
           ],
@@ -238,6 +239,7 @@ export class IpcHub {
           case 'epub':
           case 'native':
           case 'csv':
+          case 'xml':
             result = await importJsonWithPandoc(filename, extension, {});
             break;
           case 'md':
