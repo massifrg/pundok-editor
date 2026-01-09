@@ -1,5 +1,7 @@
 import { FileFilter } from 'electron';
 import { extname } from 'path-browserify';
+import { InputConverter, PandocInputConverter } from './config';
+import { isString, uniq } from 'lodash';
 
 export interface PandocFormatDescription {
   name?: string,
@@ -404,6 +406,10 @@ Object.entries(pandocFormats).forEach(([format, desc]) => {
     pandocFormats[format].name = format
   }
 })
+const DEFAULT_FORMAT_FOR_EXTENSION: Record<string, string> = {
+  txt: 'plain',
+  tex: 'latex',
+}
 
 const DEFAULT_FORMAT_PRIORITY = 1;
 
@@ -481,4 +487,105 @@ export function getPandocFormatDescriptions(input_names: string[], output_names:
     if (pandocFormat) pandocFormat.output = true
   })
   return Object.values(pandocFormats)
+}
+
+/**
+ * Derives an `InputConverter` from the name of a Pandoc input format.
+ * @param format The input format name.
+ * @returns 
+ */
+export function pandocFormatToInputConverter(format: string | PandocFormatDescription): InputConverter | undefined {
+  const desc: PandocFormatDescription | undefined = isString(format)
+    ? pandocFormats[format]
+    : format
+  if (desc?.name && desc?.input === true) {
+    return {
+      type: 'pandoc',
+      name: desc.name!,
+      format: desc.name!,
+      extensions: desc.extensions || [],
+    } as PandocInputConverter
+  }
+  return undefined
+}
+
+/**
+ * All the extensions that are associated at least to a Pandoc (input or output) format.
+ * @param direction The direction of Pandoc conversion.
+ * @returns 
+ */
+export function knownFormatExtensions(direction?: 'input' | 'output'): string[] {
+  let exts: string[] = []
+  Object.values(pandocFormats)
+    .filter((desc) => !direction || (direction === 'input' && desc.input === true) || (direction === 'output' && desc.output === true))
+    .forEach((desc) => {
+      if (desc.extensions)
+        exts = [...exts, ...desc.extensions]
+    })
+  return uniq(exts.sort())
+}
+
+/**
+ * All the descriptions of the formats associated to a document name extension.
+ * @param ext The extension ending the name of the document.
+ * @param direction The direction of Pandoc conversion.
+ * @returns 
+ */
+export function formatDescriptionsFromExtension(
+  ext: string,
+  direction: 'input' | 'output'
+): PandocFormatDescription[] {
+  return Object.values(pandocFormats)
+    .filter((desc) => (direction === 'input' && desc.input === true) || (direction === 'output' && desc.output === true))
+    .filter((desc) => desc.extensions && desc.extensions.find(e => e === ext))
+}
+
+/**
+ * Used to sort the formats associated with an extension.
+ * @param ext The extension ending the name of the document.
+ * @param direction The direction of Pandoc conversion.
+ * @returns 
+ */
+function formatExtensionToNumber(ext: string, desc: PandocFormatDescription): number {
+  const format = desc.name
+  if (DEFAULT_FORMAT_FOR_EXTENSION[ext] === format)
+    return 100
+  if (format === ext)
+    return 10
+  if (!desc.see)
+    return 5
+  return 0
+}
+
+/**
+ * Guess all the formats that are associated with a document name extension.
+ * @param ext The extension ending the name of the document.
+ * @param direction The direction of Pandoc conversion.
+ * @returns 
+ */
+export function formatsFromExtension(ext: string, direction: 'input' | 'output'): string[] {
+  const fd = formatDescriptionsFromExtension(ext, direction)
+  fd.sort((desc1, desc2) => {
+    const diff = formatExtensionToNumber(ext, desc2) - formatExtensionToNumber(ext, desc1)
+    if (diff === 0)
+      return desc1.name!.localeCompare(desc2.name!)
+    return diff
+  })
+  return fd.map(d => d.name!)
+}
+
+/**
+ * Guess the right format for a document name ending with a particular extension.
+ * @param ext The extension ending the name of the document.
+ * @param direction The direction of Pandoc conversion.
+ * @returns 
+ */
+export function guessFormatFromExtension(
+  ext: string,
+  direction: 'input' | 'output'
+): string | undefined {
+  const formats = formatsFromExtension(ext, direction)
+  if (formats.length === 0)
+    return undefined
+  return formats[0]
 }

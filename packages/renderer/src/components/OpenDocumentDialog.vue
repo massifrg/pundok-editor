@@ -7,11 +7,16 @@ import {
   Document,
   DocumentBookmark,
   Folder,
+  formatsFromExtension,
   getPandocFormatDescriptions,
+  guessFormatFromExtension,
   InputConverter,
+  knownFormatExtensions,
   OutputConverter,
   PandocFormatDescription,
+  pandocFormatToInputConverter,
   ProjectBookmark,
+  PundokEditorConfig,
 } from '../common';
 import { useBackend } from '../stores';
 import { ACTION_BACKEND_SET_CONTENT, setActionCommand } from '../actions';
@@ -30,9 +35,9 @@ type DocumentFormatType = 'guess' | 'format' | 'input-converter' | 'output-conve
  * The document format can be a plain Pandoc format or a (input or output) converter.
  */
 type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter)
-  & { type: DocumentFormatType }
+  & { ftype: DocumentFormatType }
 const guessFormat: DocumentFormat = {
-  type: 'guess',
+  ftype: 'guess',
   name: 'guess',
   description: 'let the editor guess the format from the file',
   icon: 'mdi-file-question',
@@ -58,20 +63,36 @@ export default {
   data() {
     return {
       visible: true,
+      /** An array of the folders' names of the current path */
       currentFolder: this.startFolder || ['.'],
+      /** The sub folders in the current folder */
       folders: [] as Folder[],
+      /** The documents (files) in the current folder */
       documents: [] as Document[],
+      /** The path separator ('/' on Linux/MacOS, '\' in Windows) */
       separator: '/',
+      /** The name of the selected document  */
       selectedDocument: undefined as string | undefined,
+      /** Pagination for QTable */
       pagination: { rowsPerPage: 0 },
+      /** The document(s) that are selected in the QTable */
       selected: [] as FileContentRow[],
+      /** The available Pandoc formats and input/output converters */
       pandocFormats: [] as PandocFormatDescription[],
+      /** The current, selected format/converter to use to read/save the document */
       format: undefined as DocumentFormat | undefined,
+      /** The file extensions to filter the documents */
       extensions: [] as string[],
+      /** Bookmarks to recent documents */
       docBookmarks: [] as DocumentBookmark[],
+      /** Bookmarks to recent projects */
       projectBookmarks: [] as ProjectBookmark[],
+      /** A flag to hide the subfolders in the QTable */
       hideFolders: false,
+      /** A flag to show all the available formats, instead of the main ones */
       showAllFormats: false,
+      /** A temporary configuration of the project file eventually present in the current folder */
+      tempConfiguration: undefined as PundokEditorConfig | undefined,
     }
   },
   computed: {
@@ -108,23 +129,31 @@ export default {
       return getEditorConfiguration(this.editor.state)
     },
     inputConverters(): InputConverter[] {
-      return this.configuration?.inputConverters || []
+      const current = this.configuration?.inputConverters || []
+      // read converters from the config of a project eventually present in the current folder
+      const temp = (this.tempConfiguration?.inputConverters || [])
+        .filter(t => !current.find(c => c.name === t.name))
+      return [...current, ...temp]
     },
     outputConverters(): OutputConverter[] {
-      return this.configuration?.outputConverters || []
+      const current = this.configuration?.outputConverters || []
+      // read converters from the config of a project eventually present in the current folder
+      const temp = (this.tempConfiguration?.outputConverters || [])
+        .filter(t => !current.find(c => c.name === t.name))
+      return [...current, ...temp]
     },
     documentFormats(): DocumentFormat[] {
       const isInput = this.direction !== 'output'
       let converters = isInput
-        ? this.inputConverters.map(ic => ({ ...ic, type: 'input-converter' as DocumentFormatType }))
-        : this.outputConverters.map(ic => ({ ...ic, type: 'output-converter' as DocumentFormatType }))
+        ? this.inputConverters.map(ic => ({ ...ic, ftype: 'input-converter' as DocumentFormatType }))
+        : this.outputConverters.map(ic => ({ ...ic, ftype: 'output-converter' as DocumentFormatType }))
       let pandocFormats = this.pandocFormats
         .filter(f => isInput ? f.input === true : f.output === true)
-        .map(f => ({ ...f, type: 'format' as DocumentFormatType }))
+        .map(f => ({ ...f, ftype: 'format' as DocumentFormatType }))
       if (!this.showAllFormats)
         pandocFormats = pandocFormats.filter(f => (f.priority || 0) >= 1)
       let formats = [...converters, ...pandocFormats]
-      if (isInput && formats[0].type !== 'guess')
+      if (isInput && formats[0].ftype !== 'guess')
         formats.unshift(guessFormat)
       return formats
     }
@@ -133,13 +162,16 @@ export default {
     const getFormatsAndBookmarks = async () => {
       const input_formats: string[] = await this.backend?.pandocInputFormats() || []
       const output_formats: string[] = await this.backend?.pandocOutputFormats() || []
-      this.pandocFormats = [
-        ...this.pandocFormats,
-        ...getPandocFormatDescriptions(input_formats, output_formats)
-      ]
+      const format_descriptions = getPandocFormatDescriptions(input_formats, output_formats)
+      this.pandocFormats = [...this.pandocFormats, ...format_descriptions]
       this.format = guessFormat
       this.docBookmarks = (await this.backend?.getBookmarks('document') || []) as DocumentBookmark[]
       this.projectBookmarks = (await this.backend?.getBookmarks('project') || []) as ProjectBookmark[]
+
+      // DEBUG: TODO: remove the next 3 lines
+      // const exts = knownFormatExtensions('input')
+      // console.log(exts.map(e => `${e}: ${formatsFromExtension(e, 'output').join()}`))
+      // console.log(exts.map(e => `${e}: ${guessFormatFromExtension(e, 'output') || '-'}`))
     }
     getFormatsAndBookmarks()
   },
@@ -176,16 +208,39 @@ export default {
         this.getContents()
       }
     },
+    inputConverterFromDocumentFormat(path: string): InputConverter | undefined {
+      if (!this.format || this.format?.ftype === 'guess') {
+        let ic = this.inputConverters.find(c => c.extensions.find(e => path.endsWith(`.${e}`)))
+        if (ic)
+          return toRaw(ic)
+        const ext = path.replace(/^.*?(([.][0-9a-z]{1,5})?[.][0-9a-z]+)$/i, '$1')
+        const format = guessFormatFromExtension(ext, 'input')
+        return format ? pandocFormatToInputConverter(format) : undefined
+      }
+      const format = this.format
+      const { ftype } = format
+      if (ftype === 'output-converter')
+        return undefined
+      if (ftype === 'format')
+        return pandocFormatToInputConverter(format)
+      if (ftype === 'input-converter')
+        return format as InputConverter
+      return undefined
+    },
     async openSelectedDocument() {
       const path = this.selectedDocument
       const editorKey = editorKeyFromState(this.editor.state)
       if (path && editorKey) {
+        const inputConverter = this.inputConverterFromDocumentFormat(path)
+        console.log(inputConverter)
         const doc = await this.backend?.open({
           path,
+          inputConverter,
           // configurationName,
           // project,
           editorKey,
         });
+        // TODO: check if JSON is valid
         if (doc) setActionCommand(
           editorKey,
           ACTION_BACKEND_SET_CONTENT,
@@ -203,27 +258,24 @@ export default {
     onCancel() {
       this.closeDialog()
     },
-    // isPandocFormat(format: DocumentFormat) {
-    //   return format.type === 'format'
-    // },
     formatExtensions(format: DocumentFormat): string[] {
-      if (format.type === 'output-converter') {
+      if (format.ftype === 'output-converter') {
         const ext = ((format as never) as OutputConverter).extension
         return ext ? [ext] : []
       } else {
-        return format.extensions || []
+        return (format as PandocFormatDescription | InputConverter).extensions || []
       }
     },
     iconForFormat(format?: DocumentFormat): string {
-      if (format?.type === 'input-converter')
+      if (format?.ftype === 'input-converter')
         return 'mdi-import'
-      if (format?.type === 'output-converter')
+      if (format?.ftype === 'output-converter')
         return 'mdi-export'
       return format?.icon || 'mdi-code-tags'
     },
     selectFormat(format: DocumentFormat) {
       this.format = format
-      this.extensions = format.extensions || []
+      this.extensions = (format as PandocFormatDescription | InputConverter).extensions || []
     },
     splitFolderAndDoc(path: string) {
       const folder = path.split(this.separator)
@@ -242,6 +294,12 @@ export default {
         this.selectedDocument = path
         if (name)
           this.scrollToSelectedDocument(name, 500)
+        const tempProject = await this.backend?.getProject({
+          path: folder.join(this.separator),
+          computeConfig: true
+        })
+        if (tempProject)
+          this.tempConfiguration = tempProject.computedConfig
       }
     },
     scrollToSelectedDocument(name: string, delay?: number) {
@@ -254,7 +312,7 @@ export default {
 </script>
 
 <template>
-  <q-dialog v-model="visible" full-width @before-show="getContents()">
+  <q-dialog v-model="visible" full-width persistent no-esc-dismiss @before-show="getContents()">
     <q-card>
       <q-card-section horizontal class="q-pa-sm q-pb-none q-mb-none">
         <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
@@ -308,9 +366,9 @@ export default {
           no-caps class="q-my-sm">
           <q-list>
             <q-item v-for="df in documentFormats" :title="df.description" clickable dense :class="{
-              'bg-brown-2': df.type === 'guess',
-              'bg-teal-2': df.type === 'input-converter',
-              'bg-amber-2': df.type === 'output-converter'
+              'bg-brown-2': df.ftype === 'guess',
+              'bg-teal-2': df.ftype === 'input-converter',
+              'bg-amber-2': df.ftype === 'output-converter'
             }" @click="selectFormat(df)">
               <q-item-section avatar>
                 <q-icon :name="iconForFormat(df)" />
