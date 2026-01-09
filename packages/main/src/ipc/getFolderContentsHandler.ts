@@ -1,6 +1,7 @@
 import { IpcMainInvokeEvent } from "electron";
 import {
   dirname,
+  joinPath,
   normalize,
   resolve,
   sep as separator
@@ -9,6 +10,7 @@ import { readdir } from "fs/promises";
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
 import { Document, Folder, FolderContents } from "../common";
+import { Dirent, statSync } from "fs";
 
 export const getFolderContentsHandler = (hub: IpcHub) => async (
   e: IpcMainInvokeEvent,
@@ -27,8 +29,15 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
     contents.forEach(c => {
       if (c.isDirectory())
         folders.push({ name: c.name })
-      else if (c.isFile() || c.isSymbolicLink())
+      else if (c.isFile())
         documents.push({ name: c.name })
+      else if (c.isSymbolicLink()) {
+        if (isSymlinkToDirectory(folder, c))
+          folders.push({ name: c.name })
+        else
+          documents.push({ name: c.name })
+      }
+      console.log(c.name)
     })
     // maybe we could add bookmarks found in Linux at:
     // ~/.local/share/user-places.xbel
@@ -44,4 +53,15 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
 function isRoot(dir: string) {
   const normalized = resolve(dir)
   return dirname(normalized) === normalized
+}
+
+function isSymlinkToDirectory(dirPath: string, dirent: Dirent) {
+  if (!dirent.isSymbolicLink()) return false;
+  const fullPath = resolve(dirPath, dirent.name);
+  try {
+    const stats = statSync(fullPath);
+    return stats.isDirectory();
+  } catch (err) {
+    return false;
+  }
 }
