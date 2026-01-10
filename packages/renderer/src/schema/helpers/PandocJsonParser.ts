@@ -444,15 +444,21 @@ export class PandocJsonParser {
       this.options,
     );
     let doc;
-    const metaBlock = {
-      t: 'metadata',
-      c: state.transformMetaMapContents(pdoc.meta)
-    };
-    state.parseContents([metaBlock, ...pdoc.blocks]);
-    do {
-      doc = state.closeNode();
-    } while (state.stack.length);
-    return doc || this.schema.topNodeType.createAndFill();
+    try {
+      const metaBlock = {
+        t: 'metadata',
+        c: state.transformMetaMapContents(pdoc.meta)
+      };
+
+      state.parseContents([metaBlock, ...pdoc.blocks]);
+      do {
+        doc = state.closeNode();
+      } while (state.stack.length);
+      return doc || this.schema.topNodeType.createAndFill();
+    } catch (err) {
+      console.log(err)
+      return null
+    }
   }
 }
 
