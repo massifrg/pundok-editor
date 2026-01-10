@@ -6,6 +6,7 @@ import {
   BackendSetContentActionProps,
   Document,
   DocumentBookmark,
+  DocumentOpenActionProps,
   Folder,
   formatsFromExtension,
   getPandocFormatDescriptions,
@@ -19,7 +20,7 @@ import {
   PundokEditorConfig,
 } from '../common';
 import { useBackend } from '../stores';
-import { ACTION_BACKEND_SET_CONTENT, setActionCommand } from '../actions';
+import { ACTION_BACKEND_SET_CONTENT, ACTION_DOCUMENT_OPEN, setActionCommand } from '../actions';
 import { editorKeyFromState, getEditorConfiguration } from '../schema';
 
 interface FileContentRow {
@@ -233,19 +234,30 @@ export default {
       if (path && editorKey) {
         const inputConverter = this.inputConverterFromDocumentFormat(path)
         console.log(inputConverter)
-        const doc = await this.backend?.open({
-          path,
-          inputConverter,
-          // configurationName,
-          // project,
+        setActionCommand(
           editorKey,
-        });
-        // TODO: check if JSON is valid
-        if (doc) setActionCommand(
-          editorKey,
-          ACTION_BACKEND_SET_CONTENT,
-          { content: doc } as BackendSetContentActionProps
+          ACTION_DOCUMENT_OPEN,
+          {
+            context: {
+              editorKey,
+              path,
+              inputConverter,
+            }
+          } as DocumentOpenActionProps
         )
+        // const doc = await this.backend?.open({
+        //   path,
+        //   inputConverter,
+        //   // configurationName,
+        //   // project,
+        //   editorKey,
+        // });
+        // // TODO: check if JSON is valid
+        // if (doc) setActionCommand(
+        //   editorKey,
+        //   ACTION_BACKEND_SET_CONTENT,
+        //   { content: doc } as BackendSetContentActionProps
+        // )
       }
       this.closeDialog()
     },
