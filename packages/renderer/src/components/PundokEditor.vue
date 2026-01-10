@@ -724,16 +724,17 @@ export default {
       const configurationName =
         docContext?.configurationName || docState?.configuration?.name;
       const project = docContext?.project || docState?.project;
-      this.visibleOpenDocumentDialog = true;
-      /*
-      const doc = await this.backend?.open({
-        ...docContext,
-        configurationName,
-        project,
-        editorKey: docState?.editorKey,
-      });
-      if (doc) this.loadDocument(doc, false, atLine);
-      */
+      if (!docContext.path) {
+        this.visibleOpenDocumentDialog = true;
+      } else {
+        const doc = await this.backend?.open({
+          ...docContext,
+          configurationName,
+          project,
+          editorKey: docState?.editorKey,
+        });
+        if (doc) this.loadDocument(doc, false, atLine);
+      }
     },
     async loadDocument(doc: ReadDoc, ignoreUnsaved?: boolean, atLine?: number) {
       if (!ignoreUnsaved && this.askToSaveChanges) {
