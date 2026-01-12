@@ -3,25 +3,24 @@ import { toRaw } from 'vue';
 import { mapState } from 'pinia';
 import { QTable, QTableColumn } from 'quasar';
 import {
-  BackendSetContentActionProps,
   Document,
   DocumentBookmark,
   DocumentOpenActionProps,
   Folder,
-  formatsFromExtension,
   getPandocFormatDescriptions,
   guessFormatFromExtension,
   InputConverter,
-  knownFormatExtensions,
   OutputConverter,
   PandocFormatDescription,
   pandocFormatToInputConverter,
   ProjectBookmark,
-  PundokEditorConfig,
+  PundokEditorConfigInit,
+  PundokEditorProject,
 } from '../common';
 import { useBackend } from '../stores';
-import { ACTION_BACKEND_SET_CONTENT, ACTION_DOCUMENT_OPEN, setActionCommand } from '../actions';
-import { editorKeyFromState, getEditorConfiguration } from '../schema';
+import { ACTION_DOCUMENT_OPEN, setActionCommand } from '../actions';
+import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
+import { EditorState } from '@tiptap/pm/state';
 
 interface FileContentRow {
   name: string,
@@ -58,14 +57,26 @@ const cols: QTableColumn[] = [{
   sortable: true
 }]
 
+function computeCurrentFolder(state?: EditorState): string[] {
+  let folder: string[] = ['.']
+  if (state) {
+    const path_folder = getDocState(state)?.lastSaveResponse?.doc.path?.split('/')
+    if (path_folder) {
+      path_folder.pop()
+      folder = path_folder
+    }
+  }
+  return folder
+}
+
 export default {
-  props: ['editor', 'startFolder', 'direction', 'prompt'],
+  props: ['editor', 'direction', 'prompt'],
   emits: ['hide'],
   data() {
     return {
       visible: true,
       /** An array of the folders' names of the current path */
-      currentFolder: this.startFolder || ['.'],
+      currentFolder: computeCurrentFolder(this.editor?.state),
       /** The sub folders in the current folder */
       folders: [] as Folder[],
       /** The documents (files) in the current folder */
@@ -92,8 +103,10 @@ export default {
       hideFolders: false,
       /** A flag to show all the available formats, instead of the main ones */
       showAllFormats: false,
-      /** A temporary configuration of the project file eventually present in the current folder */
-      tempConfiguration: undefined as PundokEditorConfig | undefined,
+      /** A temporary project, eventually present in the current folder */
+      tempProject: undefined as PundokEditorProject | undefined,
+      /** A temporary configuration from a bookmarked document */
+      tempConfigurationName: undefined as string | undefined,
     }
   },
   computed: {
@@ -128,6 +141,9 @@ export default {
     },
     configuration() {
       return getEditorConfiguration(this.editor.state)
+    },
+    tempConfiguration(): PundokEditorConfigInit | undefined {
+      return this.tempProject ? this.tempProject.computedConfig : undefined
     },
     inputConverters(): InputConverter[] {
       const current = this.configuration?.inputConverters || []
@@ -176,6 +192,17 @@ export default {
     }
     getFormatsAndBookmarks()
   },
+  watch: {
+    tempProject(tp) {
+      if (tp) this.tempConfigurationName = undefined
+    },
+    tempConfiguration(tc) {
+      console.log(`temporary configuration: ${tc?.name || 'none'}`)
+    },
+    tempConfigurationName(tcn) {
+      console.log(`temporary configuration name: ${tcn || 'none'}`)
+    }
+  },
   methods: {
     async getContents() {
       try {
@@ -185,6 +212,14 @@ export default {
         this.folders = contents?.folders || this.folders
         this.documents = contents?.documents || this.documents
         this.separator = contents?.separator || this.separator
+        const tempProject = await this.backend?.getProject({
+          path: path,
+          computeConfig: true
+        })
+        if (tempProject) {
+          this.tempProject = tempProject
+          this.tempConfigurationName = undefined
+        }
       } catch (err) {
         console.log(err)
       }
@@ -211,7 +246,15 @@ export default {
     },
     inputConverterFromDocumentFormat(path: string): InputConverter | undefined {
       if (!this.format || this.format?.ftype === 'guess') {
-        let ic = this.inputConverters.find(c => c.extensions.find(e => path.endsWith(`.${e}`)))
+        let ic: InputConverter | undefined = undefined
+        // try the temporary configuration (for bookmarks)
+        if (this.tempConfiguration) {
+          ic = this.tempConfiguration.inputConverters?.find(c => c.default
+            && c.extensions.find(e => path.endsWith(`.${e}`)))
+        }
+        // otherwise try the current configuration
+        if (!ic)
+          ic = this.inputConverters.find(c => c.extensions.find(e => path.endsWith(`.${e}`)))
         if (ic)
           return toRaw(ic)
         const ext = path.replace(/^.*?(([.][0-9a-z]{1,5})?[.][0-9a-z]+)$/i, '$1')
@@ -242,6 +285,8 @@ export default {
               editorKey,
               path,
               inputConverter,
+              configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+              project: this.tempProject,
             }
           } as DocumentOpenActionProps
         )
@@ -297,7 +342,7 @@ export default {
         document
       }
     },
-    async gotoPath(path: string) {
+    async gotoPath(path: string, configurationName?: string) {
       const folder = path.split(this.separator)
       const name = folder.pop()
       if (folder.length > 0) {
@@ -306,12 +351,16 @@ export default {
         this.selectedDocument = path
         if (name)
           this.scrollToSelectedDocument(name, 500)
-        const tempProject = await this.backend?.getProject({
-          path: folder.join(this.separator),
-          computeConfig: true
-        })
-        if (tempProject)
-          this.tempConfiguration = tempProject.computedConfig
+        if (configurationName && !this.tempConfiguration) {
+          const bookmarkConfig = await this.backend?.configuration(configurationName)
+          if (bookmarkConfig) {
+            const ic = bookmarkConfig?.inputConverters?.find(ic => ic.default)
+            if (ic) {
+              this.tempConfigurationName = configurationName
+              this.selectFormat({ ...ic, ftype: 'input-converter' })
+            }
+          }
+        }
       }
     },
     scrollToSelectedDocument(name: string, delay?: number) {
@@ -341,7 +390,7 @@ export default {
         &nbsp;
         <q-btn-dropdown label="document" no-caps auto-close dense class="q-my-xs">
           <q-list>
-            <q-item v-for="db in docBookmarks" clickable @click="gotoPath(db.path)">
+            <q-item v-for="db in docBookmarks" clickable @click="gotoPath(db.path, db.configurationName)">
               <q-item-section>
                 <q-item-label :title="db.path">{{ splitFolderAndDoc(db.path).document }}</q-item-label>
               </q-item-section>
