@@ -38,7 +38,7 @@
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
-        <OpenDocumentDialog v-if="visibleOpenDocumentDialog" :editor="editor"
+        <OpenDocumentDialog v-if="visibleOpenDocumentDialog" :editor="editor" :direction="documentDialogDirection"
           @hide="visibleOpenDocumentDialog = false" />
         <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
           @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
@@ -290,6 +290,7 @@ export default {
       rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
       visibleOpenDocumentDialog: false,
+      documentDialogDirection: 'input' as 'input' | 'output',
       visibleImportDialog: false,
       visibleExportDialog: false,
       visibleSearchAndReplaceDialog: false,
@@ -718,6 +719,14 @@ export default {
         console.log(err);
       }
     },
+    showOpenDocumentDialog() {
+      this.documentDialogDirection = 'input'
+      this.visibleOpenDocumentDialog = true;
+    },
+    showSaveDocumentDialog() {
+      this.documentDialogDirection = 'output'
+      this.visibleOpenDocumentDialog = true;
+    },
     async openDocument(context?: DocumentContext, atLine?: number) {
       const docState = this.docState();
       const docContext: DocumentContext = context || {};
@@ -725,7 +734,7 @@ export default {
         docContext?.configurationName || docState?.configuration?.name;
       const project = docContext?.project || docState?.project;
       if (!docContext.path) {
-        this.visibleOpenDocumentDialog = true;
+        this.showOpenDocumentDialog()
       } else {
         const doc = await this.backend?.open({
           ...docContext,

@@ -2,6 +2,7 @@ import { FileFilter } from 'electron';
 import { extname } from 'path-browserify';
 import { InputConverter, PandocInputConverter } from './config';
 import { isString, uniq } from 'lodash';
+import { commonIcons } from './icons';
 
 export interface PandocFormatDescription {
   name?: string,
@@ -204,6 +205,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     priority: 2,
     description: 'Pandoc JSON',
     extensions: ['json'],
+    icon: 'mdi-code-json',
   },
   latex: {
     description: 'LaTeX',
@@ -278,6 +280,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     priority: 1,
     description: 'OpenOffice/LibreOffice docx',
     extensions: ['odt'],
+    icon: commonIcons.odt_document,
   },
   opendocument: {
     description: 'OASIS OpenDocument XML',
@@ -325,6 +328,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
     priority: 1,
     description: 'Rich Text Format',
     extensions: ['rtf'],
+    icon: commonIcons.rtf_document,
   },
   s5: {
     description: 'S5 slide show',

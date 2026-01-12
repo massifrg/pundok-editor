@@ -101,6 +101,8 @@ export default {
       projectBookmarks: [] as ProjectBookmark[],
       /** A flag to hide the subfolders in the QTable */
       hideFolders: false,
+      /** A flag to show any document with any extension in the QTable */
+      showEveryDoc: false,
       /** A flag to show all the available formats, instead of the main ones */
       showAllFormats: false,
       /** A temporary project, eventually present in the current folder */
@@ -130,14 +132,17 @@ export default {
           isFolder: false,
           isDocument: true,
         }))
-      if (this.extensions.length > 0) {
+      if (!this.showEveryDoc && this.extensions.length > 0) {
         const exts = this.extensions.map(e => '.' + e)
         documents = documents.filter(d => !!exts.find(e => d.name.endsWith(e)))
       }
       return [...folders, ...documents]
     },
+    isInputDialog() {
+      return this.direction !== 'output'
+    },
     dialogPrompt() {
-      return this.prompt || (this.direction === 'output' ? 'Write to document:' : 'Open document:')
+      return this.prompt || (this.isInputDialog ? 'Open document:' : 'Write to document:')
     },
     configuration() {
       return getEditorConfiguration(this.editor.state)
@@ -160,19 +165,21 @@ export default {
       return [...current, ...temp]
     },
     documentFormats(): DocumentFormat[] {
-      const isInput = this.direction !== 'output'
-      let converters = isInput
+      let converters = this.isInputDialog
         ? this.inputConverters.map(ic => ({ ...ic, ftype: 'input-converter' as DocumentFormatType }))
         : this.outputConverters.map(ic => ({ ...ic, ftype: 'output-converter' as DocumentFormatType }))
       let pandocFormats = this.pandocFormats
-        .filter(f => isInput ? f.input === true : f.output === true)
+        .filter(f => this.isInputDialog ? f.input === true : f.output === true)
         .map(f => ({ ...f, ftype: 'format' as DocumentFormatType }))
       if (!this.showAllFormats)
         pandocFormats = pandocFormats.filter(f => (f.priority || 0) >= 1)
       let formats = [...converters, ...pandocFormats]
-      if (isInput && formats[0].ftype !== 'guess')
+      if (this.isInputDialog && formats[0].ftype !== 'guess')
         formats.unshift(guessFormat)
       return formats
+    },
+    guessedFormat() {
+      return this.guessFormatFromPath(this.selectedDocument)
     }
   },
   mounted() {
@@ -184,11 +191,6 @@ export default {
       this.format = guessFormat
       this.docBookmarks = (await this.backend?.getBookmarks('document') || []) as DocumentBookmark[]
       this.projectBookmarks = (await this.backend?.getBookmarks('project') || []) as ProjectBookmark[]
-
-      // DEBUG: TODO: remove the next 3 lines
-      // const exts = knownFormatExtensions('input')
-      // console.log(exts.map(e => `${e}: ${formatsFromExtension(e, 'output').join()}`))
-      // console.log(exts.map(e => `${e}: ${guessFormatFromExtension(e, 'output') || '-'}`))
     }
     getFormatsAndBookmarks()
   },
@@ -244,21 +246,48 @@ export default {
         this.getContents()
       }
     },
-    inputConverterFromDocumentFormat(path: string): InputConverter | undefined {
-      if (!this.format || this.format?.ftype === 'guess') {
-        let ic: InputConverter | undefined = undefined
+    guessFormatFromPath(path?: string): { format?: DocumentFormat | undefined, why: string } {
+      if (!path) {
+        const json_format = this.pandocFormats.find(f => f.name === 'json')
+        return {
+          format: { ...json_format, ftype: 'format' },
+          why: 'default Pandoc format for the editor'
+        }
+      }
+      if (this.isInputDialog) {
         // try the temporary configuration (for bookmarks)
         if (this.tempConfiguration) {
-          ic = this.tempConfiguration.inputConverters?.find(c => c.default
+          const ic = this.tempConfiguration.inputConverters?.find(c => c.default
             && c.extensions.find(e => path.endsWith(`.${e}`)))
+          if (ic) return {
+            format: { ...toRaw(ic), ftype: 'input-converter' },
+            why: 'from the configuration used to open the bookmarked file last time'
+          }
         }
         // otherwise try the current configuration
-        if (!ic)
-          ic = this.inputConverters.find(c => c.extensions.find(e => path.endsWith(`.${e}`)))
-        if (ic)
-          return toRaw(ic)
-        const ext = path.replace(/^.*?(([.][0-9a-z]{1,5})?[.][0-9a-z]+)$/i, '$1')
-        const format = guessFormatFromExtension(ext, 'input')
+        const ic = this.inputConverters.find(c => c.extensions.find(e => path.endsWith(`.${e}`)))
+        if (ic) return {
+          format: { ...toRaw(ic), ftype: 'input-converter' },
+          why: 'from the current configuration of the editor'
+        }
+      }
+      const ext = path.replace(/^.*?[.](([0-9a-z]{1,5}[.])?[0-9a-z]+)$/i, '$1')
+      const format = guessFormatFromExtension(ext, this.isInputDialog ? 'input' : 'output')
+      if (format) {
+        const pf = this.pandocFormats.find(f => f.name === format)
+        if (pf)
+          return {
+            format: { ...pf, ftype: 'format' },
+            why: 'from the extension of the file',
+          }
+      }
+      return {
+        why: 'no suitable format found'
+      }
+    },
+    inputConverterFromDocumentFormat(path: string): InputConverter | undefined {
+      if (!this.format || this.format?.ftype === 'guess') {
+        const { format, why } = this.guessFormatFromPath(path)
         return format ? pandocFormatToInputConverter(format) : undefined
       }
       const format = this.format
@@ -323,12 +352,48 @@ export default {
         return (format as PandocFormatDescription | InputConverter).extensions || []
       }
     },
-    iconForFormat(format?: DocumentFormat): string {
+    formatIcon(format?: DocumentFormat): string {
+      let icon
       if (format?.ftype === 'input-converter')
-        return 'mdi-import'
-      if (format?.ftype === 'output-converter')
-        return 'mdi-export'
-      return format?.icon || 'mdi-code-tags'
+        icon = format?.icon || 'mdi-import'
+      else if (format?.ftype === 'output-converter')
+        icon = format?.icon || 'mdi-export'
+      else if (format?.ftype === 'format')
+        icon = format?.icon
+      else if (format?.ftype === 'guess') {
+        const gf = this.guessedFormat?.format
+        icon = gf?.icon
+          || (gf?.ftype === 'input-converter' && 'mdi-import')
+          || (gf?.ftype === 'output-converter' && 'mdi-export')
+          || icon
+      }
+      return icon || guessFormat.icon || 'mdi-code-tags'
+    },
+    formatLabel(format?: DocumentFormat) {
+      if (format?.ftype !== 'guess')
+        return format?.name
+      const doc = this.selectedDocument
+      if (doc) {
+        const { format: format_guess } = this.guessedFormat
+        return format_guess
+          ? `guess (${format_guess.name})`
+          : 'guess (unrecognized)'
+      }
+      return 'guess'
+    },
+    formatTitle(format?: DocumentFormat) {
+      if (format?.ftype !== 'guess')
+        return format?.description
+      const doc = this.selectedDocument
+      if (doc) {
+        const { format: format_guess, why } = this.guessedFormat
+        if (format_guess)
+          return [
+            format?.description || '',
+            `(${format_guess.name}, ${why})`
+          ].join(' ')
+      }
+      return 'the editor tries to guess the format'
     },
     selectFormat(format: DocumentFormat) {
       this.format = format
@@ -402,6 +467,10 @@ export default {
         <div class="row q-ma-none q-pa-none">
           <div class="text-body2 self-end">{{ currentFolder.join(separator) }} </div>
           <q-space />
+          <q-toggle v-model="showEveryDoc" size="sm"
+            title="show every document or just the ones with the matching extensions" label="show all docs:"
+            left-label />
+          <q-space />
           <q-toggle v-model="hideFolders" size="sm" title="hide/show folders" label="hide folders:" left-label />
         </div>
         <q-table ref="docsTable" class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns"
@@ -422,8 +491,8 @@ export default {
         </q-table>
       </q-card-section>
       <q-card-section horizontal>
-        <div class="q-pa-md">Format/Custom {{ direction === 'output' ? 'writer' : 'reader' }}:</div>
-        <q-btn-dropdown :label="format?.name" :icon="iconForFormat(format)" :title="format?.description" auto-close
+        <div class="q-pa-md">Format/Custom {{ isInputDialog ? 'reader' : 'writer' }}:</div>
+        <q-btn-dropdown :label="formatLabel(format)" :icon="formatIcon(format)" :title="formatTitle(format)" auto-close
           no-caps class="q-my-sm">
           <q-list>
             <q-item v-for="df in documentFormats" :title="df.description" clickable dense :class="{
@@ -432,7 +501,7 @@ export default {
               'bg-amber-2': df.ftype === 'output-converter'
             }" @click="selectFormat(df)">
               <q-item-section avatar>
-                <q-icon :name="iconForFormat(df)" />
+                <q-icon :name="formatIcon(df)" />
               </q-item-section>
               <q-item-section>{{ df.name }}</q-item-section>
               <q-item-section>{{formatExtensions(df).map(e => `*.${e}`).join(', ')}}</q-item-section>
