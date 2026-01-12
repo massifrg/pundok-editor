@@ -10,6 +10,7 @@ export * from './exportJob';
 export * from './externalProgramResult';
 export * from './feedback';
 export * from './folders';
+export * from './icons';
 export * from './ipc';
 export * from './pandocFormat';
 export * from './pandocOptions';
