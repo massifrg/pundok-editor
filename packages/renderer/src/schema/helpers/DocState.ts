@@ -17,6 +17,12 @@ export interface DocState {
   readonly editorKey: EditorKeyType;
   /** The name of the document being edited. */
   readonly documentName?: string;
+  /** The path where documents are read */
+  readonly inputFolder?: string[];
+  /** The path where documents are stored */
+  readonly outputFolder?: string[];
+  /** The path where a copy of a document is saved */
+  readonly copyFolder?: string[];
   /** Resource path for pandoc conversions. FIXME: still useful? */
   readonly resourcePath?: string[];
   /** Current configuration in use in the editor. */
@@ -32,13 +38,16 @@ export interface DocState {
   /** `true` when the doc has changed and the changes are not saved in any format. */
   readonly unsavedChanges?: boolean;
   /** callback to get notified when the doc state changes. */
-  readonly callback?: (updated: DocState) => void;
+  // readonly callback?: (updated: DocState) => void;
 }
 
 /** An interface to update the {@link DocState}. */
 export interface DocStateUpdate {
   documentName: string | null;
   resourcePath: string[] | null;
+  inputFolder: string[] | null;
+  outputFolder: string[] | null;
+  copyFolder: string[] | null;
   configuration: PundokEditorConfig | null;
   project: PundokEditorProject | null;
   lastSaveResponse: SaveResponse | null;
@@ -102,18 +111,23 @@ export function updateDocState(
 ): DocState {
   if (updates) {
     let newDocState: DocState = { ...currentDocState };
+    let modified = false
     Object.entries(updates).forEach(([key, value]) => {
       // set a property to null if you want to reset it
+      if (!modified) {
+        let currentValue: any = currentDocState[key as keyof DocState]
+        currentValue = currentValue === undefined ? null : currentValue
+        modified = currentValue !== value
+      }
       newDocState =
         value === null
           ? { ...newDocState, [key]: undefined }
           : { ...newDocState, [key]: value };
     });
-    newDocState = {
+    if (modified) return {
       ...newDocState,
       editorKey: currentDocState.editorKey,
     };
-    return newDocState;
   }
   return currentDocState;
 }

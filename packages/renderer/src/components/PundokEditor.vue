@@ -191,6 +191,8 @@ import {
   ACTION_SETUP_VIEWER,
   ACTION_PROJECT_NEW,
   ACTION_GET_PROJECT,
+  ACTION_UPDATE_DOC_STATE,
+  UpdateDocStateActionProps,
 } from '../actions';
 import { isString } from 'lodash';
 import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
@@ -347,6 +349,16 @@ export default {
         const { name: actionName, nodeOrMark: nom, props } = nodeMarkAction;
         console.log(`action: ${actionName}`);
         switch (actionName) {
+          case ACTION_UPDATE_DOC_STATE.name:
+            {
+              const docState = (props as UpdateDocStateActionProps).docState
+              console.log('UPDATING DOC STATE...')
+              if (docState) {
+                this.savedChanges = !docState.nativeUnsavedChanges;
+                this.exportedChanges = !docState.unsavedChanges;
+              }
+            }
+            break;
           case ACTION_CLOSE_EDITOR.name:
             this.setClosePending();
             break;
@@ -578,15 +590,15 @@ export default {
     docState(): DocState | undefined {
       return getDocState(this.editorState());
     },
-    setDocStateCallback() {
-      if (this.editor)
-        this.updateEditorDocState({
-          callback: (docState: DocState) => {
-            this.savedChanges = !docState.nativeUnsavedChanges;
-            this.exportedChanges = !docState.unsavedChanges;
-          },
-        });
-    },
+    // setDocStateCallback() {
+    //   if (this.editor)
+    //     this.updateEditorDocState({
+    //       callback: (docState: DocState) => {
+    //         this.savedChanges = !docState.nativeUnsavedChanges;
+    //         this.exportedChanges = !docState.unsavedChanges;
+    //       },
+    //     });
+    // },
     editorKey(): EditorKeyType | undefined {
       return this.docState()?.editorKey;
     },
@@ -618,7 +630,7 @@ export default {
           await this.setConfiguration(getHardcodedEditorConfig());
         if (process.env.MODE !== 'production') applyDevTools(editor.view);
         // console.log(this.docState())
-        this.setDocStateCallback();
+        // this.setDocStateCallback();
         this.updateEditorDocState({
           nativeUnsavedChanges: false,
           unsavedChanges: false,

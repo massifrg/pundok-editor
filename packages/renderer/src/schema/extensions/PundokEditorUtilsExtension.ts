@@ -5,8 +5,10 @@ import { NodeSelection, Plugin } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import {
   ACTION_SET_ALTERNATIVE,
+  ACTION_UPDATE_DOC_STATE,
   setActionCommand,
-  setActionEditAttributes
+  setActionEditAttributes,
+  UpdateDocStateActionProps
 } from '../../actions';
 import {
   EditAttributesActionProps,
@@ -99,9 +101,13 @@ export const PundokEditorUtilsExtension =
                   unsavedChanges: true,
                 });
               }
-              // notify current update even if it has unset the callback field
-              if (currentDocState.callback)
-                currentDocState.callback(updatedDocState);
+              if (updatedDocState !== currentDocState) {
+                setActionCommand(
+                  updatedDocState.editorKey,
+                  ACTION_UPDATE_DOC_STATE,
+                  { docState: updatedDocState } as UpdateDocStateActionProps
+                )
+              }
               return updatedDocState;
             },
           },

@@ -1,6 +1,6 @@
 import { Editor } from '@tiptap/core';
 import { currentRepeatableCommandTooltip, SearchTextVariant } from '../schema';
-import { SelectedNodeOrMark } from '../schema/helpers';
+import { DocState, SelectedNodeOrMark } from '../schema/helpers';
 import {
   AddOrRemoveClassActionProps,
   EditorKeyType,
@@ -12,6 +12,7 @@ import { ActionsGroup } from './actionGroup';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
 
 export type ActionName =
+  | 'update-doc-state'
   | 'backend-feedback'
   | 'backend-set-project'
   | 'close-editor'
@@ -119,6 +120,15 @@ export type BaseActionForNodeOrMark = BaseEditorAction & ActionForNodeOrMarkCore
 
 /** Action pertinent to a particular Node or Mark of the document of the editor with that editorKey */
 export type ActionForNodeOrMark = EditorAction & ActionForNodeOrMarkCore
+
+export const ACTION_UPDATE_DOC_STATE: BaseEditorAction = {
+  name: 'update-doc-state',
+  label: 'update DocState',
+}
+
+export interface UpdateDocStateActionProps {
+  docState: DocState
+}
 
 export const ACTION_BACKEND_FEEDBACK: BaseEditorAction = {
   name: 'backend-feedback',
