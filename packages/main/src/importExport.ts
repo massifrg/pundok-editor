@@ -56,7 +56,7 @@ export function importWithPandoc(
   }
 }
 
-export function importJsonWithPandoc(
+export async function importJsonWithPandoc(
   filename: string,
   formatOrReader: string,
   context: DocumentContext,
@@ -71,6 +71,23 @@ export function importJsonWithPandoc(
   let pandocOpts: string[] = DEFAULT_IMPORT_PANDOC_OPTIONS;
   if (inputConverter && inputConverter.type === 'pandoc')
     pandocOpts = pandocOpts.concat(inputConverter.pandocOptions || []);
+  if (configurationName) {
+    const respath: string[] = []
+    pandocOpts = pandocOpts.map(po => {
+      let with_path = po
+      po.replace(/^(-L|--lua-filter)\s+(.*?)\s*$/, (_, option, filename) => {
+        const wp = findResourceFile(filename, { kind: 'filter', configurationName, project })
+        if (wp) {
+          const dir = parsePath(wp).dir
+          if (!respath.includes(dir)) respath.push(`"${dir}"`)
+          with_path = `${option} "${wp}"`
+        }
+        return ''
+      })
+      return with_path
+    })
+    if (respath) pandocOpts.push(`--resource-path=${respath.join(pathDelimiter)}`)
+  }
   const isCustomReader = formatOrReader.toLowerCase().endsWith('.lua')
   // if it's custom reader, we must find it in the configuration(s) directories
   if (isCustomReader) {
@@ -86,6 +103,7 @@ export function importJsonWithPandoc(
     const respath = [...(context.resourcePath || []), customReaderDir]
       .map(rp => encloseInDblQuotes(rp))
       .join(pathDelimiter)
+    console.log(`RES PATH: ${respath}`)
     pandocOpts.push(`--resource-path=${respath}`);
     pandocOpts.push(`--data-dir=${customReaderDir}`)
     format = encloseInDblQuotes(customReaderFilepath);
