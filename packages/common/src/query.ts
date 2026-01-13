@@ -1,4 +1,4 @@
-import { isArray, isObject } from 'lodash';
+import { isArray, isObject } from 'lodash-es';
 import { FindResourceOptions } from './resources';
 
 /** Types of possible queries. */

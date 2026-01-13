@@ -5,7 +5,7 @@ import {
   isBoolean,
   isString,
   isNumber,
-} from 'lodash';
+} from 'lodash-es';
 
 export const PANDOC_BLOCKS = [
   'Plain',

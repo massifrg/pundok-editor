@@ -1,7 +1,7 @@
 import { PundokEditorConfig } from "./editorConfiguration"
 import { PundokEditorConfigInit } from "./editorConfigInit"
 import { PundokEditorProject } from "./project"
-import { isString } from "lodash"
+import { isString } from "lodash-es"
 
 /** A `PrecedenceObject` maps a key in a JSON file to its precedence
  * (order in the stringified JSON) */

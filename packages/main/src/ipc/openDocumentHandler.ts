@@ -7,7 +7,7 @@ import {
   PundokEditorProject,
 } from '../common';
 import { isAbsolute, parse as parsePath, resolve } from 'path';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 import { updateBookmarksFile } from '../bookmarks';
 import { refreshMainMenu } from '../mainWindow';
 

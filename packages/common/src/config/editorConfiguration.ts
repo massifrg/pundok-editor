@@ -1,4 +1,4 @@
-import { isEqual, isString, uniq } from 'lodash';
+import { isEqual, isString, uniq } from 'lodash-es';
 import {
   Automation,
   CustomMetadata,

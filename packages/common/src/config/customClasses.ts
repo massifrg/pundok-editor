@@ -2,7 +2,7 @@ import { Mark, Node } from '@tiptap/pm/model';
 import { CustomAttribute } from './customAttributes';
 import { CustomStyleInstance, activeCustomStyles } from './customStyles';
 import { appliesTo } from './appliesTo';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 
 /**
  * A custom class for Pandoc's `Block`s and `Inline`s with an `Attr`

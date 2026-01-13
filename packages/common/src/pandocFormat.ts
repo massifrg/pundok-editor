@@ -1,7 +1,7 @@
 import { FileFilter } from 'electron';
-import { extname } from 'path-browserify';
-import { InputConverter, PandocInputConverter } from './config';
-import { isString, uniq } from 'lodash';
+import { InputConverter, OutputConverter, PandocInputConverter, PandocOutputConverter } from './config';
+import { isString, uniq } from 'lodash-es';
+import * as browserify from 'path-browserify';
 import { commonIcons } from './icons';
 
 export interface PandocFormatDescription {
@@ -159,7 +159,7 @@ const pandocFormats: Record<string, PandocFormatDescription> = {
   html: {
     priority: 1,
     description: '(X)HTML',
-    extensions: ['htm', 'html', 'xhtml'],
+    extensions: ['html', 'htm', 'xhtml'],
     icon: 'mdi-language-html5',
   },
   html4: {
@@ -460,7 +460,7 @@ export function pandocFormatsFromExtension(ext: string, direction: 'input' | 'ou
  * @returns 
  */
 export function pandocFormatsFromFilename(fn: string, direction: 'input' | 'output'): string[] {
-  return pandocFormatsFromExtension(extname(fn), direction)
+  return pandocFormatsFromExtension(browserify.extname(fn), direction)
 }
 
 /**
@@ -506,9 +506,31 @@ export function pandocFormatToInputConverter(format: string | PandocFormatDescri
     return {
       type: 'pandoc',
       name: desc.name!,
+      description: desc.description,
       format: desc.name!,
       extensions: desc.extensions || [],
     } as PandocInputConverter
+  }
+  return undefined
+}
+
+/**
+ * Derives an `OutputConverter` from the name of a Pandoc output format.
+ * @param format The output format name.
+ * @returns 
+ */
+export function pandocFormatToOutputConverter(format: string | PandocFormatDescription): OutputConverter | undefined {
+  const desc: PandocFormatDescription | undefined = isString(format)
+    ? pandocFormats[format]
+    : format
+  if (desc?.name && desc?.output === true) {
+    return {
+      type: 'pandoc',
+      name: desc.name!,
+      description: desc.description,
+      format: desc.name!,
+      extension: (desc.extensions || [])[0],
+    } as PandocOutputConverter
   }
   return undefined
 }

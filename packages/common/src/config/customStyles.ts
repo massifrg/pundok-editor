@@ -1,5 +1,5 @@
 import { Mark, MarkType, Node, NodeType } from '@tiptap/pm/model';
-import { isArray, isString } from 'lodash';
+import { isArray, isString } from 'lodash-es';
 import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';
 import {

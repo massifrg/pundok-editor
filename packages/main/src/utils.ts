@@ -1,4 +1,4 @@
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 import { parse as parsePath, resolve } from 'path';
 
 /**

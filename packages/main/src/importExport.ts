@@ -34,7 +34,7 @@ import {
 } from 'path';
 import { encloseInDblQuotes } from './utils';
 import { existsSync } from 'fs';
-import { isArray, isObject, isString } from 'lodash';
+import { isArray, isObject, isString } from 'lodash-es';
 import { expandCommandArgs } from './ipc/expandCommandArgs';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';

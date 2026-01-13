@@ -2,14 +2,14 @@
 // see https://hackage.haskell.org/package/pandoc-types-1.20/docs/Text-Pandoc-Definition.html
 // used by Pandoc 2.9.2.1 in Debian "bullseye"
 
-import { isArray } from 'lodash';
+import { isArray } from 'lodash-es';
 import type { Alignment, PandocItem, Inline } from './PandocModel';
 import { simpleMarkdownToInlines, Block, Plain, Para } from './PandocModel';
 
 export class TableCell implements PandocItem {
   properties = ['content'];
 
-  constructor(public readonly content: Block[]) {}
+  constructor(public readonly content: Block[]) { }
 
   static from(content: string | string[]): TableCell {
     if (isArray(content)) {
