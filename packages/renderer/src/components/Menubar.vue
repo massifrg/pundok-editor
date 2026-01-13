@@ -11,8 +11,10 @@
       </ToolbarButton>
 
       <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
+      <!--
       <ImportToolbarButton v-if="gui.importButton" :editor="editor" />
       <ExportToolbarButton v-if="gui.exportButton" :editor="editor" />
+      -->
       <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
 
       <span class="button-separator" />

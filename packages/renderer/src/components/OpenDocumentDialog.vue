@@ -300,7 +300,9 @@ export default {
       }
     },
     placeIcon(place: Place) {
-      return placeIcons[place.name.toLowerCase()] || 'mdi-folder-arrow-right-outline'
+      return placeIcons[place.name.toLowerCase()]
+        || (place.type === 'disk' && 'mdi-harddisk')
+        || 'mdi-folder-arrow-right-outline'
     },
     gotoPlace(place: Place) {
       if (place.href.startsWith('file://')) {

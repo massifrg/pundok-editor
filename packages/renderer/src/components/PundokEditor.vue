@@ -38,7 +38,7 @@
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
-        <OpenDocumentDialog v-if="visibleOpenDocumentDialog" :editor="editor" :direction="documentDialogDirection"
+        <OpenDocumentDialog v-if="visibleOpenDocumentDialog" :editor="editor" :mode="documentDialogMode"
           @hide="visibleOpenDocumentDialog = false" />
         <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
           @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
@@ -134,6 +134,7 @@ import {
   EditAttributesActionProps,
   ActionNameWithProps,
   GetProjectOptions,
+  DocumentSaveActionProps,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import {
@@ -153,7 +154,7 @@ import {
   ShowMessageDialog,
 } from '.';
 import Menubar from './Menubar.vue';
-import OpenDocumentDialog from './OpenDocumentDialog.vue';
+import OpenDocumentDialog, { DocumentDialogMode } from './OpenDocumentDialog.vue';
 import {
   ActionForNodeOrMark,
   EditorAction,
@@ -292,7 +293,7 @@ export default {
       rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
       visibleOpenDocumentDialog: false,
-      documentDialogDirection: 'input' as 'input' | 'output',
+      documentDialogMode: 'open' as DocumentDialogMode,
       visibleImportDialog: false,
       visibleExportDialog: false,
       visibleSearchAndReplaceDialog: false,
@@ -412,7 +413,7 @@ export default {
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
               setActionCommand(this.projectStructureEditorKey, action, props)
             else
-              this.saveToStoredPath();
+              this.save((props as DocumentSaveActionProps).storedDoc.path);
             break;
           case ACTION_DOCUMENT_SAVE_AS.name:
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
@@ -732,11 +733,11 @@ export default {
       }
     },
     showOpenDocumentDialog() {
-      this.documentDialogDirection = 'input'
+      this.documentDialogMode = 'open'
       this.visibleOpenDocumentDialog = true;
     },
     showSaveDocumentDialog() {
-      this.documentDialogDirection = 'output'
+      this.documentDialogMode = 'save'
       this.visibleOpenDocumentDialog = true;
     },
     async openDocument(context?: DocumentContext, atLine?: number) {
@@ -920,13 +921,17 @@ export default {
     saveContent() {
       this.saveToStoredPath();
     },
-    async saveToStoredPath(): Promise<SaveResponse> {
-      return this.save(this.docState()?.lastSaveResponse?.doc.path);
+    async saveToStoredPath() {
+      this.save(this.docState()?.lastSaveResponse?.doc.path);
     },
     beforeSaving() {
       this.editor?.commands.fixPandocTables();
     },
-    async save(path?: string): Promise<SaveResponse> {
+    async save(path?: string) {
+      if (!path) {
+        this.showSaveDocumentDialog()
+        return
+      }
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
       try {

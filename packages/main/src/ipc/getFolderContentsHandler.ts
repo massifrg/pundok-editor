@@ -13,30 +13,26 @@ import { pathToFileURL } from 'url'
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
 import { Document, Folder, FolderContents, Place } from "../common";
+import * as drivelist from 'drivelist';
 
-type DriveListModule = {
-  list: () => Promise<{ mountpoints: { path: string }[] }[]>
-}
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
 type JumpListModule = {
   automatic_destination_parser: DestinationParser,
   custom_destination_parser: DestinationParser,
 }
-let drivelist: DriveListModule | undefined = undefined
 let jumplist: JumpListModule | undefined = undefined
 
-// if (process.platform === 'win32') {
-//   drivelist = require('drivelist')
-//   // import { automatic_destination_parser, custom_destination_parser } from "@recent-cli/jumplist-parser-lite"
-//   jumplist = require('@recent-cli/jumplist-parser-lite')
-// }
-
-async function loadPlatformModules() {
-  if (process.platform === 'win32') {
-    drivelist = await import('drivelist');
-    jumplist = await import('@recent-cli/jumplist-parser-lite');
-  }
+if (process.platform === 'win32') {
+  // import { automatic_destination_parser, custom_destination_parser } from "@recent-cli/jumplist-parser-lite"
+  jumplist = require('@recent-cli/jumplist-parser-lite')
 }
+
+// async function loadPlatformModules() {
+//   if (process.platform === 'win32') {
+//     drivelist = await import('drivelist');
+//     jumplist = await import('@recent-cli/jumplist-parser-lite');
+//   }
+// }
 
 const USER_PLACES = '.local/share/user-places.xbel'
 const GTK_BOOKMARKS = '.config/gtk-3.0/bookmarks'
@@ -92,13 +88,29 @@ function isSymlinkToDirectory(dirPath: string, dirent: Dirent) {
   }
 }
 
-async function getUserPlacesUnix(): Promise<Place[]> {
+async function getDrivesList(): Promise<Place[]> {
   const places: Place[] = []
+  const drives = await drivelist.list();
+  drives.forEach(d => {
+    d.mountpoints.forEach(m => {
+      const href = pathToFileURL(m.path)
+      places.push({
+        name: href.pathname,
+        href: href.toString(),
+        type: 'disk',
+      })
+    });
+  })
+  return places
+}
+
+async function getUserPlacesUnix(): Promise<Place[]> {
+  let places: Place[] = []
   const user_places_dir = resolve(homedir(), USER_PLACES)
   if (existsSync(user_places_dir)) {
     const user_places = (await readFile(user_places_dir)).toString()
     user_places.replaceAll(/<bookmark href="(file:\/\/.*?)".*?\n\s*<title>(.*?)<\/title>/gm, (_, href, title) => {
-      places.push({ name: title, href })
+      places.push({ name: title, href, type: 'known' })
       return ''
     })
   }
@@ -109,38 +121,29 @@ async function getUserPlacesUnix(): Promise<Place[]> {
       if (line.startsWith('file://')) {
         const chunks = line.split(separator)
         if (chunks.length > 0)
-          places.push({ name: chunks[chunks.length - 1], href: line })
+          places.push({ name: chunks[chunks.length - 1], href: line, type: 'user' })
       }
     })
   }
+  places = [...places, ...(await getDrivesList())]
   console.log(JSON.stringify(places, null, 2))
   return places
 }
 
 async function getUserPlacesWindows(): Promise<Place[]> {
-  const places: Place[] = []
+  // const places: Place[] = []
+  // if (!drivelist || !jumplist)
+  //   await loadPlatformModules()
   // Get Drives
-  if (!drivelist || !jumplist)
-    await loadPlatformModules()
-  if (drivelist) {
-    const drives = await drivelist.list();
-    drives.forEach(d => {
-      d.mountpoints.forEach(m => {
-        const href = pathToFileURL(m.path)
-        places.push({
-          name: href.pathname,
-          href: href.toString()
-        })
-      });
-    })
-  }
+  const places = await getDrivesList()
   // Get Known Folders
   const user = process.env.USERPROFILE;
   if (user) {
     ['Desktop', 'Documents', 'Downloads', 'Pictures', 'Music', 'Videos'].forEach(p =>
       places.push({
         name: p,
-        href: pathToFileURL(joinPath(user, p)).toString()
+        href: pathToFileURL(joinPath(user, p)).toString(),
+        type: 'known'
       })
     );
     ['AppData', 'LocalAppData'].forEach(p => {
@@ -148,7 +151,8 @@ async function getUserPlacesWindows(): Promise<Place[]> {
       if (v) {
         places.push({
           name: p,
-          href: pathToFileURL(joinPath(user, v)).toString()
+          href: pathToFileURL(joinPath(user, v)).toString(),
+          type: 'known'
         })
       }
     });

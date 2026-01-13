@@ -6,9 +6,12 @@ export type Document = {
   name: string
 }
 
+
+
 export type Place = {
   name: string,
   href: string,
+  type: 'disk' | 'known' | 'user'
 }
 
 export interface FolderContents {

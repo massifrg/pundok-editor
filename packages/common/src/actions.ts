@@ -56,6 +56,11 @@ export interface DocumentOpenActionProps {
   atLine?: number
 }
 
+export interface DocumentSaveActionProps {
+  outputConverter: OutputConverter,
+  storedDoc: Partial<StoredDoc>
+}
+
 export interface ImportDocumentActionProps {
   inputConverter: InputConverter,
   storedDoc: Partial<StoredDoc>
