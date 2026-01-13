@@ -6,6 +6,7 @@ import {
   Document,
   DocumentBookmark,
   DocumentOpenActionProps,
+  DocumentSaveActionProps,
   Folder,
   getPandocFormatDescriptions,
   guessFormatFromExtension,
@@ -13,12 +14,14 @@ import {
   OutputConverter,
   PandocFormatDescription,
   pandocFormatToInputConverter,
+  pandocFormatToOutputConverter,
+  Place,
   ProjectBookmark,
   PundokEditorConfigInit,
   PundokEditorProject,
 } from '../common';
 import { useBackend } from '../stores';
-import { ACTION_DOCUMENT_OPEN, setActionCommand } from '../actions';
+import { ACTION_DOCUMENT_OPEN, ACTION_DOCUMENT_SAVE, setActionCommand } from '../actions';
 import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
 import { EditorState } from '@tiptap/pm/state';
 
@@ -36,6 +39,7 @@ type DocumentFormatType = 'guess' | 'format' | 'input-converter' | 'output-conve
  */
 type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter)
   & { ftype: DocumentFormatType }
+
 const guessFormat: DocumentFormat = {
   ftype: 'guess',
   name: 'guess',
@@ -45,6 +49,34 @@ const guessFormat: DocumentFormat = {
   output: false,
   extensions: [],
   priority: 1,
+}
+
+function documentFormatExtension(format: DocumentFormat): string | undefined {
+  const extensions: string[] = (format as any).extensions || []
+  switch (format.ftype) {
+    case 'format':
+      return extensions[0]
+    case 'input-converter':
+      return extensions[0]
+    case 'output-converter':
+      return (format as OutputConverter).extension
+    default:
+  }
+}
+
+function isNotHidden(filename: string, platform?: string) {
+  return !filename.startsWith('.')
+}
+
+const placeIcons: Record<string, string> = {
+  home: 'mdi-folder-home',
+  root: 'mdi-folder',
+  pictures: 'mdi-folder-image',
+  documents: 'mdi-folder-file',
+  downloads: 'mdi-folder-download',
+  music: 'mdi-folder-music',
+  videos: 'mdi-folder-play',
+  desktop: 'mdi-folder-table',
 }
 
 const cols: QTableColumn[] = [{
@@ -69,8 +101,10 @@ function computeCurrentFolder(state?: EditorState): string[] {
   return folder
 }
 
+export type DocumentDialogMode = 'open' | 'save' | 'save-copy'
+
 export default {
-  props: ['editor', 'direction', 'prompt'],
+  props: ['editor', 'mode', 'prompt', 'startFilename'],
   emits: ['hide'],
   data() {
     return {
@@ -81,12 +115,18 @@ export default {
       folders: [] as Folder[],
       /** The documents (files) in the current folder */
       documents: [] as Document[],
+      /** The user places in the host OS */
+      places: [] as Place[],
       /** The path separator ('/' on Linux/MacOS, '\' in Windows) */
       separator: '/',
       /** The name of the selected document  */
       selectedDocument: undefined as string | undefined,
+      /** The name of the file to be saved (or opened) in the text input box */
+      filename: this.startFilename || '',
       /** Pagination for QTable */
       pagination: { rowsPerPage: 0 },
+      /** The horizontal share (max: 100) for places vs folders/docs */
+      splitterValue: 25,
       /** The document(s) that are selected in the QTable */
       selected: [] as FileContentRow[],
       /** The available Pandoc formats and input/output converters */
@@ -103,6 +143,8 @@ export default {
       hideFolders: false,
       /** A flag to show any document with any extension in the QTable */
       showEveryDoc: false,
+      /** A flag to show hidden folders and docs too */
+      showHidden: false,
       /** A flag to show all the available formats, instead of the main ones */
       showAllFormats: false,
       /** A temporary project, eventually present in the current folder */
@@ -117,13 +159,16 @@ export default {
       return cols
     },
     rows(): FileContentRow[] {
+      const notHiddenFilter = this.showHidden
+        ? (() => true)
+        : isNotHidden
       const folders = this.hideFolders ? [] : this.folders.map(folder => ({
         name: folder.name,
         label: folder.name,
         icon: 'mdi-folder',
         isFolder: true,
         isDocument: false,
-      }))
+      })).filter(f => notHiddenFilter(f.name))
       let documents = this.documents
         .map(doc => ({
           name: doc.name,
@@ -131,7 +176,7 @@ export default {
           icon: 'mdi-file-document',
           isFolder: false,
           isDocument: true,
-        }))
+        })).filter(f => notHiddenFilter(f.name))
       if (!this.showEveryDoc && this.extensions.length > 0) {
         const exts = this.extensions.map(e => '.' + e)
         documents = documents.filter(d => !!exts.find(e => d.name.endsWith(e)))
@@ -139,7 +184,8 @@ export default {
       return [...folders, ...documents]
     },
     isInputDialog() {
-      return this.direction !== 'output'
+      const mode = this.mode as DocumentDialogMode
+      return mode !== 'save' && mode !== 'save-copy'
     },
     dialogPrompt() {
       return this.prompt || (this.isInputDialog ? 'Open document:' : 'Write to document:')
@@ -195,6 +241,11 @@ export default {
     getFormatsAndBookmarks()
   },
   watch: {
+    filename(newName, oldName) {
+      const sel = this.rows.find(r => r.name === newName)
+      this.selected = sel ? [sel] : []
+      this.selectedDocument = [...this.currentFolder, newName].join(this.separator)
+    },
     tempProject(tp) {
       if (tp) this.tempConfigurationName = undefined
     },
@@ -213,6 +264,7 @@ export default {
         this.currentFolder = contents?.base || this.currentFolder
         this.folders = contents?.folders || this.folders
         this.documents = contents?.documents || this.documents
+        this.places = contents?.places || this.places
         this.separator = contents?.separator || this.separator
         const tempProject = await this.backend?.getProject({
           path: path,
@@ -232,6 +284,7 @@ export default {
         this.selectedDocument = [...this.currentFolder, row.name].join(this.separator)
         const sel = this.rows.find(r => r.name === row.name)
         this.selected = sel ? [sel] : []
+        this.filename = row.name
       }
     },
     doubleClick(row: FileContentRow) {
@@ -243,6 +296,16 @@ export default {
         this.currentFolder = row.name === '..'
           ? cf.slice(0, cf.length - 1)
           : [...cf, row.name]
+        this.getContents()
+      }
+    },
+    placeIcon(place: Place) {
+      return placeIcons[place.name.toLowerCase()] || 'mdi-folder-arrow-right-outline'
+    },
+    gotoPlace(place: Place) {
+      if (place.href.startsWith('file://')) {
+        const folder = place.href.replace(/^file:\/\//, '').split('/')
+        this.currentFolder = folder
         this.getContents()
       }
     },
@@ -300,38 +363,65 @@ export default {
         return format as InputConverter
       return undefined
     },
+    outputConverterFromDocumentFormat(path: string): OutputConverter | undefined {
+      if (!this.format || this.format?.ftype === 'guess') {
+        const { format, why } = this.guessFormatFromPath(path)
+        return format ? pandocFormatToOutputConverter(format) : undefined
+      }
+      const format = this.format
+      const { ftype } = format
+      if (ftype === 'output-converter')
+        return format as OutputConverter
+      if (ftype === 'format')
+        return pandocFormatToOutputConverter(format)
+      if (ftype === 'input-converter')
+        return undefined
+    },
     async openSelectedDocument() {
       const path = this.selectedDocument
       const editorKey = editorKeyFromState(this.editor.state)
-      if (path && editorKey) {
-        const inputConverter = this.inputConverterFromDocumentFormat(path)
-        console.log(inputConverter)
-        setActionCommand(
-          editorKey,
-          ACTION_DOCUMENT_OPEN,
-          {
-            context: {
+      if (editorKey) {
+        if (this.isInputDialog) {
+          // open/import document
+          if (path && editorKey) {
+            const inputConverter = this.inputConverterFromDocumentFormat(path)
+            console.log(inputConverter)
+            setActionCommand(
               editorKey,
-              path,
-              inputConverter,
-              configurationName: this.tempProject ? undefined : this.tempConfigurationName,
-              project: this.tempProject,
-            }
-          } as DocumentOpenActionProps
-        )
-        // const doc = await this.backend?.open({
-        //   path,
-        //   inputConverter,
-        //   // configurationName,
-        //   // project,
-        //   editorKey,
-        // });
-        // // TODO: check if JSON is valid
-        // if (doc) setActionCommand(
-        //   editorKey,
-        //   ACTION_BACKEND_SET_CONTENT,
-        //   { content: doc } as BackendSetContentActionProps
-        // )
+              ACTION_DOCUMENT_OPEN,
+              {
+                context: {
+                  editorKey,
+                  path,
+                  inputConverter,
+                  configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+                  project: this.tempProject,
+                }
+              } as DocumentOpenActionProps
+            )
+          }
+        } else {
+          // save/save-copy/export
+          if (path && editorKey) {
+            const outputConverter = this.outputConverterFromDocumentFormat(path)
+            console.log(outputConverter)
+            setActionCommand(
+              editorKey,
+              ACTION_DOCUMENT_SAVE,
+              {
+                outputConverter,
+                storedDoc: {
+                  editorKey,
+                  id: toRaw(this.selectedDocument),
+                  path,
+                  converter: outputConverter,
+                  configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+                  project: this.tempProject,
+                }
+              } as DocumentSaveActionProps
+            )
+          }
+        }
       }
       this.closeDialog()
     },
@@ -398,6 +488,16 @@ export default {
     selectFormat(format: DocumentFormat) {
       this.format = format
       this.extensions = (format as PandocFormatDescription | InputConverter).extensions || []
+      if (!this.isInputDialog) this.adjustDocumentExtension()
+    },
+    adjustDocumentExtension() {
+      const ext = this.format && documentFormatExtension(this.format)
+      if (ext) {
+        let filename = this.filename.replace(/^(.*?[.])(([0-9a-z]{1,5}[.])?[0-9a-z]+)$/i, '$1' + ext)
+        if (filename == this.filename && !filename.endsWith('.' + ext))
+          filename = this.filename + '.' + ext
+        this.filename = filename
+      }
     },
     splitFolderAndDoc(path: string) {
       const folder = path.split(this.separator)
@@ -442,6 +542,7 @@ export default {
     <q-card>
       <q-card-section horizontal class="q-pa-sm q-pb-none q-mb-none">
         <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
+        <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name" />
         <q-space />
         <span class="q-pa-md">Go to a recent:</span>
         <q-space style="max-width: .1rem;" />
@@ -464,31 +565,51 @@ export default {
         </q-btn-dropdown>
       </q-card-section>
       <q-card-section class="q-px-md q-ma-none">
-        <div class="row q-ma-none q-pa-none">
-          <div class="text-body2 self-end">{{ currentFolder.join(separator) }} </div>
-          <q-space />
-          <q-toggle v-model="showEveryDoc" size="sm"
-            title="show every document or just the ones with the matching extensions" label="show all docs:"
-            left-label />
-          <q-space />
-          <q-toggle v-model="hideFolders" size="sm" title="hide/show folders" label="hide folders:" left-label />
-        </div>
-        <q-table ref="docsTable" class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns"
-          row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
-          v-model:pagination="pagination" :rows-per-page-options="[0]">
-          <template v-slot:body-selection="scope">
-            <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="mdi-check" />
+        <q-splitter v-model="splitterValue" :limits="[10, 50]">
+          <template v-slot:after>
+            <div class="row q-ma-none q-pa-none">
+              <div class="text-body2 self-end">{{ currentFolder.join(separator) }} </div>
+              <q-space />
+              <q-toggle v-model="showEveryDoc" size="sm"
+                title="show every document or just the ones with the matching extensions" label="show all docs:"
+                left-label />
+              <q-space />
+              <q-toggle v-model="showHidden" size="sm" title="hide/show hidden folders/documents" label="show hidden:"
+                left-label />
+              <q-space />
+              <q-toggle v-model="hideFolders" size="sm" title="hide/show folders" label="hide folders:" left-label />
+            </div>
+            <q-table ref="docsTable" class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns"
+              row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
+              v-model:pagination="pagination" :rows-per-page-options="[0]">
+              <template v-slot:body-selection="scope">
+                <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="mdi-check" />
+              </template>
+              <template v-slot:body-cell-name="props">
+                <q-td :props="props">
+                  <div class="content-name" @click="click(props.row)" @dblclick="doubleClick(props.row)"
+                    @keypress.enter="doubleClick(props.row)">
+                    <q-icon :name="props.row.icon" />
+                    <span class="text-body1 q-pl-sm">{{ props.row.name }}</span>
+                  </div>
+                </q-td>
+              </template>
+            </q-table>
           </template>
-          <template v-slot:body-cell-name="props">
-            <q-td :props="props">
-              <div class="content-name" @click="click(props.row)" @dblclick="doubleClick(props.row)"
-                @keypress.enter="doubleClick(props.row)">
-                <q-icon :name="props.row.icon" />
-                <span class="text-body1 q-pl-sm">{{ props.row.name }}</span>
-              </div>
-            </q-td>
+          <template v-slot:before>
+            <q-virtual-scroll class="fit" style="max-height: 50vh" :items="places" separator
+              v-slot="{ item: place, index }">
+              <q-item :key="index" dense clickable @click="gotoPlace(place)">
+                <q-item-section side>
+                  <q-icon :name="placeIcon(place)" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label> {{ place.name }} </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-virtual-scroll>
           </template>
-        </q-table>
+        </q-splitter>
       </q-card-section>
       <q-card-section horizontal>
         <div class="q-pa-md">Format/Custom {{ isInputDialog ? 'reader' : 'writer' }}:</div>
