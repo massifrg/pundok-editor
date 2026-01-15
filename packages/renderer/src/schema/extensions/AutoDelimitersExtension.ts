@@ -1,5 +1,7 @@
 import { Extension, Node } from '@tiptap/core';
 import {
+  EditorState,
+  EditorStateConfig,
   Plugin,
   PluginKey,
   TextSelection,
@@ -17,6 +19,8 @@ import {
   MARK_NAME_SINGLE_QUOTED,
   NODE_NAME_AUTO_DELIMITER
 } from '../../common';
+
+export const AUTO_DELIMITER_REGISTER = 'register-auto-delimiter'
 
 type DelimiterForMarkFunction = (
   mark: Mark | string,
@@ -65,21 +69,14 @@ export function registerAutodelimitedMarks(
     );
   }
   editor.storage.autoDelimiters.autodelimitedMarks = marks;
-  const delimiterForMark: DelimiterForMarkFunction = (mark, isOpen) => {
-    const index = marks.findIndex((m) =>
-      isString(mark) ? m.type.name === mark : mark.eq(m),
-    );
-    if (index >= 0) return delimiters[index][isOpen ? 0 : 1];
-    return '"';
-  };
-  registerDelimiterForMark(editor, delimiterForMark);
-}
-
-export function registerDelimiterForMark(
-  editor: Editor,
-  delimiterForMark: DelimiterForMarkFunction,
-) {
-  editor.storage.autoDelimiter.delimiterForMark = delimiterForMark;
+  // const delimiterForMark: DelimiterForMarkFunction = (mark, isOpen) => {
+  //   const index = marks.findIndex((m) =>
+  //     isString(mark) ? m.type.name === mark : mark.eq(m),
+  //   );
+  //   if (index >= 0) return delimiters[index][isOpen ? 0 : 1];
+  //   return '"';
+  // };
+  // registerDelimiterForMark(editor, delimiterForMark);
 }
 
 export function registerAutodelimiters(
@@ -104,6 +101,21 @@ export function registerAutodelimiters(
   registerAutodelimitedMarks(editor, markDefs);
 }
 
+class AutoDelimitersState {
+  constructor(
+    readonly defs: AutoDelimitedMarkDefinition[],
+    readonly delimiterForMark: DelimiterForMarkFunction = defaultDelimiterForMark) {
+  }
+  apply(foo?: any): AutoDelimitersState {
+    if (!foo)
+      return this
+    // TODO:
+    return this
+  }
+}
+
+export const autoDelimitersPluginKey = new PluginKey('autoDelimiters')
+
 export interface AutoDelimitersOptions {
   HTMLAttributes: Record<string, any>;
 }
@@ -121,12 +133,6 @@ export const AutoDelimiter = Node.create<AutoDelimitersOptions>({
       HTMLAttributes: {
         class: AUTO_DELIMITER_CLASS,
       },
-    };
-  },
-
-  addStorage() {
-    return {
-      delimiterForMark: defaultDelimiterForMark,
     };
   },
 
@@ -187,6 +193,7 @@ export const AutoDelimiter = Node.create<AutoDelimitersOptions>({
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     autoDelimiters: {
+      registerAutoDelimiters: (delimiters: Record<string, string[]>) => ReturnType,
       fixAutoDelimiters: () => ReturnType;
     };
   }
@@ -213,7 +220,15 @@ export const AutoDelimitersExtension = Extension.create<AutoDelimitersOptions>({
     const extension = this;
     return [
       new Plugin({
-        key: new PluginKey('autoDelimiters'),
+        key: autoDelimitersPluginKey,
+        state: {
+          init: (config: EditorStateConfig, instance: EditorState): AutoDelimitersState => {
+            return new AutoDelimitersState()
+          },
+          apply: (tr: Transaction, adState: AutoDelimitersState, oldState: EditorState, newState: EditorState): AutoDelimitersState => {
+            return adState.apply(tr.getMeta(AUTO_DELIMITER_REGISTER))
+          }
+        },
         appendTransaction(transactions, oldState, newState) {
           // search for the widest range containing all the changes
           const adm: Mark[] = extension.storage.autodelimitedMarks || [];
@@ -264,6 +279,12 @@ export const AutoDelimitersExtension = Extension.create<AutoDelimitersOptions>({
 
   addCommands() {
     return {
+      registerAutoDelimiters: (delimiters: Record<string, string[]>) => ({ dispatch, state, tr }) => {
+        if (dispatch) {
+          dispatch(tr.setMeta(AUTO_DELIMITER_REGISTER, delimiters))
+        }
+        return true
+      },
       fixAutoDelimiters:
         (fixFrom?: number, fixTo?: number) =>
           ({ dispatch, state, tr }) => {
