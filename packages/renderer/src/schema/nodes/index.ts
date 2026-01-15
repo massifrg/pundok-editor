@@ -24,12 +24,9 @@ export { Caption, type CaptionOptions } from './Caption';
 export { TableHead, type TableHeadOptions } from './TableHead';
 export { TableBody, type TableBodyOptions } from './TableBody';
 export { TableFoot, type TableFootOptions } from './TableFoot';
-export { TableRow, type TableRowOptions } from '@tiptap/extension-table-row';
-export {
-  TableHeader,
-  type TableHeaderOptions,
-} from '@tiptap/extension-table-header';
-export { TableCell, type TableCellOptions } from '@tiptap/extension-table-cell';
+export { TableRow, type TableRowOptions } from './TableRow';
+export { TableHeader, type TableHeaderOptions } from './TableHeader';
+export { TableCell, type TableCellOptions } from './TableCell';
 export { Break, type BreakOptions } from './Break';
 export { ListItem } from './ListItem';
 export type { ListItemOptions } from '@tiptap/extension-list-item';

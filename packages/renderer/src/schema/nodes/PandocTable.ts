@@ -680,7 +680,6 @@ export const PandocTable = Node.create<PandocTableOptions>({
             if (dispatch) {
               headRows++;
               tr.setNodeMarkup(pos, null, { ...attrs, headRows });
-              // const { cell, header_cell } = tableNodeTypes(state.schema);
               fixTableSectionCells(state.schema, tr, pos, headRows, rowHeadColumns);
               dispatch(tr);
             }
@@ -1189,7 +1188,9 @@ function fixTableSectionCells(
   headRows: number = 0,
   rowHeadColumns: number = 0,
 ): void {
-  const { cell, header_cell } = tableNodeTypes(schema);
+  const tableTypes = tableNodeTypes(schema);
+  const cell = tableTypes[TABLE_ROLE_CELL]
+  const header_cell = tableTypes[TABLE_ROLE_HEADER_CELL]
   if (!cell || !header_cell) return;
   const sectionStart = sectionPos + 1
   const $pos = tr.doc.resolve(sectionStart)
@@ -1327,7 +1328,9 @@ function fixPandocTablesCommand(
   view?: EditorView,
   all_tables?: boolean,
 ): boolean {
-  const { cell, header_cell } = tableNodeTypes(state.schema);
+  const tableTypes = tableNodeTypes(state.schema);
+  const cell = tableTypes[TABLE_ROLE_CELL]
+  const header_cell = tableTypes[TABLE_ROLE_HEADER_CELL]
   if (!cell || !header_cell) return false;
   const { from, to } = state.selection;
   if (dispatch) {
