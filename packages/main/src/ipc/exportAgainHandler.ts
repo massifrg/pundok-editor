@@ -2,7 +2,7 @@ import { IpcHub } from "./ipcHub";
 import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
 import { getExportJobWithHash } from "./documentHash";
-import { EditorKeyType, PundokEditorProject, StoredDoc } from "src/common";
+import { EditorKeyType, PundokEditorProject, StoredDoc } from "../common";
 
 export const exportAgainHandler =
   (hub: IpcHub) =>
