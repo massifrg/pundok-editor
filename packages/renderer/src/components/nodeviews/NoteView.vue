@@ -30,7 +30,7 @@
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';
 import { ResolvedPos } from '@tiptap/pm/model';
-import { CachedNote } from '../../schema/nodes/Note';
+import { CachedNote, notesPluginKey } from '../../schema';
 import { isArray } from 'lodash';
 import { romanize } from 'romanize-deromanize'
 import {
@@ -78,9 +78,13 @@ export default {
     ...mapState(useActions, ['lastViewAction']),
     isInSelection() {
       const { from, to } = this.editor.state.selection
-      const start = this.getPos() + 1
-      const end = start + this.node.content.size
-      return (from >= start && from <= end) || (to >= start && to <= end)
+      const pos = this.getPos()
+      if (pos) {
+        const start = pos + 1
+        const end = start + this.node.content.size
+        return (from >= start && from <= end) || (to >= start && to <= end)
+      }
+      return false
     },
     isSelected() {
       const selection = this.editor.state.selection
@@ -172,7 +176,8 @@ export default {
     },
     firstTextResolvedPos(): ResolvedPos | undefined {
       const doc = this.editor?.state?.doc
-      return doc ? doc.resolve(this.getPos() + 1 + this.findFirstTextOffset()) : undefined
+      const pos = this.getPos()
+      return doc && pos ? doc.resolve(pos + 1 + this.findFirstTextOffset()) : undefined
     },
     toggleShowMode(isUserWill: boolean = true) {
       this.isOpen = !this.isOpen
@@ -194,10 +199,10 @@ export default {
       if (isUserWill) this.wasOpenBeforeSelection = this.isOpen
     },
     updateNoteNumber() {
-      const storage = this.extension.storage
-      if (storage) {
+      const notes = notesPluginKey.getState(this.editor.state)?.notes
+      if (notes) {
         const pos = this.getPos()
-        const note = (storage.notes as CachedNote[]).find(n => n.pos === pos)
+        const note = (notes as CachedNote[]).find(n => n.pos === pos)
         if (note) this.noteNumber = note.noteNumber
       }
     },

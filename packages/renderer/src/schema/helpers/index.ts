@@ -16,6 +16,8 @@ export * from './markHelpers';
 export * from './mathType';
 export * from './metadata';
 export * from './nodeTemplates';
+export * from './notes';
+export * from './notesPlugin';
 export * from './pandocTable';
 export * from './PandocVsProsemirror';
 export * from './query';
