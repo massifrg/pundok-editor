@@ -16,6 +16,23 @@ class NotesState {
     if (tr.getMeta(META_REFRESH_NOTES) as boolean) {
       notes = refreshCachedNotes(newState);
     } else if (tr.docChanged) {
+      // const mapping = tr.mapping
+      // const noteCounter: number[] = []
+      // console.log(this.notes)
+      // notes = this.notes.reduce((acc, note) => {
+      //   const { noteTypeIndex, pos } = note
+      //   const { deleted, pos: newPos } = mapping.mapResult(pos)
+      //   console.log(`deleted: ${deleted}, pos: ${pos} => ${newPos}`)
+      //   if (!deleted) {
+      //     const noteNumber = (noteCounter[noteTypeIndex] || 0) + 1
+      //     noteCounter[noteTypeIndex] = noteNumber
+      //     const newNote = { ...note, pos: newPos, noteNumber }
+      //     return { ...acc, newNote }
+      //   }
+      //   return acc
+      // }, [] as CachedNote[])
+
+      // TODO: see if we can get rid of deltaNodes and use mapResult instead (see above)
       if (
         deltaNodes(
           tr,
@@ -69,10 +86,12 @@ export const notesPlugin = new Plugin({
     init: (config, state) => {
       return new NotesState(DecorationSet.empty, [])
     },
-    apply: (tr, notesState, oldState, newState) => {
+    apply: (tr, notesState: NotesState, oldState, newState): NotesState => {
       const newNotesState = notesState.apply(tr, newState, oldState)
-      if (newNotesState !== notesState)
+      if (newNotesState !== notesState) {
+        console.log('UPDATING NOTES...')
         useNotes().nextTick();
+      }
       return newNotesState
     },
   },
