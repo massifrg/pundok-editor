@@ -1,20 +1,10 @@
 import { Fragment } from '@tiptap/pm/model';
-import { EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
-import { DecorationSet } from '@tiptap/pm/view';
-import { mergeAttributes, Node, NodeWithPos } from '@tiptap/core';
+import { mergeAttributes, Node } from '@tiptap/core';
 import { Editor, VueNodeViewRenderer } from '@tiptap/vue-3';
 import { DEFAULT_NOTE_TYPE, NODE_NAME_PARAGRAPH, SK } from '../../common';
-import { NoteView, getEditorDocState } from '../index';
-import { deltaNodes } from '../helpers/whatChanged';
-import { useNotes } from '../../stores';
 import { Component } from 'vue';
-
-const META_REFRESH_NOTES = 'refresh-notes';
-
-export interface CachedNote extends NodeWithPos {
-  noteTypeIndex: number;
-  noteNumber: number;
-}
+import { getEditorDocState, META_REFRESH_NOTES, notesPlugin } from '../helpers';
+import { NoteView } from '../../components';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -58,67 +48,8 @@ export const Note = Node.create<NoteOptions>({
     return DEFAULT_NOTE_OPTIONS;
   },
 
-  addStorage() {
-    return {
-      notes: [] as CachedNote[],
-    };
-  },
-
   addProseMirrorPlugins() {
-    const { options, storage } = this;
-    const refreshCachedNotes = (newState: EditorState) => {
-      const notes: CachedNote[] = [];
-      const noteName = this.name;
-      const counters: Record<string, number> = {};
-      const noteTypeIndex = Object.fromEntries(
-        options.noteTypes.map((t, i) => [t, i]),
-      );
-      newState.doc.descendants((node, pos) => {
-        if (node.type.name === noteName) {
-          const noteType = node.attrs.noteType;
-          const counter = (counters[noteType] || 0) + 1;
-          notes.push({
-            node,
-            pos,
-            noteNumber: counter,
-            noteTypeIndex: noteTypeIndex[noteType] || -1,
-          });
-          counters[noteType] = counter;
-        }
-      });
-      storage.notes = notes;
-      useNotes().nextTick();
-    };
-    return [
-      new Plugin({
-        key: new PluginKey('notes'),
-        props: {
-          decorations(state) {
-            return this.getState(state);
-          },
-        },
-        state: {
-          init: (config, state) => {
-            return DecorationSet.empty;
-          },
-          apply: (tr, decorationSet, oldState, newState) => {
-            const refresh: boolean = tr.getMeta(META_REFRESH_NOTES);
-            if (refresh) refreshCachedNotes(newState);
-            if (tr.docChanged) {
-              if (
-                deltaNodes(
-                  tr,
-                  oldState.doc,
-                  (n) => n.type.name === this.name,
-                ) !== 0
-              ) {
-                refreshCachedNotes(newState);
-              }
-            }
-          },
-        },
-      }),
-    ];
+    return [notesPlugin];
   },
 
   addAttributes() {

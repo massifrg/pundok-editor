@@ -93,7 +93,6 @@ import {
   type DocStateUpdate,
   getDocState,
   getIndexingState,
-  registerAutodelimiters,
 } from '../schema';
 import type { SelectedNodeOrMark } from '../schema/helpers/selection';
 import {
@@ -715,7 +714,7 @@ export default {
           .setPandocContent(content, createOptions)
           .selectAll()
           .fixPandocTables(true)
-          .fixAutoDelimiters()
+          .fixAllAutoDelimiters()
           .fixCites()
           .fixIndexRefs()
           .scrollIntoViewAtTop()
@@ -1052,12 +1051,8 @@ export default {
           if (configuration) {
             const prevConfiguration = this.configuration;
             this.configuration = configuration;
-            if (configuration.autoDelimiters && this.editor) {
-              registerAutodelimiters(
-                this.editor as Editor,
-                configuration.autoDelimiters,
-              );
-              // console.log(this.editor.storage.autoDelimiters)
+            if (configuration.autoDelimiters) {
+              this.editor?.commands.registerAutoDelimiters(configuration.autoDelimiters)
             }
             if (configuration.indices) {
               const indexingState = getIndexingState(

@@ -7,9 +7,13 @@ import {
   NODE_NAME_CAPTION,
   NODE_NAME_PANDOC_TABLE,
   NODE_NAME_PARAGRAPH,
+  NODE_NAME_TABLE_CELL,
+  NODE_NAME_TABLE_HEADER,
   TABLE_ROLE_BODY,
+  TABLE_ROLE_CELL,
   TABLE_ROLE_FOOT,
   TABLE_ROLE_HEAD,
+  TABLE_ROLE_HEADER_CELL,
   TABLE_ROLE_TABLE
 } from '../../common';
 import { textNode } from './nodeTemplates';
@@ -130,7 +134,7 @@ export function createPandocTableSection(
   const rows: PmNode[] = [];
   const isBody = sectionRole === 'body';
   const rhcols = rowHeadColumns || 0;
-  const containerType = schema.nodes[cellContainer || 'paragraph'];
+  const containerType = schema.nodes[cellContainer || NODE_NAME_PARAGRAPH];
   const createCellContent = (t: string) =>
     containerType.create(null, textNode(schema, t));
   for (let rindex = 0; rindex < rowsCount; rindex += 1) {
@@ -142,7 +146,9 @@ export function createPandocTableSection(
         : isString(cellContent)
           ? createCellContent(cellContent)
           : cellContent;
-      const cellType = isHeader ? types.header_cell : types.cell;
+      const cellType = isHeader ? types[TABLE_ROLE_CELL] : types[TABLE_ROLE_HEADER_CELL];
+      console.log(`CELL TYPE:`)
+      console.log(cellType)
       const cell = createCell(cellType, content);
       if (cell) cells.push(cell);
     }

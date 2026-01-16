@@ -105,7 +105,7 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
 
   addStorage() {
     return {
-      styleAttrForCustomStyle: undefined as Record<string, string> | undefined,
+      styleAttrForCustomStyle: {} as Record<string, string>,
     };
   },
 

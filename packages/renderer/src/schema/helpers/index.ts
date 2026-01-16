@@ -1,5 +1,7 @@
 export * from './alignments';
 export * from './attributes';
+export * from './autoDelimiters';
+export * from './autoDelimitersPlugin';
 export * from './citation';
 export * from './customAttribute';
 export * from './customClass';
@@ -16,6 +18,8 @@ export * from './markHelpers';
 export * from './mathType';
 export * from './metadata';
 export * from './nodeTemplates';
+export * from './notes';
+export * from './notesPlugin';
 export * from './pandocTable';
 export * from './PandocVsProsemirror';
 export * from './query';
