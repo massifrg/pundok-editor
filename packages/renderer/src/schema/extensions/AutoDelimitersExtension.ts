@@ -36,12 +36,6 @@ export const AutoDelimiter = Node.create<AutoDelimitersOptions>({
     };
   },
 
-  addStorage() {
-    return {
-      delimiterForMark: defaultDelimiterForMark,
-    };
-  },
-
   addAttributes() {
     return {
       isOpen: {
@@ -117,12 +111,6 @@ export const AutoDelimitersExtension = Extension.create<AutoDelimitersOptions>({
       HTMLAttributes: {
         class: AUTO_DELIMITER_CLASS,
       },
-    };
-  },
-
-  addStorage() {
-    return {
-      autodelimitedMarks: [] as Mark[],
     };
   },
 
