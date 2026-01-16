@@ -694,7 +694,7 @@ export default {
           .setPandocContent(content, createOptions)
           .selectAll()
           .fixPandocTables(true)
-          .fixAutoDelimiters()
+          .fixAllAutoDelimiters()
           .fixCites()
           .fixIndexRefs()
           .scrollIntoViewAtTop()
@@ -1016,7 +1016,7 @@ export default {
             const prevConfiguration = this.configuration;
             this.configuration = configuration;
             if (configuration.autoDelimiters) {
-              this.editor?.commands.registerAutodelimiters(configuration.autoDelimiters);
+              this.editor?.commands.registerAutoDelimiters(configuration.autoDelimiters)
             }
             if (configuration.indices) {
               const indexingState = getIndexingState(

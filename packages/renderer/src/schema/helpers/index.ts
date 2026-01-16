@@ -1,5 +1,7 @@
 export * from './alignments';
 export * from './attributes';
+export * from './autoDelimiters';
+export * from './autoDelimitersPlugin';
 export * from './citation';
 export * from './customAttribute';
 export * from './customClass';
