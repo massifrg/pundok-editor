@@ -18,6 +18,8 @@ import {
   customStylesFromDef,
 } from './customStyles';
 import { PundokEditorConfigInit } from './editorConfigInit';
+import { DEFAULT_COPY_FORMAT, DEFAULT_FORMAT, DEFAULT_MAIN_FORMATS } from '../pandocFormat';
+import { CustomFormat } from './customFormat';
 
 export class PundokEditorConfig implements PundokEditorConfigInit {
   /** The name of this configuration of the editor. */
@@ -28,6 +30,14 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
   description: string;
   /** Options to configure [TipTap](https://tiptap.dev) components of the editor. */
   tiptap: { options?: Record<string, any> | undefined };
+  /** the name of a pandoc format or a CustomFormat */
+  defaultFormat?: string;
+  /** the name of the format (pandoc or custom) used with "Save a copy" */
+  copyFormat?: string;
+  /** the names of the formats that are more visible in the GUI with this configuration */
+  mainFormats?: string[];
+  /** definitions of custom formats */
+  customFormats?: CustomFormat[];
   /** A JSON-stringified document used as a template for new documents. */
   documentTemplate?: string | undefined;
   /** Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote)
@@ -74,6 +84,10 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
     this.description = init.description || '';
     // this.inherits = init.inherits;
     this.tiptap = init.tiptap || { options: {} };
+    this.defaultFormat = init.defaultFormat || DEFAULT_FORMAT;
+    this.copyFormat = init.copyFormat || DEFAULT_COPY_FORMAT;
+    this.customFormats = init.customFormats || [];
+    this.mainFormats = init.mainFormats || DEFAULT_MAIN_FORMATS;
     this.documentTemplate = init.documentTemplate;
     this.autoDelimiters = init.autoDelimiters;
     this.customStyles = init.customStyles;
@@ -304,7 +318,14 @@ export function enrichConfiguration(
           base.tiptap?.options || {},
         ),
       },
-      documentTemplate: base.documentTemplate || enriching.documentTemplate,
+      defaultFormat: enriching.defaultFormat || base.defaultFormat,
+      copyFormat: enriching.copyFormat || base.copyFormat,
+      mainFormats: enriching.mainFormats || base.mainFormats,
+      customFormats: mergeNamedObjects(
+        enriching.customFormats,
+        base.customFormats,
+      ) as CustomFormat[],
+      documentTemplate: enriching.documentTemplate || base.documentTemplate,
       autoDelimiters: { ...base.autoDelimiters, ...enriching.autoDelimiters },
       customStyles: mergeNamedObjects(
         enriching.customStyles,

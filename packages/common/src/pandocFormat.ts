@@ -4,6 +4,10 @@ import { isString, uniq } from 'lodash-es';
 import * as browserify from 'path-browserify';
 import { commonIcons } from './icons';
 
+export const DEFAULT_FORMAT = 'json'
+export const DEFAULT_COPY_FORMAT = 'markdown'
+export const DEFAULT_MAIN_FORMATS = ['json', 'markdown', 'docx']
+
 export interface PandocFormatDescription {
   name?: string,
   see?: string,

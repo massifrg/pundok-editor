@@ -199,7 +199,7 @@ import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
 import { EditorState } from '@tiptap/pm/state';
 import { CreateDocumentOptions } from '../schema/helpers/createDocument';
 import { useQuasar } from 'quasar';
-import { Component, defineAsyncComponent } from 'vue';
+import { Component, defineAsyncComponent, toRaw } from 'vue';
 import { EditorGUIPropsClass } from './EditorGUIProps';
 import { PendingOperationExtraValue } from './helpers/pending';
 import { mergeIndices } from '../schema/helpers/indices';
@@ -668,6 +668,7 @@ export default {
         const doc: ReadDoc = {
           content: content || EMPTY_DOCUMENT,
           configurationName,
+          format: 'json',
           // editorKey: this.editorKey(),
           id: 'unknown',
         };
@@ -941,6 +942,7 @@ export default {
               id: docState?.documentName,
               path: path,
               content: jsonDoc,
+              format: 'json',
               configurationName: docState?.configuration?.name,
               resourcePath: docState?.resourcePath,
             },
@@ -1085,9 +1087,7 @@ export default {
         if (backend) {
           const sdoc: Partial<StoredDoc> = storedDoc || {};
           // de-proxify converter
-          const outputConverter = JSON.parse(
-            JSON.stringify(converter),
-          ) as OutputConverter;
+          const outputConverter = toRaw(converter) as OutputConverter;
           const docState = this.docState();
           if (docState) {
             const { resourcePath, project, configuration } = docState;

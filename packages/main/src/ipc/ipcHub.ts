@@ -191,6 +191,7 @@ export class IpcHub {
     if (!isReadableFile(filename))
       return Promise.reject(`can't read "${filename}"`);
 
+    let format: string | undefined
     let result: ExternalProgramResult | undefined = undefined;
     let cmdLineFeedback: ((msg: string) => void) | undefined = undefined;
     const { dir, name } = parsePath(filename);
@@ -240,10 +241,12 @@ export class IpcHub {
           case 'native':
           case 'csv':
           case 'xml':
-            result = await importJsonWithPandoc(filename, extension, {});
+            format = extension
+            result = await importJsonWithPandoc(filename, format, {});
             break;
           case 'md':
-            result = await importJsonWithPandoc(filename, 'markdown', {});
+            format = 'markdown'
+            result = await importJsonWithPandoc(filename, format, {});
             break;
           default:
             result = {
@@ -269,6 +272,7 @@ export class IpcHub {
           id: name,
           path: filename,
           content: output,
+          format,
           configurationName,
           resourcePath,
         };
@@ -348,6 +352,7 @@ export class IpcHub {
         path: docFilepath,
         content,
         id,
+        format: 'json',
         configurationName: doc.configurationName,
         project: doc.project,
       },
@@ -529,7 +534,7 @@ export class IpcHub {
       return Promise.resolve({
         error,
         message: 'export failed',
-        doc: { content, configurationName },
+        doc: { content, format: converter?.format, configurationName },
         resultFile,
         cwd,
       });

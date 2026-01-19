@@ -14,7 +14,10 @@ const CONFIG_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
   'version',
   'description',
   'inherits',
-  'tiptap',
+  'format',
+  'copyFormat',
+  'mainFormats',
+  'customFormats',
   'customCss',
   'autoDelimiters',
   'noteStyles',
@@ -30,6 +33,7 @@ const CONFIG_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
   'rawInlines',
   'rawBlocks',
   'automations',
+  'tiptap',
 ].map((k, i) => [k, i + 1]))
 
 /**
