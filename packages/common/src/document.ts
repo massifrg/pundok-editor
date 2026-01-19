@@ -52,6 +52,8 @@ export interface DocumentContext extends CompatibleDocumentContext {
 export interface ReadDoc extends DocumentContext {
   /** The file contents. */
   content: string;
+  /** The original format of the file. */
+  format?: string;
 }
 
 /**
