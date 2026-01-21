@@ -581,24 +581,15 @@ export default {
   },
 
   methods: {
-    updateEditorDocState(update: Partial<DocStateUpdate>) {
-      this.editor?.commands.updateDocState(update);
-    },
     editorState(): EditorState | undefined {
       if (this.editor) return this.editor.view.state as EditorState;
     },
     docState(): DocState | undefined {
       return getDocState(this.editorState());
     },
-    // setDocStateCallback() {
-    //   if (this.editor)
-    //     this.updateEditorDocState({
-    //       callback: (docState: DocState) => {
-    //         this.savedChanges = !docState.nativeUnsavedChanges;
-    //         this.exportedChanges = !docState.unsavedChanges;
-    //       },
-    //     });
-    // },
+    updateEditorDocState(update: Partial<DocStateUpdate>) {
+      this.editor?.commands.updateDocState(update);
+    },
     editorKey(): EditorKeyType | undefined {
       return this.docState()?.editorKey;
     },
@@ -615,12 +606,8 @@ export default {
         // content: '',
         onUpdate: () => {
           const editor = this.editor as Editor | undefined;
-          if (editor) {
-            // HTML
+          if (editor)
             this.$emit('update:modelValue', editor.getHTML());
-            // JSON
-            // this.$emit('update:modelValue', this.editor.getJSON())
-          }
         },
       });
       if (editor) {
@@ -629,8 +616,6 @@ export default {
         if (!this.configuration)
           await this.setConfiguration(getHardcodedEditorConfig());
         if (process.env.MODE !== 'production') applyDevTools(editor.view);
-        // console.log(this.docState())
-        // this.setDocStateCallback();
         this.updateEditorDocState({
           nativeUnsavedChanges: false,
           unsavedChanges: false,
@@ -678,7 +663,7 @@ export default {
         } catch (err) {
           console.log(err);
           this.editor?.destroy();
-          this.newEditor();
+          await this.newEditor();
           this.setMainEditorKey();
           this.setContent(content || EMPTY_DOCUMENT, isNew);
           this.setDocumentAsNativelySaved();
@@ -785,7 +770,7 @@ export default {
 
         // ex TODO: remove history
         this.editor?.destroy();
-        this.newEditor();
+        await this.newEditor();
         const editorKey = this.editorKey();
         doc.editorKey = editorKey
         this.setMainEditorKey();
@@ -1216,16 +1201,6 @@ export default {
       this.inputTextDialogStartValue = DEFAULT_INPUT_TEXT_DIALOG_START_VALUE;
       this.inputTextDialogCallback = undefined;
     },
-    // async loadProjectStructure() {
-    //   const docState = this.docState()
-    //   if (docState?.project) {
-    //     const tree = await this.backend?.getInclusionTree(docState.project)
-    //     if (tree) {
-    //       console.log(tree ? tree : 'NO INCLUSION TREE')
-    //       this.visibleProjectStructureDialog = false
-    //     }
-    //   }
-    // },
     closeProjectStructureDialog() {
       this.visibleProjectStructureDialog = false;
     },
