@@ -2,12 +2,12 @@ import { IpcMainInvokeEvent } from "electron";
 import { homedir } from "os";
 import {
   dirname,
-  joinPath,
+  join as joinPath,
   normalize,
   resolve,
   sep as separator
 } from "path";
-import { Dirent, existsSync, statSync } from "fs";
+import { Dirent, existsSync, readFileSync, statSync } from "fs";
 import { readdir, readFile } from "fs/promises";
 import { pathToFileURL } from 'url'
 import { IpcHub } from "./ipcHub";
@@ -167,6 +167,15 @@ async function getUserPlacesWindows(): Promise<Place[]> {
     //   "Recent",
     //   "AutomaticDestinations"
     // );
+
+    // const { automatic_destination_parser } = require("@recent-cli/jumplist-parser-lite");
+    // const jumpListDir = joinPath(process.env.APPDATA!, "Microsoft", "Windows", "Recent", "AutomaticDestinations");
+    // // Pick one Jump List file (example: for Explorer)
+    // const filePath = joinPath(jumpListDir, "f01b4d95cf55d32a.automaticDestinations-ms");
+    // const bytes = readFileSync(filePath);
+    // const paths = automatic_destination_parser(bytes);
+    // console.log(paths);
+
     // if (existsSync(quickAccessDir)) {
     //   // NOTE: These are binary jump list files. You’ll need a parser like `win-jump-list`
     //   // npm install win-jump-list
