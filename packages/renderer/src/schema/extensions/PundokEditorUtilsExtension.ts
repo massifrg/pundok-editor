@@ -39,8 +39,14 @@ import { nudgeNumericValue, nudgeNumericValueAtIndex } from '../helpers/nudgeNum
 
 let keyCounter = 1;
 
-export function newEditorKey(): EditorKeyType {
+function newEditorKey(): EditorKeyType {
   return keyCounter++;
+}
+
+function areSameDoc(doc1?: ProsemirrorNode, doc2?: ProsemirrorNode) {
+  if (!doc1 || !doc2)
+    return false
+  return doc1.eq(doc2)
 }
 
 declare module '@tiptap/core' {
@@ -95,11 +101,15 @@ export const PundokEditorUtilsExtension =
               const alreadyFullyUnsaved =
                 updatedDocState.nativeUnsavedChanges &&
                 updatedDocState.unsavedChanges;
-              if (tr.docChanged && !alreadyFullyUnsaved) {
-                updatedDocState = updateDocState(updatedDocState, {
-                  nativeUnsavedChanges: true,
-                  unsavedChanges: true,
-                });
+              if (tr.docChanged) {
+                // check if the document is equal to the saved one
+                const sameDoc = areSameDoc(updatedDocState.savedDoc, newState.doc)
+                if (!alreadyFullyUnsaved || sameDoc) {
+                  updatedDocState = updateDocState(updatedDocState, {
+                    nativeUnsavedChanges: !sameDoc,
+                    unsavedChanges: !sameDoc,
+                  });
+                }
               }
               if (updatedDocState !== currentDocState) {
                 setActionCommand(

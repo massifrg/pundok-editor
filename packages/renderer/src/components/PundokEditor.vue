@@ -1233,7 +1233,10 @@ export default {
       this.updateEditorDocState({
         nativeUnsavedChanges: false,
         unsavedChanges: false,
+        savedDoc: this.editor?.view.state.doc
       });
+      this.savedChanges = true
+      this.exportedChanges = true
     },
     onClose(event: Event) {
       if (this.askToSaveChanges) {

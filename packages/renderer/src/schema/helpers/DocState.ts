@@ -1,7 +1,7 @@
+import { Node as PmNode } from '@tiptap/pm/model'
 import { EditorState } from "@tiptap/pm/state";
 import {
   EditorKeyType,
-  PANDOC_TYPES_VERSION,
   PundokEditorConfig,
   PundokEditorProject,
   SaveResponse
@@ -39,6 +39,8 @@ export interface DocState {
   readonly unsavedChanges?: boolean;
   /** callback to get notified when the doc state changes. */
   // readonly callback?: (updated: DocState) => void;
+  /** the document that has been saved */
+  readonly savedDoc?: PmNode;
 }
 
 /** An interface to update the {@link DocState}. */
@@ -54,7 +56,8 @@ export interface DocStateUpdate {
   lastExportResponse: SaveResponse | null;
   nativeUnsavedChanges: boolean;
   unsavedChanges: boolean;
-  callback: ((updated: DocState) => void) | null;
+  savedDoc: PmNode;
+  // callback: ((updated: DocState) => void) | null;
 }
 
 export const META_UPDATE_DOC_STATE = 'update-doc-state';
@@ -88,15 +91,15 @@ export function getEditorProject(
   return getDocState(state)?.project;
 }
 
-export function getDocStateIfEditorHasKey(
-  editor?: Editor,
-  editorKey?: EditorKeyType,
-): DocState | undefined {
-  const docState = editor?.state
-    ? pundokEditorUtilsPluginKey.getState(editor.state)
-    : undefined;
-  return docState && docState.editorKey === editorKey ? docState : undefined;
-}
+// export function getDocStateIfEditorHasKey(
+//   editor?: Editor,
+//   editorKey?: EditorKeyType,
+// ): DocState | undefined {
+//   const docState = editor?.state
+//     ? pundokEditorUtilsPluginKey.getState(editor.state)
+//     : undefined;
+//   return docState && docState.editorKey === editorKey ? docState : undefined;
+// }
 
 export function editorKeyFromState(
   state?: EditorState,
