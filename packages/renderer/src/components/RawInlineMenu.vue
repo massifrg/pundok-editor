@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts">
-import { isArray, isString, uniq } from 'lodash';
+import { isArray, isString, uniq } from 'lodash-es';
 import { DEFAULT_RAW_INLINES, InsertableRaw } from '../common';
 import { getEditorConfiguration } from '../schema';
 

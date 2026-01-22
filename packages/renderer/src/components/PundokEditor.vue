@@ -82,19 +82,23 @@
 </template>
 
 <script lang="ts">
-import { mapState } from 'pinia';
-import { Node as ProsemirrorNode } from '@tiptap/pm/model';
-import { applyDevTools } from 'prosemirror-dev-toolkit';
+import { Component, defineAsyncComponent, toRaw } from 'vue';
 import { Editor, EditorContent, NodeWithPos } from '@tiptap/vue-3';
+import { Node as ProsemirrorNode } from '@tiptap/pm/model';
+import { EditorState } from '@tiptap/pm/state';
+import { applyDevTools } from 'prosemirror-dev-toolkit';
+import { isString } from 'lodash-es';
+import { mapState } from 'pinia';
 import {
-  Pandoc,
   editorKeyFromState,
   type DocState,
   type DocStateUpdate,
   getDocState,
   getIndexingState,
+  type SelectedNodeOrMark,
 } from '../schema';
-import type { SelectedNodeOrMark } from '../schema/helpers/selection';
+// the next one is not imported from '../schema' to avoid a circular ref
+import { Pandoc } from '../schema/nodes/Pandoc'
 import {
   IPC_VALUE_WINDOW_TITLE,
   type FeedbackMessage,
@@ -136,23 +140,19 @@ import {
   DocumentSaveActionProps,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
-import {
-  AttributesEditor,
-  ConfigurationsDialog,
-  ContextMenu,
-  CustomStylesPanel,
-  ExportDialog,
-  ImportDialog,
-  InputTextDialog,
-  NewProjectDialog,
-  NodeOrMarkContextMenu,
-  PendingOperation,
-  PendingOperationDialog,
-  // ProjectStructureDialog,
-  SearchAndReplace,
-  ShowMessageDialog,
-} from '.';
+import AttributesEditor from './AttributesEditor.vue'
+import ConfigurationsDialog from './ConfigurationsDialog.vue'
+import ContextMenu from './ContextMenu.vue'
+import CustomStylesPanel from './CustomStylesPanel.vue'
+import ExportDialog from './ExportDialog.vue'
+import ImportDialog from './ImportDialog.vue'
+import InputTextDialog from './InputTextDialog.vue'
 import Menubar from './Menubar.vue';
+import NewProjectDialog from './NewProjectDialog.vue'
+import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue'
+import PendingOperationDialog from './PendingOperationDialog.vue'
+import SearchAndReplace from './SearchAndReplace.vue'
+import ShowMessageDialog from './ShowMessageDialog.vue'
 import OpenDocumentDialog, { DocumentDialogMode } from './OpenDocumentDialog.vue';
 import {
   ActionForNodeOrMark,
@@ -194,16 +194,10 @@ import {
   ACTION_UPDATE_DOC_STATE,
   UpdateDocStateActionProps,
 } from '../actions';
-import { isString } from 'lodash';
-import { nodeToPandocJsonString } from '../schema/helpers/PandocJsonExporter';
-import { EditorState } from '@tiptap/pm/state';
-import { CreateDocumentOptions } from '../schema/helpers/createDocument';
 import { useQuasar } from 'quasar';
-import { Component, defineAsyncComponent, toRaw } from 'vue';
 import { EditorGUIPropsClass } from './EditorGUIProps';
-import { PendingOperationExtraValue } from './helpers/pending';
-import { mergeIndices } from '../schema/helpers/indices';
-import { getDocAsJsonString } from '../schema/helpers';
+import { PendingOperation, PendingOperationExtraValue } from './helpers/pending';
+import { CreateDocumentOptions, getDocAsJsonString } from '../schema';
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';

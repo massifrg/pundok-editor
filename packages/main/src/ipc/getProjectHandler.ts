@@ -4,8 +4,8 @@ import { existsSync } from 'fs';
 import { IpcHub } from './ipcHub';
 import { computeProjectConfiguration, DEFAULT_PROJECT_FILENAME, GetProjectOptions, PundokEditorConfig, PundokEditorProject } from '../common';
 import { format as formatPath, parse as parsePath } from 'path';
-import { getConfigurationInit } from '.';
 import { isReadableDir } from '../resourcesManager';
+import { getConfigurationInit } from './configurationHandlers';
 
 export const getProjectHandler =
   (hub: IpcHub) =>

@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core';
-import { LINE_BLOCK_CLASS } from '../helpers/lineBlock';
+import { LINE_BLOCK_CLASS } from '../helpers';
 import { NODE_NAME_LINE_BLOCK } from '../../common';
 
 export interface LineBlockOptions {

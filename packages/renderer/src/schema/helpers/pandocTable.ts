@@ -2,7 +2,7 @@ import { NodeWithPos } from '@tiptap/vue-3';
 import { Fragment, Node as PmNode, NodeType, Schema } from '@tiptap/pm/model';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
 import { fillPmColSpecs } from './colSpec';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 import {
   NODE_NAME_CAPTION,
   NODE_NAME_PANDOC_TABLE,
@@ -19,7 +19,7 @@ import {
 import { textNode } from './nodeTemplates';
 
 // from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-table/src/utilities/getTableNodeTypes.ts
-export function getTableNodeTypes(schema: Schema): { [key: string]: NodeType } {
+function getTableNodeTypes(schema: Schema): { [key: string]: NodeType } {
   if (schema.cached.tableNodeTypes) {
     return schema.cached.tableNodeTypes;
   }
@@ -120,7 +120,7 @@ export function createPandocTable(
   return pandocTable;
 }
 
-export function createPandocTableSection(
+function createPandocTableSection(
   schema: Schema,
   sectionRole: 'body' | 'head' | 'foot',
   rowsCount: number,

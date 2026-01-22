@@ -1,5 +1,7 @@
+import { Editor } from "@tiptap/vue-3";
 import { Node as PmNode } from '@tiptap/pm/model'
 import { EditorState } from "@tiptap/pm/state";
+import { isAbsolute, parse as parsePath, relative as relativePath } from 'path-browserify'
 import {
   EditorKeyType,
   PundokEditorConfig,
@@ -7,8 +9,6 @@ import {
   SaveResponse
 } from "../../common";
 import { getIndexingState, pundokEditorUtilsPluginKey } from "../extensions";
-import { Editor } from "@tiptap/vue-3";
-import { isAbsolute, parse as parsePath, relative as relativePath } from 'path-browserify'
 import { nodeToPandocJsonString, PandocJsonExporterOptions } from "./PandocJsonExporter";
 import { mergeIndices } from "./indices";
 

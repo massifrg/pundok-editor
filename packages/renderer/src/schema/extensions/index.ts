@@ -1,5 +1,3 @@
-import { PluginKey } from '@tiptap/pm/state';
-
 export {
   CustomStyleExtension,
   type CustomStyleOptions,

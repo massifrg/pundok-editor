@@ -71,7 +71,7 @@ import {
 import { EditorView } from '@tiptap/pm/view';
 import { innerNodeDepth, pandocAlignmentToCellAlign } from '../helpers';
 import { Alignment } from '../../pandoc';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { updateTableAttrsPlugin } from '../helpers/updateTableAttrsPlugin';
 import {
   NODE_NAME_BREAK,

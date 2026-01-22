@@ -4,6 +4,7 @@ import {
 } from '@tiptap/extension-code-block-lowlight';
 
 // nodes
+export { Pandoc, type PandocOptions } from './Pandoc';
 export { Plain, type PlainOptions } from './Plain';
 export { Paragraph, type ParagraphOptions } from '@tiptap/extension-paragraph';
 export { Line, type LineOptions } from './Line';
@@ -48,6 +49,8 @@ export {
   INDEX_RANGE_NONE,
   INDEX_RANGE_START,
   INDEX_RANGE_STOP,
+  INDEX_RANGE_START_CLASS,
+  INDEX_RANGE_STOP_CLASS,
   IndexRef,
   type IndexRefOptions,
 } from './IndexRef';

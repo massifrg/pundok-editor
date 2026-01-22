@@ -1,5 +1,5 @@
 import { Mark } from "@tiptap/pm/model";
-import { EditorState, EditorStateConfig, Plugin, PluginKey, Transaction } from "@tiptap/pm/state";
+import { EditorState, Plugin, PluginKey } from "@tiptap/pm/state";
 import { NodeWithPos } from "@tiptap/vue-3";
 import { changedRanges } from "./whatChanged";
 import {
@@ -13,7 +13,7 @@ import { isString } from "lodash-es";
 
 export const REGISTER_AUTO_DELIMITER = 'register-auto-delimiter'
 
-export class AutoDelimitersState {
+class AutoDelimitersState {
   delimiterForMark: DelimiterForMarkFunction = defaultDelimiterForMark
 
   constructor(readonly marks: Mark[], delimiterForMark?: DelimiterForMarkFunction) {

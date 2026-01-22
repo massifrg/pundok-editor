@@ -1,7 +1,7 @@
 import { NodeWithPos } from '@tiptap/vue-3';
 import { Fragment, Mark, Node as PmNode, Slice } from '@tiptap/pm/model';
+import { Transaction } from '@tiptap/pm/state';
 import {
-  Mapping,
   ReplaceStep,
   ReplaceAroundStep,
   RemoveMarkStep,
@@ -11,7 +11,6 @@ import {
   AttrStep,
   DocAttrStep,
 } from '@tiptap/pm/transform';
-import { Transaction } from '@tiptap/pm/state';
 
 // export interface NodeWithRange {
 //   node: PmNode;
@@ -347,8 +346,7 @@ export function logDocChanges(changes: DocChange[]) {
       if (isContent) {
         const sign = deltaContent > 0 ? '+' : '';
         chunks.push(
-          `CONTENT [${from}, ${to}, ${sign}${deltaContent}${
-            isInsertion ? ', pure insertion' : ''
+          `CONTENT [${from}, ${to}, ${sign}${deltaContent}${isInsertion ? ', pure insertion' : ''
           }]`
         );
       } else if (isAttr) {

@@ -8,7 +8,7 @@ import {
   Complex,
 } from 'parsel-js';
 import { SelectedNodeOrMark } from './selection';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 import {
   NODE_NAME_BREAK,
   NODE_NAME_HEADING,

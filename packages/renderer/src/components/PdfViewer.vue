@@ -212,7 +212,7 @@ import {
   SynctexInfo,
   ViewerSetup
 } from '../common';
-import { debounce, isString, throttle } from 'lodash';
+import { debounce, isString, throttle } from 'lodash-es';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import PromptDialog from './helpers/PromptDialog.vue'
 import { toRaw } from 'vue';

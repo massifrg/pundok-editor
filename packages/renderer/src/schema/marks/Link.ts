@@ -1,8 +1,8 @@
+import { mergeAttributes } from '@tiptap/vue-3';
 import {
   Link as TiptapLink,
   type LinkOptions as TiptapLinkOptions,
 } from '@tiptap/extension-link';
-import { mergeAttributes } from '@tiptap/vue-3';
 import { MARK_LINK_CLASS, SK } from '../../common';
 import { getSpanAttrs } from '../helpers';
 

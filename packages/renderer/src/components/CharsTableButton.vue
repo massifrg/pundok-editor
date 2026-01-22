@@ -80,7 +80,7 @@ import { defineComponent, toRaw } from 'vue';
 import ToolbarButton from './ToolbarButton.vue';
 import { mapState } from 'pinia';
 import { useBackend } from '../stores';
-import { flatten, isEmpty, range } from 'lodash';
+import { flatten, isEmpty, range } from 'lodash-es';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 
 interface CharDesc {

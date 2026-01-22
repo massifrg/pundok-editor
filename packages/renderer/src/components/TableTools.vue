@@ -272,7 +272,7 @@ import { CellSelection, isInTable, TableMap } from '@massifrg/prosemirror-tables
 import { depthOfInnerNodeType, isTableSection } from '../schema/helpers';
 import ToolbarButton from './ToolbarButton.vue';
 import { Alignment } from '../pandoc';
-import { isString, uniq } from 'lodash';
+import { isString, uniq } from 'lodash-es';
 import { NODE_NAME_TABLE_CELL, NODE_NAME_TABLE_HEADER } from '../common';
 import { PmColSpec } from '../schema/helpers/colSpec';
 

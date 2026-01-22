@@ -28,7 +28,7 @@
 
 <script lang="ts">
 import { CustomStyleInstance, customStylesForType } from '../../common';
-import { uniq } from 'lodash';
+import { uniq } from 'lodash-es';
 import { getEditorConfiguration } from '../../schema';
 
 export default {

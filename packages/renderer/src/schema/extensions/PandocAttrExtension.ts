@@ -3,7 +3,7 @@ import {
   pandocAttrClassesToHtmlAttrs,
   pandocAttrIdToHtmlAttrs,
   pandocAttrKvToHtmlAttrs,
-} from '../helpers/pandocAttr';
+} from '../helpers';
 
 export interface PandocAttrOptions {
   types: string[];

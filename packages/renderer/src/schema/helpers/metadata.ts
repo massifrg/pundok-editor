@@ -1,5 +1,5 @@
 import { NodeType, Node as ProsemirrorNode, Schema } from '@tiptap/pm/model'
-import { isArray, isBoolean, isNumber, isObject, isString } from 'lodash'
+import { isArray, isBoolean, isNumber, isObject, isString } from 'lodash-es'
 import {
   MetaValueName,
   NODE_NAME_META_BLOCKS,
@@ -15,7 +15,7 @@ import { textNode } from './nodeTemplates'
 
 const DEFAULT_STRING_META_VALUE = NODE_NAME_META_INLINES // NODE_NAME_META_STRING
 
-export function metaValueNameToNodeType(schema: Schema, metaType: MetaValueName): NodeType | undefined {
+function metaValueNameToNodeType(schema: Schema, metaType: MetaValueName): NodeType | undefined {
   let nodeTypeName: string | undefined
   switch (metaType) {
     case 'MetaInlines':

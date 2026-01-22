@@ -11,7 +11,7 @@ import {
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_SET_INDEX_REF,
   ACTION_INSERT_RAW_INLINE,
-} from "./actions";
+} from './actions';
 import {
   AddOrRemoveClassActionProps,
   AddOrRemoveCustomStyleActionProps,
@@ -25,8 +25,8 @@ import {
   InsertRawInlineActionProps,
   DEFAULT_RAW_INLINE_FORMAT,
   InsertableRaw,
-} from "../common";
-import { RawInline } from "../schema";
+} from '../common';
+import { RawInline } from '../schema';
 
 export function defaultPropsFor(actionName: ActionName, config?: PundokEditorConfig): object {
   switch (actionName) {

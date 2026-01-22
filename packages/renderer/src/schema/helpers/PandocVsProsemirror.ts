@@ -39,8 +39,8 @@ import {
   NODE_NAME_RAW_INLINE,
   PundokEditorConfig,
 } from '../../common';
-import { isString } from 'lodash';
-import { Heading, RawBlock, RawInline } from '..';
+import { isString } from 'lodash-es';
+import { Heading, RawBlock, RawInline } from '../nodes';
 
 function ucfirst(s: string): string {
   return s.substring(0, 1).toUpperCase() + s.substring(1);

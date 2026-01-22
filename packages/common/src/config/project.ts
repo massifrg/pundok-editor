@@ -1,4 +1,5 @@
-import { PundokEditorConfig, PundokEditorConfigInit } from '.';
+import { PundokEditorConfigInit } from "./editorConfigInit";
+import { PundokEditorConfig } from "./editorConfiguration";
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 

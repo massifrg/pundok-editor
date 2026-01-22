@@ -59,8 +59,8 @@ import { EditorGUIPropsClass } from './EditorGUIProps';
 import { setActionOpenDocument, setActionCloseEditor, setActionShowResultMessage } from '../actions';
 import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/vue-3';
-import { PendingOperation } from '.';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
+import { PendingOperation } from './helpers/pending';
 
 interface LoadedDocument {
   id?: string,

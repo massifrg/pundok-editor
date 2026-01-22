@@ -19,7 +19,7 @@ import {
   updateAttributesCommand,
 } from './HelperCommandsExtension';
 import { CommandProps } from '@tiptap/vue-3';
-import { cloneDeep, isArray, isString } from 'lodash';
+import { cloneDeep, isArray, isString } from 'lodash-es';
 import { setMarkNoAtoms, toggleMarkNoAtoms } from '../../commands';
 import {
   addClass,

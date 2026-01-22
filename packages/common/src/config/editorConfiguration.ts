@@ -1,15 +1,4 @@
 import { isEqual, isString, uniq } from 'lodash-es';
-import {
-  Automation,
-  CustomMetadata,
-  Index,
-  InputConverter,
-  InsertableRaw,
-  NoteStyle,
-  OutputConverter,
-  SearchAndReplace,
-  indexRefDecorationCss,
-} from '.';
 import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';
 import {
@@ -20,6 +9,13 @@ import {
 import { PundokEditorConfigInit } from './editorConfigInit';
 import { DEFAULT_COPY_FORMAT, DEFAULT_FORMAT, DEFAULT_MAIN_FORMATS } from '../pandocFormat';
 import { CustomFormat } from './customFormat';
+import { CustomMetadata } from './customMetadata';
+import { NoteStyle } from './notes';
+import { Index, indexRefDecorationCss } from './indices';
+import { InsertableRaw } from './rawElements';
+import { InputConverter } from './inputConverters';
+import { OutputConverter } from './outputConverters';
+import { Automation, SearchAndReplace } from './automations';
 
 export class PundokEditorConfig implements PundokEditorConfigInit {
   /** The name of this configuration of the editor. */

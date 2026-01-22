@@ -1,6 +1,3 @@
-export * from './helpers/deproxify';
-export * from './helpers/addableMark';
-
 export { default as AttributesEditor } from './AttributesEditor.vue';
 export { default as BreadCrumb } from './BreadCrumb.vue';
 export { default as ConfigurationsDialog } from './ConfigurationsDialog.vue';
@@ -22,7 +19,6 @@ export { default as NewDocumentButton } from './NewDocumentButton.vue';
 export { default as NewProjectDialog } from './NewProjectDialog.vue';
 export { default as NodeOrMarkContextMenu } from './NodeOrMarkContextMenu.vue';
 export { default as PendingOperationDialog } from './PendingOperationDialog.vue';
-export type { PendingOperation, PendingOperationType } from './helpers/pending';
 export { default as ProjectStructureDialog } from './ProjectStructureDialog.vue';
 export { default as RawInlineMenu } from './RawInlineMenu.vue';
 export { default as SearchAndReplace } from './SearchAndReplace.vue';

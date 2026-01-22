@@ -1,7 +1,6 @@
 // adapted from https://github.com/ProseMirror/prosemirror-markdown/blob/master/src/from_markdown.ts
-import { isArray, isString } from 'lodash';
-import type { Attrs, Schema, NodeType } from '@tiptap/pm/model';
-import { Mark, Node } from '@tiptap/pm/model';
+import { Attrs, Mark, Node, NodeType, Schema } from '@tiptap/pm/model';
+import { isArray, isString } from 'lodash-es';
 import { pandocColSpecToPmColSpec } from './colSpec';
 import { listAttributesToPMAttrs } from './listAttributes';
 import { schema } from './PandocSchema';
@@ -9,7 +8,6 @@ import {
   pandocTargetToImagePMAttrs,
   pandocTargetToLinkPMAttrs,
 } from './target';
-
 import type { PandocJson, PandocJsonDocument } from '../../pandoc';
 import { DEFAULT_PANDOC_API_VERSION, isPandocJsonInline } from '../../pandoc';
 import { pandocAlignmentToTextAlign } from './alignments';

@@ -4,7 +4,7 @@ import {
   getMarkType,
   getNodeType,
 } from '@tiptap/core';
-import { isObject, isString } from 'lodash';
+import { isObject, isString } from 'lodash-es';
 import {
   Mark,
   MarkType,

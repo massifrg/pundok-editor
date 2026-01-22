@@ -31,7 +31,7 @@
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';
 import { ResolvedPos } from '@tiptap/pm/model';
 import { CachedNote, notesPluginKey } from '../../schema';
-import { isArray } from 'lodash';
+import { isArray } from 'lodash-es';
 import { romanize } from 'romanize-deromanize'
 import {
   DEFAULT_NOTE_TYPE,

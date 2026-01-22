@@ -17,10 +17,10 @@
 
 <script lang="ts">
 import { CustomStyleInstance, CustomStyleDef } from '../common'
-import { NodeOrMarkContextMenu } from '.'
 import { actionsForNodeOrMark, canExecuteEditorAction } from '../actions'
 import { colorFor, LabeledNodeOrMark, labeledNodesAndMarksAtPos, SelectedNodeOrMark } from '../schema/helpers'
 import { getEditorConfiguration } from '../schema'
+import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue'
 
 export default {
   props: ['editor'],

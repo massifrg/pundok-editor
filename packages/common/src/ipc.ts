@@ -1,5 +1,8 @@
-import { FeedbackMessage, PundokEditorProject, ReadDoc, ViewerSetup } from '.';
+import { PundokEditorProject } from './config';
+import { ReadDoc } from './document';
 import { EditorKeyType } from './editorKey';
+import { FeedbackMessage } from './feedback';
+import { ViewerSetup } from './viewer';
 
 /**
  * The direction of messages between Main and Renderer in an IPC channel.

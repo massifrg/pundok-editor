@@ -2,7 +2,7 @@ import { Command, EditorState, Plugin, PluginKey, Transaction } from '@tiptap/pm
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import { Extension } from '@tiptap/core';
-import { changedNodes } from '../helpers/whatChanged';
+import { changedNodes } from '../helpers';
 import type { NodeWithPos } from '@tiptap/vue-3';
 import {
   DEFAULT_INDEX_REF_CLASS,
@@ -26,7 +26,7 @@ import {
   innerNodeDepth,
   META_UPDATE_DOC_STATE
 } from '../helpers';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 import { Backend } from '../../backend';
 import { useBackend } from '../../stores';
 
