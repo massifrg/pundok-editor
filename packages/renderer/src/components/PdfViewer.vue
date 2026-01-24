@@ -650,7 +650,7 @@ export default {
 </template>
 
 <style lang="scss">
-@import 'pdfjs-dist/web/pdf_viewer.css';
+// @import 'pdfjs-dist/web/pdf_viewer.css';
 
 /** The next one is necessary to prevent the PdfViewer from staying on top even when minified */
 .lazy-component-wrapper {
