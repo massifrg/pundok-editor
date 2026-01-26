@@ -1,5 +1,10 @@
 import { FileFilter } from 'electron';
-import { InputConverter, OutputConverter, PandocInputConverter, PandocOutputConverter } from './config';
+import {
+  InputConverter,
+  OutputConverter,
+  PandocInputConverter,
+  PandocOutputConverter
+} from './config';
 import { isString, uniq } from 'lodash-es';
 import * as browserify from 'path-browserify';
 import { commonIcons } from './icons';

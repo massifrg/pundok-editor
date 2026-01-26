@@ -5,10 +5,14 @@ import { QTable, QTableColumn } from 'quasar';
 import {
   Document,
   DocumentBookmark,
+  DocumentFormat,
+  documentFormatExtension,
+  DocumentFormatType,
   DocumentOpenActionProps,
   DocumentSaveActionProps,
   Folder,
   getPandocFormatDescriptions,
+  guessFormat,
   guessFormatFromExtension,
   InputConverter,
   OutputConverter,
@@ -31,37 +35,6 @@ interface FileContentRow {
   icon?: string,
   isDocument: boolean,
   isFolder: boolean,
-}
-
-type DocumentFormatType = 'guess' | 'format' | 'input-converter' | 'output-converter'
-/**
- * The document format can be a plain Pandoc format or a (input or output) converter.
- */
-type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter)
-  & { ftype: DocumentFormatType }
-
-const guessFormat: DocumentFormat = {
-  ftype: 'guess',
-  name: 'guess',
-  description: 'let the editor guess the format from the file',
-  icon: 'mdi-file-question',
-  input: true,
-  output: false,
-  extensions: [],
-  priority: 1,
-}
-
-function documentFormatExtension(format: DocumentFormat): string | undefined {
-  const extensions: string[] = (format as any).extensions || []
-  switch (format.ftype) {
-    case 'format':
-      return extensions[0]
-    case 'input-converter':
-      return extensions[0]
-    case 'output-converter':
-      return (format as OutputConverter).extension
-    default:
-  }
 }
 
 function isNotHidden(filename: string, platform?: string) {
@@ -104,8 +77,8 @@ function computeCurrentFolder(state?: EditorState): string[] {
 export type DocumentDialogMode = 'open' | 'save' | 'save-copy'
 
 export default {
-  props: ['editor', 'mode', 'prompt', 'startFilename'],
-  emits: ['hide'],
+  props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat'],
+  emits: ['hide', 'set-input-format', 'set-output-format', 'set-copy-format'],
   data() {
     return {
       visible: true,
@@ -132,7 +105,7 @@ export default {
       /** The available Pandoc formats and input/output converters */
       pandocFormats: [] as PandocFormatDescription[],
       /** The current, selected format/converter to use to read/save the document */
-      format: undefined as DocumentFormat | undefined,
+      format: this.startFormat as DocumentFormat | undefined,
       /** The file extensions to filter the documents */
       extensions: [] as string[],
       /** Bookmarks to recent documents */
@@ -388,6 +361,7 @@ export default {
           if (path && editorKey) {
             const inputConverter = this.inputConverterFromDocumentFormat(path)
             console.log(inputConverter)
+            this.$emit('set-input-format', this.format)
             setActionCommand(
               editorKey,
               ACTION_DOCUMENT_OPEN,
@@ -407,6 +381,8 @@ export default {
           if (path && editorKey) {
             const outputConverter = this.outputConverterFromDocumentFormat(path)
             console.log(outputConverter)
+            const eventName = this.mode === 'save-copy' ? 'set-copy-format' : 'set-output-format'
+            this.$emit(eventName, this.format)
             setActionCommand(
               editorKey,
               ACTION_DOCUMENT_SAVE,
@@ -416,7 +392,7 @@ export default {
                   editorKey,
                   id: toRaw(this.selectedDocument),
                   path,
-                  converter: outputConverter,
+                  outputConverter: outputConverter,
                   configurationName: this.tempProject ? undefined : this.tempConfigurationName,
                   project: this.tempProject,
                 }
