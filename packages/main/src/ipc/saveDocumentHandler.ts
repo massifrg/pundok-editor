@@ -31,7 +31,7 @@ export const saveDocumentHandler =
           !projectAsJsonString || projectAsJsonString === '{}'
             ? undefined
             : JSON.parse(projectAsJsonString);
-        if (doc.converter) {
+        if (doc.outputConverter) {
           response = await hub.exportDocument(doc, project, editorKey);
           console.log(`EXPORT FINISHED`);
           // console.log(doc);

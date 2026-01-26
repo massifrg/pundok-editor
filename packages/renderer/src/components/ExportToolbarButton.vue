@@ -63,10 +63,16 @@ export default {
         const outputConverter = { ...oc }
         let storedDoc: Partial<StoredDoc> | undefined = undefined
         if (this.lastExportResponse) {
-          const { id, configurationName, converter, path, exportedAsPath } = this.lastExportResponse.doc
+          const { id, configurationName, outputConverter: converter, path /*, exportedAsPath */ } = this.lastExportResponse.doc
           if (this.documentName == id && this.configurationName == configurationName && oc.name == converter?.name) {
-            console.log(`exportedAsPath=${exportedAsPath}`)
-            storedDoc = { id, path, converter, configurationName, exportedAsPath }
+            // console.log(`exportedAsPath=${exportedAsPath}`)
+            storedDoc = {
+              id,
+              path,
+              outputConverter: converter,
+              configurationName,
+              // exportedAsPath
+            }
             outputConverter.feedback = 'success'
           }
         }

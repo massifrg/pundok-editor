@@ -61,10 +61,6 @@ export interface ReadDoc extends DocumentContext {
  */
 export interface StoredDoc extends ReadDoc {
   /** The converter used to export it. */
-  converter?: OutputConverter;
-  /** Options about a possible preview of the document. */
-  // preview?: Partial<PreviewOptions>;
-  /** Set the path of the exported file, when the document is exported in a different format */
-  exportedAsPath?: string;
+  outputConverter?: OutputConverter;
 }
 

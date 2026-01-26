@@ -366,7 +366,7 @@ export class IpcHub {
     project?: PundokEditorProject,
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse> {
-    const { content, converter, exportedAsPath, configurationName } = doc;
+    const { content, outputConverter: converter, /* exportedAsPath,*/ configurationName } = doc;
     const saveOpts: Partial<SaveDialogOptions> = {};
     if (converter?.extension) {
       const { extension, format } = converter;
@@ -382,9 +382,9 @@ export class IpcHub {
     let resultFile = converter?.resultFile
       ? expandCommandArgs([converter.resultFile], sourceFile)[0]
       : undefined
-    resultFile = converter?.dontAskForResultFile
-      ? resultFile
-      : exportedAsPath;
+    // resultFile = converter?.dontAskForResultFile
+    //   ? resultFile
+    //   : exportedAsPath;
     if (!converter?.dontAskForResultFile) {
       if (!resultFile) resultFile = await this.fileManager.saveFileDialog(saveOpts);
       if (!resultFile)
@@ -409,7 +409,7 @@ export class IpcHub {
     if (sourceFile) {
       documentHash = await rememberDocumentHash({
         path: sourceFile,
-        converter: doc.converter!,
+        converter: doc.outputConverter!,
         configurationName: doc.configurationName,
         projectAsJsonString: project ? JSON.stringify(project) : undefined
       })
@@ -476,10 +476,10 @@ export class IpcHub {
           message: 'document exported',
           doc: {
             id,
-            converter,
+            outputConverter: converter,
             configurationName,
             path: doc.path,
-            exportedAsPath: resultFile,
+            // exportedAsPath: resultFile,
             content: output,
           } as StoredDoc,
           resultFile,
@@ -488,7 +488,7 @@ export class IpcHub {
           cwd,
         }
         if (resultFile) {
-          const openResult = doc.converter?.openResult;
+          const openResult = doc.outputConverter?.openResult;
           console.log(`openResult = ${openResult}`);
           if (openResult === 'editor') {
             this.send('show-in-viewer', {

@@ -19,7 +19,7 @@ export const exportAgainHandler =
           : undefined
         const sdoc: StoredDoc = {
           path,
-          converter,
+          outputConverter: converter,
           configurationName,
           content: ''
         }

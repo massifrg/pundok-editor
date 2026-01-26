@@ -303,7 +303,7 @@ export class LocalBackend implements Backend {
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse> {
     let preview: Partial<PreviewOptions> | undefined = undefined;
-    const openResult = doc.converter?.openResult;
+    const openResult = doc.outputConverter?.openResult;
     if (openResult)
       preview = {
         inPundokEditor: openResult === 'editor',
