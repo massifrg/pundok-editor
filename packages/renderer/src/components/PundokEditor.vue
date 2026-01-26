@@ -568,15 +568,28 @@ export default {
     editorState(): EditorState | undefined {
       if (this.editor) return this.editor.view.state as EditorState;
     },
+    /**
+     * The current document state.
+     */
     docState(): DocState | undefined {
       return getDocState(this.editorState());
     },
+    /**
+     * Update the current document state.
+     * @param update 
+     */
     updateEditorDocState(update: Partial<DocStateUpdate>) {
       this.editor?.commands.updateDocState(update);
     },
+    /**
+     * The current editor key.
+     */
     editorKey(): EditorKeyType | undefined {
       return this.docState()?.editorKey;
     },
+    /**
+     * Sets the main editor key in the backend.
+     */
     setMainEditorKey() {
       console.log(this.mainEditor);
       console.log(this.isMainEditor);
@@ -585,9 +598,16 @@ export default {
         this.backend?.setValue(IPC_MAIN_EDITOR_KEY, this.editorKey());
       }
     },
+    /**
+     * Set the editor key of the sub editor (project structure).
+     * @param editorKey
+     */
     newSubEditor(editorKey: EditorKeyType) {
       this.projectStructureEditorKey = editorKey
     },
+    /**
+     * Create a new editor component.
+     */
     async newEditor() {
       const editor = new Editor({
         extensions: [
@@ -615,6 +635,11 @@ export default {
         this.$emit('new-editor', this.editorKey())
       }
     },
+    /**
+     * Set the content of the editor.
+     * @param content The pandoc JSON representing the document.
+     * @param isNew `true` when the content is not coming from a saved document.
+     */
     setContent(content: string, isNew?: boolean) {
       // console.log(`SET CONTENT: ${content}`)
       const editor = this.editor;
@@ -645,6 +670,10 @@ export default {
         // }, 2000)
       }
     },
+    /**
+     * Set and show a dialog to save the current unsaved contents before creating a new document.
+     * @param options 
+     */
     setPendingBeforeNewDoc(options: { configurationName?: string, content?: string }) {
       const { configurationName, content } = options
       const pending: PendingOperation = {
@@ -667,6 +696,10 @@ export default {
         ];
       this.pending = pending;
     },
+    /**
+     * Set and show a dialog to save the current unsaved contents before loading a document.
+     * @param options 
+     */
     setPendingBeforeLoadDoc(options: { doc: ReadDoc }) {
       const pending: PendingOperation = {
         type: 'loading',
@@ -687,6 +720,12 @@ export default {
         ];
       this.pending = pending;
     },
+    /**
+     * Create a new document.
+     * @param configurationName The name of the document's configuration.
+     * @param content The document's contents.
+     * @param ignoreUnsaved If `true` discard the eventual current unsaved contents.
+     */
     async newDocument(
       configurationName?: string,
       content?: string,
@@ -716,6 +755,10 @@ export default {
         this.setDocumentAsNativelySaved();
       }
     },
+    /**
+     * Reload the current document with a different configuration.
+     * @param config
+     */
     async reloadDocumentWithConfiguration(config: string | PundokEditorConfig) {
       const json = this.getDocAsJsonString();
       try {
@@ -725,21 +768,35 @@ export default {
         console.log(err);
       }
     },
+    /**
+     * Show an open document dialog.
+     */
     showOpenDocumentDialog() {
       this.documentDialogMode = 'open' as DocumentDialogMode
       this.documentDialogFormat = this.docState()?.inputFormat
       this.visibleOpenDocumentDialog = true;
     },
+    /**
+     * Show a save dialog to save the current document.
+     */
     showSaveDocumentDialog() {
       this.documentDialogMode = 'save' as DocumentDialogMode
       this.documentDialogFormat = this.docState()?.outputFormat
       this.visibleOpenDocumentDialog = true;
     },
+    /**
+     * Show a "save a copy" dialog to save the current document in a secondary format.
+     */
     showSaveCopyDialog() {
       this.documentDialogMode = 'save-copy' as DocumentDialogMode
       this.documentDialogFormat = this.docState()?.copyFormat
       this.visibleOpenDocumentDialog = true;
     },
+    /**
+     * Event listener for OpenDocumentDialog 'set-format' event.
+     * @param mode The dialog mode.
+     * @param format The format to be set for that mode.
+     */
     setFormat(mode: DocumentDialogMode, format: DocumentFormat) {
       const formatField: keyof DocStateUpdate = mode === 'open'
         ? 'inputFormat'
@@ -748,6 +805,11 @@ export default {
           : 'copyFormat'
       this.updateEditorDocState({ [formatField]: format })
     },
+    /**
+     * Open a document (optionally at a certain line).
+     * @param context The context of the document to be opened.
+     * @param atLine The line (usually the Para or Plain) where the cursor is moved after loading.
+     */
     async openDocument(context?: DocumentContext, atLine?: number) {
       const docState = this.docState();
       const docContext: DocumentContext = context || {};
