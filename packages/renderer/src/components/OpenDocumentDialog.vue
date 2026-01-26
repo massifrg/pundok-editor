@@ -78,7 +78,7 @@ export type DocumentDialogMode = 'open' | 'save' | 'save-copy'
 
 export default {
   props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat'],
-  emits: ['hide', 'set-input-format', 'set-output-format', 'set-copy-format'],
+  emits: ['hide', 'set-format'],
   data() {
     return {
       visible: true,
@@ -361,7 +361,7 @@ export default {
           if (path && editorKey) {
             const inputConverter = this.inputConverterFromDocumentFormat(path)
             console.log(inputConverter)
-            this.$emit('set-input-format', this.format)
+            this.$emit('set-format', this.mode, this.format)
             setActionCommand(
               editorKey,
               ACTION_DOCUMENT_OPEN,
@@ -381,8 +381,7 @@ export default {
           if (path && editorKey) {
             const outputConverter = this.outputConverterFromDocumentFormat(path)
             console.log(outputConverter)
-            const eventName = this.mode === 'save-copy' ? 'set-copy-format' : 'set-output-format'
-            this.$emit(eventName, this.format)
+            this.$emit('set-format', this.mode, this.format)
             setActionCommand(
               editorKey,
               ACTION_DOCUMENT_SAVE,

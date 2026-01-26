@@ -39,7 +39,7 @@
       <q-page>
         <!-- style="padding-top: 112px" -->
         <OpenDocumentDialog v-if="visibleOpenDocumentDialog" :editor="editor" :mode="documentDialogMode"
-          @hide="visibleOpenDocumentDialog = false" />
+          :format="documentDialogFormat" @set-format="setFormat" @hide="visibleOpenDocumentDialog = false" />
         <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
           @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
         <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
@@ -126,6 +126,7 @@ import {
   ActionNameWithProps,
   GetProjectOptions,
   DocumentSaveActionProps,
+  DocumentFormat,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -275,6 +276,7 @@ export default {
       visibleConfigurationDialog: false,
       visibleOpenDocumentDialog: false,
       documentDialogMode: 'open' as DocumentDialogMode,
+      documentDialogFormat: undefined as DocumentFormat | undefined,
       visibleImportDialog: false,
       visibleExportDialog: false,
       visibleSearchAndReplaceDialog: false,
@@ -724,12 +726,27 @@ export default {
       }
     },
     showOpenDocumentDialog() {
-      this.documentDialogMode = 'open'
+      this.documentDialogMode = 'open' as DocumentDialogMode
+      this.documentDialogFormat = this.docState()?.inputFormat
       this.visibleOpenDocumentDialog = true;
     },
     showSaveDocumentDialog() {
-      this.documentDialogMode = 'save'
+      this.documentDialogMode = 'save' as DocumentDialogMode
+      this.documentDialogFormat = this.docState()?.outputFormat
       this.visibleOpenDocumentDialog = true;
+    },
+    showSaveCopyDialog() {
+      this.documentDialogMode = 'save-copy' as DocumentDialogMode
+      this.documentDialogFormat = this.docState()?.copyFormat
+      this.visibleOpenDocumentDialog = true;
+    },
+    setFormat(mode: DocumentDialogMode, format: DocumentFormat) {
+      const formatField: keyof DocStateUpdate = mode === 'open'
+        ? 'inputFormat'
+        : mode === 'save'
+          ? 'outputFormat'
+          : 'copyFormat'
+      this.updateEditorDocState({ [formatField]: format })
     },
     async openDocument(context?: DocumentContext, atLine?: number) {
       const docState = this.docState();

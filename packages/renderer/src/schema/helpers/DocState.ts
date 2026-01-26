@@ -3,6 +3,7 @@ import { Node as PmNode } from '@tiptap/pm/model'
 import { EditorState } from "@tiptap/pm/state";
 import { isAbsolute, parse as parsePath, relative as relativePath } from 'path-browserify'
 import {
+  DocumentFormat,
   EditorKeyType,
   PundokEditorConfig,
   PundokEditorProject,
@@ -23,6 +24,12 @@ export interface DocState {
   readonly outputFolder?: string[];
   /** The path where a copy of a document is saved */
   readonly copyFolder?: string[];
+  /** The predefined or last-opened input format */
+  readonly inputFormat?: DocumentFormat;
+  /** The predefined or last-saved output format */
+  readonly outputFormat?: DocumentFormat;
+  /** The predefined or last-saved as copy output format */
+  readonly copyFormat?: DocumentFormat;
   /** Resource path for pandoc conversions. FIXME: still useful? */
   readonly resourcePath?: string[];
   /** Current configuration in use in the editor. */
@@ -50,6 +57,9 @@ export interface DocStateUpdate {
   inputFolder: string[] | null;
   outputFolder: string[] | null;
   copyFolder: string[] | null;
+  inputFormat: DocumentFormat | null;
+  outputFormat: DocumentFormat | null;
+  copyFormat?: DocumentFormat | null;
   configuration: PundokEditorConfig | null;
   project: PundokEditorProject | null;
   lastSaveResponse: SaveResponse | null;
