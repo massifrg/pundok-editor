@@ -5,7 +5,7 @@
         <q-toolbar-title>
           <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
             :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
-            @open-document="openDocument()" @save-content="saveContent()"
+            @open-document="openDocument()" @save-content="saveToStoredPath()"
             @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
@@ -63,18 +63,6 @@
           @new-editor="newSubEditor" />
         <NewProjectDialog :visible="visibleNewProjectDialog" @close="visibleNewProjectDialog = false" />
         <ContextMenu :editor="editor" />
-        <!-- <q-page-sticky expand position="top">
-          <q-toolbar class="text-white q-pa-none">
-            <q-toolbar-title>
-              <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
-              :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
-              @save-content="saveContent()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
-              @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
-              @show-configurations-dialog="visibleConfigurationDialog = true"
-              @reload-with-configuration="reloadWithConfiguration" />
-            </q-toolbar-title>
-          </q-toolbar>
-        </q-page-sticky> -->
         <editor-content :editor="(editor as Editor)" />
       </q-page>
     </q-page-container>
@@ -587,6 +575,14 @@ export default {
     editorKey(): EditorKeyType | undefined {
       return this.docState()?.editorKey;
     },
+    setMainEditorKey() {
+      console.log(this.mainEditor);
+      console.log(this.isMainEditor);
+      if (this.isMainEditor) {
+        console.log(`set ${this.editorKey()} as main editor key`);
+        this.backend?.setValue(IPC_MAIN_EDITOR_KEY, this.editorKey());
+      }
+    },
     newSubEditor(editorKey: EditorKeyType) {
       this.projectStructureEditorKey = editorKey
     },
@@ -617,61 +613,6 @@ export default {
         this.$emit('new-editor', this.editorKey())
       }
     },
-    async newDocument(
-      configurationName?: string,
-      content?: string,
-      ignoreUnsaved?: boolean,
-    ) {
-      if (!ignoreUnsaved && this.askToSaveChanges) {
-        const pending: PendingOperation = {
-          type: 'new',
-          cancel: {
-            label: 'cancel',
-          },
-          confirm: {
-            label: `create new "${configurationName}" document, ignore changes`,
-          },
-          configurationName,
-          content,
-        };
-        if (this.exportedChanges)
-          pending.extraValues = [
-            {
-              ...COMPLAIN_IF_JUST_EXPORTED_TOGGLE,
-              default: !!this.complainIfJustExported,
-            },
-          ];
-        this.pending = pending;
-      } else {
-        const isNew = !content;
-        const doc: ReadDoc = {
-          content: content || EMPTY_DOCUMENT,
-          configurationName,
-          format: 'json',
-          // editorKey: this.editorKey(),
-          id: 'unknown',
-        };
-        try {
-          if (configurationName) await this.setConfiguration(configurationName);
-          this.loadDocument(doc);
-        } catch (err) {
-          console.log(err);
-          this.editor?.destroy();
-          await this.newEditor();
-          this.setMainEditorKey();
-          this.setContent(content || EMPTY_DOCUMENT, isNew);
-          this.setDocumentAsNativelySaved();
-        }
-      }
-    },
-    setMainEditorKey() {
-      console.log(this.mainEditor);
-      console.log(this.isMainEditor);
-      if (this.isMainEditor) {
-        console.log(`set ${this.editorKey()} as main editor key`);
-        this.backend?.setValue(IPC_MAIN_EDITOR_KEY, this.editorKey());
-      }
-    },
     setContent(content: string, isNew?: boolean) {
       // console.log(`SET CONTENT: ${content}`)
       const editor = this.editor;
@@ -700,6 +641,77 @@ export default {
           .scrollIntoViewAtTop()
           .run();
         // }, 2000)
+      }
+    },
+    setPendingBeforeNewDoc(options: { configurationName?: string, content?: string }) {
+      const { configurationName, content } = options
+      const pending: PendingOperation = {
+        type: 'new',
+        cancel: {
+          label: 'cancel',
+        },
+        confirm: {
+          label: `create new "${configurationName || '[unknown config]'}" document, ignore changes`,
+        },
+        configurationName,
+        content,
+      };
+      if (this.exportedChanges)
+        pending.extraValues = [
+          {
+            ...COMPLAIN_IF_JUST_EXPORTED_TOGGLE,
+            default: !!this.complainIfJustExported,
+          },
+        ];
+      this.pending = pending;
+    },
+    setPendingBeforeLoadDoc(options: { doc: ReadDoc }) {
+      const pending: PendingOperation = {
+        type: 'loading',
+        cancel: {
+          label: 'cancel loading',
+        },
+        confirm: {
+          label: 'load without saving changes',
+        },
+        doc: options.doc,
+      };
+      if (this.exportedChanges)
+        pending.extraValues = [
+          {
+            ...COMPLAIN_IF_JUST_EXPORTED_TOGGLE,
+            default: !!this.complainIfJustExported,
+          },
+        ];
+      this.pending = pending;
+    },
+    async newDocument(
+      configurationName?: string,
+      content?: string,
+      ignoreUnsaved?: boolean,
+    ) {
+      if (!ignoreUnsaved && this.askToSaveChanges) {
+        this.setPendingBeforeNewDoc({ configurationName, content })
+        return
+      }
+      const isNew = !content;
+      const doc: ReadDoc = {
+        content: content || EMPTY_DOCUMENT,
+        configurationName,
+        format: 'json',
+        // editorKey: this.editorKey(),
+        id: 'unknown',
+      };
+      try {
+        if (configurationName) await this.setConfiguration(configurationName);
+        this.loadDocument(doc);
+      } catch (err) {
+        console.log(err);
+        this.editor?.destroy();
+        await this.newEditor();
+        this.setMainEditorKey();
+        this.setContent(content || EMPTY_DOCUMENT, isNew);
+        this.setDocumentAsNativelySaved();
       }
     },
     async reloadDocumentWithConfiguration(config: string | PundokEditorConfig) {
@@ -737,66 +749,215 @@ export default {
         if (doc) this.loadDocument(doc, false, atLine);
       }
     },
+    setDocumentAsNativelySaved() {
+      this.updateEditorDocState({
+        nativeUnsavedChanges: false,
+        unsavedChanges: false,
+        savedDoc: this.editor?.view.state.doc
+      });
+      this.savedChanges = true
+      this.exportedChanges = true
+    },
     async loadDocument(doc: ReadDoc, ignoreUnsaved?: boolean, atLine?: number) {
       if (!ignoreUnsaved && this.askToSaveChanges) {
-        const pending: PendingOperation = {
-          type: 'loading',
-          cancel: {
-            label: 'cancel loading',
-          },
-          confirm: {
-            label: 'load without saving changes',
-          },
-          doc,
-        };
-        if (this.exportedChanges)
-          pending.extraValues = [
+        this.setPendingBeforeLoadDoc({ doc })
+        return
+      }
+      const saveResponse = doc.path?.endsWith('.json')
+        ? { message: `loaded "${doc.path}"`, doc }
+        : undefined;
+
+      // ex TODO: remove history
+      this.editor?.destroy();
+      await this.newEditor();
+      const editorKey = this.editorKey();
+      doc.editorKey = editorKey
+      this.setMainEditorKey();
+      console.log(`created new editor for doc:`);
+      console.log(doc);
+
+      this.updateEditorDocState({
+        documentName: doc.id,
+        resourcePath: doc.resourcePath,
+        lastSaveResponse: saveResponse,
+        lastExportResponse: null,
+      });
+
+      // set project or configuration
+      if (doc.project) await this.setProject(doc.project);
+      else if (doc.configurationName) {
+        try {
+          await this.setConfiguration(doc.configurationName);
+        } catch (err) {
+          this.setConfiguration('default');
+        }
+      }
+
+      this.setWindowTitleFromDoc(doc);
+      this.setContent(doc.content, false);
+      this.detectDocumentIndices();
+      this.setDocumentAsNativelySaved();
+      this.$emit('document-loaded', doc, this.editor);
+      const action = ACTION_DOCUMENT_GO_TO_LINE
+      if (atLine) action.label += ` ${atLine}`
+      setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps)
+    },
+    async saveToStoredPath() {
+      this.save(this.docState()?.lastSaveResponse?.doc.path);
+    },
+    beforeSaving() {
+      this.editor?.commands.fixPandocTables();
+    },
+    async save(path?: string) {
+      if (!path) {
+        this.showSaveDocumentDialog()
+        return
+      }
+      this.beforeSaving();
+      const jsonDoc = this.getDocAsJsonString();
+      try {
+        const docState = this.docState();
+        if (this.backend) {
+          const response = await this.backend.save(
             {
-              ...COMPLAIN_IF_JUST_EXPORTED_TOGGLE,
-              default: !!this.complainIfJustExported,
+              id: docState?.documentName,
+              path: path,
+              content: jsonDoc,
+              format: 'json',
+              configurationName: docState?.configuration?.name,
+              resourcePath: docState?.resourcePath,
             },
-          ];
-        this.pending = pending;
-      } else {
-        const saveResponse = doc.path?.endsWith('.json')
-          ? { message: `loaded "${doc.path}"`, doc }
-          : undefined;
-
-        // ex TODO: remove history
-        this.editor?.destroy();
-        await this.newEditor();
-        const editorKey = this.editorKey();
-        doc.editorKey = editorKey
-        this.setMainEditorKey();
-        console.log(`created new editor for doc:`);
-        console.log(doc);
-
-        this.updateEditorDocState({
-          documentName: doc.id,
-          resourcePath: doc.resourcePath,
-          lastSaveResponse: saveResponse,
-          lastExportResponse: null,
-        });
-
-        // set project or configuration
-        if (doc.project) await this.setProject(doc.project);
-        else if (doc.configurationName) {
-          try {
-            await this.setConfiguration(doc.configurationName);
-          } catch (err) {
-            this.setConfiguration('default');
+            docState?.project,
+            this.editorKey(),
+          );
+          if (response.error) {
+            const errmsg = this.showResultMessage({
+              success: false,
+              caption: 'SAVE ERROR',
+              message: JSON.stringify(response.error),
+              icon: 'mdi-content-save-alert'
+            });
+            // this.currentState.setLastSaveResponse(undefined)
+            this.updateEditorDocState({ lastSaveResponse: null });
+            return Promise.reject(errmsg);
+          } else {
+            this.setDocumentAsNativelySaved();
+            this.showResultMessage({
+              success: true,
+              caption: 'SAVE SUCCESS',
+              message: `saved as ${response.doc.path || response.doc.id}`,
+              icon: 'mdi-content-save-check'
+            });
+            const prevPath = this.docState()?.lastSaveResponse?.doc.path;
+            if (prevPath !== response.doc.path) {
+              this.updateEditorDocState({ lastExportResponse: null });
+            }
+            this.updateEditorDocState({ lastSaveResponse: response });
+            this.setWindowTitleFromDoc(response.doc, 'save');
+          }
+          if (response.doc && (response.doc.path || response.doc.id)) {
+            return response;
           }
         }
-
-        this.setWindowTitleFromDoc(doc);
-        this.setContent(doc.content, false);
-        this.detectDocumentIndices();
-        this.setDocumentAsNativelySaved();
-        this.$emit('document-loaded', doc, this.editor);
-        const action = ACTION_DOCUMENT_GO_TO_LINE
-        if (atLine) action.label += ` ${atLine}`
-        setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps)
+        return Promise.reject('no backend found');
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : JSON.stringify(err);
+        const errmsg = this.showResultMessage({
+          success: false,
+          caption: 'SAVE ERROR',
+          message,
+          icon: 'mdi-content-save-alert'
+        });
+        console.log(message);
+        return Promise.reject(errmsg);
       }
+    },
+    async exportDoc(
+      converter: OutputConverter,
+      storedDoc?: Partial<StoredDoc>,
+    ): Promise<SaveResponse> {
+      const jsonDoc = this.getDocAsJsonString();
+      try {
+        const backend = this.backend;
+        if (backend) {
+          const sdoc: Partial<StoredDoc> = storedDoc || {};
+          // de-proxify converter
+          const outputConverter = toRaw(converter) as OutputConverter;
+          const docState = this.docState();
+          if (docState) {
+            const { resourcePath, project, configuration } = docState;
+            this.setOperationInProgress(true)
+            const response = await backend.save(
+              {
+                id: sdoc.id || docState?.documentName,
+                path: sdoc.path || docState?.lastSaveResponse?.doc.path,
+                // exportedAsPath: sdoc.exportedAsPath,
+                content: jsonDoc,
+                outputConverter: outputConverter,
+                configurationName:
+                  sdoc.configurationName || configuration?.name,
+                resourcePath,
+              },
+              project,
+              this.editorKey(),
+            );
+            setTimeout(() => {
+              this.setOperationInProgress(false)
+            }, 3000)
+            // console.log(response.doc)
+            this.setWindowTitleFromDoc(response.doc, 'export');
+            if (response.error) {
+              const errmsg = `ERROR, ${response.message}: ${response.error}`;
+              console.log(errmsg);
+              return Promise.reject(errmsg);
+            } else {
+              // this.currentState.setLastExportResponse(response)
+              this.updateEditorDocState({
+                unsavedChanges: false,
+                lastExportResponse: response,
+              });
+              console.log(
+                `lastExportResponse.doc = ${JSON.stringify({ ...this.docState()?.lastExportResponse?.doc })}`,
+              );
+              console.log(
+                `saved changes: ${this.savedChanges}, exported changes: ${this.exportedChanges}`,
+              );
+            }
+            // if (response.doc?.exportedAsPath) {
+            //   console.log(`EXPORTED IN: ${response.doc.exportedAsPath}`);
+            //   return response;
+            // }
+            return response;
+          }
+          return Promise.reject('no document state');
+        }
+        return Promise.reject('no backend found');
+      } catch (error) {
+        console.log(error);
+        console.log(JSON.stringify(error));
+        return Promise.reject(error);
+      }
+    },
+    async importDoc(converter: InputConverter) {
+      const docState = this.docState();
+      const doc = await this.backend?.open({
+        editorKey: docState?.editorKey,
+        configurationName: docState?.configuration?.name,
+        project: docState?.project,
+        inputConverter: { ...converter },
+      });
+      if (doc) this.loadDocument(doc);
+    },
+    setOutputConverter(converter: OutputConverter) {
+      // console.log(converter)
+      this.visibleExportDialog = false;
+      if (converter) this.exportDoc(converter);
+    },
+    setInputConverter(converter: InputConverter) {
+      // console.log(converter)
+      this.visibleImportDialog = false;
+      if (converter) this.importDoc(converter);
     },
     setOperationInProgress(remoteWorkInProgress: boolean) {
       useActions().setRemoteWorkInProgress(remoteWorkInProgress)
@@ -897,80 +1058,6 @@ export default {
       console.log(resultMessage);
       return resultMessage;
     },
-    saveContent() {
-      this.saveToStoredPath();
-    },
-    async saveToStoredPath() {
-      this.save(this.docState()?.lastSaveResponse?.doc.path);
-    },
-    beforeSaving() {
-      this.editor?.commands.fixPandocTables();
-    },
-    async save(path?: string) {
-      if (!path) {
-        this.showSaveDocumentDialog()
-        return
-      }
-      this.beforeSaving();
-      const jsonDoc = this.getDocAsJsonString();
-      try {
-        const docState = this.docState();
-        if (this.backend) {
-          const response = await this.backend.save(
-            {
-              id: docState?.documentName,
-              path: path,
-              content: jsonDoc,
-              format: 'json',
-              configurationName: docState?.configuration?.name,
-              resourcePath: docState?.resourcePath,
-            },
-            docState?.project,
-            this.editorKey(),
-          );
-          if (response.error) {
-            const errmsg = this.showResultMessage({
-              success: false,
-              caption: 'SAVE ERROR',
-              message: JSON.stringify(response.error),
-              icon: 'mdi-content-save-alert'
-            });
-            // this.currentState.setLastSaveResponse(undefined)
-            this.updateEditorDocState({ lastSaveResponse: null });
-            return Promise.reject(errmsg);
-          } else {
-            this.setDocumentAsNativelySaved();
-            this.showResultMessage({
-              success: true,
-              caption: 'SAVE SUCCESS',
-              message: `saved as ${response.doc.path || response.doc.id}`,
-              icon: 'mdi-content-save-check'
-            });
-            const prevPath = this.docState()?.lastSaveResponse?.doc.path;
-            if (prevPath !== response.doc.path) {
-              this.updateEditorDocState({ lastExportResponse: null });
-            }
-            this.updateEditorDocState({ lastSaveResponse: response });
-            this.setWindowTitleFromDoc(response.doc, 'save');
-          }
-          if (response.doc && (response.doc.path || response.doc.id)) {
-            return response;
-          }
-        }
-        return Promise.reject('no backend found');
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : JSON.stringify(err);
-        const errmsg = this.showResultMessage({
-          success: false,
-          caption: 'SAVE ERROR',
-          message,
-          icon: 'mdi-content-save-alert'
-        });
-        console.log(message);
-        return Promise.reject(errmsg);
-      }
-    },
     async setWindowTitle(title: string) {
       if (this.isMainEditor) {
         const backend = this.backend;
@@ -992,10 +1079,10 @@ export default {
       } else if (isImported) {
         title += ' (imported)';
       } else if (isExported) {
-        const suffix = doc.exportedAsPath
-          ? ` (exported as ${doc.exportedAsPath})`
-          : ` (exported)`;
-        title += suffix;
+        // const suffix = doc.exportedAsPath
+        //   ? ` (exported as ${doc.exportedAsPath})`
+        //   : ` (exported)`;
+        // title += suffix;
       }
       this.setWindowTitle(title);
     },
@@ -1055,93 +1142,6 @@ export default {
       }
       return Promise.reject(`can't set the configuration`);
     },
-    // methods for conversions
-    async exportDoc(
-      converter: OutputConverter,
-      storedDoc?: Partial<StoredDoc>,
-    ): Promise<SaveResponse> {
-      const jsonDoc = this.getDocAsJsonString();
-      try {
-        const backend = this.backend;
-        if (backend) {
-          const sdoc: Partial<StoredDoc> = storedDoc || {};
-          // de-proxify converter
-          const outputConverter = toRaw(converter) as OutputConverter;
-          const docState = this.docState();
-          if (docState) {
-            const { resourcePath, project, configuration } = docState;
-            this.setOperationInProgress(true)
-            const response = await backend.save(
-              {
-                id: sdoc.id || docState?.documentName,
-                path: sdoc.path || docState?.lastSaveResponse?.doc.path,
-                exportedAsPath: sdoc.exportedAsPath,
-                content: jsonDoc,
-                converter: outputConverter,
-                configurationName:
-                  sdoc.configurationName || configuration?.name,
-                resourcePath,
-              },
-              project,
-              this.editorKey(),
-            );
-            setTimeout(() => {
-              this.setOperationInProgress(false)
-            }, 3000)
-            // console.log(response.doc)
-            this.setWindowTitleFromDoc(response.doc, 'export');
-            if (response.error) {
-              const errmsg = `ERROR, ${response.message}: ${response.error}`;
-              console.log(errmsg);
-              return Promise.reject(errmsg);
-            } else {
-              // this.currentState.setLastExportResponse(response)
-              this.updateEditorDocState({
-                unsavedChanges: false,
-                lastExportResponse: response,
-              });
-              console.log(
-                `lastExportResponse.doc = ${JSON.stringify({ ...this.docState()?.lastExportResponse?.doc })}`,
-              );
-              console.log(
-                `saved changes: ${this.savedChanges}, exported changes: ${this.exportedChanges}`,
-              );
-            }
-            if (response.doc?.exportedAsPath) {
-              console.log(`EXPORTED IN: ${response.doc.exportedAsPath}`);
-              return response;
-            }
-            return response;
-          }
-          return Promise.reject('no document state');
-        }
-        return Promise.reject('no backend found');
-      } catch (error) {
-        console.log(error);
-        console.log(JSON.stringify(error));
-        return Promise.reject(error);
-      }
-    },
-    async importDoc(converter: InputConverter) {
-      const docState = this.docState();
-      const doc = await this.backend?.open({
-        editorKey: docState?.editorKey,
-        configurationName: docState?.configuration?.name,
-        project: docState?.project,
-        inputConverter: { ...converter },
-      });
-      if (doc) this.loadDocument(doc);
-    },
-    setOutputConverter(converter: OutputConverter) {
-      // console.log(converter)
-      this.visibleExportDialog = false;
-      if (converter) this.exportDoc(converter);
-    },
-    setInputConverter(converter: InputConverter) {
-      // console.log(converter)
-      this.visibleImportDialog = false;
-      if (converter) this.importDoc(converter);
-    },
     // methods for search and replace
     showSearchAndReplaceDialog() {
       this.visibleSearchAndReplaceDialog = true;
@@ -1197,15 +1197,6 @@ export default {
     },
     closeProjectStructureDialog() {
       this.visibleProjectStructureDialog = false;
-    },
-    setDocumentAsNativelySaved() {
-      this.updateEditorDocState({
-        nativeUnsavedChanges: false,
-        unsavedChanges: false,
-        savedDoc: this.editor?.view.state.doc
-      });
-      this.savedChanges = true
-      this.exportedChanges = true
     },
     onClose(event: Event) {
       if (this.askToSaveChanges) {
