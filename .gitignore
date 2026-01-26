@@ -98,3 +98,4 @@ yarn-error.log*
 
 out/
 staticResources/other/UnicodeData.txt
+packages/renderer/stats.html
