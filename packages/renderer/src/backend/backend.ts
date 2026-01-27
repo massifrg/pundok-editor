@@ -8,9 +8,8 @@ import type {
   ProjectComponent,
   Query,
   QueryResult,
-  ReadDoc,
   SaveResponse,
-  StoredDoc,
+  Document,
   DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
@@ -107,19 +106,13 @@ export interface Backend {
    * Retrieves a document from the backend.
    * @param context The environment of the document.
    */
-  open(context: DocumentContext): Promise<ReadDoc>;
+  open(context: DocumentContext): Promise<Document>;
 
   /**
    * Stores a document in the backend.
    * @param doc The document to be stored.
-   * @param project The (optional) project of the document.
-   * @param editorKey The key of the editor that will be answered.
    */
-  save(
-    doc: StoredDoc,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse>;
+  save(doc: Document): Promise<SaveResponse>;
 
   /**
    * Retrieves the project of a document from the backend.

@@ -24,7 +24,7 @@ export interface PandocFormatDescription {
   icon?: string;
 }
 
-const pandocFormats: Record<string, PandocFormatDescription> = {
+export const pandocFormats: Record<string, PandocFormatDescription> = {
   ansi: {
     description: 'ANSI',
     extensions: ['ans', 'ansi', 'txt'],
@@ -507,7 +507,9 @@ export function getPandocFormatDescriptions(input_names: string[], output_names:
  * @param format The input format name.
  * @returns 
  */
-export function pandocFormatToInputConverter(format: string | PandocFormatDescription): InputConverter | undefined {
+export function pandocFormatToInputConverter(format?: string | PandocFormatDescription): InputConverter | undefined {
+  if (!format)
+    return undefined
   const desc: PandocFormatDescription | undefined = isString(format)
     ? pandocFormats[format]
     : format
@@ -528,7 +530,9 @@ export function pandocFormatToInputConverter(format: string | PandocFormatDescri
  * @param format The output format name.
  * @returns 
  */
-export function pandocFormatToOutputConverter(format: string | PandocFormatDescription): OutputConverter | undefined {
+export function pandocFormatToOutputConverter(format?: string | PandocFormatDescription): OutputConverter | undefined {
+  if (!format)
+    return undefined
   const desc: PandocFormatDescription | undefined = isString(format)
     ? pandocFormats[format]
     : format

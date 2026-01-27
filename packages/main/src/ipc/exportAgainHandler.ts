@@ -2,7 +2,7 @@ import { IpcHub } from "./ipcHub";
 import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
 import { getExportJobWithHash } from "./documentHash";
-import { EditorKeyType, PundokEditorProject, StoredDoc } from "../common";
+import { EditorKeyType, PundokEditorProject, Document, DocumentFormat } from "../common";
 
 export const exportAgainHandler =
   (hub: IpcHub) =>
@@ -17,9 +17,13 @@ export const exportAgainHandler =
         const project = projectAsJsonString
           ? JSON.parse(projectAsJsonString) as PundokEditorProject
           : undefined
-        const sdoc: StoredDoc = {
+        const documentFormat: DocumentFormat = {
+          ftype: 'output-converter',
+          ...converter
+        }
+        const sdoc: Document = {
           path,
-          outputConverter: converter,
+          documentFormat,
           configurationName,
           content: ''
         }

@@ -3,7 +3,7 @@ import {
   type ConfigurationSummary,
   type PundokEditorConfig,
   type SaveResponse,
-  type StoredDoc,
+  type Document,
   getHardcodedCustomCss,
   getHardcodedEditorConfig,
   HARDCODED_CONFIG_NAME,
@@ -14,7 +14,6 @@ import {
   PundokEditorProject,
   EditorKeyType,
   FindResourceOptions,
-  ReadDoc,
   ProjectComponent,
   DocumentContext,
   DocumentCoords,
@@ -58,15 +57,11 @@ export class NetBackend implements Backend {
     throw new Error('Method not implemented.');
   }
 
-  open(context: DocumentContext): Promise<ReadDoc> {
+  open(context: DocumentContext): Promise<Document> {
     throw new Error('Method not implemented.');
   }
 
-  save(
-    doc: StoredDoc,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse> {
+  save(doc: Document): Promise<SaveResponse> {
     console.log(doc.content);
     throw new Error('Method not implemented.');
   }

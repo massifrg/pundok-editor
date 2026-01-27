@@ -9,7 +9,7 @@ import {
   type ConfigurationSummary,
   PundokEditorConfig,
   type SaveResponse,
-  type StoredDoc,
+  type Document,
   getHardcodedCustomCss,
   getHardcodedEditorConfig,
   HARDCODED_CONFIG_NAME,
@@ -27,7 +27,6 @@ import {
   PundokEditorConfigInit,
   computeProjectConfiguration,
   FindResourceOptions,
-  ReadDoc,
   ProjectComponent,
   DocumentContext,
   DocumentCoords,
@@ -49,6 +48,8 @@ import {
   FolderContents,
   PundokBookmarkType,
   PundokBookmark,
+  documentFormatToInputConverter,
+  documentFormatToOutputConverter,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -266,9 +267,10 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('get-bookmarks', bookmarkType)
   }
 
-  async open(context: DocumentContext): Promise<ReadDoc> {
+  async open(context: DocumentContext): Promise<Document> {
     try {
-      const { inputConverter, project } = context;
+      const { documentFormat, project } = context;
+      const inputConverter = documentFormatToInputConverter(documentFormat)
       return this.ipc?.invoke('open-document', {
         ...context,
         inputConverter: inputConverter && JSON.stringify(inputConverter),
@@ -279,37 +281,21 @@ export class LocalBackend implements Backend {
     }
   }
 
-  private doSave(
-    doc: StoredDoc,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse> {
-    const ipc = this.ipc;
-    if (ipc) {
-      return ipc.invoke(
-        'save-document',
-        JSON.stringify(doc),
-        project && JSON.stringify(project),
-        editorKey,
-      );
-    } else {
-      throw new Error('Method not implemented.');
-    }
-  }
-
-  save(
-    doc: StoredDoc,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse> {
+  save(doc: Document): Promise<SaveResponse> {
     let preview: Partial<PreviewOptions> | undefined = undefined;
-    const openResult = doc.outputConverter?.openResult;
+    const { documentFormat } = doc
+    const outputConverter = documentFormatToOutputConverter(documentFormat)
+    const openResult = outputConverter?.openResult;
     if (openResult)
       preview = {
         inPundokEditor: openResult === 'editor',
       };
-    console.log(doc);
-    return this.doSave({ ...doc /*, preview */ }, project, editorKey);
+    const ipc = this.ipc;
+    if (ipc) {
+      return ipc.invoke('save-document', JSON.stringify(doc));
+    } else {
+      throw new Error('Method not implemented.');
+    }
   }
 
   async debugInfo(): Promise<object> {

@@ -95,8 +95,6 @@ import {
   type PundokEditorConfig,
   type PundokEditorProject,
   type SaveResponse,
-  StoredDoc,
-  ReadDoc,
   EditorKeyType,
   getHardcodedEditorConfig,
   ProjectComponent,
@@ -126,7 +124,9 @@ import {
   ActionNameWithProps,
   GetProjectOptions,
   DocumentSaveActionProps,
+  Document,
   DocumentFormat,
+  DEFAULT_DOCUMENT_FORMAT,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -447,7 +447,7 @@ export default {
             break;
           case ACTION_DOCUMENT_EXPORT.name:
             const { outputConverter } = props as ExportDocumentActionProps;
-            let storedDoc: Partial<StoredDoc> | undefined = undefined;
+            let storedDoc: Partial<Document> | undefined = undefined;
             if (outputConverter) {
               this.exportDoc(outputConverter, storedDoc);
             } else {
@@ -700,7 +700,7 @@ export default {
      * Set and show a dialog to save the current unsaved contents before loading a document.
      * @param options 
      */
-    setPendingBeforeLoadDoc(options: { doc: ReadDoc }) {
+    setPendingBeforeLoadDoc(options: { doc: Document }) {
       const pending: PendingOperation = {
         type: 'loading',
         cancel: {
@@ -736,10 +736,10 @@ export default {
         return
       }
       const isNew = !content;
-      const doc: ReadDoc = {
+      const doc: Document = {
         content: content || EMPTY_DOCUMENT,
         configurationName,
-        format: 'json',
+        documentFormat: DEFAULT_DOCUMENT_FORMAT,
         // editorKey: this.editorKey(),
         id: 'unknown',
       };
@@ -837,7 +837,7 @@ export default {
       this.savedChanges = true
       this.exportedChanges = true
     },
-    async loadDocument(doc: ReadDoc, ignoreUnsaved?: boolean, atLine?: number) {
+    async loadDocument(doc: Document, ignoreUnsaved?: boolean, atLine?: number) {
       if (!ignoreUnsaved && this.askToSaveChanges) {
         this.setPendingBeforeLoadDoc({ doc })
         return
@@ -887,28 +887,31 @@ export default {
     beforeSaving() {
       this.editor?.commands.fixPandocTables();
     },
-    async save(path?: string) {
+    async save(path?: string, options?: { isCopy: boolean }) {
+      const isCopy = options?.isCopy
       if (!path) {
-        this.showSaveDocumentDialog()
+        if (isCopy)
+          this.showSaveCopyDialog()
+        else
+          this.showSaveDocumentDialog()
         return
       }
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
       try {
         const docState = this.docState();
+        const documentFormat = (isCopy ? docState?.copyFormat : docState?.outputFormat) || DEFAULT_DOCUMENT_FORMAT
         if (this.backend) {
-          const response = await this.backend.save(
-            {
-              id: docState?.documentName,
-              path: path,
-              content: jsonDoc,
-              format: 'json',
-              configurationName: docState?.configuration?.name,
-              resourcePath: docState?.resourcePath,
-            },
-            docState?.project,
-            this.editorKey(),
-          );
+          const response = await this.backend.save({
+            editorKey: this.editorKey(),
+            id: docState?.documentName,
+            path: path,
+            content: jsonDoc,
+            documentFormat,
+            project: docState?.project,
+            configurationName: docState?.configuration?.name,
+            resourcePath: docState?.resourcePath,
+          });
           if (response.error) {
             const errmsg = this.showResultMessage({
               success: false,
@@ -954,32 +957,33 @@ export default {
     },
     async exportDoc(
       converter: OutputConverter,
-      storedDoc?: Partial<StoredDoc>,
+      storedDoc?: Partial<Document>,
     ): Promise<SaveResponse> {
       const jsonDoc = this.getDocAsJsonString();
       try {
         const backend = this.backend;
         if (backend) {
-          const sdoc: Partial<StoredDoc> = storedDoc || {};
+          const sdoc: Partial<Document> = storedDoc || {};
           // de-proxify converter
-          const outputConverter = toRaw(converter) as OutputConverter;
+          const documentFormat: DocumentFormat = {
+            ftype: 'output-converter',
+            ...toRaw(converter) as OutputConverter,
+          }
           const docState = this.docState();
           if (docState) {
             const { resourcePath, project, configuration } = docState;
             this.setOperationInProgress(true)
             const response = await backend.save(
               {
+                editorKey: this.editorKey(),
                 id: sdoc.id || docState?.documentName,
                 path: sdoc.path || docState?.lastSaveResponse?.doc.path,
-                // exportedAsPath: sdoc.exportedAsPath,
                 content: jsonDoc,
-                outputConverter: outputConverter,
-                configurationName:
-                  sdoc.configurationName || configuration?.name,
+                project,
+                documentFormat,
+                configurationName: sdoc.configurationName || configuration?.name,
                 resourcePath,
               },
-              project,
-              this.editorKey(),
             );
             setTimeout(() => {
               this.setOperationInProgress(false)
@@ -1020,11 +1024,15 @@ export default {
     },
     async importDoc(converter: InputConverter) {
       const docState = this.docState();
+      const documentFormat: DocumentFormat = {
+        ftype: 'input-converter',
+        ...toRaw(converter) as InputConverter
+      }
       const doc = await this.backend?.open({
         editorKey: docState?.editorKey,
         configurationName: docState?.configuration?.name,
         project: docState?.project,
-        inputConverter: { ...converter },
+        documentFormat,
       });
       if (doc) this.loadDocument(doc);
     },
@@ -1146,7 +1154,7 @@ export default {
       }
     },
     setWindowTitleFromDoc(
-      doc: StoredDoc,
+      doc: Document,
       kind?: 'new' | 'save' | 'import' | 'export',
     ) {
       let title = doc.path || doc.id || 'document';
@@ -1318,7 +1326,7 @@ export default {
         case 'loading':
           if (pending.doc) {
             this.setDocumentAsNativelySaved();
-            this.loadDocument(pending.doc as ReadDoc, true);
+            this.loadDocument(pending.doc as Document, true);
           }
           break;
         case 'closing':

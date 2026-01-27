@@ -1,5 +1,5 @@
 import { PundokEditorProject } from './config';
-import { ReadDoc } from './document';
+import { Document } from './document';
 import { EditorKeyType } from './editorKey';
 import { FeedbackMessage } from './feedback';
 import { ViewerSetup } from './viewer';
@@ -233,7 +233,7 @@ export interface ServerMessageFeedback extends ServerMessage {
 /** A message from Main to Renderer with the content of a document. */
 export interface ServerMessageContent extends ServerMessage {
   type: 'content';
-  content: ReadDoc;
+  content: Document;
   project?: PundokEditorProject;
 }
 

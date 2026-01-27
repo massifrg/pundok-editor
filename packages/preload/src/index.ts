@@ -4,7 +4,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../../common/src';
-export { type SaveResponse, type StoredDoc } from '../../common/src';
+export { type SaveResponse, type Document } from '../../common/src';
 
 type IpcRendererListener = (
   e: Electron.IpcRendererEvent,

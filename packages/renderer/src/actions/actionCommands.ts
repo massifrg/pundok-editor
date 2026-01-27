@@ -29,7 +29,7 @@ import {
   OutputConverter,
   PandocFilterTransform,
   ResultMessageActionProps,
-  StoredDoc,
+  Document,
   TransformDocumentActionProps,
   ViewerSetup,
 } from '../common';
@@ -87,7 +87,7 @@ export function setActionOpenDocument(
 export function setActionImportDocument(
   stateOrKey: EditorState | EditorKeyType,
   inputConverter: InputConverter,
-  storedDoc?: Partial<StoredDoc>,
+  storedDoc?: Partial<Document>,
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   // console.log(`setActionImportDocument, editorKey=${editorKey}`);
@@ -106,7 +106,7 @@ export function setActionImportDocument(
 export function setActionExportDocument(
   stateOrKey: EditorState | EditorKeyType,
   outputConverter: OutputConverter,
-  storedDoc?: Partial<StoredDoc>,
+  storedDoc?: Partial<Document>,
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey) {

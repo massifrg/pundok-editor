@@ -1,4 +1,5 @@
-import { InputConverter, OutputConverter, PundokEditorProject } from './config';
+import { PundokEditorProject } from './config';
+import { DocumentFormat } from './documentFormat';
 import { EditorKeyType } from "./editorKey";
 
 interface CommonDocumentCoords {
@@ -26,10 +27,10 @@ export interface CompatibleDocumentContext {
   id?: string;
   /** The path of the file, when the document is read from a file. */
   path?: string;
+  /** The format of the document */
+  documentFormat?: DocumentFormat | string;
   /** The name of the configuration associated with the document. */
   configurationName?: string;
-  /** The converter to use to read the document */
-  inputConverter?: InputConverter | string;
   /** The project associated with the document */
   project?: PundokEditorProject | string;
   /** An array of paths for pandoc's --resource-path option */
@@ -40,27 +41,13 @@ export interface CompatibleDocumentContext {
  * An interface for the environment of a document.
  */
 export interface DocumentContext extends CompatibleDocumentContext {
-  /** The converter to use to read the document */
-  inputConverter?: InputConverter;
+  /** The format of the document */
+  documentFormat?: DocumentFormat;
   /** The project associated with the document */
   project?: PundokEditorProject;
 }
 
-/**
- * A document that has been read (from the filesystem or from any other storage).
- */
-export interface ReadDoc extends DocumentContext {
-  /** The file contents. */
+export interface Document extends DocumentContext {
+  /** The document JSON.stringified contents. */
   content: string;
-  /** The original format of the file. */
-  format?: string;
 }
-
-/**
- * A document that has been saved or exported to any kind of storage.
- */
-export interface StoredDoc extends ReadDoc {
-  /** The converter used to export it. */
-  outputConverter?: OutputConverter;
-}
-

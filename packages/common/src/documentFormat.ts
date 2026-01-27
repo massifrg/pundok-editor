@@ -1,5 +1,12 @@
 import { InputConverter, OutputConverter } from "./config"
-import { PandocFormatDescription } from "./pandocFormat"
+import {
+  DEFAULT_COPY_FORMAT,
+  DEFAULT_FORMAT,
+  PandocFormatDescription,
+  pandocFormats,
+  pandocFormatToInputConverter,
+  pandocFormatToOutputConverter
+} from "./pandocFormat"
 
 export type DocumentFormatType = 'guess' | 'format' | 'input-converter' | 'output-converter'
 /**
@@ -31,3 +38,45 @@ export function documentFormatExtension(format: DocumentFormat): string | undefi
     default:
   }
 }
+
+export function documentFormatToInputConverter(format?: DocumentFormat): InputConverter | undefined {
+  if (format) {
+    switch (format.ftype) {
+      case 'format':
+        return pandocFormatToInputConverter(format)
+      case 'input-converter':
+        return format as InputConverter
+      default:
+        return undefined
+    }
+  }
+  return undefined
+}
+
+export function documentFormatToOutputConverter(format?: DocumentFormat): OutputConverter | undefined {
+  if (format) {
+    switch (format.ftype) {
+      case 'format':
+        return pandocFormatToOutputConverter(format)
+      case 'output-converter':
+        return format as OutputConverter
+      default:
+        return undefined
+    }
+  }
+  return undefined
+}
+
+export function pandocFormatToDocumentFormat(name: string): DocumentFormat | undefined {
+  const desc = pandocFormats[name]
+  if (desc) {
+    return {
+      ftype: 'format',
+      ...desc
+    }
+    return undefined
+  }
+}
+
+export const DEFAULT_DOCUMENT_FORMAT: DocumentFormat = pandocFormatToDocumentFormat(DEFAULT_FORMAT)!
+export const DEFAULT_COPY_DOCUMENT_FORMAT: DocumentFormat = pandocFormatToDocumentFormat(DEFAULT_COPY_FORMAT)!

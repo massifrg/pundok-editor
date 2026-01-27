@@ -19,19 +19,19 @@ import {
   ExternalProgramResult,
   IPC_CHANNELS,
   PundokEditorProject,
-  ReadDoc,
   SaveResponse,
   ServerMessage,
   ServerMessageCommand,
-  StoredDoc,
-  computeProjectConfiguration,
-  PundokEditorConfig,
+  Document,
   DocumentContext,
   CUSTOM_PANDOC_READERS,
   CustomPandocReader,
   IpcMainToRendererChannel,
   ServerMessageForViewer,
   ServerMessageSetProject,
+  documentFormatToInputConverter,
+  DEFAULT_DOCUMENT_FORMAT,
+  documentFormatToOutputConverter,
 } from '../common';
 import { isReadableFile, validResourcePaths } from '../resourcesManager';
 import FileManager from '../fileManager';
@@ -155,8 +155,9 @@ export class IpcHub {
   async openDocument(
     context: DocumentContext,
     options?: OpenDialogOptions,
-  ): Promise<ReadDoc | undefined> {
-    const { configurationName, inputConverter, path } = context;
+  ): Promise<Document | undefined> {
+    const { configurationName, documentFormat, path } = context;
+    const inputConverter = documentFormatToInputConverter(documentFormat)
     const editorKey = context.editorKey || this.mainEditorKey;
     const filename =
       path ||
@@ -267,12 +268,12 @@ export class IpcHub {
     } else {
       const { commandLine, error, exitCode, output } = result
       if (exitCode === 0) {
-        const readDoc: ReadDoc = {
+        const readDoc: Document = {
           editorKey,
           id: name,
           path: filename,
           content: output,
-          format,
+          documentFormat,
           configurationName,
           resourcePath,
         };
@@ -303,7 +304,7 @@ export class IpcHub {
   }
 
   async saveDocument(
-    doc: ReadDoc,
+    doc: Document,
     project?: PundokEditorProject,
   ): Promise<SaveResponse> {
     const { path, content } = doc;
@@ -352,7 +353,7 @@ export class IpcHub {
         path: docFilepath,
         content,
         id,
-        format: 'json',
+        documentFormat: DEFAULT_DOCUMENT_FORMAT,
         configurationName: doc.configurationName,
         project: doc.project,
       },
@@ -362,12 +363,13 @@ export class IpcHub {
   }
 
   async exportDocument(
-    doc: StoredDoc,
+    doc: Document,
     project?: PundokEditorProject,
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse> {
-    const { content, outputConverter: converter, /* exportedAsPath,*/ configurationName } = doc;
+    const { content, documentFormat, /* exportedAsPath,*/ configurationName } = doc;
     const saveOpts: Partial<SaveDialogOptions> = {};
+    const converter = documentFormatToOutputConverter(documentFormat)
     if (converter?.extension) {
       const { extension, format } = converter;
       const name =
@@ -409,7 +411,7 @@ export class IpcHub {
     if (sourceFile) {
       documentHash = await rememberDocumentHash({
         path: sourceFile,
-        converter: doc.outputConverter!,
+        converter: documentFormatToOutputConverter(doc.documentFormat)!,
         configurationName: doc.configurationName,
         projectAsJsonString: project ? JSON.stringify(project) : undefined
       })
@@ -481,14 +483,15 @@ export class IpcHub {
             path: doc.path,
             // exportedAsPath: resultFile,
             content: output,
-          } as StoredDoc,
+          } as Document,
           resultFile,
           documentHash,
           commandLine,
           cwd,
         }
         if (resultFile) {
-          const openResult = doc.outputConverter?.openResult;
+          const outputConverter = documentFormatToOutputConverter(doc.documentFormat)
+          const openResult = outputConverter?.openResult;
           console.log(`openResult = ${openResult}`);
           if (openResult === 'editor') {
             this.send('show-in-viewer', {
@@ -524,7 +527,7 @@ export class IpcHub {
             path: resultFile,
             content: output,
             configurationName,
-          } as StoredDoc,
+          } as Document,
           resultFile,
           commandLine,
           cwd,
