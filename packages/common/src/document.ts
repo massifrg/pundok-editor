@@ -20,7 +20,7 @@ export type DocumentCoords = LocalDocumentCoords | DbDocumentCoords;
 /**
  * An interface for the environment of a document.
  */
-export interface CompatibleDocumentContext {
+export interface DocumentContext {
   /** The editor that is the recipient of the file content */
   editorKey?: EditorKeyType;
   /** The document id. */
@@ -28,23 +28,13 @@ export interface CompatibleDocumentContext {
   /** The path of the file, when the document is read from a file. */
   path?: string;
   /** The format of the document */
-  documentFormat?: DocumentFormat | string;
+  documentFormat?: DocumentFormat;
   /** The name of the configuration associated with the document. */
   configurationName?: string;
   /** The project associated with the document */
-  project?: PundokEditorProject | string;
+  project?: PundokEditorProject;
   /** An array of paths for pandoc's --resource-path option */
   resourcePath?: string[];
-}
-
-/**
- * An interface for the environment of a document.
- */
-export interface DocumentContext extends CompatibleDocumentContext {
-  /** The format of the document */
-  documentFormat?: DocumentFormat;
-  /** The project associated with the document */
-  project?: PundokEditorProject;
 }
 
 /**
