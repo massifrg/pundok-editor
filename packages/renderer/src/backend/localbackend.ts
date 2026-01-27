@@ -9,7 +9,7 @@ import {
   type ConfigurationSummary,
   PundokEditorConfig,
   type SaveResponse,
-  type Document,
+  type CxDocument,
   getHardcodedCustomCss,
   getHardcodedEditorConfig,
   HARDCODED_CONFIG_NAME,
@@ -267,7 +267,7 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('get-bookmarks', bookmarkType)
   }
 
-  async open(context: DocumentContext): Promise<Document> {
+  async open(context: DocumentContext): Promise<CxDocument> {
     try {
       const { documentFormat, project } = context;
       const inputConverter = documentFormatToInputConverter(documentFormat)
@@ -281,7 +281,7 @@ export class LocalBackend implements Backend {
     }
   }
 
-  save(doc: Document): Promise<SaveResponse> {
+  save(doc: CxDocument): Promise<SaveResponse> {
     let preview: Partial<PreviewOptions> | undefined = undefined;
     const { documentFormat } = doc
     const outputConverter = documentFormatToOutputConverter(documentFormat)

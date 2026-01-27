@@ -4,7 +4,7 @@ import {
   PundokBookmark,
   EditorKeyType,
   SaveResponse,
-  Document,
+  CxDocument,
   documentFormatToOutputConverter,
   DocumentFormat,
 } from '../common';
@@ -14,7 +14,7 @@ import { updateBookmarksFile } from '../bookmarks';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
- * to ask to save to a file the contents of a {@link Document}.
+ * to ask to save to a file the contents of a {@link CxDocument}.
  * @param hub the manager of the communications between `main` and `renderer`
  */
 export const saveDocumentHandler =
@@ -23,7 +23,7 @@ export const saveDocumentHandler =
       let response: SaveResponse;
       let editorKey: EditorKeyType | undefined = undefined
       try {
-        const doc: Document = JSON.parse(storedDoc);
+        const doc: CxDocument = JSON.parse(storedDoc);
         editorKey = doc.editorKey
         const { configurationName, content, documentFormat, id, path, project } = doc
         const outputConverter = documentFormatToOutputConverter(documentFormat as DocumentFormat)

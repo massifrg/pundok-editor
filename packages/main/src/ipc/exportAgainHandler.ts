@@ -2,7 +2,7 @@ import { IpcHub } from "./ipcHub";
 import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
 import { getExportJobWithHash } from "./documentHash";
-import { EditorKeyType, PundokEditorProject, Document, DocumentFormat } from "../common";
+import { EditorKeyType, PundokEditorProject, CxDocument, DocumentFormat } from "../common";
 
 export const exportAgainHandler =
   (hub: IpcHub) =>
@@ -21,7 +21,7 @@ export const exportAgainHandler =
           ftype: 'output-converter',
           ...converter
         }
-        const sdoc: Document = {
+        const sdoc: CxDocument = {
           path,
           documentFormat,
           configurationName,

@@ -3,7 +3,7 @@ import {
   type ConfigurationSummary,
   type PundokEditorConfig,
   type SaveResponse,
-  type Document,
+  type CxDocument,
   getHardcodedCustomCss,
   getHardcodedEditorConfig,
   HARDCODED_CONFIG_NAME,
@@ -57,11 +57,11 @@ export class NetBackend implements Backend {
     throw new Error('Method not implemented.');
   }
 
-  open(context: DocumentContext): Promise<Document> {
+  open(context: DocumentContext): Promise<CxDocument> {
     throw new Error('Method not implemented.');
   }
 
-  save(doc: Document): Promise<SaveResponse> {
+  save(doc: CxDocument): Promise<SaveResponse> {
     console.log(doc.content);
     throw new Error('Method not implemented.');
   }

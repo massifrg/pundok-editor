@@ -124,7 +124,7 @@ import {
   ActionNameWithProps,
   GetProjectOptions,
   DocumentSaveActionProps,
-  Document,
+  CxDocument,
   DocumentFormat,
   DEFAULT_DOCUMENT_FORMAT,
 } from '../common';
@@ -447,7 +447,7 @@ export default {
             break;
           case ACTION_DOCUMENT_EXPORT.name:
             const { outputConverter } = props as ExportDocumentActionProps;
-            let storedDoc: Partial<Document> | undefined = undefined;
+            let storedDoc: Partial<CxDocument> | undefined = undefined;
             if (outputConverter) {
               this.exportDoc(outputConverter, storedDoc);
             } else {
@@ -700,7 +700,7 @@ export default {
      * Set and show a dialog to save the current unsaved contents before loading a document.
      * @param options 
      */
-    setPendingBeforeLoadDoc(options: { doc: Document }) {
+    setPendingBeforeLoadDoc(options: { doc: CxDocument }) {
       const pending: PendingOperation = {
         type: 'loading',
         cancel: {
@@ -736,7 +736,7 @@ export default {
         return
       }
       const isNew = !content;
-      const doc: Document = {
+      const doc: CxDocument = {
         content: content || EMPTY_DOCUMENT,
         configurationName,
         documentFormat: DEFAULT_DOCUMENT_FORMAT,
@@ -837,7 +837,7 @@ export default {
       this.savedChanges = true
       this.exportedChanges = true
     },
-    async loadDocument(doc: Document, ignoreUnsaved?: boolean, atLine?: number) {
+    async loadDocument(doc: CxDocument, ignoreUnsaved?: boolean, atLine?: number) {
       if (!ignoreUnsaved && this.askToSaveChanges) {
         this.setPendingBeforeLoadDoc({ doc })
         return
@@ -957,13 +957,13 @@ export default {
     },
     async exportDoc(
       converter: OutputConverter,
-      storedDoc?: Partial<Document>,
+      storedDoc?: Partial<CxDocument>,
     ): Promise<SaveResponse> {
       const jsonDoc = this.getDocAsJsonString();
       try {
         const backend = this.backend;
         if (backend) {
-          const sdoc: Partial<Document> = storedDoc || {};
+          const sdoc: Partial<CxDocument> = storedDoc || {};
           // de-proxify converter
           const documentFormat: DocumentFormat = {
             ftype: 'output-converter',
@@ -1154,7 +1154,7 @@ export default {
       }
     },
     setWindowTitleFromDoc(
-      doc: Document,
+      doc: CxDocument,
       kind?: 'new' | 'save' | 'import' | 'export',
     ) {
       let title = doc.path || doc.id || 'document';
@@ -1326,7 +1326,7 @@ export default {
         case 'loading':
           if (pending.doc) {
             this.setDocumentAsNativelySaved();
-            this.loadDocument(pending.doc as Document, true);
+            this.loadDocument(pending.doc as CxDocument, true);
           }
           break;
         case 'closing':

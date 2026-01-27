@@ -12,7 +12,7 @@ import { readdir, readFile } from "fs/promises";
 import { pathToFileURL } from 'url'
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
-import { Document, Folder, FolderContents, Place } from "../common";
+import { CxDocument, Folder, FolderContents, Place } from "../common";
 import * as drivelist from 'drivelist';
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
@@ -48,7 +48,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
     const contents = await readdir(folder, { withFileTypes: true })
     const base = normalize(folder).split(separator)
     const folders: Folder[] = []
-    const documents: Document[] = []
+    const documents: CxDocument[] = []
     if (!isRoot(folder))
       folders.push({ name: '..' })
     contents.forEach(c => {

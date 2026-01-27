@@ -6,8 +6,6 @@ export type Document = {
   name: string
 }
 
-
-
 export type Place = {
   name: string,
   href: string,

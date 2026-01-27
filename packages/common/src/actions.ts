@@ -6,7 +6,7 @@ import {
   PundokEditorConfig,
   PundokEditorProject
 } from './config';
-import { DocumentContext, Document } from './document';
+import { DocumentContext, CxDocument } from './document';
 import { FeedbackMessage } from "./feedback"
 import { Node as ProsemirrorNode } from "@tiptap/pm/model"
 import { ViewerSetup } from './viewer';
@@ -33,11 +33,11 @@ export interface SetContentActionProps {
 }
 
 export interface BackendSetContentActionProps {
-  content: Document
+  content: CxDocument
 }
 
 export interface BackendSetContentWithProjectActionProps {
-  content: Document,
+  content: CxDocument,
   configuration: PundokEditorConfig,
   project: PundokEditorProject
 }
@@ -58,17 +58,17 @@ export interface DocumentOpenActionProps {
 
 export interface DocumentSaveActionProps {
   outputConverter: OutputConverter,
-  storedDoc: Partial<Document>
+  storedDoc: Partial<CxDocument>
 }
 
 export interface ImportDocumentActionProps {
   inputConverter: InputConverter,
-  storedDoc: Partial<Document>
+  storedDoc: Partial<CxDocument>
 }
 
 export interface ExportDocumentActionProps {
   outputConverter: OutputConverter,
-  storedDoc: Partial<Document>
+  storedDoc: Partial<CxDocument>
 }
 
 export interface TransformDocumentActionProps {

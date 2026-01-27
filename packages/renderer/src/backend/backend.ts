@@ -9,7 +9,7 @@ import type {
   Query,
   QueryResult,
   SaveResponse,
-  Document,
+  CxDocument,
   DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
@@ -106,13 +106,13 @@ export interface Backend {
    * Retrieves a document from the backend.
    * @param context The environment of the document.
    */
-  open(context: DocumentContext): Promise<Document>;
+  open(context: DocumentContext): Promise<CxDocument>;
 
   /**
    * Stores a document in the backend.
    * @param doc The document to be stored.
    */
-  save(doc: Document): Promise<SaveResponse>;
+  save(doc: CxDocument): Promise<SaveResponse>;
 
   /**
    * Retrieves the project of a document from the backend.

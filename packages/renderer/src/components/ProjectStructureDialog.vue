@@ -50,7 +50,7 @@
 <script lang="ts">
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import { getDocState, getEditorProject } from '../schema';
-import { DocumentContext, EditorKeyType, ProjectComponent, Document } from '../common';
+import { DocumentContext, EditorKeyType, ProjectComponent, CxDocument } from '../common';
 import { QTreeNode } from 'quasar';
 import { Component, defineAsyncComponent } from 'vue';
 import { useBackend, useProjectCache } from '../stores';
@@ -237,7 +237,7 @@ const ProjectStructureDialog: Component = {
       if (state && context)
         setActionOpenDocument(state, context)
     },
-    documentLoaded(doc: Document, editor: Editor) {
+    documentLoaded(doc: CxDocument, editor: Editor) {
       this.loaded = {
         id: doc.id,
         path: doc.path

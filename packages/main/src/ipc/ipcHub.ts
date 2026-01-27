@@ -22,7 +22,7 @@ import {
   SaveResponse,
   ServerMessage,
   ServerMessageCommand,
-  Document,
+  CxDocument,
   DocumentContext,
   CUSTOM_PANDOC_READERS,
   CustomPandocReader,
@@ -155,7 +155,7 @@ export class IpcHub {
   async openDocument(
     context: DocumentContext,
     options?: OpenDialogOptions,
-  ): Promise<Document | undefined> {
+  ): Promise<CxDocument | undefined> {
     const { configurationName, documentFormat, path } = context;
     const inputConverter = documentFormatToInputConverter(documentFormat)
     const editorKey = context.editorKey || this.mainEditorKey;
@@ -268,7 +268,7 @@ export class IpcHub {
     } else {
       const { commandLine, error, exitCode, output } = result
       if (exitCode === 0) {
-        const readDoc: Document = {
+        const readDoc: CxDocument = {
           editorKey,
           id: name,
           path: filename,
@@ -304,7 +304,7 @@ export class IpcHub {
   }
 
   async saveDocument(
-    doc: Document,
+    doc: CxDocument,
     project?: PundokEditorProject,
   ): Promise<SaveResponse> {
     const { path, content } = doc;
@@ -363,7 +363,7 @@ export class IpcHub {
   }
 
   async exportDocument(
-    doc: Document,
+    doc: CxDocument,
     project?: PundokEditorProject,
     editorKey?: EditorKeyType,
   ): Promise<SaveResponse> {
@@ -483,7 +483,7 @@ export class IpcHub {
             path: doc.path,
             // exportedAsPath: resultFile,
             content: output,
-          } as Document,
+          } as CxDocument,
           resultFile,
           documentHash,
           commandLine,
@@ -527,7 +527,7 @@ export class IpcHub {
             path: resultFile,
             content: output,
             configurationName,
-          } as Document,
+          } as CxDocument,
           resultFile,
           commandLine,
           cwd,

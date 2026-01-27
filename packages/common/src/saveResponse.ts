@@ -1,4 +1,4 @@
-import { Document } from "./document";
+import { CxDocument } from "./document";
 
 /**
  * The response after trying to save a document.
@@ -9,7 +9,7 @@ export interface SaveResponse {
   /** A feedback message about the saving operation. */
   message: string;
   /** The saved document. */
-  doc: Document;
+  doc: CxDocument;
   /** The file where the output has been saved */
   resultFile?: string;
   /** The command line used to save the document */

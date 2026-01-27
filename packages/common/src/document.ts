@@ -6,8 +6,8 @@ interface CommonDocumentCoords {
   id?: string;
   src?: string;
   path?: string;
-  format?: string;
-  formats?: string[];
+  // format?: string;
+  // formats?: string[];
 }
 interface LocalDocumentCoords extends CommonDocumentCoords {
   path: string;
@@ -47,7 +47,10 @@ export interface DocumentContext extends CompatibleDocumentContext {
   project?: PundokEditorProject;
 }
 
-export interface Document extends DocumentContext {
+/**
+ * A document with a context.
+ */
+export interface CxDocument extends DocumentContext {
   /** The document JSON.stringified contents. */
   content: string;
 }

@@ -18,7 +18,7 @@
 </template>
 
 <script lang="ts">
-import { OutputConverter, Document, DocumentFormat } from '../common';
+import { OutputConverter, CxDocument, DocumentFormat } from '../common';
 import { setActionExportDocument, setActionShowExportDialog } from '../actions';
 import { getEditorConfiguration, getEditorDocState } from '../schema';
 
@@ -61,7 +61,7 @@ export default {
       const editor = this.editor
       if (editor && oc) {
         const outputConverter = { ...oc }
-        let storedDoc: Partial<Document> | undefined = undefined
+        let storedDoc: Partial<CxDocument> | undefined = undefined
         if (this.lastExportResponse) {
           const { id, configurationName, documentFormat, path /*, exportedAsPath */ } = this.lastExportResponse.doc
           if (this.documentName == id && this.configurationName == configurationName && oc.name == documentFormat?.name) {

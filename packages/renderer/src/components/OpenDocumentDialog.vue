@@ -3,13 +3,13 @@ import { toRaw } from 'vue';
 import { mapState } from 'pinia';
 import { QTable, QTableColumn } from 'quasar';
 import {
-  Document,
   DocumentBookmark,
   DocumentFormat,
   documentFormatExtension,
   DocumentFormatType,
   DocumentOpenActionProps,
   DocumentSaveActionProps,
+  Document,
   Folder,
   getPandocFormatDescriptions,
   guessFormat,
