@@ -30,7 +30,6 @@ import {
   ProjectComponent,
   DocumentContext,
   DocumentCoords,
-  CompatibleDocumentContext,
   IpcRendererToMainChannel,
   IpcMainToRendererChannel,
   ServerMessageForViewer,
@@ -48,7 +47,6 @@ import {
   FolderContents,
   PundokBookmarkType,
   PundokBookmark,
-  documentFormatToInputConverter,
   documentFormatToOutputConverter,
 } from '../common';
 import {
