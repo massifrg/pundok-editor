@@ -57,18 +57,15 @@ export interface DocumentOpenActionProps {
 }
 
 export interface DocumentSaveActionProps {
-  outputConverter: OutputConverter,
-  storedDoc: Partial<CxDocument>
+  doc: Partial<CxDocument>
 }
 
 export interface ImportDocumentActionProps {
-  inputConverter: InputConverter,
-  storedDoc: Partial<CxDocument>
+  doc: Partial<CxDocument>
 }
 
 export interface ExportDocumentActionProps {
-  outputConverter: OutputConverter,
-  storedDoc: Partial<CxDocument>
+  doc: Partial<CxDocument>
 }
 
 export interface TransformDocumentActionProps {

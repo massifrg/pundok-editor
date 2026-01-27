@@ -6,7 +6,7 @@ interface CommonDocumentCoords {
   id?: string;
   src?: string;
   path?: string;
-  // format?: string;
+  formatName?: string;
   // formats?: string[];
 }
 interface LocalDocumentCoords extends CommonDocumentCoords {

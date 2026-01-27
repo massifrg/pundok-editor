@@ -25,7 +25,7 @@ import {
   PundokEditorProject,
 } from '../common';
 import { useBackend } from '../stores';
-import { ACTION_DOCUMENT_OPEN, ACTION_DOCUMENT_SAVE, setActionCommand } from '../actions';
+import { ACTION_DOCUMENT_INCLUDE, ACTION_DOCUMENT_OPEN, ACTION_DOCUMENT_SAVE, setActionCommand } from '../actions';
 import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
 import { EditorState } from '@tiptap/pm/state';
 
@@ -74,7 +74,7 @@ function computeCurrentFolder(state?: EditorState): string[] {
   return folder
 }
 
-export type DocumentDialogMode = 'open' | 'save' | 'save-copy'
+export type DocumentDialogMode = 'open' | 'import' | 'save' | 'save-copy'
 
 export default {
   props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat'],
@@ -161,7 +161,24 @@ export default {
       return mode !== 'save' && mode !== 'save-copy'
     },
     dialogPrompt() {
-      return this.prompt || (this.isInputDialog ? 'Open document:' : 'Write to document:')
+      let prompt = this.prompt
+      if (!prompt) {
+        switch (this.mode as DocumentDialogMode) {
+          case 'save':
+            prompt = 'Save document as:'
+            break
+          case 'save-copy':
+            prompt = 'Save a copy as:'
+            break
+          case 'import':
+            prompt = 'Import document:'
+            break
+          case 'open':
+          default:
+            prompt = 'Open document:'
+        }
+      }
+      return prompt
     },
     configuration() {
       return getEditorConfiguration(this.editor.state)
@@ -323,34 +340,12 @@ export default {
         why: 'no suitable format found'
       }
     },
-    inputConverterFromDocumentFormat(path: string): InputConverter | undefined {
+    documentFormatFromPath(path: string): DocumentFormat | undefined {
       if (!this.format || this.format?.ftype === 'guess') {
         const { format, why } = this.guessFormatFromPath(path)
-        return format ? pandocFormatToInputConverter(format) : undefined
+        return format ? format : undefined
       }
-      const format = this.format
-      const { ftype } = format
-      if (ftype === 'output-converter')
-        return undefined
-      if (ftype === 'format')
-        return pandocFormatToInputConverter(format)
-      if (ftype === 'input-converter')
-        return format as InputConverter
-      return undefined
-    },
-    outputConverterFromDocumentFormat(path: string): OutputConverter | undefined {
-      if (!this.format || this.format?.ftype === 'guess') {
-        const { format, why } = this.guessFormatFromPath(path)
-        return format ? pandocFormatToOutputConverter(format) : undefined
-      }
-      const format = this.format
-      const { ftype } = format
-      if (ftype === 'output-converter')
-        return format as OutputConverter
-      if (ftype === 'format')
-        return pandocFormatToOutputConverter(format)
-      if (ftype === 'input-converter')
-        return undefined
+      return this.format
     },
     async openSelectedDocument() {
       const path = this.selectedDocument
@@ -359,17 +354,16 @@ export default {
         if (this.isInputDialog) {
           // open/import document
           if (path && editorKey) {
-            const inputConverter = this.inputConverterFromDocumentFormat(path)
-            console.log(inputConverter)
+            const documentFormat = this.documentFormatFromPath(path)
             this.$emit('set-format', this.mode, this.format)
             setActionCommand(
               editorKey,
-              ACTION_DOCUMENT_OPEN,
+              this.mode === 'import' ? ACTION_DOCUMENT_INCLUDE : ACTION_DOCUMENT_OPEN,
               {
                 context: {
                   editorKey,
                   path,
-                  inputConverter,
+                  documentFormat,
                   configurationName: this.tempProject ? undefined : this.tempConfigurationName,
                   project: this.tempProject,
                 }
@@ -379,19 +373,17 @@ export default {
         } else {
           // save/save-copy/export
           if (path && editorKey) {
-            const outputConverter = this.outputConverterFromDocumentFormat(path)
-            console.log(outputConverter)
+            const documentFormat = this.documentFormatFromPath(path)
             this.$emit('set-format', this.mode, this.format)
             setActionCommand(
               editorKey,
               ACTION_DOCUMENT_SAVE,
               {
-                outputConverter,
-                storedDoc: {
+                doc: {
                   editorKey,
                   id: toRaw(this.selectedDocument),
                   path,
-                  outputConverter: outputConverter,
+                  documentFormat,
                   configurationName: this.tempProject ? undefined : this.tempConfigurationName,
                   project: this.tempProject,
                 }

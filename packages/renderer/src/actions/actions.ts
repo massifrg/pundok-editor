@@ -26,6 +26,7 @@ export type ActionName =
   | 'save-document-as'
   | 'new-project'
   | 'get-project'
+  | 'include-document'
   | 'import-document'
   | 'export-document'
   | 'transform-document'
@@ -208,6 +209,11 @@ export const ACTION_DOCUMENT_SAVE: BaseEditorAction = {
 export const ACTION_DOCUMENT_SAVE_AS: BaseEditorAction = {
   name: 'save-document-as',
   label: 'save document with a different name',
+};
+
+export const ACTION_DOCUMENT_INCLUDE: BaseEditorAction = {
+  name: 'include-document',
+  label: 'include a document in the current one',
 };
 
 export const ACTION_DOCUMENT_IMPORT: BaseEditorAction = {

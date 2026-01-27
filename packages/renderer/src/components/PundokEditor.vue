@@ -127,6 +127,7 @@ import {
   CxDocument,
   DocumentFormat,
   DEFAULT_DOCUMENT_FORMAT,
+  FindResourceOptions,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -182,6 +183,8 @@ import {
   ACTION_GET_PROJECT,
   ACTION_UPDATE_DOC_STATE,
   UpdateDocStateActionProps,
+  ACTION_DOCUMENT_INCLUDE,
+  setActionTransformDocument,
 } from '../actions';
 import { useQuasar } from 'quasar';
 import { EditorGUIPropsClass } from './EditorGUIProps';
@@ -396,7 +399,7 @@ export default {
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
               setActionCommand(this.projectStructureEditorKey, action, props)
             else
-              this.save((props as DocumentSaveActionProps).storedDoc.path);
+              this.save((props as DocumentSaveActionProps).doc.path);
             break;
           case ACTION_DOCUMENT_SAVE_AS.name:
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
@@ -437,23 +440,23 @@ export default {
               );
             }
             break;
-          case ACTION_DOCUMENT_IMPORT.name:
-            const { inputConverter } = props as ImportDocumentActionProps
-            if (inputConverter) {
-              this.importDoc(inputConverter /**, action?.props?.storedDoc */);
-            } else {
-              setActionShowImportDialog(this.editorKey()!);
-            }
-            break;
-          case ACTION_DOCUMENT_EXPORT.name:
-            const { outputConverter } = props as ExportDocumentActionProps;
-            let storedDoc: Partial<CxDocument> | undefined = undefined;
-            if (outputConverter) {
-              this.exportDoc(outputConverter, storedDoc);
-            } else {
-              setActionShowExportDialog(this.editorKey()!);
-            }
-            break;
+          // case ACTION_DOCUMENT_IMPORT.name:
+          //   const { inputConverter } = props as ImportDocumentActionProps
+          //   if (inputConverter) {
+          //     this.importDoc(inputConverter /**, action?.props?.storedDoc */);
+          //   } else {
+          //     setActionShowImportDialog(this.editorKey()!);
+          //   }
+          //   break;
+          // case ACTION_DOCUMENT_EXPORT.name:
+          //   const { outputConverter } = props as ExportDocumentActionProps;
+          //   let storedDoc: Partial<CxDocument> | undefined = undefined;
+          //   if (outputConverter) {
+          //     this.exportDoc(outputConverter, storedDoc);
+          //   } else {
+          //     setActionShowExportDialog(this.editorKey()!);
+          //   }
+          //   break;
           case ACTION_SHOW_RESULT_MESSAGE.name:
             if (props)
               this.showResultMessage(props as ResultMessageActionProps)
@@ -487,6 +490,26 @@ export default {
               content,
             );
             break;
+          case ACTION_DOCUMENT_INCLUDE.name:
+            {
+              const ctx = (props as DocumentOpenActionProps).context
+              if (ctx) {
+                const { path, documentFormat } = ctx
+                if (path) {
+                  const appendTransform: PandocFilterTransform = {
+                    type: 'pandoc-filter',
+                    filters: [],
+                    name: 'include-document',
+                    withResult: 'append',
+                    fromFormat: documentFormat?.name || 'json',
+                    toFormat: 'json',
+                    sources: [path],
+                  }
+                  setActionTransformDocument(editorKey, appendTransform)
+                }
+              }
+            }
+            break
           case ACTION_DOCUMENT_TRANSFORM.name:
             const { transform } = props as TransformDocumentActionProps
             console.log(transform);
@@ -1059,11 +1082,11 @@ export default {
         this.setOperationInProgress(true);
         const transformed = await this.backend?.transformPandocJson(
           json,
-          { ...transform },
+          { ...transform } as PandocFilterTransform,
           {
             project: docState?.project,
             configurationName: docState?.configuration?.name,
-          },
+          } as Partial<FindResourceOptions>,
         );
         this.setOperationInProgress(false);
         if (transformed) {

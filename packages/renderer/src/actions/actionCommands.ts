@@ -97,7 +97,7 @@ export function setActionImportDocument(
       editorKey,
       props: {
         inputConverter,
-        storedDoc,
+        doc: storedDoc,
       } as ImportDocumentActionProps,
     });
   }
@@ -115,7 +115,7 @@ export function setActionExportDocument(
       editorKey,
       props: {
         outputConverter,
-        storedDoc,
+        doc: storedDoc,
       } as ExportDocumentActionProps,
     });
   }

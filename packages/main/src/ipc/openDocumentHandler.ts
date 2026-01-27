@@ -5,6 +5,7 @@ import {
   PundokBookmark,
   InputConverter,
   PundokEditorProject,
+  DocumentContext,
 } from '../common';
 import { isAbsolute, parse as parsePath, resolve } from 'path';
 import { isString } from 'lodash-es';
@@ -19,21 +20,16 @@ import { refreshMainMenu } from '../mainWindow';
  */
 export const openDocumentHandler =
   (hub: IpcHub) =>
-    async (e: IpcMainInvokeEvent, context: CompatibleDocumentContext) => {
-      const {
-        configurationName,
-        editorKey,
-        inputConverter: maybeInputConverter,
-        path: maybePath,
-        project: maybeProject,
-      } = context;
+    async (e: IpcMainInvokeEvent, ctx: string) => {
       try {
-        const inputConverter = isString(maybeInputConverter)
-          ? (JSON.parse(maybeInputConverter) as InputConverter)
-          : maybeInputConverter;
-        const project = isString(maybeProject)
-          ? (JSON.parse(maybeProject) as PundokEditorProject)
-          : maybeProject;
+        const context = JSON.parse(ctx) as DocumentContext
+        const {
+          configurationName,
+          editorKey,
+          documentFormat,
+          path: maybePath,
+          project,
+        } = context;
         let path = maybePath;
         if (project && maybePath && !isAbsolute(maybePath)) {
           if (project.rootDocument && isAbsolute(project.rootDocument)) {
@@ -46,7 +42,7 @@ export const openDocumentHandler =
           editorKey,
           configurationName,
           path,
-          inputConverter,
+          documentFormat,
           project,
         });
         const bookmarks: PundokBookmark[] = [];

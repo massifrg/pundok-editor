@@ -1,20 +1,32 @@
 <template>
-  <ToolbarButton icon="add_document" @click="appendDocument()" />
+  <ToolbarButton icon="add_document" @click="showDialog = true">
+    <OpenDocumentDialog v-if="showDialog" :editor="editor" :mode="mode" @set-format="setFormat"
+      @hide="showDialog = false" />
+  </ToolbarButton>
 </template>
 
 <script lang="ts">
 import { mapState } from 'pinia';
 import ToolbarButton from './ToolbarButton.vue';
 import { useBackend } from '../stores';
-import { EditorKeyType, PandocFilterTransform, PundokEditorProject } from '../common';
+import { DocumentFormat, EditorKeyType, PandocFilterTransform, PundokEditorProject } from '../common';
 import { editorKeyFromState, getEditorConfiguration, getEditorProject } from '../schema';
 import { setActionTransformDocument } from '../actions';
 import { Editor } from '@tiptap/vue-3';
 import { setupQuasarIcons } from './helpers/quasarIcons';
+import OpenDocumentDialog, { DocumentDialogMode } from './OpenDocumentDialog.vue';
+import { showDialog } from '@codemirror/view';
 
 export default {
   props: ['editor'],
-  components: { ToolbarButton },
+  components: { OpenDocumentDialog, ToolbarButton },
+  data() {
+    return {
+      mode: 'import' as DocumentDialogMode,
+      showDialog: false,
+      format: undefined as DocumentFormat | undefined,
+    }
+  },
   computed: {
     ...mapState(useBackend, ['backend']),
     editorKey(): EditorKeyType | undefined {
@@ -37,6 +49,9 @@ export default {
     setupQuasarIcons()
   },
   methods: {
+    setFormat(_mode: DocumentDialogMode, format: DocumentFormat) {
+      this.format = format
+    },
     async appendDocument() {
       const editorKey = this.editorKey
       if (!editorKey) return
@@ -48,14 +63,14 @@ export default {
         },
       })
       if (!doc) return;
-      const { path, format, formats, id, src } = doc
+      const { path, formatName } = doc
       if (!path) return
       const appendTransform: PandocFilterTransform = {
         type: 'pandoc-filter',
         filters: [],
         name: 'include-document',
         withResult: 'append',
-        fromFormat: format || path?.replace(/^.*?[.]([^.]+)$/, '$1') || 'json',
+        fromFormat: formatName || 'json',
         toFormat: 'json',
         sources: [path],
       }

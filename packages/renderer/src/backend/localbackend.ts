@@ -269,13 +269,7 @@ export class LocalBackend implements Backend {
 
   async open(context: DocumentContext): Promise<CxDocument> {
     try {
-      const { documentFormat, project } = context;
-      const inputConverter = documentFormatToInputConverter(documentFormat)
-      return this.ipc?.invoke('open-document', {
-        ...context,
-        inputConverter: inputConverter && JSON.stringify(inputConverter),
-        project: project && JSON.stringify(project),
-      } as CompatibleDocumentContext);
+      return this.ipc?.invoke('open-document', JSON.stringify(context));
     } catch (error) {
       return Promise.reject(error);
     }
@@ -444,6 +438,7 @@ export class LocalBackend implements Backend {
     transform: PandocFilterTransform,
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
+
     return this.invokeIpc(
       'transform-json',
       pandocJson,

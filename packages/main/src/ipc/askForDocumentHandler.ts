@@ -31,13 +31,13 @@ export const askForDocumentHandler =
           );
           const base = options?.defaultPath;
           const src = base ? relativePath(base, filename) : filename;
-          const formats = pandocFormatsFromExtension(parsePath(filename).ext);
+          // TODO: search also custom formats, not just Pandoc formats
+          const formats = pandocFormatsFromExtension(parsePath(filename).ext, 'input');
           return {
             path: filename,
             src,
             id: id || parsePath(filename).name,
-            format: formats[0],
-            formats,
+            formatName: formats[0],
           };
         }
       }
