@@ -159,7 +159,7 @@ export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<Save
       path: sourceFile,
       converter: documentFormatToOutputConverter(doc.documentFormat)!,
       configurationName: doc.configurationName,
-      projectAsJsonString: project ? JSON.stringify(project) : undefined
+      project,
     })
   }
 

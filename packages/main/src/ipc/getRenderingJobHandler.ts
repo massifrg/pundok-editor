@@ -1,12 +1,12 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
-import { getExportJobWithHashAsJsonString } from './documentHash';
+import { getRenderingJobWithHashAsJsonString } from './documentHash';
 
-export const getExportJobHandler =
+export const getRenderingJobHandler =
   (hub: IpcHub) =>
     async (
       e: IpcMainInvokeEvent,
       hash: string,
     ): Promise<string | undefined> => {
-      return getExportJobWithHashAsJsonString(hash)
+      return getRenderingJobWithHashAsJsonString(hash)
     };

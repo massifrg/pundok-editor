@@ -13,7 +13,7 @@ import type {
   DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
-  ExportJob,
+  RenderingJob,
   ConfigInitField,
   GetProjectOptions,
   FolderContents,
@@ -216,7 +216,7 @@ export interface Backend {
 
   renderAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 
-  getRenderingJob(hash: string): Promise<ExportJob | undefined>;
+  getRenderingJob(hash: string): Promise<RenderingJob | undefined>;
 
   showAgain(hash: string, editorKey: EditorKeyType): Promise<void>
 

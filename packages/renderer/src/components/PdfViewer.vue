@@ -207,7 +207,7 @@ import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import {
   EditorKeyType,
-  ExportJob,
+  RenderingJob,
   SetupViewerActionProps,
   SynctexInfo,
   ViewerSetup
@@ -281,7 +281,7 @@ export default {
       currentBookmarkIndex: -1,
       isUpdated: false,
       documentHash: undefined as string | undefined,
-      exportJobs: {} as Record<string, ExportJob>,
+      exportJobs: {} as Record<string, RenderingJob>,
       editorKey: undefined as EditorKeyType | undefined,
       showPageDialog: false,
       showBookmarkNameDialog: false,

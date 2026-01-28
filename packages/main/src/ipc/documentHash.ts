@@ -1,4 +1,4 @@
-import { ExportJob } from "../common";
+import { RenderingJob } from "../common";
 
 const MAX_DOCUMENT_HASHES = 200
 interface DocHash {
@@ -16,7 +16,7 @@ export async function newDocumentHash(json: string, algo = 'SHA-1'): Promise<str
   ).join('');
 }
 
-export async function rememberDocumentHash(obj: ExportJob): Promise<string> {
+export async function rememberDocumentHash(obj: RenderingJob): Promise<string> {
   const json = JSON.stringify(obj)
   const hash = await newDocumentHash(json)
   const docHash = { hash, json }
@@ -35,13 +35,13 @@ function indexOfDocumentHash(search_hash: string): number {
   return -1
 }
 
-export function getExportJobWithHashAsJsonString(hash: string): string | undefined {
+export function getRenderingJobWithHashAsJsonString(hash: string): string | undefined {
   const index = indexOfDocumentHash(hash)
   return index >= 0 ? docHashes[index].json : undefined
 }
 
-export function getExportJobWithHash(hash: string): ExportJob | undefined {
-  const jsonstring = getExportJobWithHashAsJsonString(hash)
+export function getRenderingJobWithHash(hash: string): RenderingJob | undefined {
+  const jsonstring = getRenderingJobWithHashAsJsonString(hash)
   return jsonstring ? JSON.parse(jsonstring) : undefined
 }
 

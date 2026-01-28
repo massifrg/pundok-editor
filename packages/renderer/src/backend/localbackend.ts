@@ -35,7 +35,7 @@ import {
   ServerMessageForViewer,
   PandocFilterTransform,
   SynctexInfo,
-  ExportJob,
+  RenderingJob,
   BackendFeedbackActionProps,
   BackendSetProjectActionProps,
   BackendSetConfigNameActionProps,
@@ -460,9 +460,9 @@ export class LocalBackend implements Backend {
     this.invokeIpc('render-again', hash, editorKey)
   }
 
-  async getRenderingJob(hash: string): Promise<ExportJob | undefined> {
+  async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
     const job_as_string: string | undefined = await this.invokeIpc('get-rendering-job', hash)
-    return job_as_string && JSON.parse(job_as_string) as ExportJob || undefined
+    return job_as_string && JSON.parse(job_as_string) as RenderingJob || undefined
   }
 
   async storeInConfiguration(

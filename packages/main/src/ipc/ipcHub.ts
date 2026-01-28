@@ -17,7 +17,7 @@ import { debugInfoHandler } from './debugInfoHandler';
 import { editorReadyHandler } from './editorReadyHandler';
 import { renderAgainHandler } from './renderAgainHandler';
 import { getBookmarksHandler } from './getBookmarksHandler';
-import { getExportJobHandler } from './getExportJobHandler';
+import { getRenderingJobHandler } from './getRenderingJobHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
 import { getInclusionTreeHandler } from './getInclusionTreeHandler';
 import { getSourceFileHandler } from './getSourceFileHandler';
@@ -97,7 +97,7 @@ export class IpcHub {
     ipcMain.handle('get-source-file', getSourceFileHandler(this));
     ipcMain.handle('show-rendered-again', showAgainHandler(this));
     ipcMain.handle('render-again', renderAgainHandler(this));
-    ipcMain.handle('get-rendering-job', getExportJobHandler(this));
+    ipcMain.handle('get-rendering-job', getRenderingJobHandler(this));
     ipcMain.handle('update-config', updateConfigHandler(this))
   }
 

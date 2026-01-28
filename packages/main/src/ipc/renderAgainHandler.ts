@@ -1,8 +1,8 @@
 import { IpcHub } from "./ipcHub";
 import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
-import { getExportJobWithHash } from "./documentHash";
-import { EditorKeyType, PundokEditorProject, CxDocument, DocumentFormat } from "../common";
+import { getRenderingJobWithHash } from "./documentHash";
+import { EditorKeyType, CxDocument, DocumentFormat } from "../common";
 import { exportDocument } from "./saveDocumentHandler";
 
 export const renderAgainHandler =
@@ -12,12 +12,9 @@ export const renderAgainHandler =
       documentHash: string,
       editorKey: EditorKeyType,
     ): Promise<void> => {
-      const job = getExportJobWithHash(documentHash)
+      const job = getRenderingJobWithHash(documentHash)
       if (job) {
-        const { path, converter, configurationName, projectAsJsonString } = job
-        const project = projectAsJsonString
-          ? JSON.parse(projectAsJsonString) as PundokEditorProject
-          : undefined
+        const { path, converter, configurationName, project } = job
         const documentFormat: DocumentFormat = {
           ftype: 'output-converter',
           ...converter

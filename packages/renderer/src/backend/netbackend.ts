@@ -19,7 +19,7 @@ import {
   DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
-  ExportJob,
+  RenderingJob,
   ConfigInitField,
   GetProjectOptions,
   FolderContents,
@@ -167,7 +167,7 @@ export class NetBackend implements Backend {
     return Promise.reject('method non implemented');
   }
 
-  async getRenderingJob(hash: string): Promise<ExportJob | undefined> {
+  async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
     return Promise.reject('method non implemented');
   }
 
