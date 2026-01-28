@@ -1081,12 +1081,12 @@ export default {
       try {
         this.setOperationInProgress(true);
         const transformed = await this.backend?.transformPandocJson(
-          json,
-          { ...transform } as PandocFilterTransform,
           {
+            content: json,
             project: docState?.project,
             configurationName: docState?.configuration?.name,
-          } as Partial<FindResourceOptions>,
+          },
+          { ...transform } as PandocFilterTransform,
         );
         this.setOperationInProgress(false);
         if (transformed) {

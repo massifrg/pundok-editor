@@ -432,16 +432,14 @@ export class LocalBackend implements Backend {
   }
 
   async transformPandocJson(
-    pandocJson: string | undefined,
-    transform: PandocFilterTransform,
-    options?: Partial<FindResourceOptions>,
+    doc: Partial<CxDocument>,
+    transform: PandocFilterTransform
   ): Promise<string> {
 
     return this.invokeIpc(
       'transform-json',
-      pandocJson,
-      JSON.stringify({ ...transform }),
-      JSON.stringify(options || {}),
+      JSON.stringify(doc),
+      JSON.stringify(transform || {}),
     );
   }
 

@@ -96,7 +96,11 @@ export default defineComponent({
         // console.log(json);
         try {
           const transformed = await this.backend?.transformPandocJson(
-            json,
+            {
+              content: json,
+              project: docState?.project,
+              configurationName: docState?.configuration?.name,
+            },
             {
               filters: [],
               name: 'Convert JSON to Markdown',
@@ -104,10 +108,6 @@ export default defineComponent({
               fromFormat: 'json',
               toFormat: 'markdown',
               pandocOptions: ['--wrap=none', '-s'],
-            },
-            {
-              project: docState?.project,
-              configurationName: docState?.configuration?.name,
             },
           );
           if (transformed)
@@ -130,7 +130,11 @@ export default defineComponent({
       if (state) {
         const docState = getDocState(state);
         const content = await this.backend?.transformPandocJson(
-          toRaw(this.content),
+          {
+            content: toRaw(this.content),
+            project: docState?.project,
+            configurationName: docState?.configuration?.name,
+          },
           {
             filters: [],
             name: 'Convert Markdown to JSON',
@@ -138,10 +142,6 @@ export default defineComponent({
             fromFormat: 'markdown',
             toFormat: 'json',
             pandocOptions: ['-s'],
-          },
-          {
-            project: docState?.project,
-            configurationName: docState?.configuration?.name,
           },
         );
         // console.log(content);

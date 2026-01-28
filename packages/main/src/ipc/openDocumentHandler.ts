@@ -17,7 +17,7 @@ import {
   PundokEditorProject,
 } from '../common';
 import { updateBookmarksFile } from '../bookmarks';
-import { importJsonWithPandoc } from '../importExport';
+import { importWithPandoc } from '../importExport';
 import { refreshMainMenu } from '../mainWindow';
 import { isReadableFile } from '../resourcesManager';
 import { externalProgramError, runExternalProgram } from '../runExternal';
@@ -89,8 +89,6 @@ async function openDocument(hub: IpcHub, context: DocumentContext): Promise<CxDo
     return Promise.reject('You must provide a file name');
   if (!isReadableFile(filename))
     return Promise.reject(`can't read "${filename}"`);
-
-  let format: string | undefined
   let result: ExternalProgramResult | undefined = undefined;
   let cmdLineFeedback: ((msg: string) => void) | undefined = undefined;
   const { dir, name } = parsePath(filename);
@@ -102,11 +100,7 @@ async function openDocument(hub: IpcHub, context: DocumentContext): Promise<CxDo
       // console.log(`FEEDBACK: ${JSON.stringify(inputConverter.feedback)}`);
       switch (inputConverter.type) {
         case 'pandoc':
-          result = await importJsonWithPandoc(
-            filename,
-            inputConverter.format,
-            context
-          );
+          result = await importWithPandoc({ ...context, path: filename })
           break;
         case 'custom':
           {
@@ -139,8 +133,7 @@ async function openDocument(hub: IpcHub, context: DocumentContext): Promise<CxDo
           error: '',
         };
       } else if (documentFormat?.name) {
-        format = documentFormat.name
-        result = await importJsonWithPandoc(filename, format, {});
+        result = await importWithPandoc({ ...context, path: filename });
       }
     } else {
       // TODO: try to guess the format?

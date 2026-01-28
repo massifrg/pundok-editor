@@ -198,15 +198,13 @@ export interface Backend {
 
   /**
    * Transform the document or the fragment passed as Pandoc JSON.
-   * @param pandocJson the (Pandoc) JSON representation of a document or a fragment.
+   * @param doc a document or a fragment with a context.
    * @param transform the transformation to apply.
-   * @param options options to retrieve what is needed by Pandoc (e.g. to find filters).
    * @returns a (Pandoc) stringified-JSON representation of the transformed fragment or document
    */
   transformPandocJson(
-    pandocJson: string | undefined,
-    transform: PandocFilterTransform,
-    options?: Partial<FindResourceOptions>,
+    doc: Partial<CxDocument>,
+    transform: PandocFilterTransform
   ): Promise<string>;
 
   gotoSource(

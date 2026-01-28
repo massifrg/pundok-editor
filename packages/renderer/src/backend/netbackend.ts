@@ -145,9 +145,8 @@ export class NetBackend implements Backend {
   // }
 
   async transformPandocJson(
-    pandocJson: string | undefined,
-    transform: PandocFilterTransform,
-    options?: Partial<FindResourceOptions>,
+    doc: Partial<CxDocument>,
+    transform: PandocFilterTransform
   ): Promise<string> {
     return Promise.reject('method non implemented');
   }

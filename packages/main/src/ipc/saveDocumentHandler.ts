@@ -1,7 +1,6 @@
 import { IpcMainInvokeEvent, shell } from 'electron';
 import {
   basename,
-  format as formatPath,
   isAbsolute,
   parse as parsePath,
   resolve,
@@ -28,7 +27,7 @@ import {
 } from '../common';
 import { rememberDocumentHash } from './documentHash';
 import { computeProjectFromDocFile } from './getProjectHandler';
-import { exportWithPandoc, exportWithPandocLua, exportWithScript } from '../importExport';
+import { exportWithPandoc, exportWithScript } from '../importExport';
 import { expandCommandArgs } from './expandCommandArgs';
 import { validResourcePaths } from '../resourcesManager';
 import { ProgressCallback } from '../runExternal';
@@ -84,7 +83,12 @@ export const saveDocumentHandler = (hub: IpcHub) =>
     }
   };
 
-
+/**
+ * 
+ * @param hub 
+ * @param doc 
+ * @returns 
+ */
 async function savePandocJsonDocument(hub: IpcHub, doc: CxDocument): Promise<SaveResponse> {
   const { configurationName, content, editorKey, path } = doc;
   let project = doc.project
@@ -134,10 +138,22 @@ async function savePandocJsonDocument(hub: IpcHub, doc: CxDocument): Promise<Sav
   };
 }
 
-export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<SaveResponse> {
-  const { configurationName, content, documentFormat, editorKey, path, project } = doc;
+/**
+ * Save a document in a format that is different from Pandoc JSON.
+ * @param hub 
+ * @param doc The document with context to be saved in a format different from Pandoc JSON.
+ * @param isRendering When `true`, the export is a rendering that takes some time (e.g. PDF)
+ * @returns 
+ */
+export async function exportDocument(
+  hub: IpcHub,
+  doc: CxDocument,
+  isRendering?: boolean
+): Promise<SaveResponse> {
+  const { configurationName, content, documentFormat, editorKey, id, path, project } = doc;
   if (!path) return Promise.reject(`You must provide a document (file) name!`)
   const converter = documentFormatToOutputConverter(documentFormat)
+  const { feedback, openResult } = converter || {}
   const cwd = project?.path || process.cwd();
 
   const sourceFile = doc.path
@@ -162,7 +178,7 @@ export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<Save
       project,
     })
   }
-
+  const operationName = isRendering ? 'rendering' : 'storage'
   try {
     let result: ExternalProgramResult;
     switch (converter?.type) {
@@ -170,20 +186,17 @@ export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<Save
         throw new Error('custom converter not implemented yet');
         break;
       case 'lua':
-        result = await exportWithPandocLua(content, {
-          converter,
-          cwd,
-          resourcesPaths,
-        });
+        throw new Error('lua converter not implemented yet');
+        // result = await exportWithPandocLua(doc, {
+        //   cwd,
+        //   resourcesPaths,
+        // });
         break;
       case 'script':
         const callback: ProgressCallback = (source, chunk) => {
           progressFeedback(hub, source, chunk.toString(), editorKey);
         };
-        result = await exportWithScript(content, {
-          converter,
-          configurationName,
-          project,
+        result = await exportWithScript(doc, {
           cwd,
           resourcesPaths,
           sourceFile,
@@ -193,19 +206,15 @@ export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<Save
         break;
       case 'pandoc':
       default:
-        result = await exportWithPandoc(content, {
-          converter,
-          configurationName,
-          project,
+        result = await exportWithPandoc(doc, {
           cwd,
           resourcesPaths,
           resultFile,
         });
     }
-    const id = doc.id; // || basename(resultFile, ext && `.${ext}`);
     const { commandLine, error, exitCode, output } = result
-    if (converter?.feedback) {
-      switch (converter.feedback) {
+    if (feedback) {
+      switch (feedback) {
         case 'command-line':
           commandLineFeedback(hub, commandLine, editorKey);
           break;
@@ -220,7 +229,7 @@ export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<Save
     }
     if (exitCode === 0) {
       const response: SaveResponse = {
-        message: 'document exported',
+        message: `document ${operationName} successful`,
         doc: {
           id,
           outputConverter: converter,
@@ -235,8 +244,7 @@ export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<Save
         cwd,
       }
       if (resultFile) {
-        const outputConverter = documentFormatToOutputConverter(doc.documentFormat)
-        const openResult = outputConverter?.openResult;
+        // EXPORT SUCCESSFUL
         console.log(`openResult = ${openResult}`);
         if (openResult === 'editor') {
           hub.send('show-in-viewer', {
@@ -256,7 +264,8 @@ export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<Save
       }
       return Promise.resolve(response)
     } else {
-      const message = `export failed with exitCode ${exitCode}`;
+      // EXPORT FAILED
+      const message = `document ${operationName} failed with exitCode ${exitCode}`;
       const debugMessage = [
         message,
         stringify(error),
@@ -281,8 +290,8 @@ export async function exportDocument(hub: IpcHub, doc: CxDocument): Promise<Save
   } catch (error) {
     return Promise.resolve({
       error,
-      message: 'export failed',
-      doc: { content, format: converter?.format, configurationName },
+      message: `${operationName} failed`,
+      doc: { content, format: converter?.format, configurationName } as CxDocument,
       resultFile,
       cwd,
     });

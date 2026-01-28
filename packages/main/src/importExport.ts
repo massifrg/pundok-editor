@@ -11,11 +11,13 @@ import {
   PundokEditorProject,
   DEFAULT_IMPORT_PANDOC_OPTIONS,
   PandocFilterTransform,
-  FindResourceOptions,
   PandocMetadata,
   PandocVariables,
   DocumentContext,
   documentFormatToInputConverter,
+  CxDocument,
+  documentFormatToOutputConverter,
+  PandocInputConverter,
 } from './common';
 import {
   FindResourceFileOptions,
@@ -38,37 +40,38 @@ import { expandCommandArgs } from './ipc/expandCommandArgs';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';
 
-export function importWithPandoc(
-  path: string,
-  pandocFormatOrFilter: string,
-  pandocOpts?: string[],
-): Promise<ExternalProgramResult> {
-  let args = ['-f', pandocFormatOrFilter, '-t', 'json'];
-  args = args.concat(pandocOpts || []);
-  args = args.concat(['--', `"${path}"`]);
-  const commandLine = `pandoc ${args.join(' ')}`;
-  console.log(`importWithPandoc, RUNNING ${commandLine}`);
-  try {
-    return runExternalProgram('pandoc', args, { shell: true }).result;
-  } catch (err) {
-    return Promise.resolve(externalProgramError(err, commandLine));
-  }
+export interface ExportOptions {
+  /** the current working directory of the spawn process (pandoc or a script) */
+  cwd: string;
+  /** the path(s) where to look for resources */
+  resourcesPaths: string[];
+  /** the name of the source document being edited */
+  sourceFile?: string;
+  /** the file where the output is exported */
+  resultFile: string;
+  /** a callback to follow the stdout and stderr of an export operation */
+  callback?: ProgressCallback;
 }
 
-export async function importJsonWithPandoc(
-  filename: string,
-  formatOrReader: string,
-  context: DocumentContext,
+/**
+ * Read a document with Pandoc, the output is a Pandoc JSON.
+ * @param context The document context.
+ * @returns 
+ */
+export async function importWithPandoc(
+  context: DocumentContext
 ): Promise<ExternalProgramResult> {
-  const { documentFormat, configurationName, project } = context
+  const { documentFormat, configurationName, path, project, resourcePath } = context
   console.log(
     `importJsonWithPandoc, configurationName=${JSON.stringify(
       configurationName,
     )}`,
   );
-  let format = formatOrReader;
+  if (!path)
+    return Promise.reject(`You must provide the document's (file) name`)
   let pandocOpts: string[] = DEFAULT_IMPORT_PANDOC_OPTIONS;
   const inputConverter = documentFormatToInputConverter(documentFormat)
+  let format = (inputConverter as PandocInputConverter)?.format
   if (inputConverter && inputConverter.type === 'pandoc')
     pandocOpts = pandocOpts.concat(inputConverter.pandocOptions || []);
   if (configurationName) {
@@ -88,19 +91,19 @@ export async function importJsonWithPandoc(
     })
     if (respath) pandocOpts.push(`--resource-path=${respath.join(pathDelimiter)}`)
   }
-  const isCustomReader = formatOrReader.toLowerCase().endsWith('.lua')
+  const isCustomReader = format.toLowerCase().endsWith('.lua')
   // if it's custom reader, we must find it in the configuration(s) directories
   if (isCustomReader) {
-    const customReaderFilepath = findResourceFile(formatOrReader, {
+    const customReaderFilepath = findResourceFile(format, {
       kind: 'reader',
       configurationName,
       project,
-      baseResourcePaths: context.resourcePath
+      baseResourcePaths: resourcePath
     })
     if (!customReaderFilepath)
-      return Promise.reject(`Can't find the "${formatOrReader}" custom reader in document, project or configurations directories!`)
+      return Promise.reject(`Can't find the "${format}" custom reader in document, project or configurations directories!`)
     const customReaderDir = parsePath(customReaderFilepath).dir
-    const respath = [...(context.resourcePath || []), customReaderDir]
+    const respath = [...(resourcePath || []), customReaderDir]
       .map(rp => encloseInDblQuotes(rp))
       .join(pathDelimiter)
     console.log(`RES PATH: ${respath}`)
@@ -109,44 +112,17 @@ export async function importJsonWithPandoc(
     format = encloseInDblQuotes(customReaderFilepath);
   }
   console.log(`importWithPandoc, format=${format}`)
-  return importWithPandoc(filename, format, pandocOpts);
-}
 
-export function runPandocOnFile(
-  path: string,
-  pandocOpts: string[],
-): Promise<ExternalProgramResult> {
-  let args: string[] = [];
+  let args = ['-f', format, '-t', 'json'];
   args = args.concat(pandocOpts || []);
   args = args.concat(['--', `"${path}"`]);
   const commandLine = `pandoc ${args.join(' ')}`;
-  console.log(`importFromPandoc, RUNNING ${commandLine}`);
-  const cwd = parsePath(path).dir;
-  console.log(cwd);
+  console.log(`importWithPandoc, RUNNING ${commandLine}`);
   try {
-    return runExternalProgram('pandoc', args, { shell: true, cwd }).result;
+    return runExternalProgram('pandoc', args, { shell: true }).result;
   } catch (err) {
-    return Promise.resolve(externalProgramError(err, commandLine, cwd));
+    return Promise.resolve(externalProgramError(err, commandLine));
   }
-}
-
-export interface ExportOptions {
-  /** the output converter to be used */
-  converter: OutputConverter;
-  /** the current working directory of the spawn process (pandoc or a script) */
-  cwd: string;
-  /** the eventual project */
-  project: PundokEditorProject | string;
-  /** the name of the configuration */
-  configurationName: string;
-  /** the path(s) where to look for resources */
-  resourcesPaths: string[];
-  /** the name of the source document being edited */
-  sourceFile?: string;
-  /** the file where the output is exported */
-  resultFile: string;
-  /** a callback to follow the stdout and stderr of an export operation */
-  callback?: ProgressCallback;
 }
 
 async function exportWithExternalProgram(
@@ -183,12 +159,19 @@ async function exportWithExternalProgram(
   }
 }
 
+/**
+ * Export a document calling Pandoc.
+ * @param doc 
+ * @param exportOptions 
+ * @returns 
+ */
 export function exportWithPandoc(
-  jsonContent: string,
+  doc: CxDocument,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
-  const { configurationName, converter, resourcesPaths, resultFile, project } =
-    exportOptions;
+  const { configurationName, content, documentFormat, project } = doc;
+  const { resourcesPaths, resultFile } = exportOptions;
+  const converter = documentFormatToOutputConverter(documentFormat)
   const { format, pandocOptions, pandocTemplate, referenceFile, standalone } =
     converter as PandocOutputConverter;
   const pandocOpts: string[] = [];
@@ -265,22 +248,36 @@ export function exportWithPandoc(
   args = args.concat(pandocOpts || []);
   args = args.concat(['--', '-']);
 
-  return exportWithExternalProgram('pandoc', args, jsonContent, exportOptions);
+  return exportWithExternalProgram('pandoc', args, content, exportOptions);
 }
 
-export async function exportWithPandocLua(
-  json: string,
-  exportOptions: Partial<ExportOptions>,
-): Promise<ExternalProgramResult> {
-  const args = ['lua', '--', '-'];
-  return exportWithExternalProgram('pandoc', args, json, exportOptions);
-}
+// /**
+//  * Run a Lua script with `pandoc lua` and send the document content to its standard input.
+//  * @param doc The document to be exported.
+//  * @param exportOptions
+//  * @returns 
+//  */
+// export async function exportWithPandocLua(
+//   doc: CxDocument,
+//   exportOptions: Partial<ExportOptions>,
+// ): Promise<ExternalProgramResult> {
+//   const { content } = doc
+//   const args = ['lua', '--', '-'];
+//   return exportWithExternalProgram('pandoc', args, content, exportOptions);
+// }
 
+/**
+ * Export a document with an external script.
+ * @param doc 
+ * @param exportOptions 
+ * @returns 
+ */
 export async function exportWithScript(
-  jsonContent: string,
+  doc: CxDocument,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
-  const { converter, cwd, sourceFile, project } = exportOptions;
+  const { cwd, sourceFile } = exportOptions;
+  const converter = documentFormatToOutputConverter(doc.documentFormat) as OutputConverter
   if (!converter) return Promise.reject(`no output converter specified`);
   let { command, commandArgs } = converter as ScriptOutputConverter;
   if (!existsSync(command)) {
@@ -291,16 +288,25 @@ export async function exportWithScript(
   return exportWithExternalProgram(
     command,
     args,
-    jsonContent,
+    doc.content,
     exportOptions,
   );
 }
 
+/**
+ * Transform a document 
+ * @param doc The document to be transformed (`content` property is mandatory, 
+ *            `project` and `configurationName` may be useful to find resources).
+ * @param pandocTransform A description of the transformation to be applied.
+ * @returns The output of the transformation (Pandoc JSON or markdown).
+ */
 export async function transformWithPandoc(
-  pandocJson: string | undefined,
+  doc: Partial<CxDocument>,
   pandocTransform: PandocFilterTransform,
-  context: Partial<FindResourceOptions>,
 ): Promise<string> {
+  const { configurationName, project, content } = doc
+  if (!content)
+    return Promise.reject(`transformWithPandoc: no content provided!`)
   const command = 'pandoc';
   const extraOptions = pandocTransform.pandocOptions || []
   const fromFormat = pandocTransform.fromFormat || 'json'
@@ -317,10 +323,7 @@ export async function transformWithPandoc(
     );
   try {
     // resources
-    const project: PundokEditorProject | undefined =
-      context.project && isString(context.project)
-        ? JSON.parse(context.project)
-        : context.project;
+    const context = { configurationName, project }
     if (project?.path)
       args.push(`--data-dir=${encloseInDblQuotes(project.path)}`);
 
@@ -342,10 +345,7 @@ export async function transformWithPandoc(
       filters.forEach((f) => {
         const ext = extname(f).toLowerCase();
         const filename = ext === '' ? f + '.lua' : f;
-        const filterFile = findResourceFile(filename, {
-          ...context,
-          kind: 'filter',
-        });
+        const filterFile = findResourceFile(filename, { ...context, kind: 'filter' });
         if (filterFile) {
           const opt = ext === '' || ext === '.lua' ? '--lua-filter' : '--filter';
           args.push(`${opt}=${filterFile}`);
@@ -375,7 +375,7 @@ export async function transformWithPandoc(
       args,
       { cwd: project?.path },
       undefined,
-      pandocJson,
+      content,
     );
     const { error, exitCode, output } = await result;
     if (exitCode !== 0)
@@ -387,6 +387,24 @@ export async function transformWithPandoc(
     return output;
   } catch (err) {
     return Promise.reject(err);
+  }
+}
+
+function runPandocOnFile(
+  path: string,
+  pandocOpts: string[],
+): Promise<ExternalProgramResult> {
+  let args: string[] = [];
+  args = args.concat(pandocOpts || []);
+  args = args.concat(['--', `"${path}"`]);
+  const commandLine = `pandoc ${args.join(' ')}`;
+  console.log(`importFromPandoc, RUNNING ${commandLine}`);
+  const cwd = parsePath(path).dir;
+  console.log(cwd);
+  try {
+    return runExternalProgram('pandoc', args, { shell: true, cwd }).result;
+  } catch (err) {
+    return Promise.resolve(externalProgramError(err, commandLine, cwd));
   }
 }
 
