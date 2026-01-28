@@ -1,7 +1,14 @@
 <script lang="ts">
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
+import { EditorState } from '@tiptap/pm/state';
 import { QTable, QTableColumn } from 'quasar';
+import {
+  ACTION_DOCUMENT_INCLUDE,
+  ACTION_DOCUMENT_OPEN,
+  ACTION_DOCUMENT_SAVE,
+  setActionCommand
+} from '../actions';
 import {
   DocumentBookmark,
   DocumentFormat,
@@ -17,17 +24,13 @@ import {
   InputConverter,
   OutputConverter,
   PandocFormatDescription,
-  pandocFormatToInputConverter,
-  pandocFormatToOutputConverter,
   Place,
   ProjectBookmark,
   PundokEditorConfigInit,
   PundokEditorProject,
 } from '../common';
-import { useBackend } from '../stores';
-import { ACTION_DOCUMENT_INCLUDE, ACTION_DOCUMENT_OPEN, ACTION_DOCUMENT_SAVE, setActionCommand } from '../actions';
 import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
-import { EditorState } from '@tiptap/pm/state';
+import { useBackend } from '../stores';
 
 interface FileContentRow {
   name: string,

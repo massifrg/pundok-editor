@@ -15,7 +15,6 @@ import {
   CustomPandocReader,
   CUSTOM_PANDOC_READERS,
   PundokEditorProject,
-  DocumentFormat,
 } from '../common';
 import { updateBookmarksFile } from '../bookmarks';
 import { importJsonWithPandoc } from '../importExport';
