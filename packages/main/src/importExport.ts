@@ -6,7 +6,6 @@ import {
 import {
   ScriptOutputConverter,
   ExternalProgramResult,
-  InputConverter,
   OutputConverter,
   PandocOutputConverter,
   PundokEditorProject,
@@ -16,10 +15,10 @@ import {
   PandocMetadata,
   PandocVariables,
   DocumentContext,
+  documentFormatToInputConverter,
 } from './common';
 import {
   FindResourceFileOptions,
-  configDir,
   configsDir,
   findResourceFile,
   isReadableFile,
@@ -61,7 +60,7 @@ export async function importJsonWithPandoc(
   formatOrReader: string,
   context: DocumentContext,
 ): Promise<ExternalProgramResult> {
-  const { inputConverter, configurationName, project } = context
+  const { documentFormat, configurationName, project } = context
   console.log(
     `importJsonWithPandoc, configurationName=${JSON.stringify(
       configurationName,
@@ -69,6 +68,7 @@ export async function importJsonWithPandoc(
   );
   let format = formatOrReader;
   let pandocOpts: string[] = DEFAULT_IMPORT_PANDOC_OPTIONS;
+  const inputConverter = documentFormatToInputConverter(documentFormat)
   if (inputConverter && inputConverter.type === 'pandoc')
     pandocOpts = pandocOpts.concat(inputConverter.pandocOptions || []);
   if (configurationName) {

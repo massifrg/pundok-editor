@@ -1,88 +1,37 @@
-import type {
-  BaseWindow,
-  OpenDialogOptions,
-  SaveDialogOptions,
-  WebContentsView,
-} from 'electron';
-import { ipcMain, shell } from 'electron';
-import { readFile, writeFile } from 'fs/promises';
-import {
-  basename,
-  format as formatPath,
-  isAbsolute,
-  parse as parsePath,
-  resolve,
-} from 'path';
+import type { BaseWindow, WebContentsView } from 'electron';
+import { ipcMain } from 'electron';
 import {
   CommandToRenderer,
   EditorKeyType,
-  ExternalProgramResult,
   IPC_CHANNELS,
   PundokEditorProject,
-  SaveResponse,
   ServerMessage,
   ServerMessageCommand,
-  CxDocument,
-  DocumentContext,
-  CUSTOM_PANDOC_READERS,
-  CustomPandocReader,
   IpcMainToRendererChannel,
-  ServerMessageForViewer,
   ServerMessageSetProject,
-  documentFormatToInputConverter,
-  DEFAULT_DOCUMENT_FORMAT,
-  documentFormatToOutputConverter,
 } from '../common';
-import { isReadableFile, validResourcePaths } from '../resourcesManager';
-import FileManager from '../fileManager';
-import {
-  exportWithPandoc,
-  exportWithPandocLua,
-  exportWithScript,
-  importJsonWithPandoc,
-} from '../importExport';
-import {
-  ProgressCallback,
-  externalProgramError,
-  runExternalProgram,
-} from '../runExternal';
-import {
-  commandLineFeedback,
-  errorFeedback,
-  messageFeedback,
-  progressFeedback,
-} from './feedback';
-import { stringify } from '../utils';
+// import FileManager from '../fileManager';
+import { askForDocumentHandler } from './askForDocumentHandler';
+import { availableConfigurationsHandler, loadConfigurationHandler } from './configurationHandlers';
+import { debugInfoHandler } from './debugInfoHandler';
+import { editorReadyHandler } from './editorReadyHandler';
+import { renderAgainHandler } from './renderAgainHandler';
+import { getBookmarksHandler } from './getBookmarksHandler';
+import { getExportJobHandler } from './getExportJobHandler';
+import { getFolderContentsHandler } from './getFolderContentsHandler';
+import { getInclusionTreeHandler } from './getInclusionTreeHandler';
+import { getSourceFileHandler } from './getSourceFileHandler';
+import { fileContentsHandler } from './fileContentsHandler';
+import { getProjectHandler } from './getProjectHandler';
+import { newProjectHandler } from './newProjectHandler';
+import { openDocumentHandler } from './openDocumentHandler';
+import { pandocInputFormatsHandler, pandocOutputFormatsHandler } from './pandocFormatsHandler';
 import { queryHandler } from './queryHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
-import { computeProjectFromDocFile, getProjectHandler } from './getProjectHandler';
-import { openDocumentHandler } from './openDocumentHandler';
-import { editorReadyHandler } from './editorReadyHandler';
-import { debugInfoHandler } from './debugInfoHandler';
-import { transformJsonHandler } from './transformJsonHandler';
-import { newProjectHandler } from './newProjectHandler';
-import {
-  availableConfigurationsHandler,
-  getConfigurationInit,
-  loadConfigurationHandler,
-} from './configurationHandlers';
-import {
-  pandocInputFormatsHandler,
-  pandocOutputFormatsHandler,
-} from './pandocFormatsHandler';
-import { fileContentsHandler } from './fileContentsHandler';
-import { askForDocumentHandler } from './askForDocumentHandler';
-import { getInclusionTreeHandler } from './getInclusionTreeHandler';
-import { getSourceFileHandler } from './getSourceFileHandler';
-import { exportAgainHandler } from './exportAgainHandler';
-import { rememberDocumentHash } from './documentHash';
-import { expandCommandArgs } from './expandCommandArgs';
-import { getExportJobHandler } from './getExportJobHandler';
 import { showAgainHandler } from './showAgainHandler';
+import { transformJsonHandler } from './transformJsonHandler';
 import { updateConfigHandler } from './updateConfigHandler';
-import { getFolderContentsHandler } from './getFolderContentsHandler';
-import { getBookmarksHandler } from './getBookmarksHandler';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -100,7 +49,7 @@ export interface DocumentOpening {
  * A class to handle the communication between `main` and `renderer` processes.
  */
 export class IpcHub {
-  readonly fileManager: FileManager = new FileManager();
+  // readonly fileManager: FileManager = new FileManager();
   mainEditorKey: EditorKeyType | undefined = undefined;
   pendingDocumentOpen: DocumentOpening | undefined = undefined;
 
@@ -146,251 +95,10 @@ export class IpcHub {
     ipcMain.handle('pandoc-output-formats', pandocOutputFormatsHandler(this));
     ipcMain.handle('query', queryHandler(this));
     ipcMain.handle('get-source-file', getSourceFileHandler(this));
-    ipcMain.handle('show-again', showAgainHandler(this));
-    ipcMain.handle('export-again', exportAgainHandler(this));
-    ipcMain.handle('get-export-job', getExportJobHandler(this));
+    ipcMain.handle('show-rendered-again', showAgainHandler(this));
+    ipcMain.handle('render-again', renderAgainHandler(this));
+    ipcMain.handle('get-rendering-job', getExportJobHandler(this));
     ipcMain.handle('update-config', updateConfigHandler(this))
-  }
-
-  async saveDocument(
-    doc: CxDocument,
-    project?: PundokEditorProject,
-  ): Promise<SaveResponse> {
-    const { path, content } = doc;
-    const docFilepath =
-      path ||
-      (await this.fileManager.saveFileDialog({
-        defaultPath: path,
-        filters: [
-          {
-            name: 'pandoc json',
-            extensions: ['json'],
-          },
-        ],
-      }));
-    try {
-      await writeFile(docFilepath, content!)
-    } catch (error) {
-      return Promise.reject({
-        error,
-        message: JSON.stringify(error),
-        doc: { content, path: docFilepath },
-      });
-    };
-
-    const docDir = parsePath(docFilepath).dir
-    const id = doc.id || basename(docFilepath, '.json');
-
-    // load the project, if the document has been saved in a project directory
-    // TODO: what to do when a file in a project is saved in the directory of another project?
-    if (docFilepath && !project) {
-      try {
-        const dirProject = await computeProjectFromDocFile(docFilepath)
-        console.log(`dirProject is ${dirProject.name}`)
-        if (dirProject) {
-          doc.project = dirProject
-          this.fireEventSetProject(dirProject)
-        }
-      } catch (err) {
-        console.log(`no project file in document folder (${parsePath(docFilepath).dir})`)
-      }
-    }
-
-    return {
-      message: 'document saved',
-      doc: {
-        path: docFilepath,
-        content,
-        id,
-        documentFormat: DEFAULT_DOCUMENT_FORMAT,
-        configurationName: doc.configurationName,
-        project: doc.project,
-      },
-      resultFile: docFilepath,
-      cwd: docDir,
-    };
-  }
-
-  async exportDocument(
-    doc: CxDocument,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse> {
-    const { content, documentFormat, /* exportedAsPath,*/ configurationName } = doc;
-    const saveOpts: Partial<SaveDialogOptions> = {};
-    const converter = documentFormatToOutputConverter(documentFormat)
-    if (converter?.extension) {
-      const { extension, format } = converter;
-      const name =
-        format === extension
-          ? `*.${extension}`
-          : `${format} files (*.${extension})`;
-      saveOpts.filters = [{ name, extensions: [extension] }];
-    }
-    const cwd = project?.path || process.cwd();
-
-    const sourceFile = doc.path
-    let resultFile = converter?.resultFile
-      ? expandCommandArgs([converter.resultFile], sourceFile)[0]
-      : undefined
-    // resultFile = converter?.dontAskForResultFile
-    //   ? resultFile
-    //   : exportedAsPath;
-    if (!converter?.dontAskForResultFile) {
-      if (!resultFile) resultFile = await this.fileManager.saveFileDialog(saveOpts);
-      if (!resultFile)
-        return Promise.resolve({
-          error: 'no output file given',
-          message: 'export failed',
-          doc: { content, configurationName },
-          resultFile,
-        } as SaveResponse);
-    }
-    if (resultFile && !isAbsolute(resultFile))
-      resultFile = resolve(cwd, resultFile)
-
-    const resourcesPaths = validResourcePaths(
-      undefined,
-      project,
-      configurationName,
-    );
-
-    // if content comes from a file (doc.path) and not from stdin, remember job
-    let documentHash: string | undefined = undefined
-    if (sourceFile) {
-      documentHash = await rememberDocumentHash({
-        path: sourceFile,
-        converter: documentFormatToOutputConverter(doc.documentFormat)!,
-        configurationName: doc.configurationName,
-        projectAsJsonString: project ? JSON.stringify(project) : undefined
-      })
-    }
-
-    try {
-      let result: ExternalProgramResult;
-      switch (converter?.type) {
-        case 'custom':
-          throw new Error('custom converter not implemented yet');
-          break;
-        case 'lua':
-          result = await exportWithPandocLua(content, {
-            converter,
-            cwd,
-            resourcesPaths,
-          });
-          break;
-        case 'script':
-          const callback: ProgressCallback = (source, chunk) => {
-            progressFeedback(this, source, chunk.toString(), editorKey);
-          };
-          result = await exportWithScript(content, {
-            converter,
-            configurationName,
-            project,
-            cwd,
-            resourcesPaths,
-            sourceFile,
-            resultFile,
-            callback,
-          });
-          break;
-        case 'pandoc':
-        default:
-          result = await exportWithPandoc(content, {
-            converter,
-            configurationName,
-            project,
-            cwd,
-            resourcesPaths,
-            resultFile,
-          });
-      }
-      const ext = converter?.extension;
-      const id = doc.id; // || basename(resultFile, ext && `.${ext}`);
-      const { commandLine, error, exitCode, output } = result
-      if (converter?.feedback) {
-        switch (converter.feedback) {
-          case 'command-line':
-            commandLineFeedback(this, commandLine, editorKey);
-            break;
-          case 'success':
-          default:
-            messageFeedback(
-              this,
-              `successfully exported in "${resultFile}"`,
-              editorKey,
-            );
-        }
-      }
-      if (exitCode === 0) {
-        const response: SaveResponse = {
-          message: 'document exported',
-          doc: {
-            id,
-            outputConverter: converter,
-            configurationName,
-            path: doc.path,
-            // exportedAsPath: resultFile,
-            content: output,
-          } as CxDocument,
-          resultFile,
-          documentHash,
-          commandLine,
-          cwd,
-        }
-        if (resultFile) {
-          const outputConverter = documentFormatToOutputConverter(doc.documentFormat)
-          const openResult = outputConverter?.openResult;
-          console.log(`openResult = ${openResult}`);
-          if (openResult === 'editor') {
-            this.send('show-in-viewer', {
-              type: 'viewer',
-              editorKey,
-              setup: {
-                name: resultFile,
-                projectAsJson: project ? JSON.stringify(project) : undefined,
-                documentHash: response.documentHash
-              },
-            } as ServerMessageForViewer);
-          } else if (openResult === 'os') {
-            shell.openPath(resultFile).catch((error) => {
-              errorFeedback(this, stringify(error), editorKey);
-            });
-          }
-        }
-        return Promise.resolve(response)
-      } else {
-        const message = `export failed with exitCode ${exitCode}`;
-        const debugMessage = [
-          message,
-          stringify(error),
-          'command line:',
-          commandLine,
-        ].join('\n');
-        errorFeedback(this, debugMessage, editorKey);
-        return Promise.resolve({
-          error,
-          message,
-          doc: {
-            id,
-            path: resultFile,
-            content: output,
-            configurationName,
-          } as CxDocument,
-          resultFile,
-          commandLine,
-          cwd,
-        });
-      }
-    } catch (error) {
-      return Promise.resolve({
-        error,
-        message: 'export failed',
-        doc: { content, format: converter?.format, configurationName },
-        resultFile,
-        cwd,
-      });
-    }
   }
 
   fireEventInRenderer(

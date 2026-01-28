@@ -51,9 +51,9 @@ export type IpcRendererToMainChannel =
   | 'set-value'
   | 'query'
   | 'get-source-file'
-  | 'show-again'
-  | 'export-again'
-  | 'get-export-job'
+  | 'show-rendered-again'
+  | 'render-again'
+  | 'get-rendering-job'
   | 'update-config'
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
@@ -71,7 +71,7 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   document: {
     dir: 'm2r',
     description:
-      'main tells the renderer to ask for an action on the document (open, save, save-as, import, export)',
+      'main tells the renderer to ask for an action on the document (open, save, save-as, import, render)',
   },
   'get-folder-contents': {
     dir: 'r2m',
@@ -176,17 +176,17 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'm2r',
     description: 'show some content in the viewer',
   },
-  'show-again': {
+  'show-rendered-again': {
     dir: 'r2m',
-    description: 'show an export job (a PDF) again in the viewer, without recompiling it'
+    description: 'show a rendered job (a PDF) again in the viewer, without recompiling it'
   },
-  'export-again': {
+  'render-again': {
     dir: 'r2m',
-    description: 'export (compile PDF) again'
+    description: 'render the document again (recompile PDF)'
   },
-  'get-export-job': {
+  'get-rendering-job': {
     dir: 'r2m',
-    description: 'retrieve information about an export job (e.g. a PDF instance of a document)'
+    description: 'retrieve information about a rendering job (e.g. a PDF instance of a document)'
   },
   'get-source-file': {
     dir: 'r2m',

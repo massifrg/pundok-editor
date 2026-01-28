@@ -163,11 +163,11 @@ export class NetBackend implements Backend {
     return Promise.reject('method non implemented');
   }
 
-  async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+  async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
     return Promise.reject('method non implemented');
   }
 
-  async getExportJob(hash: string): Promise<ExportJob | undefined> {
+  async getRenderingJob(hash: string): Promise<ExportJob | undefined> {
     return Promise.reject('method non implemented');
   }
 

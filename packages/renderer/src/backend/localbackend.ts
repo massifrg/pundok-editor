@@ -453,15 +453,15 @@ export class LocalBackend implements Backend {
   }
 
   async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    this.invokeIpc('show-again', hash, editorKey)
+    this.invokeIpc('show-rendered-again', hash, editorKey)
   }
 
-  async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    this.invokeIpc('export-again', hash, editorKey)
+  async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    this.invokeIpc('render-again', hash, editorKey)
   }
 
-  async getExportJob(hash: string): Promise<ExportJob | undefined> {
-    const job_as_string: string | undefined = await this.invokeIpc('get-export-job', hash)
+  async getRenderingJob(hash: string): Promise<ExportJob | undefined> {
+    const job_as_string: string | undefined = await this.invokeIpc('get-rendering-job', hash)
     return job_as_string && JSON.parse(job_as_string) as ExportJob || undefined
   }
 

@@ -214,11 +214,11 @@ export interface Backend {
     info: SynctexInfo,
   ): Promise<void>
 
+  renderAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
+
+  getRenderingJob(hash: string): Promise<ExportJob | undefined>;
+
   showAgain(hash: string, editorKey: EditorKeyType): Promise<void>
-
-  exportAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
-
-  getExportJob(hash: string): Promise<ExportJob | undefined>;
 
   /**
    * Update a configuration or project JSON file adding/updating an object

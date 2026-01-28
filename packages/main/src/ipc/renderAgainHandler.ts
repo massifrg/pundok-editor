@@ -3,8 +3,9 @@ import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
 import { getExportJobWithHash } from "./documentHash";
 import { EditorKeyType, PundokEditorProject, CxDocument, DocumentFormat } from "../common";
+import { exportDocument } from "./saveDocumentHandler";
 
-export const exportAgainHandler =
+export const renderAgainHandler =
   (hub: IpcHub) =>
     async (
       e: IpcMainInvokeEvent,
@@ -25,10 +26,12 @@ export const exportAgainHandler =
           path,
           documentFormat,
           configurationName,
-          content: ''
+          content: '',
+          project,
+          editorKey,
         }
         try {
-          hub.exportDocument(sdoc, project, editorKey)
+          exportDocument(hub, sdoc)
         } catch (error) {
           const msg = stringify(error)
           console.log(msg)
