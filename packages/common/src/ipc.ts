@@ -46,8 +46,7 @@ export type IpcRendererToMainChannel =
   | 'get-inclusion-tree'
   | 'ask-for-document'
   | 'transform-json'
-  | 'pandoc-input-formats'
-  | 'pandoc-output-formats'
+  | 'pandoc-feature'
   | 'set-value'
   | 'query'
   | 'get-source-file'
@@ -141,13 +140,9 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'm2r',
     description: 'main sends the project configuration to the renderer',
   },
-  'pandoc-input-formats': {
+  'pandoc-feature': {
     dir: 'r2m',
-    description: 'the renderer asks main to run pandoc --list-input-formats',
-  },
-  'pandoc-output-formats': {
-    dir: 'r2m',
-    description: 'the renderer asks main to run pandoc --list-output-formats',
+    description: 'the renderer asks main to run pandoc for features like --list-input-formats, --list-output-formats, --list-extensions=...',
   },
   'transform-json': {
     dir: 'r2m',

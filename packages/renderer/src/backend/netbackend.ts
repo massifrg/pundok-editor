@@ -25,6 +25,8 @@ import {
   FolderContents,
   PundokBookmarkType,
   PundokBookmark,
+  PandocFeatureName,
+  PandocFeatureOptions,
 } from '../common';
 import { OpenDialogOptions } from 'electron';
 
@@ -109,12 +111,8 @@ export class NetBackend implements Backend {
     // TODO: remember to JSON.stringify the value before sending it
   }
 
-  async pandocInputFormats(): Promise<string[]> {
-    return Promise.resolve([]);
-  }
-
-  async pandocOutputFormats(): Promise<string[]> {
-    return Promise.resolve([]);
+  pandocFeature(featureName: PandocFeatureName, options?: PandocFeatureOptions): Promise<any[]> {
+    return Promise.reject('Method not implemented');
   }
 
   async queryDatabase(query: Query): Promise<QueryResult[]> {

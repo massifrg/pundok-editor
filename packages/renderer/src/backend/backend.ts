@@ -19,6 +19,8 @@ import type {
   FolderContents,
   PundokBookmarkType,
   PundokBookmark,
+  PandocFeatureName,
+  PandocFeatureOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -179,14 +181,13 @@ export interface Backend {
   setValue(key: string, value?: any): Promise<void>;
 
   /**
-   * Asks the backend to run the installed version of pandoc to retrieve its input formats.
+   * Asks the backend to run the installed version of pandoc to retrieve its features
+   * (input and output formats, extensions of a format).
    */
-  pandocInputFormats(): Promise<string[]>;
-
-  /**
-   * Asks the backend to run the installed version of pandoc to retrieve its output formats.
-   */
-  pandocOutputFormats(): Promise<string[]>;
+  pandocFeature(
+    featureName: PandocFeatureName,
+    options?: PandocFeatureOptions
+  ): Promise<any[]>;
 
   /**
    * Asks the backend to open the viewer to show the result file.

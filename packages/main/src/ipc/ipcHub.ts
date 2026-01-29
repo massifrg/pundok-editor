@@ -25,7 +25,7 @@ import { fileContentsHandler } from './fileContentsHandler';
 import { getProjectHandler } from './getProjectHandler';
 import { newProjectHandler } from './newProjectHandler';
 import { openDocumentHandler } from './openDocumentHandler';
-import { pandocInputFormatsHandler, pandocOutputFormatsHandler } from './pandocFormatsHandler';
+import { pandocFeaturesHandler } from './pandocFeaturesHandler';
 import { queryHandler } from './queryHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
@@ -91,8 +91,7 @@ export class IpcHub {
     ipcMain.handle('set-value', setValueHandler(this));
     ipcMain.handle('new-project', newProjectHandler(this));
     ipcMain.handle('transform-json', transformJsonHandler(this));
-    ipcMain.handle('pandoc-input-formats', pandocInputFormatsHandler(this));
-    ipcMain.handle('pandoc-output-formats', pandocOutputFormatsHandler(this));
+    ipcMain.handle('pandoc-feature', pandocFeaturesHandler(this));
     ipcMain.handle('query', queryHandler(this));
     ipcMain.handle('get-source-file', getSourceFileHandler(this));
     ipcMain.handle('show-rendered-again', showAgainHandler(this));

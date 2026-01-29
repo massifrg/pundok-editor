@@ -48,6 +48,8 @@ import {
   PundokBookmarkType,
   PundokBookmark,
   documentFormatToOutputConverter,
+  PandocFeatureName,
+  PandocFeatureOptions,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -349,12 +351,8 @@ export class LocalBackend implements Backend {
     this.invokeIpc('set-value', key, JSON.stringify(value));
   }
 
-  async pandocInputFormats(): Promise<string[]> {
-    return this.invokeIpc('pandoc-input-formats');
-  }
-
-  async pandocOutputFormats(): Promise<string[]> {
-    return this.invokeIpc('pandoc-output-formats');
+  pandocFeature(featureName: PandocFeatureName, options?: PandocFeatureOptions): Promise<any[]> {
+    return this.invokeIpc('pandoc-feature', featureName, options)
   }
 
   // async openViewer(

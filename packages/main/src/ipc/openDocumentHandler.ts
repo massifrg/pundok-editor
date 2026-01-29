@@ -21,6 +21,7 @@ import {
 import { updateBookmarksFile } from '../bookmarks';
 import { importWithPandoc } from '../importExport';
 import { refreshMainMenu } from '../mainWindow';
+import { pandocFeatures } from '../pandocFeatures';
 import { isReadableFile } from '../resourcesManager';
 import { externalProgramError, runExternalProgram } from '../runExternal';
 import { commandLineFeedback, errorFeedback } from './feedback';
@@ -108,7 +109,7 @@ async function openDocument(hub: IpcHub, context: DocumentContext, tryFormats?: 
       return openDocumentWithFormat(hub, context)
     console.log(`openDocument: PASS 2, no format provided, let's guess from extension`)
     const config = project ? project.computedConfig : await getConfigurationInit(configurationName)
-    const guessed = documentFormatsFromFilename(path, 'input', config)
+    const guessed = await pandocFeatures.documentFormatsFromFilename(path, 'input', config)
     console.log(`suitable formats for ${path}: ${guessed.map(g => g.name).join()}`)
     if (guessed.length > 0)
       return openDocument(hub, context, guessed)

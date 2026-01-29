@@ -12,6 +12,7 @@ export * from './feedback';
 export * from './folders';
 export * from './icons';
 export * from './ipc';
+export * from './pandocFeatures';
 export * from './pandocFormat';
 export * from './pandocOptions';
 export * from './prosemirrorNames';
