@@ -16,7 +16,6 @@ import {
   CUSTOM_PANDOC_READERS,
   PundokEditorProject,
   DocumentFormat,
-  documentFormatsFromFilename,
 } from '../common';
 import { updateBookmarksFile } from '../bookmarks';
 import { importWithPandoc } from '../importExport';

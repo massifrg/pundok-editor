@@ -257,6 +257,7 @@ import {
   ActionNameWithProps,
   AddOrRemoveClassActionProps,
   DEFAULT_INDEX_NAME,
+  DocumentCoords,
   INDEX_NAME_ATTR,
   Index,
   IndexSource,
@@ -605,14 +606,16 @@ export default {
     async setIncludedDocAttrs() {
       const docState = getDocState(this.editor.state)
       // console.log(docState)
-      const coords = await this.backend?.askForDocumentIdOrPath('inclusion', {
-        editorKey: docState?.editorKey,
-        project: docState?.project,
-      })
+      const coords: DocumentCoords | undefined = await this.backend?.askForDocumentIdOrPath(
+        'inclusion',
+        {
+          editorKey: docState?.editorKey,
+          project: docState?.project,
+        })
       if (coords) {
         // console.log(coords)
-        const { format, id, src } = coords
-        if (format) this.updateKvAttribute(INCLUDE_FORMAT_ATTR, format)
+        const { formatName, id, src } = coords
+        if (formatName) this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
         if (src) this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
         if (id) {
           // this.updateKvAttribute(INCLUDE_ID_ATTR, id)

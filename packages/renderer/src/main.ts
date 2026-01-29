@@ -1,7 +1,7 @@
 // main file per Vue
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import { Quasar, Notify } from 'quasar';
+import { Quasar, Dialog, Notify } from 'quasar';
 import App from './PundokApp.vue';
 
 // Import icon libraries
@@ -18,6 +18,7 @@ app.use(pinia);
 app.use(Quasar, {
   plugins: {
     // import Quasar plugins and add here
+    Dialog,
     Notify,
   },
   config: {

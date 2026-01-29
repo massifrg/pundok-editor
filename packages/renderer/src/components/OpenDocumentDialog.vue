@@ -20,7 +20,6 @@ import {
   Folder,
   getPandocFormatDescriptions,
   guessFormat,
-  guessFormatFromExtension,
   InputConverter,
   OutputConverter,
   PandocFormatDescription,
@@ -28,6 +27,7 @@ import {
   ProjectBookmark,
   PundokEditorConfigInit,
   PundokEditorProject,
+  documentFormatsFromFilename,
 } from '../common';
 import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
 import { useBackend } from '../stores';
@@ -81,7 +81,7 @@ export type DocumentDialogMode = 'open' | 'import' | 'save' | 'save-copy'
 
 export default {
   props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat'],
-  emits: ['hide', 'set-format'],
+  emits: ['ok', 'hide', 'set-format'],
   data() {
     return {
       visible: true,
@@ -223,10 +223,10 @@ export default {
   },
   mounted() {
     const getFormatsAndBookmarks = async () => {
-      const input_formats: string[] = await this.backend?.pandocInputFormats() || []
-      const output_formats: string[] = await this.backend?.pandocOutputFormats() || []
+      const input_formats: string[] = await this.backend?.pandocFeature('input-formats') || []
+      const output_formats: string[] = await this.backend?.pandocFeature('output-formats') || []
       const format_descriptions = getPandocFormatDescriptions(input_formats, output_formats)
-      this.pandocFormats = [...this.pandocFormats, ...format_descriptions]
+      this.pandocFormats = [...format_descriptions]
       this.format = guessFormat
       this.docBookmarks = (await this.backend?.getBookmarks('document') || []) as DocumentBookmark[]
       this.projectBookmarks = (await this.backend?.getBookmarks('project') || []) as ProjectBookmark[]
@@ -329,10 +329,9 @@ export default {
           why: 'from the current configuration of the editor'
         }
       }
-      const ext = path.replace(/^.*?[.](([0-9a-z]{1,5}[.])?[0-9a-z]+)$/i, '$1')
-      const format = guessFormatFromExtension(ext, this.isInputDialog ? 'input' : 'output')
-      if (format) {
-        const pf = this.pandocFormats.find(f => f.name === format)
+      const formats = documentFormatsFromFilename(this.pandocFormats, path, this.isInputDialog ? 'input' : 'output')
+      if (formats.length > 0) {
+        const pf = formats[0]
         if (pf)
           return {
             format: { ...pf, ftype: 'format' },
@@ -354,6 +353,7 @@ export default {
       const path = this.selectedDocument
       const editorKey = editorKeyFromState(this.editor.state)
       if (editorKey) {
+        this.$emit('ok')
         if (this.isInputDialog) {
           // open/import document
           if (path && editorKey) {
@@ -510,7 +510,7 @@ export default {
 </script>
 
 <template>
-  <q-dialog v-model="visible" full-width persistent no-esc-dismiss @before-show="getContents()">
+  <q-dialog ref="dialogRef" v-model="visible" full-width persistent no-esc-dismiss @before-show="getContents()">
     <q-card>
       <q-card-section horizontal class="q-pa-sm q-pb-none q-mb-none">
         <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
@@ -608,8 +608,8 @@ export default {
       <q-card-actions>
         <q-btn color="primary" label="Reload" @click="getContents()" />
         <q-space />
-        <q-btn color="primary" label="OK" @click="onOk" />
-        <q-btn color="primary" label="Cancel" @click="onCancel" />
+        <q-btn ref="ok" color="primary" label="OK" @click="onOk" />
+        <q-btn ref="cancel" color="primary" label="Cancel" @click="onCancel" />
       </q-card-actions>
     </q-card>
   </q-dialog>

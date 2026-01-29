@@ -3,10 +3,10 @@ import { IpcHub } from './ipcHub';
 import {
   DocumentCoords,
   EditorKeyType,
-  pandocFormatsFromExtension,
   pandocInputFileFilters,
 } from '../common';
 import { parse as parsePath, relative as relativePath } from 'path';
+import { pandocFeatures } from '../pandocFeatures';
 
 export const askForDocumentHandler =
   (hub: IpcHub) =>
@@ -32,12 +32,12 @@ export const askForDocumentHandler =
           const base = options?.defaultPath;
           const src = base ? relativePath(base, filename) : filename;
           // TODO: search also custom formats, not just Pandoc formats
-          const formats = pandocFormatsFromExtension(parsePath(filename).ext, 'input');
+          const formats = await pandocFeatures.documentFormatsFromFilename(filename, 'input');
           return {
             path: filename,
             src,
             id: id || parsePath(filename).name,
-            formatName: formats[0],
+            formatName: formats[0]?.name,
           };
         }
       }

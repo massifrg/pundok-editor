@@ -9,9 +9,9 @@ import {
   DEFAULT_COPY_FORMAT,
   DEFAULT_FORMAT,
   formatDescriptionsFromFilename,
+  PandocConversionDir,
   PandocFormatDescription,
-  pandocFormats,
-  pandocFormatsFromExtension,
+  pandocFormatsDefs,
   pandocFormatToInputConverter,
   pandocFormatToOutputConverter
 } from "./pandocFormat"
@@ -76,7 +76,7 @@ export function documentFormatToOutputConverter(format?: DocumentFormat): Output
 }
 
 export function pandocFormatToDocumentFormat(name: string): DocumentFormat | undefined {
-  const desc = pandocFormats[name]
+  const desc = pandocFormatsDefs[name]
   if (desc) {
     return {
       ftype: 'format',
@@ -89,7 +89,7 @@ export function pandocFormatToDocumentFormat(name: string): DocumentFormat | und
 
 export function customFormatToDocumentFormat(
   cf: CustomFormat,
-  direction: 'input' | 'output',
+  direction: PandocConversionDir,
   config?: PundokEditorConfig | PundokEditorConfigInit,
 ): DocumentFormat {
   const isInput = direction === 'input'
@@ -102,7 +102,7 @@ export function customFormatToDocumentFormat(
 
 export function documentFormatWithName(
   name: string,
-  direction: 'input' | 'output',
+  direction: PandocConversionDir,
   config?: PundokEditorConfig | PundokEditorConfigInit
 ): DocumentFormat | undefined {
   // 1. search a pandoc format
@@ -155,8 +155,9 @@ function documentFormatsCompare(df1: DocumentFormat, df2: DocumentFormat): numbe
 }
 
 export function documentFormatsFromFilename(
+  pandocFormats: PandocFormatDescription[],
   filename: string,
-  direction: 'input' | 'output' = 'input',
+  direction: PandocConversionDir = 'input',
   config?: PundokEditorConfig | PundokEditorConfigInit
 ): DocumentFormat[] {
   const dformats: DocumentFormat[] = []
@@ -182,7 +183,7 @@ export function documentFormatsFromFilename(
     }
   }
   // 3. search pandoc formats
-  return dformats.concat(formatDescriptionsFromFilename(filename, direction)
+  return dformats.concat(formatDescriptionsFromFilename(pandocFormats, filename, direction)
     .map(f => ({ ftype: 'format', ...f })))
     .sort(documentFormatsCompare)
 }
