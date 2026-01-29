@@ -15,6 +15,8 @@ import {
   CustomPandocReader,
   CUSTOM_PANDOC_READERS,
   PundokEditorProject,
+  DocumentFormat,
+  documentFormatsFromFilename,
 } from '../common';
 import { updateBookmarksFile } from '../bookmarks';
 import { importWithPandoc } from '../importExport';
@@ -24,6 +26,7 @@ import { externalProgramError, runExternalProgram } from '../runExternal';
 import { commandLineFeedback, errorFeedback } from './feedback';
 import { computeProjectFromDocFile } from './getProjectHandler';
 import { IpcHub } from './ipcHub';
+import { getConfigurationInit } from './configurationHandlers';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -81,18 +84,51 @@ export const openDocumentHandler =
       }
     };
 
-async function openDocument(hub: IpcHub, context: DocumentContext): Promise<CxDocument> {
-  const { configurationName, documentFormat, path: filename } = context;
-  const inputConverter = documentFormat?.ftype === 'input-converter' && documentFormatToInputConverter(documentFormat)
+async function openDocument(hub: IpcHub, context: DocumentContext, tryFormats?: DocumentFormat[]): Promise<CxDocument> {
+  if (tryFormats !== undefined && tryFormats.length > 0) {
+    console.log(`openDocument: PASS 3, trying formats guessed from filename extension`)
+    try {
+      const documentFormat = tryFormats[0]
+      console.log(`trying to open "${context.path}" as ${documentFormat.name}`)
+      return openDocumentWithFormat(hub, { ...context, documentFormat })
+    } catch (err) {
+      if (tryFormats.length < 2) // last format
+        return Promise.reject(err)
+      else                       // try the next one
+        return openDocument(hub, context, tryFormats.slice(1))
+    }
+  } else {
+    console.log(`openDocument: PASS 1, see whether a format has been provided`)
+    const { configurationName, documentFormat, path, project } = context;
+    if (!path)
+      return Promise.reject('You must provide a file name');
+    if (!isReadableFile(path))
+      return Promise.reject(`can't read "${path}"`);
+    if (documentFormat)
+      return openDocumentWithFormat(hub, context)
+    console.log(`openDocument: PASS 2, no format provided, let's guess from extension`)
+    const config = project ? project.computedConfig : await getConfigurationInit(configurationName)
+    const guessed = documentFormatsFromFilename(path, 'input', config)
+    console.log(`suitable formats for ${path}: ${guessed.map(g => g.name).join()}`)
+    if (guessed.length > 0)
+      return openDocument(hub, context, guessed)
+    else
+      return Promise.reject(`Can't guess the file format`)
+  }
+}
+
+async function openDocumentWithFormat(hub: IpcHub, context: DocumentContext): Promise<CxDocument> {
+  const { configurationName, documentFormat, path } = context;
+  // openDocument ensures that documentFormat is defined and path is a readable filename
+  const { ftype, name: formatName } = documentFormat!
+  const filename = path!
+  const inputConverter = ftype === 'input-converter' && documentFormatToInputConverter(documentFormat)
   const editorKey = context.editorKey || hub.mainEditorKey;
-  if (!filename)
-    return Promise.reject('You must provide a file name');
-  if (!isReadableFile(filename))
-    return Promise.reject(`can't read "${filename}"`);
   let result: ExternalProgramResult | undefined = undefined;
   let cmdLineFeedback: ((msg: string) => void) | undefined = undefined;
   const { dir, name } = parsePath(filename);
   const resourcePath = [formatPath(parsePath(dir))];
+  console.log(`openDocumentWithFormat, format: ${JSON.stringify(documentFormat!)}`)
   try {
     if (inputConverter) {
       if (inputConverter.feedback)
@@ -123,8 +159,8 @@ async function openDocument(hub: IpcHub, context: DocumentContext): Promise<CxDo
           ).result;
           break;
       }
-    } else if (documentFormat?.ftype === 'format') {
-      if (documentFormat?.name === 'json') {
+    } else if (ftype === 'format') {
+      if (formatName === 'json') {
         result = {
           exitCode: 0,
           commandLine: '',
@@ -132,12 +168,11 @@ async function openDocument(hub: IpcHub, context: DocumentContext): Promise<CxDo
           output: await readFile(filename).then((buf) => buf.toString()),
           error: '',
         };
-      } else if (documentFormat?.name) {
+      } else {
         result = await importWithPandoc({ ...context, path: filename });
       }
     } else {
-      // TODO: try to guess the format?
-      return Promise.reject(`Can't determine the file format`)
+      return Promise.reject(`Can't guess the file format`)
     }
   } catch (err) {
     if (err) errorFeedback(hub, `${err}`, editorKey);
@@ -151,7 +186,7 @@ async function openDocument(hub: IpcHub, context: DocumentContext): Promise<CxDo
       const doc: CxDocument = {
         editorKey,
         id: name,
-        path: filename,
+        path,
         content: output,
         documentFormat,
         configurationName,

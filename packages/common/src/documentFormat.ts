@@ -8,8 +8,10 @@ import {
 import {
   DEFAULT_COPY_FORMAT,
   DEFAULT_FORMAT,
+  formatDescriptionsFromFilename,
   PandocFormatDescription,
   pandocFormats,
+  pandocFormatsFromExtension,
   pandocFormatToInputConverter,
   pandocFormatToOutputConverter
 } from "./pandocFormat"
@@ -124,6 +126,67 @@ export function documentFormatWithName(
   }
   return format
 }
+
+const DOCFORMAT_FTYPE_TO_VALUE: Record<DocumentFormatType, number> = {
+  'guess': 1,
+  'format': 2,
+  'input-converter': 3,
+  'output-converter': 3
+}
+
+/**
+ * A comparison function to sort document formats.
+ * @param df1
+ * @param df2 
+ */
+function documentFormatsCompare(df1: DocumentFormat, df2: DocumentFormat): number {
+  const ftype1 = df1.ftype
+  const diff_ftype = DOCFORMAT_FTYPE_TO_VALUE[df2.ftype] - DOCFORMAT_FTYPE_TO_VALUE[ftype1]
+  if (diff_ftype !== 0)
+    return diff_ftype
+  if (ftype1 === 'format') {
+    const see1 = (df1 as PandocFormatDescription).see ? 1 : 2
+    const see2 = (df2 as PandocFormatDescription).see ? 1 : 2
+    const diff_see = see2 - see1
+    if (diff_see !== 0)
+      return diff_see
+  }
+  return 0
+}
+
+export function documentFormatsFromFilename(
+  filename: string,
+  direction: 'input' | 'output' = 'input',
+  config?: PundokEditorConfig | PundokEditorConfigInit
+): DocumentFormat[] {
+  const dformats: DocumentFormat[] = []
+  if (config) {
+    // 1. search custom formats (they have precedence over Pandoc formats with the same extension)
+    config.customFormats?.forEach(cf => {
+      if (filename.endsWith('.' + cf.extension)) {
+        const df = customFormatToDocumentFormat(cf, direction, config)
+        if (df) dformats.push(df)
+      }
+    })
+    // 2. search InputConverters or OutputConverters
+    if (direction === 'input') {
+      config.inputConverters?.forEach(ic => {
+        if (ic.extensions?.find(ext => (filename.endsWith('.' + ext))))
+          dformats.push({ ftype: 'input-converter', ...ic })
+      })
+    } else {
+      config.outputConverters?.forEach(oc => {
+        if (filename.endsWith('.' + oc.extension))
+          dformats.push({ ftype: 'output-converter', ...oc })
+      })
+    }
+  }
+  // 3. search pandoc formats
+  return dformats.concat(formatDescriptionsFromFilename(filename, direction)
+    .map(f => ({ ftype: 'format', ...f })))
+    .sort(documentFormatsCompare)
+}
+
 
 export const DEFAULT_DOCUMENT_FORMAT: DocumentFormat = pandocFormatToDocumentFormat(DEFAULT_FORMAT)!
 export const DEFAULT_COPY_DOCUMENT_FORMAT: DocumentFormat = pandocFormatToDocumentFormat(DEFAULT_COPY_FORMAT)!

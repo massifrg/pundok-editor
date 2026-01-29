@@ -414,9 +414,20 @@ Object.entries(pandocFormats).forEach(([format, desc]) => {
   const mainFormat = desc.see
   if (mainFormat) {
     const mainDesc = pandocFormats[mainFormat]
-    pandocFormats[format] = { ...mainDesc, ...desc, name: format }
+    pandocFormats[format] = {
+      ...mainDesc,
+      ...desc,
+      name: format,
+      input: true,
+      output: true
+    }
   } else {
-    pandocFormats[format].name = format
+    pandocFormats[format] = {
+      ...pandocFormats[format],
+      name: format,
+      input: true,
+      output: true
+    }
   }
 })
 const DEFAULT_FORMAT_FOR_EXTENSION: Record<string, string> = {
@@ -565,18 +576,18 @@ export function knownFormatExtensions(direction?: 'input' | 'output'): string[] 
 }
 
 /**
- * All the descriptions of the formats associated to a document name extension.
- * @param ext The extension ending the name of the document.
+ * All the descriptions of the formats associated to (the extension of) a filename.
+ * @param filename The document filename (with extension).
  * @param direction The direction of Pandoc conversion.
  * @returns 
  */
-export function formatDescriptionsFromExtension(
-  ext: string,
+export function formatDescriptionsFromFilename(
+  filename: string,
   direction: 'input' | 'output'
 ): PandocFormatDescription[] {
   return Object.values(pandocFormats)
     .filter((desc) => (direction === 'input' && desc.input === true) || (direction === 'output' && desc.output === true))
-    .filter((desc) => desc.extensions && desc.extensions.find(e => e === ext))
+    .filter((desc) => desc.extensions && desc.extensions.find(e => filename.endsWith('.' + e)))
 }
 
 /**
@@ -603,7 +614,7 @@ function formatExtensionToNumber(ext: string, desc: PandocFormatDescription): nu
  * @returns 
  */
 export function formatsFromExtension(ext: string, direction: 'input' | 'output'): string[] {
-  const fd = formatDescriptionsFromExtension(ext, direction)
+  const fd = formatDescriptionsFromFilename(ext, direction)
   fd.sort((desc1, desc2) => {
     const diff = formatExtensionToNumber(ext, desc2) - formatExtensionToNumber(ext, desc1)
     if (diff === 0)
