@@ -86,7 +86,6 @@ export function pandocFormatToDocumentFormat(name: string): DocumentFormat | und
   }
 }
 
-
 export function customFormatToDocumentFormat(
   cf: CustomFormat,
   direction: PandocConversionDir,
@@ -188,6 +187,16 @@ export function documentFormatsFromFilename(
     .sort(documentFormatsCompare)
 }
 
+export function documentFormatIcon(format?: DocumentFormat, defaultIcon?: string): string | undefined {
+  let icon
+  if (format?.ftype === 'input-converter')
+    icon = format?.icon || 'mdi-import'
+  else if (format?.ftype === 'output-converter')
+    icon = format?.icon || 'mdi-export'
+  else if (format?.ftype === 'format')
+    icon = format?.icon
+  return icon || defaultIcon
+}
 
 export const DEFAULT_DOCUMENT_FORMAT: DocumentFormat = pandocFormatToDocumentFormat(DEFAULT_FORMAT)!
 export const DEFAULT_COPY_DOCUMENT_FORMAT: DocumentFormat = pandocFormatToDocumentFormat(DEFAULT_COPY_FORMAT)!

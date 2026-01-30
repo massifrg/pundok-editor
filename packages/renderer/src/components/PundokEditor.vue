@@ -179,8 +179,8 @@ import {
   ACTION_UPDATE_DOC_STATE,
   UpdateDocStateActionProps,
   ACTION_DOCUMENT_INCLUDE,
-  setActionTransformDocument,
   ACTION_SET_DOCUMENT_FORMAT,
+  ACTION_DOCUMENT_SAVE_COPY,
 } from '../actions';
 import { useQuasar } from 'quasar';
 import { EditorGUIPropsClass } from './EditorGUIProps';
@@ -400,6 +400,12 @@ export default {
             else
               this.save();
             break;
+          case ACTION_DOCUMENT_SAVE_COPY.name:
+            if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
+              setActionCommand(this.projectStructureEditorKey, action, props)
+            else
+              this.save((props as DocumentSaveActionProps).doc.path, { isCopy: true });
+            break;
           case ACTION_SET_DOCUMENT_FORMAT.name:
             const { whichFormat, documentFormat } = props as SetDocumentFormatActionProps
             const property = (whichFormat === 'input' && 'inputFormat')
@@ -506,7 +512,8 @@ export default {
                     toFormat: 'json',
                     sources: [path],
                   }
-                  setActionTransformDocument(editorKey, appendTransform)
+                  setActionCommand(editorKey, ACTION_DOCUMENT_TRANSFORM,
+                    { transform: appendTransform } as TransformDocumentActionProps)
                 }
               }
             }
@@ -810,6 +817,17 @@ export default {
           prompt: 'Open document',
           startFolder: docState?.inputFolder,
           startFormat: docState?.inputFormat,
+          callback: (context) => {
+            const { editorKey, documentFormat } = context
+            if (documentFormat) {
+              const props: SetDocumentFormatActionProps = {
+                whichFormat: 'input',
+                documentFormat
+              }
+              setActionCommand(editorKey!, ACTION_SET_DOCUMENT_FORMAT, props)
+            }
+            setActionCommand(editorKey!, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
+          }
         } as DocumentDialogProps)
       } else {
         const doc = await this.backend?.open({
@@ -890,6 +908,17 @@ export default {
             prompt: 'Save a copy',
             startFolder: docState?.copyFolder,
             startFormat: docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT,
+            callback: (context) => {
+              const { editorKey, documentFormat } = context
+              if (documentFormat) {
+                const props: SetDocumentFormatActionProps = {
+                  whichFormat: 'copy',
+                  documentFormat
+                }
+                setActionCommand(editorKey!, ACTION_SET_DOCUMENT_FORMAT, props)
+              }
+              setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY, { doc: context } as DocumentSaveActionProps)
+            }
           } as DocumentDialogProps)
         else
           showSaveDocumentDialog({
@@ -897,6 +926,17 @@ export default {
             prompt: 'Save document',
             startFolder: docState?.outputFolder,
             startFormat: docState?.outputFormat || DEFAULT_DOCUMENT_FORMAT,
+            callback: (context) => {
+              const { editorKey, documentFormat } = context
+              if (documentFormat) {
+                const props: SetDocumentFormatActionProps = {
+                  whichFormat: 'output',
+                  documentFormat
+                }
+                setActionCommand(editorKey!, ACTION_SET_DOCUMENT_FORMAT, props)
+              }
+              setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE, { doc: context } as DocumentSaveActionProps)
+            }
           } as DocumentDialogProps)
         return
       }
@@ -1057,7 +1097,9 @@ export default {
       const { sources, withResult } = transform;
       const whatToDo: WhatToDoWithResult =
         withResult || (sources ? 'append' : 'replace');
+      console.log(sources)
       const json = sources ? undefined : this.getDocAsJsonString();
+      console.log(json)
       const docState = this.docState();
       try {
         this.setOperationInProgress(true);

@@ -605,17 +605,17 @@ export default {
     updatedAttrs() {
       return Object.fromEntries(this.modifiedAttrs().map(e => [e.attrName, e.to]));
     },
-    async setIncludedDocAttrs() {
-      const docState = getDocState(this.editor.state)
+    setIncludedDocAttrs() {
       let src: string | undefined = undefined
       showIncludeDocumentDialog({
         editor: this.editor,
         callback: (context) => {
-          const { documentFormat, path } = context
+          const { documentFormat, path, project } = context
           if (path) {
-            const formatName = documentFormat?.name
-            src = relative(docState?.lastSaveResponse?.cwd || '', context.path!)
+            const baseDir = project?.path || ''
+            src = baseDir ? relative(baseDir!, path!) : path
             const id = parse(path).name
+            const formatName = documentFormat?.name
             if (src) {
               this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
               if (id)

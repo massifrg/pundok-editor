@@ -21,6 +21,7 @@ import {
   PundokEditorProject,
   documentFormatsFromFilename,
   DocumentContext,
+  documentFormatIcon,
 } from '../common';
 import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
 import { useBackend } from '../stores';
@@ -74,7 +75,7 @@ export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'inc
 
 export default {
   props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat', 'startFolder'],
-  emits: [...useDialogPluginComponent.emits, 'set-format'],
+  emits: [...useDialogPluginComponent.emits],
   data() {
     return {
       visible: true,
@@ -278,7 +279,7 @@ export default {
     doubleClick(row: FileContentRow) {
       if (row.isDocument) {
         this.selectedDocument = row.name
-        this.openSelectedDocument()
+        this.selectDocument()
       } else if (row.isFolder) {
         const cf = this.currentFolder
         this.currentFolder = row.name === '..'
@@ -344,10 +345,11 @@ export default {
       }
       return this.format
     },
-    async openSelectedDocument() {
+    selectDocument() {
       const path = this.selectedDocument
       const editorKey = editorKeyFromState(this.editor.state)
       if (editorKey && path) {
+        console.log(`documentSelected, path=${path}, editorKey=${editorKey}`)
         const documentFormat = this.documentFormatFromPath(path)
         this.$emit('ok', {
           editorKey,
@@ -363,12 +365,6 @@ export default {
     closeDialog() {
       this.$emit('hide')
     },
-    onOk() {
-      this.openSelectedDocument()
-    },
-    onCancel() {
-      this.closeDialog()
-    },
     formatExtensions(format: DocumentFormat): string[] {
       if (format.ftype === 'output-converter') {
         const ext = ((format as never) as OutputConverter).extension
@@ -379,20 +375,14 @@ export default {
     },
     formatIcon(format?: DocumentFormat): string {
       let icon
-      if (format?.ftype === 'input-converter')
-        icon = format?.icon || 'mdi-import'
-      else if (format?.ftype === 'output-converter')
-        icon = format?.icon || 'mdi-export'
-      else if (format?.ftype === 'format')
-        icon = format?.icon
-      else if (format?.ftype === 'guess') {
+      if (format?.ftype === 'guess') {
         const gf = this.guessedFormat?.format
         icon = gf?.icon
           || (gf?.ftype === 'input-converter' && 'mdi-import')
           || (gf?.ftype === 'output-converter' && 'mdi-export')
           || icon
       }
-      return icon || guessFormat.icon || 'mdi-code-tags'
+      return icon || documentFormatIcon(format) || guessFormat.icon || 'mdi-code-tags'
     },
     formatLabel(format?: DocumentFormat) {
       if (format?.ftype !== 'guess')
@@ -473,8 +463,8 @@ export default {
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" v-model="visible" full-width persistent no-esc-dismiss @before-show="getContents()">
-    <q-card>
+  <q-dialog ref="dialog" v-model="visible" full-width persistent no-esc-dismiss @before-show="getContents()">
+    <q-card class="q-dialog-plugin">
       <q-card-section horizontal class="q-pa-sm q-pb-none q-mb-none">
         <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
         <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name"
@@ -572,8 +562,8 @@ export default {
       <q-card-actions>
         <q-btn color="primary" label="Reload" @click="getContents()" />
         <q-space />
-        <q-btn ref="ok" color="primary" label="OK" @click="onOk" />
-        <q-btn ref="cancel" color="primary" label="Cancel" @click="onCancel" />
+        <q-btn ref="okRef" color="primary" label="OK" @click="selectDocument" />
+        <q-btn ref="cancelRef" color="primary" label="Cancel" @click="closeDialog" />
       </q-card-actions>
     </q-card>
   </q-dialog>
