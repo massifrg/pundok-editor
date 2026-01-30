@@ -38,8 +38,6 @@
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
-        <OpenDocumentDialog v-if="visibleOpenDocumentDialog" :editor="editor" :mode="documentDialogMode"
-          :format="documentDialogFormat" @set-format="setFormat" @hide="visibleOpenDocumentDialog = false" />
         <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
           @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
         <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
@@ -128,6 +126,8 @@ import {
   DocumentFormat,
   DEFAULT_DOCUMENT_FORMAT,
   FindResourceOptions,
+  SetDocumentFormatActionProps,
+  DEFAULT_COPY_DOCUMENT_FORMAT,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -143,15 +143,12 @@ import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue'
 import PendingOperationDialog from './PendingOperationDialog.vue'
 import SearchAndReplace from './SearchAndReplace.vue'
 import ShowMessageDialog from './ShowMessageDialog.vue'
-import OpenDocumentDialog, { DocumentDialogMode } from './OpenDocumentDialog.vue';
 import {
   ActionForNodeOrMark,
   EditorAction,
   actionSetMetaMapText,
   ACTION_EDIT_ATTRIBUTES,
   ACTION_EDIT_META_MAP_TEXT,
-  ACTION_DOCUMENT_EXPORT,
-  ACTION_DOCUMENT_IMPORT,
   ACTION_NEW_EMPTY_DOCUMENT,
   ACTION_SHOW_RESULT_MESSAGE,
   ACTION_SHOW_EXPORT_DIALOG,
@@ -166,8 +163,6 @@ import {
   ACTION_BACKEND_FEEDBACK,
   ACTION_BACKEND_SET_CONFIG_NAME,
   ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
-  setActionShowExportDialog,
-  setActionShowImportDialog,
   ACTION_DOCUMENT_OPEN,
   ACTION_SHOW_PROJECT_STRUCTURE_DIALOG,
   ACTION_CLOSE_EDITOR,
@@ -185,11 +180,13 @@ import {
   UpdateDocStateActionProps,
   ACTION_DOCUMENT_INCLUDE,
   setActionTransformDocument,
+  ACTION_SET_DOCUMENT_FORMAT,
 } from '../actions';
 import { useQuasar } from 'quasar';
 import { EditorGUIPropsClass } from './EditorGUIProps';
 import { PendingOperation, PendingOperationExtraValue } from './helpers/pending';
 import { CreateDocumentOptions, getDocAsJsonString } from '../schema';
+import { DocumentDialogProps, showOpenDocumentDialog, showSaveCopyDialog, showSaveDocumentDialog } from './helpers/chooseDocumentDialogs';
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';
@@ -227,7 +224,6 @@ export default {
     NodeOrMarkContextMenu,
     PendingOperationDialog,
     NewProjectDialog,
-    OpenDocumentDialog,
     "ProjectStructureDialog": defineAsyncComponent(() => import('./ProjectStructureDialog.vue')),
     "PdfViewer": defineAsyncComponent(() => import('./PdfViewer.vue'))
   },
@@ -277,9 +273,6 @@ export default {
       prevLeftDrawerWidth: 640,
       rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
-      visibleOpenDocumentDialog: false,
-      documentDialogMode: 'open' as DocumentDialogMode,
-      documentDialogFormat: undefined as DocumentFormat | undefined,
       visibleImportDialog: false,
       visibleExportDialog: false,
       visibleSearchAndReplaceDialog: false,
@@ -407,6 +400,14 @@ export default {
             else
               this.save();
             break;
+          case ACTION_SET_DOCUMENT_FORMAT.name:
+            const { whichFormat, documentFormat } = props as SetDocumentFormatActionProps
+            const property = (whichFormat === 'input' && 'inputFormat')
+              || (whichFormat === 'output' && 'outputFormat')
+              || (whichFormat === 'copy' && 'copyFormat')
+            if (property)
+              this.updateEditorDocState({ [whichFormat]: documentFormat || null })
+            break
           case ACTION_DOCUMENT_GO_TO_LINE.name:
             {
               const { atLine } = props as GoToLineActionProps
@@ -792,43 +793,6 @@ export default {
       }
     },
     /**
-     * Show an open document dialog.
-     */
-    showOpenDocumentDialog() {
-      this.documentDialogMode = 'open' as DocumentDialogMode
-      this.documentDialogFormat = this.docState()?.inputFormat
-      this.visibleOpenDocumentDialog = true;
-    },
-    /**
-     * Show a save dialog to save the current document.
-     */
-    showSaveDocumentDialog() {
-      this.documentDialogMode = 'save' as DocumentDialogMode
-      this.documentDialogFormat = this.docState()?.outputFormat
-      this.visibleOpenDocumentDialog = true;
-    },
-    /**
-     * Show a "save a copy" dialog to save the current document in a secondary format.
-     */
-    showSaveCopyDialog() {
-      this.documentDialogMode = 'save-copy' as DocumentDialogMode
-      this.documentDialogFormat = this.docState()?.copyFormat
-      this.visibleOpenDocumentDialog = true;
-    },
-    /**
-     * Event listener for OpenDocumentDialog 'set-format' event.
-     * @param mode The dialog mode.
-     * @param format The format to be set for that mode.
-     */
-    setFormat(mode: DocumentDialogMode, format: DocumentFormat) {
-      const formatField: keyof DocStateUpdate = mode === 'open'
-        ? 'inputFormat'
-        : mode === 'save'
-          ? 'outputFormat'
-          : 'copyFormat'
-      this.updateEditorDocState({ [formatField]: format })
-    },
-    /**
      * Open a document (optionally at a certain line).
      * @param context The context of the document to be opened.
      * @param atLine The line (usually the Para or Plain) where the cursor is moved after loading.
@@ -840,7 +804,13 @@ export default {
         docContext?.configurationName || docState?.configuration?.name;
       const project = docContext?.project || docState?.project;
       if (!docContext.path) {
-        this.showOpenDocumentDialog()
+        showOpenDocumentDialog({
+          editor: this.editor,
+          mode: 'open',
+          prompt: 'Open document',
+          startFolder: docState?.inputFolder,
+          startFormat: docState?.inputFormat,
+        } as DocumentDialogProps)
       } else {
         const doc = await this.backend?.open({
           ...docContext,
@@ -912,11 +882,22 @@ export default {
     },
     async save(path?: string, options?: { isCopy: boolean }) {
       const isCopy = options?.isCopy
+      const docState = this.docState()
       if (!path) {
         if (isCopy)
-          this.showSaveCopyDialog()
+          showSaveCopyDialog({
+            editor: this.editor,
+            prompt: 'Save a copy',
+            startFolder: docState?.copyFolder,
+            startFormat: docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT,
+          } as DocumentDialogProps)
         else
-          this.showSaveDocumentDialog()
+          showSaveDocumentDialog({
+            editor: this.editor,
+            prompt: 'Save document',
+            startFolder: docState?.outputFolder,
+            startFormat: docState?.outputFormat || DEFAULT_DOCUMENT_FORMAT,
+          } as DocumentDialogProps)
         return
       }
       this.beforeSaving();

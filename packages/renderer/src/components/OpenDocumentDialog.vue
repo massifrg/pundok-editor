@@ -2,20 +2,12 @@
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
 import { EditorState } from '@tiptap/pm/state';
-import { QTable, QTableColumn } from 'quasar';
-import {
-  ACTION_DOCUMENT_INCLUDE,
-  ACTION_DOCUMENT_OPEN,
-  ACTION_DOCUMENT_SAVE,
-  setActionCommand
-} from '../actions';
+import { QTable, QTableColumn, useDialogPluginComponent } from 'quasar';
 import {
   DocumentBookmark,
   DocumentFormat,
   documentFormatExtension,
   DocumentFormatType,
-  DocumentOpenActionProps,
-  DocumentSaveActionProps,
   Document,
   Folder,
   getPandocFormatDescriptions,
@@ -28,6 +20,7 @@ import {
   PundokEditorConfigInit,
   PundokEditorProject,
   documentFormatsFromFilename,
+  DocumentContext,
 } from '../common';
 import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
 import { useBackend } from '../stores';
@@ -77,16 +70,16 @@ function computeCurrentFolder(state?: EditorState): string[] {
   return folder
 }
 
-export type DocumentDialogMode = 'open' | 'import' | 'save' | 'save-copy'
+export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'include'
 
 export default {
-  props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat'],
-  emits: ['ok', 'hide', 'set-format'],
+  props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat', 'startFolder'],
+  emits: [...useDialogPluginComponent.emits, 'set-format'],
   data() {
     return {
       visible: true,
       /** An array of the folders' names of the current path */
-      currentFolder: computeCurrentFolder(this.editor?.state),
+      currentFolder: this.startFolder || computeCurrentFolder(this.editor?.state),
       /** The sub folders in the current folder */
       folders: [] as Folder[],
       /** The documents (files) in the current folder */
@@ -108,7 +101,7 @@ export default {
       /** The available Pandoc formats and input/output converters */
       pandocFormats: [] as PandocFormatDescription[],
       /** The current, selected format/converter to use to read/save the document */
-      format: this.startFormat as DocumentFormat | undefined,
+      format: this.startFormat || guessFormat as DocumentFormat | undefined,
       /** The file extensions to filter the documents */
       extensions: [] as string[],
       /** Bookmarks to recent documents */
@@ -176,6 +169,9 @@ export default {
           case 'import':
             prompt = 'Import document:'
             break
+          case 'include':
+            prompt = 'Include document:'
+            break
           case 'open':
           default:
             prompt = 'Open document:'
@@ -227,7 +223,6 @@ export default {
       const output_formats: string[] = await this.backend?.pandocFeature('output-formats') || []
       const format_descriptions = getPandocFormatDescriptions(input_formats, output_formats)
       this.pandocFormats = [...format_descriptions]
-      this.format = guessFormat
       this.docBookmarks = (await this.backend?.getBookmarks('document') || []) as DocumentBookmark[]
       this.projectBookmarks = (await this.backend?.getBookmarks('project') || []) as ProjectBookmark[]
     }
@@ -352,48 +347,16 @@ export default {
     async openSelectedDocument() {
       const path = this.selectedDocument
       const editorKey = editorKeyFromState(this.editor.state)
-      if (editorKey) {
-        this.$emit('ok')
-        if (this.isInputDialog) {
-          // open/import document
-          if (path && editorKey) {
-            const documentFormat = this.documentFormatFromPath(path)
-            this.$emit('set-format', this.mode, this.format)
-            setActionCommand(
-              editorKey,
-              this.mode === 'import' ? ACTION_DOCUMENT_INCLUDE : ACTION_DOCUMENT_OPEN,
-              {
-                context: {
-                  editorKey,
-                  path,
-                  documentFormat,
-                  configurationName: this.tempProject ? undefined : this.tempConfigurationName,
-                  project: this.tempProject,
-                }
-              } as DocumentOpenActionProps
-            )
-          }
-        } else {
-          // save/save-copy/export
-          if (path && editorKey) {
-            const documentFormat = this.documentFormatFromPath(path)
-            this.$emit('set-format', this.mode, this.format)
-            setActionCommand(
-              editorKey,
-              ACTION_DOCUMENT_SAVE,
-              {
-                doc: {
-                  editorKey,
-                  id: toRaw(this.selectedDocument),
-                  path,
-                  documentFormat,
-                  configurationName: this.tempProject ? undefined : this.tempConfigurationName,
-                  project: this.tempProject,
-                }
-              } as DocumentSaveActionProps
-            )
-          }
-        }
+      if (editorKey && path) {
+        const documentFormat = this.documentFormatFromPath(path)
+        this.$emit('ok', {
+          editorKey,
+          id: toRaw(this.selectedDocument),
+          path,
+          documentFormat,
+          configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+          project: this.tempProject,
+        } as DocumentContext)
       }
       this.closeDialog()
     },
@@ -466,7 +429,7 @@ export default {
       const ext = this.format && documentFormatExtension(this.format)
       if (ext) {
         let filename = this.filename.replace(/^(.*?[.])(([0-9a-z]{1,5}[.])?[0-9a-z]+)$/i, '$1' + ext)
-        if (filename == this.filename && !filename.endsWith('.' + ext))
+        if (this.filename.length > 0 && filename == this.filename && !filename.endsWith('.' + ext))
           filename = this.filename + '.' + ext
         this.filename = filename
       }
@@ -514,7 +477,8 @@ export default {
     <q-card>
       <q-card-section horizontal class="q-pa-sm q-pb-none q-mb-none">
         <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
-        <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name" />
+        <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name"
+          @blur="adjustDocumentExtension()" />
         <q-space />
         <span class="q-pa-md">Go to a recent:</span>
         <q-space style="max-width: .1rem;" />

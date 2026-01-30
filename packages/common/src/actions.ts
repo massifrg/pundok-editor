@@ -10,6 +10,7 @@ import { DocumentContext, CxDocument } from './document';
 import { FeedbackMessage } from "./feedback"
 import { Node as ProsemirrorNode } from "@tiptap/pm/model"
 import { ViewerSetup } from './viewer';
+import { DocumentFormat } from './documentFormat';
 
 export interface ActionNameWithProps {
   name: string,
@@ -70,6 +71,12 @@ export interface ExportDocumentActionProps {
 
 export interface TransformDocumentActionProps {
   transform: PandocFilterTransform
+}
+
+export type WhichDocumentFormat = 'input' | 'output' | 'copy'
+export interface SetDocumentFormatActionProps {
+  whichFormat: WhichDocumentFormat
+  documentFormat: DocumentFormat
 }
 
 export interface GoToLineActionProps {

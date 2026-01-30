@@ -123,7 +123,7 @@
         @click="showProjectStructure()" />
 
       <q-space />
-      <ToolbarButton icon="mdi-bug" title="test programmatically open a dialog" @click="debug" />
+      <!-- <ToolbarButton icon="mdi-bug" title="debug" @click="debug" /> -->
 
       <q-badge v-if="gui.showEditorVersion" color="positive"><i>{{ version }}</i></q-badge>
     </q-bar>
@@ -363,7 +363,6 @@ import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
-import { showOpenDocumentDialog } from './showOpenDocumentDialog';
 // import { SK } from '../common'
 
 export default {
@@ -603,13 +602,7 @@ export default {
     reloadWithConfiguration(configurationName: string) {
       this.$emit('reloadWithConfiguration', configurationName);
     },
-    async debug() {
-      showOpenDocumentDialog({
-        editor: this.editor,
-        prompt: 'test',
-        mode: 'open'
-      })
-    },
+    async debug() { },
   },
 };
 </script>

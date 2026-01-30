@@ -284,6 +284,8 @@ import {
 import { toRaw } from 'vue';
 import { createLowlight, all } from 'lowlight';
 import { ACTION_ADD_CLASS } from '../actions';
+import { showIncludeDocumentDialog } from './helpers/chooseDocumentDialogs';
+import { parse, relative } from 'path-browserify';
 
 const lowlight = createLowlight(all);
 
@@ -605,25 +607,45 @@ export default {
     },
     async setIncludedDocAttrs() {
       const docState = getDocState(this.editor.state)
-      // console.log(docState)
-      const coords: DocumentCoords | undefined = await this.backend?.askForDocumentIdOrPath(
-        'inclusion',
-        {
-          editorKey: docState?.editorKey,
-          project: docState?.project,
-        })
-      if (coords) {
-        // console.log(coords)
-        const { formatName, id, src } = coords
-        if (formatName) this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
-        if (src) this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
-        if (id) {
-          // this.updateKvAttribute(INCLUDE_ID_ATTR, id)
-          this.updateAttribute('id', id)
+      let src: string | undefined = undefined
+      showIncludeDocumentDialog({
+        editor: this.editor,
+        callback: (context) => {
+          const { documentFormat, path } = context
+          if (path) {
+            const formatName = documentFormat?.name
+            src = relative(docState?.lastSaveResponse?.cwd || '', context.path!)
+            const id = parse(path).name
+            if (src) {
+              this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
+              if (id)
+                this.updateAttribute('id', id)
+              if (formatName)
+                this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
+            }
+          }
         }
-      } else {
+      })
+      if (!src)
         this.removeClass(INCLUDE_DOC_CLASS)
-      }
+      // await this.backend?.askForDocumentIdOrPath(
+      //   'inclusion',
+      //   {
+      //     editorKey: docState?.editorKey,
+      //     project: docState?.project,
+      //   })
+      // if (coords) {
+      //   // console.log(coords)
+      //   const { formatName, id, src } = coords
+      //   if (formatName) this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
+      //   if (src) this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
+      //   if (id) {
+      //     // this.updateKvAttribute(INCLUDE_ID_ATTR, id)
+      //     this.updateAttribute('id', id)
+      //   }
+      // } else {
+      //   this.removeClass(INCLUDE_DOC_CLASS)
+      // }
     },
     doChange() {
       const snom: SelectedNodeOrMark = this.selectedNodeOrMark as SelectedNodeOrMark;

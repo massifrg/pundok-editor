@@ -30,6 +30,7 @@ export type ActionName =
   | 'import-document'
   | 'export-document'
   | 'transform-document'
+  | 'set-document-format'
   | 'document-go-to-line'
   | 'show-result-message'
   | 'show-export-dialog'
@@ -231,6 +232,11 @@ export const ACTION_DOCUMENT_TRANSFORM: BaseEditorAction = {
   label: 'transform document',
   icon: 'mdi-file-replace-outline',
 };
+
+export const ACTION_SET_DOCUMENT_FORMAT: BaseEditorAction = {
+  name: 'set-document-format',
+  label: 'set the document format',
+}
 
 export const ACTION_DOCUMENT_GO_TO_LINE: BaseEditorAction = {
   name: 'document-go-to-line',
