@@ -12,7 +12,7 @@ export const getProjectHandler =
     async (
       e: IpcMainInvokeEvent,
       options: GetProjectOptions,
-    ): Promise<PundokEditorProject> => {
+    ): Promise<PundokEditorProject | undefined> => {
       if (options.path) {
         // check if the path is the project directory or a document inside it
         const dir = isReadableDir(options.path)
@@ -26,7 +26,8 @@ export const getProjectHandler =
             : loadProjectFromFile(projectFile);
         }
       }
-      return Promise.reject(`can't load a project file`);
+      console.log(`can't load a project file`);
+      return undefined
     };
 
 /**

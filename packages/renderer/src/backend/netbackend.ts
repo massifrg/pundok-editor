@@ -72,7 +72,7 @@ export class NetBackend implements Backend {
     return Promise.resolve({ info: 'no debug info yet for netbackend!' });
   }
 
-  async getProject(options: GetProjectOptions): Promise<PundokEditorProject> {
+  async getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined> {
     throw new Error('Method not implemented.');
   }
 

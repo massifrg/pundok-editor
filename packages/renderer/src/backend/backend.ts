@@ -120,7 +120,7 @@ export interface Backend {
    * Retrieves the project of a document from the backend.
    * @param context
    */
-  getProject(options: GetProjectOptions): Promise<PundokEditorProject>;
+  getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined>;
 
   /**
    * Create a new project in a directory.

@@ -296,7 +296,7 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('debug-info');
   }
 
-  async getProject(options: GetProjectOptions): Promise<PundokEditorProject> {
+  async getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined> {
     return this.invokeIpc('get-project', options);
   }
 
@@ -433,7 +433,7 @@ export class LocalBackend implements Backend {
     doc: Partial<CxDocument>,
     transform: PandocFilterTransform
   ): Promise<string> {
-
+    console.log(doc)
     return this.invokeIpc(
       'transform-json',
       JSON.stringify(doc),
