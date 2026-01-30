@@ -24,6 +24,7 @@ export type ActionName =
   | 'open-document'
   | 'save-document'
   | 'save-document-as'
+  | 'save-document-copy'
   | 'new-project'
   | 'get-project'
   | 'include-document'
@@ -210,6 +211,11 @@ export const ACTION_DOCUMENT_SAVE: BaseEditorAction = {
 export const ACTION_DOCUMENT_SAVE_AS: BaseEditorAction = {
   name: 'save-document-as',
   label: 'save document with a different name',
+};
+
+export const ACTION_DOCUMENT_SAVE_COPY: BaseEditorAction = {
+  name: 'save-document-copy',
+  label: 'save a copy',
 };
 
 export const ACTION_DOCUMENT_INCLUDE: BaseEditorAction = {
