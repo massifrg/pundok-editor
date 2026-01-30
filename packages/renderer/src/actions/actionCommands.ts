@@ -233,19 +233,6 @@ export function setActionSetupViewer(
     });
 }
 
-export function setActionTransformDocument(
-  stateOrKey: EditorState | EditorKeyType,
-  transform: PandocFilterTransform,
-) {
-  const editorKey = editorKeyFrom(stateOrKey);
-  if (editorKey)
-    useActions().setAction({
-      ...ACTION_DOCUMENT_TRANSFORM,
-      editorKey,
-      props: { transform } as TransformDocumentActionProps,
-    });
-}
-
 export function setActionCommand(
   stateOrKey: EditorState | EditorKeyType,
   action: BaseEditorAction,
