@@ -147,8 +147,8 @@ function createPandocTableSection(
           ? createCellContent(cellContent)
           : cellContent;
       const cellType = isHeader ? types[TABLE_ROLE_CELL] : types[TABLE_ROLE_HEADER_CELL];
-      console.log(`CELL TYPE:`)
-      console.log(cellType)
+      // console.log(`CELL TYPE:`)
+      // console.log(cellType)
       const cell = createCell(cellType, content);
       if (cell) cells.push(cell);
     }
