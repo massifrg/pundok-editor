@@ -1,4 +1,3 @@
-export * from './askForDocumentHandler';
 export * from './configurationHandlers';
 export * from './debugInfoHandler';
 export * from './editorReadyHandler';

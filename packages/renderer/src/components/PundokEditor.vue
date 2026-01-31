@@ -59,7 +59,8 @@
         <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
           :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
           @new-editor="newSubEditor" />
-        <NewProjectDialog :visible="visibleNewProjectDialog" @close="visibleNewProjectDialog = false" />
+        <NewProjectDialog :editor="editor" :visible="visibleNewProjectDialog"
+          @close="visibleNewProjectDialog = false" />
         <ContextMenu :editor="editor" />
         <editor-content :editor="(editor as Editor)" />
       </q-page>

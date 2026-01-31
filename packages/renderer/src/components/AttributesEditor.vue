@@ -622,30 +622,14 @@ export default {
                 this.updateAttribute('id', id)
               if (formatName)
                 this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
+            } else {
+              this.removeClass(INCLUDE_DOC_CLASS)
             }
           }
         }
       })
       if (!src)
         this.removeClass(INCLUDE_DOC_CLASS)
-      // await this.backend?.askForDocumentIdOrPath(
-      //   'inclusion',
-      //   {
-      //     editorKey: docState?.editorKey,
-      //     project: docState?.project,
-      //   })
-      // if (coords) {
-      //   // console.log(coords)
-      //   const { formatName, id, src } = coords
-      //   if (formatName) this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
-      //   if (src) this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
-      //   if (id) {
-      //     // this.updateKvAttribute(INCLUDE_ID_ATTR, id)
-      //     this.updateAttribute('id', id)
-      //   }
-      // } else {
-      //   this.removeClass(INCLUDE_DOC_CLASS)
-      // }
     },
     doChange() {
       const snom: SelectedNodeOrMark = this.selectedNodeOrMark as SelectedNodeOrMark;

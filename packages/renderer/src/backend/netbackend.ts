@@ -131,13 +131,6 @@ export class NetBackend implements Backend {
     return undefined;
   }
 
-  async askForDocumentIdOrPath(
-    why: WhyAskingForIdOrPath,
-    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
-  ): Promise<DocumentCoords | undefined> {
-    return Promise.reject('method non implemented');
-  }
-
   // openViewer(docName: string, options?: Partial<FindResourceOptions>): Promise<void> {
   //   throw new Error('Method not implemented.');
   // }

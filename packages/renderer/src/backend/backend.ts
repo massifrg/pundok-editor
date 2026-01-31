@@ -138,16 +138,6 @@ export interface Backend {
   ): Promise<ProjectComponent | undefined>;
 
   /**
-   * Retrieves the id or the path of a document from the backend.
-   * @param why The aim of the request (open a document, include a document, ...)
-   * @param options
-   */
-  askForDocumentIdOrPath(
-    why: WhyAskingForIdOrPath,
-    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
-  ): Promise<DocumentCoords | undefined>;
-
-  /**
    * Retrieves all the available configurations for the editor.
    */
   availableConfigurations(): Promise<ConfigurationSummary[]>;

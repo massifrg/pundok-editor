@@ -390,45 +390,6 @@ export class LocalBackend implements Backend {
     }
   }
 
-  async askForDocumentIdOrPath(
-    why: WhyAskingForIdOrPath,
-    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
-  ): Promise<DocumentCoords | undefined> {
-    const maybeProject = options?.project;
-    const project = isString(maybeProject)
-      ? (JSON.parse(maybeProject) as PundokEditorProject)
-      : maybeProject;
-    console.log(`asking for a filename relative to ${project?.path}`);
-    let title = 'Open document'
-    let buttonLabel: string | undefined = undefined
-    let dialogOptions: Partial<OpenDialogOptions> = { ...options?.openDialogOptions }
-    let defaultPath = project?.path
-    switch (why) {
-      case 'inclusion':
-        title = 'Include document'
-        buttonLabel = 'Include'
-        break
-      case 'edit':
-        break
-      case 'image':
-        title = 'Set image src attribute'
-        buttonLabel = 'Set'
-        break
-      case 'project':
-        title = 'Choose project directory'
-        dialogOptions.filters = []
-        dialogOptions.properties = ['openDirectory', 'createDirectory']
-        defaultPath = undefined
-        break
-    }
-    return this.invokeIpc('ask-for-document', options?.editorKey, options?.id, {
-      defaultPath,
-      title,
-      buttonLabel,
-      ...dialogOptions
-    });
-  }
-
   async transformPandocJson(
     doc: Partial<CxDocument>,
     transform: PandocFilterTransform

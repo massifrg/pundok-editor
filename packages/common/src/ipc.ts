@@ -44,7 +44,6 @@ export type IpcRendererToMainChannel =
   | 'new-project'
   | 'get-project'
   | 'get-inclusion-tree'
-  | 'ask-for-document'
   | 'transform-json'
   | 'pandoc-feature'
   | 'set-value'
@@ -131,10 +130,6 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'get-inclusion-tree': {
     dir: 'r2m',
     description: 'the renderer asks the inclusion tree of a document',
-  },
-  'ask-for-document': {
-    dir: 'r2m',
-    description: 'the renderer asks the filename or id of a document',
   },
   'set-project': {
     dir: 'm2r',

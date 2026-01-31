@@ -123,7 +123,7 @@
         @click="showProjectStructure()" />
 
       <q-space />
-      <!-- <ToolbarButton icon="mdi-bug" title="debug" @click="debug" /> -->
+      <ToolbarButton icon="mdi-bug" title="debug" @click="debug" />
 
       <q-badge v-if="gui.showEditorVersion" color="positive"><i>{{ version }}</i></q-badge>
     </q-bar>
@@ -363,6 +363,7 @@ import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
+import { showSelectFolderDialog } from './helpers/chooseDocumentDialogs';
 // import { SK } from '../common'
 
 export default {
@@ -602,7 +603,14 @@ export default {
     reloadWithConfiguration(configurationName: string) {
       this.$emit('reloadWithConfiguration', configurationName);
     },
-    async debug() { },
+    async debug() {
+      showSelectFolderDialog({
+        editor: this.editor,
+        callback: ({ path }) => {
+          console.log(path)
+        }
+      })
+    },
   },
 };
 </script>

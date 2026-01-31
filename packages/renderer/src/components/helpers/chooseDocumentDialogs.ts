@@ -48,3 +48,11 @@ export function showIncludeDocumentDialog(props: DocumentDialogProps) {
 export function showImportDocumentDialog(props: DocumentDialogProps) {
   return showOpenDocumentDialog({ ...props, mode: 'import' })
 }
+
+export function showSelectFolderDialog(props: DocumentDialogProps) {
+  return showOpenDocumentDialog({ ...props, mode: 'folder' })
+}
+
+export function showSelectNonDocumentDialog(props: DocumentDialogProps) {
+  return showOpenDocumentDialog({ ...props, mode: 'folder' })
+}

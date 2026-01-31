@@ -11,7 +11,6 @@ import {
   ServerMessageSetProject,
 } from '../common';
 // import FileManager from '../fileManager';
-import { askForDocumentHandler } from './askForDocumentHandler';
 import { availableConfigurationsHandler, loadConfigurationHandler } from './configurationHandlers';
 import { debugInfoHandler } from './debugInfoHandler';
 import { editorReadyHandler } from './editorReadyHandler';
@@ -80,7 +79,6 @@ export class IpcHub {
     ipcMain.handle('debug-info', debugInfoHandler(this));
     ipcMain.handle('get-project', getProjectHandler(this));
     ipcMain.handle('get-inclusion-tree', getInclusionTreeHandler(this));
-    ipcMain.handle('ask-for-document', askForDocumentHandler(this));
     ipcMain.handle('get-bookmarks', getBookmarksHandler(this));
     ipcMain.handle(
       'available-configurations',

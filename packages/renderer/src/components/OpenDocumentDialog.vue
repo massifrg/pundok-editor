@@ -35,7 +35,7 @@ interface FileContentRow {
 }
 
 function isNotHidden(filename: string, platform?: string) {
-  return !filename.startsWith('.')
+  return filename === '..' || !filename.startsWith('.')
 }
 
 const placeIcons: Record<string, string> = {
@@ -71,7 +71,7 @@ function computeCurrentFolder(state?: EditorState): string[] {
   return folder
 }
 
-export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'include'
+export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'include' | 'folder'
 
 export default {
   props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat', 'startFolder'],
@@ -252,7 +252,9 @@ export default {
         const contents = await this.backend?.getFolderContents({ path })
         this.currentFolder = contents?.base || this.currentFolder
         this.folders = contents?.folders || this.folders
-        this.documents = contents?.documents || this.documents
+        this.documents = this.mode === 'folder'
+          ? []
+          : contents?.documents || this.documents
         this.places = contents?.places || this.places
         this.separator = contents?.separator || this.separator
         const tempProject = await this.backend?.getProject({
@@ -269,7 +271,8 @@ export default {
       this.selectedDocument = undefined
     },
     click(row: FileContentRow) {
-      if (row.isDocument) {
+      const isFolderMode = this.mode === 'folder'
+      if ((isFolderMode && row.isFolder) || (!isFolderMode && row.isDocument)) {
         this.selectedDocument = [...this.currentFolder, row.name].join(this.separator)
         const sel = this.rows.find(r => r.name === row.name)
         this.selected = sel ? [sel] : []
@@ -346,19 +349,29 @@ export default {
       return this.format
     },
     selectDocument() {
-      const path = this.selectedDocument
       const editorKey = editorKeyFromState(this.editor.state)
+      const path = this.selectedDocument
       if (editorKey && path) {
-        console.log(`documentSelected, path=${path}, editorKey=${editorKey}`)
-        const documentFormat = this.documentFormatFromPath(path)
-        this.$emit('ok', {
-          editorKey,
-          id: toRaw(this.selectedDocument),
-          path,
-          documentFormat,
-          configurationName: this.tempProject ? undefined : this.tempConfigurationName,
-          project: this.tempProject,
-        } as DocumentContext)
+        if (this.mode === 'folder') {
+          console.log(`document selected, path=${path}, editorKey=${editorKey}`)
+          const documentFormat = this.documentFormatFromPath(path)
+          this.$emit('ok', {
+            editorKey,
+            id: toRaw(this.selectedDocument),
+            path,
+            documentFormat,
+            configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+            project: this.tempProject,
+          } as DocumentContext)
+        } else {
+          console.log(`folder selected, path=${path}, editorKey=${editorKey}`)
+          this.$emit('ok', {
+            editorKey,
+            path,
+            configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+            project: this.tempProject,
+          } as DocumentContext)
+        }
       }
       this.closeDialog()
     },
@@ -502,8 +515,9 @@ export default {
               <q-space />
               <q-toggle v-model="showHidden" size="sm" title="hide/show hidden folders/documents" label="show hidden:"
                 left-label />
-              <q-space />
-              <q-toggle v-model="hideFolders" size="sm" title="hide/show folders" label="hide folders:" left-label />
+              <q-space v-if="mode !== 'folder'" />
+              <q-toggle v-if="mode !== 'folder'" v-model="hideFolders" size="sm" title="hide/show folders"
+                label="hide folders:" left-label />
             </div>
             <q-table ref="docsTable" class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns"
               row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
