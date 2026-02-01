@@ -22,6 +22,7 @@ import {
   documentFormatsFromFilename,
   DocumentContext,
   documentFormatIcon,
+  FolderContents,
 } from '../common';
 import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
 import { useBackend } from '../stores';
@@ -247,16 +248,19 @@ export default {
   },
   methods: {
     async getContents() {
+      const path = toRaw(this.currentFolder).join(this.separator) + this.separator
       try {
-        const path = toRaw(this.currentFolder).join(this.separator) + this.separator
-        const contents = await this.backend?.getFolderContents({ path })
-        this.currentFolder = contents?.base || this.currentFolder
+        const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })
+        const baseUrl = contents?.baseUrl && URL.parse(contents.baseUrl)
+        this.currentFolder = baseUrl
+          ? baseUrl.pathname.split('/')
+          : this.currentFolder
         this.folders = contents?.folders || this.folders
         this.documents = this.mode === 'folder'
           ? []
           : contents?.documents || this.documents
         this.places = contents?.places || this.places
-        this.separator = contents?.separator || this.separator
+        // this.separator = contents?.separator || this.separator
         const tempProject = await this.backend?.getProject({
           path: path,
           computeConfig: true
@@ -266,6 +270,14 @@ export default {
           this.tempConfigurationName = undefined
         }
       } catch (err) {
+        this.$q.notify({
+          message: 'Error',
+          caption: `Can't retrieve folder contents of ${path}`,
+          icon: 'mdi-folder-alert',
+          position: 'top',
+          color: 'negative',
+          timeout: 3000,
+        });
         console.log(err)
       }
       this.selectedDocument = undefined

@@ -7,12 +7,12 @@ import {
   resolve,
   sep as separator
 } from "path";
-import { Dirent, existsSync, readFileSync, statSync } from "fs";
+import { Dirent, existsSync, statSync } from "fs";
 import { readdir, readFile } from "fs/promises";
 import { pathToFileURL } from 'url'
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
-import { CxDocument, Folder, FolderContents, Place } from "../common";
+import { Document, Folder, FolderContents, Place } from "../common";
 import * as drivelist from 'drivelist';
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
@@ -46,9 +46,9 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
   try {
     const folder = resolve(normalize(options.path))
     const contents = await readdir(folder, { withFileTypes: true })
-    const base = normalize(folder).split(separator)
+    const baseUrl = pathToFileURL(normalize(folder)).pathname.replace(/[/]$/, '')
     const folders: Folder[] = []
-    const documents: CxDocument[] = []
+    const documents: Document[] = []
     if (!isRoot(folder))
       folders.push({ name: '..' })
     contents.forEach(c => {
@@ -65,7 +65,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
       console.log(c.name)
     })
     const places = await getUserPlaces()
-    return { base, folders, documents, places, separator, platform: process.platform } as FolderContents
+    return { baseUrl, folders, documents, places, separator, platform: process.platform } as FolderContents
   } catch (err) {
     console.log(err)
     return Promise.reject(stringify(err))

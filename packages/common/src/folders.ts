@@ -13,7 +13,7 @@ export type Place = {
 }
 
 export interface FolderContents {
-  base: string[],
+  baseUrl: string,
   folders: Folder[],
   documents: Document[],
   places: Place[],
