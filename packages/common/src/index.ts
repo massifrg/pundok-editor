@@ -11,6 +11,7 @@ export * from './externalProgramResult';
 export * from './feedback';
 export * from './folders';
 export * from './icons';
+export * from './imageFormats';
 export * from './ipc';
 export * from './pandocFeatures';
 export * from './pandocFormat';

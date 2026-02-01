@@ -26,6 +26,10 @@ import {
 } from '../common';
 import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
 import { useBackend } from '../stores';
+import { IMAGE_FORMATS, ImageFormatDescription, imageFormatFromFilename } from '../../../common/src/imageFormats';
+import { uniq } from 'lodash-es';
+
+export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'include' | 'folder' | 'image'
 
 interface FileContentRow {
   name: string,
@@ -72,7 +76,29 @@ function computeCurrentFolder(state?: EditorState): string[] {
   return folder
 }
 
-export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'include' | 'folder'
+const imageFormats = IMAGE_FORMATS.map(f => ({ ...f, ftype: 'image' } as DocumentFormat))
+const vectorFormats = imageFormats.filter(f => (f as ImageFormatDescription).isVectorial)
+const rasterFormats = imageFormats.filter(f => !(f as ImageFormatDescription).isVectorial)
+const guessImageFormats = [
+  {
+    ftype: 'guess',
+    name: 'raster image',
+    description: 'all raster image formats',
+    icon: 'mdi-checkerboard',
+    extensions: uniq(rasterFormats.reduce((acc, rf) =>
+      [...acc, ...(rf as ImageFormatDescription).extensions], [] as string[]))
+  },
+  {
+    ftype: 'guess',
+    name: 'vector image',
+    description: 'all vector image formats',
+    icon: 'mdi-vector-polygon',
+    extensions: uniq(vectorFormats.reduce((acc, vf) =>
+      [...acc, ...(vf as ImageFormatDescription).extensions], [] as string[]))
+  }
+]
+
+
 
 export default {
   props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat', 'startFolder'],
@@ -202,6 +228,9 @@ export default {
       return [...current, ...temp]
     },
     documentFormats(): DocumentFormat[] {
+      if (this.mode === 'image') {
+        return [...guessImageFormats, ...imageFormats] as DocumentFormat[]
+      }
       let converters = this.isInputDialog
         ? this.inputConverters.map(ic => ({ ...ic, ftype: 'input-converter' as DocumentFormatType }))
         : this.outputConverters.map(ic => ({ ...ic, ftype: 'output-converter' as DocumentFormatType }))
@@ -214,6 +243,9 @@ export default {
       if (this.isInputDialog && formats[0].ftype !== 'guess')
         formats.unshift(guessFormat)
       return formats
+    },
+    guess(): DocumentFormat {
+      return guessFormat
     },
     guessedFormat() {
       return this.guessFormatFromPath(this.selectedDocument)
@@ -231,6 +263,13 @@ export default {
     getFormatsAndBookmarks()
   },
   watch: {
+    rows(rr: FileContentRow[]) {
+      const cf = (this.currentFolder as string[]).map(f => f + this.separator).join('')
+      if (!rr.find(r => cf + r.label === this.selectedDocument)) {
+        this.selected = []
+        this.selectedDocument = undefined
+      }
+    },
     filename(newName, oldName) {
       const sel = this.rows.find(r => r.name === newName)
       this.selected = sel ? [sel] : []
@@ -316,38 +355,49 @@ export default {
       }
     },
     guessFormatFromPath(path?: string): { format?: DocumentFormat | undefined, why: string } {
-      if (!path) {
-        const json_format = this.pandocFormats.find(f => f.name === 'json')
-        return {
-          format: { ...json_format, ftype: 'format' },
-          why: 'default Pandoc format for the editor'
+      if (this.mode === 'image') {
+        if (path) {
+          const image_format = imageFormatFromFilename(path)
+          if (image_format)
+            return {
+              format: { ...image_format, ftype: 'image' },
+              why: 'from the extension of the file'
+            }
         }
-      }
-      if (this.isInputDialog) {
-        // try the temporary configuration (for bookmarks)
-        if (this.tempConfiguration) {
-          const ic = this.tempConfiguration.inputConverters?.find(c => c.default
-            && c.extensions.find(e => path.endsWith(`.${e}`)))
+      } else {
+        if (!path) {
+          const json_format = this.pandocFormats.find(f => f.name === 'json')
+          return {
+            format: { ...json_format, ftype: 'format' },
+            why: 'default Pandoc format for the editor'
+          }
+        }
+        if (this.isInputDialog) {
+          // try the temporary configuration (for bookmarks)
+          if (this.tempConfiguration) {
+            const ic = this.tempConfiguration.inputConverters?.find(c => c.default
+              && c.extensions.find(e => path.endsWith(`.${e}`)))
+            if (ic) return {
+              format: { ...toRaw(ic), ftype: 'input-converter' },
+              why: 'from the configuration used to open the bookmarked file last time'
+            }
+          }
+          // otherwise try the current configuration
+          const ic = this.inputConverters.find(c => c.extensions.find(e => path.endsWith(`.${e}`)))
           if (ic) return {
             format: { ...toRaw(ic), ftype: 'input-converter' },
-            why: 'from the configuration used to open the bookmarked file last time'
+            why: 'from the current configuration of the editor'
           }
         }
-        // otherwise try the current configuration
-        const ic = this.inputConverters.find(c => c.extensions.find(e => path.endsWith(`.${e}`)))
-        if (ic) return {
-          format: { ...toRaw(ic), ftype: 'input-converter' },
-          why: 'from the current configuration of the editor'
+        const formats = documentFormatsFromFilename(this.pandocFormats, path, this.isInputDialog ? 'input' : 'output')
+        if (formats.length > 0) {
+          const pf = formats[0]
+          if (pf)
+            return {
+              format: { ...pf, ftype: 'format' },
+              why: 'from the extension of the file',
+            }
         }
-      }
-      const formats = documentFormatsFromFilename(this.pandocFormats, path, this.isInputDialog ? 'input' : 'output')
-      if (formats.length > 0) {
-        const pf = formats[0]
-        if (pf)
-          return {
-            format: { ...pf, ftype: 'format' },
-            why: 'from the extension of the file',
-          }
       }
       return {
         why: 'no suitable format found'
@@ -403,9 +453,9 @@ export default {
       if (format?.ftype === 'guess') {
         const gf = this.guessedFormat?.format
         icon = gf?.icon
+          || format?.icon
           || (gf?.ftype === 'input-converter' && 'mdi-import')
           || (gf?.ftype === 'output-converter' && 'mdi-export')
-          || icon
       }
       return icon || documentFormatIcon(format) || guessFormat.icon || 'mdi-code-tags'
     },
@@ -415,11 +465,12 @@ export default {
       const doc = this.selectedDocument
       if (doc) {
         const { format: format_guess } = this.guessedFormat
+        const label = format?.name || 'guess'
         return format_guess
-          ? `guess (${format_guess.name})`
-          : 'guess (unrecognized)'
+          ? `${label} (${format_guess.name})`
+          : `${label} (unrecognized)`
       }
-      return 'guess'
+      return format?.name || 'guess'
     },
     formatTitle(format?: DocumentFormat) {
       if (format?.ftype !== 'guess')
@@ -568,6 +619,12 @@ export default {
         <q-btn-dropdown :label="formatLabel(format)" :icon="formatIcon(format)" :title="formatTitle(format)" auto-close
           no-caps class="q-my-sm">
           <q-list>
+            <!-- <q-item :title="guess.description" clickable dense class="bg-brown-2" @click="selectFormat(guess)">
+              <q-item-section avatar>
+                <q-icon :name="formatIcon(guess)" />
+              </q-item-section>
+              <q-item-section>{{ guess.name }}</q-item-section>
+            </q-item> -->
             <q-item v-for="df in documentFormats" :title="df.description" clickable dense :class="{
               'bg-brown-2': df.ftype === 'guess',
               'bg-teal-2': df.ftype === 'input-converter',

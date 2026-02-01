@@ -13,6 +13,8 @@
 import { useBackend } from '../../stores';
 import { mapState } from 'pinia';
 import { getDocState, makePathRelativeToDoc } from '../../schema';
+import { showSelectImageDialog } from '../helpers/chooseDocumentDialogs';
+import { DocumentFormat, imageFormatFromFilename } from '/@/common';
 
 export default {
   props: ['editor', 'urlAttrName', 'url', 'title'],
@@ -49,29 +51,20 @@ export default {
     async askTargetFileUrl() {
       const docState = getDocState(this.editor.state)
       // console.log(docState)
-      const coords = await this.backend?.askForDocumentIdOrPath('image', {
-        editorKey: docState?.editorKey,
-        project: docState?.project,
-        openDialogOptions: {
-          filters: [
-            {
-              name: "raster images",
-              extensions: ["jpg", "jpeg", "png"],
-            },
-            {
-              name: "vector images",
-              extensions: ["svg", "pdf"]
-            }
-          ]
+      let folder = URL.parse(this.targetUrl)?.pathname.split('/') || []
+      const filename = folder.pop() || ''
+      const format = imageFormatFromFilename(filename)
+      showSelectImageDialog({
+        editor: this.editor,
+        prompt: 'Choose an image:',
+        startFolder: folder,
+        startFormat: format ? { ...format, ftype: 'image' } as DocumentFormat : undefined,
+        callback: (context) => {
+          const { path } = context
+          if (path)
+            this.updateTargetUrl(docState ? makePathRelativeToDoc(docState, path) : path)
         }
       })
-      if (coords) {
-        // console.log(coords)
-        const { src } = coords
-        if (src) {
-          this.updateTargetUrl(docState ? makePathRelativeToDoc(docState, src) : src)
-        }
-      }
     }
   }
 }

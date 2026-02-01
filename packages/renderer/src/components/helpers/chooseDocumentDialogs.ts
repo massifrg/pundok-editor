@@ -53,6 +53,6 @@ export function showSelectFolderDialog(props: DocumentDialogProps) {
   return showOpenDocumentDialog({ ...props, mode: 'folder' })
 }
 
-export function showSelectNonDocumentDialog(props: DocumentDialogProps) {
-  return showOpenDocumentDialog({ ...props, mode: 'folder' })
+export function showSelectImageDialog(props: DocumentDialogProps) {
+  return showOpenDocumentDialog({ ...props, mode: 'image' })
 }

@@ -5,6 +5,7 @@ import {
   PundokEditorConfig,
   PundokEditorConfigInit
 } from "./config"
+import { ImageFormatDescription } from "./imageFormats"
 import {
   DEFAULT_COPY_FORMAT,
   DEFAULT_FORMAT,
@@ -16,11 +17,28 @@ import {
   pandocFormatToOutputConverter
 } from "./pandocFormat"
 
-export type DocumentFormatType = 'guess' | 'format' | 'input-converter' | 'output-converter'
+/**
+ * Type of documents' formats. It can be:
+ * - `guess`            a special type to leave the editor guess the right format.
+ * - `format`           a format natively supported by Pandoc (the ones you get with
+ *                      `--list-input-formats` and `--list-output-formats`).
+ * - `input-converter`  an InputConverter, so a format/custom reader with options for Pandoc
+ *                      or a script to read a file as Pandoc JSON.
+ * - `output-converter` an OutputConverter, so a format/custom writer with options for Pandoc
+ *                      or a script to write a file as Pandoc JSON.
+ * - `image`            a format used to choose image files in OpenDocumentDialog.
+ */
+export type DocumentFormatType =
+  | 'guess'
+  | 'format'
+  | 'input-converter'
+  | 'output-converter'
+  | 'image'
+
 /**
  * The document format can be a plain Pandoc format or a (input or output) converter.
  */
-export type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter)
+export type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter | ImageFormatDescription)
   & { ftype: DocumentFormatType }
 
 export const guessFormat: DocumentFormat = {
@@ -38,8 +56,8 @@ export function documentFormatExtension(format: DocumentFormat): string | undefi
   const extensions: string[] = (format as any).extensions || []
   switch (format.ftype) {
     case 'format':
-      return extensions[0]
     case 'input-converter':
+    case 'image':
       return extensions[0]
     case 'output-converter':
       return (format as OutputConverter).extension
@@ -127,10 +145,11 @@ export function documentFormatWithName(
 }
 
 const DOCFORMAT_FTYPE_TO_VALUE: Record<DocumentFormatType, number> = {
-  'guess': 1,
-  'format': 2,
-  'input-converter': 3,
-  'output-converter': 3
+  'guess': 3,
+  'format': 5,
+  'input-converter': 7,
+  'output-converter': 7,
+  'image': 1,
 }
 
 /**
@@ -193,7 +212,7 @@ export function documentFormatIcon(format?: DocumentFormat, defaultIcon?: string
     icon = format?.icon || 'mdi-import'
   else if (format?.ftype === 'output-converter')
     icon = format?.icon || 'mdi-export'
-  else if (format?.ftype === 'format')
+  else
     icon = format?.icon
   return icon || defaultIcon
 }
