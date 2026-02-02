@@ -82,12 +82,20 @@ export type ActionName =
   | 'uppercase-first'
   | 'auto-set-index-term-id'
   | 'insert-raw-inline'
+  | 'move-before-first-sibling'
+  | 'move-before-previous-sibling'
+  | 'move-before-next-sibling'
+  | 'move-after-previous-sibling'
+  | 'move-after-next-sibling'
+  | 'move-after-last-sibling'
+  | 'move-inside-prev-sibling'
+  | 'move-inside-next-sibling'
 
 export type TooltipForAction =
   | string
   | ((
     editor?: Editor,
-    action?: ActionForNodeOrMark | EditorAction,
+    action?: ActionCore, // ActionForNodeOrMark | EditorAction,
   ) => string | undefined);
 
 /** Core properties of actions */

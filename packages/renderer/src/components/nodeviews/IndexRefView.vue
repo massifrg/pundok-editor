@@ -83,7 +83,7 @@ export default {
       const { from, to } = this.editor.state.selection;
       // console.log(`from=${from} to=${to} getPos=${this.getPos()}`)
       const pos = this.getPos();
-      return pos >= from && pos < to && to > from;
+      return pos && pos >= from && pos < to && to > from;
     },
   },
 };

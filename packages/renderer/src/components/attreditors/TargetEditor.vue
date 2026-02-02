@@ -10,11 +10,11 @@
 </template>
 
 <script lang="ts">
-import { useBackend } from '../../stores';
 import { mapState } from 'pinia';
-import { getDocState, makePathRelativeToDoc } from '../../schema';
+import { DocumentFormat, imageFormatFromFilename } from '../../common';
 import { showSelectImageDialog } from '../helpers/chooseDocumentDialogs';
-import { DocumentFormat, imageFormatFromFilename } from '/@/common';
+import { getDocState, makePathRelativeToDoc } from '../../schema';
+import { useBackend } from '../../stores';
 
 export default {
   props: ['editor', 'urlAttrName', 'url', 'title'],

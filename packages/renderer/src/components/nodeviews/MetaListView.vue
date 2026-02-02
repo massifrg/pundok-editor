@@ -36,8 +36,11 @@ export default {
       return nodeIcon(nodetypename)
     },
     appendMetaItem(metaType: string, key: string) {
-      const pos = this.getPos() + this.node.content.size + 1
-      this.editor.commands.appendMetaListItem(metaType, pos)
+      let pos = this.getPos()
+      if (pos) {
+        pos += this.node.content.size + 1
+        this.editor.commands.appendMetaListItem(metaType, pos)
+      }
     },
   }
 };

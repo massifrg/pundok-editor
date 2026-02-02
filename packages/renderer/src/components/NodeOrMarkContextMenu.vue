@@ -81,11 +81,11 @@ export default {
     isGroup(a: ActionOrGroup) {
       return this.actionsOfGroup[a.name] !== undefined
     },
-    setAction(action: ActionForNodeOrMark) {
+    setAction(action: ActionForNodeOrMark | ActionsGroup) {
       if (this.isAction(action))
-        this.actions.setAction(action)
+        this.actions.setAction(action as ActionForNodeOrMark)
     },
-    titleFor(action: ActionForNodeOrMark) {
+    titleFor(action: ActionForNodeOrMark | ActionsGroup) {
       const actionTooltip = action.tooltip
       if (actionTooltip) {
         return isString(actionTooltip)

@@ -39,7 +39,8 @@ export default {
   computed: {
     metaValue() {
       const doc: ProsemirrorNode = this.editor.state.doc
-      const node = doc && doc.nodeAt(this.getPos())
+      const pos = this.getPos()
+      const node = doc && pos && doc.nodeAt(pos) || undefined
       return node?.firstChild || null
     },
     iconForContent() {
@@ -74,7 +75,7 @@ export default {
       const node = this.node
       const pos = this.getPos()
       const editorKey = editorKeyFromState(this.editor.state)
-      if (editorKey) {
+      if (editorKey && pos) {
         useActions().setAction({
           ...ACTION_EDIT_META_MAP_TEXT,
           nodeOrMark: {
@@ -95,15 +96,18 @@ export default {
       return this.metaValue && nodeOrMarkToPandocName(this.metaValue)
     },
     deleteEntry() {
-      const $pos = this.editor.state.doc.resolve(this.getPos())
-      const parent = $pos.node()
-      console.log(parent.type.name)
-      if (parent.childCount > 1 || parent.type.name === NODE_NAME_METADATA) {
-        this.deleteNode()
-      } else {
-        const ppos = $pos.start(-1) - 1
-        console.log(`ppos=${ppos}`)
-        this.editor.commands.deleteNodeAtPos(ppos)
+      const pos = this.getPos()
+      if (pos) {
+        const $pos = this.editor.state.doc.resolve(pos)
+        const parent = $pos.node()
+        console.log(parent.type.name)
+        if (parent.childCount > 1 || parent.type.name === NODE_NAME_METADATA) {
+          this.deleteNode()
+        } else {
+          const ppos = $pos.start(-1) - 1
+          console.log(`ppos=${ppos}`)
+          this.editor.commands.deleteNodeAtPos(ppos)
+        }
       }
     }
   }

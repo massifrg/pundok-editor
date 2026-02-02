@@ -1,4 +1,4 @@
-import { Mark, Node as PmNode, Schema } from "@tiptap/pm/model";
+import { Mark, Node as PmNode } from "@tiptap/pm/model";
 import { difference, intersection, isString } from "lodash-es";
 import {
   MARK_NAME_DOUBLE_QUOTED,

@@ -2,7 +2,7 @@
 import { mapState } from 'pinia';
 import { useActions } from '../stores';
 import { ACTION_BACKEND_FEEDBACK, EditorAction } from '../actions';
-import { BackendFeedbackActionProps, FeedbackMessage } from '../common';
+import { BackendFeedbackActionProps } from '../common';
 
 export default {
   props: ['editorKey'],
