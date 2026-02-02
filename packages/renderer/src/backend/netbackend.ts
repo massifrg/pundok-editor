@@ -1,4 +1,4 @@
-import type { Backend, BackendConfig, WhyAskingForIdOrPath } from './backend';
+import type { Backend, BackendConfig } from './backend';
 import {
   type ConfigurationSummary,
   type PundokEditorConfig,
@@ -16,7 +16,6 @@ import {
   FindResourceOptions,
   ProjectComponent,
   DocumentContext,
-  DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
   RenderingJob,
@@ -28,7 +27,6 @@ import {
   PandocFeatureName,
   PandocFeatureOptions,
 } from '../common';
-import { OpenDialogOptions } from 'electron';
 
 export class NetBackend implements Backend {
   private config: BackendConfig = {};
@@ -51,7 +49,7 @@ export class NetBackend implements Backend {
 
   async editorReady(editorKey?: EditorKeyType) { }
 
-  getFolderContents(options: { path?: string }): Promise<FolderContents> {
+  getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents> {
     throw new Error('Method not implemented.');
   }
 

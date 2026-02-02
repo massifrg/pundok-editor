@@ -96,7 +96,7 @@ export interface Backend {
    * Get the contents of a folder (a collection of documents and/or sub-folders).
    * @param path The folders path (an array of the names of the path's folders).
    */
-  getFolderContents(options: { path?: string }): Promise<FolderContents>;
+  getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents>;
 
   /**
    * Get the bookmarks (projects and documents).

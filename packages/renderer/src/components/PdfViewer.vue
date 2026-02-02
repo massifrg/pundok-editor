@@ -202,6 +202,7 @@ import VuePdfEmbed from 'vue-pdf-embed'
 // optional styles
 import 'vue-pdf-embed/dist/styles/annotationLayer.css'
 import 'vue-pdf-embed/dist/styles/textLayer.css'
+import { toRaw } from 'vue';
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
@@ -214,8 +215,7 @@ import {
 } from '../common';
 import { debounce, isString, throttle } from 'lodash-es';
 import { setupQuasarIcons } from './helpers/quasarIcons';
-import PromptDialog from './helpers/PromptDialog.vue'
-import { toRaw } from 'vue';
+import { PromptDialog } from './dialogs'
 
 interface LoadingProgress {
   loaded: number,

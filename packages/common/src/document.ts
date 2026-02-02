@@ -25,10 +25,8 @@ export interface DocumentContext {
   editorKey?: EditorKeyType;
   /** The document id. */
   id?: string;
-  /** The path of the file, when the document is read from a file. */
+  /** The path or URL of the file. */
   path?: string;
-  /** The URL of the document. */
-  url?: string;
   /** The format of the document */
   documentFormat?: DocumentFormat;
   /** The name of the configuration associated with the document. */

@@ -12,8 +12,9 @@ import { readdir, readFile } from "fs/promises";
 import { pathToFileURL } from 'url'
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
-import { Document, Folder, FolderContents, Place } from "../common";
+import { Document, DocumentContext, Folder, FolderContents, Place } from "../common";
 import * as drivelist from 'drivelist';
+import { pathToUrl } from "./pathToUrl";
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
 type JumpListModule = {
@@ -39,33 +40,36 @@ const GTK_BOOKMARKS = '.config/gtk-3.0/bookmarks'
 
 export const getFolderContentsHandler = (hub: IpcHub) => async (
   e: IpcMainInvokeEvent,
-  options: {
-    path: string,
-  },
+  ctx: string,
 ): Promise<FolderContents> => {
   try {
-    const folder = resolve(normalize(options.path))
+    const context = JSON.parse(ctx) as DocumentContext
+    const { path, project } = context;
+    const url = pathToUrl(path || '', project)
+    if (!url)
+      return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
+    const folder = url.pathname
+    const baseUrl = url.toString()
     const contents = await readdir(folder, { withFileTypes: true })
-    const baseUrl = pathToFileURL(normalize(folder)).pathname.replace(/[/]$/, '')
     const folders: Folder[] = []
     const documents: Document[] = []
     if (!isRoot(folder))
-      folders.push({ name: '..' })
+      folders.push({ name: '..', baseUrl })
     contents.forEach(c => {
       if (c.isDirectory())
-        folders.push({ name: c.name })
+        folders.push({ name: c.name, baseUrl })
       else if (c.isFile())
         documents.push({ name: c.name })
       else if (c.isSymbolicLink()) {
-        if (isSymlinkToDirectory(folder, c))
-          folders.push({ name: c.name })
+        if (isSymlinkToDirectory(baseUrl, c))
+          folders.push({ name: c.name, baseUrl })
         else
           documents.push({ name: c.name })
       }
       console.log(c.name)
     })
     const places = await getUserPlaces()
-    return { baseUrl, folders, documents, places, separator, platform: process.platform } as FolderContents
+    return { baseUrl, folders, documents, places, platform: process.platform } as FolderContents
   } catch (err) {
     console.log(err)
     return Promise.reject(stringify(err))

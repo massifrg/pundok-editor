@@ -28,6 +28,7 @@ import { computeProjectFromDocFile } from './getProjectHandler';
 import { IpcHub } from './ipcHub';
 import { getConfigurationInit } from './configurationHandlers';
 import { fileURLToPath } from 'url';
+import { pathToUrl } from './pathToUrl';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -44,20 +45,15 @@ export const openDocumentHandler =
           configurationName,
           editorKey,
           documentFormat,
-          url,
+          path: _path,
           project,
         } = context;
-        const parsedUrl = url && URL.parse(url) || URL.parse('file://' + url)
-        if (!parsedUrl)
-          return Promise.reject(`openDocumentHandler: please provide a valid URL or file path!`)
-        let path = fileURLToPath(parsedUrl)
-        if (project && path && !isAbsolute(path)) {
-          if (project.rootDocument && isAbsolute(project.rootDocument)) {
-            path = resolve(parsePath(project.rootDocument).dir, path);
-          } else {
-            path = resolve(project.path, path);
-          }
-        }
+        if (!_path)
+          return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
+        const url = pathToUrl(_path!, project)
+        if (!url)
+          return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
+        const path = fileURLToPath(url)
         const readDoc = await openDocument(hub, {
           editorKey,
           configurationName,
@@ -211,4 +207,3 @@ async function openDocumentWithFormat(hub: IpcHub, context: DocumentContext): Pr
   }
   return Promise.reject(`Error trying to open "${filename}"`)
 }
-

@@ -258,8 +258,8 @@ export class LocalBackend implements Backend {
     this.invokeIpc('editor-ready', editorKey);
   }
 
-  getFolderContents(options: { path?: string }): Promise<FolderContents> {
-    return this.invokeIpc('get-folder-contents', options)
+  getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents> {
+    return this.invokeIpc('get-folder-contents', JSON.stringify(context))
   }
 
   async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {

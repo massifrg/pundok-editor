@@ -290,9 +290,11 @@ export default {
   methods: {
     async getContents() {
       const path = toRaw(this.currentFolder).join(this.separator) + this.separator
+      console.log(`getContents, path="${path}"`)
       try {
         const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })
         const baseUrl = contents?.baseUrl && URL.parse(contents.baseUrl)
+        console.log(`baseUrl=${baseUrl}`)
         this.currentFolder = baseUrl
           ? baseUrl.pathname.split('/')
           : this.currentFolder
@@ -416,7 +418,15 @@ export default {
       const editorKey = editorKeyFromState(this.editor.state)
       const path = this.selectedDocument
       if (editorKey && path) {
-        if (this.mode === 'folder') {
+        if (this.mode == 'folder') {
+          console.log(`folder selected, path=${path}, editorKey=${editorKey}`)
+          this.$emit('ok', {
+            editorKey,
+            path,
+            configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+            project: this.tempProject,
+          } as DocumentContext)
+        } else {
           console.log(`document selected, path=${path}, editorKey=${editorKey}`)
           const documentFormat = this.documentFormatFromPath(path)
           this.$emit('ok', {
@@ -424,14 +434,6 @@ export default {
             id: toRaw(this.selectedDocument),
             path,
             documentFormat,
-            configurationName: this.tempProject ? undefined : this.tempConfigurationName,
-            project: this.tempProject,
-          } as DocumentContext)
-        } else {
-          console.log(`folder selected, path=${path}, editorKey=${editorKey}`)
-          this.$emit('ok', {
-            editorKey,
-            path,
             configurationName: this.tempProject ? undefined : this.tempConfigurationName,
             project: this.tempProject,
           } as DocumentContext)

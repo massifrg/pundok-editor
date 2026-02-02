@@ -1,4 +1,5 @@
 export type Folder = {
+  baseUrl: string,
   name: string
 }
 
@@ -17,6 +18,6 @@ export interface FolderContents {
   folders: Folder[],
   documents: Document[],
   places: Place[],
-  separator: string,
+  // separator: string,
   platform?: string,
 }
