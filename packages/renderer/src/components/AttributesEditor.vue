@@ -229,6 +229,7 @@ import {
   editableAttrsForNodeOrMark,
   editableAttrsWithTab,
   getAttrsChange,
+  getEditorDocState,
   importantClasses,
   markIcon,
   matchingDuplicatedAttribute,
@@ -261,6 +262,7 @@ import {
   ActionNameWithProps,
   AddOrRemoveClassActionProps,
   DEFAULT_INDEX_NAME,
+  DEFAULT_START_FOLDER,
   INDEX_NAME_ATTR,
   Index,
   IndexSource,
@@ -602,9 +604,11 @@ export default {
       return Object.fromEntries(this.modifiedAttrs().map(e => [e.attrName, e.to]));
     },
     setIncludedDocAttrs() {
+      const docState = getEditorDocState(this.editor.state)
       let src: string | undefined = undefined
       showIncludeDocumentDialog({
         editor: this.editor,
+        startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
         callback: (context) => {
           const { documentFormat, path, project } = context
           if (path) {

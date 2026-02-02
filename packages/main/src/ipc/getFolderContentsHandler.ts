@@ -12,7 +12,7 @@ import { readdir, readFile } from "fs/promises";
 import { pathToFileURL } from 'url'
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
-import { Document, DocumentContext, Folder, FolderContents, Place } from "../common";
+import { DEFAULT_START_FOLDER, Document, DocumentContext, Folder, FolderContents, Place } from "../common";
 import * as drivelist from 'drivelist';
 import { pathToUrl } from "./pathToUrl";
 
@@ -45,24 +45,26 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
   try {
     const context = JSON.parse(ctx) as DocumentContext
     const { path, project } = context;
-    const url = pathToUrl(path || '', project)
+    const url = pathToUrl(path || DEFAULT_START_FOLDER, project)
+    console.log(`getFolderContentsHandler: path=${path}, url=${url}`)
     if (!url)
       return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
-    const folder = url.pathname
     const baseUrl = url.toString()
+    const folder = url.pathname
+    console.log(`baseUrl=${baseUrl}, folder=${folder}`)
     const contents = await readdir(folder, { withFileTypes: true })
     const folders: Folder[] = []
     const documents: Document[] = []
     if (!isRoot(folder))
-      folders.push({ name: '..', baseUrl })
+      folders.push({ name: '..', /* baseUrl */ })
     contents.forEach(c => {
       if (c.isDirectory())
-        folders.push({ name: c.name, baseUrl })
+        folders.push({ name: c.name, /* baseUrl */ })
       else if (c.isFile())
         documents.push({ name: c.name })
       else if (c.isSymbolicLink()) {
         if (isSymlinkToDirectory(baseUrl, c))
-          folders.push({ name: c.name, baseUrl })
+          folders.push({ name: c.name, /* baseUrl */ })
         else
           documents.push({ name: c.name })
       }

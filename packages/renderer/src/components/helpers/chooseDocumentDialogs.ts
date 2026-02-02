@@ -11,7 +11,7 @@ export interface DocumentDialogProps {
   editor: Editor
   mode?: DocumentDialogMode
   prompt?: string
-  startFolder?: string[]
+  startFolder?: string
   startFilename?: string
   startFormat?: DocumentFormat
   callback?: (payload: DocumentContext | CxDocument) => void

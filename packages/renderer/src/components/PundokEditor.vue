@@ -126,6 +126,7 @@ import {
   DEFAULT_DOCUMENT_FORMAT,
   SetDocumentFormatActionProps,
   DEFAULT_COPY_DOCUMENT_FORMAT,
+  DEFAULT_START_FOLDER,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -820,7 +821,7 @@ export default {
           editor: this.editor,
           mode: 'open',
           prompt: 'Open document',
-          startFolder: docState?.inputFolder,
+          startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
           startFormat: docState?.inputFormat,
           callback: (context) => {
             const { editorKey, documentFormat } = context
@@ -881,7 +882,7 @@ export default {
         resourcePath: doc.resourcePath,
         lastSaveResponse: saveResponse,
         lastExportResponse: null,
-        inputFolder: path.dir.split('/'),
+        inputFolder: path.dir,
         inputFormat: doc.documentFormat,
       });
 

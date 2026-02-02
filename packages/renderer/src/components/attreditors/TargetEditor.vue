@@ -13,7 +13,7 @@
 import { mapState } from 'pinia';
 import { DocumentFormat, imageFormatFromFilename } from '../../common';
 import { showSelectImageDialog } from '../helpers';
-import { getDocState, makePathRelativeToDoc } from '../../schema';
+import { getEditorDocState, makePathRelativeToDoc } from '../../schema';
 import { useBackend } from '../../stores';
 
 export default {
@@ -49,11 +49,12 @@ export default {
       this.$emit('update-attribute', 'title', this.targetTitle)
     },
     async askTargetFileUrl() {
-      const docState = getDocState(this.editor.state)
-      // console.log(docState)
-      let folder = URL.parse(this.targetUrl)?.pathname.split('/') || []
-      const filename = folder.pop() || ''
-      const format = imageFormatFromFilename(filename)
+      const docState = getEditorDocState(this.editor)
+      const url = new URL(this.targetUrl)
+      const chunks = url && url.pathname.split('/')
+      const filename = url && chunks.pop()
+      const folder = url && `${url.protocol}${chunks.join('/')}` || undefined
+      const format = filename && imageFormatFromFilename(filename) || undefined
       showSelectImageDialog({
         editor: this.editor,
         prompt: 'Choose an image:',

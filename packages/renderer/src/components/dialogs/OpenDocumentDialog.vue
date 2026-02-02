@@ -66,18 +66,6 @@ const cols: QTableColumn[] = [{
   sortable: true
 }]
 
-function computeCurrentFolder(state?: EditorState): string[] {
-  let folder: string[] = ['.']
-  if (state) {
-    const path_folder = getDocState(state)?.lastSaveResponse?.doc.path?.split('/')
-    if (path_folder) {
-      path_folder.pop()
-      folder = path_folder
-    }
-  }
-  return folder
-}
-
 const imageFormats = IMAGE_FORMATS.map(f => ({ ...f, ftype: 'image' } as DocumentFormat))
 const vectorFormats = imageFormats.filter(f => (f as ImageFormatDescription).isVectorial)
 const rasterFormats = imageFormats.filter(f => !(f as ImageFormatDescription).isVectorial)
@@ -100,24 +88,22 @@ const guessImageFormats = [
   }
 ]
 
-
-
 export default {
   props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat', 'startFolder'],
   emits: [...useDialogPluginComponent.emits],
   data() {
     return {
       visible: true,
+      /** The protocol of the URL to open (usually it's `file://`) */
+      protocol: 'file://',
       /** An array of the folders' names of the current path */
-      currentFolder: this.startFolder || computeCurrentFolder(this.editor?.state),
+      currentFolder: this.startFolder || '.',
       /** The sub folders in the current folder */
       folders: [] as Folder[],
       /** The documents (files) in the current folder */
       documents: [] as Document[],
       /** The user places in the host OS */
       places: [] as Place[],
-      /** The path separator ('/' on Linux/MacOS, '\' in Windows) */
-      separator: '/',
       /** The name of the selected document  */
       selectedDocument: undefined as string | undefined,
       /** The name of the file to be saved (or opened) in the text input box */
@@ -266,7 +252,7 @@ export default {
   },
   watch: {
     rows(rr: FileContentRow[]) {
-      const cf = (this.currentFolder as string[]).map(f => f + this.separator).join('')
+      const cf = this.currentFolder + '/'
       if (!rr.find(r => cf + r.label === this.selectedDocument)) {
         this.selected = []
         this.selectedDocument = undefined
@@ -275,7 +261,7 @@ export default {
     filename(newName, oldName) {
       const sel = this.rows.find(r => r.name === newName)
       this.selected = sel ? [sel] : []
-      this.selectedDocument = [...this.currentFolder, newName].join(this.separator)
+      this.selectedDocument = `${this.currentFolder}/${newName}`
     },
     tempProject(tp) {
       if (tp) this.tempConfigurationName = undefined
@@ -289,21 +275,19 @@ export default {
   },
   methods: {
     async getContents() {
-      const path = toRaw(this.currentFolder).join(this.separator) + this.separator
+      const path = this.protocol + this.currentFolder
       console.log(`getContents, path="${path}"`)
       try {
         const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })
         const baseUrl = contents?.baseUrl && URL.parse(contents.baseUrl)
         console.log(`baseUrl=${baseUrl}`)
-        this.currentFolder = baseUrl
-          ? baseUrl.pathname.split('/')
-          : this.currentFolder
+        this.protocol = baseUrl ? baseUrl.protocol : this.protocol
+        this.currentFolder = baseUrl ? baseUrl.pathname : this.currentFolder
         this.folders = contents?.folders || this.folders
         this.documents = this.mode === 'folder'
           ? []
           : contents?.documents || this.documents
         this.places = contents?.places || this.places
-        // this.separator = contents?.separator || this.separator
         const tempProject = await this.backend?.getProject({
           path: path,
           computeConfig: true
@@ -328,7 +312,7 @@ export default {
     click(row: FileContentRow) {
       const isFolderMode = this.mode === 'folder'
       if ((isFolderMode && row.isFolder) || (!isFolderMode && row.isDocument)) {
-        this.selectedDocument = [...this.currentFolder, row.name].join(this.separator)
+        this.selectedDocument = `${this.currentFolder}/${row.name}`
         const sel = this.rows.find(r => r.name === row.name)
         this.selected = sel ? [sel] : []
         this.filename = row.name
@@ -339,10 +323,9 @@ export default {
         this.selectedDocument = row.name
         this.selectDocument()
       } else if (row.isFolder) {
-        const cf = this.currentFolder
         this.currentFolder = row.name === '..'
-          ? cf.slice(0, cf.length - 1)
-          : [...cf, row.name]
+          ? this.splitFolderAndDoc(this.currentFolder).folder
+          : this.currentFolder = `${this.currentFolder}/${row.name}`
         this.getContents()
       }
     },
@@ -353,8 +336,9 @@ export default {
     },
     gotoPlace(place: Place) {
       if (place.href.startsWith('file://')) {
-        const folder = place.href.replace(/^file:\/\//, '').split('/')
-        this.currentFolder = folder
+        const url = new URL(place.href)
+        this.protocol = url && url.protocol || this.protocol
+        this.currentFolder = url && url.pathname || this.currentFolder
         this.getContents()
       }
     },
@@ -505,22 +489,21 @@ export default {
       }
     },
     splitFolderAndDoc(path: string) {
-      const folder = path.split(this.separator)
+      const folder = path.split('/')
       const document = folder.pop()
       return {
-        folder: folder.join(this.separator),
+        folder: folder.join('/'),
         document
       }
     },
     async gotoPath(path: string, configurationName?: string) {
-      const folder = path.split(this.separator)
-      const name = folder.pop()
+      const { folder, document } = this.splitFolderAndDoc(path)
       if (folder.length > 0) {
         this.currentFolder = folder;
         await this.getContents()
         this.selectedDocument = path
-        if (name)
-          this.scrollToSelectedDocument(name, 500)
+        if (document)
+          this.scrollToSelectedDocument(document, 500)
         if (configurationName && !this.tempConfiguration) {
           const bookmarkConfig = await this.backend?.configuration(configurationName)
           if (bookmarkConfig) {
@@ -574,7 +557,7 @@ export default {
         <q-splitter v-model="splitterValue" :limits="[10, 50]">
           <template v-slot:after>
             <div class="row q-ma-none q-pa-none">
-              <div class="text-body2 self-end">{{ currentFolder.join(separator) }} </div>
+              <div class="text-body2 self-end">{{ currentFolder }} </div>
               <q-space />
               <q-toggle v-model="showEveryDoc" size="sm"
                 title="show every document or just the ones with the matching extensions" label="show all docs:"

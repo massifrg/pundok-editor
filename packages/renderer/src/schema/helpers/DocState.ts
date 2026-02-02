@@ -18,12 +18,12 @@ export interface DocState {
   readonly editorKey: EditorKeyType;
   /** The name of the document being edited. */
   readonly documentName?: string;
-  /** The path where documents are read */
-  readonly inputFolder?: string[];
-  /** The path where documents are stored */
-  readonly outputFolder?: string[];
-  /** The path where a copy of a document is saved */
-  readonly copyFolder?: string[];
+  /** The path or base URL where documents are read */
+  readonly inputFolder?: string;
+  /** The path or base URL where documents are stored */
+  readonly outputFolder?: string;
+  /** The path or base URL where a copy of a document is saved */
+  readonly copyFolder?: string;
   /** The predefined or last-opened input format */
   readonly inputFormat?: DocumentFormat;
   /** The predefined or last-saved output format */
@@ -54,9 +54,9 @@ export interface DocState {
 export interface DocStateUpdate {
   documentName: string | null;
   resourcePath: string[] | null;
-  inputFolder: string[] | null;
-  outputFolder: string[] | null;
-  copyFolder: string[] | null;
+  inputFolder: string | null;
+  outputFolder: string | null;
+  copyFolder: string | null;
   inputFormat: DocumentFormat | null;
   outputFormat: DocumentFormat | null;
   copyFormat?: DocumentFormat | null;

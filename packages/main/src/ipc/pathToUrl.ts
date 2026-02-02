@@ -11,9 +11,13 @@ import { pathToFileURL } from "url";
  * @param project 
  * @returns 
  */
-export function pathToUrl(path: string | URL, project?: PundokEditorProject): URL | null {
-  let url = URL.parse(path)
-  if (!url && isString(path)) {
+export function pathToUrl(urlOrPath: string | URL, project?: PundokEditorProject): URL | null {
+  let url = URL.parse(urlOrPath)
+  let path = url?.protocol === 'file://'
+    ? url.pathname
+    : isString(urlOrPath) && urlOrPath || undefined
+  if (url?.hostname === '.') path = '.'
+  if (path) {
     if (!isAbsolute(path)) {
       let absPath
       if (project) {

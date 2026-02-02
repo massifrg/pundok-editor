@@ -42,8 +42,9 @@ import { useBackend } from '../stores';
 import NameDescriptionEditor from './NameDescriptionEditor.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import { parse as parsePath } from 'path-browserify';
-import { ConfigurationSummary, PundokEditorConfigInit, PundokEditorProject } from '../common';
+import { ConfigurationSummary, DEFAULT_START_FOLDER, PundokEditorConfigInit, PundokEditorProject } from '../common';
 import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers';
+import { getEditorDocState } from '../schema';
 
 export default {
   props: ['editor', 'visible'],
@@ -93,9 +94,11 @@ export default {
       this.configurations = this.configurations.filter(c => c !== configName)
     },
     async selectFolder() {
+      const docState = getEditorDocState(this.editor)
       showSelectFolderDialog({
         editor: this.editor,
         prompt: 'Select the project folder:',
+        startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
         callback: async ({ path }) => {
           if (path) {
             this.path = path
@@ -113,7 +116,7 @@ export default {
       })
     },
     async selectRootDocument() {
-      const startFolder = this.path && parsePath(this.path).dir.split('/') || undefined
+      const startFolder = this.path && parsePath(this.path).dir || undefined
       showOpenDocumentDialog({
         editor: this.editor,
         prompt: 'Select the root document:',

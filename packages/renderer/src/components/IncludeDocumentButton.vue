@@ -9,12 +9,13 @@ import ToolbarButton from './ToolbarButton.vue';
 import { ACTION_DOCUMENT_TRANSFORM, setActionCommand } from '../actions';
 import {
   DEFAULT_FORMAT,
+  DEFAULT_START_FOLDER,
   EditorKeyType,
   PandocFilterTransform,
   PundokEditorProject,
   TransformDocumentActionProps
 } from '../common';
-import { editorKeyFromState, getEditorConfiguration, getEditorProject } from '../schema';
+import { editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject } from '../schema';
 import { useBackend } from '../stores';
 import { setupQuasarIcons, showImportDocumentDialog } from './helpers';
 
@@ -46,10 +47,11 @@ export default {
     showDialog() {
       const editorKey = this.editorKey
       if (!editorKey) return
+      const docState = getEditorDocState(this.editor)
       showImportDocumentDialog({
         editor: this.editor,
         prompt: 'Append document:',
-        // startFolder: this.project?.path.split('/'),
+        startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
         callback: (context) => {
           const { documentFormat, path } = context
           console.log(context)

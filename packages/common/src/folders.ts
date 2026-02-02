@@ -1,5 +1,5 @@
 export type Folder = {
-  baseUrl: string,
+  // baseUrl: string,
   name: string
 }
 
@@ -21,3 +21,5 @@ export interface FolderContents {
   // separator: string,
   platform?: string,
 }
+
+export const DEFAULT_START_FOLDER = ''
