@@ -24,12 +24,20 @@ export interface DocState {
   readonly outputFolder?: string;
   /** The path or base URL where a copy of a document is saved */
   readonly copyFolder?: string;
+  /** The path or base URL where images are picked */
+  readonly imagesFolder?: string;
+  /** The path or base URL where document or snippets are picked for inclusion */
+  readonly includeFolder?: string;
   /** The predefined or last-opened input format */
   readonly inputFormat?: DocumentFormat;
   /** The predefined or last-saved output format */
   readonly outputFormat?: DocumentFormat;
   /** The predefined or last-saved as copy output format */
   readonly copyFormat?: DocumentFormat;
+  /** The predefined or last-picked image format */
+  readonly imagesFormat?: DocumentFormat;
+  /** The predefined or last-included document or snippet */
+  readonly includeFormat?: DocumentFormat;
   /** Resource path for pandoc conversions. FIXME: still useful? */
   readonly resourcePath?: string[];
   /** Current configuration in use in the editor. */
@@ -57,9 +65,13 @@ export interface DocStateUpdate {
   inputFolder: string | null;
   outputFolder: string | null;
   copyFolder: string | null;
+  imagesFolder: string | null;
+  includeFolder: string | null;
   inputFormat: DocumentFormat | null;
   outputFormat: DocumentFormat | null;
   copyFormat?: DocumentFormat | null;
+  imagesFormat?: DocumentFormat | null;
+  includeFormat?: DocumentFormat | null;
   configuration: PundokEditorConfig | null;
   project: PundokEditorProject | null;
   lastSaveResponse: SaveResponse | null;

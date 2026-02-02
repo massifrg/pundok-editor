@@ -51,7 +51,7 @@ export default {
       showImportDocumentDialog({
         editor: this.editor,
         prompt: 'Append document:',
-        startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
+        startFolder: docState?.includeFolder || docState?.inputFolder || DEFAULT_START_FOLDER,
         callback: (context) => {
           const { documentFormat, path } = context
           console.log(context)

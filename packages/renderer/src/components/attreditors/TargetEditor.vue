@@ -11,9 +11,9 @@
 
 <script lang="ts">
 import { mapState } from 'pinia';
-import { DocumentFormat, imageFormatFromFilename } from '../../common';
+import { DEFAULT_START_FOLDER, DocumentFormat, imageFormatFromFilename } from '../../common';
 import { showSelectImageDialog } from '../helpers';
-import { getEditorDocState, makePathRelativeToDoc } from '../../schema';
+import { getEditorDocState, makePathRelativeToDoc, updateDocState } from '../../schema';
 import { useBackend } from '../../stores';
 
 export default {
@@ -53,15 +53,23 @@ export default {
       const url = new URL(this.targetUrl)
       const chunks = url && url.pathname.split('/')
       const filename = url && chunks.pop()
-      const folder = url && `${url.protocol}${chunks.join('/')}` || undefined
+      const startFolder = url && `${url.protocol}${chunks.join('/')}`
+        || docState?.imagesFolder || docState?.inputFolder || DEFAULT_START_FOLDER
       const format = filename && imageFormatFromFilename(filename) || undefined
+      const startFormat = format
+        ? { ...format, ftype: 'image' } as DocumentFormat
+        : docState?.imagesFormat
       showSelectImageDialog({
         editor: this.editor,
         prompt: 'Choose an image:',
-        startFolder: folder,
-        startFormat: format ? { ...format, ftype: 'image' } as DocumentFormat : undefined,
+        startFolder,
+        startFormat,
         callback: (context) => {
-          const { path } = context
+          const { path, documentFormat } = context
+          this.editor.commands.updateDocState({
+            // TODO: update also imagesFolder
+            imagesFormat: documentFormat || docState?.imagesFormat,
+          })
           if (path)
             this.updateTargetUrl(docState ? makePathRelativeToDoc(docState, path) : path)
         }
