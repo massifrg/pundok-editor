@@ -3,7 +3,6 @@ import type {
   BackendConfig,
   Ipc,
   IpcRendererListener,
-  WhyAskingForIdOrPath,
 } from './backend';
 import {
   type ConfigurationSummary,

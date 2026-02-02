@@ -27,6 +27,7 @@ import { commandLineFeedback, errorFeedback } from './feedback';
 import { computeProjectFromDocFile } from './getProjectHandler';
 import { IpcHub } from './ipcHub';
 import { getConfigurationInit } from './configurationHandlers';
+import { fileURLToPath } from 'url';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -43,15 +44,18 @@ export const openDocumentHandler =
           configurationName,
           editorKey,
           documentFormat,
-          path: maybePath,
+          url,
           project,
         } = context;
-        let path = maybePath;
-        if (project && maybePath && !isAbsolute(maybePath)) {
+        const parsedUrl = url && URL.parse(url) || URL.parse('file://' + url)
+        if (!parsedUrl)
+          return Promise.reject(`openDocumentHandler: please provide a valid URL or file path!`)
+        let path = fileURLToPath(parsedUrl)
+        if (project && path && !isAbsolute(path)) {
           if (project.rootDocument && isAbsolute(project.rootDocument)) {
-            path = resolve(parsePath(project.rootDocument).dir, maybePath);
+            path = resolve(parsePath(project.rootDocument).dir, path);
           } else {
-            path = resolve(project.path, maybePath);
+            path = resolve(project.path, path);
           }
         }
         const readDoc = await openDocument(hub, {
