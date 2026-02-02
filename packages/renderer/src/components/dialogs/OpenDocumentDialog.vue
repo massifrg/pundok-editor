@@ -12,6 +12,9 @@ import {
   Folder,
   getPandocFormatDescriptions,
   guessFormat,
+  IMAGE_FORMATS,
+  ImageFormatDescription,
+  imageFormatFromFilename,
   InputConverter,
   OutputConverter,
   PandocFormatDescription,
@@ -23,10 +26,9 @@ import {
   DocumentContext,
   documentFormatIcon,
   FolderContents,
-} from '../common';
-import { editorKeyFromState, getDocState, getEditorConfiguration } from '../schema';
-import { useBackend } from '../stores';
-import { IMAGE_FORMATS, ImageFormatDescription, imageFormatFromFilename } from '../../../common/src/imageFormats';
+} from '../../common';
+import { editorKeyFromState, getDocState, getEditorConfiguration } from '../../schema';
+import { useBackend } from '../../stores';
 import { uniq } from 'lodash-es';
 
 export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'include' | 'folder' | 'image'

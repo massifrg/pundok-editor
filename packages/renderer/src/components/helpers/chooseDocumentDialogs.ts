@@ -5,7 +5,7 @@ import {
   DocumentContext,
   DocumentFormat,
 } from '../../common'
-import OpenDocumentDialog, { DocumentDialogMode } from '../OpenDocumentDialog.vue'
+import { DocumentDialogMode, OpenDocumentDialog } from '../dialogs'
 
 export interface DocumentDialogProps {
   editor: Editor

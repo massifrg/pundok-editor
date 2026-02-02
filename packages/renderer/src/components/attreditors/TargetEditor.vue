@@ -12,7 +12,7 @@
 <script lang="ts">
 import { mapState } from 'pinia';
 import { DocumentFormat, imageFormatFromFilename } from '../../common';
-import { showSelectImageDialog } from '../helpers/chooseDocumentDialogs';
+import { showSelectImageDialog } from '../helpers';
 import { getDocState, makePathRelativeToDoc } from '../../schema';
 import { useBackend } from '../../stores';
 

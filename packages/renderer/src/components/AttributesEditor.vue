@@ -227,10 +227,15 @@ import { mdiChevronLeft, mdiChevronRight } from '@quasar/extras/mdi-v6/index.js'
 import {
   PANDOC_OUTPUT_FORMATS,
   editableAttrsForNodeOrMark,
+  editableAttrsWithTab,
+  getAttrsChange,
   importantClasses,
-  matchingDuplicatedAttribute
-} from '../schema/helpers/attributes';
-import { type SelectedNodeOrMark } from '../schema/helpers/selection';
+  markIcon,
+  matchingDuplicatedAttribute,
+  nodeIcon,
+  nodeOrMarkToPandocName,
+  type SelectedNodeOrMark
+} from '../schema/helpers';
 import LevelEditor from './attreditors/LevelEditor.vue';
 import TextAttrEditor from './attreditors/TextAttrEditor.vue';
 import ClassesEditor from './attreditors/ClassesEditor.vue';
@@ -250,14 +255,12 @@ import {
   INCLUDE_FORMAT_ATTR,
   INCLUDE_SRC_ATTR,
   SearchTextVariant,
-  getDocState,
   getEditorConfiguration
 } from '../schema';
 import {
   ActionNameWithProps,
   AddOrRemoveClassActionProps,
   DEFAULT_INDEX_NAME,
-  DocumentCoords,
   INDEX_NAME_ATTR,
   Index,
   IndexSource,
@@ -274,17 +277,10 @@ import {
 } from '../common';
 import { useBackend } from '../stores';
 import { mapState } from 'pinia';
-import {
-  editableAttrsWithTab,
-  getAttrsChange,
-  markIcon,
-  nodeIcon,
-  nodeOrMarkToPandocName
-} from '../schema/helpers';
 import { toRaw } from 'vue';
 import { createLowlight, all } from 'lowlight';
 import { ACTION_ADD_CLASS } from '../actions';
-import { showIncludeDocumentDialog } from './helpers/chooseDocumentDialogs';
+import { showIncludeDocumentDialog } from './helpers';
 import { parse, relative } from 'path-browserify';
 
 const lowlight = createLowlight(all);

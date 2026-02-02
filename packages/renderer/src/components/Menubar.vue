@@ -363,7 +363,7 @@ import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
-import { showSelectFolderDialog } from './helpers/chooseDocumentDialogs';
+import { showSelectFolderDialog } from './helpers';
 // import { SK } from '../common'
 
 export default {

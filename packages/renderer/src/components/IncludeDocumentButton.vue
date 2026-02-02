@@ -6,7 +6,7 @@
 import { Editor } from '@tiptap/vue-3';
 import { mapState } from 'pinia';
 import ToolbarButton from './ToolbarButton.vue';
-import { useBackend } from '../stores';
+import { ACTION_DOCUMENT_TRANSFORM, setActionCommand } from '../actions';
 import {
   DEFAULT_FORMAT,
   EditorKeyType,
@@ -15,10 +15,8 @@ import {
   TransformDocumentActionProps
 } from '../common';
 import { editorKeyFromState, getEditorConfiguration, getEditorProject } from '../schema';
-import { ACTION_DOCUMENT_TRANSFORM } from '../actions';
-import { setupQuasarIcons } from './helpers/quasarIcons';
-import { showImportDocumentDialog } from './helpers/chooseDocumentDialogs';
-import { setActionCommand } from '../actions/actionCommands';
+import { useBackend } from '../stores';
+import { setupQuasarIcons, showImportDocumentDialog } from './helpers';
 
 export default {
   props: ['editor'],

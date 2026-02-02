@@ -109,8 +109,6 @@ import {
   SetContentActionProps,
   BackendSetContentWithProjectActionProps,
   DocumentOpenActionProps,
-  ImportDocumentActionProps,
-  ExportDocumentActionProps,
   TransformDocumentActionProps,
   NewEmptyDocumentActionProps,
   NewDocumentActionProps,
@@ -126,7 +124,6 @@ import {
   CxDocument,
   DocumentFormat,
   DEFAULT_DOCUMENT_FORMAT,
-  FindResourceOptions,
   SetDocumentFormatActionProps,
   DEFAULT_COPY_DOCUMENT_FORMAT,
 } from '../common';
@@ -185,9 +182,16 @@ import {
 } from '../actions';
 import { useQuasar } from 'quasar';
 import { EditorGUIPropsClass } from './EditorGUIProps';
-import { PendingOperation, PendingOperationExtraValue } from './helpers/pending';
 import { CreateDocumentOptions, getDocAsJsonString } from '../schema';
-import { DocumentDialogProps, showOpenDocumentDialog, showSaveCopyDialog, showSaveDocumentDialog } from './helpers/chooseDocumentDialogs';
+import {
+  PendingOperation,
+  PendingOperationExtraValue,
+  DocumentDialogProps,
+  showOpenDocumentDialog,
+  showSaveCopyDialog,
+  showSaveDocumentDialog
+} from './helpers';
+import { parse } from 'path-browserify';
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';
@@ -831,13 +835,17 @@ export default {
           }
         } as DocumentDialogProps)
       } else {
-        const doc = await this.backend?.open({
-          ...docContext,
-          configurationName,
-          project,
-          editorKey: docState?.editorKey,
-        });
-        if (doc) this.loadDocument(doc, false, atLine);
+        try {
+          const doc = await this.backend?.open({
+            ...docContext,
+            configurationName,
+            project,
+            editorKey: docState?.editorKey,
+          });
+          if (doc) this.loadDocument(doc, false, atLine);
+        } catch (err) {
+          console.log(err)
+        }
       }
     },
     setDocumentAsNativelySaved() {
@@ -867,11 +875,14 @@ export default {
       console.log(`created new editor for doc:`);
       console.log(doc);
 
+      const path = parse(doc.path!)
       this.updateEditorDocState({
-        documentName: doc.id,
+        documentName: path.base,
         resourcePath: doc.resourcePath,
         lastSaveResponse: saveResponse,
         lastExportResponse: null,
+        inputFolder: path.dir.split('/'),
+        inputFormat: doc.documentFormat,
       });
 
       // set project or configuration
@@ -899,9 +910,20 @@ export default {
     beforeSaving() {
       this.editor?.commands.fixPandocTables();
     },
-    async save(path?: string, options?: { isCopy: boolean }) {
+    async save(_path?: string, options?: { isCopy: boolean }) {
       const isCopy = options?.isCopy
       const docState = this.docState()
+      this.beforeSaving();
+      const jsonDoc = this.getDocAsJsonString();
+      let path = _path
+      if (!path) {
+        const folder = isCopy
+          ? docState?.copyFolder
+          : docState?.outputFolder || docState?.inputFolder
+        const documentName = docState?.documentName
+        path = folder !== undefined && documentName && [...folder, documentName].join('/') || undefined
+        console.log(`saving in "${path}"`)
+      }
       if (!path) {
         if (isCopy)
           showSaveCopyDialog({
@@ -918,7 +940,10 @@ export default {
                 }
                 setActionCommand(editorKey!, ACTION_SET_DOCUMENT_FORMAT, props)
               }
-              setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY, { doc: context } as DocumentSaveActionProps)
+              const props = {
+                doc: { ...context, content: jsonDoc } as CxDocument
+              } as DocumentSaveActionProps
+              setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY, props)
             }
           } as DocumentDialogProps)
         else
@@ -932,25 +957,28 @@ export default {
               if (documentFormat) {
                 const props: SetDocumentFormatActionProps = {
                   whichFormat: 'output',
-                  documentFormat
+                  documentFormat,
                 }
                 setActionCommand(editorKey!, ACTION_SET_DOCUMENT_FORMAT, props)
               }
-              setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE, { doc: context } as DocumentSaveActionProps)
+              const props = {
+                doc: { ...context, content: jsonDoc } as CxDocument
+              } as DocumentSaveActionProps
+              setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE, props)
             }
           } as DocumentDialogProps)
         return
       }
-      this.beforeSaving();
-      const jsonDoc = this.getDocAsJsonString();
       try {
         const docState = this.docState();
-        const documentFormat = (isCopy ? docState?.copyFormat : docState?.outputFormat) || DEFAULT_DOCUMENT_FORMAT
+        const documentFormat = isCopy
+          ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
+          : docState?.outputFormat || docState?.inputFormat || DEFAULT_DOCUMENT_FORMAT
         if (this.backend) {
           const response = await this.backend.save({
             editorKey: this.editorKey(),
             id: docState?.documentName,
-            path: path,
+            path,
             content: jsonDoc,
             documentFormat,
             project: docState?.project,

@@ -43,7 +43,7 @@ import NameDescriptionEditor from './NameDescriptionEditor.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import { parse as parsePath } from 'path-browserify';
 import { ConfigurationSummary, PundokEditorConfigInit, PundokEditorProject } from '../common';
-import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers/chooseDocumentDialogs';
+import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers';
 
 export default {
   props: ['editor', 'visible'],
