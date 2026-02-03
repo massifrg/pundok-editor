@@ -80,6 +80,7 @@ import {
   type DocState,
   type DocStateUpdate,
   getDocState,
+  getEditorDocState,
   getIndexingState,
   type SelectedNodeOrMark,
 } from '../schema';
@@ -664,6 +665,8 @@ export default {
       });
       if (editor) {
         // @ts-ignore
+        const oldDocState = getEditorDocState(this.editor)
+        // @ts-ignore
         this.editor = editor;
         if (!this.configuration)
           await this.setConfiguration(getHardcodedEditorConfig());
@@ -671,6 +674,16 @@ export default {
         this.updateEditorDocState({
           nativeUnsavedChanges: false,
           unsavedChanges: false,
+          inputFolder: oldDocState?.inputFolder,
+          outputFolder: oldDocState?.outputFolder,
+          imagesFolder: oldDocState?.imagesFolder,
+          includeFolder: oldDocState?.includeFolder,
+          copyFolder: oldDocState?.copyFolder,
+          inputFormat: oldDocState?.inputFormat,
+          outputFormat: oldDocState?.outputFormat,
+          imagesFormat: oldDocState?.imagesFormat,
+          includeFormat: oldDocState?.includeFormat,
+          copyFormat: oldDocState?.copyFormat,
         });
         this.$emit('new-editor', this.editorKey())
       }
