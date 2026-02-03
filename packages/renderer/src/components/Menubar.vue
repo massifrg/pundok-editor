@@ -6,9 +6,11 @@
 
       <ToolbarButton v-if="gui.openButton" icon="mdi-folder-open" @click="$emit('openDocument')"
         title="open document" />
-      <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)">
+      <!-- <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)">
         <q-badge v-if="!!savedExportedColor" :color="savedExportedColor" floating rounded />
-      </ToolbarButton>
+      </ToolbarButton> -->
+
+      <SaveButton :editor="editor" :text-color="savedExportedColor" />
 
       <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
       <!--
@@ -331,6 +333,7 @@ import ExportToolbarButton from './ExportToolbarButton.vue';
 import NewDocumentButton from './NewDocumentButton.vue';
 import RawInlineButton from './RawInlineButton.vue';
 import RawBlockMenu from './RawBlockMenu.vue';
+import SaveButton from './SaveButton.vue';
 import TableTools from './TableTools.vue';
 import ToolbarButton from './ToolbarButton.vue';
 import WholeDocTransformsButton from './WholeDocTransformsButton.vue';
@@ -363,7 +366,6 @@ import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getEditorDocState, getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
-import { showSelectFolderDialog } from './helpers';
 // import { SK } from '../common'
 
 export default {
@@ -387,10 +389,11 @@ export default {
     NewDocumentButton,
     RawInlineButton,
     RawBlockMenu,
-    // TextAlignMenubarItem,
-    // VerticalAlignMenubarItem,
+    SaveButton,
     TableTools,
+    // TextAlignMenubarItem,
     ToolbarButton,
+    // VerticalAlignMenubarItem,
     WholeDocTransformsButton,
   },
   props: [
@@ -402,7 +405,7 @@ export default {
   ],
   emits: [
     'openDocument',
-    'saveContent',
+    // 'saveContent',
     // 'exportAgain',
     'showConfigurationsDialog',
     'toggleSearchAndReplaceDialog',

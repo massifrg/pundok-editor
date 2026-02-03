@@ -171,8 +171,7 @@ export function exportWithPandoc(
 ): Promise<ExternalProgramResult> {
   const { configurationName, content, documentFormat, path, project } = doc;
   console.log(`exportWithPandoc, path=${path}`)
-  const { resourcesPaths } = exportOptions;
-  const resultFile = exportOptions.resultFile || path
+  const { resourcesPaths, resultFile } = exportOptions;
   const converter = documentFormatToOutputConverter(documentFormat)
   const { format, pandocOptions, pandocTemplate, referenceFile, standalone } =
     converter as PandocOutputConverter;

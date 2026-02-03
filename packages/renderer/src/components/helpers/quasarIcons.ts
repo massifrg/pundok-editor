@@ -18,6 +18,7 @@ import {
   mdiPageFirst,
   mdiPageLast,
   mdiPlay,
+  mdiContentSavePlus,
 } from '@quasar/extras/mdi-v7/index.js';
 
 import { commonIcons } from '../../common';
@@ -41,6 +42,7 @@ export const icons: Record<string, string> = {
   root_document: mdiFileStarFourPoints,
   remove_class: mdiOctagramMinus,
   remove_custom_class: mdiOctagramMinusOutline,
+  save_copy: mdiContentSavePlus,
   warning: mdiAlertCircle,
 };
 

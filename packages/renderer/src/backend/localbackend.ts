@@ -28,7 +28,6 @@ import {
   FindResourceOptions,
   ProjectComponent,
   DocumentContext,
-  DocumentCoords,
   IpcRendererToMainChannel,
   IpcMainToRendererChannel,
   ServerMessageForViewer,
@@ -68,8 +67,6 @@ import {
 } from '../actions';
 import { useActions } from '../stores';
 import { IPC_CHANNELS } from '../common';
-import { isString } from 'lodash-es';
-import { OpenDialogOptions } from 'electron';
 
 type Listener = () => void;
 

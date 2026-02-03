@@ -5,8 +5,7 @@
         <q-toolbar-title>
           <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
             :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
-            @open-document="openDocument()" @save-content="saveToStoredPath()"
-            @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+            @open-document="openDocument()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
             @reload-with-configuration="reloadWithConfiguration" />
@@ -406,7 +405,7 @@ export default {
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
               setActionCommand(this.projectStructureEditorKey, action, props)
             else
-              this.save();
+              this.save({ ...(props as DocumentSaveActionProps), isSaveAs: true });
             break;
           case ACTION_DOCUMENT_SAVE_COPY.name:
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
@@ -852,7 +851,6 @@ export default {
         }
       }
     },
-
     setDocumentAsNativelySaved() {
       this.updateEditorDocState({
         nativeUnsavedChanges: false,
@@ -909,58 +907,37 @@ export default {
       if (atLine) action.label += ` ${atLine}`
       setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps)
     },
-    async saveToStoredPath() {
-      const docState = this.docState()
-      const { configuration, documentName, editorKey, inputFormat, inputFolder, outputFormat, outputFolder, project } = docState || {}
-      const folder = outputFolder || inputFolder
-      const path = `${folder}/${documentName}`
-      const id = documentNameToId(documentName)
-      this.save({
-        doc: {
-          documentFormat: outputFormat || inputFormat,
-          editorKey,
-          id,
-          path,
-          project,
-          configurationName: project ? undefined : configuration?.name,
-        }
-      });
-    },
     beforeSaving() {
       this.editor?.commands.fixPandocTables();
     },
     async save(props?: DocumentSaveActionProps) {
-      const isCopy = props?.isCopy
+      const { isCopy, isSaveAs } = props || {}
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
       const docState = this.docState()
-      let path = props?.doc?.path
+      let path = props?.path
       if (!path) {
-        const folder = isCopy
-          ? docState?.copyFolder
-          : docState?.outputFolder || docState?.inputFolder
-        const documentName = docState?.documentName
-        path = folder !== undefined && documentName && [...folder, documentName].join('/') || undefined
+        const { documentName, copyFolder, inputFolder, outputFolder } = docState || {}
+        const folder = isCopy ? copyFolder : outputFolder || inputFolder
+        const path = folder && documentName && `${folder}/${documentName}` || undefined
         console.log(`saving in "${path}"`)
       }
-      if (!path) {
+      if (!path || isSaveAs) {
         if (isCopy)
           showSaveCopyDialog({
             editor: this.editor,
-            prompt: 'Save a copy',
+            prompt: 'Save a copy to:',
             startFolder: docState?.copyFolder,
             startFormat: docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT,
             callback: (context) => {
-              const { editorKey, documentFormat } = context
-              if (context.path) {
+              const { editorKey, documentFormat, path } = context
+              if (path) {
                 this.editor?.commands.updateDocState({
-                  copyFolder: splitFolderAndDoc(context.path).folder,
+                  copyFolder: splitFolderAndDoc(path).folder,
                   copyFormat: documentFormat,
                 })
-                const props = {
-                  doc: { ...context, content: jsonDoc } as CxDocument
-                } as DocumentSaveActionProps
-                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY, props)
+                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY,
+                  { path, isCopy: true } as DocumentSaveActionProps)
               } else {
                 // TODO: signal missing path!
               }
@@ -969,22 +946,20 @@ export default {
         else
           showSaveDocumentDialog({
             editor: this.editor,
-            prompt: 'Save document',
+            prompt: isSaveAs ? 'Save document as:' : 'Save document:',
             startFolder: docState?.outputFolder,
             startFormat: docState?.outputFormat || DEFAULT_DOCUMENT_FORMAT,
             callback: (context) => {
-              const { editorKey, documentFormat } = context
-              if (context.path) {
-                const { folder, document } = splitFolderAndDoc(context.path)
+              const { editorKey, documentFormat, path } = context
+              if (path) {
+                const { folder, document } = splitFolderAndDoc(path)
                 this.editor?.commands.updateDocState({
                   outputFolder: folder,
                   documentName: document,
                   outputFormat: documentFormat,
                 })
-                const props = {
-                  doc: { ...context, content: jsonDoc } as CxDocument
-                } as DocumentSaveActionProps
-                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE, props)
+                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE,
+                  { path } as DocumentSaveActionProps)
               } else {
                 // TODO: signal missing path!
               }
@@ -998,15 +973,16 @@ export default {
           ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
           : docState?.outputFormat || docState?.inputFormat || DEFAULT_DOCUMENT_FORMAT
         if (this.backend) {
+          const { configuration, documentName, project, resourcePath } = docState || {}
           const response = await this.backend.save({
             editorKey: this.editorKey(),
-            id: docState?.documentName,
+            id: documentNameToId(documentName),
             path,
             content: jsonDoc,
             documentFormat,
-            project: docState?.project,
-            configurationName: docState?.configuration?.name,
-            resourcePath: docState?.resourcePath,
+            project,
+            configurationName: project ? undefined : configuration?.name,
+            resourcePath,
           });
           if (response.error) {
             const errmsg = this.showResultMessage({
@@ -1067,7 +1043,7 @@ export default {
           }
           const docState = this.docState();
           if (docState) {
-            const { resourcePath, project, configuration } = docState;
+            const { configuration, documentName, project, resourcePath, } = docState;
             this.setOperationInProgress(true)
             const response = await backend.save(
               {

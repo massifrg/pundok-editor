@@ -206,11 +206,10 @@ export async function exportDocument(
         break;
       case 'pandoc':
       default:
-        console.log(`EXPORTING WITH PANDOC...`)
         result = await exportWithPandoc(doc, {
           cwd,
           resourcesPaths,
-          resultFile,
+          resultFile: resultFile || doc.path,
         });
     }
     const { commandLine, error, exitCode, output } = result
