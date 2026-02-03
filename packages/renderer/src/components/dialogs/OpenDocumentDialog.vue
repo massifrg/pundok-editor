@@ -26,8 +26,9 @@ import {
   DocumentContext,
   documentFormatIcon,
   FolderContents,
+  splitFolderAndDoc,
 } from '../../common';
-import { editorKeyFromState, getDocState, getEditorConfiguration } from '../../schema';
+import { editorKeyFromState, getEditorConfiguration } from '../../schema';
 import { useBackend } from '../../stores';
 import { uniq } from 'lodash-es';
 
@@ -309,6 +310,9 @@ export default {
       }
       this.selectedDocument = undefined
     },
+    splitFolderAndDoc(path: string) {
+      return splitFolderAndDoc(path)
+    },
     click(row: FileContentRow) {
       const isFolderMode = this.mode === 'folder'
       if ((isFolderMode && row.isFolder) || (!isFolderMode && row.isDocument)) {
@@ -324,7 +328,7 @@ export default {
         this.selectDocument()
       } else if (row.isFolder) {
         this.currentFolder = row.name === '..'
-          ? this.splitFolderAndDoc(this.currentFolder).folder
+          ? splitFolderAndDoc(this.currentFolder).folder
           : this.currentFolder = `${this.currentFolder}/${row.name}`
         this.getContents()
       }
@@ -488,16 +492,8 @@ export default {
         this.filename = filename
       }
     },
-    splitFolderAndDoc(path: string) {
-      const folder = path.split('/')
-      const document = folder.pop()
-      return {
-        folder: folder.join('/'),
-        document
-      }
-    },
     async gotoPath(path: string, configurationName?: string) {
-      const { folder, document } = this.splitFolderAndDoc(path)
+      const { folder, document } = splitFolderAndDoc(path)
       if (folder.length > 0) {
         this.currentFolder = folder;
         await this.getContents()

@@ -1,7 +1,7 @@
 // slightly modified from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-image/src/image.ts
 import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model'
-import { docBasePath, getDocState, getEditorDocState } from '../helpers';
+import { getDocState, getEditorDocState } from '../helpers';
 import { isAbsolute, parse as parsePath, relative } from 'path-browserify'
 import { Editor } from '@tiptap/vue-3';
 import { Command } from '@tiptap/pm/state';
@@ -93,7 +93,7 @@ export const Image = Node.create<ImageOptions>({
       let baseUrl: string | undefined = undefined
       const docState = getEditorDocState(editor as Editor)
       if (docState)
-        baseUrl = docBasePath(docState)
+        baseUrl = docState?.imagesFolder || docState?.outputFolder || docState?.inputFolder
       if (baseUrl)
         storage.baseUrl = baseUrl
     }
@@ -166,7 +166,7 @@ function fixImageSrc(all: boolean): Command {
     const docState = getDocState(state)
     if (!docState)
       return false
-    const basePath = docBasePath(docState)
+    const basePath = docState?.imagesFolder || docState?.inputFolder
     if (!basePath)
       return false
     const { doc, selection, tr } = state

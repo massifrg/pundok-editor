@@ -7,7 +7,6 @@ import {
   EditorKeyType,
   PundokEditorConfig,
   PundokEditorProject,
-  SaveResponse
 } from "../../common";
 import { getIndexingState, pundokEditorUtilsPluginKey } from "../extensions";
 import { nodeToPandocJsonString, PandocJsonExporterOptions } from "./PandocJsonExporter";
@@ -45,9 +44,9 @@ export interface DocState {
   /** Current project of the document being edited. */
   readonly project?: PundokEditorProject;
   /** The result of the last save operation. */
-  readonly lastSaveResponse?: SaveResponse;
+  // readonly lastSaveResponse?: SaveResponse;
   /** The result of the last export operation. */
-  readonly lastExportResponse?: SaveResponse;
+  // readonly lastExportResponse?: SaveResponse;
   /** `true` when the doc has changed and the changes are not saved in JSON yet. FIXME: native format too? */
   readonly nativeUnsavedChanges?: boolean;
   /** `true` when the doc has changed and the changes are not saved in any format. */
@@ -74,8 +73,8 @@ export interface DocStateUpdate {
   includeFormat?: DocumentFormat | null;
   configuration: PundokEditorConfig | null;
   project: PundokEditorProject | null;
-  lastSaveResponse: SaveResponse | null;
-  lastExportResponse: SaveResponse | null;
+  // lastSaveResponse: SaveResponse | null;
+  // lastExportResponse: SaveResponse | null;
   nativeUnsavedChanges: boolean;
   unsavedChanges: boolean;
   savedDoc: PmNode;
@@ -144,6 +143,8 @@ export function updateDocState(
         currentValue = currentValue === undefined ? null : currentValue
         modified = currentValue !== value
       }
+      if (key !== 'savedDoc')
+        console.log(`updateDocState: updated ${key} to ${JSON.stringify(value)}`)
       newDocState =
         value === null
           ? { ...newDocState, [key]: undefined }
@@ -157,20 +158,8 @@ export function updateDocState(
   return currentDocState;
 }
 
-export function docBasePath(docState: DocState): string | undefined {
-  let basePath = docState.project?.path
-  if (basePath)
-    return basePath
-  basePath = docState.lastSaveResponse?.doc.path
-  if (basePath)
-    return parsePath(basePath).dir
-  basePath = docState.resourcePath && docState.resourcePath[0]
-  if (basePath)
-    return basePath
-}
-
 export function makePathRelativeToDoc(docState: DocState, path: string): string {
-  const basePath = docBasePath(docState)
+  const basePath = docState?.outputFolder || docState?.inputFolder
   return basePath && isAbsolute(path)
     ? relativePath(basePath, path)
     : path

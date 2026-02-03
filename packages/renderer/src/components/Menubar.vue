@@ -361,7 +361,7 @@ import {
 } from '../schema';
 import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
-import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
+import { getEditorDocState, getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
 import { showSelectFolderDialog } from './helpers';
 // import { SK } from '../common'
@@ -604,12 +604,7 @@ export default {
       this.$emit('reloadWithConfiguration', configurationName);
     },
     async debug() {
-      showSelectFolderDialog({
-        editor: this.editor,
-        callback: ({ path }) => {
-          console.log(path)
-        }
-      })
+      console.log(JSON.stringify(getEditorDocState(this.editor), undefined, 2))
     },
   },
 };

@@ -119,9 +119,6 @@ export default {
       const indices = useProjectCache().indicesCache
       return indices && this.indexName && indices[this.indexName]
     },
-    lastSaveResponse() {
-      return getDocState((this.editor as Editor)?.state)?.lastSaveResponse
-    },
     labelEveryWord() {
       return this.optionEveryWord ? 'every word' : 'exact text'
     },

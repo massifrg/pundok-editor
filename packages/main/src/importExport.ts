@@ -169,8 +169,10 @@ export function exportWithPandoc(
   doc: CxDocument,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
-  const { configurationName, content, documentFormat, project } = doc;
-  const { resourcesPaths, resultFile } = exportOptions;
+  const { configurationName, content, documentFormat, path, project } = doc;
+  console.log(`exportWithPandoc, path=${path}`)
+  const { resourcesPaths } = exportOptions;
+  const resultFile = exportOptions.resultFile || path
   const converter = documentFormatToOutputConverter(documentFormat)
   const { format, pandocOptions, pandocTemplate, referenceFile, standalone } =
     converter as PandocOutputConverter;

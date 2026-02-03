@@ -44,3 +44,7 @@ export interface CxDocument extends DocumentContext {
   /** The document JSON.stringified contents. */
   content: string;
 }
+
+export function documentNameToId(name?: string): string | undefined {
+  return name && name.replace(/([.][0-9a-z_-]{1,5})*[.].*?$/i, '') || undefined
+}

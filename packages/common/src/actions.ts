@@ -58,7 +58,8 @@ export interface DocumentOpenActionProps {
 }
 
 export interface DocumentSaveActionProps {
-  doc: Partial<CxDocument>
+  doc: Partial<CxDocument>,
+  isCopy?: boolean,
 }
 
 export interface ImportDocumentActionProps {

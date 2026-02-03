@@ -23,3 +23,12 @@ export interface FolderContents {
 }
 
 export const DEFAULT_START_FOLDER = ''
+
+export function splitFolderAndDoc(path: string) {
+  const folder = path.split('/')
+  const document = folder.pop()
+  return {
+    folder: folder.join('/'),
+    document
+  }
+}

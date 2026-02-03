@@ -11,13 +11,10 @@ import { pathToFileURL } from "url";
  * @param project 
  * @returns 
  */
-export function pathToUrl(urlOrPath: string | URL, project?: PundokEditorProject): URL | null {
-  let url = URL.parse(urlOrPath)
-  let path = url?.protocol === 'file://'
-    ? url.pathname
-    : isString(urlOrPath) && urlOrPath || undefined
-  if (url?.hostname === '.') path = '.'
-  if (path) {
+export function pathToUrl(_path: string, project?: PundokEditorProject): URL | null {
+  let url
+  if (_path) {
+    const path = _path.replace(/^file:\/\//, '')
     if (!isAbsolute(path)) {
       let absPath
       if (project) {
@@ -35,7 +32,7 @@ export function pathToUrl(urlOrPath: string | URL, project?: PundokEditorProject
       url = pathToFileURL(normalize(path))
     }
   }
-  return url
+  return url || null
 }
 
 /**
@@ -56,7 +53,7 @@ export function baseUrlWithFilename(
   filepath: string | URL,
   project?: PundokEditorProject
 ): BaseUrlWithFilename | null {
-  const fileUrl = pathToUrl(filepath, project)
+  const fileUrl = isString(filepath) ? pathToUrl(filepath, project) : filepath
   if (fileUrl) {
     const chunks = fileUrl.pathname.split('/')
     const filename = chunks.pop()

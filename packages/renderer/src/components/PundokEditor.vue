@@ -127,6 +127,8 @@ import {
   SetDocumentFormatActionProps,
   DEFAULT_COPY_DOCUMENT_FORMAT,
   DEFAULT_START_FOLDER,
+  splitFolderAndDoc,
+  documentNameToId,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -398,7 +400,7 @@ export default {
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
               setActionCommand(this.projectStructureEditorKey, action, props)
             else
-              this.save((props as DocumentSaveActionProps).doc.path);
+              this.save(props as DocumentSaveActionProps);
             break;
           case ACTION_DOCUMENT_SAVE_AS.name:
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
@@ -410,7 +412,7 @@ export default {
             if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
               setActionCommand(this.projectStructureEditorKey, action, props)
             else
-              this.save((props as DocumentSaveActionProps).doc.path, { isCopy: true });
+              this.save({ ...(props as DocumentSaveActionProps), isCopy: true });
             break;
           case ACTION_SET_DOCUMENT_FORMAT.name:
             const { whichFormat, documentFormat } = props as SetDocumentFormatActionProps
@@ -681,10 +683,10 @@ export default {
       // console.log(`SET CONTENT: ${content}`)
       const editor = this.editor;
       if (isNew) {
-        this.updateEditorDocState({
-          lastSaveResponse: null,
-          lastExportResponse: null,
-        });
+        // this.updateEditorDocState({
+        //   lastSaveResponse: null,
+        //   lastExportResponse: null,
+        // });
       }
       const configuration = this.docState()?.configuration;
       const createOptions: CreateDocumentOptions = {
@@ -824,15 +826,16 @@ export default {
           startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
           startFormat: docState?.inputFormat,
           callback: (context) => {
-            const { editorKey, documentFormat } = context
-            if (documentFormat) {
-              const props: SetDocumentFormatActionProps = {
-                whichFormat: 'input',
-                documentFormat
-              }
-              setActionCommand(editorKey!, ACTION_SET_DOCUMENT_FORMAT, props)
+            const { editorKey, documentFormat, path } = context
+            if (path) {
+              const { folder, document } = splitFolderAndDoc(path)
+              this.editor?.commands.updateDocState({
+                inputFolder: folder,
+                documentName: document,
+                inputFormat: documentFormat,
+              })
+              setActionCommand(editorKey!, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
             }
-            setActionCommand(editorKey!, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
           }
         } as DocumentDialogProps)
       } else {
@@ -849,6 +852,7 @@ export default {
         }
       }
     },
+
     setDocumentAsNativelySaved() {
       this.updateEditorDocState({
         nativeUnsavedChanges: false,
@@ -880,8 +884,8 @@ export default {
       this.updateEditorDocState({
         documentName: path.base,
         resourcePath: doc.resourcePath,
-        lastSaveResponse: saveResponse,
-        lastExportResponse: null,
+        // lastSaveResponse: saveResponse,
+        // lastExportResponse: null,
         inputFolder: path.dir,
         inputFormat: doc.documentFormat,
       });
@@ -906,17 +910,31 @@ export default {
       setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps)
     },
     async saveToStoredPath() {
-      this.save(this.docState()?.lastSaveResponse?.doc.path);
+      const docState = this.docState()
+      const { configuration, documentName, editorKey, inputFormat, inputFolder, outputFormat, outputFolder, project } = docState || {}
+      const folder = outputFolder || inputFolder
+      const path = `${folder}/${documentName}`
+      const id = documentNameToId(documentName)
+      this.save({
+        doc: {
+          documentFormat: outputFormat || inputFormat,
+          editorKey,
+          id,
+          path,
+          project,
+          configurationName: project ? undefined : configuration?.name,
+        }
+      });
     },
     beforeSaving() {
       this.editor?.commands.fixPandocTables();
     },
-    async save(_path?: string, options?: { isCopy: boolean }) {
-      const isCopy = options?.isCopy
-      const docState = this.docState()
+    async save(props?: DocumentSaveActionProps) {
+      const isCopy = props?.isCopy
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
-      let path = _path
+      const docState = this.docState()
+      let path = props?.doc?.path
       if (!path) {
         const folder = isCopy
           ? docState?.copyFolder
@@ -934,17 +952,18 @@ export default {
             startFormat: docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT,
             callback: (context) => {
               const { editorKey, documentFormat } = context
-              if (documentFormat) {
-                const props: SetDocumentFormatActionProps = {
-                  whichFormat: 'copy',
-                  documentFormat
-                }
-                setActionCommand(editorKey!, ACTION_SET_DOCUMENT_FORMAT, props)
+              if (context.path) {
+                this.editor?.commands.updateDocState({
+                  copyFolder: splitFolderAndDoc(context.path).folder,
+                  copyFormat: documentFormat,
+                })
+                const props = {
+                  doc: { ...context, content: jsonDoc } as CxDocument
+                } as DocumentSaveActionProps
+                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY, props)
+              } else {
+                // TODO: signal missing path!
               }
-              const props = {
-                doc: { ...context, content: jsonDoc } as CxDocument
-              } as DocumentSaveActionProps
-              setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY, props)
             }
           } as DocumentDialogProps)
         else
@@ -955,17 +974,20 @@ export default {
             startFormat: docState?.outputFormat || DEFAULT_DOCUMENT_FORMAT,
             callback: (context) => {
               const { editorKey, documentFormat } = context
-              if (documentFormat) {
-                const props: SetDocumentFormatActionProps = {
-                  whichFormat: 'output',
-                  documentFormat,
-                }
-                setActionCommand(editorKey!, ACTION_SET_DOCUMENT_FORMAT, props)
+              if (context.path) {
+                const { folder, document } = splitFolderAndDoc(context.path)
+                this.editor?.commands.updateDocState({
+                  outputFolder: folder,
+                  documentName: document,
+                  outputFormat: documentFormat,
+                })
+                const props = {
+                  doc: { ...context, content: jsonDoc } as CxDocument
+                } as DocumentSaveActionProps
+                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE, props)
+              } else {
+                // TODO: signal missing path!
               }
-              const props = {
-                doc: { ...context, content: jsonDoc } as CxDocument
-              } as DocumentSaveActionProps
-              setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE, props)
             }
           } as DocumentDialogProps)
         return
@@ -994,7 +1016,7 @@ export default {
               icon: 'mdi-content-save-alert'
             });
             // this.currentState.setLastSaveResponse(undefined)
-            this.updateEditorDocState({ lastSaveResponse: null });
+            // this.updateEditorDocState({ lastSaveResponse: null });
             return Promise.reject(errmsg);
           } else {
             this.setDocumentAsNativelySaved();
@@ -1004,11 +1026,11 @@ export default {
               message: `saved as ${response.doc.path || response.doc.id}`,
               icon: 'mdi-content-save-check'
             });
-            const prevPath = this.docState()?.lastSaveResponse?.doc.path;
-            if (prevPath !== response.doc.path) {
-              this.updateEditorDocState({ lastExportResponse: null });
-            }
-            this.updateEditorDocState({ lastSaveResponse: response });
+            // const prevPath = this.docState()?.lastSaveResponse?.doc.path;
+            // if (prevPath !== response.doc.path) {
+            //   this.updateEditorDocState({ lastExportResponse: null });
+            // }
+            // this.updateEditorDocState({ lastSaveResponse: response });
             this.setWindowTitleFromDoc(response.doc, 'save');
           }
           if (response.doc && (response.doc.path || response.doc.id)) {
@@ -1051,7 +1073,7 @@ export default {
               {
                 editorKey: this.editorKey(),
                 id: sdoc.id || docState?.documentName,
-                path: sdoc.path || docState?.lastSaveResponse?.doc.path,
+                path: sdoc.path /* || docState?.lastSaveResponse?.doc.path */,
                 content: jsonDoc,
                 project,
                 documentFormat,
@@ -1072,11 +1094,8 @@ export default {
               // this.currentState.setLastExportResponse(response)
               this.updateEditorDocState({
                 unsavedChanges: false,
-                lastExportResponse: response,
+                // lastExportResponse: response,
               });
-              console.log(
-                `lastExportResponse.doc = ${JSON.stringify({ ...this.docState()?.lastExportResponse?.doc })}`,
-              );
               console.log(
                 `saved changes: ${this.savedChanges}, exported changes: ${this.exportedChanges}`,
               );

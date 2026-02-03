@@ -206,6 +206,7 @@ export async function exportDocument(
         break;
       case 'pandoc':
       default:
+        console.log(`EXPORTING WITH PANDOC...`)
         result = await exportWithPandoc(doc, {
           cwd,
           resourcesPaths,
