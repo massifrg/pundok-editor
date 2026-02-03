@@ -4,8 +4,9 @@
       <NewDocumentButton v-if="gui.newDocument" @new-document="newDocument" />
       <span v-if="gui.newDocument" class="button-separator" />
 
-      <ToolbarButton v-if="gui.openButton" icon="mdi-folder-open" @click="$emit('openDocument')"
-        title="open document" />
+      <!-- <ToolbarButton v-if="gui.openButton" icon="mdi-folder-open" @click="$emit('openDocument')"
+        title="open document" /> -->
+      <OpenButton :editor="editor" />
       <!-- <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)">
         <q-badge v-if="!!savedExportedColor" :color="savedExportedColor" floating rounded />
       </ToolbarButton> -->
@@ -366,6 +367,7 @@ import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getEditorDocState, getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
+import OpenButton from './OpenButton.vue';
 // import { SK } from '../common'
 
 export default {
@@ -387,6 +389,7 @@ export default {
     InsertNoteButton,
     ImportToolbarButton,
     NewDocumentButton,
+    OpenButton,
     RawInlineButton,
     RawBlockMenu,
     SaveButton,
