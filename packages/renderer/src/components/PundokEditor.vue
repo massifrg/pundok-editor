@@ -929,6 +929,7 @@ export default {
       if (!path) {
         const { documentName, copyFolder, inputFolder, outputFolder } = docState || {}
         const folder = isCopy ? copyFolder : outputFolder || inputFolder
+        // TODO: when isCopy rename the file with the right format!
         path = folder && documentName && `${folder}/${documentName}` || undefined
       }
       if (!path || isSaveAs) {
@@ -941,12 +942,8 @@ export default {
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {
-                this.editor?.commands.updateDocState({
-                  copyFolder: splitFolderAndDoc(path).folder,
-                  copyFormat: documentFormat,
-                })
                 setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY,
-                  { path, isCopy: true } as DocumentSaveActionProps)
+                  { path, documentFormat, isCopy: true } as DocumentSaveActionProps)
               } else {
                 // TODO: signal missing path!
               }
@@ -961,14 +958,8 @@ export default {
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {
-                const { folder, document } = splitFolderAndDoc(path)
-                this.editor?.commands.updateDocState({
-                  outputFolder: folder,
-                  documentName: document,
-                  outputFormat: documentFormat,
-                })
                 setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE,
-                  { path } as DocumentSaveActionProps)
+                  { path, documentFormat } as DocumentSaveActionProps)
               } else {
                 // TODO: signal missing path!
               }
@@ -978,7 +969,7 @@ export default {
       }
       try {
         const docState = this.docState();
-        const documentFormat = isCopy
+        const documentFormat = props?.documentFormat || isCopy
           ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
           : docState?.outputFormat || docState?.inputFormat || DEFAULT_DOCUMENT_FORMAT
         if (this.backend) {
@@ -1004,6 +995,21 @@ export default {
             // this.updateEditorDocState({ lastSaveResponse: null });
             return Promise.reject(errmsg);
           } else {
+            const path = response.doc.path
+            console.log(`PATH of saved file: ${path}`)
+            if (path) {
+              const { folder, document } = splitFolderAndDoc(path)
+              const update: Partial<DocStateUpdate> = {}
+              if (isCopy) {
+                update.copyFolder = folder
+                update.copyFormat = documentFormat
+              } else {
+                update.documentName = document
+                update.outputFolder = folder
+                update.outputFormat = documentFormat
+              }
+              this.editor?.commands.updateDocState(update)
+            }
             this.setDocumentAsNativelySaved();
             this.showResultMessage({
               success: true,

@@ -59,6 +59,7 @@ export interface DocumentOpenActionProps {
 
 export interface DocumentSaveActionProps {
   path?: string,
+  documentFormat: DocumentFormat,
   isSaveAs?: boolean,
   isCopy?: boolean,
 }
