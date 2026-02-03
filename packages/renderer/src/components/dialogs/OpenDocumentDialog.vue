@@ -96,7 +96,7 @@ export default {
     return {
       visible: true,
       /** The protocol of the URL to open (usually it's `file://`) */
-      protocol: 'file://',
+      protocol: 'file:',
       /** An array of the folders' names of the current path */
       currentFolder: this.startFolder || '.',
       /** The sub folders in the current folder */
@@ -262,7 +262,7 @@ export default {
     filename(newName, oldName) {
       const sel = this.rows.find(r => r.name === newName)
       this.selected = sel ? [sel] : []
-      this.selectedDocument = `${this.currentFolder}/${newName}`
+      this.selectedDocument = newName
     },
     tempProject(tp) {
       if (tp) this.tempConfigurationName = undefined
@@ -316,7 +316,7 @@ export default {
     click(row: FileContentRow) {
       const isFolderMode = this.mode === 'folder'
       if ((isFolderMode && row.isFolder) || (!isFolderMode && row.isDocument)) {
-        this.selectedDocument = `${this.currentFolder}/${row.name}`
+        this.selectedDocument = row.name
         const sel = this.rows.find(r => r.name === row.name)
         this.selected = sel ? [sel] : []
         this.filename = row.name
