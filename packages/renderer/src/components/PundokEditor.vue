@@ -815,39 +815,47 @@ export default {
      */
     async openDocument(context?: DocumentContext, atLine?: number) {
       const docState = this.docState();
-      const docContext: DocumentContext = context || {};
-      const configurationName =
-        docContext?.configurationName || docState?.configuration?.name;
-      const project = docContext?.project || docState?.project;
-      if (!docContext.path) {
-        showOpenDocumentDialog({
-          editor: this.editor,
-          mode: 'open',
-          prompt: 'Open document',
-          startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
-          startFormat: docState?.inputFormat,
-          callback: (context) => {
-            const { editorKey, documentFormat, path } = context
-            if (path) {
-              const { folder, document } = splitFolderAndDoc(path)
-              this.editor?.commands.updateDocState({
-                inputFolder: folder,
-                documentName: document,
-                inputFormat: documentFormat,
-              })
-              setActionCommand(editorKey!, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
+      const editorKey = this.editorKey()
+      if (!context?.path) {
+        if (editorKey) {
+          showOpenDocumentDialog({
+            editor: this.editor,
+            mode: 'open',
+            prompt: 'Open document',
+            startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
+            startFormat: docState?.inputFormat,
+            callback: (context) => {
+              if (context.path) {
+                setActionCommand(editorKey, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
+              }
             }
-          }
-        } as DocumentDialogProps)
+          } as DocumentDialogProps)
+        }
       } else {
         try {
+          const configurationName = context?.configurationName
+            || (!docState?.project && docState?.configuration?.name)
+            || undefined;
+          const project = context?.project || docState?.project;
           const doc = await this.backend?.open({
-            ...docContext,
+            ...context,
             configurationName,
             project,
-            editorKey: docState?.editorKey,
+            editorKey,
           });
-          if (doc) this.loadDocument(doc, false, atLine);
+          if (doc) {
+            this.loadDocument(doc, false, atLine);
+            const { documentFormat, path } = doc
+            const update: Partial<DocStateUpdate> = {
+              inputFormat: documentFormat
+            }
+            if (path) {
+              const { folder, document } = splitFolderAndDoc(path)
+              update.inputFolder = folder
+              update.documentName = document
+            }
+            this.editor?.commands.updateDocState(update)
+          }
         } catch (err) {
           console.log(err)
         }
@@ -921,7 +929,7 @@ export default {
       if (!path) {
         const { documentName, copyFolder, inputFolder, outputFolder } = docState || {}
         const folder = isCopy ? copyFolder : outputFolder || inputFolder
-        const path = folder && documentName && `${folder}/${documentName}` || undefined
+        path = folder && documentName && `${folder}/${documentName}` || undefined
         console.log(`saving in "${path}"`)
       }
       if (!path || isSaveAs) {

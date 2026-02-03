@@ -110,7 +110,7 @@ import {
   VerticalAlign,
   VerticalAlignOptions,
 } from '../extensions';
-import { CreateDocumentOptions, createDocument } from '../helpers';
+import { CreateDocumentOptions, createDocumentCommand } from '../helpers';
 import type { PandocJsonDocument } from '../../pandoc';
 
 // load all languages with "all" or common languages with "common"
@@ -461,7 +461,7 @@ export const Pandoc = Document.extend<PandocOptions>({
       setPandocContent: (
         json: string | PandocJsonDocument,
         options?: CreateDocumentOptions,
-      ) => createDocument(json, options),
+      ) => createDocumentCommand(json, options),
       scrollIntoViewAtTop:
         () =>
           ({ dispatch, state, tr }) => {
