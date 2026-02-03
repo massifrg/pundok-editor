@@ -128,6 +128,8 @@ import {
   DEFAULT_START_FOLDER,
   splitFolderAndDoc,
   documentNameToId,
+  documentFormatToOutputConverter,
+  outputConverterToDocumentFormat,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -1036,11 +1038,7 @@ export default {
         const backend = this.backend;
         if (backend) {
           const sdoc: Partial<CxDocument> = storedDoc || {};
-          // de-proxify converter
-          const documentFormat: DocumentFormat = {
-            ftype: 'output-converter',
-            ...toRaw(converter) as OutputConverter,
-          }
+          const documentFormat = outputConverterToDocumentFormat(toRaw(converter) as OutputConverter)
           const docState = this.docState();
           if (docState) {
             const { configuration, documentName, project, resourcePath, } = docState;

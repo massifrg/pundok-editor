@@ -290,7 +290,7 @@ export default {
           : contents?.documents || this.documents
         this.places = contents?.places || this.places
         const tempProject = await this.backend?.getProject({
-          path: path,
+          path: this.currentFolder,
           computeConfig: true
         })
         if (tempProject) {
@@ -381,9 +381,16 @@ export default {
             why: 'from the current configuration of the editor'
           }
         }
-        const formats = documentFormatsFromFilename(this.pandocFormats, path, this.isInputDialog ? 'input' : 'output')
+        const formats = documentFormatsFromFilename(
+          this.pandocFormats,
+          path,
+          this.isInputDialog ? 'input' : 'output',
+          this.tempConfiguration || this.configuration
+        )
         if (formats.length > 0) {
-          const pf = formats[0]
+          console.log(formats)
+          const pf = formats.find(f => f.extensions?.includes(f.name!))
+            || formats[0]
           if (pf)
             return {
               format: { ...pf, ftype: 'format' },
@@ -404,7 +411,7 @@ export default {
     },
     selectDocument() {
       const editorKey = editorKeyFromState(this.editor.state)
-      const path = this.selectedDocument
+      const path = `${this.currentFolder}/${this.selectedDocument}`
       if (editorKey && path) {
         if (this.mode == 'folder') {
           console.log(`folder selected, path=${path}, editorKey=${editorKey}`)
