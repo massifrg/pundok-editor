@@ -365,9 +365,10 @@ import {
 } from '../schema';
 import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
-import { getEditorDocState, getTextMarkRangesBetween, iconFor } from '../schema/helpers';
+import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
 import OpenButton from './OpenButton.vue';
+import { showDocStateDialog } from './helpers';
 // import { SK } from '../common'
 
 export default {
@@ -610,7 +611,7 @@ export default {
       this.$emit('reloadWithConfiguration', configurationName);
     },
     async debug() {
-      console.log(JSON.stringify(getEditorDocState(this.editor), undefined, 2))
+      showDocStateDialog(this.editor)
     },
   },
 };

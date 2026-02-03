@@ -930,7 +930,6 @@ export default {
         const { documentName, copyFolder, inputFolder, outputFolder } = docState || {}
         const folder = isCopy ? copyFolder : outputFolder || inputFolder
         path = folder && documentName && `${folder}/${documentName}` || undefined
-        console.log(`saving in "${path}"`)
       }
       if (!path || isSaveAs) {
         if (isCopy)
