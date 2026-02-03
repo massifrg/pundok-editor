@@ -39,7 +39,7 @@ export type DocumentFormatType =
  * The document format can be a plain Pandoc format or a (input or output) converter.
  */
 export type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter | ImageFormatDescription)
-  & { ftype: DocumentFormatType }
+  & { ftype: DocumentFormatType, extensions?: string[] }
 
 export const guessFormat: DocumentFormat = {
   ftype: 'guess',
@@ -91,6 +91,14 @@ export function documentFormatToOutputConverter(format?: DocumentFormat): Output
     }
   }
   return undefined
+}
+
+export function outputConverterToDocumentFormat(oc: OutputConverter): DocumentFormat {
+  return {
+    ftype: 'output-converter',
+    ...oc,
+    extensions: oc.extension && [oc.extension] || []
+  }
 }
 
 export function pandocFormatToDocumentFormat(name: string): DocumentFormat | undefined {
@@ -168,6 +176,10 @@ function documentFormatsCompare(df1: DocumentFormat, df2: DocumentFormat): numbe
     const diff_see = see2 - see1
     if (diff_see !== 0)
       return diff_see
+    const priority1 = (df1 as PandocFormatDescription).priority || 1
+    const priority2 = (df2 as PandocFormatDescription).priority || 1
+    const diff_priority = priority2 - priority1
+    return diff_priority
   }
   return 0
 }
