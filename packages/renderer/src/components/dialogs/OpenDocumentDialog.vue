@@ -276,7 +276,7 @@ export default {
   },
   methods: {
     async getContents() {
-      const path = this.protocol + this.currentFolder
+      const path = `${this.protocol}//${this.currentFolder}`
       console.log(`getContents, path="${path}"`)
       try {
         const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })
@@ -494,10 +494,11 @@ export default {
     },
     async gotoPath(path: string, configurationName?: string) {
       const { folder, document } = splitFolderAndDoc(path)
+      console.log(`folder=${folder}, document=${document}`)
       if (folder.length > 0) {
         this.currentFolder = folder;
         await this.getContents()
-        this.selectedDocument = path
+        this.selectedDocument = document
         if (document)
           this.scrollToSelectedDocument(document, 500)
         if (configurationName && !this.tempConfiguration) {
