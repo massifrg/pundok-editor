@@ -58,10 +58,16 @@ export interface DocumentOpenActionProps {
 }
 
 export interface DocumentSaveActionProps {
+  /** The complete path of the document to be saved (folder and filename). */
   path?: string,
+  /** The format in which the document must be saved. */
   documentFormat: DocumentFormat,
+  /** It's a "save as" operation. The document in the editor takes the new name and format. */
   isSaveAs?: boolean,
+  /** It's a "save a copy" operation. The document in the editor keeps its name and format. */
   isCopy?: boolean,
+  /** When `true`, don't ask for the copy name and format. */
+  dontAskCopyPath?: boolean,
 }
 
 export interface ImportDocumentActionProps {

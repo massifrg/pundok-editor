@@ -27,6 +27,7 @@ import {
   documentFormatIcon,
   FolderContents,
   splitFolderAndDoc,
+  changeFileExtensionToFormat,
 } from '../../common';
 import { editorKeyFromState, getEditorConfiguration } from '../../schema';
 import { useBackend } from '../../stores';
@@ -491,13 +492,7 @@ export default {
       if (!this.isInputDialog) this.adjustDocumentExtension()
     },
     adjustDocumentExtension() {
-      const ext = this.format && documentFormatExtension(this.format)
-      if (ext) {
-        let filename = this.filename.replace(/^(.*?[.])(([0-9a-z]{1,5}[.])?[0-9a-z]+)$/i, '$1' + ext)
-        if (this.filename.length > 0 && filename == this.filename && !filename.endsWith('.' + ext))
-          filename = this.filename + '.' + ext
-        this.filename = filename
-      }
+      this.filename = changeFileExtensionToFormat(this.filename, this.format)
     },
     async gotoPath(path: string, configurationName?: string) {
       const { folder, document } = splitFolderAndDoc(path)

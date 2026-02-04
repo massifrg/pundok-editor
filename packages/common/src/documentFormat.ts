@@ -65,6 +65,17 @@ export function documentFormatExtension(format: DocumentFormat): string | undefi
   }
 }
 
+export function changeFileExtensionToFormat(filename: string, format: DocumentFormat): string {
+  const ext = format && documentFormatExtension(format)
+  if (ext) {
+    let renamed = filename.replace(/^(.*?[.])(([0-9a-z]{1,5}[.])?[0-9a-z]+)$/i, '$1' + ext)
+    if (filename.length > 0 && renamed == filename && !renamed.endsWith('.' + ext))
+      renamed = filename + '.' + ext
+    return renamed
+  }
+  return filename
+}
+
 export function documentFormatToInputConverter(format?: DocumentFormat): InputConverter | undefined {
   if (format) {
     switch (format.ftype) {

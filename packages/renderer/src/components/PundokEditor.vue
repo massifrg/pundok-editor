@@ -129,8 +129,8 @@ import {
   DEFAULT_START_FOLDER,
   splitFolderAndDoc,
   documentNameToId,
-  documentFormatToOutputConverter,
   outputConverterToDocumentFormat,
+  changeFileExtensionToFormat,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -196,7 +196,7 @@ import {
   showSaveCopyDialog,
   showSaveDocumentDialog
 } from './helpers';
-import { parse } from 'path-browserify';
+import { format, parse } from 'path-browserify';
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';
@@ -934,7 +934,7 @@ export default {
       this.editor?.commands.fixPandocTables();
     },
     async save(props?: DocumentSaveActionProps) {
-      const { isCopy, isSaveAs } = props || {}
+      const { dontAskCopyPath, isCopy, isSaveAs } = props || {}
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
       const docState = this.docState()
@@ -942,27 +942,31 @@ export default {
       if (!path) {
         const { documentName, copyFolder, inputFolder, outputFolder } = docState || {}
         const folder = isCopy ? copyFolder : outputFolder || inputFolder
-        // TODO: when isCopy rename the file with the right format!
         path = folder && documentName && `${folder}/${documentName}` || undefined
       }
-      if (!path || isSaveAs) {
-        if (isCopy)
+      if (!path || isSaveAs || (isCopy && !dontAskCopyPath)) {
+        if (isCopy) {
+          const { documentName, copyFormat } = docState || {}
+          const startFilename = documentName && copyFormat
+            ? changeFileExtensionToFormat(documentName, copyFormat)
+            : undefined
           showSaveCopyDialog({
             editor: this.editor,
             prompt: 'Save a copy to:',
             startFolder: docState?.copyFolder,
             startFormat: docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT,
+            startFilename,
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {
                 setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY,
-                  { path, documentFormat, isCopy: true } as DocumentSaveActionProps)
+                  { path, documentFormat, isCopy: true, dontAskCopyPath: true } as DocumentSaveActionProps)
               } else {
                 // TODO: signal missing path!
               }
             }
           } as DocumentDialogProps)
-        else
+        } else {
           showSaveDocumentDialog({
             editor: this.editor,
             prompt: isSaveAs ? 'Save document as:' : 'Save document:',
@@ -978,13 +982,18 @@ export default {
               }
             }
           } as DocumentDialogProps)
+        }
         return
       }
       try {
         const docState = this.docState();
-        const documentFormat = props?.documentFormat || isCopy
-          ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
-          : docState?.outputFormat || docState?.inputFormat || DEFAULT_DOCUMENT_FORMAT
+        console.log(toRaw(props))
+        const documentFormat = toRaw(props?.documentFormat || (
+          isCopy
+            ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
+            : docState?.outputFormat || docState?.inputFormat || DEFAULT_DOCUMENT_FORMAT
+        ))
+        console.log(`SAVING... isCopy=${isCopy}, documentFormat=${documentFormat.name}`)
         if (this.backend) {
           const { configuration, documentName, project, resourcePath } = docState || {}
           const response = await this.backend.save({
