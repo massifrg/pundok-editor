@@ -80,7 +80,6 @@ import {
   type DocState,
   type DocStateUpdate,
   getDocState,
-  getEditorDocState,
   getIndexingState,
   type SelectedNodeOrMark,
 } from '../schema';
@@ -666,7 +665,7 @@ export default {
       });
       if (editor) {
         // @ts-ignore
-        const oldDocState = getEditorDocState(this.editor)
+        const oldDocState = this.docState()
         // @ts-ignore
         this.editor = editor;
         if (!this.configuration)
@@ -784,23 +783,25 @@ export default {
         return
       }
       const isNew = !content;
-      const doc: CxDocument = {
-        content: content || EMPTY_DOCUMENT,
-        configurationName,
-        documentFormat: DEFAULT_DOCUMENT_FORMAT,
-        // editorKey: this.editorKey(),
-        id: 'unknown',
-      };
       try {
         if (configurationName) await this.setConfiguration(configurationName);
-        this.loadDocument(doc);
-      } catch (err) {
-        console.log(err);
+        // @ts-ignore
+        const prevDocState: Partial<DocStateUpdate> = this.docState() || {}
         this.editor?.destroy();
         await this.newEditor();
+        this.editor?.commands.updateDocState({
+          configuration: prevDocState?.configuration,
+          inputFolder: prevDocState?.inputFolder,
+          inputFormat: prevDocState?.inputFormat,
+          imagesFolder: prevDocState?.imagesFolder,
+          imagesFormat: prevDocState?.imagesFormat,
+          // TODO: check which property should be inherited
+        })
         this.setMainEditorKey();
         this.setContent(content || EMPTY_DOCUMENT, isNew);
         this.setDocumentAsNativelySaved();
+      } catch (err) {
+        console.log(err);
       }
     },
     /**
@@ -883,10 +884,6 @@ export default {
         this.setPendingBeforeLoadDoc({ doc })
         return
       }
-      const saveResponse = doc.path?.endsWith('.json')
-        ? { message: `loaded "${doc.path}"`, doc }
-        : undefined;
-
       // ex TODO: remove history
       this.editor?.destroy();
       await this.newEditor();
