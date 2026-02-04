@@ -26,8 +26,11 @@ import {
   FolderContents,
   splitFolderAndDoc,
   changeFileExtensionToFormat,
+  documentFormatFromInputConverter,
+  documentFormatFromOutputConverter,
+  documentFormatFromPandocFormatDescription,
 } from '../../common';
-import { editorKeyFromState, getEditorConfiguration } from '../../schema';
+import { editorKeyFromState, getEditorConfiguration, getEditorDocState } from '../../schema';
 import { useBackend } from '../../stores';
 import { uniq } from 'lodash-es';
 
@@ -235,14 +238,17 @@ export default {
       if (this.mode === 'image') {
         return [...guessImageFormats, ...imageFormats] as DocumentFormat[]
       }
+      const docState = getEditorDocState(this.editor)
+      const source = this.tempProject?.name || this.tempConfiguration?.name
+        || docState?.project?.name || docState?.configuration?.name
       let converters = this.isInputDialog
-        ? this.inputConverters.map(ic => ({ ...ic, ftype: 'input-converter' as DocumentFormatType }))
-        : this.outputConverters.map(ic => ({ ...ic, ftype: 'output-converter' as DocumentFormatType }))
+        ? this.inputConverters.map(ic => documentFormatFromInputConverter(ic, source))
+        : this.outputConverters.map(oc => documentFormatFromOutputConverter(oc, source))
       let pandocFormats = this.pandocFormats
         .filter(f => this.isInputDialog ? f.input === true : f.output === true)
-        .map(f => ({ ...f, ftype: 'format' as DocumentFormatType }))
+        .map(f => documentFormatFromPandocFormatDescription(f))
       if (!this.showAllFormats)
-        pandocFormats = pandocFormats.filter(f => (f.priority || 0) >= 1)
+        pandocFormats = pandocFormats.filter(f => ((f as PandocFormatDescription).priority || 0) >= 1)
       let formats = [...converters, ...pandocFormats]
       if (this.isInputDialog && formats[0].ftype !== 'guess')
         formats.unshift(guessFormat)
@@ -509,7 +515,8 @@ export default {
       const doc = this.selectedDocument
       if (doc) {
         const { format: format_guess } = this.guessedFormat
-        const label = format?.name || 'guess'
+        const source = format?.source || format_guess?.source
+        const label = (format?.name || 'guess') + (source ? `@${source}` : '')
         return format_guess
           ? `${label} (${format_guess.name})`
           : `${label} (unrecognized)`
@@ -569,7 +576,7 @@ export default {
       <q-card-section horizontal class="q-pa-sm q-pb-none q-mb-none">
         <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
         <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name"
-          @blur="adjustDocumentExtension()" />
+          @blur="adjustDocumentExtension()" @keyup.enter="selectDocument()" />
         <q-space />
         <span class="q-pa-md">Go to a recent:</span>
         <q-space style="max-width: .1rem;" />
@@ -658,7 +665,9 @@ export default {
               <q-item-section avatar>
                 <q-icon :name="formatIcon(df)" />
               </q-item-section>
-              <q-item-section>{{ df.name }}</q-item-section>
+              <q-item-section>
+                {{ df.name + (df.source && df.source !== 'pandoc' ? `@${df.source}` : '') }}
+              </q-item-section>
               <q-item-section>{{formatExtensions(df).map(e => `*.${e}`).join(', ')}}</q-item-section>
             </q-item>
           </q-list>
