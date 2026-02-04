@@ -1,12 +1,10 @@
 <script lang="ts">
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
-import { EditorState } from '@tiptap/pm/state';
 import { QTable, QTableColumn, useDialogPluginComponent } from 'quasar';
 import {
   DocumentBookmark,
   DocumentFormat,
-  documentFormatExtension,
   DocumentFormatType,
   Document,
   Folder,
@@ -164,6 +162,9 @@ export default {
           isFolder: false,
           isDocument: true,
         })).filter(f => notHiddenFilter(f.name))
+      // adjust extensions according to the current format
+      if (this.format)
+        this.selectFormat(this.format)
       if (!this.showEveryDoc && this.extensions.length > 0) {
         const exts = this.extensions.map(e => '.' + e)
         documents = documents.filter(d => !!exts.find(e => d.name.endsWith(e)))
@@ -316,16 +317,24 @@ export default {
     },
     click(row: FileContentRow) {
       const isFolderMode = this.mode === 'folder'
-      if ((isFolderMode && row.isFolder) || (!isFolderMode && row.isDocument)) {
+      const isFolderInFolderMode = isFolderMode && row.isFolder
+      const isDocInDocMode = !isFolderMode && row.isDocument
+      if (isDocInDocMode || isFolderInFolderMode) {
         this.selectedDocument = row.name
         const sel = this.rows.find(r => r.name === row.name)
         this.selected = sel ? [sel] : []
         this.filename = row.name
       }
+      if (isDocInDocMode) {
+        this.filename = row.name
+        this.fixFormatWhenDifferentExt(row.name)
+      }
     },
     doubleClick(row: FileContentRow) {
       if (row.isDocument) {
         this.selectedDocument = row.name
+        this.filename = row.name
+        this.fixFormatWhenDifferentExt(row.name)
         this.selectDocument()
       } else if (row.isFolder) {
         this.currentFolder = row.name === '..'
@@ -345,6 +354,28 @@ export default {
         this.protocol = url && url.protocol || this.protocol
         this.currentFolder = url && url.pathname || this.currentFolder
         this.getContents()
+      }
+    },
+    selectFormat(format: DocumentFormat) {
+      this.format = format
+      this.extensions = (format as PandocFormatDescription | InputConverter).extensions || []
+      if (!this.isInputDialog) this.adjustDocumentExtension()
+    },
+    fixFormatWhenDifferentExt(path: string) {
+      if (!this.extensions.find(e => path.endsWith('.' + e))) {
+        const gf = this.guessFormatFromPath(path)
+        // console.log(`format should be ${gf?.format?.name}`)
+        if (gf?.format) {
+          this.$q.notify({
+            message: 'Warning',
+            caption: `Format set to ${gf.format.name} to match "${path}" extension.`,
+            icon: 'mdi-message-alert',
+            position: 'top',
+            color: 'warning',
+            timeout: 3000,
+          });
+          this.format = gf?.format || this.format
+        }
       }
     },
     guessFormatFromPath(path?: string): { format?: DocumentFormat | undefined, why: string } {
@@ -486,11 +517,6 @@ export default {
       }
       return 'the editor tries to guess the format'
     },
-    selectFormat(format: DocumentFormat) {
-      this.format = format
-      this.extensions = (format as PandocFormatDescription | InputConverter).extensions || []
-      if (!this.isInputDialog) this.adjustDocumentExtension()
-    },
     adjustDocumentExtension() {
       this.filename = changeFileExtensionToFormat(this.filename, this.format)
     },
@@ -631,7 +657,7 @@ export default {
       <q-card-actions>
         <q-btn color="primary" label="Reload" @click="getContents()" />
         <q-space />
-        <q-btn ref="okRef" color="primary" label="OK" @click="selectDocument" />
+        <q-btn ref="okRef" color="primary" label="OK" :disabled="!filename" @click="selectDocument" />
         <q-btn ref="cancelRef" color="primary" label="Cancel" @click="closeDialog" />
       </q-card-actions>
     </q-card>
