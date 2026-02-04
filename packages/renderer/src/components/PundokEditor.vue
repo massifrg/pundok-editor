@@ -993,7 +993,6 @@ export default {
             ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
             : docState?.outputFormat || docState?.inputFormat || DEFAULT_DOCUMENT_FORMAT
         ))
-        console.log(`SAVING... isCopy=${isCopy}, documentFormat=${documentFormat.name}`)
         if (this.backend) {
           const { configuration, documentName, project, resourcePath } = docState || {}
           const response = await this.backend.save({
@@ -1013,12 +1012,9 @@ export default {
               message: JSON.stringify(response.error),
               icon: 'mdi-content-save-alert'
             });
-            // this.currentState.setLastSaveResponse(undefined)
-            // this.updateEditorDocState({ lastSaveResponse: null });
             return Promise.reject(errmsg);
           } else {
             const path = response.doc.path
-            console.log(`PATH of saved file: ${path}`)
             if (path) {
               const { folder, document } = splitFolderAndDoc(path)
               const update: Partial<DocStateUpdate> = {}
@@ -1039,12 +1035,8 @@ export default {
               message: `saved as ${response.doc.path || response.doc.id}`,
               icon: 'mdi-content-save-check'
             });
-            // const prevPath = this.docState()?.lastSaveResponse?.doc.path;
-            // if (prevPath !== response.doc.path) {
-            //   this.updateEditorDocState({ lastExportResponse: null });
-            // }
-            // this.updateEditorDocState({ lastSaveResponse: response });
-            this.setWindowTitleFromDoc(response.doc, 'save');
+            if (!isCopy)
+              this.setWindowTitleFromDoc(response.doc);
           }
           if (response.doc && (response.doc.path || response.doc.id)) {
             return response;
@@ -1094,7 +1086,7 @@ export default {
               this.setOperationInProgress(false)
             }, 3000)
             // console.log(response.doc)
-            this.setWindowTitleFromDoc(response.doc, 'export');
+            this.setWindowTitleFromDoc(response.doc);
             if (response.error) {
               const errmsg = `ERROR, ${response.message}: ${response.error}`;
               console.log(errmsg);
@@ -1259,22 +1251,8 @@ export default {
     },
     setWindowTitleFromDoc(
       doc: CxDocument,
-      kind?: 'new' | 'save' | 'import' | 'export',
     ) {
-      let title = doc.path || doc.id || 'document';
-      let isImported = kind === 'import';
-      let isExported = kind === 'export';
-      if (doc.path && !isImported) isImported = !doc.path.endsWith('.json');
-      if (kind === 'new') {
-        title = 'new document';
-      } else if (isImported) {
-        title += ' (imported)';
-      } else if (isExported) {
-        // const suffix = doc.exportedAsPath
-        //   ? ` (exported as ${doc.exportedAsPath})`
-        //   : ` (exported)`;
-        // title += suffix;
-      }
+      const title = doc.path || doc.id || 'new document'
       this.setWindowTitle(title);
     },
     async setProject(project: PundokEditorProject) {
