@@ -15,8 +15,8 @@ export function showDocStateDialog(editor: Editor) {
       'copyFormat',
       'imagesFolder',
       'imagesFormat',
-      'nativeUnsavedChanges',
       'unsavedChanges',
+      'unsavedChangesAsCopy',
       'resourcePath',
     ]
     let lines: string[] = fields.map(f => `<th>${f}</th><td>${JSON.stringify(docState[f])}</td>`)

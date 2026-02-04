@@ -4,7 +4,7 @@
       <q-toolbar class="text-white q-pa-none">
         <q-toolbar-title>
           <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
-            :saved-changes="savedChanges" :exported-changes="exportedChanges" @new-document="newDocument"
+            :saved-changes="savedChanges" :saved-changes-as-copy="savedChangesAsCopy" @new-document="newDocument"
             @open-document="openDocument()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
@@ -99,7 +99,7 @@ import {
   ProjectComponent,
   DocumentContext,
   IPC_MAIN_EDITOR_KEY,
-  COLOR_JUST_EXPORTED,
+  COLOR_SAVED_ONLY_AS_COPY,
   PandocFilterTransform,
   WhatToDoWithResult,
   NODE_NAME_INDEX_TERM,
@@ -196,7 +196,7 @@ import {
   showSaveCopyDialog,
   showSaveDocumentDialog
 } from './helpers';
-import { format, parse } from 'path-browserify';
+import { parse as parsePath } from 'path-browserify';
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';
@@ -205,11 +205,11 @@ const DEFAULT_INPUT_TEXT_DIALOG_LABEL = 'text';
 const DEFAULT_INPUT_TEXT_DIALOG_START_VALUE = '';
 const DEFAULT_JSON_SPACE = 2; // third argument of JSON.stringify for saved documents.
 
-const COMPLAIN_IF_JUST_EXPORTED_TOGGLE: PendingOperationExtraValue = {
+const COMPLAIN_IF_SAVED_ONLY_AS_COPY_TOGGLE: PendingOperationExtraValue = {
   name: 'complainIfJustExported',
   label:
     'ask when a document has been saved/exported in format different from JSON',
-  color: COLOR_JUST_EXPORTED,
+  color: COLOR_SAVED_ONLY_AS_COPY,
   values: [false, true],
   default: true,
 };
@@ -271,7 +271,7 @@ export default {
       // the document in the editor, in its current state, has been saved
       savedChanges: true,
       // the document in the editor, in its current state, has been exported
-      exportedChanges: true,
+      savedChangesAsCopy: true,
       // complain if the document, in its current state, has just been exported but not saved in JSON
       complainIfJustExported: true,
       pending: undefined as PendingOperation | undefined,
@@ -314,7 +314,7 @@ export default {
     },
     askToSaveChanges() {
       if (this.savedChanges) return false;
-      if (this.exportedChanges && !this.complainIfJustExported) return false;
+      if (this.savedChangesAsCopy && !this.complainIfJustExported) return false;
       return true;
     },
     currentNodesWithPos(): NodeWithPos[] {
@@ -344,8 +344,8 @@ export default {
               const docState = (props as UpdateDocStateActionProps).docState
               console.log('UPDATING DOC STATE...')
               if (docState) {
-                this.savedChanges = !docState.nativeUnsavedChanges;
-                this.exportedChanges = !docState.unsavedChanges;
+                this.savedChanges = !docState.unsavedChanges;
+                this.savedChangesAsCopy = !docState.unsavedChangesAsCopy;
               }
             }
             break;
@@ -672,8 +672,8 @@ export default {
           await this.setConfiguration(getHardcodedEditorConfig());
         if (process.env.MODE !== 'production') applyDevTools(editor.view);
         this.updateEditorDocState({
-          nativeUnsavedChanges: false,
           unsavedChanges: false,
+          unsavedChangesAsCopy: false,
           inputFolder: oldDocState?.inputFolder,
           outputFolder: oldDocState?.outputFolder,
           imagesFolder: oldDocState?.imagesFolder,
@@ -734,10 +734,10 @@ export default {
         configurationName,
         content,
       };
-      if (this.exportedChanges)
+      if (this.savedChangesAsCopy)
         pending.extraValues = [
           {
-            ...COMPLAIN_IF_JUST_EXPORTED_TOGGLE,
+            ...COMPLAIN_IF_SAVED_ONLY_AS_COPY_TOGGLE,
             default: !!this.complainIfJustExported,
           },
         ];
@@ -758,10 +758,10 @@ export default {
         },
         doc: options.doc,
       };
-      if (this.exportedChanges)
+      if (this.savedChangesAsCopy)
         pending.extraValues = [
           {
-            ...COMPLAIN_IF_JUST_EXPORTED_TOGGLE,
+            ...COMPLAIN_IF_SAVED_ONLY_AS_COPY_TOGGLE,
             default: !!this.complainIfJustExported,
           },
         ];
@@ -869,13 +869,13 @@ export default {
       }
     },
     setDocumentAsNativelySaved() {
+      this.savedChanges = true
+      // this.savedChangesAsCopy = true
       this.updateEditorDocState({
-        nativeUnsavedChanges: false,
-        unsavedChanges: false,
+        unsavedChanges: !this.savedChanges,
+        // unsavedChangesAsCopy: !this.savedChangesAsCopy,
         savedDoc: this.editor?.view.state.doc
       });
-      this.savedChanges = true
-      this.exportedChanges = true
     },
     async loadDocument(doc: CxDocument, ignoreUnsaved?: boolean, atLine?: number) {
       if (!ignoreUnsaved && this.askToSaveChanges) {
@@ -895,7 +895,7 @@ export default {
       console.log(`created new editor for doc:`);
       console.log(doc);
 
-      const path = parse(doc.path!)
+      const path = parsePath(doc.path!)
       this.updateEditorDocState({
         documentName: path.base,
         resourcePath: doc.resourcePath,
@@ -1013,14 +1013,16 @@ export default {
               if (isCopy) {
                 update.copyFolder = folder
                 update.copyFormat = documentFormat
+                update.unsavedChangesAsCopy = false
               } else {
                 update.documentName = document
                 update.outputFolder = folder
                 update.outputFormat = documentFormat
+                update.unsavedChanges = false
               }
               this.editor?.commands.updateDocState(update)
             }
-            this.setDocumentAsNativelySaved();
+            // this.setDocumentAsNativelySaved();
             this.showResultMessage({
               success: true,
               caption: 'SAVE SUCCESS',
@@ -1086,10 +1088,10 @@ export default {
             } else {
               // this.currentState.setLastExportResponse(response)
               this.updateEditorDocState({
-                unsavedChanges: false,
+                unsavedChangesAsCopy: false,
               });
               console.log(
-                `saved changes: ${this.savedChanges}, exported changes: ${this.exportedChanges}`,
+                `saved changes: ${this.savedChanges}, exported changes: ${this.savedChangesAsCopy}`,
               );
             }
             // if (response.doc?.exportedAsPath) {
@@ -1374,10 +1376,10 @@ export default {
           label: 'close anyway',
         },
       };
-      if (this.exportedChanges)
+      if (this.savedChangesAsCopy)
         pending.extraValues = [
           {
-            ...COMPLAIN_IF_JUST_EXPORTED_TOGGLE,
+            ...COMPLAIN_IF_SAVED_ONLY_AS_COPY_TOGGLE,
             default: !!this.complainIfJustExported,
           },
         ];

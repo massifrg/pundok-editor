@@ -43,10 +43,10 @@ export interface DocState {
   readonly configuration?: PundokEditorConfig;
   /** Current project of the document being edited. */
   readonly project?: PundokEditorProject;
-  /** `true` when the doc has changed and the changes are not saved in JSON yet. FIXME: native format too? */
-  readonly nativeUnsavedChanges?: boolean;
-  /** `true` when the doc has changed and the changes are not saved in any format. */
+  /** `true` when the doc has changed and the changes are not saved in the original document or in another format with "save as" */
   readonly unsavedChanges?: boolean;
+  /** `true` when the doc has changed and the changes have not been saved as a copy in another format. */
+  readonly unsavedChangesAsCopy?: boolean;
   /** the document that has been saved */
   readonly savedDoc?: PmNode;
 }
@@ -67,8 +67,8 @@ export interface DocStateUpdate {
   includeFormat?: DocumentFormat | null;
   configuration: PundokEditorConfig | null;
   project: PundokEditorProject | null;
-  nativeUnsavedChanges: boolean;
   unsavedChanges: boolean;
+  unsavedChangesAsCopy: boolean;
   savedDoc: PmNode;
 }
 

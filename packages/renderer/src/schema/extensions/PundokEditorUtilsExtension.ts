@@ -99,15 +99,15 @@ export const PundokEditorUtilsExtension =
               if (updates)
                 updatedDocState = updateDocState(currentDocState, updates);
               const alreadyFullyUnsaved =
-                updatedDocState.nativeUnsavedChanges &&
-                updatedDocState.unsavedChanges;
+                updatedDocState.unsavedChanges &&
+                updatedDocState.unsavedChangesAsCopy;
               if (tr.docChanged) {
                 // check if the document is equal to the saved one
                 const sameDoc = areSameDoc(updatedDocState.savedDoc, newState.doc)
                 if (!alreadyFullyUnsaved || sameDoc) {
                   updatedDocState = updateDocState(updatedDocState, {
-                    nativeUnsavedChanges: !sameDoc,
                     unsavedChanges: !sameDoc,
+                    unsavedChangesAsCopy: !sameDoc,
                   });
                 }
               }

@@ -147,7 +147,7 @@ const ProjectStructureDialog: Component = {
     selectedColor(): string | undefined {
       const is_loaded = isLoaded(this.findTreeNode(labelNodeMatcher(this.selected)), this.loaded)
       if (is_loaded)
-        return getDocState(this.subEditor)?.unsavedChanges ? 'negative' : 'primary'
+        return getDocState(this.subEditor)?.unsavedChangesAsCopy ? 'negative' : 'primary'
     }
   },
   watch: {
@@ -249,7 +249,7 @@ const ProjectStructureDialog: Component = {
     },
     closeDialog(force?: boolean) {
       const subEditor = this.subEditor
-      const unsavedChanges = subEditor && getDocState(subEditor.state)?.unsavedChanges
+      const unsavedChanges = subEditor && getDocState(subEditor.state)?.unsavedChangesAsCopy
       if (!force && unsavedChanges) {
         setActionCloseEditor(this.subEditor.state)
       } else {

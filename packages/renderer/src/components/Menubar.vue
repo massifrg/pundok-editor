@@ -11,7 +11,7 @@
         <q-badge v-if="!!savedExportedColor" :color="savedExportedColor" floating rounded />
       </ToolbarButton> -->
 
-      <SaveButton :editor="editor" :text-color="savedExportedColor" />
+      <SaveButton :editor="editor" :text-color="savedColor" />
 
       <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
       <!--
@@ -342,7 +342,7 @@ import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
 // import TextAlignMenubarItem from "./TextAlignMenubarItem.vue";
 // import VerticalAlignMenubarItem from "./VerticalAlignMenubarItem.vue";
 import {
-  COLOR_JUST_EXPORTED,
+  COLOR_SAVED_ONLY_AS_COPY,
   COLOR_UNSAVED,
   ConfigurationSummary,
   CustomStyleInstance,
@@ -405,7 +405,7 @@ export default {
     'currentNodesWithPos',
     'guiProps',
     'savedChanges',
-    'exportedChanges',
+    'savedChangesAsCopy',
   ],
   emits: [
     'openDocument',
@@ -440,11 +440,11 @@ export default {
     project() {
       return getEditorProject(this.editor);
     },
-    savedExportedColor(): string | undefined {
-      const exported = this.exportedChanges;
+    savedColor(): string | undefined {
+      const savedAsCopy = this.savedChangesAsCopy;
       const saved = this.savedChanges;
-      if (exported && !saved) return COLOR_JUST_EXPORTED;
-      else if (!(exported || saved)) return COLOR_UNSAVED;
+      if (savedAsCopy && !saved) return COLOR_SAVED_ONLY_AS_COPY;
+      else if (!(savedAsCopy || saved)) return COLOR_UNSAVED;
       else return undefined;
     },
     currentParagraph(): NodeWithPos | undefined {
