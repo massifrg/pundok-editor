@@ -39,7 +39,13 @@ export type DocumentFormatType =
  * The document format can be a plain Pandoc format or a (input or output) converter.
  */
 export type DocumentFormat = (PandocFormatDescription | InputConverter | OutputConverter | ImageFormatDescription)
-  & { ftype: DocumentFormatType, extensions?: string[] }
+  & {
+    ftype: DocumentFormatType,
+    /** The extensions of the documents (files) of this format. */
+    extensions?: string[],
+    /** The name of the Configuration or Project it comes from. */
+    source?: string,
+  }
 
 export const guessFormat: DocumentFormat = {
   ftype: 'guess',
@@ -288,6 +294,19 @@ export function documentFormatIcon(format?: DocumentFormat, defaultIcon?: string
   else
     icon = format?.icon
   return icon || defaultIcon
+}
+
+export function documentFormatFromPandocFormatDescription(pfd: PandocFormatDescription): DocumentFormat {
+  return { ...pfd, ftype: 'format', source: 'pandoc' }
+}
+
+export function documentFormatFromInputConverter(ic: InputConverter, source?: string): DocumentFormat {
+  return { ...ic, ftype: 'input-converter', source }
+}
+
+export function documentFormatFromOutputConverter(oc: OutputConverter, source?: string): DocumentFormat {
+  const extensions = oc.extension ? [oc.extension] : undefined
+  return { ...oc, extensions, ftype: 'output-converter', source }
 }
 
 export const DEFAULT_DOCUMENT_FORMAT: DocumentFormat = pandocFormatToDocumentFormat(DEFAULT_FORMAT)!
