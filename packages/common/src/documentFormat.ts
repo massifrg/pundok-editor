@@ -52,6 +52,44 @@ export const guessFormat: DocumentFormat = {
   priority: 1,
 }
 
+/**
+ * If a format is both input and output, return it, otherwise return undefined.
+ * @param format 
+ * @returns 
+ */
+export function asInputFormat(format?: DocumentFormat): DocumentFormat | undefined {
+  switch (format?.ftype) {
+    case 'input-converter':
+    case 'image':
+      return format
+    case 'format':
+    case 'guess':
+      return (format as PandocFormatDescription).input === true && format || undefined
+    case 'output-converter':
+    default:
+      return undefined
+  }
+}
+
+/**
+ * If a format is both input and output, return it, otherwise return undefined.
+ * @param format 
+ * @returns 
+ */
+export function asOutputFormat(format?: DocumentFormat): DocumentFormat | undefined {
+  switch (format?.ftype) {
+    case 'output-converter':
+    case 'image':
+      return format
+    case 'format':
+    case 'guess':
+      return (format as PandocFormatDescription).output === true && format || undefined
+    case 'input-converter':
+    default:
+      return undefined
+  }
+}
+
 export function documentFormatExtension(format: DocumentFormat): string | undefined {
   const extensions: string[] = (format as any).extensions || []
   switch (format.ftype) {

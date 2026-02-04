@@ -175,6 +175,19 @@ export default {
       const mode = this.mode as DocumentDialogMode
       return mode !== 'save' && mode !== 'save-copy'
     },
+    /**
+     * The path returned by this dialog on Ok
+     */
+    targetPath(): string | undefined {
+      if (this.mode === 'folder')
+        return this.currentFolder && this.selectedDocument
+          ? `${this.currentFolder}/${this.selectedDocument}`
+          : undefined
+      else
+        return this.currentFolder && this.filename
+          ? `${this.currentFolder}/${this.filename}`
+          : undefined
+    },
     dialogPrompt() {
       let prompt = this.prompt
       if (!prompt) {
@@ -443,7 +456,7 @@ export default {
     },
     selectDocument() {
       const editorKey = editorKeyFromState(this.editor.state)
-      const path = `${this.currentFolder}/${this.selectedDocument}`
+      const path = this.targetPath
       if (editorKey && path) {
         if (this.mode == 'folder') {
           console.log(`folder selected, path=${path}, editorKey=${editorKey}`)
@@ -657,7 +670,7 @@ export default {
       <q-card-actions>
         <q-btn color="primary" label="Reload" @click="getContents()" />
         <q-space />
-        <q-btn ref="okRef" color="primary" label="OK" :disabled="!filename" @click="selectDocument" />
+        <q-btn ref="okRef" color="primary" label="OK" :disabled="!targetPath" @click="selectDocument" />
         <q-btn ref="cancelRef" color="primary" label="Cancel" @click="closeDialog" />
       </q-card-actions>
     </q-card>

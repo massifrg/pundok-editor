@@ -131,6 +131,7 @@ import {
   documentNameToId,
   outputConverterToDocumentFormat,
   changeFileExtensionToFormat,
+  asOutputFormat,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -938,15 +939,17 @@ export default {
       }
       if (!path || isSaveAs || (isCopy && !dontAskCopyPath)) {
         if (isCopy) {
-          const { documentName, copyFormat } = docState || {}
+          const { documentName, copyFolder, copyFormat, inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
           const startFilename = documentName && copyFormat
             ? changeFileExtensionToFormat(documentName, copyFormat)
             : undefined
           showSaveCopyDialog({
             editor: this.editor,
             prompt: 'Save a copy to:',
-            startFolder: docState?.copyFolder,
-            startFormat: docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT,
+            startFolder: copyFolder || outputFolder || inputFolder,
+            startFormat: copyFormat || outputFormat
+              || asOutputFormat(inputFormat)
+              || DEFAULT_COPY_DOCUMENT_FORMAT,
             startFilename,
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
@@ -959,11 +962,14 @@ export default {
             }
           } as DocumentDialogProps)
         } else {
+          const { inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
           showSaveDocumentDialog({
             editor: this.editor,
             prompt: isSaveAs ? 'Save document as:' : 'Save document:',
-            startFolder: docState?.outputFolder,
-            startFormat: docState?.outputFormat || DEFAULT_DOCUMENT_FORMAT,
+            startFolder: outputFolder || inputFolder,
+            startFormat: outputFormat
+              || asOutputFormat(inputFormat)
+              || DEFAULT_DOCUMENT_FORMAT,
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {
