@@ -43,16 +43,10 @@ export interface DocState {
   readonly configuration?: PundokEditorConfig;
   /** Current project of the document being edited. */
   readonly project?: PundokEditorProject;
-  /** The result of the last save operation. */
-  // readonly lastSaveResponse?: SaveResponse;
-  /** The result of the last export operation. */
-  // readonly lastExportResponse?: SaveResponse;
   /** `true` when the doc has changed and the changes are not saved in JSON yet. FIXME: native format too? */
   readonly nativeUnsavedChanges?: boolean;
   /** `true` when the doc has changed and the changes are not saved in any format. */
   readonly unsavedChanges?: boolean;
-  /** callback to get notified when the doc state changes. */
-  // readonly callback?: (updated: DocState) => void;
   /** the document that has been saved */
   readonly savedDoc?: PmNode;
 }
@@ -73,12 +67,9 @@ export interface DocStateUpdate {
   includeFormat?: DocumentFormat | null;
   configuration: PundokEditorConfig | null;
   project: PundokEditorProject | null;
-  // lastSaveResponse: SaveResponse | null;
-  // lastExportResponse: SaveResponse | null;
   nativeUnsavedChanges: boolean;
   unsavedChanges: boolean;
   savedDoc: PmNode;
-  // callback: ((updated: DocState) => void) | null;
 }
 
 export const META_UPDATE_DOC_STATE = 'update-doc-state';

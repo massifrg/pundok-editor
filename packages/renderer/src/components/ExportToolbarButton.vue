@@ -34,9 +34,6 @@ export default {
     documentName() {
       return this.docState?.documentName
     },
-    lastExportResponse() {
-      return this.docState?.lastExportResponse
-    },
     configurationName() {
       return this.configuration?.name
     },
@@ -62,20 +59,6 @@ export default {
       if (editor && oc) {
         const outputConverter = { ...oc }
         let storedDoc: Partial<CxDocument> | undefined = undefined
-        if (this.lastExportResponse) {
-          const { id, configurationName, documentFormat, path /*, exportedAsPath */ } = this.lastExportResponse.doc
-          if (this.documentName == id && this.configurationName == configurationName && oc.name == documentFormat?.name) {
-            // console.log(`exportedAsPath=${exportedAsPath}`)
-            storedDoc = {
-              id,
-              path,
-              documentFormat,
-              configurationName,
-              // exportedAsPath
-            }
-            outputConverter.feedback = 'success'
-          }
-        }
         setActionExportDocument(editor.state, outputConverter, storedDoc)
       }
     },

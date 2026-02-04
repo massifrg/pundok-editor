@@ -696,12 +696,6 @@ export default {
     setContent(content: string, isNew?: boolean) {
       // console.log(`SET CONTENT: ${content}`)
       const editor = this.editor;
-      if (isNew) {
-        // this.updateEditorDocState({
-        //   lastSaveResponse: null,
-        //   lastExportResponse: null,
-        // });
-      }
       const configuration = this.docState()?.configuration;
       const createOptions: CreateDocumentOptions = {
         emitUpdate: true,
@@ -905,8 +899,6 @@ export default {
       this.updateEditorDocState({
         documentName: path.base,
         resourcePath: doc.resourcePath,
-        // lastSaveResponse: saveResponse,
-        // lastExportResponse: null,
         inputFolder: path.dir,
         inputFormat: doc.documentFormat,
       });
@@ -1074,7 +1066,7 @@ export default {
               {
                 editorKey: this.editorKey(),
                 id: sdoc.id || docState?.documentName,
-                path: sdoc.path /* || docState?.lastSaveResponse?.doc.path */,
+                path: sdoc.path,
                 content: jsonDoc,
                 project,
                 documentFormat,
@@ -1095,7 +1087,6 @@ export default {
               // this.currentState.setLastExportResponse(response)
               this.updateEditorDocState({
                 unsavedChanges: false,
-                // lastExportResponse: response,
               });
               console.log(
                 `saved changes: ${this.savedChanges}, exported changes: ${this.exportedChanges}`,

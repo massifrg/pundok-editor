@@ -211,7 +211,6 @@ export default {
               kind: 'index',
               project: docState?.project,
               configurationName: docState?.configuration?.name,
-              // path: this.lastSaveResponse?.doc.path,
             }
           }
           this.pendingSearch = true
@@ -260,7 +259,6 @@ export default {
           kind: 'index',
           project: docState?.project,
           configurationName: docState?.configuration?.name,
-          // path: this.lastSaveResponse?.doc.path,
         }
       }
       this.pendingSearch = true
