@@ -356,10 +356,10 @@ export default {
         this.getContents()
       }
     },
-    selectFormat(format: DocumentFormat) {
+    selectFormat(format: DocumentFormat, adjustFileExtension?: boolean) {
       this.format = format
       this.extensions = (format as PandocFormatDescription | InputConverter).extensions || []
-      if (!this.isInputDialog) this.adjustDocumentExtension()
+      if (!this.isInputDialog) this.adjustDocumentExtension(adjustFileExtension)
     },
     fixFormatWhenDifferentExt(path: string) {
       if (!this.extensions.find(e => path.endsWith('.' + e))) {
@@ -517,8 +517,8 @@ export default {
       }
       return 'the editor tries to guess the format'
     },
-    adjustDocumentExtension() {
-      this.filename = changeFileExtensionToFormat(this.filename, this.format)
+    adjustDocumentExtension(addIfMissing?: boolean) {
+      this.filename = changeFileExtensionToFormat(this.filename, this.format, addIfMissing)
     },
     async gotoPath(path: string, configurationName?: string) {
       const { folder, document } = splitFolderAndDoc(path)
@@ -641,7 +641,7 @@ export default {
               'bg-brown-2': df.ftype === 'guess',
               'bg-teal-2': df.ftype === 'input-converter',
               'bg-amber-2': df.ftype === 'output-converter'
-            }" @click="selectFormat(df)">
+            }" @click="selectFormat(df, true)">
               <q-item-section avatar>
                 <q-icon :name="formatIcon(df)" />
               </q-item-section>

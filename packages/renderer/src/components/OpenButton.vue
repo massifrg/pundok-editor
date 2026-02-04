@@ -77,7 +77,10 @@ export default {
     <q-list dense>
       <q-item :disable="projectBookmarks.length === 0" key="recent-projects" title="open recent project" clickable>
         <q-item-section>
-          <q-item-label>recent projects...</q-item-label>
+          <q-item-label>recent projects</q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="mdi-menu-right" />
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>
@@ -92,7 +95,10 @@ export default {
       </q-item>
       <q-item :disable="docBookmarks.length === 0" key="recent-documents" title="open recent document" clickable>
         <q-item-section>
-          <q-item-label>recent document...</q-item-label>
+          <q-item-label>recent documents</q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="mdi-menu-right" />
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>

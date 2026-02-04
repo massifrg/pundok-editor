@@ -65,11 +65,23 @@ export function documentFormatExtension(format: DocumentFormat): string | undefi
   }
 }
 
-export function changeFileExtensionToFormat(filename: string, format: DocumentFormat): string {
+export function changeFileExtensionToFormat(
+  filename: string,
+  format: DocumentFormat,
+  addIfMissing?: boolean
+): string {
   const ext = format && documentFormatExtension(format)
   if (ext) {
-    let renamed = filename.replace(/^(.*?[.])(([0-9a-z]{1,5}[.])?[0-9a-z]+)$/i, '$1' + ext)
-    if (filename.length > 0 && renamed == filename && !renamed.endsWith('.' + ext))
+    let hasExt = true
+    let renamed = filename.replace(/^(.*?)(([.][0-9a-z]{1,5})*[.][0-9a-z]*)$/i,
+      (_, base, oldext) => {
+        if (oldext?.length > 0)
+          return `${base}.${ext}`
+        else
+          hasExt = false
+        return `${base}${oldext}`
+      })
+    if (filename.length > 0 && renamed == filename && !renamed.endsWith('.' + ext) && (hasExt && addIfMissing))
       renamed = filename + '.' + ext
     return renamed
   }
