@@ -5,7 +5,6 @@ import { QTable, QTableColumn, useDialogPluginComponent } from 'quasar';
 import {
   DocumentBookmark,
   DocumentFormat,
-  DocumentFormatType,
   Document,
   Folder,
   getPandocFormatDescriptions,
@@ -259,6 +258,15 @@ export default {
     },
     guessedFormat() {
       return this.guessFormatFromPath(this.selectedDocument)
+    },
+    formatDropdownLabel() {
+      return this.formatLabel(this.format)
+    },
+    formatDropdownIcon() {
+      return this.formatIcon(this.format)
+    },
+    formatDropdownTitle() {
+      return this.formatTitle(this.format)
     }
   },
   mounted() {
@@ -473,8 +481,8 @@ export default {
             project: this.tempProject,
           } as DocumentContext)
         } else {
-          console.log(`document selected, path=${path}, editorKey=${editorKey}`)
-          const documentFormat = this.documentFormatFromPath(path)
+          const documentFormat = toRaw(this.format)
+          console.log(`document selected, path=${path}, editorKey=${editorKey}, format=${documentFormat.name}`)
           this.$emit('ok', {
             editorKey,
             id: toRaw(this.selectedDocument),
@@ -510,8 +518,10 @@ export default {
       return icon || documentFormatIcon(format) || guessFormat.icon || 'mdi-code-tags'
     },
     formatLabel(format?: DocumentFormat) {
-      if (format?.ftype !== 'guess')
-        return format?.name
+      if (format && format.ftype !== 'guess') {
+        const { name, source } = format
+        return name + (source && source !== 'pandoc' ? ` [${source}]` : '')
+      }
       const doc = this.selectedDocument
       if (doc) {
         const { format: format_guess } = this.guessedFormat
@@ -648,7 +658,7 @@ export default {
       </q-card-section>
       <q-card-section horizontal>
         <div class="q-pa-md">Format/Custom {{ isInputDialog ? 'reader' : 'writer' }}:</div>
-        <q-btn-dropdown :label="formatLabel(format)" :icon="formatIcon(format)" :title="formatTitle(format)" auto-close
+        <q-btn-dropdown :label="formatDropdownLabel" :icon="formatDropdownIcon" :title="formatDropdownTitle" auto-close
           no-caps class="q-my-sm">
           <q-list>
             <!-- <q-item :title="guess.description" clickable dense class="bg-brown-2" @click="selectFormat(guess)">
@@ -665,9 +675,7 @@ export default {
               <q-item-section avatar>
                 <q-icon :name="formatIcon(df)" />
               </q-item-section>
-              <q-item-section>
-                {{ df.name + (df.source && df.source !== 'pandoc' ? `@${df.source}` : '') }}
-              </q-item-section>
+              <q-item-section>{{ formatLabel(df) }}</q-item-section>
               <q-item-section>{{formatExtensions(df).map(e => `*.${e}`).join(', ')}}</q-item-section>
             </q-item>
           </q-list>

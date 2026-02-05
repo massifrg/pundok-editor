@@ -934,7 +934,11 @@ export default {
         const folder = isCopy ? copyFolder : outputFolder || inputFolder
         path = folder && documentName && `${folder}/${documentName}` || undefined
       }
-      if (!path || isSaveAs || (isCopy && !dontAskCopyPath)) {
+      const isSave = !isSaveAs && !isCopy
+      let documentFormat = props?.documentFormat
+        || docState?.outputFormat
+        || asOutputFormat(docState?.inputFormat)
+      if (!path || isSaveAs || (isCopy && !dontAskCopyPath) || (isSave && !documentFormat)) {
         if (isCopy) {
           const { documentName, copyFolder, copyFormat, inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
           const startFilename = documentName && copyFormat
@@ -959,14 +963,19 @@ export default {
             }
           } as DocumentDialogProps)
         } else {
-          const { inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
+          const { documentName, inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
+          const startFormat = isSaveAs
+            ? outputFormat || inputFormat
+            : documentFormat || DEFAULT_DOCUMENT_FORMAT
+          const startFilename = documentName && startFormat
+            ? changeFileExtensionToFormat(documentName, startFormat)
+            : undefined
           showSaveDocumentDialog({
             editor: this.editor,
             prompt: isSaveAs ? 'Save document as:' : 'Save document:',
-            startFolder: outputFolder || inputFolder,
-            startFormat: outputFormat
-              || asOutputFormat(inputFormat)
-              || DEFAULT_DOCUMENT_FORMAT,
+            startFolder: isSaveAs ? outputFolder || inputFolder : inputFolder,
+            startFormat,
+            startFilename,
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {
@@ -1017,6 +1026,11 @@ export default {
                 update.copyFolder = folder
                 update.copyFormat = documentFormat
                 update.unsavedChangesAsCopy = false
+              } else if (isSaveAs) {
+                update.documentName = document
+                update.outputFolder = folder
+                update.outputFormat = documentFormat
+                update.unsavedChanges = false
               } else {
                 update.documentName = document
                 update.outputFolder = folder
