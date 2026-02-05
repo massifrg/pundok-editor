@@ -2,7 +2,6 @@ export * from './appliesTo';
 export * from './automations';
 export * from './customClasses';
 export * from './customAttributes';
-export * from './customFormat';
 export * from './customMetadata';
 export * from './customSpan';
 export * from './customStyles';

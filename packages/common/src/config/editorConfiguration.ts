@@ -8,7 +8,6 @@ import {
 } from './customStyles';
 import { PundokEditorConfigInit } from './editorConfigInit';
 import { DEFAULT_COPY_FORMAT, DEFAULT_FORMAT, DEFAULT_MAIN_FORMATS } from '../pandocFormat';
-import { CustomFormat } from './customFormat';
 import { CustomMetadata } from './customMetadata';
 import { NoteStyle } from './notes';
 import { Index, indexRefDecorationCss } from './indices';
@@ -26,14 +25,14 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
   description: string;
   /** Options to configure [TipTap](https://tiptap.dev) components of the editor. */
   tiptap: { options?: Record<string, any> | undefined };
-  /** the name of a pandoc format or a CustomFormat */
-  defaultFormat?: string;
+  /** the name of a pandoc format or an InputConverter used as default to open documents. */
+  inputFormat?: string;
+  /** the name of a pandoc format or an OutputConverter used as default to save documents. */
+  outputFormat?: string;
   /** the name of the format (pandoc or custom) used with "Save a copy" */
   copyFormat?: string;
   /** the names of the formats that are more visible in the GUI with this configuration */
   mainFormats?: string[];
-  /** definitions of custom formats */
-  customFormats?: CustomFormat[];
   /** A JSON-stringified document used as a template for new documents. */
   documentTemplate?: string | undefined;
   /** Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote)
@@ -80,9 +79,9 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
     this.description = init.description || '';
     // this.inherits = init.inherits;
     this.tiptap = init.tiptap || { options: {} };
-    this.defaultFormat = init.defaultFormat || DEFAULT_FORMAT;
+    this.inputFormat = init.inputFormat || DEFAULT_FORMAT;
+    this.outputFormat = init.outputFormat || DEFAULT_FORMAT;
     this.copyFormat = init.copyFormat || DEFAULT_COPY_FORMAT;
-    this.customFormats = init.customFormats || [];
     this.mainFormats = init.mainFormats || DEFAULT_MAIN_FORMATS;
     this.documentTemplate = init.documentTemplate;
     this.autoDelimiters = init.autoDelimiters;
@@ -314,13 +313,10 @@ export function enrichConfiguration(
           base.tiptap?.options || {},
         ),
       },
-      defaultFormat: enriching.defaultFormat || base.defaultFormat,
+      inputFormat: enriching.inputFormat || base.inputFormat,
+      outputFormat: enriching.outputFormat || base.outputFormat,
       copyFormat: enriching.copyFormat || base.copyFormat,
       mainFormats: enriching.mainFormats || base.mainFormats,
-      customFormats: mergeNamedObjects(
-        enriching.customFormats,
-        base.customFormats,
-      ) as CustomFormat[],
       documentTemplate: enriching.documentTemplate || base.documentTemplate,
       autoDelimiters: { ...base.autoDelimiters, ...enriching.autoDelimiters },
       customStyles: mergeNamedObjects(

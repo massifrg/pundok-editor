@@ -131,6 +131,9 @@ import {
   outputConverterToDocumentFormat,
   changeFileExtensionToFormat,
   asOutputFormat,
+  getDefaultInputFormat,
+  getDefaultOutputFormat,
+  getDefaultCopyFormat,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import AttributesEditor from './AttributesEditor.vue'
@@ -792,7 +795,9 @@ export default {
         this.editor?.commands.updateDocState({
           configuration: prevDocState?.configuration,
           inputFolder: prevDocState?.inputFolder,
-          inputFormat: prevDocState?.inputFormat,
+          inputFormat: getDefaultInputFormat(this.configuration) || prevDocState?.inputFormat,
+          outputFormat: getDefaultOutputFormat(this.configuration),
+          copyFormat: getDefaultCopyFormat(this.configuration),
           imagesFolder: prevDocState?.imagesFolder,
           imagesFormat: prevDocState?.imagesFormat,
           // TODO: check which property should be inherited
@@ -854,9 +859,14 @@ export default {
           });
           if (doc) {
             this.loadDocument(doc, false, atLine);
-            const { documentFormat, path } = doc
+            const { configurationName, documentFormat, path, project } = doc
+            const configuration = project?.computedConfig
+              || (configurationName && await this.setConfiguration(configurationName))
+              || undefined
             const update: Partial<DocStateUpdate> = {
-              inputFormat: documentFormat
+              inputFormat: documentFormat,
+              outputFormat: getDefaultOutputFormat(configuration),
+              copyFormat: getDefaultCopyFormat(configuration),
             }
             if (path) {
               const { folder, document } = splitFolderAndDoc(path)
@@ -940,15 +950,16 @@ export default {
         || asOutputFormat(docState?.inputFormat)
       if (!path || isSaveAs || (isCopy && !dontAskCopyPath) || (isSave && !documentFormat)) {
         if (isCopy) {
-          const { documentName, copyFolder, copyFormat, inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
+          const { configuration, documentName, copyFolder, copyFormat, inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
           const startFilename = documentName && copyFormat
             ? changeFileExtensionToFormat(documentName, copyFormat)
             : undefined
+          const defaultCopyFormat = getDefaultCopyFormat(configuration)
           showSaveCopyDialog({
             editor: this.editor,
             prompt: 'Save a copy to:',
             startFolder: copyFolder || outputFolder || inputFolder,
-            startFormat: copyFormat || outputFormat
+            startFormat: copyFormat || defaultCopyFormat || outputFormat
               || asOutputFormat(inputFormat)
               || DEFAULT_COPY_DOCUMENT_FORMAT,
             startFilename,
@@ -963,10 +974,11 @@ export default {
             }
           } as DocumentDialogProps)
         } else {
-          const { documentName, inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
+          const { documentName, inputFolder, inputFormat, outputFolder, outputFormat, configuration } = docState || {}
+          const defaultOutputFormat = getDefaultOutputFormat(configuration)
           const startFormat = isSaveAs
-            ? outputFormat || inputFormat
-            : documentFormat || DEFAULT_DOCUMENT_FORMAT
+            ? outputFormat || defaultOutputFormat
+            : documentFormat || defaultOutputFormat || DEFAULT_DOCUMENT_FORMAT
           const startFilename = documentName && startFormat
             ? changeFileExtensionToFormat(documentName, startFormat)
             : undefined

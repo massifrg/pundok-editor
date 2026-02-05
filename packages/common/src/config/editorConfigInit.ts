@@ -3,7 +3,6 @@ import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';
 import { CustomMetadata } from './customMetadata';
 import { CustomStyleDef } from './customStyles';
-import { CustomFormat } from './customFormat';
 import { Index } from './indices';
 import { InputConverter } from './inputConverters';
 import { NoteStyle } from './notes';
@@ -26,14 +25,14 @@ export interface PundokEditorConfigInit {
   tiptap?: {
     options?: Record<string, any>;
   };
-  /** the name of a pandoc format or a CustomFormat */
-  defaultFormat?: string,
+  /** the name of a pandoc format or an InputConverter used as default to open documents. */
+  inputFormat?: string;
+  /** the name of a pandoc format or an OutputConverter used as default to save documents. */
+  outputFormat?: string;
   /** the name of the format (pandoc or custom) used with "Save a copy" */
   copyFormat?: string,
   /** the names of the formats that are more visible in the GUI with this configuration */
   mainFormats?: string[],
-  /** definitions of custom formats */
-  customFormats?: CustomFormat[],
   /** a template for new documents */
   documentTemplate?: string;
   /** automatic delimiters for Marks like singleQuoted or doubleQuoted,

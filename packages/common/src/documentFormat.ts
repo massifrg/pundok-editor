@@ -1,5 +1,4 @@
 import {
-  CustomFormat,
   InputConverter,
   OutputConverter,
   PundokEditorConfig,
@@ -179,32 +178,16 @@ export function pandocFormatToDocumentFormat(name: string): DocumentFormat | und
   }
 }
 
-export function customFormatToDocumentFormat(
-  cf: CustomFormat,
-  direction: PandocConversionDir,
-  config?: PundokEditorConfig | PundokEditorConfigInit,
-): DocumentFormat {
-  const isInput = direction === 'input'
-  const converter = isInput
-    ? config?.inputConverters?.find(c => c.name === cf.reader)
-    : config?.outputConverters?.find(c => c.name === cf.writer)
-  const ftype: DocumentFormatType = isInput ? 'input-converter' : 'output-converter'
-  return { ftype, ...converter }
-}
-
 export function documentFormatWithName(
-  name: string,
+  name: string | undefined,
   direction: PandocConversionDir,
   config?: PundokEditorConfig | PundokEditorConfigInit
 ): DocumentFormat | undefined {
+  if (!name) return undefined
   // 1. search a pandoc format
   let format = pandocFormatToDocumentFormat(name)
   if (!format && config) {
-    // 2. search a custom format
-    const custom = config.customFormats?.find(f => f.name === name)
-    if (custom)
-      format = customFormatToDocumentFormat(custom, direction, config)
-    // 3. search an InputConverter or an OutputConverter
+    // 2. search an InputConverter or an OutputConverter
     if (!format) {
       const isInput = direction === 'input'
       const converter = isInput
@@ -259,14 +242,7 @@ export function documentFormatsFromFilename(
 ): DocumentFormat[] {
   const dformats: DocumentFormat[] = []
   if (config) {
-    // 1. search custom formats (they have precedence over Pandoc formats with the same extension)
-    config.customFormats?.forEach(cf => {
-      if (filename.endsWith('.' + cf.extension)) {
-        const df = customFormatToDocumentFormat(cf, direction, config)
-        if (df) dformats.push(df)
-      }
-    })
-    // 2. search InputConverters or OutputConverters
+    // search InputConverters or OutputConverters
     if (direction === 'input') {
       config.inputConverters?.forEach(ic => {
         if (ic.extensions?.find(ext => (filename.endsWith('.' + ext))))
@@ -307,6 +283,31 @@ export function documentFormatFromInputConverter(ic: InputConverter, source?: st
 export function documentFormatFromOutputConverter(oc: OutputConverter, source?: string): DocumentFormat {
   const extensions = oc.extension ? [oc.extension] : undefined
   return { ...oc, extensions, ftype: 'output-converter', source }
+}
+
+export function getDefaultInputFormat(config?: PundokEditorConfig | PundokEditorConfigInit): DocumentFormat | undefined {
+  if (!config) return undefined
+  let df = documentFormatWithName(config?.inputFormat, 'input', config)
+  if (!df) {
+    const ic = config.inputConverters?.find(c => c.default === true)
+    return ic && documentFormatFromInputConverter(ic, config.name)
+  }
+  return df
+}
+
+export function getDefaultOutputFormat(config?: PundokEditorConfig | PundokEditorConfigInit): DocumentFormat | undefined {
+  if (!config) return undefined
+  let df = documentFormatWithName(config?.outputFormat, 'output', config)
+  if (!df) {
+    const oc = config.outputConverters?.find(c => c.default === true)
+    return oc && documentFormatFromOutputConverter(oc, config.name)
+  }
+  return df
+}
+
+export function getDefaultCopyFormat(config?: PundokEditorConfig | PundokEditorConfigInit): DocumentFormat | undefined {
+  if (!config) return undefined
+  return documentFormatWithName(config?.copyFormat, 'output', config)
 }
 
 export const DEFAULT_DOCUMENT_FORMAT: DocumentFormat = pandocFormatToDocumentFormat(DEFAULT_FORMAT)!
