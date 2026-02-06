@@ -10,10 +10,10 @@ import {
 import { Dirent, existsSync, statSync } from "fs";
 import { readdir, readFile } from "fs/promises";
 import { pathToFileURL } from 'url'
+import { getDiskInfoSync } from 'node-disk-info';
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
 import { DEFAULT_START_FOLDER, Document, DocumentContext, Folder, FolderContents, Place } from "../common";
-import * as drivelist from 'drivelist';
 import { pathToUrl } from "./pathToUrl";
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
@@ -42,6 +42,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
   e: IpcMainInvokeEvent,
   ctx: string,
 ): Promise<FolderContents> => {
+  let folder: string | undefined = undefined
   try {
     const context = JSON.parse(ctx) as DocumentContext
     const { path, project } = context;
@@ -50,7 +51,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
     if (!url)
       return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
     const baseUrl = url.toString()
-    const folder = url.pathname
+    folder = url.pathname
     console.log(`baseUrl=${baseUrl}, folder=${folder}`)
     const contents = await readdir(folder, { withFileTypes: true })
     const folders: Folder[] = []
@@ -74,7 +75,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
     return { baseUrl, folders, documents, places, platform: process.platform } as FolderContents
   } catch (err) {
     console.log(err)
-    return Promise.reject(stringify(err))
+    return Promise.reject(stringify(err) + `\nwhile trying to get the contents of folder "${folder}"`)
   }
 }
 
@@ -96,17 +97,18 @@ function isSymlinkToDirectory(dirPath: string, dirent: Dirent) {
 
 async function getDrivesList(): Promise<Place[]> {
   const places: Place[] = []
-  const drives = await drivelist.list();
-  drives.forEach(d => {
-    d.mountpoints.forEach(m => {
-      const href = pathToFileURL(m.path)
+  try {
+    const disks = getDiskInfoSync();
+    disks.forEach(disk => {
       places.push({
-        name: href.pathname,
-        href: href.toString(),
+        name: disk.mounted,
+        href: 'file://' + disk.mounted + '/',
         type: 'disk',
       })
     });
-  })
+  } catch (e) {
+    console.error(e);
+  }
   return places
 }
 

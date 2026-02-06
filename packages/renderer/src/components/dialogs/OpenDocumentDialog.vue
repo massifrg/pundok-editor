@@ -329,7 +329,7 @@ export default {
       } catch (err) {
         this.$q.notify({
           message: 'Error',
-          caption: `Can't retrieve folder contents of ${path}`,
+          caption: `Can't retrieve folder contents of ${path}: \n${err}`,
           icon: 'mdi-folder-alert',
           position: 'top',
           color: 'negative',
