@@ -56,12 +56,6 @@ export const Image = Node.create<ImageOptions>({
     };
   },
 
-  addStorage() {
-    return {
-      baseUrl: undefined as string | undefined
-    }
-  },
-
   addAttributes() {
     return {
       src: {
@@ -87,15 +81,14 @@ export const Image = Node.create<ImageOptions>({
 
   renderHTML({ HTMLAttributes, node }) {
     const editor = this.editor
-    const storage = this.storage
     const attributes: Record<string, any> = { ...node.attrs }
-    if (editor && !storage.baseUrl) {
-      let baseUrl: string | undefined = undefined
+    let baseUrl: string | undefined = undefined
+    if (editor) {
       const docState = getEditorDocState(editor as Editor)
-      if (docState)
-        baseUrl = docState?.imagesFolder || docState?.outputFolder || docState?.inputFolder
-      if (baseUrl)
-        storage.baseUrl = baseUrl
+      baseUrl = docState?.imagesFolder
+        || docState?.outputFolder
+        || docState?.inputFolder
+        || docState?.project?.path
     }
     const ext = parsePath(attributes.src).ext.toLowerCase()
     const { page, ['preview-width']: width, ['preview-height']: height } = attributes.kv || {}
@@ -103,11 +96,11 @@ export const Image = Node.create<ImageOptions>({
     if (!attributes.src || attributes.src.length === 0) {
       console.log("IMG NO SRC!")
       attributes.src = '?' // no_image_base64
-    } else if (isAbsolute(attributes.src) && storage.baseUrl) {
-      attributes.src = `img://${storage.baseUrl}/${relative(storage.baseUrl, attributes.src)}`
+    } else if (isAbsolute(attributes.src) && baseUrl) {
+      attributes.src = `img://${baseUrl}/${relative(baseUrl, attributes.src)}`
     } else {
-      attributes.src = storage.baseUrl
-        ? `img://${storage.baseUrl}/${attributes.src}${query}`
+      attributes.src = baseUrl
+        ? `img://${baseUrl}/${attributes.src}${query}`
         : `img://${attributes.src}${query}`
     }
     const style = (width || height)
@@ -166,7 +159,7 @@ function fixImageSrc(all: boolean): Command {
     const docState = getDocState(state)
     if (!docState)
       return false
-    const basePath = docState?.imagesFolder || docState?.inputFolder
+    const basePath = docState?.imagesFolder || docState?.outputFolder || docState?.inputFolder
     if (!basePath)
       return false
     const { doc, selection, tr } = state
