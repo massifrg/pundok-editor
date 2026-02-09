@@ -646,7 +646,7 @@ export default {
      * Set the editor key of the sub editor (project structure).
      * @param editorKey
      */
-    newSubEditor(editorKey: EditorKeyType) {
+    newSubEditor(editorKey: EditorKeyType, editor?: Editor) {
       this.projectStructureEditorKey = editorKey
     },
     /**
@@ -688,7 +688,7 @@ export default {
           includeFormat: oldDocState?.includeFormat,
           copyFormat: oldDocState?.copyFormat,
         });
-        this.$emit('new-editor', this.editorKey())
+        this.$emit('new-editor', this.editorKey(), this.editor)
       }
     },
     /**
