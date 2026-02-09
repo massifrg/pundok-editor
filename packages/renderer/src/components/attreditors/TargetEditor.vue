@@ -13,7 +13,7 @@
 import { mapState } from 'pinia';
 import { DEFAULT_START_FOLDER, DocumentFormat, imageFormatFromFilename } from '../../common';
 import { showSelectImageDialog } from '../helpers';
-import { getEditorDocState, makePathRelativeToDoc, updateDocState } from '../../schema';
+import { getEditorDocState, makePathRelativeToDoc } from '../../schema';
 import { useBackend } from '../../stores';
 
 export default {
@@ -50,10 +50,22 @@ export default {
     },
     async askTargetFileUrl() {
       const docState = getEditorDocState(this.editor)
-      const url = new URL(this.targetUrl)
+      const { project, inputFolder, outputFolder } = docState || {}
+      let url: URL
+      let path = this.targetUrl
+      console.log(path)
+      try {
+        url = new URL(path)
+      } catch (err) {
+        path = outputFolder || inputFolder || project?.path
+        path = path ? path + '/' + this.targetUrl : this.targetUrl
+        console.log(path)
+      } finally {
+        url = new URL('file://' + path)
+      }
       const chunks = url && url.pathname.split('/')
       const filename = url && chunks.pop()
-      const startFolder = url && `${url.protocol}${chunks.join('/')}`
+      const startFolder = url && chunks.join('/')
         || docState?.imagesFolder || docState?.inputFolder || DEFAULT_START_FOLDER
       const format = filename && imageFormatFromFilename(filename) || undefined
       const startFormat = format
