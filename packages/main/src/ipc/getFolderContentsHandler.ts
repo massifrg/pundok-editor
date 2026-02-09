@@ -3,13 +3,12 @@ import { homedir } from "os";
 import {
   dirname,
   join as joinPath,
-  normalize,
   resolve,
   sep as separator
 } from "path";
 import { Dirent, existsSync, statSync } from "fs";
 import { readdir, readFile } from "fs/promises";
-import { pathToFileURL } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 import { getDiskInfoSync } from 'node-disk-info';
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
@@ -46,13 +45,14 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
   try {
     const context = JSON.parse(ctx) as DocumentContext
     const { path, project } = context;
-    const url = pathToUrl(path || DEFAULT_START_FOLDER, project)
-    console.log(`getFolderContentsHandler: path=${path}, url=${url}`)
-    if (!url)
+    const baseUrl = pathToUrl(path || DEFAULT_START_FOLDER, project)
+    console.log(`getFolderContentsHandler: path=${path}, baseUrl=${baseUrl}`)
+    if (!baseUrl)
       return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
-    const baseUrl = url.toString()
-    folder = url.pathname
-    console.log(`baseUrl=${baseUrl}, folder=${folder}`)
+    folder = fileURLToPath(baseUrl)
+    if (!folder)
+      return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
+    console.log(`folder=${folder}`)
     const contents = await readdir(folder, { withFileTypes: true })
     const folders: Folder[] = []
     const documents: Document[] = []
@@ -64,7 +64,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
       else if (c.isFile())
         documents.push({ name: c.name })
       else if (c.isSymbolicLink()) {
-        if (isSymlinkToDirectory(baseUrl, c))
+        if (isSymlinkToDirectory(folder!, c))
           folders.push({ name: c.name, /* baseUrl */ })
         else
           documents.push({ name: c.name })
@@ -72,7 +72,13 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
       console.log(c.name)
     })
     const places = await getUserPlaces()
-    return { baseUrl, folders, documents, places, platform: process.platform } as FolderContents
+    return {
+      baseUrl: baseUrl.toString(),
+      folders,
+      documents,
+      places,
+      platform: process.platform
+    } as FolderContents
   } catch (err) {
     console.log(err)
     return Promise.reject(stringify(err) + `\nwhile trying to get the contents of folder "${folder}"`)

@@ -22,7 +22,7 @@ export interface FolderContents {
   platform?: string,
 }
 
-export const DEFAULT_START_FOLDER = ''
+export const DEFAULT_START_FOLDER = '.'
 
 export function splitFolderAndDoc(path: string) {
   const folder = path.split('/')

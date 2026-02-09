@@ -1,7 +1,8 @@
 import { isAbsolute, normalize, parse as parsePath, resolve } from "path";
 import { PundokEditorProject } from "../common";
 import { isString } from "lodash-es";
-import { pathToFileURL } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
+import { platform } from "os";
 
 /**
  * Compute an absolute `file://` URL from a path that may be relative
@@ -14,7 +15,9 @@ import { pathToFileURL } from "url";
 export function pathToUrl(_path: string, project?: PundokEditorProject): URL | null {
   let url
   if (_path) {
-    const path = _path.replace(/^file:\/\//, '')
+    let path = _path.replace(/^file:\/\//, '')
+    if (platform() === 'win32')
+      path = path.replace(/^\/([A-Za-z]:)/, '$1')
     if (!isAbsolute(path)) {
       let absPath
       if (project) {
@@ -55,7 +58,7 @@ export function baseUrlWithFilename(
 ): BaseUrlWithFilename | null {
   const fileUrl = isString(filepath) ? pathToUrl(filepath, project) : filepath
   if (fileUrl) {
-    const chunks = fileUrl.pathname.split('/')
+    const chunks = fileURLToPath(fileUrl).split('/')
     const filename = chunks.pop()
     return filename
       ? { baseUrl: 'file://' + chunks.join('/'), filename }

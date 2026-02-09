@@ -310,7 +310,6 @@ export default {
       try {
         const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })
         const baseUrl = contents?.baseUrl && URL.parse(contents.baseUrl)
-        console.log(`baseUrl=${baseUrl}`)
         this.protocol = baseUrl ? baseUrl.protocol : this.protocol
         this.currentFolder = baseUrl ? baseUrl.pathname : this.currentFolder
         this.folders = contents?.folders || this.folders

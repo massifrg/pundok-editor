@@ -1,7 +1,7 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
 import { pandocFeatures } from '../pandocFeatures';
-import { PandocFeatureName, PandocFeatureOptions, PandocFormatExtension } from 'src/common';
+import { PandocFeatureName, PandocFeatureOptions, PandocFormatExtension } from '../common';
 
 export const pandocFeaturesHandler = (hub: IpcHub) => async (
   e: IpcMainInvokeEvent,
