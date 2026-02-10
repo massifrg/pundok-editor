@@ -169,25 +169,28 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
   const bookmarks = await getBookmarks();
   const recentDocsMenu = bookmarks
     .filter((b) => b.type === 'document')
-    .map((b) => ({
-      label: b.id || basename(b.path),
-      sublabel: b.path,
-      tooltip: b.path,
-      click: () => {
-        ipcHub.fireEventOpenDocument({
-          path: b.path,
-          configurationName: b.configurationName
-        });
-      },
-    }));
+    .map((b) => {
+      const path = b.url?.replace(/^file:\/\//, '')
+      return {
+        label: b.id || path,
+        sublabel: path,
+        tooltip: path,
+        click: () => {
+          ipcHub.fireEventOpenDocument({
+            path: b.url,
+            configurationName: b.configurationName
+          });
+        },
+      }
+    });
   const recentProjectsMenu = bookmarks
     .filter((b) => b.type === 'project')
     .map((b) => ({
       label: b.name,
-      sublabel: b.path,
-      tooltip: b.path,
+      sublabel: b.url,
+      tooltip: b.url,
       click: () => {
-        ipcHub.fireEventOpenDocument({ path: b.path });
+        ipcHub.fireEventOpenDocument({ path: b.url });
       },
     }));
   const recentMenu = [

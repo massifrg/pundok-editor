@@ -27,7 +27,7 @@ async function saveBookmarksFile(bookmarks: PundokBookmark[]): Promise<boolean> 
 }
 
 function sameBookmark(b1: PundokBookmark, b2: PundokBookmark): boolean {
-  return !(b1.type !== b2.type || (b1.path && b1.path !== b2.path));
+  return !(b1.type !== b2.type || (b1.url && b1.url !== b2.url));
 }
 
 function updateBookmarks(

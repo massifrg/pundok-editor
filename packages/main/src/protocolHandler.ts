@@ -3,6 +3,7 @@ import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import { parse } from 'path';
 import { runExternalProgram } from "./runExternal";
+import { fileURLToPath } from "url";
 
 type BufferLoader = (filepath: string, params: Record<string, any>) => Promise<Buffer>
 
@@ -12,7 +13,7 @@ export function handleImagesFor(view: WebContentsView) {
     const url = new URL(url_string)
     let loader: BufferLoader | undefined = undefined
     console.log(request)
-    const filepath = url_string.substring('img://'.length)
+    const filepath = fileURLToPath(url_string.replace(/^img:\/\//, 'file://'))
     if (existsSync(filepath)) {
       const { ext } = parse(filepath)
       let blobType: string | undefined = undefined
@@ -36,6 +37,7 @@ export function handleImagesFor(view: WebContentsView) {
       const imageBuffer = loader
         ? await loader(filepath, { ...url.searchParams, mimeType: blobType })
         : await readFile(filepath);
+      // @ts-ignore
       const blob = new Blob([imageBuffer], { type: blobType })
       return new Response(blob, {
         status: 200,

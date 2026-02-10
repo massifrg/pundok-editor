@@ -199,7 +199,6 @@ import {
   showSaveCopyDialog,
   showSaveDocumentDialog
 } from './helpers';
-import { parse as parsePath } from 'path-browserify';
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';
@@ -903,11 +902,11 @@ export default {
       console.log(`created new editor for doc:`);
       console.log(doc);
 
-      const path = parsePath(doc.path!)
+      const { folder, document } = splitFolderAndDoc(doc.path!)
       this.updateEditorDocState({
-        documentName: path.base,
+        documentName: document,
         resourcePath: doc.resourcePath,
-        inputFolder: path.dir,
+        inputFolder: folder,
         inputFormat: doc.documentFormat,
       });
 

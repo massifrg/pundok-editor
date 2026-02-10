@@ -1,5 +1,5 @@
 import { IpcMainInvokeEvent } from "electron";
-import { homedir } from "os";
+import { homedir, platform } from "os";
 import {
   dirname,
   join as joinPath,
@@ -12,7 +12,14 @@ import { fileURLToPath, pathToFileURL } from 'url'
 import { getDiskInfoSync } from 'node-disk-info';
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
-import { DEFAULT_START_FOLDER, Document, DocumentContext, Folder, FolderContents, Place } from "../common";
+import {
+  DEFAULT_START_FOLDER,
+  Document,
+  DocumentContext,
+  Folder,
+  FolderContents,
+  Place
+} from "../common";
 import { pathToUrl } from "./pathToUrl";
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
@@ -42,14 +49,14 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
   ctx: string,
 ): Promise<FolderContents> => {
   let folder: string | undefined = undefined
+  const context = JSON.parse(ctx) as DocumentContext
+  const { path, project } = context;
+  const path_as_url = pathToUrl(path || DEFAULT_START_FOLDER, project)
+  console.log(`getFolderContentsHandler: path=${path}, path_as_url=${path_as_url}`)
   try {
-    const context = JSON.parse(ctx) as DocumentContext
-    const { path, project } = context;
-    const baseUrl = pathToUrl(path || DEFAULT_START_FOLDER, project)
-    console.log(`getFolderContentsHandler: path=${path}, baseUrl=${baseUrl}`)
-    if (!baseUrl)
+    if (!path_as_url)
       return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
-    folder = fileURLToPath(baseUrl)
+    folder = fileURLToPath(path_as_url)
     if (!folder)
       return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
     console.log(`folder=${folder}`)
@@ -72,8 +79,11 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
       console.log(c.name)
     })
     const places = await getUserPlaces()
+    const baseUrl = platform() === 'win32'
+      ? path_as_url.toString().replaceAll(/\\/g, '/')
+      : path_as_url.toString()
     return {
-      baseUrl: baseUrl.toString(),
+      baseUrl,
       folders,
       documents,
       places,
@@ -81,7 +91,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
     } as FolderContents
   } catch (err) {
     console.log(err)
-    return Promise.reject(stringify(err) + `\nwhile trying to get the contents of folder "${folder}"`)
+    return Promise.reject(stringify(err) + `\nwhile trying to get the contents of path="${path}", path_as_url="${path_as_url}" => folder "${folder}"`)
   }
 }
 

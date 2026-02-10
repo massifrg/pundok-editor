@@ -56,7 +56,7 @@ export const saveDocumentHandler = (hub: IpcHub) =>
         const bookmark: PundokBookmark = {
           type: 'document',
           id,
-          path: path!,
+          url: 'file://' + path!,
           configurationName: project ? undefined : configurationName,
         }
         await updateBookmarksFile([bookmark]);

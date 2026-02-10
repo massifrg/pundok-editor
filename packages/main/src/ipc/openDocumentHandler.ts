@@ -65,7 +65,7 @@ export const openDocumentHandler =
         if (readDoc?.path)
           bookmarks.push({
             type: 'document',
-            path: readDoc!.path,
+            url: readDoc!.path,
             configurationName: readDoc?.project
               ? undefined
               : readDoc.configurationName,
@@ -74,7 +74,7 @@ export const openDocumentHandler =
           bookmarks.push({
             type: 'project',
             name: readDoc.project.name,
-            path: resolve(readDoc.project.path, readDoc.project.rootDocument),
+            url: 'file://' + resolve(readDoc.project.path, readDoc.project.rootDocument),
           });
         await updateBookmarksFile(bookmarks);
         refreshMainMenu(hub);

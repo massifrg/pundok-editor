@@ -36,10 +36,10 @@ export default {
     },
     titleForBookmark(b: ProjectBookmark | DocumentBookmark) {
       if (b.type === 'project')
-        return `project "${b.name}" at "${b.path}"`
+        return `project "${b.name}" at "${b.url}"`
       else if (b.type === 'document') {
         const configText = b.configurationName ? ` (config=${b.configurationName})` : ''
-        return `document "${this.justFilename(b.path)}" at "${b.path}"${configText}`
+        return `document "${this.justFilename(b.url)}" at "${b.url}"${configText}`
       }
     },
     justFilename(path: string) {
@@ -53,7 +53,7 @@ export default {
       if (this.editorKey)
         setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {
           context: {
-            path: p.path
+            path: p.url
           }
         } as DocumentOpenActionProps)
     },
@@ -61,7 +61,7 @@ export default {
       if (this.editorKey)
         setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {
           context: {
-            path: d.path,
+            path: d.url,
             configurationName: d.configurationName
           }
         } as DocumentOpenActionProps)
@@ -84,7 +84,7 @@ export default {
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>
-            <q-item v-for="p in projectBookmarks" :key="p.path" :title="titleForBookmark(p)" clickable v-close-popup
+            <q-item v-for="p in projectBookmarks" :key="p.url" :title="titleForBookmark(p)" clickable v-close-popup
               @click="openProjectBookmark(p)">
               <q-item-section>
                 {{ p.name }}
@@ -102,10 +102,10 @@ export default {
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>
-            <q-item v-for="d in docBookmarks" :key="d.path" :title="titleForBookmark(d)" clickable v-close-popup
+            <q-item v-for="d in docBookmarks" :key="d.url" :title="titleForBookmark(d)" clickable v-close-popup
               @click="openDocBookmark(d)">
               <q-item-section>
-                {{ justFilename(d.path) }}
+                {{ justFilename(d.url) }}
               </q-item-section>
             </q-item>
           </q-list>

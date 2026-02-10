@@ -3,14 +3,14 @@ export type PundokBookmarkType = 'document' | 'project';
 export interface DocumentBookmark {
   type: 'document';
   id?: string;
-  path: string;
+  url: string;
   configurationName?: string;
 }
 
 export interface ProjectBookmark {
   type: 'project';
   name: string;
-  path: string;
+  url: string;
 }
 
 /**

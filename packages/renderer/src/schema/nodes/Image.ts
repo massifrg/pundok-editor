@@ -89,6 +89,7 @@ export const Image = Node.create<ImageOptions>({
         || docState?.outputFolder
         || docState?.inputFolder
         || docState?.project?.path
+      baseUrl = baseUrl?.replaceAll('\\', '/')
     }
     const ext = parsePath(attributes.src).ext.toLowerCase()
     const { page, ['preview-width']: width, ['preview-height']: height } = attributes.kv || {}
@@ -103,6 +104,7 @@ export const Image = Node.create<ImageOptions>({
         ? `img://${baseUrl}/${attributes.src}${query}`
         : `img://${attributes.src}${query}`
     }
+    console.log(`Image src="${attributes.src}"`)
     const style = (width || height)
       && Object.entries({ width, height }).map(([p, v]) => `${p}: ${v}`).join('; ') || ''
     if (style)

@@ -591,7 +591,7 @@ export default {
         <q-space style="max-width: .1rem;" />
         <q-btn-dropdown label="project" no-caps auto-close dense class="q-my-xs">
           <q-list>
-            <q-item v-for="pb in projectBookmarks" clickable @click="gotoPath(pb.path)">
+            <q-item v-for="pb in projectBookmarks" clickable @click="gotoPath(pb.url)">
               <q-item-section>{{ pb.name }}</q-item-section>
             </q-item>
           </q-list>
@@ -599,9 +599,9 @@ export default {
         &nbsp;
         <q-btn-dropdown label="document" no-caps auto-close dense class="q-my-xs">
           <q-list>
-            <q-item v-for="db in docBookmarks" clickable @click="gotoPath(db.path, db.configurationName)">
+            <q-item v-for="db in docBookmarks" clickable @click="gotoPath(db.url, db.configurationName)">
               <q-item-section>
-                <q-item-label :title="db.path">{{ splitFolderAndDoc(db.path).document }}</q-item-label>
+                <q-item-label :title="db.url">{{ splitFolderAndDoc(db.url).document }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>

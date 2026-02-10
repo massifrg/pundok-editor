@@ -1,41 +1,21 @@
-import { isAbsolute, normalize, parse as parsePath, resolve } from "path";
-import { PundokEditorProject } from "../common";
 import { isString } from "lodash-es";
+import { isAbsolute, resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import { platform } from "os";
+import { PundokEditorProject } from "../common";
 
-/**
- * Compute an absolute `file://` URL from a path that may be relative
- * (to the current project or the current working directory) or absolute,
- * or already a full blown URL.
- * @param path 
- * @param project 
- * @returns 
- */
-export function pathToUrl(_path: string, project?: PundokEditorProject): URL | null {
-  let url
-  if (_path) {
-    let path = _path.replace(/^file:\/\//, '')
-    if (platform() === 'win32')
-      path = path.replace(/^\/([A-Za-z]:)/, '$1')
-    if (!isAbsolute(path)) {
-      let absPath
-      if (project) {
-        if (project.rootDocument && isAbsolute(project.rootDocument))
-          absPath = resolve(parsePath(project.rootDocument).dir, path);
-        else
-          absPath = resolve(project.path, path);
-      } else {
-        // no project, path is relative to process.cwd
-        absPath = resolve(process.cwd(), path)
-      }
-      url = pathToFileURL(normalize(absPath))
-    } else {
-      // absolute path
-      url = pathToFileURL(normalize(path))
-    }
+export function pathToUrl(path: string, project?: PundokEditorProject): string {
+  const base = project?.path || process.cwd()
+  try {
+    // Try parsing as URL
+    const url = new URL(path);
+    return url.toString();
+  } catch {
+    // Not a valid URL → treat as path
+    const absolutePath = isAbsolute(path)
+      ? path
+      : resolve(base, path);
+    return pathToFileURL(absolutePath).toString();
   }
-  return url || null
 }
 
 /**
