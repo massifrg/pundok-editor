@@ -4,7 +4,7 @@ import {
   ACTION_DOCUMENT_OPEN,
   setActionCommand
 } from '../actions';
-import { DocumentBookmark, DocumentOpenActionProps, ProjectBookmark } from '../common';
+import { bookmarkLabel, DocumentBookmark, DocumentOpenActionProps, ProjectBookmark, PundokBookmark } from '../common';
 import { editorKeyFromState, getDocState } from '../schema';
 import { useBackend } from '../stores';
 import { setupQuasarIcons } from './helpers';
@@ -34,16 +34,13 @@ export default {
       this.docBookmarks = (await this.backend?.getBookmarks('document') || []) as DocumentBookmark[]
       this.projectBookmarks = (await this.backend?.getBookmarks('project') || []) as ProjectBookmark[]
     },
-    titleForBookmark(b: ProjectBookmark | DocumentBookmark) {
-      if (b.type === 'project')
-        return `project "${b.name}" at "${b.url}"`
-      else if (b.type === 'document') {
-        const configText = b.configurationName ? ` (config=${b.configurationName})` : ''
-        return `document "${this.justFilename(b.url)}" at "${b.url}"${configText}`
-      }
+    titleForBookmark(b: PundokBookmark) {
+      const { label, tooltip } = bookmarkLabel(b)
+      return `${label}, ${tooltip}`
     },
-    justFilename(path: string) {
-      return path.split('/').pop()
+    labelForBookmark(b: PundokBookmark) {
+      const { label } = bookmarkLabel(b)
+      return label
     },
     openDocument() {
       if (this.editorKey)
@@ -105,7 +102,7 @@ export default {
             <q-item v-for="d in docBookmarks" :key="d.url" :title="titleForBookmark(d)" clickable v-close-popup
               @click="openDocBookmark(d)">
               <q-item-section>
-                {{ justFilename(d.url) }}
+                {{ labelForBookmark(d) }}
               </q-item-section>
             </q-item>
           </q-list>

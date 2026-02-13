@@ -10,7 +10,13 @@ export const MAX_RECENT_PROJECTS = 10;
 async function readBookmarksFile(): Promise<PundokBookmark[]> {
   try {
     const buf = await readFile(resolve(userAppDataDir(), BOOKMARKS_FILENAME));
-    return JSON.parse(buf.toString()) as PundokBookmark[];
+    const bm = JSON.parse(buf.toString()) as (PundokBookmark & { path?: string })[];
+    // fix older bookmarks with path
+    return bm.map(b => {
+      return b.path && !b.url
+        ? { ...b, url: `file://${b.path}`, path: undefined }
+        : b
+    })
   } catch (err) {
     return Promise.resolve([]);
   }

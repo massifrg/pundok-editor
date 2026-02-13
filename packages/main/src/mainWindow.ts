@@ -11,6 +11,7 @@ import {
 import { updateStaticResources } from './staticResources';
 import { getBookmarks } from './bookmarks';
 import { handleImagesFor } from './protocolHandler';
+import { bookmarkLabel, splitFolderAndDoc } from './common';
 
 let showDeveloperTools = !!import.meta.env.DEV;
 let showPdfView = false;
@@ -170,11 +171,11 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
   const recentDocsMenu = bookmarks
     .filter((b) => b.type === 'document')
     .map((b) => {
-      const path = b.url?.replace(/^file:\/\//, '')
+      const { label, sublabel, tooltip } = bookmarkLabel(b)
       return {
-        label: b.id || path,
-        sublabel: path,
-        tooltip: path,
+        label,
+        sublabel,
+        tooltip,
         click: () => {
           ipcHub.fireEventOpenDocument({
             path: b.url,
@@ -185,14 +186,17 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
     });
   const recentProjectsMenu = bookmarks
     .filter((b) => b.type === 'project')
-    .map((b) => ({
-      label: b.name,
-      sublabel: b.url,
-      tooltip: b.url,
-      click: () => {
-        ipcHub.fireEventOpenDocument({ path: b.url });
-      },
-    }));
+    .map((b) => {
+      const { label, sublabel, tooltip } = bookmarkLabel(b)
+      return {
+        label,
+        sublabel,
+        tooltip,
+        click: () => {
+          ipcHub.fireEventOpenDocument({ path: b.url });
+        },
+      }
+    });
   const recentMenu = [
     {
       label: 'document...',
