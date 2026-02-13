@@ -520,6 +520,8 @@ export default {
     startSearch() {
       const started = this.cssMode ? this.startSearchCss() : this.startSearchText()
       this.searchStarted = started
+      if (started)
+        this.editor?.commands.focus()
       return started
     },
     hideDialog() {
@@ -553,8 +555,9 @@ export default {
         this.editor.commands.selectPrevCss(this.optionCycle)
         this.scrollAtSelectedCss()
       } else {
-        this.editor.chain().selectPrevFoundText(this.optionCycle).focus().run()
+        this.editor.commands.selectPrevFoundText(this.optionCycle)
       }
+      this.editor.commands.focus()
     },
     nextFound(scroll?: boolean): boolean {
       if (this.cssMode) {
@@ -565,28 +568,28 @@ export default {
       } else {
         if (!this.editor.can().selectNextFoundText(this.optionCycle))
           return false
-        this.editor.chain().selectNextFoundText(this.optionCycle).focus().run()
+        this.editor.commands.selectNextFoundText(this.optionCycle)
         if (scroll) this.editor.commands.scrollIntoView()
       }
+      if (scroll) this.editor.commands.focus()
       return true
     },
     replaceSelected() {
       if (this.optionSearchOnly) {
-        this.editor.chain()
-          .applyActions(this.actionsOnReplace)
-          .focus().run()
+        this.editor.commands.applyActions(this.actionsOnReplace)
       } else {
         if (this.cssMode)
           this.editor.chain()
             .replaceWithText(this.textToReplace)
             .applyActions(this.actionsOnReplace)
-            .focus().run()
+            .run()
         else
           this.editor.chain()
             .replaceSelectedText()
             .applyActions(this.actionsOnReplace)
-            .focus().run()
+            .run()
       }
+      this.editor.commands.focus()
     },
     replaceNextText() {
       this.replaceSelected()
