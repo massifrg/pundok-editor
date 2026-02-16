@@ -52,6 +52,9 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
   let path = context.path || project?.path || process.cwd()
   if (path?.startsWith('file://'))
     path = path.replace(/^file:\/\//, '')
+  // This is needed because pathToFileURL('/C:/') === 'file:///C:/C:/'
+  if (platform() === 'win32' && path?.match(/^\/[A-Z]:/i))
+    path = path.substring(1)
   const path_as_url = pathToFileURL(path)
   console.log(`getFolderContentsHandler: path=${path}, path_as_url=${path_as_url}`)
   try {
