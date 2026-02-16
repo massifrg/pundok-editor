@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import { mapState } from 'pinia';
-import { DEFAULT_START_FOLDER, DocumentFormat, imageFormatFromFilename } from '../../common';
+import { DocumentFormat, imageFormatFromFilename } from '../../common';
 import { showSelectImageDialog } from '../helpers';
 import { getEditorDocState, makePathRelativeToDoc } from '../../schema';
 import { useBackend } from '../../stores';
@@ -66,7 +66,7 @@ export default {
       const chunks = url && url.pathname.split('/')
       const filename = url && chunks.pop()
       const startFolder = url && chunks.join('/')
-        || docState?.imagesFolder || docState?.inputFolder || DEFAULT_START_FOLDER
+        || docState?.imagesFolder || docState?.inputFolder
       const format = filename && imageFormatFromFilename(filename) || undefined
       const startFormat = format
         ? { ...format, ftype: 'image' } as DocumentFormat

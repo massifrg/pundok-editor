@@ -99,7 +99,7 @@ export default {
       /** The protocol of the URL to open (usually it's `file://`) */
       protocol: 'file:',
       /** An array of the folders' names of the current path */
-      currentFolder: this.startFolder || '.',
+      currentFolder: this.startFolder,
       /** The sub folders in the current folder */
       folders: [] as Folder[],
       /** The documents (files) in the current folder */
@@ -305,7 +305,7 @@ export default {
   },
   methods: {
     async getContents() {
-      const path = `${this.protocol}//${this.currentFolder}`
+      const path = this.currentFolder && `${this.protocol}//${this.currentFolder}` || undefined
       console.log(`getContents, path="${path}"`)
       try {
         const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })

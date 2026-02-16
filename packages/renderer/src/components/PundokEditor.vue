@@ -125,7 +125,6 @@ import {
   DEFAULT_DOCUMENT_FORMAT,
   SetDocumentFormatActionProps,
   DEFAULT_COPY_DOCUMENT_FORMAT,
-  DEFAULT_START_FOLDER,
   splitFolderAndDoc,
   documentNameToId,
   outputConverterToDocumentFormat,
@@ -835,7 +834,7 @@ export default {
             editor: this.editor,
             mode: 'open',
             prompt: 'Open document',
-            startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
+            startFolder: docState?.inputFolder,
             startFormat: docState?.inputFormat,
             callback: (context) => {
               if (context.path) {

@@ -262,7 +262,6 @@ import {
   ActionNameWithProps,
   AddOrRemoveClassActionProps,
   DEFAULT_INDEX_NAME,
-  DEFAULT_START_FOLDER,
   INDEX_NAME_ATTR,
   Index,
   IndexSource,
@@ -608,7 +607,7 @@ export default {
       let src: string | undefined = undefined
       showIncludeDocumentDialog({
         editor: this.editor,
-        startFolder: docState?.inputFolder || DEFAULT_START_FOLDER,
+        startFolder: docState?.inputFolder,
         callback: (context) => {
           const { documentFormat, path, project } = context
           if (path) {

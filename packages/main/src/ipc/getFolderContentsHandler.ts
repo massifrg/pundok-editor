@@ -13,14 +13,12 @@ import { getDiskInfoSync } from 'node-disk-info';
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
 import {
-  DEFAULT_START_FOLDER,
   Document,
   DocumentContext,
   Folder,
   FolderContents,
   Place
 } from "../common";
-import { pathToUrl } from "./pathToUrl";
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
 type JumpListModule = {
@@ -50,8 +48,11 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
 ): Promise<FolderContents> => {
   let folder: string | undefined = undefined
   const context = JSON.parse(ctx) as DocumentContext
-  const { path, project } = context;
-  const path_as_url = pathToUrl(path || DEFAULT_START_FOLDER, project)
+  const { project } = context;
+  let path = context.path || project?.path || process.cwd()
+  if (path?.startsWith('file://'))
+    path = path.replace(/^file:\/\//, '')
+  const path_as_url = pathToFileURL(path)
   console.log(`getFolderContentsHandler: path=${path}, path_as_url=${path_as_url}`)
   try {
     if (!path_as_url)

@@ -9,7 +9,6 @@ import ToolbarButton from './ToolbarButton.vue';
 import { ACTION_DOCUMENT_TRANSFORM, setActionCommand } from '../actions';
 import {
   DEFAULT_FORMAT,
-  DEFAULT_START_FOLDER,
   EditorKeyType,
   PandocFilterTransform,
   PundokEditorProject,
@@ -51,7 +50,7 @@ export default {
       showImportDocumentDialog({
         editor: this.editor,
         prompt: 'Append document:',
-        startFolder: docState?.includeFolder || docState?.inputFolder || DEFAULT_START_FOLDER,
+        startFolder: docState?.includeFolder || docState?.inputFolder,
         callback: (context) => {
           const { documentFormat, path } = context
           console.log(context)

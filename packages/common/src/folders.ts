@@ -22,8 +22,6 @@ export interface FolderContents {
   platform?: string,
 }
 
-export const DEFAULT_START_FOLDER = '.'
-
 export function splitFolderAndDoc(path: string) {
   const folder = path.replaceAll('\\', '/').split('/')
   const document = folder.pop()
