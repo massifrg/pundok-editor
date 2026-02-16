@@ -8,7 +8,7 @@ import {
 } from "path";
 import { Dirent, existsSync, statSync } from "fs";
 import { readdir, readFile } from "fs/promises";
-import { fileURLToPath, pathToFileURL } from 'url'
+import { fileURLToPath } from 'url'
 import { getDiskInfoSync } from 'node-disk-info';
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
@@ -19,6 +19,7 @@ import {
   FolderContents,
   Place
 } from "../common";
+import { pathToFileURLfixed } from "./pathToUrl";
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
 type JumpListModule = {
@@ -50,12 +51,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
   const context = JSON.parse(ctx) as DocumentContext
   const { project } = context;
   let path = context.path || project?.path || process.cwd()
-  if (path?.startsWith('file://'))
-    path = path.replace(/^file:\/\//, '')
-  // This is needed because pathToFileURL('/C:/') === 'file:///C:/C:/'
-  if (platform() === 'win32' && path?.match(/^\/[A-Z]:/i))
-    path = path.substring(1)
-  const path_as_url = pathToFileURL(path)
+  const path_as_url = pathToFileURLfixed(path)
   console.log(`getFolderContentsHandler: path=${path}, path_as_url=${path_as_url}`)
   try {
     if (!path_as_url)
@@ -170,7 +166,7 @@ async function getUserPlacesWindows(): Promise<Place[]> {
     ['Desktop', 'Documents', 'Downloads', 'Pictures', 'Music', 'Videos'].forEach(p =>
       places.push({
         name: p,
-        href: pathToFileURL(joinPath(user, p)).toString(),
+        href: pathToFileURLfixed(joinPath(user, p)).toString(),
         type: 'known'
       })
     );
@@ -179,7 +175,7 @@ async function getUserPlacesWindows(): Promise<Place[]> {
       if (v) {
         places.push({
           name: p,
-          href: pathToFileURL(joinPath(user, v)).toString(),
+          href: pathToFileURLfixed(joinPath(user, v)).toString(),
           type: 'known'
         })
       }

@@ -28,7 +28,8 @@ import { computeProjectFromDocFile } from './getProjectHandler';
 import { IpcHub } from './ipcHub';
 import { getConfigurationInit } from './configurationHandlers';
 import { fileURLToPath } from 'url';
-import { pathToUrl } from './pathToUrl';
+import { pathToUrl, toUnixPath } from './pathToUrl';
+import { platform } from 'os';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -50,10 +51,10 @@ export const openDocumentHandler =
         } = context;
         if (!_path)
           return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
-        const url = pathToUrl(_path!, project)
-        if (!url)
-          return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
-        const path = fileURLToPath(url)
+        let path = _path.replace(/^file:\/\//, '')
+        path = !isAbsolute(path) && project?.path
+          ? resolve(project?.path, path)
+          : path
         const readDoc = await openDocument(hub, {
           editorKey,
           configurationName,
@@ -65,7 +66,7 @@ export const openDocumentHandler =
         if (readDoc?.path)
           bookmarks.push({
             type: 'document',
-            url: readDoc!.path,
+            url: toUnixPath(readDoc!.path),
             configurationName: readDoc?.project
               ? undefined
               : readDoc.configurationName,
@@ -74,7 +75,7 @@ export const openDocumentHandler =
           bookmarks.push({
             type: 'project',
             name: readDoc.project.name,
-            url: 'file://' + resolve(readDoc.project.path, readDoc.project.rootDocument),
+            url: 'file://' + toUnixPath(resolve(readDoc.project.path, readDoc.project.rootDocument)),
           });
         await updateBookmarksFile(bookmarks);
         refreshMainMenu(hub);
