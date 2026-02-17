@@ -1,5 +1,4 @@
 import { IpcMainInvokeEvent } from 'electron';
-import { readFile } from '../filesystem';
 import {
   format as formatPath,
   isAbsolute,
@@ -27,7 +26,7 @@ import { commandLineFeedback, errorFeedback } from './feedback';
 import { computeProjectFromDocFile } from './getProjectHandler';
 import { IpcHub } from './ipcHub';
 import { getConfigurationInit } from './configurationHandlers';
-import { toUnixPath } from '../filesystem';
+import { localizePath, readFile, toUnixPath } from '../filesystem';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
@@ -44,14 +43,14 @@ export const openDocumentHandler =
           configurationName,
           editorKey,
           documentFormat,
-          path: _path,
           project,
         } = context;
-        if (!_path)
+        let path = context.path
+        if (!path)
           return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
-        let path = _path.replace(/^file:\/\//, '')
+        path = localizePath(path)
         path = !isAbsolute(path) && project?.path
-          ? resolve(project?.path, path)
+          ? resolve(localizePath(project?.path), path)
           : path
         const readDoc = await openDocument(hub, {
           editorKey,

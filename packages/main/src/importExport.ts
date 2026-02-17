@@ -34,7 +34,7 @@ import {
   resolve,
 } from 'path';
 import { encloseInDblQuotes } from './utils';
-import { existsSync, toOsPath } from './filesystem';
+import { existsSync, localizePath } from './filesystem';
 import { isArray, isObject, isString } from 'lodash-es';
 import { expandCommandArgs } from './ipc/expandCommandArgs';
 
@@ -172,7 +172,7 @@ export function exportWithPandoc(
   const { configurationName, content, documentFormat, path, project } = doc;
   console.log(`exportWithPandoc, path=${path}`)
   let { resourcesPaths, resultFile } = exportOptions;
-  resultFile = toOsPath(resultFile)
+  resultFile = resultFile && localizePath(resultFile) || undefined
   const converter = documentFormatToOutputConverter(documentFormat)
   const { format, pandocOptions, pandocTemplate, referenceFile, standalone } =
     converter as PandocOutputConverter;
@@ -410,6 +410,14 @@ function runPandocOnFile(
   }
 }
 
+/**
+ * Make a Pandoc conversion, from JSON to a custom writer, of the master document
+ * of a project, using the include-doc filter to asseble the whole project.
+ * @param editorProject The project: its `path` and `rootDocument` must be defined.
+ * @param writerFilename The name of the custom writer file.
+ * @param options Metadata and variables values to be set in the pandoc conversion.
+ * @returns The result of the writer or `undefined` when there's no project or root document.
+ */
 export async function runWriterOnMasterFile(
   editorProject: string | PundokEditorProject,
   writerFilename: string,
@@ -423,24 +431,25 @@ export async function runWriterOnMasterFile(
       editorProject && isString(editorProject)
         ? JSON.parse(editorProject)
         : editorProject;
-    if (!project.path || !project.rootDocument)
+    let { path, rootDocument } = project
+    if (!path || !rootDocument)
       return undefined
-    let src = resolve(project.path, project.rootDocument);
+    path = localizePath(path)
+    rootDocument = localizePath(rootDocument)
+    let src = resolve(path, rootDocument);
     if (!isAbsolute(src))
       return Promise.reject(`"${src}" is not an absolute path`);
     if (!isReadableFile(src))
       return Promise.reject(`"${src}" is not a readable file`);
-    const writer = findResourceFile(writerFilename, { kind: 'writer' });
+    const writer = findResourceFile(localizePath(writerFilename), { kind: 'writer' });
     const includeDocFilterFile = findResourceFile(INCLUDE_DOC_FILTER, {
       kind: 'filter',
     });
     if (writer && includeDocFilterFile) {
-      console.log(writer);
-      console.log(includeDocFilterFile);
       const args = ['-f', 'json', '-t', writer, '-L', includeDocFilterFile];
 
-      if (project?.path)
-        args.push(`--data-dir=${encloseInDblQuotes(project.path)}`);
+      if (path)
+        args.push(`--data-dir=${encloseInDblQuotes(path)}`);
 
       // variables
       Object.entries(options?.variables || {}).forEach(([name, value]) => {

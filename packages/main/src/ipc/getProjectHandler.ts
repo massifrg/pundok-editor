@@ -1,8 +1,13 @@
 import { IpcMainInvokeEvent } from 'electron';
-import { readFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, readFile } from '../filesystem';
 import { IpcHub } from './ipcHub';
-import { computeProjectConfiguration, DEFAULT_PROJECT_FILENAME, GetProjectOptions, PundokEditorConfig, PundokEditorProject } from '../common';
+import {
+  computeProjectConfiguration,
+  DEFAULT_PROJECT_FILENAME,
+  GetProjectOptions,
+  PundokEditorConfig,
+  PundokEditorProject
+} from '../common';
 import { format as formatPath, parse as parsePath } from 'path';
 import { isReadableDir } from '../resourcesManager';
 import { getConfigurationInit } from './configurationHandlers';

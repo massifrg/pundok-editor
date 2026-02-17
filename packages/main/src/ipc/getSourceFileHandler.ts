@@ -1,8 +1,12 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
-import { existsSync } from 'fs';
+import { existsSync } from '../filesystem';
 import { runExternalProgram } from '../runExternal';
-import { EditorKeyType, PundokEditorProject, SynctexInfo } from '../common';
+import {
+  EditorKeyType,
+  PundokEditorProject,
+  SynctexInfo
+} from '../common';
 import { isAbsolute, resolve } from 'path';
 import { progressFeedback } from './feedback';
 import { getExtendedEnvironment } from '../resourcesManager';

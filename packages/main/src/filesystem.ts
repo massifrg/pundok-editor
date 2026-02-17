@@ -38,10 +38,11 @@ export function toUnixPath(path: string): string {
  * Adjust the slashes/backslashes in a path according to the OS.
  * @param path 
  */
-export function toOsPath(path: string): string {
+export function localizePath(path: string): string {
+  const no_file_protocol = path.replace(/^file:\/\//, '')
   return platform() === 'win32'
-    ? path.replaceAll('/', '\\').replace(/^\\([A-Z]:)/i, '$1')
-    : toUnixPath(path)
+    ? no_file_protocol.replaceAll('/', '\\').replace(/^\\([A-Z]:)/i, '$1')
+    : toUnixPath(no_file_protocol)
 }
 
 export function pathToUrl(path: string, project?: PundokEditorProject): string {
@@ -89,11 +90,11 @@ export function baseUrlWithFilename(
 }
 
 export function readFile(path: string) {
-  return fs_readFile(toOsPath(path))
+  return fs_readFile(localizePath(path))
 }
 
 export function existsSync(path: string) {
-  return fs_existsSync(toOsPath(path))
+  return fs_existsSync(localizePath(path))
 }
 
 export function writeFile(
@@ -101,5 +102,5 @@ export function writeFile(
   data: string | NodeJS.ArrayBufferView | Iterable<string | NodeJS.ArrayBufferView> | AsyncIterable<string | NodeJS.ArrayBufferView> | Stream,
   options?: (ObjectEncodingOptions & { mode?: Mode | undefined; flag?: OpenMode | undefined; flush?: boolean | undefined; } & EventEmitter.Abortable) | BufferEncoding | null
 ) {
-  return fs_writeFile(toOsPath(path), data, options)
+  return fs_writeFile(localizePath(path), data, options)
 }

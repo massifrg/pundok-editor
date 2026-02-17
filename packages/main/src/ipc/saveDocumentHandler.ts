@@ -5,7 +5,7 @@ import {
   parse as parsePath,
   resolve,
 } from 'path';
-import { toOsPath, toUnixPath, writeFile } from '../filesystem';
+import { localizePath, toUnixPath, writeFile } from '../filesystem';
 import {
   commandLineFeedback,
   errorFeedback,
@@ -154,9 +154,9 @@ export async function exportDocument(
   if (!path) return Promise.reject(`You must provide a document (file) name!`)
   const converter = documentFormatToOutputConverter(documentFormat)
   const { feedback, openResult } = converter || {}
-  const cwd = toOsPath(project?.path || process.cwd());
+  const cwd = localizePath(project?.path || process.cwd());
 
-  const sourceFile = toOsPath(path)
+  const sourceFile = localizePath(path)
   let resultFile = converter?.resultFile
     ? expandCommandArgs([converter.resultFile], sourceFile)[0]
     : undefined

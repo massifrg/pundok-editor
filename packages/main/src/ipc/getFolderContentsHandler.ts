@@ -1,5 +1,5 @@
 import { IpcMainInvokeEvent } from "electron";
-import { homedir, platform } from "os";
+import { homedir } from "os";
 import {
   dirname,
   join as joinPath,
@@ -8,7 +8,6 @@ import {
 } from "path";
 import { Dirent, existsSync, statSync } from "fs";
 import { readdir, readFile } from "fs/promises";
-import { fileURLToPath } from 'url'
 import { getDiskInfoSync } from 'node-disk-info';
 import { IpcHub } from "./ipcHub";
 import { stringify } from "../utils";
@@ -19,7 +18,7 @@ import {
   FolderContents,
   Place
 } from "../common";
-import { pathToFileURLfixed } from "../filesystem";
+import { localizePath, pathToFileURLfixed, toUnixPath } from "../filesystem";
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
 type JumpListModule = {
@@ -43,27 +42,26 @@ if (process.platform === 'win32') {
 const USER_PLACES = '.local/share/user-places.xbel'
 const GTK_BOOKMARKS = '.config/gtk-3.0/bookmarks'
 
+/**
+ * 
+ * @param hub 
+ * @returns 
+ */
 export const getFolderContentsHandler = (hub: IpcHub) => async (
   e: IpcMainInvokeEvent,
   ctx: string,
 ): Promise<FolderContents> => {
-  let folder: string | undefined = undefined
   const context = JSON.parse(ctx) as DocumentContext
   const { project } = context;
   let path = context.path || project?.path || process.cwd()
-  const path_as_url = pathToFileURLfixed(path)
-  console.log(`getFolderContentsHandler: path=${path}, path_as_url=${path_as_url}`)
+  if (!path)
+    return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
+  path = localizePath(path)
   try {
-    if (!path_as_url)
-      return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
-    folder = fileURLToPath(path_as_url)
-    if (!folder)
-      return Promise.reject(`openDocumentHandler: please provide a valid file path!`)
-    console.log(`folder=${folder}`)
-    const contents = await readdir(folder, { withFileTypes: true })
+    const contents = await readdir(path, { withFileTypes: true })
     const folders: Folder[] = []
     const documents: Document[] = []
-    if (!isRoot(folder))
+    if (!isRoot(path))
       folders.push({ name: '..', /* baseUrl */ })
     contents.forEach(c => {
       if (c.isDirectory())
@@ -71,17 +69,15 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
       else if (c.isFile())
         documents.push({ name: c.name })
       else if (c.isSymbolicLink()) {
-        if (isSymlinkToDirectory(folder!, c))
+        if (isSymlinkToDirectory(path!, c))
           folders.push({ name: c.name, /* baseUrl */ })
         else
           documents.push({ name: c.name })
       }
       console.log(c.name)
     })
+    const baseUrl = 'file://' + toUnixPath(path)
     const places = await getUserPlaces()
-    const baseUrl = platform() === 'win32'
-      ? path_as_url.toString().replaceAll(/\\/g, '/')
-      : path_as_url.toString()
     return {
       baseUrl,
       folders,
@@ -91,7 +87,7 @@ export const getFolderContentsHandler = (hub: IpcHub) => async (
     } as FolderContents
   } catch (err) {
     console.log(err)
-    return Promise.reject(stringify(err) + `\nwhile trying to get the contents of path="${path}", path_as_url="${path_as_url}" => folder "${folder}"`)
+    return Promise.reject(stringify(err) + `\nwhile trying to get the contents of path="${path}"`)
   }
 }
 
