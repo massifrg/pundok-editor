@@ -5,7 +5,7 @@ import {
   parse as parsePath,
   resolve,
 } from 'path';
-import { writeFile } from 'fs/promises';
+import { toOsPath, toUnixPath, writeFile } from '../filesystem';
 import {
   commandLineFeedback,
   errorFeedback,
@@ -56,7 +56,7 @@ export const saveDocumentHandler = (hub: IpcHub) =>
         const bookmark: PundokBookmark = {
           type: 'document',
           id,
-          url: 'file://' + path!,
+          url: 'file://' + toUnixPath(path!),
           configurationName: project ? undefined : configurationName,
         }
         await updateBookmarksFile([bookmark]);
@@ -154,9 +154,9 @@ export async function exportDocument(
   if (!path) return Promise.reject(`You must provide a document (file) name!`)
   const converter = documentFormatToOutputConverter(documentFormat)
   const { feedback, openResult } = converter || {}
-  const cwd = project?.path || process.cwd();
+  const cwd = toOsPath(project?.path || process.cwd());
 
-  const sourceFile = doc.path
+  const sourceFile = toOsPath(path)
   let resultFile = converter?.resultFile
     ? expandCommandArgs([converter.resultFile], sourceFile)[0]
     : undefined

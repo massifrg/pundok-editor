@@ -34,7 +34,7 @@ import {
   resolve,
 } from 'path';
 import { encloseInDblQuotes } from './utils';
-import { existsSync } from 'fs';
+import { existsSync, toOsPath } from './filesystem';
 import { isArray, isObject, isString } from 'lodash-es';
 import { expandCommandArgs } from './ipc/expandCommandArgs';
 
@@ -171,7 +171,8 @@ export function exportWithPandoc(
 ): Promise<ExternalProgramResult> {
   const { configurationName, content, documentFormat, path, project } = doc;
   console.log(`exportWithPandoc, path=${path}`)
-  const { resourcesPaths, resultFile } = exportOptions;
+  let { resourcesPaths, resultFile } = exportOptions;
+  resultFile = toOsPath(resultFile)
   const converter = documentFormatToOutputConverter(documentFormat)
   const { format, pandocOptions, pandocTemplate, referenceFile, standalone } =
     converter as PandocOutputConverter;

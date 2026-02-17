@@ -19,7 +19,7 @@ import {
   FolderContents,
   Place
 } from "../common";
-import { pathToFileURLfixed } from "./pathToUrl";
+import { pathToFileURLfixed } from "../filesystem";
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
 type JumpListModule = {

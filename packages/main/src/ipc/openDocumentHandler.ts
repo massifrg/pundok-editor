@@ -1,5 +1,5 @@
 import { IpcMainInvokeEvent } from 'electron';
-import { readFile } from 'fs/promises';
+import { readFile } from '../filesystem';
 import {
   format as formatPath,
   isAbsolute,
@@ -27,9 +27,7 @@ import { commandLineFeedback, errorFeedback } from './feedback';
 import { computeProjectFromDocFile } from './getProjectHandler';
 import { IpcHub } from './ipcHub';
 import { getConfigurationInit } from './configurationHandlers';
-import { fileURLToPath } from 'url';
-import { pathToUrl, toUnixPath } from './pathToUrl';
-import { platform } from 'os';
+import { toUnixPath } from '../filesystem';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,
