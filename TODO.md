@@ -98,3 +98,6 @@
 - native file open/save dialogs
 
 - remove duplication of indices in DocState and IndexingState
+
+- replace the call to wmic in win32 with "Get-WmiObject -Class Win32_LogicalDisk | Select-Object Caption, FreeSpace, Size,
+  VolumeSerialNumber, Description | Format-List"
