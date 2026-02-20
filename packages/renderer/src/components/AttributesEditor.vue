@@ -607,7 +607,7 @@ export default {
       let src: string | undefined = undefined
       showIncludeDocumentDialog({
         editor: this.editor,
-        startFolder: docState?.inputFolder,
+        startFolder: docState?.workingFolder,
         callback: (context) => {
           const { documentFormat, path, project } = context
           if (path) {

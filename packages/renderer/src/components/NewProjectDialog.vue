@@ -98,7 +98,7 @@ export default {
       showSelectFolderDialog({
         editor: this.editor,
         prompt: 'Select the project folder:',
-        startFolder: docState?.inputFolder,
+        startFolder: docState?.workingFolder,
         callback: async ({ path }) => {
           if (path) {
             this.path = path

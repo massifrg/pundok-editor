@@ -285,22 +285,12 @@ export function documentFormatFromOutputConverter(oc: OutputConverter, source?: 
   return { ...oc, extensions, ftype: 'output-converter', source }
 }
 
-export function getDefaultInputFormat(config?: PundokEditorConfig | PundokEditorConfigInit): DocumentFormat | undefined {
+export function getDefaultWorkingFormat(config?: PundokEditorConfig | PundokEditorConfigInit): DocumentFormat | undefined {
   if (!config) return undefined
-  let df = documentFormatWithName(config?.inputFormat, 'input', config)
+  let df = documentFormatWithName(config?.workingFormat, 'input', config)
   if (!df) {
     const ic = config.inputConverters?.find(c => c.default === true)
     return ic && documentFormatFromInputConverter(ic, config.name)
-  }
-  return df
-}
-
-export function getDefaultOutputFormat(config?: PundokEditorConfig | PundokEditorConfigInit): DocumentFormat | undefined {
-  if (!config) return undefined
-  let df = documentFormatWithName(config?.outputFormat, 'output', config)
-  if (!df) {
-    const oc = config.outputConverters?.find(c => c.default === true)
-    return oc && documentFormatFromOutputConverter(oc, config.name)
   }
   return df
 }

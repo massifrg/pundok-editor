@@ -50,14 +50,14 @@ export default {
     },
     async askTargetFileUrl() {
       const docState = getEditorDocState(this.editor)
-      const { project, inputFolder, outputFolder } = docState || {}
+      const { project, workingFolder } = docState || {}
       let url: URL
       let path = this.targetUrl
       console.log(path)
       try {
         url = new URL(path)
       } catch (err) {
-        path = outputFolder || inputFolder || project?.path
+        path = workingFolder || project?.path
         path = path ? path + '/' + this.targetUrl : this.targetUrl
         console.log(path)
       } finally {
@@ -66,7 +66,7 @@ export default {
       const chunks = url && url.pathname.split('/')
       const filename = url && chunks.pop()
       const startFolder = url && chunks.join('/')
-        || docState?.imagesFolder || docState?.inputFolder
+        || docState?.imagesFolder || docState?.workingFolder
       const format = filename && imageFormatFromFilename(filename) || undefined
       const startFormat = format
         ? { ...format, ftype: 'image' } as DocumentFormat

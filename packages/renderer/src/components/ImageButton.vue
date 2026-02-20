@@ -34,8 +34,8 @@ export default {
       return "insert Image" + (sc && sc.length > 0 ? ` [${sc}]` : '')
     },
     basePath() {
-      const { imagesFolder, inputFolder, outputFolder } = this.docState
-      return imagesFolder || outputFolder || inputFolder
+      const { imagesFolder, workingFolder } = this.docState
+      return imagesFolder || workingFolder
     },
   },
   setup() {

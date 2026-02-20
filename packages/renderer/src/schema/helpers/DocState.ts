@@ -18,9 +18,7 @@ export interface DocState {
   /** The name of the document being edited. */
   readonly documentName?: string;
   /** The path or base URL where documents are read */
-  readonly inputFolder?: string;
-  /** The path or base URL where documents are stored */
-  readonly outputFolder?: string;
+  readonly workingFolder?: string;
   /** The path or base URL where a copy of a document is saved */
   readonly copyFolder?: string;
   /** The path or base URL where images are picked */
@@ -28,9 +26,7 @@ export interface DocState {
   /** The path or base URL where document or snippets are picked for inclusion */
   readonly includeFolder?: string;
   /** The predefined or last-opened input format */
-  readonly inputFormat?: DocumentFormat;
-  /** The predefined or last-saved output format */
-  readonly outputFormat?: DocumentFormat;
+  readonly workingFormat?: DocumentFormat;
   /** The predefined or last-saved as copy output format */
   readonly copyFormat?: DocumentFormat;
   /** The predefined or last-picked image format */
@@ -55,13 +51,11 @@ export interface DocState {
 export interface DocStateUpdate {
   documentName: string | null;
   resourcePath: string[] | null;
-  inputFolder: string | null;
-  outputFolder: string | null;
+  workingFolder: string | null;
   copyFolder: string | null;
   imagesFolder: string | null;
   includeFolder: string | null;
-  inputFormat: DocumentFormat | null;
-  outputFormat: DocumentFormat | null;
+  workingFormat: DocumentFormat | null;
   copyFormat?: DocumentFormat | null;
   imagesFormat?: DocumentFormat | null;
   includeFormat?: DocumentFormat | null;
@@ -150,7 +144,7 @@ export function updateDocState(
 }
 
 export function makePathRelativeToDoc(docState: DocState, path: string): string {
-  const basePath = docState?.outputFolder || docState?.inputFolder
+  const basePath = docState?.workingFolder
   return basePath && isAbsolute(path)
     ? relativePath(basePath, path)
     : path

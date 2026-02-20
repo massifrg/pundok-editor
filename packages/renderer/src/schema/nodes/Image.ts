@@ -86,8 +86,7 @@ export const Image = Node.create<ImageOptions>({
     if (editor) {
       const docState = getEditorDocState(editor as Editor)
       baseUrl = docState?.imagesFolder
-        || docState?.outputFolder
-        || docState?.inputFolder
+        || docState?.workingFolder
         || docState?.project?.path
       baseUrl = baseUrl?.replaceAll('\\', '/')
     }
@@ -161,7 +160,7 @@ function fixImageSrc(all: boolean): Command {
     const docState = getDocState(state)
     if (!docState)
       return false
-    const basePath = docState?.imagesFolder || docState?.outputFolder || docState?.inputFolder
+    const basePath = docState?.imagesFolder || docState?.workingFolder
     if (!basePath)
       return false
     const { doc, selection, tr } = state

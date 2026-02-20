@@ -7,10 +7,8 @@ export function showDocStateDialog(editor: Editor) {
   if (docState) {
     const fields: (keyof typeof docState)[] = [
       'documentName',
-      'inputFolder',
-      'inputFormat',
-      'outputFolder',
-      'outputFormat',
+      'workingFolder',
+      'workingFormat',
       'copyFolder',
       'copyFormat',
       'imagesFolder',

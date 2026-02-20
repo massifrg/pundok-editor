@@ -26,9 +26,7 @@ export interface PundokEditorConfigInit {
     options?: Record<string, any>;
   };
   /** the name of a pandoc format or an InputConverter used as default to open documents. */
-  inputFormat?: string;
-  /** the name of a pandoc format or an OutputConverter used as default to save documents. */
-  outputFormat?: string;
+  workingFormat?: string;
   /** the name of the format (pandoc or custom) used with "Save a copy" */
   copyFormat?: string,
   /** the names of the formats that are more visible in the GUI with this configuration */

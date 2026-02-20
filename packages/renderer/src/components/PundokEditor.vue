@@ -130,8 +130,7 @@ import {
   outputConverterToDocumentFormat,
   changeFileExtensionToFormat,
   asOutputFormat,
-  getDefaultInputFormat,
-  getDefaultOutputFormat,
+  getDefaultWorkingFormat,
   getDefaultCopyFormat,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
@@ -419,8 +418,7 @@ export default {
             break;
           case ACTION_SET_DOCUMENT_FORMAT.name:
             const { whichFormat, documentFormat } = props as SetDocumentFormatActionProps
-            const property = (whichFormat === 'input' && 'inputFormat')
-              || (whichFormat === 'output' && 'outputFormat')
+            const property = (whichFormat === 'input' && 'workingFormat')
               || (whichFormat === 'copy' && 'copyFormat')
             if (property)
               this.updateEditorDocState({ [whichFormat]: documentFormat || null })
@@ -675,13 +673,11 @@ export default {
         this.updateEditorDocState({
           unsavedChanges: false,
           unsavedChangesAsCopy: false,
-          inputFolder: oldDocState?.inputFolder,
-          outputFolder: oldDocState?.outputFolder,
+          workingFolder: oldDocState?.workingFolder,
           imagesFolder: oldDocState?.imagesFolder,
           includeFolder: oldDocState?.includeFolder,
           copyFolder: oldDocState?.copyFolder,
-          inputFormat: oldDocState?.inputFormat,
-          outputFormat: oldDocState?.outputFormat,
+          workingFormat: oldDocState?.workingFormat,
           imagesFormat: oldDocState?.imagesFormat,
           includeFormat: oldDocState?.includeFormat,
           copyFormat: oldDocState?.copyFormat,
@@ -792,9 +788,8 @@ export default {
         await this.newEditor();
         this.editor?.commands.updateDocState({
           configuration: prevDocState?.configuration,
-          inputFolder: prevDocState?.inputFolder,
-          inputFormat: getDefaultInputFormat(this.configuration) || prevDocState?.inputFormat,
-          outputFormat: getDefaultOutputFormat(this.configuration),
+          workingFolder: prevDocState?.workingFolder,
+          workingFormat: getDefaultWorkingFormat(this.configuration) || prevDocState?.workingFormat,
           copyFormat: getDefaultCopyFormat(this.configuration),
           imagesFolder: prevDocState?.imagesFolder,
           imagesFormat: prevDocState?.imagesFormat,
@@ -834,8 +829,8 @@ export default {
             editor: this.editor,
             mode: 'open',
             prompt: 'Open document',
-            startFolder: docState?.inputFolder,
-            startFormat: docState?.inputFormat,
+            startFolder: docState?.workingFolder,
+            startFormat: docState?.workingFormat,
             callback: (context) => {
               if (context.path) {
                 setActionCommand(editorKey, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
@@ -862,13 +857,12 @@ export default {
               || (configurationName && await this.setConfiguration(configurationName))
               || undefined
             const update: Partial<DocStateUpdate> = {
-              inputFormat: documentFormat,
-              outputFormat: getDefaultOutputFormat(configuration),
+              workingFormat: documentFormat,
               copyFormat: getDefaultCopyFormat(configuration),
             }
             if (path) {
               const { folder, document } = splitFolderAndDoc(path)
-              update.inputFolder = folder
+              update.workingFolder = folder
               update.documentName = document
             }
             this.editor?.commands.updateDocState(update)
@@ -905,8 +899,8 @@ export default {
       this.updateEditorDocState({
         documentName: document,
         resourcePath: doc.resourcePath,
-        inputFolder: folder,
-        inputFormat: doc.documentFormat,
+        workingFolder: folder,
+        workingFormat: doc.documentFormat,
       });
 
       // set project or configuration
@@ -938,17 +932,16 @@ export default {
       const docState = this.docState()
       let path = props?.path
       if (!path) {
-        const { documentName, copyFolder, inputFolder, outputFolder } = docState || {}
-        const folder = isCopy ? copyFolder : outputFolder || inputFolder
+        const { documentName, copyFolder, workingFolder } = docState || {}
+        const folder = isCopy ? copyFolder : workingFolder
         path = folder && documentName && `${folder}/${documentName}` || undefined
       }
       const isSave = !isSaveAs && !isCopy
       let documentFormat = props?.documentFormat
-        || docState?.outputFormat
-        || asOutputFormat(docState?.inputFormat)
+        || asOutputFormat(docState?.workingFormat)
       if (!path || isSaveAs || (isCopy && !dontAskCopyPath) || (isSave && !documentFormat)) {
         if (isCopy) {
-          const { configuration, documentName, copyFolder, copyFormat, inputFolder, inputFormat, outputFolder, outputFormat } = docState || {}
+          const { configuration, documentName, copyFolder, copyFormat, workingFolder, workingFormat } = docState || {}
           const startFilename = documentName && copyFormat
             ? changeFileExtensionToFormat(documentName, copyFormat)
             : undefined
@@ -956,9 +949,9 @@ export default {
           showSaveCopyDialog({
             editor: this.editor,
             prompt: 'Save a copy to:',
-            startFolder: copyFolder || outputFolder || inputFolder,
-            startFormat: copyFormat || defaultCopyFormat || outputFormat
-              || asOutputFormat(inputFormat)
+            startFolder: copyFolder || workingFolder,
+            startFormat: copyFormat || defaultCopyFormat
+              || asOutputFormat(workingFormat)
               || DEFAULT_COPY_DOCUMENT_FORMAT,
             startFilename,
             callback: (context) => {
@@ -972,18 +965,18 @@ export default {
             }
           } as DocumentDialogProps)
         } else {
-          const { documentName, inputFolder, inputFormat, outputFolder, outputFormat, configuration } = docState || {}
-          const defaultOutputFormat = getDefaultOutputFormat(configuration)
+          const { documentName, workingFolder, workingFormat, configuration } = docState || {}
+          const defaultWorkingFormat = getDefaultWorkingFormat(configuration)
           const startFormat = isSaveAs
-            ? outputFormat || defaultOutputFormat
-            : documentFormat || defaultOutputFormat || DEFAULT_DOCUMENT_FORMAT
+            ? workingFormat || defaultWorkingFormat
+            : documentFormat || defaultWorkingFormat || DEFAULT_DOCUMENT_FORMAT
           const startFilename = documentName && startFormat
             ? changeFileExtensionToFormat(documentName, startFormat)
             : undefined
           showSaveDocumentDialog({
             editor: this.editor,
             prompt: isSaveAs ? 'Save document as:' : 'Save document:',
-            startFolder: isSaveAs ? outputFolder || inputFolder : inputFolder,
+            startFolder: isSaveAs ? workingFolder : workingFolder,
             startFormat,
             startFilename,
             callback: (context) => {
@@ -1005,7 +998,7 @@ export default {
         const documentFormat = toRaw(props?.documentFormat || (
           isCopy
             ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
-            : docState?.outputFormat || docState?.inputFormat || DEFAULT_DOCUMENT_FORMAT
+            : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT
         ))
         if (this.backend) {
           const { configuration, documentName, project, resourcePath } = docState || {}
@@ -1038,13 +1031,13 @@ export default {
                 update.unsavedChangesAsCopy = false
               } else if (isSaveAs) {
                 update.documentName = document
-                update.outputFolder = folder
-                update.outputFormat = documentFormat
+                update.workingFolder = folder
+                update.workingFormat = documentFormat
                 update.unsavedChanges = false
               } else {
                 update.documentName = document
-                update.outputFolder = folder
-                update.outputFormat = documentFormat
+                update.workingFolder = folder
+                update.workingFormat = documentFormat
                 update.unsavedChanges = false
               }
               this.editor?.commands.updateDocState(update)
