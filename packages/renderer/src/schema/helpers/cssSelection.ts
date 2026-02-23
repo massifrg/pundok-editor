@@ -10,6 +10,9 @@ import {
 import { SelectedNodeOrMark } from './selection';
 import { isString } from 'lodash-es';
 import {
+  MARK_NAME_DOUBLE_QUOTED,
+  MARK_NAME_EMPH,
+  MARK_NAME_SINGLE_QUOTED,
   NODE_NAME_BREAK,
   NODE_NAME_HEADING,
   NODE_NAME_HORIZONTAL_RULE,
@@ -33,6 +36,9 @@ const NORMALIZED_NAME: Record<string, string | MatchNameWithNodeOrMarkFunction> 
   br: NODE_NAME_BREAK.toLowerCase(),
   linebreak: (n) => n.type.name === NODE_NAME_BREAK && !n.attrs.soft,
   softbreak: (n) => n.type.name === NODE_NAME_BREAK && !!n.attrs.soft,
+  dq: MARK_NAME_DOUBLE_QUOTED,
+  sq: MARK_NAME_SINGLE_QUOTED,
+  em: MARK_NAME_EMPH,
 };
 
 type CombinatorSelector =
