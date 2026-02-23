@@ -12,6 +12,8 @@
         <q-space />
         <q-btn icon="mdi-delete" title="delete note" size="sm" @click="deleteNode" />
         <q-space style="max-width: 3rem" />
+        <q-btn icon="mdi-note-remove" title="unwrap/convert note to text" size="sm"
+          :disabled="!editor?.can().noteToText()" @click="noteToText()" />
         <q-btn icon="mdi-refresh" title="refresh/fix note numbers" size="sm" @click="refreshNotes()" />
         <q-space style="max-width: 3rem" />
         <q-btn icon="mdi-close" title="close note" size="sm" @click="hide()" />
@@ -205,6 +207,9 @@ export default {
         const note = (notes as CachedNote[]).find(n => n.pos === pos)
         if (note) this.noteNumber = note.noteNumber
       }
+    },
+    noteToText() {
+      this.editor?.commands.noteToText()
     },
     refreshNotes() {
       this.editor?.commands.refreshNotes()

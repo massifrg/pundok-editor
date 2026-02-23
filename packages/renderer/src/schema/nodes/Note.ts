@@ -1,10 +1,11 @@
 import { Fragment } from '@tiptap/pm/model';
 import { mergeAttributes, Node } from '@tiptap/core';
 import { Editor, VueNodeViewRenderer } from '@tiptap/vue-3';
-import { DEFAULT_NOTE_TYPE, NODE_NAME_PARAGRAPH, SK } from '../../common';
+import { DEFAULT_NOTE_TYPE, NODE_NAME_NOTE, NODE_NAME_PARAGRAPH, SK } from '../../common';
 import { Component } from 'vue';
-import { getEditorDocState, META_REFRESH_NOTES, notesPlugin } from '../helpers';
+import { depthOfInnerNodeType, getEditorDocState, META_REFRESH_NOTES, notesPlugin } from '../helpers';
 import { NoteView } from '../../components';
+import { NodeSelection } from '@tiptap/pm/state';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -17,6 +18,10 @@ declare module '@tiptap/core' {
        * Refresh notes (decorations)
        */
       refreshNotes: () => ReturnType;
+      /**
+       * Split the current paragraph at the note marker and unwrap the Note blocks into the main text.
+       */
+      noteToText: () => ReturnType;
     };
   }
 }
@@ -153,6 +158,25 @@ export const Note = Node.create<NoteOptions>({
             if (dispatch) dispatch(tr.setMeta(META_REFRESH_NOTES, true));
             return true;
           },
+      noteToText: () => ({ dispatch, state, tr }) => {
+        const { $from } = state.selection
+        const d = depthOfInnerNodeType($from, [NODE_NAME_NOTE])
+        if (!d) return false
+        const pos = $from.start(d) - 1
+        const note = state.doc.nodeAt(pos)
+        if (!note) return false
+        if (dispatch) {
+          const content = note && note.content
+          const noteSelection = new NodeSelection(state.doc.resolve(pos))
+          dispatch(tr
+            .setSelection(noteSelection)
+            .deleteSelection()
+            .split(pos)
+            .insert(pos, content)
+          )
+        }
+        return true
+      },
     };
   },
 
