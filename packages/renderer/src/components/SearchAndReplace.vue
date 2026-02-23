@@ -535,6 +535,10 @@ export default {
       const newValue = v ? v.toString() : ''
       this.searchInput = newValue
       this.searchStarted = false
+      if (this.cssMode)
+        this.cssSelector = this.searchInput
+      else
+        this.textToSearch = this.searchInput
     },
     updateTextToReplace(v: string | number | null) {
       const newValue = v ? v.toString() : ''
@@ -724,7 +728,7 @@ export default {
           type: 'elements-selection',
           name,
           description,
-          cssSelector: toRaw(this.cssSelector),
+          cssSelector: toRaw(this.searchInput),
           replace: toRaw(this.textToReplace),
           // tab,
         } as ElementsSelection
