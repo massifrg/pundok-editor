@@ -158,6 +158,7 @@ import MarksPaletteDropdown from './MarksPaletteDropdown.vue';
 import SaveConfigurationElementPopup from './SaveConfigurationElementPopup.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
+  CssSelectOptions,
   LabeledNodeOrMark,
   SearchQuery,
   SearchResultFilter,
@@ -507,9 +508,9 @@ export default {
       if (editor) {
         try {
           editor.commands.cssSelect(this.searchInput, {
-            mergeAdjacentMarks: this.optionMergeAdjacentMarks,
+            mergeSameAdjacentMarks: this.optionMergeAdjacentMarks,
             sort: true
-          })
+          } as CssSelectOptions)
           return true
         } catch (err: any) {
           console.log(err.message)
