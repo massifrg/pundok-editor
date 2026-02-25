@@ -38,7 +38,7 @@
           <q-menu anchor="bottom start" self="bottom end">
             <q-list>
               <q-item v-for="sel in cssSelections" clickable v-close-popup dense :title="sel.description"
-                @click="setCssSelector(sel)">
+                @click="loadCssElementsSelection(sel)">
                 <q-item-section>{{ sel.name }}</q-item-section>
               </q-item>
             </q-list>
@@ -69,9 +69,10 @@
           <div class="q-pt-md q-gutter-none">
             <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="mdi-find-replace"
               title="cycle through found texts" @click="optionCycle = !optionCycle" />
-            <q-btn v-if="cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionMergeAdjacentMarks"
-              icon="mdi-set-merge" title="merge adjacent text ranges with the same marks"
-              @click="optionMergeAdjacentMarks = !optionMergeAdjacentMarks" />
+            <q-btn v-if="cssMode" class="q-ma-xs" size="sm" round color="primary"
+              :outline="!optionMergeSameAdjacentMarks" icon="mdi-set-merge"
+              title="merge adjacent text ranges with the same marks"
+              @click="optionMergeSameAdjacentMarks = !optionMergeSameAdjacentMarks" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionCaseInsensitive"
               icon="mdi-format-letter-case" title="case insensitive search"
               @click="optionCaseInsensitive = !optionCaseInsensitive" />
@@ -234,7 +235,7 @@ export default {
       // in CSS selection mode, the CSS selector
       cssSelector: '',
       // in CSS selection mode, merge adjacent text nodes with the same marks
-      optionMergeAdjacentMarks: true,
+      optionMergeSameAdjacentMarks: true,
       // in text mode, the text or the regex to be searched
       textToSearch: '',
       // the the replacing text (text and CSS)
@@ -439,17 +440,6 @@ export default {
       this.editor.chain().hideFoundTexts().focus().run()
       this.hideDialog()
     },
-    setCssSelector(sel: ElementsSelection) {
-      this.updateSearchInput(sel.cssSelector)
-      if (sel.replace) {
-        this.optionSearchOnly = false
-        this.updateTextToReplace(sel.replace)
-      } else {
-        this.optionSearchOnly = true
-      }
-      this.startSearch()
-      // this.editorAttributesTab = sel.tab
-    },
     scrollAtSelectedCss() {
       if (this.foundCount <= 0 || this.foundIndex < 0) return
       const e: LabeledNodeOrMark = this.cssSelected[this.foundIndex]
@@ -508,7 +498,7 @@ export default {
       if (editor) {
         try {
           editor.commands.cssSelect(this.searchInput, {
-            mergeSameAdjacentMarks: this.optionMergeAdjacentMarks,
+            mergeSameAdjacentMarks: this.optionMergeSameAdjacentMarks,
             sort: true
           } as CssSelectOptions)
           return true
@@ -544,6 +534,7 @@ export default {
     updateTextToReplace(v: string | number | null) {
       const newValue = v ? v.toString() : ''
       this.textToReplace = newValue;
+      console.log(`textToReplace updated to ${JSON.stringify(this.textToReplace)}`)
     },
     canPrevFound() {
       return this.cssMode
@@ -646,6 +637,15 @@ export default {
       this.actionsOnReplace = []
       this.foundIndex = -1
     },
+    loadCssElementsSelection(sel: ElementsSelection) {
+      this.updateSearchInput(sel.cssSelector)
+      this.updateTextToReplace(sel.replace || '')
+      this.optionSearchOnly = sel.optionSearchOnly !== undefined
+        ? sel.optionSearchOnly
+        : sel.replace !== undefined
+      this.optionMergeSameAdjacentMarks = !!sel.optionMergeSameAdjacentMarks
+      this.startSearch()
+    },
     loadSearchAndReplace(sar: SearchAndReplace) {
       this.textToSearch = sar.search;
       this.updateSearchInput(this.textToSearch)
@@ -656,8 +656,7 @@ export default {
         ? searchMarkSpecToAddableMarks(sar.filterOnMarks.absent, this.editor.state.schema, this.configuration)
         : []
       this.searchFilterSwitch = this.filterMarkPresence.length + this.filterMarkAbsence.length > 0
-      this.textToReplace = sar.replace || '';
-      this.updateTextToReplace(this.textToReplace)
+      this.updateTextToReplace(sar.replace || '')
       this.optionSearchOnly = !!sar.optionSearchOnly || (!sar.replace && sar.replace !== '')
       this.optionCaseInsensitive = !!sar.optionCaseInsensitive
       this.optionRegex = !!sar.optionRegex;
@@ -725,12 +724,15 @@ export default {
     async saveSettings(name: string, description: string, isProject: boolean, configName?: string, isDeletion?: boolean) {
       let obj
       if (this.cssMode) {
+        const optionSearchOnly = this.optionSearchOnly
         obj = {
           type: 'elements-selection',
           name,
           description,
           cssSelector: toRaw(this.searchInput),
-          replace: toRaw(this.textToReplace),
+          optionSearchOnly,
+          replace: optionSearchOnly ? undefined : toRaw(this.textToReplace),
+          optionMergeSameAdjacentMarks: toRaw(this.optionMergeSameAdjacentMarks),
           // tab,
         } as ElementsSelection
       } else {
