@@ -272,6 +272,14 @@ export function findResourceFile(
   return resourcePath && resolve(resourcePath, filename);
 }
 
+function startupFilename(): string {
+  return resolve(userAppDataDir(), STARTUP_FILENAME)
+}
+
+export function existsStartupFile(): boolean {
+  return existsSync(startupFilename())
+}
+
 /**
  * Get the contents of the program's startup file.
  * @returns 
@@ -279,7 +287,7 @@ export function findResourceFile(
 export async function getStartup(): Promise<StartupConfiguration> {
   console.log(`app.getAppPath(): ${app.getAppPath()}`);
   try {
-    const buf = await readFile(resolve(userAppDataDir(), STARTUP_FILENAME));
+    const buf = await readFile(startupFilename());
     const startup = JSON.parse(buf.toString()) as StartupConfiguration;
     return startup;
   } catch (err) {
