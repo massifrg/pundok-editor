@@ -8,14 +8,14 @@
   that Span will have an attribute specifying the note's type;
   currently they're encoded with a single Div as the Note content (with the Div carrying the note type information)~~
 
-- Image inclusion/linking
+- ~~Image inclusion/linking~~
 
 - ~~reload current document with a different configuration~~
 
-- selection by Mark: not only the text with a Mark, but text with a Mark
-  and without another one
+- ~~selection by Mark: not only the text with a Mark, but text with a Mark
+  and without another one~~
 
-- don't ask filename when exporting the same document to the same format
+- ~~don't ask filename when exporting the same document to the same format~~
 
 - ~~use PDFViewer embedded in Chrome (done with pdfjs-dist)~~
 
@@ -25,9 +25,9 @@
 
 - enable/disable markdown input text automations
 
-- CTRL+S in subeditor should save the document in the subeditor, not in the main one
+- ~~CTRL+S in subeditor should save the document in the subeditor, not in the main one~~
 
-- save current modified configuration in the project file
+- ~~save current modified configuration in the project file~~
 
 - copy previous project file in pundok-project.bak
 
@@ -46,14 +46,14 @@
 
 - ~~check configuration loading when opening a document that is part of a project~~
 
-- load project when "save as" creates a file inside a project directory
+- ~~load project when "save as" creates a file inside a project directory~~
 
 - ~~reload prosemirror history plugin when loading a different document, to prevent
   switching to the content of the previous document (with the name of the current one)~~
 
 - ~~shortcut key to edit attributes (Alt-a)~~
 
-- limit the names of custom styles in menubar button
+- ~~limit the names of custom styles in menubar button~~
 
 - keyboard shortcuts for tables (see also tiptap)
 
@@ -80,11 +80,11 @@
 - metadata "pundok-config" to load the configuration of a file before opening it (only
   for files out of a project)
 
-- automatically update version in startup.json
+- ~~automatically update version in startup.json~~
 
 - split tables (maybe better done in prosemirror-tables-sections)
 
-- convert text to tables and tables to text
+- ~~convert text to tables and tables to text~~
 
 - ~~CTRL+F to open search dialog~~
 
@@ -95,7 +95,7 @@
 - see if it's possible to allow marks on Code Mark
   (see pandoc testsuite.native, that has a quoted code)
 
-- native file open/save dialogs
+- ~~native file open/save dialogs~~
 
 - remove duplication of indices in DocState and IndexingState
 
