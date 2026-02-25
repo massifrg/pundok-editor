@@ -23,7 +23,7 @@ export interface FolderContents {
 }
 
 export function splitFolderAndDoc(path: string) {
-  const folder = path.replaceAll('\\', '/').split('/')
+  const folder = path.replace(/^file:\/\//, '').replaceAll('\\', '/').split('/')
   const document = folder.pop()
   return {
     folder: folder.join('/'),
