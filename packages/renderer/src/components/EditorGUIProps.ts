@@ -12,6 +12,8 @@ export interface EditorGUIProps {
   showEditorVersion: boolean;
   showEditorKey: boolean;
   showConfiguration: boolean;
+  /** process.env.NODE_ENV !== 'production' */
+  isDevelopmentMode: boolean;
 }
 
 export class EditorGUIPropsClass implements EditorGUIProps {
@@ -23,6 +25,7 @@ export class EditorGUIPropsClass implements EditorGUIProps {
   showEditorVersion: boolean = true;
   showEditorKey: boolean = process.env.NODE_ENV !== 'production';
   showConfiguration: boolean = true;
+  isDevelopmentMode: boolean = process.env.NODE_ENV !== 'production'
 
   constructor(props?: Partial<EditorGUIProps>) {
     if (props) {
