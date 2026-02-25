@@ -62,7 +62,10 @@ export const guessFormat: DocumentFormat = {
  * @param format 
  * @returns 
  */
-export function asInputFormat(format?: DocumentFormat): DocumentFormat | undefined {
+export function asInputFormat(
+  format?: DocumentFormat,
+  config?: PundokEditorConfig | PundokEditorConfigInit,
+): DocumentFormat | undefined {
   switch (format?.ftype) {
     case 'input-converter':
     case 'image':
@@ -71,6 +74,10 @@ export function asInputFormat(format?: DocumentFormat): DocumentFormat | undefin
     case 'guess':
       return (format as PandocFormatDescription).input === true && format || undefined
     case 'output-converter':
+      const inputConverter = config?.inputConverters?.find(ic => ic.name === format.name)
+      return inputConverter
+        ? documentFormatFromInputConverter(inputConverter)
+        : undefined
     default:
       return undefined
   }
@@ -81,7 +88,10 @@ export function asInputFormat(format?: DocumentFormat): DocumentFormat | undefin
  * @param format 
  * @returns 
  */
-export function asOutputFormat(format?: DocumentFormat): DocumentFormat | undefined {
+export function asOutputFormat(
+  format?: DocumentFormat,
+  config?: PundokEditorConfig | PundokEditorConfigInit,
+): DocumentFormat | undefined {
   switch (format?.ftype) {
     case 'output-converter':
     case 'image':
@@ -90,6 +100,10 @@ export function asOutputFormat(format?: DocumentFormat): DocumentFormat | undefi
     case 'guess':
       return (format as PandocFormatDescription).output === true && format || undefined
     case 'input-converter':
+      const outputConverter = config?.outputConverters?.find(oc => oc.name === format.name)
+      return outputConverter
+        ? documentFormatFromOutputConverter(outputConverter)
+        : undefined
     default:
       return undefined
   }

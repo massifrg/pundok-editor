@@ -129,6 +129,7 @@ import {
   documentNameToId,
   outputConverterToDocumentFormat,
   changeFileExtensionToFormat,
+  asInputFormat,
   asOutputFormat,
   getDefaultWorkingFormat,
   getDefaultCopyFormat,
@@ -825,12 +826,13 @@ export default {
       const editorKey = this.editorKey()
       if (!context?.path) {
         if (editorKey) {
+          const { configuration, workingFolder, workingFormat } = docState || {}
           showOpenDocumentDialog({
             editor: this.editor,
             mode: 'open',
             prompt: 'Open document',
-            startFolder: docState?.workingFolder,
-            startFormat: docState?.workingFormat,
+            startFolder: workingFolder,
+            startFormat: asInputFormat(workingFormat, configuration),
             callback: (context) => {
               if (context.path) {
                 setActionCommand(editorKey, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
@@ -937,11 +939,11 @@ export default {
         path = folder && documentName && `${folder}/${documentName}` || undefined
       }
       const isSave = !isSaveAs && !isCopy
-      let documentFormat = props?.documentFormat
-        || asOutputFormat(docState?.workingFormat)
+      const { configuration, workingFormat } = docState || {}
+      let documentFormat = asOutputFormat(props?.documentFormat || workingFormat, configuration)
       if (!path || isSaveAs || (isCopy && !dontAskCopyPath) || (isSave && !documentFormat)) {
         if (isCopy) {
-          const { configuration, documentName, copyFolder, copyFormat, workingFolder, workingFormat } = docState || {}
+          const { documentName, copyFolder, copyFormat, workingFolder } = docState || {}
           const startFilename = documentName && copyFormat
             ? changeFileExtensionToFormat(documentName, copyFormat)
             : undefined
@@ -951,7 +953,7 @@ export default {
             prompt: 'Save a copy to:',
             startFolder: copyFolder || workingFolder,
             startFormat: copyFormat || defaultCopyFormat
-              || asOutputFormat(workingFormat)
+              || asOutputFormat(workingFormat, configuration)
               || DEFAULT_COPY_DOCUMENT_FORMAT,
             startFilename,
             callback: (context) => {
@@ -965,11 +967,12 @@ export default {
             }
           } as DocumentDialogProps)
         } else {
-          const { documentName, workingFolder, workingFormat, configuration } = docState || {}
+          const { configuration, documentName, workingFolder, workingFormat } = docState || {}
           const defaultWorkingFormat = getDefaultWorkingFormat(configuration)
-          const startFormat = isSaveAs
+          const format = isSaveAs
             ? workingFormat || defaultWorkingFormat
             : documentFormat || defaultWorkingFormat || DEFAULT_DOCUMENT_FORMAT
+          const startFormat = asOutputFormat(format, configuration)
           const startFilename = documentName && startFormat
             ? changeFileExtensionToFormat(documentName, startFormat)
             : undefined
