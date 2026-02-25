@@ -158,6 +158,7 @@ import MarksPaletteDropdown from './MarksPaletteDropdown.vue';
 import SaveConfigurationElementPopup from './SaveConfigurationElementPopup.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
+  CssSelectOptions,
   LabeledNodeOrMark,
   SearchQuery,
   SearchResultFilter,
@@ -507,9 +508,9 @@ export default {
       if (editor) {
         try {
           editor.commands.cssSelect(this.searchInput, {
-            mergeAdjacentMarks: this.optionMergeAdjacentMarks,
+            mergeSameAdjacentMarks: this.optionMergeAdjacentMarks,
             sort: true
-          })
+          } as CssSelectOptions)
           return true
         } catch (err: any) {
           console.log(err.message)
@@ -520,6 +521,8 @@ export default {
     startSearch() {
       const started = this.cssMode ? this.startSearchCss() : this.startSearchText()
       this.searchStarted = started
+      if (started)
+        this.editor?.commands.focus()
       return started
     },
     hideDialog() {
@@ -533,6 +536,10 @@ export default {
       const newValue = v ? v.toString() : ''
       this.searchInput = newValue
       this.searchStarted = false
+      if (this.cssMode)
+        this.cssSelector = this.searchInput
+      else
+        this.textToSearch = this.searchInput
     },
     updateTextToReplace(v: string | number | null) {
       const newValue = v ? v.toString() : ''
@@ -553,8 +560,9 @@ export default {
         this.editor.commands.selectPrevCss(this.optionCycle)
         this.scrollAtSelectedCss()
       } else {
-        this.editor.chain().selectPrevFoundText(this.optionCycle).focus().run()
+        this.editor.commands.selectPrevFoundText(this.optionCycle)
       }
+      this.editor.commands.focus()
     },
     nextFound(scroll?: boolean): boolean {
       if (this.cssMode) {
@@ -565,28 +573,28 @@ export default {
       } else {
         if (!this.editor.can().selectNextFoundText(this.optionCycle))
           return false
-        this.editor.chain().selectNextFoundText(this.optionCycle).focus().run()
+        this.editor.commands.selectNextFoundText(this.optionCycle)
         if (scroll) this.editor.commands.scrollIntoView()
       }
+      if (scroll) this.editor.commands.focus()
       return true
     },
     replaceSelected() {
       if (this.optionSearchOnly) {
-        this.editor.chain()
-          .applyActions(this.actionsOnReplace)
-          .focus().run()
+        this.editor.commands.applyActions(this.actionsOnReplace)
       } else {
         if (this.cssMode)
           this.editor.chain()
             .replaceWithText(this.textToReplace)
             .applyActions(this.actionsOnReplace)
-            .focus().run()
+            .run()
         else
           this.editor.chain()
             .replaceSelectedText()
             .applyActions(this.actionsOnReplace)
-            .focus().run()
+            .run()
       }
+      this.editor.commands.focus()
     },
     replaceNextText() {
       this.replaceSelected()
@@ -721,7 +729,7 @@ export default {
           type: 'elements-selection',
           name,
           description,
-          cssSelector: toRaw(this.cssSelector),
+          cssSelector: toRaw(this.searchInput),
           replace: toRaw(this.textToReplace),
           // tab,
         } as ElementsSelection

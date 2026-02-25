@@ -2,7 +2,7 @@ import { CustomStyleDef, CustomStyleInstance } from './customStyles';
 import { CustomClass } from './customClasses';
 import { CustomAttribute } from './customAttributes';
 import { Mark, MarkType, Node, NodeType } from '@tiptap/pm/model';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 
 /**
  * Check if a custom style definition/instance, or a custom class, or a custom attribute,

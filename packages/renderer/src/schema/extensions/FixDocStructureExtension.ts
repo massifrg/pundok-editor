@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core';
-import { Node, Attrs } from '@tiptap/pm/model';
-import { EditorState, NodeSelection, Transaction } from '@tiptap/pm/state';
+import { Node } from '@tiptap/pm/model';
+import { EditorState, Transaction } from '@tiptap/pm/state';
 import {
   DEFAULT_INDEX_NAME,
   INDEX_CLASS,

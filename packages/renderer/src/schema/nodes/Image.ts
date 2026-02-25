@@ -1,7 +1,7 @@
 // slightly modified from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-image/src/image.ts
 import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model'
-import { docBasePath, getDocState, getEditorDocState } from '../helpers';
+import { getDocState, getEditorDocState } from '../helpers';
 import { isAbsolute, parse as parsePath, relative } from 'path-browserify'
 import { Editor } from '@tiptap/vue-3';
 import { Command } from '@tiptap/pm/state';
@@ -56,12 +56,6 @@ export const Image = Node.create<ImageOptions>({
     };
   },
 
-  addStorage() {
-    return {
-      baseUrl: undefined as string | undefined
-    }
-  },
-
   addAttributes() {
     return {
       src: {
@@ -87,15 +81,14 @@ export const Image = Node.create<ImageOptions>({
 
   renderHTML({ HTMLAttributes, node }) {
     const editor = this.editor
-    const storage = this.storage
     const attributes: Record<string, any> = { ...node.attrs }
-    if (editor && !storage.baseUrl) {
-      let baseUrl: string | undefined = undefined
+    let baseUrl: string | undefined = undefined
+    if (editor) {
       const docState = getEditorDocState(editor as Editor)
-      if (docState)
-        baseUrl = docBasePath(docState)
-      if (baseUrl)
-        storage.baseUrl = baseUrl
+      baseUrl = docState?.imagesFolder
+        || docState?.workingFolder
+        || docState?.project?.path
+      baseUrl = baseUrl?.replaceAll('\\', '/')
     }
     const ext = parsePath(attributes.src).ext.toLowerCase()
     const { page, ['preview-width']: width, ['preview-height']: height } = attributes.kv || {}
@@ -103,13 +96,14 @@ export const Image = Node.create<ImageOptions>({
     if (!attributes.src || attributes.src.length === 0) {
       console.log("IMG NO SRC!")
       attributes.src = '?' // no_image_base64
-    } else if (isAbsolute(attributes.src) && storage.baseUrl) {
-      attributes.src = `img://${storage.baseUrl}/${relative(storage.baseUrl, attributes.src)}`
+    } else if (isAbsolute(attributes.src) && baseUrl) {
+      attributes.src = `img://${baseUrl}/${relative(baseUrl, attributes.src)}`
     } else {
-      attributes.src = storage.baseUrl
-        ? `img://${storage.baseUrl}/${attributes.src}${query}`
+      attributes.src = baseUrl
+        ? `img://${baseUrl}/${attributes.src}${query}`
         : `img://${attributes.src}${query}`
     }
+    console.log(`Image src="${attributes.src}"`)
     const style = (width || height)
       && Object.entries({ width, height }).map(([p, v]) => `${p}: ${v}`).join('; ') || ''
     if (style)
@@ -166,7 +160,7 @@ function fixImageSrc(all: boolean): Command {
     const docState = getDocState(state)
     if (!docState)
       return false
-    const basePath = docBasePath(docState)
+    const basePath = docState?.imagesFolder || docState?.workingFolder
     if (!basePath)
       return false
     const { doc, selection, tr } = state

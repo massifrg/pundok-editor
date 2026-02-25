@@ -12,6 +12,8 @@
         <q-space />
         <q-btn icon="mdi-delete" title="delete note" size="sm" @click="deleteNode" />
         <q-space style="max-width: 3rem" />
+        <q-btn icon="mdi-note-remove" title="unwrap/convert note to text" size="sm"
+          :disabled="!editor?.can().noteToText()" @click="noteToText()" />
         <q-btn icon="mdi-refresh" title="refresh/fix note numbers" size="sm" @click="refreshNotes()" />
         <q-space style="max-width: 3rem" />
         <q-btn icon="mdi-close" title="close note" size="sm" @click="hide()" />
@@ -30,8 +32,8 @@
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';
 import { ResolvedPos } from '@tiptap/pm/model';
-import { CachedNote } from '../../schema/nodes/Note';
-import { isArray } from 'lodash';
+import { CachedNote, notesPluginKey } from '../../schema';
+import { isArray } from 'lodash-es';
 import { romanize } from 'romanize-deromanize'
 import {
   DEFAULT_NOTE_TYPE,
@@ -78,9 +80,13 @@ export default {
     ...mapState(useActions, ['lastViewAction']),
     isInSelection() {
       const { from, to } = this.editor.state.selection
-      const start = this.getPos() + 1
-      const end = start + this.node.content.size
-      return (from >= start && from <= end) || (to >= start && to <= end)
+      const pos = this.getPos()
+      if (pos) {
+        const start = pos + 1
+        const end = start + this.node.content.size
+        return (from >= start && from <= end) || (to >= start && to <= end)
+      }
+      return false
     },
     isSelected() {
       const selection = this.editor.state.selection
@@ -172,7 +178,8 @@ export default {
     },
     firstTextResolvedPos(): ResolvedPos | undefined {
       const doc = this.editor?.state?.doc
-      return doc ? doc.resolve(this.getPos() + 1 + this.findFirstTextOffset()) : undefined
+      const pos = this.getPos()
+      return doc && pos ? doc.resolve(pos + 1 + this.findFirstTextOffset()) : undefined
     },
     toggleShowMode(isUserWill: boolean = true) {
       this.isOpen = !this.isOpen
@@ -194,12 +201,15 @@ export default {
       if (isUserWill) this.wasOpenBeforeSelection = this.isOpen
     },
     updateNoteNumber() {
-      const storage = this.extension.storage
-      if (storage) {
+      const notes = notesPluginKey.getState(this.editor.state)?.notes
+      if (notes) {
         const pos = this.getPos()
-        const note = (storage.notes as CachedNote[]).find(n => n.pos === pos)
+        const note = (notes as CachedNote[]).find(n => n.pos === pos)
         if (note) this.noteNumber = note.noteNumber
       }
+    },
+    noteToText() {
+      this.editor?.commands.noteToText()
     },
     refreshNotes() {
       this.editor?.commands.refreshNotes()

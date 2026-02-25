@@ -4,6 +4,7 @@ import {
 } from '@tiptap/extension-code-block-lowlight';
 
 // nodes
+export { Pandoc, type PandocOptions } from './Pandoc';
 export { Plain, type PlainOptions } from './Plain';
 export { Paragraph, type ParagraphOptions } from '@tiptap/extension-paragraph';
 export { Line, type LineOptions } from './Line';
@@ -24,12 +25,9 @@ export { Caption, type CaptionOptions } from './Caption';
 export { TableHead, type TableHeadOptions } from './TableHead';
 export { TableBody, type TableBodyOptions } from './TableBody';
 export { TableFoot, type TableFootOptions } from './TableFoot';
-export { TableRow, type TableRowOptions } from '@tiptap/extension-table-row';
-export {
-  TableHeader,
-  type TableHeaderOptions,
-} from '@tiptap/extension-table-header';
-export { TableCell, type TableCellOptions } from '@tiptap/extension-table-cell';
+export { TableRow, type TableRowOptions } from './TableRow';
+export { TableHeader, type TableHeaderOptions } from './TableHeader';
+export { TableCell, type TableCellOptions } from './TableCell';
 export { Break, type BreakOptions } from './Break';
 export { ListItem } from './ListItem';
 export type { ListItemOptions } from '@tiptap/extension-list-item';
@@ -51,6 +49,8 @@ export {
   INDEX_RANGE_NONE,
   INDEX_RANGE_START,
   INDEX_RANGE_STOP,
+  INDEX_RANGE_START_CLASS,
+  INDEX_RANGE_STOP_CLASS,
   IndexRef,
   type IndexRefOptions,
 } from './IndexRef';

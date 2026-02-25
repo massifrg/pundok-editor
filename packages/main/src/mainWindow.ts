@@ -11,6 +11,7 @@ import {
 import { updateStaticResources } from './staticResources';
 import { getBookmarks } from './bookmarks';
 import { handleImagesFor } from './protocolHandler';
+import { bookmarkLabel, splitFolderAndDoc } from './common';
 
 let showDeveloperTools = !!import.meta.env.DEV;
 let showPdfView = false;
@@ -169,27 +170,33 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
   const bookmarks = await getBookmarks();
   const recentDocsMenu = bookmarks
     .filter((b) => b.type === 'document')
-    .map((b) => ({
-      label: b.id || basename(b.path),
-      sublabel: b.path,
-      tooltip: b.path,
-      click: () => {
-        ipcHub.fireEventOpenDocument({
-          path: b.path,
-          configurationName: b.configurationName
-        });
-      },
-    }));
+    .map((b) => {
+      const { label, sublabel, tooltip } = bookmarkLabel(b)
+      return {
+        label,
+        sublabel,
+        tooltip,
+        click: () => {
+          ipcHub.fireEventOpenDocument({
+            path: b.url,
+            configurationName: b.configurationName
+          });
+        },
+      }
+    });
   const recentProjectsMenu = bookmarks
     .filter((b) => b.type === 'project')
-    .map((b) => ({
-      label: b.name,
-      sublabel: b.path,
-      tooltip: b.path,
-      click: () => {
-        ipcHub.fireEventOpenDocument({ path: b.path });
-      },
-    }));
+    .map((b) => {
+      const { label, sublabel, tooltip } = bookmarkLabel(b)
+      return {
+        label,
+        sublabel,
+        tooltip,
+        click: () => {
+          ipcHub.fireEventOpenDocument({ path: b.url });
+        },
+      }
+    });
   const recentMenu = [
     {
       label: 'document...',

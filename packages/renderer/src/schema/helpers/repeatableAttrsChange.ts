@@ -1,5 +1,5 @@
 import { Attrs, Mark, Node } from '@tiptap/pm/model';
-import { clone, isArray, isObject } from 'lodash';
+import { clone, isArray, isObject } from 'lodash-es';
 
 interface ClassesAdded {
   change: 'add';

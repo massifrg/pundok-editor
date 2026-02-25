@@ -5,8 +5,10 @@ import { NodeSelection, Plugin } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import {
   ACTION_SET_ALTERNATIVE,
+  ACTION_UPDATE_DOC_STATE,
   setActionCommand,
-  setActionEditAttributes
+  setActionEditAttributes,
+  UpdateDocStateActionProps
 } from '../../actions';
 import {
   EditAttributesActionProps,
@@ -37,8 +39,14 @@ import { nudgeNumericValue, nudgeNumericValueAtIndex } from '../helpers/nudgeNum
 
 let keyCounter = 1;
 
-export function newEditorKey(): EditorKeyType {
+function newEditorKey(): EditorKeyType {
   return keyCounter++;
+}
+
+function areSameDoc(doc1?: ProsemirrorNode, doc2?: ProsemirrorNode) {
+  if (!doc1 || !doc2)
+    return false
+  return doc1.eq(doc2)
 }
 
 declare module '@tiptap/core' {
@@ -91,17 +99,25 @@ export const PundokEditorUtilsExtension =
               if (updates)
                 updatedDocState = updateDocState(currentDocState, updates);
               const alreadyFullyUnsaved =
-                updatedDocState.nativeUnsavedChanges &&
-                updatedDocState.unsavedChanges;
-              if (tr.docChanged && !alreadyFullyUnsaved) {
-                updatedDocState = updateDocState(updatedDocState, {
-                  nativeUnsavedChanges: true,
-                  unsavedChanges: true,
-                });
+                updatedDocState.unsavedChanges &&
+                updatedDocState.unsavedChangesAsCopy;
+              if (tr.docChanged) {
+                // check if the document is equal to the saved one
+                const sameDoc = areSameDoc(updatedDocState.savedDoc, newState.doc)
+                if (!alreadyFullyUnsaved || sameDoc) {
+                  updatedDocState = updateDocState(updatedDocState, {
+                    unsavedChanges: !sameDoc,
+                    unsavedChangesAsCopy: !sameDoc,
+                  });
+                }
               }
-              // notify current update even if it has unset the callback field
-              if (currentDocState.callback)
-                currentDocState.callback(updatedDocState);
+              if (updatedDocState !== currentDocState) {
+                setActionCommand(
+                  updatedDocState.editorKey,
+                  ACTION_UPDATE_DOC_STATE,
+                  { docState: updatedDocState } as UpdateDocStateActionProps
+                )
+              }
               return updatedDocState;
             },
           },

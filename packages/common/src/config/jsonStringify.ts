@@ -1,7 +1,7 @@
 import { PundokEditorConfig } from "./editorConfiguration"
 import { PundokEditorConfigInit } from "./editorConfigInit"
 import { PundokEditorProject } from "./project"
-import { isString } from "lodash"
+import { isString } from "lodash-es"
 
 /** A `PrecedenceObject` maps a key in a JSON file to its precedence
  * (order in the stringified JSON) */
@@ -14,7 +14,10 @@ const CONFIG_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
   'version',
   'description',
   'inherits',
-  'tiptap',
+  'format',
+  'workingFormat',
+  'copyFormat',
+  'mainFormats',
   'customCss',
   'autoDelimiters',
   'noteStyles',
@@ -30,6 +33,7 @@ const CONFIG_KEYS_PRECEDENCE: PrecedenceObject = Object.fromEntries([
   'rawInlines',
   'rawBlocks',
   'automations',
+  'tiptap',
 ].map((k, i) => [k, i + 1]))
 
 /**

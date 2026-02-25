@@ -4,7 +4,7 @@ import {
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
-import { SINGLE_QUOTED_CLASS } from '../helpers/quoted';
+import { SINGLE_QUOTED_CLASS } from '../helpers';
 import { MARK_NAME_SINGLE_QUOTED, SK } from '../../common';
 
 export interface SingleQuotedOptions {

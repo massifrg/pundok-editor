@@ -97,7 +97,7 @@
                     size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap><span class="style-item">H{{ level
-                }}&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
+                    }}&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
               </q-item>
               <q-item v-for="(styleItem, index) in availableHeaderStylesForNode(innerParaLike, level)" :key="index"
                 clickable :value="index" :title="description(styleItem)" dense class="q-pa-xs"
@@ -193,7 +193,7 @@ import {
 } from '../common';
 import { getEditorConfiguration, Heading } from '../schema';
 import { getTextMarkRangesBetween, nodeIcon, nodeOrMarkToPandocName } from '../schema/helpers';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 
 const STARTING_TAB = 'summary'
 const MINI_SPLITTER_VALUE = 20

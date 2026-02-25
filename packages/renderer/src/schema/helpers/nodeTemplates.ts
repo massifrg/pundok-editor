@@ -1,4 +1,5 @@
 import { Attrs, Mark, Node, NodeType, ResolvedPos, Schema } from '@tiptap/pm/model';
+import { EditorState } from '@tiptap/pm/state';
 import {
   DEFAULT_INDEX_NAME,
   DEFAULT_RAW_BLOCK_FORMAT,
@@ -41,10 +42,10 @@ import {
   NODE_NAME_SHORT_CAPTION,
   PundokEditorConfig,
 } from '../../common';
-import { createPandocTable, innerNodeDepth } from '.';
-import { isString } from 'lodash';
-import { EditorState } from '@tiptap/pm/state';
+import { isString } from 'lodash-es';
 import { RawBlock } from '../nodes';
+import { createPandocTable } from './pandocTable';
+import { innerNodeDepth } from './nodeDepth';
 
 export function nodesWithTemplate(): string[] {
   return [

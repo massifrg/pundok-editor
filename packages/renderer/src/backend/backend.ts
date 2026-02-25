@@ -8,15 +8,19 @@ import type {
   ProjectComponent,
   Query,
   QueryResult,
-  ReadDoc,
   SaveResponse,
-  StoredDoc,
+  CxDocument,
   DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
-  ExportJob,
+  RenderingJob,
   ConfigInitField,
   GetProjectOptions,
+  FolderContents,
+  PundokBookmarkType,
+  PundokBookmark,
+  PandocFeatureName,
+  PandocFeatureOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -88,29 +92,35 @@ export interface Backend {
    */
   editorReady(editorKey?: EditorKeyType): Promise<void>;
 
+  /** 
+   * Get the contents of a folder (a collection of documents and/or sub-folders).
+   * @param path The folders path (an array of the names of the path's folders).
+   */
+  getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents>;
+
+  /**
+   * Get the bookmarks (projects and documents).
+   * @param bookmarkType 
+   */
+  getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]>;
+
   /**
    * Retrieves a document from the backend.
    * @param context The environment of the document.
    */
-  open(context: DocumentContext): Promise<ReadDoc>;
+  open(context: DocumentContext): Promise<CxDocument>;
 
   /**
    * Stores a document in the backend.
    * @param doc The document to be stored.
-   * @param project The (optional) project of the document.
-   * @param editorKey The key of the editor that will be answered.
    */
-  save(
-    doc: StoredDoc,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse>;
+  save(doc: CxDocument): Promise<SaveResponse>;
 
   /**
    * Retrieves the project of a document from the backend.
    * @param context
    */
-  getProject(options: GetProjectOptions): Promise<PundokEditorProject>;
+  getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined>;
 
   /**
    * Create a new project in a directory.
@@ -126,16 +136,6 @@ export interface Backend {
   getInclusionTree(
     project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined>;
-
-  /**
-   * Retrieves the id or the path of a document from the backend.
-   * @param why The aim of the request (open a document, include a document, ...)
-   * @param options
-   */
-  askForDocumentIdOrPath(
-    why: WhyAskingForIdOrPath,
-    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
-  ): Promise<DocumentCoords | undefined>;
 
   /**
    * Retrieves all the available configurations for the editor.
@@ -171,14 +171,13 @@ export interface Backend {
   setValue(key: string, value?: any): Promise<void>;
 
   /**
-   * Asks the backend to run the installed version of pandoc to retrieve its input formats.
+   * Asks the backend to run the installed version of pandoc to retrieve its features
+   * (input and output formats, extensions of a format).
    */
-  pandocInputFormats(): Promise<string[]>;
-
-  /**
-   * Asks the backend to run the installed version of pandoc to retrieve its output formats.
-   */
-  pandocOutputFormats(): Promise<string[]>;
+  pandocFeature(
+    featureName: PandocFeatureName,
+    options?: PandocFeatureOptions
+  ): Promise<any[]>;
 
   /**
    * Asks the backend to open the viewer to show the result file.
@@ -190,15 +189,13 @@ export interface Backend {
 
   /**
    * Transform the document or the fragment passed as Pandoc JSON.
-   * @param pandocJson the (Pandoc) JSON representation of a document or a fragment.
+   * @param doc a document or a fragment with a context.
    * @param transform the transformation to apply.
-   * @param options options to retrieve what is needed by Pandoc (e.g. to find filters).
    * @returns a (Pandoc) stringified-JSON representation of the transformed fragment or document
    */
   transformPandocJson(
-    pandocJson: string | undefined,
-    transform: PandocFilterTransform,
-    options?: Partial<FindResourceOptions>,
+    doc: Partial<CxDocument>,
+    transform: PandocFilterTransform
   ): Promise<string>;
 
   gotoSource(
@@ -206,11 +203,11 @@ export interface Backend {
     info: SynctexInfo,
   ): Promise<void>
 
+  renderAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
+
+  getRenderingJob(hash: string): Promise<RenderingJob | undefined>;
+
   showAgain(hash: string, editorKey: EditorKeyType): Promise<void>
-
-  exportAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
-
-  getExportJob(hash: string): Promise<ExportJob | undefined>;
 
   /**
    * Update a configuration or project JSON file adding/updating an object

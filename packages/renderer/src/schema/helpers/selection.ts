@@ -1,6 +1,6 @@
-import { take } from 'lodash';
 import { MarkRange, NodeWithPos } from '@tiptap/vue-3';
 import type { Mark, Node } from '@tiptap/pm/model';
+import { take } from 'lodash-es';
 import {
   nodeOrMarkToPandocName,
   nodeOrMarkToPandocType,

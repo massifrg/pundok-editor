@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts">
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { AddableMark } from './helpers/addableMark';
 
 export default {

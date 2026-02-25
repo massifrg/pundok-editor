@@ -1,5 +1,8 @@
-import { FeedbackMessage, PundokEditorProject, ReadDoc, ViewerSetup } from '.';
+import { PundokEditorProject } from './config';
+import { CxDocument } from './document';
 import { EditorKeyType } from './editorKey';
+import { FeedbackMessage } from './feedback';
+import { ViewerSetup } from './viewer';
 
 /**
  * The direction of messages between Main and Renderer in an IPC channel.
@@ -30,8 +33,10 @@ export type IpcMainToRendererChannel =
 /** Types of IPC channels in the communication from Renderer to Main. */
 export type IpcRendererToMainChannel =
   | 'debug-info'
+  | 'get-folder-contents'
   | 'open-document'
   | 'save-document'
+  | 'get-bookmarks'
   | 'available-configurations'
   | 'editor-ready'
   | 'load-configuration'
@@ -39,16 +44,14 @@ export type IpcRendererToMainChannel =
   | 'new-project'
   | 'get-project'
   | 'get-inclusion-tree'
-  | 'ask-for-document'
   | 'transform-json'
-  | 'pandoc-input-formats'
-  | 'pandoc-output-formats'
+  | 'pandoc-feature'
   | 'set-value'
   | 'query'
   | 'get-source-file'
-  | 'show-again'
-  | 'export-again'
-  | 'get-export-job'
+  | 'show-rendered-again'
+  | 'render-again'
+  | 'get-rendering-job'
   | 'update-config'
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
@@ -66,7 +69,11 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   document: {
     dir: 'm2r',
     description:
-      'main tells the renderer to ask for an action on the document (open, save, save-as, import, export)',
+      'main tells the renderer to ask for an action on the document (open, save, save-as, import, render)',
+  },
+  'get-folder-contents': {
+    dir: 'r2m',
+    description: 'the renderer asks main the contents of a folder',
   },
   'open-document': {
     dir: 'r2m',
@@ -79,6 +86,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'new-empty-document': {
     dir: 'm2r',
     description: 'main asks the renderer to show a new empty editor',
+  },
+  'get-bookmarks': {
+    dir: 'r2m',
+    description: 'the renderer asks main the list of bookmarks (projects and documents)'
   },
   content: {
     dir: 'm2r',
@@ -120,21 +131,13 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'r2m',
     description: 'the renderer asks the inclusion tree of a document',
   },
-  'ask-for-document': {
-    dir: 'r2m',
-    description: 'the renderer asks the filename or id of a document',
-  },
   'set-project': {
     dir: 'm2r',
     description: 'main sends the project configuration to the renderer',
   },
-  'pandoc-input-formats': {
+  'pandoc-feature': {
     dir: 'r2m',
-    description: 'the renderer asks main to run pandoc --list-input-formats',
-  },
-  'pandoc-output-formats': {
-    dir: 'r2m',
-    description: 'the renderer asks main to run pandoc --list-output-formats',
+    description: 'the renderer asks main to run pandoc for features like --list-input-formats, --list-output-formats, --list-extensions=...',
   },
   'transform-json': {
     dir: 'r2m',
@@ -163,17 +166,17 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'm2r',
     description: 'show some content in the viewer',
   },
-  'show-again': {
+  'show-rendered-again': {
     dir: 'r2m',
-    description: 'show an export job (a PDF) again in the viewer, without recompiling it'
+    description: 'show a rendered job (a PDF) again in the viewer, without recompiling it'
   },
-  'export-again': {
+  'render-again': {
     dir: 'r2m',
-    description: 'export (compile PDF) again'
+    description: 'render the document again (recompile PDF)'
   },
-  'get-export-job': {
+  'get-rendering-job': {
     dir: 'r2m',
-    description: 'retrieve information about an export job (e.g. a PDF instance of a document)'
+    description: 'retrieve information about a rendering job (e.g. a PDF instance of a document)'
   },
   'get-source-file': {
     dir: 'r2m',
@@ -220,7 +223,7 @@ export interface ServerMessageFeedback extends ServerMessage {
 /** A message from Main to Renderer with the content of a document. */
 export interface ServerMessageContent extends ServerMessage {
   type: 'content';
-  content: ReadDoc;
+  content: CxDocument;
   project?: PundokEditorProject;
 }
 

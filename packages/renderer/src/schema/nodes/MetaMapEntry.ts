@@ -10,7 +10,7 @@ import {
   NODE_NAME_META_MAP_ENTRY,
   NODE_NAME_METADATA
 } from '../../common';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

@@ -1,4 +1,4 @@
-import { ExternalProgramResult } from '.';
+import { ExternalProgramResult } from "./externalProgramResult";
 
 export interface CustomPandocReader {
   name: string;

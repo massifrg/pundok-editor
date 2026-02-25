@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts">
-import { isString } from 'lodash'
+import { isString } from 'lodash-es'
 import { ActionForNodeOrMark } from '../actions'
 import { useActions } from '../stores'
 

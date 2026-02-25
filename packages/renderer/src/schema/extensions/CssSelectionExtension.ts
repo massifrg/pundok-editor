@@ -1,3 +1,5 @@
+import { Extension } from '@tiptap/core';
+import { Fragment, Slice } from '@tiptap/pm/model';
 import {
   EditorState,
   NodeSelection,
@@ -7,10 +9,9 @@ import {
   TextSelection,
   Transaction
 } from '@tiptap/pm/state';
-import { Extension } from '@tiptap/core';
-import { CssSelectOptions, SelectedNodeOrMark, cssSelect } from '../helpers';
 import { Mapping } from '@tiptap/pm/transform';
 import { NODE_NAME_PARAGRAPH } from '../../common';
+import { CssSelectOptions, SelectedNodeOrMark, cssSelect } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -26,6 +27,7 @@ declare module '@tiptap/core' {
 const CSS_SELECTION_PLUGIN = 'css-selection-plugin';
 const cssSelectionPluginKey = new PluginKey(CSS_SELECTION_PLUGIN);
 const META_SET_CSS_SELECTOR = 'set-css-selector';
+const SELECTION_MATCHER = '$&' // matches the current selection in CSS replacement
 
 export const CssSelectionExtension = Extension.create({
   name: 'cssSelection',
@@ -100,11 +102,47 @@ export const CssSelectionExtension = Extension.create({
         return true
       },
       replaceWithText: (text: string) => ({ dispatch, state, tr }) => {
-        const { selection } = state
+        const { doc, schema, selection } = state
         if (selection.empty) return false
         if (dispatch) {
+          const { from, to } = selection
+          // 3rd argument is false: don't include parents (paragraph Node)
+          const selectedContent = doc.slice(from, to, false)
+          /*
+          First we must prepare the replacing text.
+          If it does not contain the `$&`, it's just a text node.
+          Otherwise we must replace all the occurrencies of `$&` with
+          the contents of the current selection.
+           */
+          let replacement: Fragment = Fragment.empty
           if (selection instanceof TextSelection) {
-            tr.insertText(text)
+            // the "match" is the $& that identifies the selected text
+            let matchIndex = text.indexOf(SELECTION_MATCHER)
+            if (matchIndex < 0)
+              replacement = replacement.addToEnd(schema.text(text))
+            else {
+              let textAfter = text
+              while (matchIndex >= 0) {
+                const textBefore = textAfter.substring(0, matchIndex)
+                if (textBefore.length > 0)
+                  replacement = replacement.addToEnd(schema.text(textBefore))
+                textAfter = textAfter.substring(matchIndex + SELECTION_MATCHER.length)
+                replacement = replacement.append(selectedContent.content)
+                matchIndex = textAfter.indexOf(SELECTION_MATCHER)
+              }
+              if (textAfter.length > 0)
+                replacement = replacement.addToEnd(schema.text(textAfter))
+            }
+            // tr.insertText(text)
+            tr.replaceSelection(new Slice(replacement,
+              selectedContent.openStart,
+              selectedContent.openEnd)
+            )
+            const mapping = tr.mapping
+            tr.setSelection(new TextSelection(
+              tr.doc.resolve(mapping.map(from)),
+              tr.doc.resolve(mapping.map(to)))
+            )
           } else {
             const { $anchor } = selection
             const content = $anchor.node().type.spec.content

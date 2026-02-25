@@ -5,96 +5,52 @@ import { History, type HistoryOptions } from '@tiptap/extension-history';
 import { Text } from '@tiptap/extension-text';
 import { Selection } from '@tiptap/pm/state';
 
-import {
-  Blockquote,
-  BlockquoteOptions,
-  Break,
-  BreakOptions,
-  BulletList,
-  BulletListOptions,
-  Caption,
-  CaptionOptions,
-  CodeBlock,
-  CodeBlockLowlightOptions,
-  DefinitionData,
-  DefinitionDataOptions,
-  DefinitionList,
-  DefinitionListOptions,
-  DefinitionTerm,
-  DefinitionTermOptions,
-  Div,
-  DivOptions,
-  EmptySpan,
-  EmptySpanOptions,
-  FigureCaption,
-  FigureCaptionOptions,
-  Figure,
-  FigureOptions,
-  Heading,
-  HeadingOptions,
-  HorizontalRule,
-  HorizontalRuleOptions,
-  Image,
-  ImageOptions,
-  IndexDiv,
-  IndexDivOptions,
-  IndexRef,
-  IndexRefOptions,
-  IndexTerm,
-  IndexTermOptions,
-  LineBlock,
-  LineBlockOptions,
-  Line,
-  LineOptions,
-  ListItem,
-  ListItemOptions,
-  Metadata,
-  MetadataOptions,
-  MetaBlocks,
-  MetaBlocksOptions,
-  MetaBool,
-  MetaBoolOptions,
-  MetaInlines,
-  MetaInlinesOptions,
-  MetaList,
-  MetaListOptions,
-  MetaMap,
-  MetaMapOptions,
-  MetaMapEntry,
-  MetaMapEntryOptions,
-  MetaString,
-  MetaStringOptions,
-  Note,
-  NoteOptions,
-  OrderedList,
-  OrderedListOptions,
-  PandocNull,
-  PandocNullOptions,
-  PandocTable,
-  PandocTableOptions,
-  Paragraph,
-  ParagraphOptions,
-  Plain,
-  PlainOptions,
-  RawBlock,
-  RawBlockOptions,
-  RawInline,
-  RawInlineOptions,
-  ShortCaption,
-  ShortCaptionOptions,
-  TableBody,
-  TableBodyOptions,
-  TableCell,
-  TableCellOptions,
-  TableFoot,
-  TableFootOptions,
-  TableHeader,
-  TableHeaderOptions,
-  TableHead,
-  TableHeadOptions,
-  TableRow,
-  TableRowOptions,
-} from '.'; // don't import from '../nodes', because '../nodes/index.ts' exports Pandoc from this file
+import { Blockquote, BlockquoteOptions } from '@tiptap/extension-blockquote'
+import { Break, BreakOptions } from './Break'
+import { BulletList, BulletListOptions } from '@tiptap/extension-bullet-list'
+import { Caption, CaptionOptions } from './Caption'
+import { CodeBlock } from '@tiptap/extension-code-block'
+import { CodeBlockLowlightOptions } from '@tiptap/extension-code-block-lowlight'
+import { DefinitionData, DefinitionDataOptions } from './DefinitionData'
+import { DefinitionList, DefinitionListOptions } from './DefinitionList'
+import { DefinitionTerm, DefinitionTermOptions } from './DefinitionTerm'
+import { Div, DivOptions } from './Div'
+import { EmptySpan, EmptySpanOptions } from './EmptySpan'
+import { FigureCaption, FigureCaptionOptions } from './FigureCaption'
+import { Figure, FigureOptions } from './Figure'
+import { Heading, HeadingOptions } from '@tiptap/extension-heading'
+import { HorizontalRule, HorizontalRuleOptions } from '@tiptap/extension-horizontal-rule'
+import { Image, ImageOptions } from './Image'
+import { IndexDiv, IndexDivOptions } from './IndexDiv'
+import { IndexRef, IndexRefOptions } from './IndexRef'
+import { IndexTerm, IndexTermOptions } from './IndexTerm'
+import { LineBlock, LineBlockOptions } from './LineBlock'
+import { Line, LineOptions } from './Line';
+import { ListItem } from './ListItem'
+import { ListItemOptions } from '@tiptap/extension-list-item'
+import { Metadata, MetadataOptions } from './Metadata'
+import { MetaBlocks, MetaBlocksOptions } from './MetaBlocks'
+import { MetaBool, MetaBoolOptions } from './MetaBool'
+import { MetaInlines, MetaInlinesOptions } from './MetaInlines'
+import { MetaList, MetaListOptions } from './MetaList'
+import { MetaMap, MetaMapOptions } from './MetaMap'
+import { MetaMapEntry, MetaMapEntryOptions } from './MetaMapEntry'
+import { MetaString, MetaStringOptions } from './MetaString'
+import { Note, NoteOptions } from './Note'
+import { OrderedList, OrderedListOptions } from './OrderedList'
+import { PandocNull, PandocNullOptions } from './PandocNull'
+import { PandocTable, PandocTableOptions } from './PandocTable'
+import { Paragraph, ParagraphOptions } from '@tiptap/extension-paragraph'
+import { Plain, PlainOptions } from './Plain'
+import { RawBlock, RawBlockOptions } from './RawBlock'
+import { RawInline, RawInlineOptions } from './RawInline'
+import { ShortCaption, ShortCaptionOptions } from './ShortCaption'
+import { TableBody, TableBodyOptions } from './TableBody'
+import { TableCell, TableCellOptions } from './TableCell'
+import { TableFoot, TableFootOptions } from './TableFoot'
+import { TableHeader, TableHeaderOptions } from './TableHeader'
+import { TableHead, TableHeadOptions } from './TableHead'
+import { TableRow, TableRowOptions } from './TableRow';
 import {
   Cite,
   CiteOptions,
@@ -154,10 +110,7 @@ import {
   VerticalAlign,
   VerticalAlignOptions,
 } from '../extensions';
-import {
-  CreateDocumentOptions,
-  createDocument,
-} from '../helpers/createDocument';
+import { CreateDocumentOptions, createDocumentCommand } from '../helpers';
 import type { PandocJsonDocument } from '../../pandoc';
 
 // load all languages with "all" or common languages with "common"
@@ -348,11 +301,11 @@ export const Pandoc = Document.extend<PandocOptions>({
   name: 'doc',
   content: 'metadata? block+',
 
-  addOptions() {
-    return {
-      ...this.parent?.(),
-    };
-  },
+  // addOptions() {
+  //   return {
+  //     ...this.parent?.(),
+  //   };
+  // },
 
   addAttributes() {
     return {
@@ -508,7 +461,7 @@ export const Pandoc = Document.extend<PandocOptions>({
       setPandocContent: (
         json: string | PandocJsonDocument,
         options?: CreateDocumentOptions,
-      ) => createDocument(json, options),
+      ) => createDocumentCommand(json, options),
       scrollIntoViewAtTop:
         () =>
           ({ dispatch, state, tr }) => {

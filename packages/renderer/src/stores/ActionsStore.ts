@@ -9,7 +9,7 @@ export const useActions = defineStore('actions', {
     viewAction: undefined as ViewAction | undefined,
     /** Used to flag a work in progress on the backend. */
     // TODO: there are many possible remote wip jobs.
-    remoteWorkInProgress: false,
+    _remoteWorkInProgress: false,
   }),
   getters: {
     lastAction(state) {
@@ -19,7 +19,7 @@ export const useActions = defineStore('actions', {
       return state.viewAction;
     },
     remoteWorkInProgress(state) {
-      return state.remoteWorkInProgress;
+      return state._remoteWorkInProgress;
     }
   },
   actions: {
@@ -30,7 +30,7 @@ export const useActions = defineStore('actions', {
       this.viewAction = viewAction;
     },
     setRemoteWorkInProgress(rwip: boolean) {
-      this.remoteWorkInProgress = rwip;
+      this._remoteWorkInProgress = rwip;
     }
   },
 });

@@ -42,6 +42,8 @@ export interface BaseOutputConverter {
   openResult?: ShowOutputConversion;
   /** asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion) */
   feedback?: FeedbackMessageType;
+  /** optional icon */
+  icon?: string;
 }
 
 export interface PandocOutputConverter extends BaseOutputConverter {

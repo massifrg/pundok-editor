@@ -29,7 +29,7 @@ import {
   OutputConverter,
   PandocFilterTransform,
   ResultMessageActionProps,
-  StoredDoc,
+  CxDocument,
   TransformDocumentActionProps,
   ViewerSetup,
 } from '../common';
@@ -87,7 +87,7 @@ export function setActionOpenDocument(
 export function setActionImportDocument(
   stateOrKey: EditorState | EditorKeyType,
   inputConverter: InputConverter,
-  storedDoc?: Partial<StoredDoc>,
+  storedDoc?: Partial<CxDocument>,
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   // console.log(`setActionImportDocument, editorKey=${editorKey}`);
@@ -97,7 +97,7 @@ export function setActionImportDocument(
       editorKey,
       props: {
         inputConverter,
-        storedDoc,
+        doc: storedDoc,
       } as ImportDocumentActionProps,
     });
   }
@@ -106,7 +106,7 @@ export function setActionImportDocument(
 export function setActionExportDocument(
   stateOrKey: EditorState | EditorKeyType,
   outputConverter: OutputConverter,
-  storedDoc?: Partial<StoredDoc>,
+  storedDoc?: Partial<CxDocument>,
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey) {
@@ -115,7 +115,7 @@ export function setActionExportDocument(
       editorKey,
       props: {
         outputConverter,
-        storedDoc,
+        doc: storedDoc,
       } as ExportDocumentActionProps,
     });
   }
@@ -230,19 +230,6 @@ export function setActionSetupViewer(
       ...ACTION_SETUP_VIEWER,
       editorKey,
       props: { setup },
-    });
-}
-
-export function setActionTransformDocument(
-  stateOrKey: EditorState | EditorKeyType,
-  transform: PandocFilterTransform,
-) {
-  const editorKey = editorKeyFrom(stateOrKey);
-  if (editorKey)
-    useActions().setAction({
-      ...ACTION_DOCUMENT_TRANSFORM,
-      editorKey,
-      props: { transform } as TransformDocumentActionProps,
     });
 }
 

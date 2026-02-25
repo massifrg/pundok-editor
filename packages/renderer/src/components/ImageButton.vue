@@ -20,7 +20,7 @@
 
 <script lang="ts">
 import { shortcut } from '../common';
-import { docBasePath, getDocState } from '../schema';
+import { getDocState } from '../schema';
 import { setupQuasarIcons } from './helpers/quasarIcons'
 
 export default {
@@ -34,7 +34,8 @@ export default {
       return "insert Image" + (sc && sc.length > 0 ? ` [${sc}]` : '')
     },
     basePath() {
-      return this.docState && docBasePath(this.docState)
+      const { imagesFolder, workingFolder } = this.docState
+      return imagesFolder || workingFolder
     },
   },
   setup() {

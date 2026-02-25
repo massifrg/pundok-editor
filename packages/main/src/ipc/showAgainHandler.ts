@@ -1,6 +1,6 @@
 import { IpcMainInvokeEvent } from "electron";
 import { IpcHub } from "./ipcHub";
-import { getExportJobWithHash } from "./documentHash";
+import { getRenderingJobWithHash } from "./documentHash";
 import { EditorKeyType, ServerMessageForViewer } from "../common";
 
 export const showAgainHandler =
@@ -10,7 +10,7 @@ export const showAgainHandler =
       documentHash: string,
       editorKey: EditorKeyType,
     ): Promise<void> => {
-      const job = getExportJobWithHash(documentHash)
+      const job = getRenderingJobWithHash(documentHash)
       if (job) {
         const { path, projectAsJsonString } = job
         hub.send('show-in-viewer', {

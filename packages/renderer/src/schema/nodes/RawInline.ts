@@ -3,7 +3,7 @@ import { DEFAULT_RAW_INLINE_FORMAT, NODE_NAME_RAW_INLINE, SK } from '../../commo
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { Command, NodeSelection } from '@tiptap/pm/state';
 import { getEditorConfiguration, marksEnding, marksStarting, textNode } from '../helpers';
-import { intersection } from 'lodash';
+import { intersection } from 'lodash-es';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

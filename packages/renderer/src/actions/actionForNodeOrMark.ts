@@ -29,6 +29,7 @@ import {
   ACTION_EDIT_ATTRIBUTES,
   ACTION_REPEAT_CHANGE,
   ActionForNodeOrMark,
+  ActionName,
   EditorAction,
   TABLE_CELL_ALIGNMENT_ACTIONS,
   UNWRAP_BLOCKS_ACTION
@@ -241,7 +242,7 @@ export function actionsForNodeOrMark(
         actions.push(
           insertBlockAction(
             editorKey,
-            `insert-${typename}-before`,
+            `insert-${typename}-before` as ActionName,
             `insert a ${nodeOrMarkToPandocName(
               typename,
               undefined,
@@ -255,7 +256,7 @@ export function actionsForNodeOrMark(
         actions.push(
           insertBlockAction(
             editorKey,
-            `insert-${typename}-after`,
+            `insert-${typename}-after` as ActionName,
             `insert a ${nodeOrMarkToPandocName(
               typename,
               undefined,
@@ -297,7 +298,7 @@ export function actionsForNodeOrMark(
       const id = node?.attrs.id
       const path = node?.attrs.kv[INCLUDE_SRC_ATTR]
       const format = node?.attrs.kv[INCLUDE_FORMAT_ATTR]
-        || (path && pandocFormatsFromExtension(path)[0])
+        || (path && pandocFormatsFromExtension(path, 'input')[0])
         || 'json'
       console.log(`id=${id}, path=${path}, format=${format}`)
       if ((id || path) && format) {

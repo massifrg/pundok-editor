@@ -41,8 +41,8 @@ export default {
   methods: {
     openAttributesEditor(event: Event) {
       const node = this.node
-      if (node) {
-        const pos = this.getPos()
+      const pos = this.getPos()
+      if (node && pos) {
         const selNode: SelectedNodeOrMark = {
           name: node.type.name,
           node,
@@ -51,8 +51,8 @@ export default {
           to: pos
         }
         setActionEditAttributes(this.editor.state, selNode, { tab: 'format' })
+        event.preventDefault()
       }
-      event.preventDefault()
     }
   },
 

@@ -39,9 +39,7 @@ export interface FindResourceOptions {
   kind: ResourceType;
   project: PundokEditorProject | string;
   configurationName: string;
-  // path: string;
   base64?: boolean;
-  // configuration: PundokEditorConfig | string;
 }
 
 /**

@@ -32,6 +32,7 @@ const config = {
         'electron',
         'electron-devtools-installer',
         ...builtinModules.flatMap((p) => [p, `node:${p}`]),
+        // 'drivelist',
       ],
       output: {
         entryFileNames: '[name].cjs',

@@ -6,7 +6,7 @@ import {
   Schema,
 } from '@tiptap/pm/model';
 import { EditorState, SelectionRange } from '@tiptap/pm/state';
-import { difference } from 'lodash';
+import { difference } from 'lodash-es';
 import {
   MARK_NAME_EMPH,
   MARK_NAME_LINK,

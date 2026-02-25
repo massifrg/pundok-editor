@@ -1,9 +1,9 @@
-import type { Backend, BackendConfig, WhyAskingForIdOrPath } from './backend';
+import type { Backend, BackendConfig } from './backend';
 import {
   type ConfigurationSummary,
   type PundokEditorConfig,
   type SaveResponse,
-  type StoredDoc,
+  type CxDocument,
   getHardcodedCustomCss,
   getHardcodedEditorConfig,
   HARDCODED_CONFIG_NAME,
@@ -14,17 +14,19 @@ import {
   PundokEditorProject,
   EditorKeyType,
   FindResourceOptions,
-  ReadDoc,
   ProjectComponent,
   DocumentContext,
-  DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
-  ExportJob,
+  RenderingJob,
   ConfigInitField,
   GetProjectOptions,
+  FolderContents,
+  PundokBookmarkType,
+  PundokBookmark,
+  PandocFeatureName,
+  PandocFeatureOptions,
 } from '../common';
-import { OpenDialogOptions } from 'electron';
 
 export class NetBackend implements Backend {
   private config: BackendConfig = {};
@@ -47,15 +49,19 @@ export class NetBackend implements Backend {
 
   async editorReady(editorKey?: EditorKeyType) { }
 
-  open(context: DocumentContext): Promise<ReadDoc> {
+  getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents> {
     throw new Error('Method not implemented.');
   }
 
-  save(
-    doc: StoredDoc,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse> {
+  async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  open(context: DocumentContext): Promise<CxDocument> {
+    throw new Error('Method not implemented.');
+  }
+
+  save(doc: CxDocument): Promise<SaveResponse> {
     console.log(doc.content);
     throw new Error('Method not implemented.');
   }
@@ -64,7 +70,7 @@ export class NetBackend implements Backend {
     return Promise.resolve({ info: 'no debug info yet for netbackend!' });
   }
 
-  async getProject(options: GetProjectOptions): Promise<PundokEditorProject> {
+  async getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined> {
     throw new Error('Method not implemented.');
   }
 
@@ -103,12 +109,8 @@ export class NetBackend implements Backend {
     // TODO: remember to JSON.stringify the value before sending it
   }
 
-  async pandocInputFormats(): Promise<string[]> {
-    return Promise.resolve([]);
-  }
-
-  async pandocOutputFormats(): Promise<string[]> {
-    return Promise.resolve([]);
+  pandocFeature(featureName: PandocFeatureName, options?: PandocFeatureOptions): Promise<any[]> {
+    return Promise.reject('Method not implemented');
   }
 
   async queryDatabase(query: Query): Promise<QueryResult[]> {
@@ -127,21 +129,13 @@ export class NetBackend implements Backend {
     return undefined;
   }
 
-  async askForDocumentIdOrPath(
-    why: WhyAskingForIdOrPath,
-    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
-  ): Promise<DocumentCoords | undefined> {
-    return Promise.reject('method non implemented');
-  }
-
   // openViewer(docName: string, options?: Partial<FindResourceOptions>): Promise<void> {
   //   throw new Error('Method not implemented.');
   // }
 
   async transformPandocJson(
-    pandocJson: string | undefined,
-    transform: PandocFilterTransform,
-    options?: Partial<FindResourceOptions>,
+    doc: Partial<CxDocument>,
+    transform: PandocFilterTransform
   ): Promise<string> {
     return Promise.reject('method non implemented');
   }
@@ -157,11 +151,11 @@ export class NetBackend implements Backend {
     return Promise.reject('method non implemented');
   }
 
-  async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+  async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
     return Promise.reject('method non implemented');
   }
 
-  async getExportJob(hash: string): Promise<ExportJob | undefined> {
+  async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
     return Promise.reject('method non implemented');
   }
 

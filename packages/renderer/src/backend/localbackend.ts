@@ -3,13 +3,12 @@ import type {
   BackendConfig,
   Ipc,
   IpcRendererListener,
-  WhyAskingForIdOrPath,
 } from './backend';
 import {
   type ConfigurationSummary,
   PundokEditorConfig,
   type SaveResponse,
-  type StoredDoc,
+  type CxDocument,
   getHardcodedCustomCss,
   getHardcodedEditorConfig,
   HARDCODED_CONFIG_NAME,
@@ -27,17 +26,14 @@ import {
   PundokEditorConfigInit,
   computeProjectConfiguration,
   FindResourceOptions,
-  ReadDoc,
   ProjectComponent,
   DocumentContext,
-  DocumentCoords,
-  CompatibleDocumentContext,
   IpcRendererToMainChannel,
   IpcMainToRendererChannel,
   ServerMessageForViewer,
   PandocFilterTransform,
   SynctexInfo,
-  ExportJob,
+  RenderingJob,
   BackendFeedbackActionProps,
   BackendSetProjectActionProps,
   BackendSetConfigNameActionProps,
@@ -46,6 +42,12 @@ import {
   DocumentOpenActionProps,
   ConfigInitField,
   GetProjectOptions,
+  FolderContents,
+  PundokBookmarkType,
+  PundokBookmark,
+  documentFormatToOutputConverter,
+  PandocFeatureName,
+  PandocFeatureOptions,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -65,8 +67,6 @@ import {
 } from '../actions';
 import { useActions } from '../stores';
 import { IPC_CHANNELS } from '../common';
-import { isString } from 'lodash';
-import { OpenDialogOptions } from 'electron';
 
 type Listener = () => void;
 
@@ -231,7 +231,8 @@ export class LocalBackend implements Backend {
     ...args: any[]
   ): Promise<any> {
     const c = IPC_CHANNELS[channel];
-    if (c && c.dir === 'r2m') return this.ipc?.invoke(channel, ...args);
+    if (c && c.dir === 'r2m')
+      return this.ipc?.invoke(channel, ...args);
     else
       return Promise.reject(
         `"${channel}" is not a valid <Renderer -> Main> channel`,
@@ -254,57 +255,44 @@ export class LocalBackend implements Backend {
     this.invokeIpc('editor-ready', editorKey);
   }
 
-  async open(context: DocumentContext): Promise<ReadDoc> {
+  getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents> {
+    return this.invokeIpc('get-folder-contents', JSON.stringify(context))
+  }
+
+  async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
+    return this.invokeIpc('get-bookmarks', bookmarkType)
+  }
+
+  async open(context: DocumentContext): Promise<CxDocument> {
     try {
-      const { inputConverter, project } = context;
-      return this.ipc?.invoke('open-document', {
-        ...context,
-        inputConverter: inputConverter && JSON.stringify(inputConverter),
-        project: project && JSON.stringify(project),
-      } as CompatibleDocumentContext);
+      return this.ipc?.invoke('open-document', JSON.stringify(context));
     } catch (error) {
       return Promise.reject(error);
     }
   }
 
-  private doSave(
-    doc: StoredDoc,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse> {
-    const ipc = this.ipc;
-    if (ipc) {
-      return ipc.invoke(
-        'save-document',
-        JSON.stringify(doc),
-        project && JSON.stringify(project),
-        editorKey,
-      );
-    } else {
-      throw new Error('Method not implemented.');
-    }
-  }
-
-  save(
-    doc: StoredDoc,
-    project?: PundokEditorProject,
-    editorKey?: EditorKeyType,
-  ): Promise<SaveResponse> {
+  save(doc: CxDocument): Promise<SaveResponse> {
     let preview: Partial<PreviewOptions> | undefined = undefined;
-    const openResult = doc.converter?.openResult;
+    const { documentFormat } = doc
+    const outputConverter = documentFormatToOutputConverter(documentFormat)
+    const openResult = outputConverter?.openResult;
     if (openResult)
       preview = {
         inPundokEditor: openResult === 'editor',
       };
-    console.log(doc);
-    return this.doSave({ ...doc /*, preview */ }, project, editorKey);
+    const ipc = this.ipc;
+    if (ipc) {
+      return ipc.invoke('save-document', JSON.stringify(doc));
+    } else {
+      throw new Error('Method not implemented.');
+    }
   }
 
   async debugInfo(): Promise<object> {
     return this.invokeIpc('debug-info');
   }
 
-  async getProject(options: GetProjectOptions): Promise<PundokEditorProject> {
+  async getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined> {
     return this.invokeIpc('get-project', options);
   }
 
@@ -359,12 +347,8 @@ export class LocalBackend implements Backend {
     this.invokeIpc('set-value', key, JSON.stringify(value));
   }
 
-  async pandocInputFormats(): Promise<string[]> {
-    return this.invokeIpc('pandoc-input-formats');
-  }
-
-  async pandocOutputFormats(): Promise<string[]> {
-    return this.invokeIpc('pandoc-output-formats');
+  pandocFeature(featureName: PandocFeatureName, options?: PandocFeatureOptions): Promise<any[]> {
+    return this.invokeIpc('pandoc-feature', featureName, options)
   }
 
   // async openViewer(
@@ -402,55 +386,15 @@ export class LocalBackend implements Backend {
     }
   }
 
-  async askForDocumentIdOrPath(
-    why: WhyAskingForIdOrPath,
-    options?: DocumentContext & { openDialogOptions?: Partial<OpenDialogOptions> },
-  ): Promise<DocumentCoords | undefined> {
-    const maybeProject = options?.project;
-    const project = isString(maybeProject)
-      ? (JSON.parse(maybeProject) as PundokEditorProject)
-      : maybeProject;
-    console.log(`asking for a filename relative to ${project?.path}`);
-    let title = 'Open document'
-    let buttonLabel: string | undefined = undefined
-    let dialogOptions: Partial<OpenDialogOptions> = { ...options?.openDialogOptions }
-    let defaultPath = project?.path
-    switch (why) {
-      case 'inclusion':
-        title = 'Include document'
-        buttonLabel = 'Include'
-        break
-      case 'edit':
-        break
-      case 'image':
-        title = 'Set image src attribute'
-        buttonLabel = 'Set'
-        break
-      case 'project':
-        title = 'Choose project directory'
-        dialogOptions.filters = []
-        dialogOptions.properties = ['openDirectory', 'createDirectory']
-        defaultPath = undefined
-        break
-    }
-    return this.invokeIpc('ask-for-document', options?.editorKey, options?.id, {
-      defaultPath,
-      title,
-      buttonLabel,
-      ...dialogOptions
-    });
-  }
-
   async transformPandocJson(
-    pandocJson: string | undefined,
-    transform: PandocFilterTransform,
-    options?: Partial<FindResourceOptions>,
+    doc: Partial<CxDocument>,
+    transform: PandocFilterTransform
   ): Promise<string> {
+    console.log(doc)
     return this.invokeIpc(
       'transform-json',
-      pandocJson,
-      JSON.stringify({ ...transform }),
-      JSON.stringify(options || {}),
+      JSON.stringify(doc),
+      JSON.stringify(transform || {}),
     );
   }
 
@@ -462,16 +406,16 @@ export class LocalBackend implements Backend {
   }
 
   async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    this.invokeIpc('show-again', hash, editorKey)
+    this.invokeIpc('show-rendered-again', hash, editorKey)
   }
 
-  async exportAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    this.invokeIpc('export-again', hash, editorKey)
+  async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    this.invokeIpc('render-again', hash, editorKey)
   }
 
-  async getExportJob(hash: string): Promise<ExportJob | undefined> {
-    const job_as_string: string | undefined = await this.invokeIpc('get-export-job', hash)
-    return job_as_string && JSON.parse(job_as_string) as ExportJob || undefined
+  async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
+    const job_as_string: string | undefined = await this.invokeIpc('get-rendering-job', hash)
+    return job_as_string && JSON.parse(job_as_string) as RenderingJob || undefined
   }
 
   async storeInConfiguration(

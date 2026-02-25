@@ -6,10 +6,11 @@ import {
   PundokEditorConfig,
   PundokEditorProject
 } from './config';
-import { DocumentContext, ReadDoc, StoredDoc } from './document';
+import { DocumentContext, CxDocument } from './document';
 import { FeedbackMessage } from "./feedback"
 import { Node as ProsemirrorNode } from "@tiptap/pm/model"
 import { ViewerSetup } from './viewer';
+import { DocumentFormat } from './documentFormat';
 
 export interface ActionNameWithProps {
   name: string,
@@ -33,11 +34,11 @@ export interface SetContentActionProps {
 }
 
 export interface BackendSetContentActionProps {
-  content: ReadDoc
+  content: CxDocument
 }
 
 export interface BackendSetContentWithProjectActionProps {
-  content: ReadDoc,
+  content: CxDocument,
   configuration: PundokEditorConfig,
   project: PundokEditorProject
 }
@@ -56,18 +57,35 @@ export interface DocumentOpenActionProps {
   atLine?: number
 }
 
+export interface DocumentSaveActionProps {
+  /** The complete path of the document to be saved (folder and filename). */
+  path?: string,
+  /** The format in which the document must be saved. */
+  documentFormat: DocumentFormat,
+  /** It's a "save as" operation. The document in the editor takes the new name and format. */
+  isSaveAs?: boolean,
+  /** It's a "save a copy" operation. The document in the editor keeps its name and format. */
+  isCopy?: boolean,
+  /** When `true`, don't ask for the copy name and format. */
+  dontAskCopyPath?: boolean,
+}
+
 export interface ImportDocumentActionProps {
-  inputConverter: InputConverter,
-  storedDoc: Partial<StoredDoc>
+  doc: Partial<CxDocument>
 }
 
 export interface ExportDocumentActionProps {
-  outputConverter: OutputConverter,
-  storedDoc: Partial<StoredDoc>
+  doc: Partial<CxDocument>
 }
 
 export interface TransformDocumentActionProps {
   transform: PandocFilterTransform
+}
+
+export type WhichDocumentFormat = 'input' | 'output' | 'copy'
+export interface SetDocumentFormatActionProps {
+  whichFormat: WhichDocumentFormat
+  documentFormat: DocumentFormat
 }
 
 export interface GoToLineActionProps {

@@ -43,9 +43,11 @@ import NameDescriptionEditor from './NameDescriptionEditor.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import { parse as parsePath } from 'path-browserify';
 import { ConfigurationSummary, PundokEditorConfigInit, PundokEditorProject } from '../common';
+import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers';
+import { getEditorDocState } from '../schema';
 
 export default {
-  props: ['mainEditor', 'visible'],
+  props: ['editor', 'visible'],
   emits: ['close'],
   components: {
     NameDescriptionEditor
@@ -92,41 +94,51 @@ export default {
       this.configurations = this.configurations.filter(c => c !== configName)
     },
     async selectFolder() {
-      const coords = await this.backend?.askForDocumentIdOrPath('project')
-      const path = coords?.path
-      if (path) {
-        this.path = path
-        const existingProject = await this.backend?.getProject({ path })
-        if (existingProject) {
-          const { name, description, configurations, rootDocument, editorConfig } = existingProject
-          this.setName(name || '')
-          this.setDescription(description || '')
-          this.configurations = configurations || []
-          this.rootDocument = rootDocument
-          this.editorConfig = editorConfig
+      const docState = getEditorDocState(this.editor)
+      showSelectFolderDialog({
+        editor: this.editor,
+        prompt: 'Select the project folder:',
+        startFolder: docState?.workingFolder,
+        callback: async ({ path }) => {
+          if (path) {
+            this.path = path
+            const existingProject = await this.backend?.getProject({ path })
+            if (existingProject) {
+              const { name, description, configurations, rootDocument, editorConfig } = existingProject
+              this.setName(name || '')
+              this.setDescription(description || '')
+              this.configurations = configurations || []
+              this.rootDocument = rootDocument
+              this.editorConfig = editorConfig
+            }
+          }
         }
-      }
+      })
     },
     async selectRootDocument() {
-      const coords = await this.backend?.askForDocumentIdOrPath('edit', {
-        path: this.path,
-        resourcePath: [this.path!],
+      const startFolder = this.path && parsePath(this.path).dir || undefined
+      showOpenDocumentDialog({
+        editor: this.editor,
+        prompt: 'Select the root document:',
+        startFolder,
+        callback: ({ path }) => {
+          if (path) {
+            const { dir, base } = parsePath(path)
+            if (dir === this.path) {
+              this.rootDocument = base
+            } else {
+              this.$q.notify({
+                message: 'the root document must be a file in the project folder',
+                caption: '',
+                icon: 'mdi-alert-circle',
+                position: 'top',
+                color: 'negative',
+                timeout: 3000,
+              })
+            }
+          }
+        }
       })
-      const path = coords?.path
-      if (path && path.startsWith(this.path!)) {
-        const { dir, base } = parsePath(path)
-        if (dir === this.path)
-          this.rootDocument = base
-        else
-          this.$q.notify({
-            message: 'the root document must be a file in the project folder',
-            caption: '',
-            icon: 'mdi-alert-circle',
-            position: 'top',
-            color: 'negative',
-            timeout: 3000,
-          })
-      }
     },
     onCancel() {
       this.$emit('close')

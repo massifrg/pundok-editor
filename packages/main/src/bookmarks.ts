@@ -1,22 +1,28 @@
 import { readFile, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 import { userAppDataDir } from './resourcesManager';
-import { DocBookmark, DocBookmarkType } from './common';
+import { PundokBookmark, PundokBookmarkType } from './common';
 
 export const BOOKMARKS_FILENAME = 'bookmarks.json';
 export const MAX_RECENT_DOCS = 20;
 export const MAX_RECENT_PROJECTS = 10;
 
-async function readBookmarksFile(): Promise<DocBookmark[]> {
+async function readBookmarksFile(): Promise<PundokBookmark[]> {
   try {
     const buf = await readFile(resolve(userAppDataDir(), BOOKMARKS_FILENAME));
-    return JSON.parse(buf.toString()) as DocBookmark[];
+    const bm = JSON.parse(buf.toString()) as (PundokBookmark & { path?: string })[];
+    // fix older bookmarks with path
+    return bm.map(b => {
+      return b.path && !b.url
+        ? { ...b, url: `file://${b.path}`, path: undefined }
+        : b
+    })
   } catch (err) {
     return Promise.resolve([]);
   }
 }
 
-async function saveBookmarksFile(bookmarks: DocBookmark[]): Promise<boolean> {
+async function saveBookmarksFile(bookmarks: PundokBookmark[]): Promise<boolean> {
   try {
     await writeFile(resolve(userAppDataDir(), BOOKMARKS_FILENAME), JSON.stringify(bookmarks));
     return true;
@@ -26,14 +32,14 @@ async function saveBookmarksFile(bookmarks: DocBookmark[]): Promise<boolean> {
   }
 }
 
-function sameBookmark(b1: DocBookmark, b2: DocBookmark): boolean {
-  return !(b1.type !== b2.type || (b1.path && b1.path !== b2.path));
+function sameBookmark(b1: PundokBookmark, b2: PundokBookmark): boolean {
+  return !(b1.type !== b2.type || (b1.url && b1.url !== b2.url));
 }
 
 function updateBookmarks(
-  bookmarks: DocBookmark[],
-  bookmark: DocBookmark,
-): DocBookmark[] {
+  bookmarks: PundokBookmark[],
+  bookmark: PundokBookmark,
+): PundokBookmark[] {
   const index = bookmarks.findIndex((b) => sameBookmark(b, bookmark));
   let docs = MAX_RECENT_DOCS - (bookmark.type === 'document' ? 1 : 0);
   let projects = MAX_RECENT_PROJECTS - (bookmark.type === 'project' ? 1 : 0);
@@ -59,7 +65,7 @@ function updateBookmarks(
  * @returns `true` if the operation succeeds
  */
 export async function updateBookmarksFile(
-  newBookmarks: DocBookmark[],
+  newBookmarks: PundokBookmark[],
 ): Promise<boolean> {
   let bookmarks = await readBookmarksFile();
   newBookmarks.forEach((bookmark) => {
@@ -74,8 +80,8 @@ export async function updateBookmarksFile(
  * @returns
  */
 export async function getBookmarks(
-  type?: DocBookmarkType,
-): Promise<DocBookmark[]> {
+  type?: PundokBookmarkType,
+): Promise<PundokBookmark[]> {
   const bookmarks = await readBookmarksFile();
   return type ? bookmarks.filter((b) => b.type === type) : bookmarks;
 }

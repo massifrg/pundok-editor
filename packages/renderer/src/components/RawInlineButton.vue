@@ -6,7 +6,7 @@
 
 <script lang="ts">
 import ToolbarButton from './ToolbarButton.vue';
-import { intersection, union } from 'lodash';
+import { intersection, union } from 'lodash-es';
 import { getRawInlineFormats } from '../common';
 import { getEditorConfiguration } from '../schema';
 import { marksStarting } from '../schema/helpers';

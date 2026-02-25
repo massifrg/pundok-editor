@@ -19,7 +19,7 @@ import { NodeWithPos, RawCommands, UnionCommands } from '@tiptap/vue-3';
 import {
   NODE_NAME_TABLE_CELL, NODE_NAME_TABLE_HEADER, NODE_NAME_TABLE_ROW, shortcutSuffix, SK
 } from '../../common';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 
 const REPEATABLE_COMMAND_PLUGIN = 'repeatable-command-plugin';
 const SET_REPEATABLE_COMMAND = 'set-repeatable-command';

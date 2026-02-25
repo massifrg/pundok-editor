@@ -6,7 +6,7 @@ import {
   resolve,
   sep as pathSeparator,
 } from 'path';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 import {
   PundokEditorConfigInit,
   HARDCODED_CONFIG_NAME,
@@ -25,8 +25,8 @@ import {
   statSync,
 } from 'fs';
 import { app, dialog } from 'electron';
-import { Parse as ParseZipStream } from 'unzip-stream';
-import { archiveFolder } from 'zip-lib';
+import * as unzipStream from 'unzip-stream';
+import * as zipLib from 'zip-lib';
 import { STATIC_RESOURCES_DIR } from './staticResources';
 import { stringify } from './utils';
 
@@ -359,7 +359,7 @@ function fixOlderConfigsFilename(outPath: string): string | undefined {
  */
 export async function loadConfigurationsFromFile(filename: string) {
   createReadStream(filename)
-    .pipe(ParseZipStream())
+    .pipe(unzipStream.Parse())
     .on('entry', function (entry) {
       let fixedPath = fixOlderConfigsFilename(entry.path);
       if (fixedPath) {
@@ -416,7 +416,7 @@ export async function askAndLoadConfFromFile() {
 export async function saveConfigurationsToFile(filename: string) {
   const dir = configsDir();
   console.log(`dir=${dir}, zipfile=${filename}`);
-  await archiveFolder(dir, filename);
+  await zipLib.archiveFolder(dir, filename);
 }
 
 /**

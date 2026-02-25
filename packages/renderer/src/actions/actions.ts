@@ -1,6 +1,6 @@
 import { Editor } from '@tiptap/core';
 import { currentRepeatableCommandTooltip, SearchTextVariant } from '../schema';
-import { SelectedNodeOrMark } from '../schema/helpers';
+import { DocState, SelectedNodeOrMark } from '../schema/helpers';
 import {
   AddOrRemoveClassActionProps,
   EditorKeyType,
@@ -12,6 +12,7 @@ import { ActionsGroup } from './actionGroup';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
 
 export type ActionName =
+  | 'update-doc-state'
   | 'backend-feedback'
   | 'backend-set-project'
   | 'close-editor'
@@ -23,11 +24,14 @@ export type ActionName =
   | 'open-document'
   | 'save-document'
   | 'save-document-as'
+  | 'save-document-copy'
   | 'new-project'
   | 'get-project'
+  | 'include-document'
   | 'import-document'
   | 'export-document'
   | 'transform-document'
+  | 'set-document-format'
   | 'document-go-to-line'
   | 'show-result-message'
   | 'show-export-dialog'
@@ -78,12 +82,20 @@ export type ActionName =
   | 'uppercase-first'
   | 'auto-set-index-term-id'
   | 'insert-raw-inline'
+  | 'move-before-first-sibling'
+  | 'move-before-previous-sibling'
+  | 'move-before-next-sibling'
+  | 'move-after-previous-sibling'
+  | 'move-after-next-sibling'
+  | 'move-after-last-sibling'
+  | 'move-inside-prev-sibling'
+  | 'move-inside-next-sibling'
 
 export type TooltipForAction =
   | string
   | ((
     editor?: Editor,
-    action?: ActionForNodeOrMark | EditorAction,
+    action?: ActionCore, // ActionForNodeOrMark | EditorAction,
   ) => string | undefined);
 
 /** Core properties of actions */
@@ -119,6 +131,15 @@ export type BaseActionForNodeOrMark = BaseEditorAction & ActionForNodeOrMarkCore
 
 /** Action pertinent to a particular Node or Mark of the document of the editor with that editorKey */
 export type ActionForNodeOrMark = EditorAction & ActionForNodeOrMarkCore
+
+export const ACTION_UPDATE_DOC_STATE: BaseEditorAction = {
+  name: 'update-doc-state',
+  label: 'update DocState',
+}
+
+export interface UpdateDocStateActionProps {
+  docState: DocState
+}
 
 export const ACTION_BACKEND_FEEDBACK: BaseEditorAction = {
   name: 'backend-feedback',
@@ -200,6 +221,16 @@ export const ACTION_DOCUMENT_SAVE_AS: BaseEditorAction = {
   label: 'save document with a different name',
 };
 
+export const ACTION_DOCUMENT_SAVE_COPY: BaseEditorAction = {
+  name: 'save-document-copy',
+  label: 'save a copy',
+};
+
+export const ACTION_DOCUMENT_INCLUDE: BaseEditorAction = {
+  name: 'include-document',
+  label: 'include a document in the current one',
+};
+
 export const ACTION_DOCUMENT_IMPORT: BaseEditorAction = {
   name: 'import-document',
   label: 'import document',
@@ -215,6 +246,11 @@ export const ACTION_DOCUMENT_TRANSFORM: BaseEditorAction = {
   label: 'transform document',
   icon: 'mdi-file-replace-outline',
 };
+
+export const ACTION_SET_DOCUMENT_FORMAT: BaseEditorAction = {
+  name: 'set-document-format',
+  label: 'set the document format',
+}
 
 export const ACTION_DOCUMENT_GO_TO_LINE: BaseEditorAction = {
   name: 'document-go-to-line',

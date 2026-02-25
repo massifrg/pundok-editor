@@ -1,18 +1,23 @@
 import { IpcMainInvokeEvent } from 'electron';
-import { readFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, readFile } from '../filesystem';
 import { IpcHub } from './ipcHub';
-import { computeProjectConfiguration, DEFAULT_PROJECT_FILENAME, GetProjectOptions, PundokEditorConfig, PundokEditorProject } from '../common';
+import {
+  computeProjectConfiguration,
+  DEFAULT_PROJECT_FILENAME,
+  GetProjectOptions,
+  PundokEditorConfig,
+  PundokEditorProject
+} from '../common';
 import { format as formatPath, parse as parsePath } from 'path';
-import { getConfigurationInit } from '.';
 import { isReadableDir } from '../resourcesManager';
+import { getConfigurationInit } from './configurationHandlers';
 
 export const getProjectHandler =
   (hub: IpcHub) =>
     async (
       e: IpcMainInvokeEvent,
       options: GetProjectOptions,
-    ): Promise<PundokEditorProject> => {
+    ): Promise<PundokEditorProject | undefined> => {
       if (options.path) {
         // check if the path is the project directory or a document inside it
         const dir = isReadableDir(options.path)
@@ -26,7 +31,8 @@ export const getProjectHandler =
             : loadProjectFromFile(projectFile);
         }
       }
-      return Promise.reject(`can't load a project file`);
+      console.log(`can't load a project file`);
+      return undefined
     };
 
 /**

@@ -119,9 +119,6 @@ export default {
       const indices = useProjectCache().indicesCache
       return indices && this.indexName && indices[this.indexName]
     },
-    lastSaveResponse() {
-      return getDocState((this.editor as Editor)?.state)?.lastSaveResponse
-    },
     labelEveryWord() {
       return this.optionEveryWord ? 'every word' : 'exact text'
     },
@@ -214,7 +211,6 @@ export default {
               kind: 'index',
               project: docState?.project,
               configurationName: docState?.configuration?.name,
-              // path: this.lastSaveResponse?.doc.path,
             }
           }
           this.pendingSearch = true
@@ -263,7 +259,6 @@ export default {
           kind: 'index',
           project: docState?.project,
           configurationName: docState?.configuration?.name,
-          // path: this.lastSaveResponse?.doc.path,
         }
       }
       this.pendingSearch = true

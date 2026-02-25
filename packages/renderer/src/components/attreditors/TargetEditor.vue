@@ -10,9 +10,11 @@
 </template>
 
 <script lang="ts">
-import { useBackend } from '../../stores';
 import { mapState } from 'pinia';
-import { getDocState, makePathRelativeToDoc } from '../../schema';
+import { DocumentFormat, imageFormatFromFilename } from '../../common';
+import { showSelectImageDialog } from '../helpers';
+import { getEditorDocState, makePathRelativeToDoc } from '../../schema';
+import { useBackend } from '../../stores';
 
 export default {
   props: ['editor', 'urlAttrName', 'url', 'title'],
@@ -47,31 +49,43 @@ export default {
       this.$emit('update-attribute', 'title', this.targetTitle)
     },
     async askTargetFileUrl() {
-      const docState = getDocState(this.editor.state)
-      // console.log(docState)
-      const coords = await this.backend?.askForDocumentIdOrPath('image', {
-        editorKey: docState?.editorKey,
-        project: docState?.project,
-        openDialogOptions: {
-          filters: [
-            {
-              name: "raster images",
-              extensions: ["jpg", "jpeg", "png"],
-            },
-            {
-              name: "vector images",
-              extensions: ["svg", "pdf"]
-            }
-          ]
+      const docState = getEditorDocState(this.editor)
+      const { project, workingFolder } = docState || {}
+      let url: URL
+      let path = this.targetUrl
+      console.log(path)
+      try {
+        url = new URL(path)
+      } catch (err) {
+        path = workingFolder || project?.path
+        path = path ? path + '/' + this.targetUrl : this.targetUrl
+        console.log(path)
+      } finally {
+        url = new URL('file://' + path)
+      }
+      const chunks = url && url.pathname.split('/')
+      const filename = url && chunks.pop()
+      const startFolder = url && chunks.join('/')
+        || docState?.imagesFolder || docState?.workingFolder
+      const format = filename && imageFormatFromFilename(filename) || undefined
+      const startFormat = format
+        ? { ...format, ftype: 'image' } as DocumentFormat
+        : docState?.imagesFormat
+      showSelectImageDialog({
+        editor: this.editor,
+        prompt: 'Choose an image:',
+        startFolder,
+        startFormat,
+        callback: (context) => {
+          const { path, documentFormat } = context
+          this.editor.commands.updateDocState({
+            // TODO: update also imagesFolder
+            imagesFormat: documentFormat || docState?.imagesFormat,
+          })
+          if (path)
+            this.updateTargetUrl(docState ? makePathRelativeToDoc(docState, path) : path)
         }
       })
-      if (coords) {
-        // console.log(coords)
-        const { src } = coords
-        if (src) {
-          this.updateTargetUrl(docState ? makePathRelativeToDoc(docState, src) : src)
-        }
-      }
     }
   }
 }

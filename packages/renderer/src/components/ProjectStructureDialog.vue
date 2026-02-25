@@ -49,8 +49,8 @@
 
 <script lang="ts">
 import { setupQuasarIcons } from './helpers/quasarIcons';
-import { getDocState, getEditorProject } from '../schema';
-import { DocumentContext, EditorKeyType, ProjectComponent, ReadDoc } from '../common';
+import { getDocState, getEditorDocState, getEditorProject } from '../schema';
+import { DocumentContext, EditorKeyType, ProjectComponent, CxDocument } from '../common';
 import { QTreeNode } from 'quasar';
 import { Component, defineAsyncComponent } from 'vue';
 import { useBackend, useProjectCache } from '../stores';
@@ -59,8 +59,8 @@ import { EditorGUIPropsClass } from './EditorGUIProps';
 import { setActionOpenDocument, setActionCloseEditor, setActionShowResultMessage } from '../actions';
 import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/vue-3';
-import { PendingOperation } from '.';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
+import { PendingOperation } from './helpers/pending';
 
 interface LoadedDocument {
   id?: string,
@@ -118,11 +118,12 @@ const ProjectStructureDialog: Component = {
       expanded: [] as boolean[],
       selected: null as string | null,
       loaded: undefined as LoadedDocument | undefined,
-      subEditor: Editor,
+      subEditor: undefined as Editor | undefined,
       structure: undefined as ProjectComponent | undefined,
       dontReloadStructure: false,
       guiProps: new EditorGUIPropsClass({
         newDocument: false,
+        openButton: false,
         importButton: false,
         exportButton: false,
         projectStructure: false,
@@ -146,7 +147,7 @@ const ProjectStructureDialog: Component = {
     selectedColor(): string | undefined {
       const is_loaded = isLoaded(this.findTreeNode(labelNodeMatcher(this.selected)), this.loaded)
       if (is_loaded)
-        return getDocState(this.subEditor)?.unsavedChanges ? 'negative' : 'primary'
+        return getDocState(this.subEditor)?.unsavedChangesAsCopy ? 'negative' : 'primary'
     }
   },
   watch: {
@@ -158,8 +159,9 @@ const ProjectStructureDialog: Component = {
     }
   },
   methods: {
-    forwardEditorKey(editorKey: EditorKeyType) {
-      this.$emit('new-editor', editorKey)
+    forwardEditorKey(editorKey: EditorKeyType, editor?: Editor) {
+      this.subEditor = editor || this.editor
+      this.$emit('new-editor', editorKey, this.subEditor)
     },
     async reloadStructure(): Promise<void> {
       this.dontReloadStructure = false
@@ -231,12 +233,13 @@ const ProjectStructureDialog: Component = {
       this.selected = selected
       const context = this.getOpenDocContextFromSelected()
       // console.log(this.getInclusionLine(context))
+      console.log(context)
       const state = this.subEditor?.state
       console.log(state)
       if (state && context)
         setActionOpenDocument(state, context)
     },
-    documentLoaded(doc: ReadDoc, editor: Editor) {
+    documentLoaded(doc: CxDocument, editor: Editor) {
       this.loaded = {
         id: doc.id,
         path: doc.path
@@ -248,8 +251,10 @@ const ProjectStructureDialog: Component = {
     },
     closeDialog(force?: boolean) {
       const subEditor = this.subEditor
-      const unsavedChanges = subEditor && getDocState(subEditor.state)?.unsavedChanges
-      if (!force && unsavedChanges) {
+      const { unsavedChanges, unsavedChangesAsCopy } = getDocState(subEditor.state) || {}
+      const unsaved = subEditor && unsavedChanges
+      if (!force && unsaved) {
+        console.log(getEditorDocState(this.subEditor.state))
         setActionCloseEditor(this.subEditor.state)
       } else {
         this.selected = null

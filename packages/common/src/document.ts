@@ -1,12 +1,13 @@
-import { InputConverter, OutputConverter, PundokEditorProject } from './config';
+import { PundokEditorProject } from './config';
+import { DocumentFormat } from './documentFormat';
 import { EditorKeyType } from "./editorKey";
 
 interface CommonDocumentCoords {
   id?: string;
   src?: string;
   path?: string;
-  format?: string;
-  formats?: string[];
+  formatName?: string;
+  // formats?: string[];
 }
 interface LocalDocumentCoords extends CommonDocumentCoords {
   path: string;
@@ -19,50 +20,31 @@ export type DocumentCoords = LocalDocumentCoords | DbDocumentCoords;
 /**
  * An interface for the environment of a document.
  */
-export interface CompatibleDocumentContext {
+export interface DocumentContext {
   /** The editor that is the recipient of the file content */
   editorKey?: EditorKeyType;
   /** The document id. */
   id?: string;
-  /** The path of the file, when the document is read from a file. */
+  /** The path or URL of the file. */
   path?: string;
+  /** The format of the document */
+  documentFormat?: DocumentFormat;
   /** The name of the configuration associated with the document. */
   configurationName?: string;
-  /** The converter to use to read the document */
-  inputConverter?: InputConverter | string;
   /** The project associated with the document */
-  project?: PundokEditorProject | string;
+  project?: PundokEditorProject;
   /** An array of paths for pandoc's --resource-path option */
   resourcePath?: string[];
 }
 
 /**
- * An interface for the environment of a document.
+ * A document with a context.
  */
-export interface DocumentContext extends CompatibleDocumentContext {
-  /** The converter to use to read the document */
-  inputConverter?: InputConverter;
-  /** The project associated with the document */
-  project?: PundokEditorProject;
-}
-
-/**
- * A document that has been read (from the filesystem or from any other storage).
- */
-export interface ReadDoc extends DocumentContext {
-  /** The file contents. */
+export interface CxDocument extends DocumentContext {
+  /** The document JSON.stringified contents. */
   content: string;
 }
 
-/**
- * A document that has been saved or exported to any kind of storage.
- */
-export interface StoredDoc extends ReadDoc {
-  /** The converter used to export it. */
-  converter?: OutputConverter;
-  /** Options about a possible preview of the document. */
-  // preview?: Partial<PreviewOptions>;
-  /** Set the path of the exported file, when the document is exported in a different format */
-  exportedAsPath?: string;
+export function documentNameToId(name?: string): string | undefined {
+  return name && name.replace(/([.][0-9a-z_-]{1,5})*[.].*?$/i, '') || undefined
 }
-

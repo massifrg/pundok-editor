@@ -1,3 +1,4 @@
+import type { Node, Schema } from '@tiptap/pm/model';
 import {
   type ListAttributes,
   type PandocItem,
@@ -52,11 +53,10 @@ import {
   Figure,
   ColSpec,
   Alignment,
+  toJsonString
 } from '../../pandoc';
-import type { Node, Schema } from '@tiptap/pm/model';
-import { toJsonString } from '../../pandoc';
 import { schema } from './PandocSchema';
-import { flatten, isArray, isEqual, uniq } from 'lodash';
+import { flatten, isEqual, uniq } from 'lodash-es';
 import { TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT, textAlignToPandocAlignment } from './alignments';
 import { colAlignmentsFromSections, PmColSpec } from './colSpec';
 import {
@@ -83,7 +83,7 @@ import {
   INDEX_RANGE_START_CLASS,
   INDEX_RANGE_STOP,
   INDEX_RANGE_STOP_CLASS,
-} from '../nodes/IndexRef';
+} from '../nodes';
 import { PundokCitation } from './citation';
 
 type PmAttrs = Record<string, any>;

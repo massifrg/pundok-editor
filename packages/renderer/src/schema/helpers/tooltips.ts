@@ -1,7 +1,7 @@
-import { isArray, isString } from 'lodash';
+import { Mark, Node } from '@tiptap/pm/model';
+import { isArray, isString } from 'lodash-es';
 import { visibleAttrsForNodeOrMark } from './attributes';
 import { LabeledNodeOrMark } from './selection';
-import { Mark, Node } from '@tiptap/pm/model';
 import { PmColSpec, colSpecToCompactString } from './colSpec';
 import { PundokCitation } from './citation';
 

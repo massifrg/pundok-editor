@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts">
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 
 export default {
   props: {

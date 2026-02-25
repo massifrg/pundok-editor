@@ -1,16 +1,22 @@
 <template>
-  <ToolbarButton icon="add_document" @click="appendDocument()" />
+  <ToolbarButton icon="add_document" @click="showDialog" />
 </template>
 
 <script lang="ts">
+import { Editor } from '@tiptap/vue-3';
 import { mapState } from 'pinia';
 import ToolbarButton from './ToolbarButton.vue';
+import { ACTION_DOCUMENT_TRANSFORM, setActionCommand } from '../actions';
+import {
+  DEFAULT_FORMAT,
+  EditorKeyType,
+  PandocFilterTransform,
+  PundokEditorProject,
+  TransformDocumentActionProps
+} from '../common';
+import { editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject } from '../schema';
 import { useBackend } from '../stores';
-import { EditorKeyType, PandocFilterTransform, PundokEditorProject } from '../common';
-import { editorKeyFromState, getEditorConfiguration, getEditorProject } from '../schema';
-import { setActionTransformDocument } from '../actions';
-import { Editor } from '@tiptap/vue-3';
-import { setupQuasarIcons } from './helpers/quasarIcons';
+import { setupQuasarIcons, showImportDocumentDialog } from './helpers';
 
 export default {
   props: ['editor'],
@@ -37,29 +43,33 @@ export default {
     setupQuasarIcons()
   },
   methods: {
-    async appendDocument() {
+    showDialog() {
       const editorKey = this.editorKey
       if (!editorKey) return
-      const doc = await this.backend?.askForDocumentIdOrPath('inclusion', {
-        editorKey,
-        configurationName: this.configurationName,
-        project: this.project,
-        openDialogOptions: {
-        },
+      const docState = getEditorDocState(this.editor)
+      showImportDocumentDialog({
+        editor: this.editor,
+        prompt: 'Append document:',
+        startFolder: docState?.includeFolder || docState?.workingFolder,
+        callback: (context) => {
+          const { documentFormat, path } = context
+          console.log(context)
+          if (path) {
+            const appendTransform: PandocFilterTransform = {
+              type: 'pandoc-filter',
+              filters: [],
+              name: 'include-document',
+              withResult: 'append',
+              fromFormat: documentFormat?.name || DEFAULT_FORMAT,
+              toFormat: 'json',
+              sources: [path],
+            }
+            console.log(appendTransform)
+            setActionCommand(editorKey, ACTION_DOCUMENT_TRANSFORM,
+              { transform: appendTransform } as TransformDocumentActionProps)
+          }
+        }
       })
-      if (!doc) return;
-      const { path, format, formats, id, src } = doc
-      if (!path) return
-      const appendTransform: PandocFilterTransform = {
-        type: 'pandoc-filter',
-        filters: [],
-        name: 'include-document',
-        withResult: 'append',
-        fromFormat: format || path?.replace(/^.*?[.]([^.]+)$/, '$1') || 'json',
-        toFormat: 'json',
-        sources: [path],
-      }
-      setActionTransformDocument(editorKey, appendTransform)
     }
   }
 }

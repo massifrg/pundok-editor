@@ -202,20 +202,20 @@ import VuePdfEmbed from 'vue-pdf-embed'
 // optional styles
 import 'vue-pdf-embed/dist/styles/annotationLayer.css'
 import 'vue-pdf-embed/dist/styles/textLayer.css'
+import { toRaw } from 'vue';
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import {
   EditorKeyType,
-  ExportJob,
+  RenderingJob,
   SetupViewerActionProps,
   SynctexInfo,
   ViewerSetup
 } from '../common';
-import { debounce, isString, throttle } from 'lodash';
+import { debounce, isString, throttle } from 'lodash-es';
 import { setupQuasarIcons } from './helpers/quasarIcons';
-import PromptDialog from './helpers/PromptDialog.vue'
-import { toRaw } from 'vue';
+import { PromptDialog } from './dialogs'
 
 interface LoadingProgress {
   loaded: number,
@@ -281,7 +281,7 @@ export default {
       currentBookmarkIndex: -1,
       isUpdated: false,
       documentHash: undefined as string | undefined,
-      exportJobs: {} as Record<string, ExportJob>,
+      exportJobs: {} as Record<string, RenderingJob>,
       editorKey: undefined as EditorKeyType | undefined,
       showPageDialog: false,
       showBookmarkNameDialog: false,
@@ -650,7 +650,7 @@ export default {
 </template>
 
 <style lang="scss">
-@import 'pdfjs-dist/web/pdf_viewer.css';
+// @import 'pdfjs-dist/web/pdf_viewer.css';
 
 /** The next one is necessary to prevent the PdfViewer from staying on top even when minified */
 .lazy-component-wrapper {

@@ -1,6 +1,8 @@
 export interface EditorGUIProps {
   /** new document button */
   newDocument: boolean;
+  /** open document button */
+  openButton: boolean;
   /** import document button */
   importButton: boolean;
   /** export document button */
@@ -14,6 +16,7 @@ export interface EditorGUIProps {
 
 export class EditorGUIPropsClass implements EditorGUIProps {
   newDocument: boolean = true;
+  openButton: boolean = true;
   importButton: boolean = true;
   exportButton: boolean = true;
   projectStructure: boolean = true;

@@ -8,8 +8,11 @@ import {
   Complex,
 } from 'parsel-js';
 import { SelectedNodeOrMark } from './selection';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 import {
+  MARK_NAME_DOUBLE_QUOTED,
+  MARK_NAME_EMPH,
+  MARK_NAME_SINGLE_QUOTED,
   NODE_NAME_BREAK,
   NODE_NAME_HEADING,
   NODE_NAME_HORIZONTAL_RULE,
@@ -29,11 +32,35 @@ const NORMALIZED_NAME: Record<string, string | MatchNameWithNodeOrMarkFunction> 
   h5: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 5,
   h6: (n) => n.type.name === NODE_NAME_HEADING && n.attrs.level === 6,
   hr: NODE_NAME_HORIZONTAL_RULE.toLowerCase(),
-  '§': 'custom-style',
+  '§': 'customStyle',
   br: NODE_NAME_BREAK.toLowerCase(),
   linebreak: (n) => n.type.name === NODE_NAME_BREAK && !n.attrs.soft,
   softbreak: (n) => n.type.name === NODE_NAME_BREAK && !!n.attrs.soft,
+  dq: MARK_NAME_DOUBLE_QUOTED,
+  sq: MARK_NAME_SINGLE_QUOTED,
+  em: MARK_NAME_EMPH,
+  quoted: (m) => m.type.name === MARK_NAME_SINGLE_QUOTED || m.type.name === MARK_NAME_DOUBLE_QUOTED,
 };
+
+/**
+ * Create virtual attributes for some nodes or marks, in particular for Pandoc's `Quoted`
+ * inline, so that you can use a CSS selector like this: `Quoted[quoteType=DoubleQuoted]`.
+ * That's because the Prosemirror schema of this editor splits Pandoc's `Quoted` into two
+ * different Marks: `SingleQuoted` and `DoubleQuoted`.
+ * @param nom A Node or a Mark for which some virtual attributes are generated in CSS matching. 
+ * @returns 
+ */
+function getVirtualAttrs(nom: Node | Mark): Record<string, any> {
+  switch (nom.type.name) {
+    case MARK_NAME_DOUBLE_QUOTED:
+      return { quoteType: 'DoubleQuote' }
+    case MARK_NAME_SINGLE_QUOTED:
+      return { quoteType: 'SingleQuote' }
+    case NODE_NAME_PARAGRAPH:
+      return { kv: { 'custom-style': nom.attrs.customStyle } }
+  }
+  return {}
+}
 
 type CombinatorSelector =
   | 'descendant'
@@ -228,7 +255,7 @@ function normalizeName(name: string, nom?: Node | Mark): string | false {
     return lowered
   const normalized = NORMALIZED_NAME[lowered];
   if (!normalized)
-    return lowered
+    return name
   if (isString(normalized))
     return normalized
   return normalized(nom) && nom.type.name.toLowerCase() || false
@@ -244,8 +271,7 @@ function nomMatchesAST(nom: Node | Mark, ast: AST, parent?: Node | null, index?:
     case 'class':
       return nomHasClass(nom, ast.name);
     case 'attribute': {
-      const normalized = normalizeName(ast.name, nom)
-      return !!normalized && nomHasAttribute(nom, normalized, ast);
+      return nomHasAttribute(nom, ast, parent);
     }
     case 'compound':
       return nomMatchesCompound(nom, ast.list, parent, index);
@@ -299,22 +325,20 @@ function nomHasClass(nom: Node | Mark, className: string): boolean {
 
 function nomHasAttribute(
   nom: Node | Mark,
-  attrName: string,
-  ast?: AttributeToken
+  ast: AttributeToken,
+  parent?: Node | null,
 ): boolean {
+  const attrName = normalizeName(ast.name, nom)
   if (!attrName) return false;
-  const attrs = nom.attrs;
+  const attrs = { ...nom.attrs, ...getVirtualAttrs(nom) };
   if (!attrs) return false;
-  const no_attribute =
-    attrs[attrName] === undefined &&
-    (attrs?.kv === undefined || attrs?.kv[attrName] === undefined);
-  if (!ast?.operator) return !no_attribute;
   const attrValue: string = attrs[attrName] || (attrs.kv && attrs.kv[attrName]);
+  if (!ast?.operator) return attrValue !== undefined;
   const { caseSensitive, operator, value } = ast;
   const av = caseSensitive ? attrValue : attrValue?.toLowerCase();
   const cv = caseSensitive ? value : value?.toLowerCase();
   let retValue = false;
-  if (av && cv) {
+  if (av !== undefined && cv !== undefined) {
     switch (operator) {
       case '=':
         retValue = av === cv;

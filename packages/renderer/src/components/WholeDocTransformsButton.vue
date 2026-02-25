@@ -17,8 +17,8 @@
 <script lang="ts">
 import { mapState } from 'pinia';
 import { useActions } from '../stores';
-import { setActionTransformDocument } from '../actions';
-import { getPandocFilterTransforms, PandocFilterTransform } from '../common';
+import { ACTION_DOCUMENT_TRANSFORM, setActionCommand } from '../actions';
+import { getPandocFilterTransforms, PandocFilterTransform, SetDocumentFormatActionProps, TransformDocumentActionProps } from '../common';
 import { getEditorConfiguration } from '../schema';
 
 export default {
@@ -33,8 +33,9 @@ export default {
     }
   },
   methods: {
-    transformWith(t: PandocFilterTransform) {
-      setActionTransformDocument(this.editor.state, t)
+    transformWith(transform: PandocFilterTransform) {
+      setActionCommand(this.editor.state, ACTION_DOCUMENT_TRANSFORM,
+        { transform } as TransformDocumentActionProps)
     }
   }
 }

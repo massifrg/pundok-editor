@@ -1,5 +1,5 @@
 import type { Attrs, Mark, Node } from '@tiptap/pm/model';
-import { cloneDeep, isArray, isString } from 'lodash';
+import { cloneDeep, isArray, isString } from 'lodash-es';
 import { PmColSpec } from './colSpec';
 import { textAlignToPandocAlignment } from './alignments';
 import {

@@ -25,6 +25,12 @@ export interface PundokEditorConfigInit {
   tiptap?: {
     options?: Record<string, any>;
   };
+  /** the name of a pandoc format or an InputConverter used as default to open documents. */
+  workingFormat?: string;
+  /** the name of the format (pandoc or custom) used with "Save a copy" */
+  copyFormat?: string,
+  /** the names of the formats that are more visible in the GUI with this configuration */
+  mainFormats?: string[],
   /** a template for new documents */
   documentTemplate?: string;
   /** automatic delimiters for Marks like singleQuoted or doubleQuoted,

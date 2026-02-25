@@ -2,10 +2,20 @@ import { getEditorConfiguration } from '../schema';
 import { nodeOrMarkToPandocName } from '../schema/helpers/PandocVsProsemirror';
 import { nodeIcon, templateNode } from '../schema/helpers';
 import { EditorKeyType, PundokEditorConfig } from '../common';
-import { ActionCore, ActionForNodeOrMark } from './actions';
+import { ActionCore, ActionForNodeOrMark, ActionName, BaseEditorAction, TooltipForAction } from './actions';
+
+/** Allowed names for Actions' groups */
+type ActionGroupName =
+  | 'insert-before'
+  | 'insert-after'
+  | 'convert-block'
+  | 'move-block'
 
 /** Useful to group actions in sub menus (not linked to an editor instance) */
-type BaseActionsGroup = ActionCore
+type BaseActionsGroup = ActionCore & {
+  name: ActionGroupName,
+  tooltip?: TooltipForAction,
+}
 
 /** Actions group that is relevant only to the editor with that editorKey */
 export interface ActionsGroup extends BaseActionsGroup {
@@ -17,6 +27,7 @@ const ACTION_GROUP_INSERT_BEFORE: BaseActionsGroup = {
   label: 'insert before...',
   icon: 'mdi-select-place',
   iconRight: 'mdi-square-rounded',
+  tooltip: 'insert an element before this one'
 };
 
 const ACTION_GROUP_INSERT_AFTER: BaseActionsGroup = {
@@ -24,12 +35,14 @@ const ACTION_GROUP_INSERT_AFTER: BaseActionsGroup = {
   label: 'insert after...',
   icon: 'mdi-square-rounded',
   iconRight: 'mdi-select-place',
+  tooltip: 'insert an element after this one'
 };
 
 const ACTION_GROUP_CONVERT_BLOCK: BaseActionsGroup = {
   name: 'convert-block',
   label: 'convert block...',
   icon: 'mdi-swap-horizontal',
+  tooltip: 'convert this Block into a compatible one'
 };
 
 const ACTION_GROUP_MOVE_BLOCK: BaseActionsGroup = {
@@ -37,11 +50,12 @@ const ACTION_GROUP_MOVE_BLOCK: BaseActionsGroup = {
   label: 'move block...',
   icon: 'mdi-select-place',
   iconRight: 'mdi-swap-vertical',
+  tooltip: 'move this Block up, down, up & inside or down & inside'
 };
 
 export function insertBlockAction(
   editorKey: EditorKeyType,
-  name: string,
+  name: ActionName,
   label: string,
   pos: number,
   nodetypename: string,
@@ -120,7 +134,7 @@ export function convertBlockAction(
   const convertGroup = { ...ACTION_GROUP_CONVERT_BLOCK, editorKey } as ActionsGroup;
   return {
     editorKey,
-    name: `convert-${fromTypeName}-to-${toTypeName}`,
+    name: `convert-${fromTypeName}-to-${toTypeName}` as ActionName,
     label: `convert ${nodeOrMarkToPandocName(
       fromTypeName,
       undefined,

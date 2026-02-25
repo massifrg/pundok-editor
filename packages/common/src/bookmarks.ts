@@ -1,19 +1,41 @@
-export type DocBookmarkType = 'document' | 'project';
+import { splitFolderAndDoc } from "./folders";
 
-interface FileBookmark {
+export type PundokBookmarkType = 'document' | 'project';
+
+export interface DocumentBookmark {
   type: 'document';
   id?: string;
-  path: string;
+  url: string;
   configurationName?: string;
 }
 
-interface ProjectBookmark {
+export interface ProjectBookmark {
   type: 'project';
   name: string;
-  path: string;
+  url: string;
 }
 
 /**
  * A document or a project recently opened.
  */
-export type DocBookmark = FileBookmark | ProjectBookmark;
+export type PundokBookmark = DocumentBookmark | ProjectBookmark;
+
+interface BookmarkLabel {
+  label: string,
+  sublabel: string,
+  tooltip: string,
+}
+
+export function bookmarkLabel(b: PundokBookmark): BookmarkLabel {
+  const { type, url } = b
+  const isProject = type === 'project'
+  const { name } = b as ProjectBookmark
+  const { id, configurationName } = b as DocumentBookmark
+  const path = url?.replace(/^file:\/\//, '')
+  const { document } = splitFolderAndDoc(path)
+  const suffix = configurationName && ` [${configurationName}]` || ''
+  const label = isProject ? name : (id || document || path) + suffix
+  const sublabel = path
+  const tooltip = url
+  return { label, sublabel, tooltip }
+}

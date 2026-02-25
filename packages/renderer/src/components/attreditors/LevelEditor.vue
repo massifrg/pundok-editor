@@ -5,7 +5,7 @@
 
 <script lang="ts">
 import { Editor } from '@tiptap/vue-3';
-import { max } from 'lodash';
+import { max } from 'lodash-es';
 import IntegerEditor from './IntegerEditor.vue';
 
 export default {

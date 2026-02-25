@@ -9,6 +9,7 @@ import {
 } from 'path';
 import { readFile } from 'fs/promises';
 import { stringify } from '../utils';
+import { localizePath } from '../filesystem';
 
 export const fileContentsHandler =
   (hub: IpcHub) =>
@@ -17,15 +18,22 @@ export const fileContentsHandler =
       filename: string,
       context: Partial<FindResourceOptions>,
     ): Promise<string> => {
+      const path = localizePath(filename)
       let kind = context?.kind;
       if (!kind) {
-        const ext = pathExtension(filename);
+        const ext = pathExtension(path);
         const types = resourceTypesFromExtension(ext);
         kind = types[0] || kind;
       }
-      return getFileContents(filename, { ...context, kind });
+      return getFileContents(path, { ...context, kind });
     };
 
+/**
+ * Return the contents of a file as a string.
+ * @param filename A OS-dependent file path.
+ * @param context 
+ * @returns 
+ */
 async function getFileContents(
   filename: string,
   context?: Partial<FindResourceOptions>,

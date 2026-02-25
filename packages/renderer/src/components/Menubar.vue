@@ -4,14 +4,20 @@
       <NewDocumentButton v-if="gui.newDocument" @new-document="newDocument" />
       <span v-if="gui.newDocument" class="button-separator" />
 
-      <!-- <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)" /> -->
-      <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)">
+      <!-- <ToolbarButton v-if="gui.openButton" icon="mdi-folder-open" @click="$emit('openDocument')"
+        title="open document" /> -->
+      <OpenButton :editor="editor" />
+      <!-- <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)">
         <q-badge v-if="!!savedExportedColor" :color="savedExportedColor" floating rounded />
-      </ToolbarButton>
+      </ToolbarButton> -->
+
+      <SaveButton :editor="editor" :text-color="savedColor" />
 
       <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
+      <!--
       <ImportToolbarButton v-if="gui.importButton" :editor="editor" />
       <ExportToolbarButton v-if="gui.exportButton" :editor="editor" />
+      -->
       <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
 
       <span class="button-separator" />
@@ -120,6 +126,7 @@
         @click="showProjectStructure()" />
 
       <q-space />
+      <ToolbarButton icon="mdi-bug" title="debug" @click="debug" />
 
       <q-badge v-if="gui.showEditorVersion" color="positive"><i>{{ version }}</i></q-badge>
     </q-bar>
@@ -327,6 +334,7 @@ import ExportToolbarButton from './ExportToolbarButton.vue';
 import NewDocumentButton from './NewDocumentButton.vue';
 import RawInlineButton from './RawInlineButton.vue';
 import RawBlockMenu from './RawBlockMenu.vue';
+import SaveButton from './SaveButton.vue';
 import TableTools from './TableTools.vue';
 import ToolbarButton from './ToolbarButton.vue';
 import WholeDocTransformsButton from './WholeDocTransformsButton.vue';
@@ -334,7 +342,7 @@ import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
 // import TextAlignMenubarItem from "./TextAlignMenubarItem.vue";
 // import VerticalAlignMenubarItem from "./VerticalAlignMenubarItem.vue";
 import {
-  COLOR_JUST_EXPORTED,
+  COLOR_SAVED_ONLY_AS_COPY,
   COLOR_UNSAVED,
   ConfigurationSummary,
   CustomStyleInstance,
@@ -359,6 +367,8 @@ import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
 import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
+import OpenButton from './OpenButton.vue';
+import { showDocStateDialog } from './helpers';
 // import { SK } from '../common'
 
 export default {
@@ -380,12 +390,14 @@ export default {
     InsertNoteButton,
     ImportToolbarButton,
     NewDocumentButton,
+    OpenButton,
     RawInlineButton,
     RawBlockMenu,
-    // TextAlignMenubarItem,
-    // VerticalAlignMenubarItem,
+    SaveButton,
     TableTools,
+    // TextAlignMenubarItem,
     ToolbarButton,
+    // VerticalAlignMenubarItem,
     WholeDocTransformsButton,
   },
   props: [
@@ -393,10 +405,11 @@ export default {
     'currentNodesWithPos',
     'guiProps',
     'savedChanges',
-    'exportedChanges',
+    'savedChangesAsCopy',
   ],
   emits: [
-    'saveContent',
+    'openDocument',
+    // 'saveContent',
     // 'exportAgain',
     'showConfigurationsDialog',
     'toggleSearchAndReplaceDialog',
@@ -427,11 +440,11 @@ export default {
     project() {
       return getEditorProject(this.editor);
     },
-    savedExportedColor(): string | undefined {
-      const exported = this.exportedChanges;
+    savedColor(): string | undefined {
+      const savedAsCopy = this.savedChangesAsCopy;
       const saved = this.savedChanges;
-      if (exported && !saved) return COLOR_JUST_EXPORTED;
-      else if (!(exported || saved)) return COLOR_UNSAVED;
+      if (savedAsCopy && !saved) return COLOR_SAVED_ONLY_AS_COPY;
+      else if (!(savedAsCopy || saved)) return COLOR_UNSAVED;
       else return undefined;
     },
     currentParagraph(): NodeWithPos | undefined {
@@ -597,7 +610,9 @@ export default {
     reloadWithConfiguration(configurationName: string) {
       this.$emit('reloadWithConfiguration', configurationName);
     },
-    async debug() { },
+    async debug() {
+      showDocStateDialog(this.editor)
+    },
   },
 };
 </script>

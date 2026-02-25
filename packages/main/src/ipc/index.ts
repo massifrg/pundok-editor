@@ -1,4 +1,3 @@
-export * from './askForDocumentHandler';
 export * from './configurationHandlers';
 export * from './debugInfoHandler';
 export * from './editorReadyHandler';
@@ -9,7 +8,7 @@ export * from './getInclusionTreeHandler';
 export * from './ipcHub';
 export * from './newProjectHandler';
 export * from './openDocumentHandler';
-export * from './pandocFormatsHandler';
+export * from './pandocFeaturesHandler';
 export * from './queryHandler';
 export * from './saveDocumentHandler';
 export * from './setValueHandler';

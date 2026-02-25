@@ -39,7 +39,7 @@
 
 <script lang="ts">
 import ToolbarButton from './ToolbarButton.vue';
-import { isArray, isString, uniq } from 'lodash';
+import { isArray, isString, uniq } from 'lodash-es';
 import { DEFAULT_RAW_INLINES, InsertableRaw } from '../common';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import { getEditorConfiguration } from '../schema';

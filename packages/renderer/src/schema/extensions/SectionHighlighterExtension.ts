@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/core';
 import { Node as PmNode, NodeType } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { SelectedNodeOrMark } from '../helpers/selection';
+import { SelectedNodeOrMark } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -43,19 +43,19 @@ export const SectionHighlighterExtension = Extension.create({
     return {
       highlightSection:
         (section: SelectedNodeOrMark) =>
-        ({ tr, dispatch }) => {
-          if (section && (section.mark || section.node)) {
-            if (dispatch) dispatch(tr.setMeta(HIGHLIGHT_KEY, section));
-            return true;
-          }
-          return false;
-        },
+          ({ tr, dispatch }) => {
+            if (section && (section.mark || section.node)) {
+              if (dispatch) dispatch(tr.setMeta(HIGHLIGHT_KEY, section));
+              return true;
+            }
+            return false;
+          },
       highlightNothing:
         () =>
-        ({ tr, dispatch }) => {
-          if (dispatch) dispatch(tr.setMeta(HIGHLIGHT_KEY, null));
-          return true;
-        },
+          ({ tr, dispatch }) => {
+            if (dispatch) dispatch(tr.setMeta(HIGHLIGHT_KEY, null));
+            return true;
+          },
     };
   },
 

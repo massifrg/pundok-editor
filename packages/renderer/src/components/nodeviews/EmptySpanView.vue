@@ -6,7 +6,7 @@
       </q-icon>
     </span>
     <span v-if="type === 'milestone'" :class="classes" :title="title">{{ node.attrs.kv['page-number'] || 'MS'
-      }}</span>
+    }}</span>
     <span v-if="type === 'anchor'" :class="classes" :title="title">⚓</span>
     <node-view-content as="span" class="content" />
   </node-view-wrapper>
@@ -102,7 +102,7 @@ export default {
       const { from, to } = this.editor.state.selection;
       // console.log(`from=${from} to=${to} getPos=${this.getPos()}`)
       const pos = this.getPos();
-      return pos >= from && pos < to && to > from;
+      return pos && pos >= from && pos < to && to > from;
     },
   },
 };

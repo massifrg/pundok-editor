@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Attrs, MarkType, Node as ProsemirrorNode } from '@tiptap/pm/model';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 import { ChangeMarkOptions } from '../helpers';
 import {
   setMarkNoAtoms,

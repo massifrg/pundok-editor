@@ -1,4 +1,6 @@
 import { CommandProps, Extension } from '@tiptap/core';
+import { Attrs, Mark, MarkType } from '@tiptap/pm/model';
+import { Command } from '@tiptap/pm/state';
 import {
   lowerCaseCommand,
   lowerCaseTransaction,
@@ -7,7 +9,6 @@ import {
   upperCaseFirstTransaction,
   upperCaseTransaction,
 } from '../../commands';
-import { Attrs, Mark, MarkType } from '@tiptap/pm/model';
 import { getMark } from '../helpers';
 import {
   ActionNameWithProps,
@@ -35,11 +36,9 @@ import {
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
 } from '../../actions';
-// import { updateAttributesCommand } from './HelperCommandsExtension';
-import { Command } from '@tiptap/pm/state';
 import { setIndexRefCommand } from './IndexingExtension';
 import { insertRawInlineCommand } from '../nodes/RawInline';
-import { isString } from 'lodash';
+import { isString } from 'lodash-es';
 
 export type TextTransformType =
   | 'add-mark'

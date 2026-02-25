@@ -16,6 +16,8 @@ export type BaseInputConverter = {
   extensions: string[];
   /** asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion) */
   feedback?: string;
+  /** optional icon */
+  icon?: string;
 };
 
 /**
