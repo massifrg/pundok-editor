@@ -29,101 +29,6 @@
       ],
       "type": "string"
     },
-    "BaseInputConverter": {
-      "additionalProperties": false,
-      "description": "A base type for documents' import.",
-      "properties": {
-        "default": {
-          "description": "true for the default input converter (only one can be default, otherwise it's the first encountered)",
-          "type": "boolean"
-        },
-        "description": {
-          "description": "description of the converter",
-          "type": "string"
-        },
-        "extensions": {
-          "description": "input file extensions",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "feedback": {
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
-          "type": "string"
-        },
-        "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/InputConverterType",
-          "description": "kind of importer (used by derived types)"
-        }
-      },
-      "required": [
-        "name",
-        "type",
-        "extensions"
-      ],
-      "type": "object"
-    },
-    "BaseOutputConverter": {
-      "additionalProperties": false,
-      "description": "Definition of a document's converter to a particular format.",
-      "properties": {
-        "default": {
-          "description": "true for the default output converter (only one can be default, otherwise it's the first encountered)",
-          "type": "boolean"
-        },
-        "description": {
-          "description": "description of the converter",
-          "type": "string"
-        },
-        "dontAskForResultFile": {
-          "description": "don't ask for the output file, because the script knows where to save its output",
-          "type": "boolean"
-        },
-        "extension": {
-          "description": "extension of the resulting file",
-          "type": "string"
-        },
-        "feedback": {
-          "$ref": "#/definitions/FeedbackMessageType",
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
-        },
-        "format": {
-          "description": "format of the resulting output (pandoc's `-t` option)",
-          "type": "string"
-        },
-        "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
-          "type": "string"
-        },
-        "openResult": {
-          "$ref": "#/definitions/ShowOutputConversion",
-          "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
-        },
-        "projectBuild": {
-          "description": "it's the build of a project-wise product",
-          "type": "boolean"
-        },
-        "resultFile": {
-          "description": "the path of the output file",
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/OutputConverterType",
-          "description": "converter's type: pandoc, lua script, generic program or internal function"
-        }
-      },
-      "required": [
-        "name",
-        "type",
-        "format"
-      ],
-      "type": "object"
-    },
     "ConfigInitField": {
       "description": "The fields allowed in a configuration init object.",
       "enum": [
@@ -132,6 +37,9 @@
         "description",
         "inherits",
         "tiptap",
+        "workingFormat",
+        "copyFormat",
+        "mainFormats",
         "documentTemplate",
         "autoDelimiters",
         "customStyles",
@@ -251,6 +159,10 @@
           "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
           "type": "string"
         },
+        "icon": {
+          "description": "optional icon",
+          "type": "string"
+        },
         "name": {
           "description": "name of the filter, use only 0-9a-z_- characters",
           "type": "string"
@@ -318,6 +230,10 @@
         },
         "format": {
           "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -459,6 +375,10 @@
         },
         "feedback": {
           "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -681,16 +601,6 @@
         }
       ]
     },
-    "OutputConverterType": {
-      "description": "Output conversion can be done:\n- spawning a `pandoc` process\n- a `lua` script\n- a generic external program or `script`\n- `custom` hardcoded function",
-      "enum": [
-        "pandoc",
-        "lua",
-        "custom",
-        "script"
-      ],
-      "type": "string"
-    },
     "PandocInputConverter": {
       "additionalProperties": false,
       "description": "An input converter that spawns a pandoc process to import a document.",
@@ -716,6 +626,10 @@
         },
         "format": {
           "description": "a pandoc's input format or a lua script",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -767,6 +681,10 @@
         },
         "format": {
           "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -830,6 +748,10 @@
         },
         "format": {
           "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -901,6 +823,10 @@
           },
           "type": "array"
         },
+        "copyFormat": {
+          "description": "the name of the format (pandoc or custom) used with \"Save a copy\"",
+          "type": "string"
+        },
         "customAttributes": {
           "description": "custom attributes for Pandoc's elements with an `Attr` data stucture",
           "items": {
@@ -969,6 +895,13 @@
           },
           "type": "array"
         },
+        "mainFormats": {
+          "description": "the names of the formats that are more visible in the GUI with this configuration",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "name": {
           "description": "the name of the configuration (please only letters, numbers and underscore)",
           "type": "string"
@@ -1017,6 +950,10 @@
             "type": "number"
           },
           "type": "array"
+        },
+        "workingFormat": {
+          "description": "the name of a pandoc format or an InputConverter used as default to open documents.",
+          "type": "string"
         }
       },
       "required": [
@@ -1064,6 +1001,10 @@
           "description": "format of the resulting output (pandoc's `-t` option)",
           "type": "string"
         },
+        "icon": {
+          "description": "optional icon",
+          "type": "string"
+        },
         "name": {
           "description": "name of the filter, use only 0-9a-z_- characters",
           "type": "string"
@@ -1105,3 +1046,4 @@
     }
   }
 }
+

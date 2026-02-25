@@ -112,10 +112,18 @@ export interface ElementsSelection extends Automation {
   type: 'elements-selection';
   /** The CSS selector to select `Node`s or `Mark`s */
   cssSelector: string;
-  /** The default tab on which to open the element attributes dialog. */
+  /** The default tab on which to open the element attributes dialog. (TODO: to be deprecated?) */
   tab?: string;
-  /** The text to replace the selected element with. */
+  /** The text to replace the selected element with (use "$&" to replace the selected text). */
   replace?: string;
+  /** Just search, don't replace with text. */
+  optionSearchOnly?: boolean,
+  /** Keep adjacent selected text nodes together. Example: "`<i>italic <b>bold</b></i>`" 
+   * are two text Nodes, the first with just the `Emph` Mark and the second with
+   * both the `Emph` and `Strong` Marks; when the option is `true` they are kept
+   * together as a single found text span.
+   */
+  optionMergeSameAdjacentMarks?: boolean,
 }
 
 /** What to do with the result of a document transformation. */

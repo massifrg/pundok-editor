@@ -126,7 +126,7 @@
         @click="showProjectStructure()" />
 
       <q-space />
-      <ToolbarButton icon="mdi-bug" title="debug" @click="debug" />
+      <ToolbarButton v-if="gui.isDevelopmentMode" icon="mdi-bug" title="debug" @click="debug" />
 
       <q-badge v-if="gui.showEditorVersion" color="positive"><i>{{ version }}</i></q-badge>
     </q-bar>

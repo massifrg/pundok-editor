@@ -1,6 +1,6 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { EditorKeyType, ServerMessageSetConfiguration, getPundokVersion } from '../common';
-import { getStartup, updateStartup } from '../resourcesManager';
+import { existsStartupFile, getStartup, updateStartup } from '../resourcesManager';
 import { IpcHub } from './ipcHub';
 
 /**
@@ -12,6 +12,12 @@ import { IpcHub } from './ipcHub';
 export const editorReadyHandler =
   (hub: IpcHub) => async (e: IpcMainInvokeEvent, editorKey?: EditorKeyType) => {
     const startup = await getStartup();
+    try {
+      if (!existsStartupFile())
+        updateStartup(startup)
+    } catch (err) {
+      console.log(err)
+    }
     const version = getPundokVersion();
     if (startup.version !== version) {
       await updateStartup({ ...startup, version })

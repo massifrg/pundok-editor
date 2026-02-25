@@ -131,6 +131,10 @@
           "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
           "type": "string"
         },
+        "icon": {
+          "description": "optional icon",
+          "type": "string"
+        },
         "name": {
           "description": "name of the filter, use only 0-9a-z_- characters",
           "type": "string"
@@ -198,6 +202,10 @@
         },
         "format": {
           "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -379,6 +387,10 @@
         },
         "feedback": {
           "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -628,6 +640,10 @@
           "description": "a pandoc's input format or a lua script",
           "type": "string"
         },
+        "icon": {
+          "description": "optional icon",
+          "type": "string"
+        },
         "name": {
           "description": "name of the filter, use only 0-9a-z_- characters",
           "type": "string"
@@ -677,6 +693,10 @@
         },
         "format": {
           "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -740,6 +760,10 @@
         },
         "format": {
           "description": "format of the resulting output (pandoc's `-t` option)",
+          "type": "string"
+        },
+        "icon": {
+          "description": "optional icon",
           "type": "string"
         },
         "name": {
@@ -809,6 +833,10 @@
             "$ref": "#/definitions/Automation"
           },
           "type": "array"
+        },
+        "copyFormat": {
+          "description": "the name of the format (pandoc or custom) used with \"Save a copy\"",
+          "type": "string"
         },
         "customAttributes": {
           "description": "Custom attributes that can be added to Blocks or Inlines with an `Attr`.",
@@ -885,6 +913,13 @@
           },
           "type": "array"
         },
+        "mainFormats": {
+          "description": "the names of the formats that are more visible in the GUI with this configuration",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "name": {
           "description": "The name of this configuration of the editor.",
           "type": "string"
@@ -933,6 +968,10 @@
             "type": "number"
           },
           "type": "array"
+        },
+        "workingFormat": {
+          "description": "the name of a pandoc format or an InputConverter used as default to open documents.",
+          "type": "string"
         }
       },
       "required": [
@@ -982,6 +1021,10 @@
                 "$ref": "#/definitions/Automation"
               },
               "type": "array"
+            },
+            "copyFormat": {
+              "description": "the name of the format (pandoc or custom) used with \"Save a copy\"",
+              "type": "string"
             },
             "customAttributes": {
               "description": "custom attributes for Pandoc's elements with an `Attr` data stucture",
@@ -1051,6 +1094,13 @@
               },
               "type": "array"
             },
+            "mainFormats": {
+              "description": "the names of the formats that are more visible in the GUI with this configuration",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
             "name": {
               "description": "the name of the configuration (please only letters, numbers and underscore)",
               "type": "string"
@@ -1099,6 +1149,10 @@
                 "type": "number"
               },
               "type": "array"
+            },
+            "workingFormat": {
+              "description": "the name of a pandoc format or an InputConverter used as default to open documents.",
+              "type": "string"
             }
           },
           "type": "object"
@@ -1160,6 +1214,10 @@
           "description": "format of the resulting output (pandoc's `-t` option)",
           "type": "string"
         },
+        "icon": {
+          "description": "optional icon",
+          "type": "string"
+        },
         "name": {
           "description": "name of the filter, use only 0-9a-z_- characters",
           "type": "string"
@@ -1201,3 +1259,4 @@
     }
   }
 }
+
