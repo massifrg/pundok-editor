@@ -24,7 +24,7 @@ const TYPE_NAME_TO_ICON_NAME: Record<string, string> = Object.fromEntries([
   [MARK_NAME_SMALLCAPS, 'smallcaps'], //'mdi-alpha-k-box'],
   [MARK_NAME_SINGLE_QUOTED, 'singlequoted'],
   [MARK_NAME_DOUBLE_QUOTED, 'doublequoted'],
-  [MARK_NAME_MATH, 'mdi-sigma'],
+  [MARK_NAME_MATH, 'mdi-square-root'],
   [MARK_NAME_LINK, 'mdi-link'],
   [MARK_NAME_CITE, 'mdi-book-account'],
   [MARK_NAME_CODE, 'mdi-language-c'],
