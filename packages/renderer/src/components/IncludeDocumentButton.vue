@@ -12,9 +12,10 @@ import {
   EditorKeyType,
   PandocFilterTransform,
   PundokEditorProject,
+  splitFolderAndDoc,
   TransformDocumentActionProps
 } from '../common';
-import { editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject } from '../schema';
+import { DocStateUpdate, editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject, updateDocState } from '../schema';
 import { useBackend } from '../stores';
 import { setupQuasarIcons, showImportDocumentDialog } from './helpers';
 
@@ -47,10 +48,12 @@ export default {
       const editorKey = this.editorKey
       if (!editorKey) return
       const docState = getEditorDocState(this.editor)
+      const { includeFolder, includeFormat, workingFolder, workingFormat } = docState || {}
       showImportDocumentDialog({
         editor: this.editor,
         prompt: 'Append document:',
-        startFolder: docState?.includeFolder || docState?.workingFolder,
+        startFolder: includeFolder || workingFolder,
+        startFormat: includeFormat || workingFormat,
         callback: (context) => {
           const { documentFormat, path } = context
           console.log(context)
@@ -64,9 +67,19 @@ export default {
               toFormat: 'json',
               sources: [path],
             }
+            const docState = getEditorDocState(this.editor)
+            const { includeFolder, includeFormat } = docState || {}
+            const { folder } = splitFolderAndDoc(path)
+            this.editor?.commands.updateDocState({
+              includeFolder: folder || includeFolder,
+              includeFormat: documentFormat || includeFormat,
+            } as Partial<DocStateUpdate>)
             console.log(appendTransform)
-            setActionCommand(editorKey, ACTION_DOCUMENT_TRANSFORM,
-              { transform: appendTransform } as TransformDocumentActionProps)
+            setActionCommand(
+              editorKey,
+              ACTION_DOCUMENT_TRANSFORM,
+              { transform: appendTransform } as TransformDocumentActionProps
+            )
           }
         }
       })
