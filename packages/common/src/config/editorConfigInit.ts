@@ -1,3 +1,4 @@
+import { Config } from 'electron';
 import { Automation } from './automations';
 import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';
@@ -63,3 +64,18 @@ export interface PundokEditorConfigInit extends NamedAndDescribed {
 
 /** The fields allowed in a configuration init object. */
 export type ConfigInitField = keyof PundokEditorConfigInit
+
+export type PrunableConfigInitField = keyof Pick<PundokEditorConfigInit,
+  | 'autoDelimiters'
+  | 'automations'
+  | 'customAttributes'
+  | 'customClasses'
+  | 'customCss'
+  | 'customMetadata'
+  | 'customStyles'
+  | 'indices'
+  | 'inputConverters'
+  | 'mainFormats'
+  | 'noteStyles'
+  | 'outputConverters'
+>

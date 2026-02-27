@@ -6,7 +6,7 @@ import {
   CustomStyleDef,
   customStylesFromDef,
 } from './customStyles';
-import { PundokEditorConfigInit } from './editorConfigInit';
+import { PrunableConfigInitField, PundokEditorConfigInit } from './editorConfigInit';
 import { DEFAULT_COPY_FORMAT, DEFAULT_FORMAT, DEFAULT_MAIN_FORMATS } from '../pandocFormat';
 import { CustomMetadata } from './customMetadata';
 import { NoteStyle } from './notes';
@@ -423,7 +423,7 @@ export function getRawBlockFormats(config: PundokEditorConfig | PundokEditorConf
 /**
  * A description of the elements to prune from an inherited configuration.
  */
-export type ConfigurationPruning = Record<keyof PundokEditorConfigInit, string[]>
+export type ConfigurationPruning = Record<PrunableConfigInitField, string[]>
 
 /**
  * Description of an inherited configuration, where some elements are removed.
@@ -479,15 +479,15 @@ export function getPrunedConfigInit(
   c: PundokEditorConfigInit | PundokEditorConfig,
   remove?: ConfigurationPruning,
 ): PundokEditorConfig {
-  const modified: Partial<PundokEditorConfigInit> = {}
+  const modified: Partial<Record<PrunableConfigInitField, any>> = {}
   if (remove) {
     Object.entries(remove).forEach(entry => {
-      const k = entry[0] as keyof PundokEditorConfigInit
-      const toBeRemoved = entry[1]
+      const k = entry[0] as PrunableConfigInitField
+      const toBeRemoved: string[] = entry[1]
       const oldValue = (c as PundokEditorConfigInit)[k]
       if (oldValue) {
         let newValue = undefined
-        switch (k as keyof PundokEditorConfigInit) {
+        switch (k as PrunableConfigInitField) {
           case 'autoDelimiters':
             newValue = omit(oldValue as object, toBeRemoved) as Record<string, string[]>
             break
@@ -507,10 +507,11 @@ export function getPrunedConfigInit(
             newValue = (oldValue as NoteStyle[]).filter(o => !toBeRemoved.includes(o.noteType))
             break
           case 'customCss':
+          case 'mainFormats':
             newValue = (oldValue as string[]).filter(o => !toBeRemoved.includes(o))
+            break
         }
         if (newValue !== undefined) {
-          // @ts-ignore
           modified[k] = newValue
           console.log(`prune Config ${c.name}: ${JSON.stringify(oldValue)} => ${JSON.stringify(newValue)} `)
         }
