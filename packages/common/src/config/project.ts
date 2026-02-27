@@ -1,15 +1,13 @@
 import { PundokEditorConfigInit } from "./editorConfigInit";
 import { PundokEditorConfig } from "./editorConfiguration";
+import { NamedAndDescribed } from "./types";
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 
-export interface PundokEditorProject {
-  name: string;
+export interface PundokEditorProject extends NamedAndDescribed {
   path: string;
   /** The root (master) document of the document tree */
   rootDocument: string;
-  /** A description of the project */
-  description?: string;
   /** The names of configurations to inherit */
   configurations?: string[];
   /** A complement to the inherited configurations */

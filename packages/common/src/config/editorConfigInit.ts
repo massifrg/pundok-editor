@@ -8,17 +8,14 @@ import { InputConverter } from './inputConverters';
 import { NoteStyle } from './notes';
 import { OutputConverter } from './outputConverters';
 import { InsertableRaw } from './rawElements';
+import { NamedAndDescribed } from './types';
 
 /**
  * A configuration (customization) of PundokEditor.
  */
-export interface PundokEditorConfigInit {
-  /** the name of the configuration (please only letters, numbers and underscore) */
-  name: string;
+export interface PundokEditorConfigInit extends NamedAndDescribed {
   /** the minimal suitable version of the editor */
   version: number[];
-  /** a description of the aim of this configuration of the editor */
-  description: string;
   /** the names of other configurations to derive this from */
   inherits?: string[];
   /** options for TipTap/Prosemirror `Node`s and `Mark`s */

@@ -1,17 +1,15 @@
+import { NamedAndDescribed } from "./types";
+
 export type InputConverterType = 'pandoc' | 'script' | 'custom';
 
 /**
- * A base type for documents' import.
+ * A base type for documents' import. Use only 0-9a-z_- characters for its name.
  */
-export type BaseInputConverter = {
-  /** name of the filter, use only 0-9a-z_- characters */
-  name: string;
+export type BaseInputConverter = NamedAndDescribed & {
   /** kind of importer (used by derived types) */
   type: InputConverterType;
   /** true for the default input converter (only one can be default, otherwise it's the first encountered) */
   default?: boolean;
-  /** description of the converter */
-  description?: string;
   /** input file extensions */
   extensions: string[];
   /** asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion) */

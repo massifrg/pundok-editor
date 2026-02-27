@@ -15,3 +15,4 @@ export * from './notes';
 export * from './outputConverters';
 export * from './project';
 export * from './rawElements';
+export * from './types';

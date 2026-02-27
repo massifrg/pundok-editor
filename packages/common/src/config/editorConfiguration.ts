@@ -22,7 +22,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
   /** The version of this configuration (it's meant for compatibility, but it's not used yet). */
   version: number[];
   /** Description of the aim of this configuration. */
-  description: string;
+  description?: string;
   /** Options to configure [TipTap](https://tiptap.dev) components of the editor. */
   tiptap: { options?: Record<string, any> | undefined };
   /** the name of a pandoc format or an InputConverter used as default to open documents. */

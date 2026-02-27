@@ -2,17 +2,14 @@ import { Mark, Node } from '@tiptap/pm/model';
 import { CustomStyleInstance, activeCustomStyles } from './customStyles';
 import { CustomClass, activeCustomClasses } from './customClasses';
 import { appliesTo } from './appliesTo';
+import { NamedAndDescribed } from './types';
 
 /**
  * A custom attribute for Pandoc's `Block`s and `Inline`s with an `Attr`
  * (`CodeBlock`, `Header`, `Table`, `Figure`, `TableHead`, `TableBody`,
  *  `TableFoot`, `Row`, `Cell`, `Code`, `Link`, `Image`, `Span`).
  */
-export interface CustomAttribute {
-  /** the name of the attribute (the key in the attributes of `Attr`) */
-  name: string;
-  /** optional description of the attribute */
-  description?: string;
+export interface CustomAttribute extends NamedAndDescribed {
   /** the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`) */
   appliesTo?: string[];
   /** optional default value */

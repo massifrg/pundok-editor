@@ -1,4 +1,5 @@
-import { FeedbackMessageType } from '..';
+import { FeedbackMessageType } from "../feedback";
+import { NamedAndDescribed } from "./types";
 
 /**
  * Output conversion can be done:
@@ -17,16 +18,13 @@ export type ShowOutputConversion = 'editor' | 'os';
 
 /**
  * Definition of a document's converter to a particular format.
+ * Use only 0-9a-z_- characters for its name.
  */
-export interface BaseOutputConverter {
-  /**  name of the filter, use only 0-9a-z_- characters */
-  name: string;
+export interface BaseOutputConverter extends NamedAndDescribed {
   /** converter's type: pandoc, lua script, generic program or internal function */
   type: OutputConverterType;
   /** true for the default output converter (only one can be default, otherwise it's the first encountered) */
   default?: boolean;
-  /** description of the converter */
-  description?: string;
   /** it's the build of a project-wise product */
   projectBuild?: boolean;
   /** format of the resulting output (pandoc's `-t` option) */
