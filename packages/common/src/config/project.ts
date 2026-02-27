@@ -60,16 +60,16 @@ export async function computeProjectConfiguration(
     computedConfig = projectConfig;
   } else {
     try {
-      let { name: configName, remove } = getInheritedConfiguration(inherited.shift())
+      let { name: configName, remove, keep } = getInheritedConfiguration(inherited.shift())
       computedConfig = await getConfiguration(configName);
       if (computedConfig) {
-        computedConfig = getPrunedConfigInit(computedConfig, remove)
+        computedConfig = getPrunedConfigInit(computedConfig, remove, keep)
         while (inherited.length > 0) {
-          const { name: configurationName, remove } = getInheritedConfiguration(inherited.shift());
+          const { name: configurationName, remove, keep } = getInheritedConfiguration(inherited.shift());
           let onTop = await getConfiguration(configurationName!);
           if (!onTop)
             return Promise.reject(`can't read configuration "${name}"`);
-          onTop = getPrunedConfigInit(onTop, remove)
+          onTop = getPrunedConfigInit(onTop, remove, keep)
           computedConfig = computedConfig.addConfiguration(onTop);
         }
         computedConfig = computedConfig.addConfiguration(projectConfig);
