@@ -15,6 +15,7 @@ import {
   FindResourceOptions,
   ResourceType,
   RESOURCE_SUBPATHS,
+  getInheritedConfigName,
 } from './common';
 import {
   createReadStream,
@@ -200,10 +201,11 @@ export function validResourcePaths(
     );
   // 3. try the configurations inherited by the project, in reverse order
   if (project?.configurations) {
-    console.log(`inherited configurations: ${project.configurations.join()}`);
+    console.log(`inherited configurations: ${project.configurations.map(c => getInheritedConfigName(c)).join()}`);
     const reversed = project.configurations.map((c) => c).reverse();
-    reversed.forEach((configName) => {
-      searchpaths = searchpaths.concat(findValidPaths(resolve(configsdir, configName)));
+    reversed.forEach((c) => {
+      const configName = getInheritedConfigName(c)
+      searchpaths = searchpaths.concat(findValidPaths(resolve(configsdir, configName!)));
     });
   }
   // 4. try the application data dir

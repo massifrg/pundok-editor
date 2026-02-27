@@ -42,7 +42,7 @@ import { useBackend } from '../stores';
 import NameDescriptionEditor from './NameDescriptionEditor.vue';
 import { setupQuasarIcons } from './helpers/quasarIcons';
 import { parse as parsePath } from 'path-browserify';
-import { ConfigurationSummary, PundokEditorConfigInit, PundokEditorProject } from '../common';
+import { ConfigurationSummary, getInheritedConfigName, PundokEditorConfigInit, PundokEditorProject } from '../common';
 import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers';
 import { getEditorDocState } from '../schema';
 
@@ -107,7 +107,8 @@ export default {
               const { name, description, configurations, rootDocument, editorConfig } = existingProject
               this.setName(name || '')
               this.setDescription(description || '')
-              this.configurations = configurations || []
+              this.configurations = configurations?.map(c =>
+                getInheritedConfigName(c) as string) || []
               this.rootDocument = rootDocument
               this.editorConfig = editorConfig
             }

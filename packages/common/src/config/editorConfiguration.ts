@@ -1,4 +1,4 @@
-import { isEqual, isString, uniq } from 'lodash-es';
+import { isEqual, isString, omit, uniq } from 'lodash-es';
 import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';
 import {
@@ -15,6 +15,7 @@ import { InsertableRaw } from './rawElements';
 import { InputConverter } from './inputConverters';
 import { OutputConverter } from './outputConverters';
 import { Automation, SearchAndReplace } from './automations';
+import { NamedAndDescribed } from './types';
 
 export class PundokEditorConfig implements PundokEditorConfigInit {
   /** The name of this configuration of the editor. */
@@ -374,7 +375,7 @@ export interface PundokEditorConfigWithError {
 
 export async function computeDerivedConfiguration(
   config: PundokEditorConfig,
-  inherited: string[],
+  inherited: InheritedConfigurationSpec[],
   getConfiguration: (configurationName: string) => Promise<PundokEditorConfig>,
 ): Promise<PundokEditorConfig> {
   const not_inherited: string[] = [];
@@ -384,17 +385,21 @@ export async function computeDerivedConfiguration(
     const c = inherited.pop();
     let from: PundokEditorConfig | undefined = undefined;
     try {
-      from = await getConfiguration(c!);
+      const configName = getInheritedConfigName(c!)
+      from = await getConfiguration(configName!);
       if (from) {
+        const { remove } = getInheritedConfiguration(from)
+        derived = getPrunedConfigInit(derived, remove)
         derived = enrichConfiguration(derived, from);
       } else {
-        not_inherited.push(c!);
+        not_inherited.push(configName!);
       }
     } catch (err) {
+      const configName = getInheritedConfigName(c!) || 'unknown configuration'
       errors.push(
-        `can't inherit config "${c!}"${isString(err) ? ': ' + err : ''}`,
+        `can't inherit config "${configName}"${isString(err) ? ': ' + err : ''}`,
       );
-      not_inherited.push(c!);
+      not_inherited.push(configName);
     }
   }
   if (not_inherited.length > 0) {
@@ -413,4 +418,104 @@ export function getRawInlineFormats(config: PundokEditorConfig | PundokEditorCon
 
 export function getRawBlockFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
   return uniq(config?.rawBlocks?.map((r) => r.format)) || [];
+}
+
+/**
+ * A description of the elements to prune from an inherited configuration.
+ */
+export type ConfigurationPruning = Record<keyof PundokEditorConfigInit, string[]>
+
+/**
+ * Description of an inherited configuration, where some elements are removed.
+ */
+export interface InheritedConfiguration {
+  name: string,
+  /** The elements to be removed. */
+  remove?: ConfigurationPruning
+}
+
+/**
+ * An inherited configuration can be specified:
+ * - with its name (it's inherited as is)
+ * - as an {@link InheritedConfiguration}, that specifies which elements are to be removed
+ */
+export type InheritedConfigurationSpec = string | InheritedConfiguration
+
+/**
+ * Gets the name of an inherited configuration, regardless of how it is specified.
+ * @param c 
+ * @returns 
+ */
+export function getInheritedConfigName(c?: InheritedConfigurationSpec): string | undefined {
+  if (c) {
+    if (isString(c))
+      return c
+    return c.name
+  }
+}
+
+/**
+ * Gets an {@link InheritedConfiguration}, regardless of how it is specified.
+ * @param c 
+ * @returns an {@link InheritedConfiguration} or an empty object if `c` is falsy.
+ */
+export function getInheritedConfiguration(c?: InheritedConfigurationSpec): InheritedConfiguration {
+  if (c) {
+    if (isString(c))
+      return { name: c }
+    return c
+  }
+  return {} as InheritedConfiguration
+}
+
+/**
+ * Gets a {@link PundokEditorConfig} where the specified elements are removed,
+ * when the configuration is inherited.
+ * @param c 
+ * @param remove 
+ * @returns 
+ */
+export function getPrunedConfigInit(
+  c: PundokEditorConfigInit | PundokEditorConfig,
+  remove?: ConfigurationPruning,
+): PundokEditorConfig {
+  const modified: Partial<PundokEditorConfigInit> = {}
+  if (remove) {
+    Object.entries(remove).forEach(entry => {
+      const k = entry[0] as keyof PundokEditorConfigInit
+      const toBeRemoved = entry[1]
+      const oldValue = (c as PundokEditorConfigInit)[k]
+      if (oldValue) {
+        let newValue = undefined
+        switch (k as keyof PundokEditorConfigInit) {
+          case 'autoDelimiters':
+            newValue = omit(oldValue as object, toBeRemoved) as Record<string, string[]>
+            break
+          case 'automations':
+          case 'customAttributes':
+          case 'customClasses':
+          case 'customMetadata':
+          case 'customStyles':
+          case 'inputConverters':
+          case 'outputConverters':
+            newValue = (oldValue as NamedAndDescribed[]).filter(o => !toBeRemoved.includes(o.name))
+            break
+          case 'indices':
+            newValue = (oldValue as Index[]).filter(o => !toBeRemoved.includes(o.indexName))
+            break
+          case 'noteStyles':
+            newValue = (oldValue as NoteStyle[]).filter(o => !toBeRemoved.includes(o.noteType))
+            break
+          case 'customCss':
+            newValue = (oldValue as string[]).filter(o => !toBeRemoved.includes(o))
+        }
+        if (newValue !== undefined) {
+          // @ts-ignore
+          modified[k] = newValue
+          console.log(`prune Config ${c.name}: ${JSON.stringify(oldValue)} => ${JSON.stringify(newValue)} `)
+        }
+      }
+    })
+  }
+  return new PundokEditorConfig({ ...c, ...modified })
 }
