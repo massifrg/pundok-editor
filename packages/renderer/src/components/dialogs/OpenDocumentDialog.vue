@@ -655,7 +655,7 @@ export default {
           </template>
         </q-splitter>
       </q-card-section>
-      <q-card-section horizontal>
+      <q-card-section v-if="mode !== 'folder'" horizontal>
         <div class="q-pa-md">Format/Custom {{ isInputDialog ? 'reader' : 'writer' }}:</div>
         <q-btn-dropdown :label="formatDropdownLabel" :icon="formatDropdownIcon" :title="formatDropdownTitle" auto-close
           no-caps class="q-my-sm">
