@@ -290,7 +290,7 @@ const myIcons: Record<string, string> = {
   chevron_left: mdiChevronLeft,
   chevron_right: mdiChevronRight,
 }
-
+const SHOW_INCLUDE_DIALOG_DELAY = 100
 const TARGET_ATTRS = ['src', 'href', 'title']
 const TEXT_CONTENT_TAB = 'content'
 
@@ -605,28 +605,30 @@ export default {
     setIncludedDocAttrs() {
       const docState = getEditorDocState(this.editor.state)
       let src: string | undefined = undefined
-      showIncludeDocumentDialog({
-        editor: this.editor,
-        startFolder: docState?.workingFolder,
-        callback: (context) => {
-          const { documentFormat, path, project } = context
-          if (path) {
-            const baseDir = project?.path || ''
-            src = baseDir ? relative(baseDir!, path!) : path
-            const id = parse(path).name
-            const formatName = documentFormat?.name
-            if (src) {
-              this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
-              if (id)
-                this.updateAttribute('id', id)
-              if (formatName)
-                this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
-            } else {
-              this.removeClass(INCLUDE_DOC_CLASS)
+      setTimeout(() => {
+        showIncludeDocumentDialog({
+          editor: this.editor,
+          startFolder: docState?.workingFolder,
+          callback: (context) => {
+            const { documentFormat, path, project } = context
+            if (path) {
+              const baseDir = project?.path || ''
+              src = baseDir ? relative(baseDir!, path!) : path
+              const id = parse(path).name
+              const formatName = documentFormat?.name
+              if (src) {
+                this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
+                if (id)
+                  this.updateAttribute('id', id)
+                if (formatName)
+                  this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
+              } else {
+                this.removeClass(INCLUDE_DOC_CLASS)
+              }
             }
           }
-        }
-      })
+        })
+      }, SHOW_INCLUDE_DIALOG_DELAY)
       if (!src)
         this.removeClass(INCLUDE_DOC_CLASS)
     },
