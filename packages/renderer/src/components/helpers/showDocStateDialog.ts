@@ -9,6 +9,8 @@ export function showDocStateDialog(editor: Editor) {
       'documentName',
       'workingFolder',
       'workingFormat',
+      'includeFolder',
+      'includeFormat',
       'copyFolder',
       'copyFormat',
       'imagesFolder',

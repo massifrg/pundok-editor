@@ -225,6 +225,7 @@ import { Mark, Node } from '@tiptap/pm/model';
 import { useQuasar } from 'quasar';
 import { mdiChevronLeft, mdiChevronRight } from '@quasar/extras/mdi-v6/index.js'
 import {
+  DocStateUpdate,
   PANDOC_OUTPUT_FORMATS,
   editableAttrsForNodeOrMark,
   editableAttrsWithTab,
@@ -274,7 +275,8 @@ import {
   NODE_NAME_INDEX_TERM,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
-  NODE_NAME_TABLE_BODY
+  NODE_NAME_TABLE_BODY,
+  splitFolderAndDoc
 } from '../common';
 import { useBackend } from '../stores';
 import { mapState } from 'pinia';
@@ -603,12 +605,14 @@ export default {
       return Object.fromEntries(this.modifiedAttrs().map(e => [e.attrName, e.to]));
     },
     setIncludedDocAttrs() {
-      const docState = getEditorDocState(this.editor.state)
-      let src: string | undefined = undefined
       setTimeout(() => {
+        const docState = getEditorDocState(this.editor)
+        const { includeFolder, includeFormat, workingFolder, workingFormat } = docState || {}
+        let src: string | undefined = undefined
         showIncludeDocumentDialog({
           editor: this.editor,
-          startFolder: docState?.workingFolder,
+          startFolder: includeFolder || workingFolder,
+          startFormat: includeFormat || workingFormat,
           callback: (context) => {
             const { documentFormat, path, project } = context
             if (path) {
@@ -622,6 +626,11 @@ export default {
                   this.updateAttribute('id', id)
                 if (formatName)
                   this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
+                const { folder } = splitFolderAndDoc(path)
+                this.editor.commands.updateDocState({
+                  includeFolder: folder || includeFolder,
+                  includeFormat: documentFormat || includeFormat,
+                } as DocStateUpdate)
               } else {
                 this.removeClass(INCLUDE_DOC_CLASS)
               }
@@ -629,8 +638,8 @@ export default {
           }
         })
       }, SHOW_INCLUDE_DIALOG_DELAY)
-      if (!src)
-        this.removeClass(INCLUDE_DOC_CLASS)
+      // if (!src)
+      //   this.removeClass(INCLUDE_DOC_CLASS)
     },
     doChange() {
       const snom: SelectedNodeOrMark = this.selectedNodeOrMark as SelectedNodeOrMark;
