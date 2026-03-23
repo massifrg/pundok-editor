@@ -311,7 +311,8 @@ export default {
         const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })
         const baseUrl = contents?.baseUrl && URL.parse(contents.baseUrl)
         this.protocol = baseUrl ? baseUrl.protocol : this.protocol
-        this.currentFolder = baseUrl ? baseUrl.pathname : this.currentFolder
+        const pathname = baseUrl ? baseUrl.pathname : this.currentFolder
+        this.currentFolder = contents?.platform === 'win32' ? pathname.replace(/^\/([a-z]):/i, '$1:') : pathname
         this.folders = contents?.folders || this.folders
         this.documents = this.mode === 'folder'
           ? []
