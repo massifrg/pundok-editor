@@ -627,7 +627,7 @@ export default {
                   src = path.substring(projectPath.length)
                 src = src?.startsWith('/') ? src.substring(1) : src
               }
-              const id = document
+              const id = document?.replace(/[.][^.]+$/, '')
               const formatName = documentFormat?.name
               if (src) {
                 this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
