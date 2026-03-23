@@ -284,7 +284,7 @@ import { toRaw } from 'vue';
 import { createLowlight, all } from 'lowlight';
 import { ACTION_ADD_CLASS } from '../actions';
 import { showIncludeDocumentDialog } from './helpers';
-import { parse, relative } from 'path-browserify';
+import { relative } from 'path-browserify';
 
 const lowlight = createLowlight(all);
 
@@ -616,9 +616,18 @@ export default {
           callback: (context) => {
             const { documentFormat, path, project } = context
             if (path) {
-              const baseDir = project?.path || ''
-              src = baseDir ? relative(baseDir!, path!) : path
-              const id = parse(path).name
+              const { folder, document } = splitFolderAndDoc(path)
+              console.log(`project.path=${project?.path}, path=${path}`)
+              let src
+              try {
+                src = project?.path ? relative(project.path, path!) : path
+              } catch (err) {
+                const projectPath = project?.path || ''
+                if (path.startsWith(projectPath))
+                  src = path.substring(projectPath.length)
+                src = src?.startsWith('/') ? src.substring(1) : src
+              }
+              const id = document
               const formatName = documentFormat?.name
               if (src) {
                 this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
@@ -626,7 +635,6 @@ export default {
                   this.updateAttribute('id', id)
                 if (formatName)
                   this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
-                const { folder } = splitFolderAndDoc(path)
                 this.editor.commands.updateDocState({
                   includeFolder: folder || includeFolder,
                   includeFormat: documentFormat || includeFormat,
