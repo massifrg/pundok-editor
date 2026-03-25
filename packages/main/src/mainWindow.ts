@@ -1,7 +1,7 @@
 import type { MenuItemConstructorOptions } from 'electron';
 import { BaseWindow, BrowserWindow, Menu, WebContentsView } from 'electron';
-import { basename, join } from 'path';
-import { URL } from 'url';
+import { dirname, join } from 'path';
+import { URL, fileURLToPath } from 'url';
 import { IpcHub } from './ipc/ipcHub';
 import {
   askAndLoadConfFromFile,
@@ -11,7 +11,10 @@ import {
 import { updateStaticResources } from './staticResources';
 import { getBookmarks } from './bookmarks';
 import { handleImagesFor } from './protocolHandler';
-import { bookmarkLabel, splitFolderAndDoc } from './common';
+import { bookmarkLabel } from './common';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 let showDeveloperTools = !!import.meta.env.DEV;
 let showPdfView = false;
@@ -32,7 +35,7 @@ async function createWindow(): Promise<WindowWithIpc> {
     // webPreferences: {
     //   // nativeWindowOpen: true,
     //   webviewTag: false, // The webview tag is not recommended. Consider alternatives like iframe or Electron's BrowserView. https://www.electronjs.org/docs/latest/api/webview-tag#warning
-    //   preload: join(__dirname, '../../preload/dist/index.cjs'),
+    //   preload: join(__dirname, '../../preload/dist/index.mjs'),
     //   devTools: true,
     //   spellcheck: true,
     //   // nodeIntegration: true,

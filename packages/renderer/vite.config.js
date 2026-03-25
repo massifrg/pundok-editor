@@ -10,7 +10,7 @@ import vue from '@vitejs/plugin-vue';
 // import vueI18n from '@intlify/vite-plugin-vue-i18n'
 // see https://vue-i18n.intlify.dev/guide/advanced/sfc.html
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
-import { visualizer } from 'rollup-plugin-visualizer';
+// import { visualizer } from 'rollup-plugin-visualizer';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -44,12 +44,12 @@ const config = {
         './src/assets/css/quasar.variables.scss',
       ),
     }),
-    visualizer({
-      // filename: 'stats.html', // output file
-      // template: 'network', // "sunburst" | "treemap" | "network"
-      // gzipSize: true,
-      // brotliSize: true,
-    }),
+    // visualizer({
+    // filename: 'stats.html', // output file
+    // template: 'network', // "sunburst" | "treemap" | "network"
+    // gzipSize: true,
+    // brotliSize: true,
+    // }),
   ],
   pluginOptions: {},
   base: '',

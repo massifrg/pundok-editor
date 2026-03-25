@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const { createServer, build, createLogger } = require('vite');
-const electronPath = require('electron');
-const { spawn } = require('child_process');
-const { generateAsync } = require('dts-for-context-bridge');
+import { createServer, build, createLogger } from 'vite';
+import electronPath from 'electron';
+import { spawn } from 'child_process';
+import { generateAsync } from 'dts-for-context-bridge';
 
 /** @type 'production' | 'development'' */
 const mode = (process.env.MODE = process.env.MODE || 'development');
