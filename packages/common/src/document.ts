@@ -2,21 +2,6 @@ import { PundokEditorProject } from './config';
 import { DocumentFormat } from './documentFormat';
 import { EditorKeyType } from "./editorKey";
 
-interface CommonDocumentCoords {
-  id?: string;
-  src?: string;
-  path?: string;
-  formatName?: string;
-  // formats?: string[];
-}
-interface LocalDocumentCoords extends CommonDocumentCoords {
-  path: string;
-}
-interface DbDocumentCoords extends CommonDocumentCoords {
-  id: string;
-}
-export type DocumentCoords = LocalDocumentCoords | DbDocumentCoords;
-
 /**
  * An interface for the environment of a document.
  */

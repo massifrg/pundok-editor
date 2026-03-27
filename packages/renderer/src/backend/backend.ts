@@ -10,7 +10,6 @@ import type {
   QueryResult,
   SaveResponse,
   CxDocument,
-  DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
   RenderingJob,
@@ -25,7 +24,6 @@ import type {
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
 import { NetBackend } from './netbackend';
-import { OpenDialogOptions } from 'electron';
 
 export type IpcRendererListener = (
   e: Electron.IpcRendererEvent,
@@ -136,6 +134,12 @@ export interface Backend {
   getInclusionTree(
     project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined>;
+
+  /**
+   * Create a folder for documents.
+   * @param path A path or URL of the folder to be created.
+   */
+  createFolder(path: string): Promise<string>;
 
   /**
    * Retrieves all the available configurations for the editor.

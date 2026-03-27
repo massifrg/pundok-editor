@@ -34,6 +34,7 @@ export type IpcMainToRendererChannel =
 export type IpcRendererToMainChannel =
   | 'debug-info'
   | 'get-folder-contents'
+  | 'create-folder'
   | 'open-document'
   | 'save-document'
   | 'get-bookmarks'
@@ -74,6 +75,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'get-folder-contents': {
     dir: 'r2m',
     description: 'the renderer asks main the contents of a folder',
+  },
+  'create-folder': {
+    dir: 'r2m',
+    description: 'the renderer asks main to create a folder',
   },
   'open-document': {
     dir: 'r2m',

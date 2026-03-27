@@ -1,7 +1,7 @@
 <script lang="ts">
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
-import { QTable, QTableColumn, useDialogPluginComponent } from 'quasar';
+import { QTable, QTableColumn, useDialogPluginComponent, useQuasar } from 'quasar';
 import {
   DocumentBookmark,
   DocumentFormat,
@@ -91,6 +91,11 @@ const guessImageFormats = [
 ]
 
 export default {
+  setup() {
+    const $q = useQuasar()
+    console.log($q)
+    return { $q }
+  },
   props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat', 'startFolder'],
   emits: [...useDialogPluginComponent.emits],
   data() {
@@ -267,7 +272,7 @@ export default {
     },
     formatDropdownTitle() {
       return this.formatTitle(this.format)
-    }
+    },
   },
   mounted() {
     const getFormatsAndBookmarks = async () => {
@@ -341,6 +346,47 @@ export default {
     },
     splitFolderAndDoc(path: string) {
       return splitFolderAndDoc(path)
+    },
+    async createFolder(folder: string) {
+      try {
+        const path = await this.backend?.createFolder(`${this.currentFolder}/${folder}`)
+        if (path) {
+          this.currentFolder = path
+          this.getContents()
+        }
+      } catch (err) {
+        console.log(err)
+        this.$q.dialog({
+          color: "negative",
+          title: 'Error',
+          message: `Can't create a "${folder}" folder in "${this.currentFolder}"`
+        })
+      }
+    },
+    askForFolderToCreate() {
+      this.$q.dialog({
+        title: 'Create new folder',
+        message: 'Folder name:',
+        prompt: {
+          model: '',
+          type: 'text',
+          isValid(v) {
+            return !!(v && v.length > 0 && v.match(/^(\p{L}|[_-]|\d)+$/u))
+          }
+        },
+        cancel: true,
+        persistent: false
+      })
+        .onOk(data => {
+          if (data)
+            this.createFolder(data)
+        })
+        .onCancel(() => {
+          // console.log('>>>> Cancel')
+        })
+        .onDismiss(() => {
+          // console.log('I am triggered on both OK and Cancel')
+        })
     },
     click(row: FileContentRow) {
       const isFolderMode = this.mode === 'folder'
@@ -587,6 +633,9 @@ export default {
         <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
         <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name"
           @blur="adjustDocumentExtension()" @keyup.enter="selectDocument()" />
+        <q-space />
+        <q-btn v-if="!isInputDialog" icon="mdi-folder-plus" size="sm" color="primary" title="create new folder"
+          @click="askForFolderToCreate" />
         <q-space />
         <span class="q-pa-md">Go to a recent:</span>
         <q-space style="max-width: .1rem;" />

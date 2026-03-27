@@ -78,6 +78,10 @@ export class NetBackend implements Backend {
     throw new Error('Method not implemented.');
   }
 
+  async createFolder(path: string): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
+
   async availableConfigurations(): Promise<ConfigurationSummary[]> {
     return [
       {

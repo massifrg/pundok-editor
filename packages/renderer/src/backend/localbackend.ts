@@ -259,6 +259,10 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('get-folder-contents', JSON.stringify(context))
   }
 
+  async createFolder(path: string): Promise<string> {
+    return this.invokeIpc('create-folder', path)
+  }
+
   async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
     return this.invokeIpc('get-bookmarks', bookmarkType)
   }
