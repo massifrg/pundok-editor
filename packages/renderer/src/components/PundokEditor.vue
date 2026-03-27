@@ -830,9 +830,11 @@ export default {
           showOpenDocumentDialog({
             editor: this.editor,
             mode: 'open',
-            prompt: 'Open document',
-            startFolder: workingFolder,
-            startFormat: asInputFormat(workingFormat, configuration),
+            options: {
+              prompt: 'Open document',
+              startFolder: workingFolder,
+              startFormat: asInputFormat(workingFormat, configuration),
+            },
             callback: (context) => {
               if (context.path) {
                 setActionCommand(editorKey, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
@@ -950,12 +952,14 @@ export default {
           const defaultCopyFormat = getDefaultCopyFormat(configuration)
           showSaveCopyDialog({
             editor: this.editor,
-            prompt: 'Save a copy to:',
-            startFolder: copyFolder || workingFolder,
-            startFormat: copyFormat || defaultCopyFormat
-              || asOutputFormat(workingFormat, configuration)
-              || DEFAULT_COPY_DOCUMENT_FORMAT,
-            startFilename,
+            options: {
+              prompt: 'Save a copy to:',
+              startFolder: copyFolder || workingFolder,
+              startFormat: copyFormat || defaultCopyFormat
+                || asOutputFormat(workingFormat, configuration)
+                || DEFAULT_COPY_DOCUMENT_FORMAT,
+              startFilename,
+            },
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {
@@ -978,10 +982,12 @@ export default {
             : undefined
           showSaveDocumentDialog({
             editor: this.editor,
-            prompt: isSaveAs ? 'Save document as:' : 'Save document:',
-            startFolder: isSaveAs ? workingFolder : workingFolder,
-            startFormat,
-            startFilename,
+            options: {
+              prompt: isSaveAs ? 'Save document as:' : 'Save document:',
+              startFolder: isSaveAs ? workingFolder : workingFolder,
+              startFormat,
+              startFilename,
+            },
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {

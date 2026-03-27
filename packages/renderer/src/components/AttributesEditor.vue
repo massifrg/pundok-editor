@@ -611,8 +611,10 @@ export default {
         let src: string | undefined = undefined
         showIncludeDocumentDialog({
           editor: this.editor,
-          startFolder: includeFolder || workingFolder,
-          startFormat: includeFormat || workingFormat,
+          options: {
+            startFolder: includeFolder || workingFolder,
+            startFormat: includeFormat || workingFormat,
+          },
           callback: (context) => {
             const { documentFormat, path, project } = context
             if (path) {

@@ -97,8 +97,10 @@ export default {
       const docState = getEditorDocState(this.editor)
       showSelectFolderDialog({
         editor: this.editor,
-        prompt: 'Select the project folder:',
-        startFolder: docState?.workingFolder,
+        options: {
+          prompt: 'Select the project folder:',
+          startFolder: docState?.workingFolder,
+        },
         callback: async ({ path }) => {
           if (path) {
             this.path = path
@@ -120,8 +122,10 @@ export default {
       const startFolder = this.path && parsePath(this.path).dir || undefined
       showOpenDocumentDialog({
         editor: this.editor,
-        prompt: 'Select the root document:',
-        startFolder,
+        options: {
+          prompt: 'Select the root document:',
+          startFolder,
+        },
         callback: ({ path }) => {
           if (path) {
             const { dir, base } = parsePath(path)

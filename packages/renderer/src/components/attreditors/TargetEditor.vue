@@ -73,9 +73,11 @@ export default {
         : docState?.imagesFormat
       showSelectImageDialog({
         editor: this.editor,
-        prompt: 'Choose an image:',
-        startFolder,
-        startFormat,
+        options: {
+          prompt: 'Choose an image:',
+          startFolder,
+          startFormat,
+        },
         callback: (context) => {
           const { path, documentFormat } = context
           this.editor.commands.updateDocState({

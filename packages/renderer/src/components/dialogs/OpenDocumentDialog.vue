@@ -96,7 +96,7 @@ export default {
     console.log($q)
     return { $q }
   },
-  props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat', 'startFolder'],
+  props: ['editor', 'mode', 'options'],
   emits: [...useDialogPluginComponent.emits],
   data() {
     return {
@@ -104,7 +104,7 @@ export default {
       /** The protocol of the URL to open (usually it's `file://`) */
       protocol: 'file:',
       /** An array of the folders' names of the current path */
-      currentFolder: this.startFolder,
+      currentFolder: this.options.startFolder,
       /** The sub folders in the current folder */
       folders: [] as Folder[],
       /** The documents (files) in the current folder */
@@ -114,7 +114,7 @@ export default {
       /** The name of the selected document  */
       selectedDocument: undefined as string | undefined,
       /** The name of the file to be saved (or opened) in the text input box */
-      filename: this.startFilename || '',
+      filename: this.options.startFilename || '',
       /** Pagination for QTable */
       pagination: { rowsPerPage: 0 },
       /** The horizontal share (max: 100) for places vs folders/docs */
@@ -124,7 +124,7 @@ export default {
       /** The available Pandoc formats and input/output converters */
       pandocFormats: [] as PandocFormatDescription[],
       /** The current, selected format/converter to use to read/save the document */
-      format: this.startFormat || guessFormat as DocumentFormat | undefined,
+      format: this.options.startFormat || guessFormat as DocumentFormat | undefined,
       /** The file extensions to filter the documents */
       extensions: [] as string[],
       /** Bookmarks to recent documents */
@@ -196,7 +196,7 @@ export default {
           : undefined
     },
     dialogPrompt() {
-      let prompt = this.prompt
+      let prompt = this.options.prompt
       if (!prompt) {
         switch (this.mode as DocumentDialogMode) {
           case 'save':
@@ -219,7 +219,7 @@ export default {
       return prompt
     },
     configuration() {
-      return getEditorConfiguration(this.editor.state)
+      return getEditorConfiguration(this.editor)
     },
     tempConfiguration(): PundokEditorConfigInit | undefined {
       return this.tempProject ? this.tempProject.computedConfig : undefined

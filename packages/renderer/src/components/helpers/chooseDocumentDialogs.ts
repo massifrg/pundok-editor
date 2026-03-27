@@ -7,20 +7,30 @@ import {
 } from '../../common'
 import { DocumentDialogMode, OpenDocumentDialog } from '../dialogs'
 
-export interface DocumentDialogProps {
-  editor: Editor
-  mode?: DocumentDialogMode
+export interface DocumentDialogOptions {
   prompt?: string
   startFolder?: string
   startFilename?: string
   startFormat?: DocumentFormat
-  callback?: (payload: DocumentContext | CxDocument) => void
 }
 
-export function showOpenDocumentDialog(props: DocumentDialogProps) {
+export type DocumentDialogCallback = (payload: DocumentContext | CxDocument) => void
+
+export interface DocumentDialogProps {
+  editor: Editor
+  mode?: DocumentDialogMode
+  options: DocumentDialogOptions,
+  callback?: DocumentDialogCallback
+}
+
+export function showDocumentDialog(props: DocumentDialogProps) {
   Dialog.create({
     component: OpenDocumentDialog,
-    componentProps: { ...props, persistent: true }
+    componentProps: {
+      mode: props.mode,
+      options: props.options,
+      persistent: true
+    }
   }).onOk((payload: DocumentContext) => {
     const { callback } = props
     if (callback) {
@@ -33,26 +43,30 @@ export function showOpenDocumentDialog(props: DocumentDialogProps) {
   })
 }
 
+export function showOpenDocumentDialog(props: DocumentDialogProps) {
+  return showDocumentDialog({ ...props, mode: 'open' })
+}
+
 export function showSaveDocumentDialog(props: DocumentDialogProps) {
-  return showOpenDocumentDialog({ ...props, mode: 'save' })
+  return showDocumentDialog({ ...props, mode: 'save' })
 }
 
 export function showSaveCopyDialog(props: DocumentDialogProps) {
-  return showOpenDocumentDialog({ ...props, mode: 'save-copy' })
+  return showDocumentDialog({ ...props, mode: 'save-copy' })
 }
 
 export function showIncludeDocumentDialog(props: DocumentDialogProps) {
-  return showOpenDocumentDialog({ ...props, mode: 'include' })
+  return showDocumentDialog({ ...props, mode: 'include' })
 }
 
 export function showImportDocumentDialog(props: DocumentDialogProps) {
-  return showOpenDocumentDialog({ ...props, mode: 'import' })
+  return showDocumentDialog({ ...props, mode: 'import' })
 }
 
 export function showSelectFolderDialog(props: DocumentDialogProps) {
-  return showOpenDocumentDialog({ ...props, mode: 'folder' })
+  return showDocumentDialog({ ...props, mode: 'folder' })
 }
 
 export function showSelectImageDialog(props: DocumentDialogProps) {
-  return showOpenDocumentDialog({ ...props, mode: 'image' })
+  return showDocumentDialog({ ...props, mode: 'image' })
 }
