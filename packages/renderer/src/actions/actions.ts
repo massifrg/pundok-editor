@@ -71,6 +71,8 @@ export type ActionName =
   | 'select-mark-range'
   | 'add-mark'
   | 'remove-mark'
+  | 'delete-css-selected'
+  | 'unwrap-css-selected'
   | 'set-span'
   | 'set-index-ref'
   | 'add-custom-style'
@@ -460,6 +462,18 @@ export const ACTION_INSERT_RAW_INLINE: BaseActionForNodeOrMark = {
   icon: 'mdi-code-tags',
 }
 
+export const ACTION_DELETE_CSS_SELECTED: BaseActionForNodeOrMark = {
+  name: 'delete-css-selected',
+  label: 'delete the current CSS-selected Node or Mark',
+  icon: 'mdi-delete'
+}
+
+export const ACTION_UNWRAP_CSS_SELECTED: BaseActionForNodeOrMark = {
+  name: 'unwrap-css-selected',
+  label: 'unwrap the contents of the current CSS-selected Node or remove Mark',
+  icon: 'mdi-wrap-disabled'
+}
+
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
   name: 'setup-viewer',
   label: 'setup viewer',
@@ -550,6 +564,8 @@ export function executeEditorAction(
 const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
   ACTION_ADD_MARK,
   ACTION_REMOVE_MARK,
+  ACTION_DELETE_CSS_SELECTED,
+  ACTION_UNWRAP_CSS_SELECTED,
   ACTION_ADD_CUSTOM_STYLE,
   ACTION_REMOVE_CUSTOM_STYLE,
   ACTION_LOWERCASE,
