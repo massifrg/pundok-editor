@@ -44,7 +44,7 @@ export default {
       return this.configuration?.outputConverters || []
     },
     converters() {
-      return this.outputConverters.filter(oc => !oc.projectBuild)
+      return this.outputConverters.filter(oc => !oc.longRendering)
     },
     dropDownTitle() {
       if (this.defaultOutputConverter) {

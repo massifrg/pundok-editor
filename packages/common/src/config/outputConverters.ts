@@ -25,8 +25,8 @@ export interface BaseOutputConverter extends NamedAndDescribed {
   type: OutputConverterType;
   /** true for the default output converter (only one can be default, otherwise it's the first encountered) */
   default?: boolean;
-  /** it's the build of a project-wise product */
-  projectBuild?: boolean;
+  /** the conversion takes a long time, like the build of a project-wise product (tipically PDF) */
+  longRendering?: boolean;
   /** format of the resulting output (pandoc's `-t` option) */
   format: string;
   /** extension of the resulting file */
@@ -35,8 +35,10 @@ export interface BaseOutputConverter extends NamedAndDescribed {
   dontAskForResultFile?: boolean;
   /** the path of the output file */
   resultFile?: string;
-  /** open resulting file in editor or with the OS's predefined app
-   *  for that format/extension (Windows: "start", Linux: "xdg-open|exo-open|gnome-open", Mac: "open") */
+  /**
+   * open resulting file in editor or with the OS's predefined app
+   * for that format/extension (Windows: "start", Linux: "xdg-open|exo-open|gnome-open", Mac: "open")
+   */
   openResult?: ShowOutputConversion;
   /** asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion) */
   feedback?: FeedbackMessageType;
