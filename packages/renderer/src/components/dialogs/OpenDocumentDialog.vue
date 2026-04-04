@@ -232,7 +232,8 @@ export default {
       return [...current, ...temp]
     },
     outputConverters(): OutputConverter[] {
-      const current = this.configuration?.outputConverters || []
+      const current = (this.configuration?.outputConverters || [])
+        .filter(oc => !oc.longRendering)
       // read converters from the config of a project eventually present in the current folder
       const temp = (this.tempConfiguration?.outputConverters || [])
         .filter(t => !current.find(c => c.name === t.name))
