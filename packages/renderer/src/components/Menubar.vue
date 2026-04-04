@@ -13,6 +13,8 @@
 
       <SaveButton :editor="editor" :text-color="savedColor" />
 
+      <RenderButton :editor="editor" />
+
       <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
       <!--
       <ImportToolbarButton v-if="gui.importButton" :editor="editor" />
@@ -334,6 +336,7 @@ import ExportToolbarButton from './ExportToolbarButton.vue';
 import NewDocumentButton from './NewDocumentButton.vue';
 import RawInlineButton from './RawInlineButton.vue';
 import RawBlockMenu from './RawBlockMenu.vue';
+import RenderButton from './RenderButton.vue';
 import SaveButton from './SaveButton.vue';
 import TableTools from './TableTools.vue';
 import ToolbarButton from './ToolbarButton.vue';
@@ -393,6 +396,7 @@ export default {
     OpenButton,
     RawInlineButton,
     RawBlockMenu,
+    RenderButton,
     SaveButton,
     TableTools,
     // TextAlignMenubarItem,

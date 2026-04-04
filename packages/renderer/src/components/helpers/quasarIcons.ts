@@ -3,6 +3,7 @@ import {
   mdiAlertCircle,
   mdiArrowDown,
   mdiArrowUp,
+  mdiBookCog,
   mdiChevronLeft,
   mdiChevronRight,
   mdiFileDocumentPlus,
@@ -42,6 +43,7 @@ export const icons: Record<string, string> = {
   root_document: mdiFileStarFourPoints,
   remove_class: mdiOctagramMinus,
   remove_custom_class: mdiOctagramMinusOutline,
+  render: mdiBookCog,
   save_copy: mdiContentSavePlus,
   warning: mdiAlertCircle,
 };

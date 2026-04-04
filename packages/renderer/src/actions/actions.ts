@@ -25,6 +25,7 @@ export type ActionName =
   | 'save-document'
   | 'save-document-as'
   | 'save-document-copy'
+  | 'render-document'
   | 'new-project'
   | 'get-project'
   | 'include-document'
@@ -226,6 +227,12 @@ export const ACTION_DOCUMENT_SAVE_AS: BaseEditorAction = {
 export const ACTION_DOCUMENT_SAVE_COPY: BaseEditorAction = {
   name: 'save-document-copy',
   label: 'save a copy',
+};
+
+export const ACTION_DOCUMENT_RENDER: BaseEditorAction = {
+  name: 'render-document',
+  label: 'render this document or project',
+  icon: 'mdi-book-play',
 };
 
 export const ACTION_DOCUMENT_INCLUDE: BaseEditorAction = {
