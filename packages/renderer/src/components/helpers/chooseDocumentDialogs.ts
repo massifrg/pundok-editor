@@ -27,6 +27,7 @@ export function showDocumentDialog(props: DocumentDialogProps) {
   Dialog.create({
     component: OpenDocumentDialog,
     componentProps: {
+      editor: props.editor,
       mode: props.mode,
       options: props.options,
       persistent: true

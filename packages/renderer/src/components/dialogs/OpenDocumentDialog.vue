@@ -516,7 +516,7 @@ export default {
       return this.format
     },
     selectDocument() {
-      const editorKey = editorKeyFromState(this.editor.state)
+      const editorKey = editorKeyFromState(this.editor?.state)
       const path = this.targetPath
       if (editorKey && path) {
         if (this.mode == 'folder') {
