@@ -30,6 +30,7 @@ import {
   ACTION_REPEAT_CHANGE,
   ActionForNodeOrMark,
   ActionName,
+  BaseEditorAction,
   EditorAction,
   TABLE_CELL_ALIGNMENT_ACTIONS,
   UNWRAP_BLOCKS_ACTION
@@ -39,6 +40,7 @@ import {
   insertBlockAction,
   moveBlockActions
 } from './actionGroup';
+import { setActionCommand } from './actionCommands';
 
 export function actionsForNodeOrMark(
   state: EditorState,
@@ -301,20 +303,25 @@ export function actionsForNodeOrMark(
         || (path && pandocFormatsFromExtension(path, 'input')[0])
         || 'json'
       console.log(`id=${id}, path=${path}, format=${format}`)
+      const props = {
+        context: {
+          id,
+          path,
+          inputConverter: {
+            type: 'pandoc',
+            format,
+          } as InputConverter
+        } as DocumentContext
+      } as DocumentOpenActionProps
       if ((id || path) && format) {
         actions.push({
           ...ACTION_DOCUMENT_OPEN,
-          canDo: () => true,
-          props: {
-            context: {
-              id,
-              path,
-              inputConverter: {
-                type: 'pandoc',
-                format,
-              } as InputConverter
-            } as DocumentContext
-          } as DocumentOpenActionProps,
+          canDo: (editor) => editorKeyFromState(editor?.state) == editorKey,
+          do: (editor, a) => {
+            setActionCommand(editorKey, a as BaseEditorAction, props)
+            return true
+          },
+          props,
           editorKey
         })
       }

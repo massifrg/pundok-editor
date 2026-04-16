@@ -2,7 +2,9 @@ import { Editor } from '@tiptap/core';
 import { currentRepeatableCommandTooltip, SearchTextVariant } from '../schema';
 import { DocState, SelectedNodeOrMark } from '../schema/helpers';
 import {
+  ActionProps,
   AddOrRemoveClassActionProps,
+  DocumentOpenActionProps,
   EditorKeyType,
   MetaMapTextActionProps,
   TableCellVertAlignActionProps,
@@ -10,6 +12,7 @@ import {
 } from '../common';
 import { ActionsGroup } from './actionGroup';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
+import isString from 'lodash-es/isString';
 
 export type ActionName =
   | 'update-doc-state'
@@ -94,26 +97,41 @@ export type ActionName =
   | 'move-inside-prev-sibling'
   | 'move-inside-next-sibling'
 
+export type LabelForAction =
+  | string
+  | ((
+    editor?: Editor,
+    action?: ActionCore,
+  ) => string | undefined);
+
 export type TooltipForAction =
   | string
   | ((
     editor?: Editor,
-    action?: ActionCore, // ActionForNodeOrMark | EditorAction,
+    action?: ActionCore,
   ) => string | undefined);
+
+export type HighlightForAction =
+  | boolean
+  | ((
+    editor?: Editor,
+    action?: ActionCore,
+  ) => boolean | undefined);
 
 /** Core properties of actions */
 export interface ActionCore {
-  label: string;
+  label: LabelForAction;
   tooltip?: TooltipForAction;
   icon?: string;
   iconRight?: string;
   order?: number;
+  highlight?: HighlightForAction;
+  props?: ActionProps;
 }
 
 /** Editor action that is not linked to an editor instance */
 export interface BaseEditorAction extends ActionCore {
   name: ActionName;
-  props?: object;
 }
 
 /** Editor action that is relevant only to the editor having that editorKey */
@@ -210,8 +228,22 @@ export const ACTION_NEW_DOCUMENT: BaseEditorAction = {
 
 export const ACTION_DOCUMENT_OPEN: BaseEditorAction = {
   name: 'open-document',
-  label: 'open document',
-  icon: 'mdi-file-document-edit'
+  label: (_, action) => {
+    const path = (action?.props as DocumentOpenActionProps)?.context?.path
+    const suffix = path ? ` "${path}"` : ''
+    return `open document${suffix}`
+  },
+  tooltip: (_, action) => {
+    const props = action?.props as DocumentOpenActionProps
+    const path = props?.context?.path
+    const atLine = props?.atLine
+    let text = 'open document'
+    text = path ? `${text} "${path}"` : ''
+    text = atLine ? `${text} at line (paragraph) ${atLine}` : ''
+    return text
+  },
+  highlight: (_, action) => !!(action?.props as DocumentOpenActionProps)?.context?.path,
+  icon: 'mdi-file-document-edit',
 };
 
 export const ACTION_DOCUMENT_SAVE: BaseEditorAction = {
@@ -607,4 +639,28 @@ export function fillAvailableAction(
   const available = availableAction(actionName)
   if (available && editorKey)
     return { ...available, props, editorKey, nodeOrMark }
+}
+
+export function isHighlightedAction(action: ActionCore, editor?: Editor): boolean {
+  const hl = action?.highlight
+  if (!hl) return false
+  if (hl === true)
+    return true
+  return hl && hl(editor, action) || false
+}
+
+export function labelForAction(action: ActionCore, editor?: Editor): string | undefined {
+  const label = action?.label
+  if (label)
+    return isString(label)
+      ? label
+      : label(editor, action)
+}
+
+export function tooltipForAction(action: ActionCore, editor?: Editor): string | undefined {
+  const tooltip = action?.tooltip
+  if (tooltip)
+    return isString(tooltip)
+      ? tooltip
+      : tooltip(editor, action)
 }

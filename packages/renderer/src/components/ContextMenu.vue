@@ -1,6 +1,13 @@
 <template>
   <q-menu :model-value="!!clickedNodeOrMark" touch-position context-menu @before-show="prepareContextMenuItems">
     <q-list dense>
+      <q-item v-for="hl in highlightedActions" :key="hl.name" clickable :title="tooltipForAction(hl)" v-close-popup
+        @click="setAction(hl)">
+        <q-item-section side>
+          <q-icon :name="hl.icon" />
+        </q-item-section>
+        <q-item-section>{{ labelForAction(hl) }}</q-item-section>
+      </q-item>
       <q-item v-for="lnom in labeledWithActions" :key="lnom.key" clickable :class="classFor(lnom)">
         <q-item-section :class="classFor(lnom)" side>{{ lnom.node ? 'N' : 'M' }}</q-item-section>
         <q-item-section>{{ lnom.label }}</q-item-section>
@@ -17,10 +24,27 @@
 
 <script lang="ts">
 import { CustomStyleInstance, CustomStyleDef } from '../common'
-import { actionsForNodeOrMark, canExecuteEditorAction } from '../actions'
-import { colorFor, LabeledNodeOrMark, labeledNodesAndMarksAtPos, SelectedNodeOrMark } from '../schema/helpers'
+import {
+  ActionCore,
+  ActionForNodeOrMark,
+  actionsForNodeOrMark,
+  BaseEditorAction,
+  canExecuteEditorAction,
+  executeEditorAction,
+  isHighlightedAction,
+  labelForAction,
+  setActionCommand,
+  tooltipForAction
+} from '../actions'
+import {
+  colorFor,
+  LabeledNodeOrMark,
+  labeledNodesAndMarksAtPos,
+  SelectedNodeOrMark
+} from '../schema/helpers'
 import { getEditorConfiguration } from '../schema'
 import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue'
+import { flatten } from 'lodash-es'
 
 export default {
   props: ['editor'],
@@ -42,7 +66,11 @@ export default {
     },
     labeledWithActions() {
       return this.labeled.filter(l => this.actionsFor(l).length > 0)
-    }
+    },
+    highlightedActions() {
+      return flatten(this.labeledWithActions.map(lwa => this.actionsFor(lwa)))
+        .filter(a => isHighlightedAction(a, this.editor))
+    },
   },
   components: {
     NodeOrMarkContextMenu
@@ -51,11 +79,12 @@ export default {
     classFor(lnom: LabeledNodeOrMark) {
       return `bg-${colorFor(lnom)} text-white`
     },
-    actionsFor(labeled: LabeledNodeOrMark) {
+    actionsFor(labeled: LabeledNodeOrMark, onlyHighlighted?: boolean) {
       const editor = this.editor
       if (!editor) return []
       return actionsForNodeOrMark(editor.state, labeled)
         .filter(a => canExecuteEditorAction(editor, a))
+        .filter(a => onlyHighlighted ? isHighlightedAction(a, editor) : true)
     },
     prepareContextMenuItems(ev: Event) {
       // console.log(ev)
@@ -71,6 +100,17 @@ export default {
         }
       }
       // this.$forceUpdate()
+    },
+    labelForAction(a: ActionCore) {
+      return labelForAction(a, this.editor)
+    },
+    tooltipForAction(a: ActionCore) {
+      return tooltipForAction(a, this.editor)
+    },
+    setAction(a: ActionForNodeOrMark) {
+      const editor = this.editor
+      if (canExecuteEditorAction(editor, a))
+        executeEditorAction(a, editor)
     }
   }
 }

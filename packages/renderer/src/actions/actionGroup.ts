@@ -2,7 +2,7 @@ import { getEditorConfiguration } from '../schema';
 import { nodeOrMarkToPandocName } from '../schema/helpers/PandocVsProsemirror';
 import { nodeIcon, templateNode } from '../schema/helpers';
 import { EditorKeyType, PundokEditorConfig } from '../common';
-import { ActionCore, ActionForNodeOrMark, ActionName, BaseEditorAction, TooltipForAction } from './actions';
+import { ActionCore, ActionForNodeOrMark, ActionName, BaseEditorAction, LabelForAction, TooltipForAction } from './actions';
 
 /** Allowed names for Actions' groups */
 type ActionGroupName =

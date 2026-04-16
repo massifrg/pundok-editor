@@ -9,7 +9,7 @@
           <q-icon :name="action.iconRight" size="sm" />
         </span>
       </q-item-section>
-      <q-item-section>{{ action.label }}</q-item-section>
+      <q-item-section>{{ labelFor(action) }}</q-item-section>
       <q-item-section v-if="isGroup(action)" side>
         <q-icon name="mdi-arrow-right" />
       </q-item-section>
@@ -20,12 +20,13 @@
 </template>
 
 <script lang="ts">
-import { isString } from 'lodash-es'
 import {
   ActionForNodeOrMark,
   ActionsGroup,
   actionsForNodeOrMark,
-  canExecuteEditorAction
+  canExecuteEditorAction,
+  labelForAction,
+  tooltipForAction
 } from '../actions'
 import { useActions } from '../stores'
 import ActionsMenu from './ActionsMenu.vue'
@@ -86,12 +87,10 @@ export default {
         this.actions.setAction(action as ActionForNodeOrMark)
     },
     titleFor(action: ActionForNodeOrMark | ActionsGroup) {
-      const actionTooltip = action.tooltip
-      if (actionTooltip) {
-        return isString(actionTooltip)
-          ? actionTooltip
-          : actionTooltip(this.editor, action)
-      }
+      return tooltipForAction(action, this.editor)
+    },
+    labelFor(action: ActionForNodeOrMark | ActionsGroup) {
+      return labelForAction(action, this.editor)
     }
   },
 }
