@@ -383,7 +383,7 @@ $color-fg-index: #dc7200;
     font-size: smaller;
   }
 
-  .unknown-custom-style {
+  .unstyled-custom-style {
     text-decoration: underline dotted 4px #8bc6ff;
   }
 

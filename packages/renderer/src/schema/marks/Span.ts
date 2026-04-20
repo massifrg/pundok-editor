@@ -1,6 +1,8 @@
 import { Mark, mergeAttributes } from '@tiptap/core';
+import { VueMarkViewRenderer } from '@tiptap/vue-3';
 import { MARK_NAME_SPAN, SK } from '../../common';
 import { getSpanAttrs } from '../helpers';
+import { SpanMarkView } from '../../components';
 
 export interface SpanOptions {
   HTMLAttributes: Record<string, any>;
@@ -43,6 +45,10 @@ export const Span = Mark.create<SpanOptions>({
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
       0,
     ];
+  },
+
+  addMarkView() {
+    return VueMarkViewRenderer(SpanMarkView)
   },
 
   addCommands() {

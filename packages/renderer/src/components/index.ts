@@ -42,6 +42,8 @@ export { default as SelectValueEditor } from './attreditors/SelectValueEditor.vu
 export { default as TargetEditor } from './attreditors/TargetEditor.vue';
 export { default as TextAttrEditor } from './attreditors/TextAttrEditor.vue';
 
+export { default as SpanMarkView } from './markviews/SpanMarkView.vue'
+
 export { default as EmptySpanView } from './nodeviews/EmptySpanView.vue';
 export { default as IndexRefView } from './nodeviews/IndexRefView.vue';
 export { default as MetaBoolView } from './nodeviews/MetaBoolView.vue';

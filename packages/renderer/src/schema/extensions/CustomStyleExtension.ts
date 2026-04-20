@@ -103,11 +103,11 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
     };
   },
 
-  addStorage() {
-    return {
-      styleAttrForCustomStyle: {} as Record<string, string>,
-    };
-  },
+  // addStorage() {
+  //   return {
+  //     styleAttrForCustomStyle: {} as Record<string, string>,
+  //   };
+  // },
 
   addGlobalAttributes() {
     return [
@@ -116,21 +116,12 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
         attributes: {
           customStyle: {
             default: null,
-            parseHTML: (e) => e.getAttribute('custom-style') || null,
+            parseHTML: (e) => e.getAttribute('custom-style') || e.getAttribute('data-custom-style') || null,
             renderHTML: (attrs) => {
-              let customStyle: string | undefined =
-                attrs.kv && attrs.kv['custom-style'];
-              attrs.customStyle = attrs.customStyle || customStyle;
-              customStyle = attrs.customStyle;
-              if (!customStyle) return {};
-              const style: string =
-                this.storage?.styleAttrForCustomStyle[customStyle];
-              const styleAttr = style ? { style } : {};
-              return {
-                class: style ? 'custom-style' : 'unknown-custom-style',
-                'custom-style': customStyle,
-                ...styleAttr,
-              };
+              const customStyle = attrs.customStyle || (attrs.kv && attrs.kv['custom-style'])
+              return customStyle
+                ? { 'custom-style': customStyle }
+                : {}
             },
           },
         },
@@ -138,40 +129,40 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
     ];
   },
 
-  addProseMirrorPlugins() {
-    const storage = this.storage;
-    return [
-      new Plugin({
-        key: customStylePluginKey,
-        state: {
-          init(config, state) { },
-          apply(tr, pluginState, oldState, newState) {
-            const updateDocState = tr.getMeta(META_UPDATE_DOC_STATE);
-            if (
-              !storage.styleAttrForCustomStyle ||
-              updateDocState?.configuration
-            ) {
-              const configuration: PundokEditorConfig | undefined =
-                updateDocState?.configuration ||
-                getDocState(newState)?.configuration;
-              if (configuration) {
-                const cs2style: Record<string, string> = {};
-                configuration?.customStyles?.forEach((styleDef) => {
-                  const cssProps = styleDef && styleDef.css;
-                  if (isArray(cssProps)) {
-                    cs2style[styleDef.name] = cssProps
-                      .map(([prop, value]) => `${prop}: ${value}`)
-                      .join('; ');
-                  }
-                });
-                storage.styleAttrForCustomStyle = cs2style;
-              }
-            }
-          },
-        },
-      }),
-    ];
-  },
+  // addProseMirrorPlugins() {
+  //   const storage = this.storage;
+  //   return [
+  //     new Plugin({
+  //       key: customStylePluginKey,
+  //       state: {
+  //         init(config, state) { },
+  //         apply(tr, pluginState, oldState, newState) {
+  //           const updateDocState = tr.getMeta(META_UPDATE_DOC_STATE);
+  //           if (
+  //             !storage.styleAttrForCustomStyle ||
+  //             updateDocState?.configuration
+  //           ) {
+  //             const configuration: PundokEditorConfig | undefined =
+  //               updateDocState?.configuration ||
+  //               getDocState(newState)?.configuration;
+  //             if (configuration) {
+  //               const cs2style: Record<string, string> = {};
+  //               configuration?.customStyles?.forEach((styleDef) => {
+  //                 const cssProps = styleDef && styleDef.css;
+  //                 if (isArray(cssProps)) {
+  //                   cs2style[styleDef.name] = cssProps
+  //                     .map(([prop, value]) => `${prop}: ${value}`)
+  //                     .join('; ');
+  //                 }
+  //               });
+  //               storage.styleAttrForCustomStyle = cs2style;
+  //             }
+  //           }
+  //         },
+  //       },
+  //     }),
+  //   ];
+  // },
 
   addCommands() {
     return {
