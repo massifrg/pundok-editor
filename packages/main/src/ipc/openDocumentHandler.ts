@@ -20,12 +20,11 @@ import { updateBookmarksFile } from '../bookmarks';
 import { importWithPandoc } from '../importExport';
 import { refreshMainMenu } from '../mainWindow';
 import { pandocFeatures } from '../pandocFeatures';
-import { isReadableFile } from '../resourcesManager';
+import { isReadableFile, getConfigurationInit } from '../resourcesManager';
 import { externalProgramError, runExternalProgram } from '../runExternal';
 import { commandLineFeedback, errorFeedback } from './feedback';
 import { computeProjectFromDocFile } from './getProjectHandler';
 import { IpcHub } from './ipcHub';
-import { getConfigurationInit } from './configurationHandlers';
 import { localizePath, readFile, toUnixPath } from '../filesystem';
 
 /**

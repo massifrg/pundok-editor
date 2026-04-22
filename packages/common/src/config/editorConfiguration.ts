@@ -22,6 +22,8 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
   name: string;
   /** The version of this configuration (it's meant for compatibility, but it's not used yet). */
   version: number[];
+  /** the configuration is local (this is set by the editor, it's overridden if set by the user) */
+  isLocal?: boolean;
   /** Description of the aim of this configuration. */
   description?: string;
   /** Options to configure [TipTap](https://tiptap.dev) components of the editor. */
@@ -181,6 +183,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
 export interface ConfigurationSummary {
   name: string;
   description?: string;
+  isLocal: boolean;
 }
 
 function mergeTiptapOptions(
@@ -304,6 +307,7 @@ export function enrichConfiguration(
     const ret = new PundokEditorConfig({
       name: base.name,
       version: minSuitableVersion(enriching.version, base.version || []),
+      isLocal: base.isLocal || enriching.isLocal,
       description: base.description,
       tiptap: {
         options: mergeTiptapOptions(
