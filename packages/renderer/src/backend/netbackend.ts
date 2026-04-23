@@ -26,6 +26,7 @@ import {
   PundokBookmark,
   PandocFeatureName,
   PandocFeatureOptions,
+  ConfigQueryOptions,
 } from '../common';
 
 export class NetBackend implements Backend {
@@ -82,11 +83,12 @@ export class NetBackend implements Backend {
     throw new Error('Method not implemented.');
   }
 
-  async availableConfigurations(): Promise<ConfigurationSummary[]> {
+  async availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]> {
     return [
       {
         name: HARDCODED_CONFIG_NAME,
         description: HARDCODED_CONFIG_DESC,
+        isLocal: false,
       },
     ] as ConfigurationSummary[];
   }

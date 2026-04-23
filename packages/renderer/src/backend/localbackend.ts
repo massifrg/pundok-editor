@@ -48,6 +48,7 @@ import {
   documentFormatToOutputConverter,
   PandocFeatureName,
   PandocFeatureOptions,
+  ConfigQueryOptions,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -304,16 +305,17 @@ export class LocalBackend implements Backend {
     return this.invokeIpc('new-project', path, JSON.stringify(project));
   }
 
-  async availableConfigurations(): Promise<ConfigurationSummary[]> {
+  async availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]> {
     const ipc = this.ipc;
     let configs: ConfigurationSummary[] = [
       {
         name: HARDCODED_CONFIG_NAME,
         description: HARDCODED_CONFIG_DESC,
+        isLocal: false,
       },
     ];
     if (ipc) {
-      const maybeConfigs = await ipc.invoke('available-configurations');
+      const maybeConfigs = await ipc.invoke('available-configurations', options);
       configs = configs.concat(maybeConfigs || []);
     }
     return configs;

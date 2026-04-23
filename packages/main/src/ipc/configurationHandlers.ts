@@ -1,11 +1,11 @@
 import { IpcMainInvokeEvent } from 'electron';
-import { ConfigurationSummary, PundokEditorConfigInit } from '../common';
+import { ConfigQueryOptions, ConfigurationSummary, PundokEditorConfigInit } from '../common';
 import { getConfigurationInit, parseConfigurationFiles } from '../resourcesManager';
 import { IpcHub } from './ipcHub';
 
 export const availableConfigurationsHandler = (hub: IpcHub) =>
-  async (e: IpcMainInvokeEvent): Promise<ConfigurationSummary[]> => {
-    return (await parseConfigurationFiles())
+  async (e: IpcMainInvokeEvent, options: ConfigQueryOptions): Promise<ConfigurationSummary[]> => {
+    return (await parseConfigurationFiles(options))
       .map((c) => ({
         name: c.name,
         description: c.description,

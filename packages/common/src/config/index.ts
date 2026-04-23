@@ -1,5 +1,6 @@
 export * from './appliesTo';
 export * from './automations';
+export * from './configQuery';
 export * from './customClasses';
 export * from './customAttributes';
 export * from './customMetadata';

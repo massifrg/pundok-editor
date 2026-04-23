@@ -20,6 +20,7 @@ import type {
   PundokBookmark,
   PandocFeatureName,
   PandocFeatureOptions,
+  ConfigQueryOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -143,8 +144,9 @@ export interface Backend {
 
   /**
    * Retrieves all the available configurations for the editor.
+   * @param options Options to select only a subset of the configurations.
    */
-  availableConfigurations(): Promise<ConfigurationSummary[]>;
+  availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]>;
 
   /**
    * Retrieves the configuration with a particular name.

@@ -16,6 +16,7 @@ import {
   ResourceType,
   RESOURCE_SUBPATHS,
   getInheritedConfigName,
+  ConfigQueryOptions,
 } from './common';
 import {
   createReadStream,
@@ -141,9 +142,18 @@ async function configFilesInDir(dirpath: string, isLocal: boolean): Promise<Conf
     }))
 }
 
-export async function allConfigurations(): Promise<ConfigurationCoords[]> {
-  const globalConfigs = await configFilesInDir(configsDir(), false)
-  const localConfigs = await configFilesInDir(localConfigsDir(), true)
+/**
+ * Parse the available configurations.
+ * @param options Options to select only a subset of the configurations.
+ * @returns 
+ */
+export async function allConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationCoords[]> {
+  const globalConfigs = !options?.onlyLocal
+    ? await configFilesInDir(configsDir(), false)
+    : []
+  const localConfigs = !options?.onlyGlobal
+    ? await configFilesInDir(localConfigsDir(), true)
+    : []
   return [...localConfigs, ...globalConfigs]
 }
 
@@ -151,8 +161,8 @@ export async function allConfigurations(): Promise<ConfigurationCoords[]> {
  * Read and parse all the configurations in the configuration's directories.
  * @returns
  */
-export async function parseConfigurationFiles(): Promise<PundokEditorConfigInit[]> {
-  const parsed = (await allConfigurations())
+export async function parseConfigurationFiles(options?: ConfigQueryOptions): Promise<PundokEditorConfigInit[]> {
+  const parsed = (await allConfigurations(options))
     .map(({ path, isLocal }) => ({ content: readFileSync(path).toString(), isLocal }))
     .map(({ content, isLocal }) => {
       try {
