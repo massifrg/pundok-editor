@@ -599,11 +599,11 @@ export class PandocJsonExporter {
       [INDEXED_TEXT_ATTR]: indexedText,
       [INDEX_RANGE_ATTR]: indexRange,
     } = kv;
-    const idref = attrs.idref || attrs.kv.idref;
+    const idref = attrs.idref || attrs.kv.idref
     const classes = [this.indexRefClass(indexName)];
     if (indexRange === INDEX_RANGE_START) classes.push(INDEX_RANGE_START_CLASS);
     if (indexRange === INDEX_RANGE_STOP) classes.push(INDEX_RANGE_STOP_CLASS);
-    const attributes: Record<string, string> = { ...kv, idref };
+    const attributes: Record<string, string> = idref ? { ...kv, idref } : { ...kv }
     if (indexName) attributes[INDEX_NAME_ATTR] = indexName;
     if (indexedText) attributes[INDEXED_TEXT_ATTR] = indexedText;
     return new Span(Attr.from({ id: '', classes, attributes }), []);
