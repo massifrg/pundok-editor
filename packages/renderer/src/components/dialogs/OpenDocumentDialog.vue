@@ -317,7 +317,7 @@ export default {
         const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })
         const baseUrl = contents?.baseUrl && URL.parse(contents.baseUrl)
         this.protocol = baseUrl ? baseUrl.protocol : this.protocol
-        const pathname = baseUrl ? baseUrl.pathname : this.currentFolder
+        const pathname = baseUrl ? decodeURIComponent(baseUrl.pathname) : this.currentFolder
         this.currentFolder = contents?.platform === 'win32' ? pathname.replace(/^\/([a-z]):/i, '$1:') : pathname
         this.folders = contents?.folders || this.folders
         this.documents = this.mode === 'folder'
@@ -426,7 +426,7 @@ export default {
       if (place.href.startsWith('file://')) {
         const url = new URL(place.href)
         this.protocol = url && url.protocol || this.protocol
-        this.currentFolder = url && url.pathname || this.currentFolder
+        this.currentFolder = url && decodeURIComponent(url.pathname) || this.currentFolder
         this.getContents()
       }
     },
@@ -597,6 +597,9 @@ export default {
     adjustDocumentExtension(addIfMissing?: boolean) {
       this.filename = changeFileExtensionToFormat(this.filename, this.format, addIfMissing)
     },
+    async gotoUrl(url: string, configurationName?: string) {
+      return this.gotoPath(decodeURIComponent(url), configurationName)
+    },
     async gotoPath(path: string, configurationName?: string) {
       const { folder, document } = splitFolderAndDoc(path)
       console.log(`folder=${folder}, document=${document}`)
@@ -642,7 +645,7 @@ export default {
         <q-space style="max-width: .1rem;" />
         <q-btn-dropdown label="project" no-caps auto-close dense class="q-my-xs">
           <q-list>
-            <q-item v-for="pb in projectBookmarks" clickable @click="gotoPath(pb.url)">
+            <q-item v-for="pb in projectBookmarks" clickable @click="gotoUrl(pb.url)">
               <q-item-section>{{ pb.name }}</q-item-section>
             </q-item>
           </q-list>
@@ -650,9 +653,10 @@ export default {
         &nbsp;
         <q-btn-dropdown label="document" no-caps auto-close dense class="q-my-xs">
           <q-list>
-            <q-item v-for="db in docBookmarks" clickable @click="gotoPath(db.url, db.configurationName)">
+            <q-item v-for="db in docBookmarks" clickable @click="gotoUrl(db.url, db.configurationName)">
               <q-item-section>
-                <q-item-label :title="db.url">{{ splitFolderAndDoc(db.url).document }}</q-item-label>
+                <q-item-label :title="db.url">{{ splitFolderAndDoc(decodeURIComponent(db.url)).document
+                  }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
