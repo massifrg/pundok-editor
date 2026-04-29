@@ -24,6 +24,7 @@ import {
 import { getEditorConfiguration } from '..';
 import {
   attrsForConversionTo,
+  getEditorGuiProps,
   getMarkRangesBetween,
   innerNodeDepth,
   pandocTableBodies,
@@ -309,10 +310,26 @@ export const HelperCommandsExtension = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      [SK.MOVE_NODE_UP]: () => this.editor.commands.moveChild('up'),
-      [SK.MOVE_NODE_DOWN]: () => this.editor.commands.moveChild('down'),
-      [SK.MOVE_NODE_UP_INSIDE]: () => this.editor.commands.moveChild('up-inside'),
-      [SK.MOVE_NODE_DOWN_INSIDE]: () => this.editor.commands.moveChild('down-inside'),
+      [SK.MOVE_NODE_UP]: () => {
+        const editor = this.editor as Editor
+        const canMove = getEditorGuiProps(editor)?.swapBlocksActive
+        return canMove
+          ? editor.commands.moveChild('up')
+          : false
+      },
+      [SK.MOVE_NODE_DOWN]: () => {
+        const editor = this.editor as Editor
+        const canMove = getEditorGuiProps(editor)?.swapBlocksActive
+        return canMove
+          ? editor.commands.moveChild('down')
+          : false
+      },
+      [SK.MOVE_NODE_UP_INSIDE]: () => {
+        return this.editor.commands.moveChild('up-inside')
+      },
+      [SK.MOVE_NODE_DOWN_INSIDE]: () => {
+        return this.editor.commands.moveChild('down-inside')
+      },
       [SK.UNWRAP_NODE]: () => this.editor.commands.unwrapNode(),
     };
   },

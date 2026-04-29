@@ -9,6 +9,7 @@ export * from './customClass';
 export * from './customStyle';
 export * from './cssSelection';
 export * from './DocState';
+export * from './EditorGUIProps';
 export * from './fixPreArrowUpPlugin';
 export * from './htmlSpanAttrs';
 export * from './icons';

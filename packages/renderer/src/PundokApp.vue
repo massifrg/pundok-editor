@@ -3,15 +3,13 @@
 </template>
 
 <script lang="ts">
-// import './index.css'
 import { defineAsyncComponent, defineComponent } from 'vue';
 import { useQuasar } from 'quasar'
 import { mapState } from 'pinia';
 import { useBackend } from './stores';
 import { createBackend } from './backend/backend';
-// import PundokEditor from './components/PundokEditor.vue';
 import testingContent from './assets/test-pandoc.json?raw';
-import { EditorGUIPropsClass } from './components/EditorGUIProps';
+import { EditorGUIPropsClass } from './schema';
 
 const electronIpc = window && window.ipc;
 
@@ -19,7 +17,6 @@ export default defineComponent({
   name: 'PandocApp',
   components: {
     "PundokEditor": defineAsyncComponent(() => import('./components/PundokEditor.vue'))
-    // PundokEditor
   },
   setup() {
     const backendStore = useBackend();

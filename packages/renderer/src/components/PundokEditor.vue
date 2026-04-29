@@ -82,6 +82,7 @@ import {
   getDocState,
   getIndexingState,
   type SelectedNodeOrMark,
+  getEditorGuiProps,
 } from '../schema';
 // the next one is not imported from '../schema' to avoid a circular ref
 import { Pandoc } from '../schema/nodes/Pandoc'
@@ -188,8 +189,11 @@ import {
   ACTION_DOCUMENT_SAVE_COPY,
 } from '../actions';
 import { useQuasar } from 'quasar';
-import { EditorGUIPropsClass } from './EditorGUIProps';
-import { CreateDocumentOptions, getDocAsJsonString } from '../schema';
+import {
+  CreateDocumentOptions,
+  EditorGUIPropsClass,
+  getDocAsJsonString
+} from '../schema';
 import {
   PendingOperation,
   PendingOperationExtraValue,
@@ -291,6 +295,7 @@ export default {
       visibleProjectStructureDialog: false,
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
       visibleNewProjectDialog: false,
+      swapBlocksWasActive: this.guiProps.swapBlocksActive,
       inputTextDialogLabel: DEFAULT_INPUT_TEXT_DIALOG_LABEL,
       inputTextDialogStartValue: DEFAULT_INPUT_TEXT_DIALOG_START_VALUE,
       inputTextDialogCallback: undefined as
@@ -332,6 +337,15 @@ export default {
   },
 
   watch: {
+    visibleSearchAndReplaceDialog(visible: boolean) {
+      const editor = this.editor as Editor
+      if (visible) {
+        this.swapBlocksWasActive = getEditorGuiProps(editor)?.swapBlocksActive || false
+        editor?.commands.toggleSwapBlocks(false)
+      } else {
+        editor?.commands.toggleSwapBlocks(this.swapBlocksWasActive)
+      }
+    },
     lastAction(action: EditorAction) {
       const editor = this.editor as Editor;
       const editorKey = editorKeyFromState(editor.state);
@@ -674,6 +688,7 @@ export default {
         this.updateEditorDocState({
           unsavedChanges: false,
           unsavedChangesAsCopy: false,
+          guiProps: this.guiProps,
           workingFolder: oldDocState?.workingFolder,
           imagesFolder: oldDocState?.imagesFolder,
           includeFolder: oldDocState?.includeFolder,

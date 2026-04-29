@@ -32,9 +32,8 @@
           <template v-slot:after>
             <q-card class="q-pa-none">
               <q-card-section class="scroll q-pa-none">
-                <PundokEditor :height="height" :mainEditor="false" :gui-props="guiProps"
-                  @document-loaded="documentLoaded" @pending-confirmed="pendingCloseConfirmed"
-                  @new-editor="forwardEditorKey" />
+                <PundokEditor :height="height" :mainEditor="false" @document-loaded="documentLoaded"
+                  :gui-props="guiProps" @pending-confirmed="pendingCloseConfirmed" @new-editor="forwardEditorKey" />
               </q-card-section>
             </q-card>
           </template>
@@ -49,13 +48,12 @@
 
 <script lang="ts">
 import { setupQuasarIcons } from './helpers/quasarIcons';
-import { getDocState, getEditorDocState, getEditorProject } from '../schema';
+import { EditorGUIPropsClass, getDocState, getEditorDocState, getEditorProject } from '../schema';
 import { DocumentContext, EditorKeyType, ProjectComponent, CxDocument } from '../common';
 import { QTreeNode } from 'quasar';
 import { Component, defineAsyncComponent } from 'vue';
 import { useBackend, useProjectCache } from '../stores';
 import { mapState } from 'pinia';
-import { EditorGUIPropsClass } from './EditorGUIProps';
 import { setActionOpenDocument, setActionCloseEditor, setActionShowResultMessage } from '../actions';
 import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/vue-3';
@@ -129,6 +127,7 @@ const ProjectStructureDialog: Component = {
         projectStructure: false,
         showEditorVersion: false,
         showConfiguration: false,
+        swapBlocksActive: false,
       }),
     }
   },

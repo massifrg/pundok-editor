@@ -6,7 +6,7 @@
 
       <!-- <ToolbarButton v-if="gui.openButton" icon="mdi-folder-open" @click="$emit('openDocument')"
         title="open document" /> -->
-      <OpenButton :editor="editor" />
+      <OpenButton v-if="gui.openButton" :editor="editor" />
       <!-- <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)">
         <q-badge v-if="!!savedExportedColor" :color="savedExportedColor" floating rounded />
       </ToolbarButton> -->
@@ -37,7 +37,8 @@
       <ToolbarButton icon="mdi-repeat-variant" :disabled="!editor.can().repeatCommand()" :title="repeatCommandTitle()"
         @click="editor.commands.repeatCommand()" />
 
-      <span class="button-separator" />
+      <q-toggle v-model="swapBlocksActive" icon="mdi-swap-vertical" :title="swapBlocksToggleTooltip()"
+        @click="editor.commands.toggleSwapBlocks()" />
 
       <ToolbarButton icon="mdi-format-paragraph" :disabled="!editor.can().togglePlain()" :shortcut="SK.TOGGLE_PLAIN"
         @click="
@@ -366,9 +367,13 @@ import {
   getEditorConfiguration,
   getEditorProject,
 } from '../schema';
-import { EditorGUIProps } from './EditorGUIProps';
 import { mapState } from 'pinia';
-import { getTextMarkRangesBetween, iconFor } from '../schema/helpers';
+import {
+  EditorGUIPropsClass,
+  getEditorGuiProps,
+  getTextMarkRangesBetween,
+  iconFor
+} from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
 import OpenButton from './OpenButton.vue';
 import { showDocStateDialog } from './helpers';
@@ -407,7 +412,6 @@ export default {
   props: [
     'editor',
     'currentNodesWithPos',
-    'guiProps',
     'savedChanges',
     'savedChangesAsCopy',
   ],
@@ -432,11 +436,13 @@ export default {
     ...mapState(useBackend, ['backend']),
     ...mapState(useActions, ['remoteWorkInProgress']),
     gui() {
-      console.log(JSON.stringify(this.guiProps));
-      return this.guiProps as EditorGUIProps;
+      return getEditorGuiProps(this.editor) || new EditorGUIPropsClass();
     },
     editorKey() {
       return editorKeyFromState(this.editor.state);
+    },
+    swapBlocksActive() {
+      return getEditorGuiProps(this.editor)?.swapBlocksActive || false;
     },
     configuration() {
       return getEditorConfiguration(this.editor);
@@ -613,6 +619,10 @@ export default {
     },
     reloadWithConfiguration(configurationName: string) {
       this.$emit('reloadWithConfiguration', configurationName);
+    },
+    swapBlocksToggleTooltip() {
+      const what = this.swapBlocksActive ? 'prevent' : 'allow'
+      return `click to ${what} moving/swapping paragraphs or blocks vertically with ${SK.MOVE_NODE_UP}/${SK.MOVE_NODE_DOWN}`
     },
     async debug() {
       showDocStateDialog(this.editor)
