@@ -13,8 +13,8 @@ import { defaultPropsFor } from '../actions/defaultProps';
 import { getEditorConfiguration } from '../schema';
 
 export default {
-  props: ['editor', 'startActions'],
-  emits: ['update-actions'],
+  props: ['editor', 'startActions', 'searchOnly'],
+  emits: ['update-actions', 'close'],
   data() {
     return {
       actions: (this.startActions || []) as ActionNameWithProps[],
@@ -31,6 +31,9 @@ export default {
     availableActionsNames() {
       return availableActionsNames()
     },
+    appendNewActionTooltip() {
+      return `append new action to be applied on ${this.searchOnly ? 'found' : 'replaced'} texts`
+    }
   },
   watch: {
     actions(value) {
@@ -140,7 +143,7 @@ export default {
 <template>
   <q-card>
     <q-card-section class="q-px-xs">
-      <div class="q-text-h6 q-ma-md">Operations on the replaced text:</div>
+      <div class="q-text-h6 q-ma-md">Actions to be applied on {{ searchOnly ? 'found' : 'replaced' }} texts:</div>
       <q-list>
         <q-item v-for="(a, index) in actions" dense>
           <q-item-section side>
@@ -198,7 +201,9 @@ export default {
       </q-list>
     </q-card-section>
     <q-card-actions align="center">
-      <q-btn size="sm" icon="mdi-plus" label="append new" @click="newActionItem()" />
+      <q-btn size="sm" icon="mdi-plus" label="new" :title="appendNewActionTooltip" @click="newActionItem()" />
+      <q-space />
+      <q-btn size="sm" icon="mdi-close" label="close" @click="$emit('close')" />
     </q-card-actions>
   </q-card>
 </template>

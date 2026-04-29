@@ -1,5 +1,6 @@
 <script lang="ts">
 import { toRaw } from 'vue';
+import { QBtnDropdown } from 'quasar';
 import { ActionName, defaultPropsFor } from '../actions';
 import {
   ActionNameWithProps,
@@ -84,7 +85,7 @@ function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConf
 }
 
 export default {
-  props: ['editor', 'actions'],
+  props: ['editor', 'actions', 'searchOnly'],
   emits: ['update-actions'],
   computed: {
     configuration() {
@@ -112,13 +113,18 @@ export default {
       this.label = actionsAsText(actions, this.configuration)
       // forward event
       this.$emit('update-actions', actions)
+    },
+    hideMenu() {
+      (this.$refs.actionsOnReplace as QBtnDropdown).hide()
     }
   }
 }
 </script>
 <template>
-  <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty" :label="label" no-caps>
+  <q-btn-dropdown ref="actionsOnReplace" class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty"
+    :label="label" no-caps>
     <!-- :no-caps="noneActive || operation === 'remove all'" :menu-anchor="menuAnchor" :menu-self="menuSelf" -->
-    <ActionsList :editor="editor" :start-actions="actions" @update-actions="update" style="min-width: 100%;" />
+    <ActionsList :editor="editor" :start-actions="actions" :searchOnly="searchOnly" style="min-width: 100%;"
+      @update-actions="update" @close="hideMenu()" />
   </q-btn-dropdown>
 </template>

@@ -85,7 +85,7 @@
               icon="mdi-filter-outline" title="filter searched text styles"
               @click="searchFilterSwitch = !searchFilterSwitch" />
             <ActionsOnReplaceDropdown v-if="optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
-              title="actions on selected text" @update-actions="updateActions" />
+              :searchOnly="optionSearchOnly" title="actions on found texts" @update-actions="updateActions" />
           </div>
         </q-card-section>
         <q-card-section v-if="!cssMode && searchFilterSwitch" horizontal>
@@ -96,7 +96,7 @@
         <q-card-section v-if="!optionSearchOnly" horizontal>
           <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
             stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
-          <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace" title="actions on replaced text"
+          <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace" title="actions on replaced texts"
             @update-actions="updateActions" />
         </q-card-section>
       </q-card-section>
