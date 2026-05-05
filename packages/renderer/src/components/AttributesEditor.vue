@@ -222,8 +222,6 @@
 <script lang="ts">
 import { isEmpty, isEqual } from 'lodash-es';
 import { Mark, Node } from '@tiptap/pm/model';
-import { useQuasar } from 'quasar';
-import { mdiChevronLeft, mdiChevronRight } from '@quasar/extras/mdi-v6/index.js'
 import {
   DocStateUpdate,
   PANDOC_OUTPUT_FORMATS,
@@ -281,17 +279,14 @@ import {
 import { useBackend } from '../stores';
 import { mapState } from 'pinia';
 import { toRaw } from 'vue';
-import { createLowlight, all } from 'lowlight';
+import { createLowlight } from 'lowlight';
 import { ACTION_ADD_CLASS } from '../actions';
 import { showIncludeDocumentDialog } from './helpers';
+import { setupQuasarIcons } from './helpers/quasarIcons';
 import { relative } from 'path-browserify';
 
-const lowlight = createLowlight(all);
+const lowlight = createLowlight();
 
-const myIcons: Record<string, string> = {
-  chevron_left: mdiChevronLeft,
-  chevron_right: mdiChevronRight,
-}
 const SHOW_INCLUDE_DIALOG_DELAY = 100
 const TARGET_ATTRS = ['src', 'href', 'title']
 const TEXT_CONTENT_TAB = 'content'
@@ -314,13 +309,7 @@ export default {
     TargetEditor,
   },
   setup() {
-    const $q = useQuasar()
-    $q.iconMapFn = (iconName) => {
-      const icon = myIcons[iconName]
-      if (icon !== void 0) {
-        return { icon: icon }
-      }
-    }
+    setupQuasarIcons()
   },
   props: ['editor', 'selectedNodeOrMark', 'startTab', 'onAttributesEditorShow'],
   emits: ['closeAttributesEditor'],

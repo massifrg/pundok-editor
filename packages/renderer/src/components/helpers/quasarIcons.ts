@@ -20,7 +20,12 @@ import {
   mdiPageLast,
   mdiPlay,
   mdiContentSavePlus,
-} from '@quasar/extras/mdi-v7/index.js';
+  mdiUndo,
+  mdiRedo,
+  mdiRepeatVariant,
+  mdiSwapVertical,
+  mdiFormatParagraph,
+} from '@quasar/extras/mdi-v7';
 
 import { commonIcons } from '../../common';
 
@@ -41,10 +46,15 @@ export const icons: Record<string, string> = {
   last_page: mdiPageLast,
   play_arrow: mdiPlay,
   root_document: mdiFileStarFourPoints,
+  redo: mdiRedo,
   remove_class: mdiOctagramMinus,
   remove_custom_class: mdiOctagramMinusOutline,
   render: mdiBookCog,
+  repeat_command: mdiRepeatVariant,
   save_copy: mdiContentSavePlus,
+  swap_blocks: mdiSwapVertical,
+  toggle_plain: mdiFormatParagraph,
+  undo: mdiUndo,
   warning: mdiAlertCircle,
 };
 

@@ -83,6 +83,9 @@ import {
   getIndexingState,
   type SelectedNodeOrMark,
   getEditorGuiProps,
+  EditorGUIPropsClass,
+  getDocAsJsonString,
+  CreateDocumentOptions,
 } from '../schema';
 // the next one is not imported from '../schema' to avoid a circular ref
 import { Pandoc } from '../schema/nodes/Pandoc'
@@ -189,11 +192,6 @@ import {
   ACTION_DOCUMENT_SAVE_COPY,
 } from '../actions';
 import { useQuasar } from 'quasar';
-import {
-  CreateDocumentOptions,
-  EditorGUIPropsClass,
-  getDocAsJsonString
-} from '../schema';
 import {
   PendingOperation,
   PendingOperationExtraValue,

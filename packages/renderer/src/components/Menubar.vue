@@ -28,22 +28,21 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-undo" :disabled="!editor.can().undo()" title="undo" :shortcut="SK.UNDO"
+      <ToolbarButton icon="undo" :disabled="!editor.can().undo()" title="undo" :shortcut="SK.UNDO"
         @click="editor.chain().undo().redecorateIndexRefs().run()" />
-      <ToolbarButton icon="mdi-redo" :disabled="!editor.can().redo()" title="redo" :shortcut="SK.REDO"
+      <ToolbarButton icon="redo" :disabled="!editor.can().redo()" title="redo" :shortcut="SK.REDO"
         @click="editor.commands.redo()" />
 
       <span class="button-separator" />
-      <ToolbarButton icon="mdi-repeat-variant" :disabled="!editor.can().repeatCommand()" :title="repeatCommandTitle()"
+      <ToolbarButton icon="repeat_command" :disabled="!editor.can().repeatCommand()" :title="repeatCommandTitle()"
         @click="editor.commands.repeatCommand()" />
 
-      <q-toggle v-model="swapBlocksActive" icon="mdi-swap-vertical" :title="swapBlocksToggleTooltip()"
+      <q-toggle v-model="swapBlocksActive" icon="swap_blocks" :title="swapBlocksToggleTooltip()"
         @click="editor.commands.toggleSwapBlocks()" />
 
-      <ToolbarButton icon="mdi-format-paragraph" :disabled="!editor.can().togglePlain()" :shortcut="SK.TOGGLE_PLAIN"
-        @click="
-          editor.commands.runRepeatableCommand('togglePlain', 'Plain ↔ Para')
-          " title="toggle Plain/Para" />
+      <ToolbarButton icon="toggle_plain" :disabled="!editor.can().togglePlain()" :shortcut="SK.TOGGLE_PLAIN" @click="
+        editor.commands.runRepeatableCommand('togglePlain', 'Plain ↔ Para')
+        " title="toggle Plain/Para" />
 
       <!-- <span class="button-separator" /> -->
 
@@ -314,6 +313,8 @@
 
 <script setup lang="ts">
 import { SK } from '../common'
+import { setupQuasarIcons } from './helpers/quasarIcons';
+setupQuasarIcons()
 </script>
 
 <script lang="ts">
