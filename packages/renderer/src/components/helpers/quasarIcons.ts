@@ -362,6 +362,7 @@ export const icons: Record<string, string> = {
   root_document: mdiFileStarFourPoints,
   redo: mdiRedo,
   regex: mdiRegex,
+  refresh: mdiReload,
   reload: mdiReload,
   reload_with_other_configuration: mdiSyncCircle,
   remove_class: mdiOctagramMinus,
