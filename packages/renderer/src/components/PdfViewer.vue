@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 const defaultPdf = 'data:application/pdf;base64,' +
   'JVBERi0xLjUKJbXtrvsKNCAwIG9iago8PCAvTGVuZ3RoIDUgMCBSCiAgIC9GaWx0ZXIgL0ZsYXRl' +
@@ -214,7 +219,6 @@ import {
   ViewerSetup
 } from '../common';
 import { debounce, isString, throttle } from 'lodash-es';
-import { setupQuasarIcons } from './helpers/quasarIcons';
 import { PromptDialog } from './dialogs'
 
 interface LoadingProgress {
@@ -252,9 +256,6 @@ async function createHash(message: string, algo = 'SHA-1'): Promise<string> {
 }
 
 export default {
-  setup() {
-    setupQuasarIcons()
-  },
   components: {
     PromptDialog,
     VuePdfEmbed,
@@ -589,30 +590,26 @@ export default {
       <q-btn label="default pdf" @click="loadDefaultPdf" />
       <q-btn label="load pdf" @click="loadPdf({ filename: 'setup-en.pdf' })" />
       -->
-      <q-btn size="sm" icon='mdi-page-first' title="go to the first page" :disabled="page <= 1" @click="firstPage" />
-      <q-btn size="sm" icon='mdi-chevron-left' title="go to the previous page" :disabled="page <= 1"
-        @click="prevPage" />
+      <q-btn size="sm" icon='page_first' title="go to the first page" :disabled="page <= 1" @click="firstPage" />
+      <q-btn size="sm" icon='page_left' title="go to the previous page" :disabled="page <= 1" @click="prevPage" />
       <q-chip :label="page" size="md" @wheel="pageWheel" clickable @click="showPageDialog = true" />
       <PromptDialog :visible="showPageDialog" label="go to page" :start-value="page.toString()" :validate="validatePage"
         @set-value="setPage" @close-dialog="showPageDialog = false" />
-      <q-btn size="sm" icon='mdi-chevron-right' title="go to the next page" :disabled="page >= maxPages"
-        @click="nextPage" />
-      <q-btn size="sm" icon='mdi-page-last' title="go to the last page" :disabled="page >= maxPages"
-        @click="lastPage" />
-      <q-btn size="sm" icon="mdi-minus" :disabled="magnify < 0.11" title="zoom out" @click="decreaseScale" />
+      <q-btn size="sm" icon='page_right' title="go to the next page" :disabled="page >= maxPages" @click="nextPage" />
+      <q-btn size="sm" icon='page_last' title="go to the last page" :disabled="page >= maxPages" @click="lastPage" />
+      <q-btn size="sm" icon="zoom_out" :disabled="magnify < 0.11" title="zoom out" @click="decreaseScale" />
       <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblClick="resetScale" />
-      <q-btn size="sm" icon="mdi-plus" :disabled="magnify > 9.9" title="zoom in" @click="increaseScale" />
-      <q-btn v-if="bookmarks.length === 0" size="sm" icon="mdi-bookmark-plus" title="add bookmark"
-        @click="setBookmark()" />
-      <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="mdi-bookmark-plus" title="add bookmark"
+      <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" title="zoom in" @click="increaseScale" />
+      <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" title="add bookmark" @click="setBookmark()" />
+      <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="bookmark_add" title="add bookmark"
         @click="setBookmark()">
         <q-list>
           <q-item v-for="(bookmark, i) in bookmarks" clickable v-close-popup :label="bookmark.label"
             @click="recallBookmark(i)">
-            <q-item-section side title="edit bookmark"><q-icon name="mdi-comment-bookmark" color="primary"
+            <q-item-section side title="edit bookmark"><q-icon name="bookmark_edit" color="primary"
                 @click="editBookmark(i)" /></q-item-section>
             <q-item-section title="remove bookmark"><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
-            <q-item-section side title="remove bookmark"><q-icon name="mdi-bookmark-remove" color="primary"
+            <q-item-section side title="remove bookmark"><q-icon name="bookmark_remove" color="primary"
                 @click="removeBookmark(i)" /></q-item-section>
           </q-item>
         </q-list>
@@ -631,7 +628,7 @@ export default {
         :start-value="bookmarks[currentBookmarkIndex]?.label" @set-value="setBookmarkLabel"
         @close-dialog="showBookmarkNameDialog = false" />
       <q-space />
-      <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'mdi-reload'" :disable="isRegeneratingPdf"
+      <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'reload'" :disable="isRegeneratingPdf"
         @click="regeneratePdf()">
         <q-circular-progress v-if="isRegeneratingPdf" indeterminate round size="1rem" />
       </q-btn>

@@ -25,31 +25,31 @@ export interface ActionsGroup extends BaseActionsGroup {
 const ACTION_GROUP_INSERT_BEFORE: BaseActionsGroup = {
   name: 'insert-before',
   label: 'insert before...',
-  icon: 'mdi-select-place',
-  iconRight: 'mdi-square-rounded',
+  icon: 'place_of_insertion',
+  iconRight: 'block',
   tooltip: 'insert an element before this one'
 };
 
 const ACTION_GROUP_INSERT_AFTER: BaseActionsGroup = {
   name: 'insert-after',
   label: 'insert after...',
-  icon: 'mdi-square-rounded',
-  iconRight: 'mdi-select-place',
+  icon: 'block',
+  iconRight: 'place_of_insertion',
   tooltip: 'insert an element after this one'
 };
 
 const ACTION_GROUP_CONVERT_BLOCK: BaseActionsGroup = {
   name: 'convert-block',
   label: 'convert block...',
-  icon: 'mdi-swap-horizontal',
+  icon: 'block_convert',
   tooltip: 'convert this Block into a compatible one'
 };
 
 const ACTION_GROUP_MOVE_BLOCK: BaseActionsGroup = {
   name: 'move-block',
   label: 'move block...',
-  icon: 'mdi-select-place',
-  iconRight: 'mdi-swap-vertical',
+  icon: 'place_of_insertion',
+  iconRight: 'block_move',
   tooltip: 'move this Block up, down, up & inside or down & inside'
 };
 
@@ -69,8 +69,8 @@ export function insertBlockAction(
     editorKey,
     name,
     label,
-    icon: isBefore ? icon : 'mdi-square-rounded',
-    iconRight: isBefore ? 'mdi-square-rounded' : icon,
+    icon: isBefore ? icon : 'block',
+    iconRight: isBefore ? 'block' : icon,
     group: isBefore ? beforeGroup : afterGroup,
     canDo: (editor) => {
       try {
@@ -140,7 +140,7 @@ export function convertBlockAction(
       undefined,
       config,
     )} to ${nodeOrMarkToPandocName(toTypeName, undefined, config)}`,
-    icon: 'mdi-swap-horizontal',
+    icon: 'block_convert',
     iconRight: nodeIcon(toTypeName),
     group: convertGroup,
     canDo: (editor) => editor.can().convertNode(toTypeName, pos),
@@ -158,7 +158,7 @@ export function moveBlockActions(
       editorKey,
       name: 'move-before-first-sibling',
       label: 'move before any sibling',
-      icon: 'mdi-arrow-collapse-up',
+      icon: 'arrow_top',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('start', pos),
       do: (editor, action) => editor.commands.moveChild('start', pos),
@@ -167,7 +167,7 @@ export function moveBlockActions(
       editorKey,
       name: 'move-before-previous-sibling',
       label: 'move before previous sibling',
-      icon: 'mdi-arrow-up',
+      icon: 'arrow_upward',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('up', pos),
       do: (editor, action) => editor.commands.moveChild('up', pos),
@@ -176,7 +176,7 @@ export function moveBlockActions(
       editorKey,
       name: 'move-after-next-sibling',
       label: 'move after next sibling',
-      icon: 'mdi-arrow-down',
+      icon: 'arrow_downward',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('down', pos),
       do: (editor, action) => editor.commands.moveChild('down', pos),
@@ -185,7 +185,7 @@ export function moveBlockActions(
       editorKey,
       name: 'move-after-last-sibling',
       label: 'move after any sibling',
-      icon: 'mdi-arrow-collapse-down',
+      icon: 'arrow_bottom',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('end', pos),
       do: (editor, action) => editor.commands.moveChild('end', pos),
@@ -194,7 +194,7 @@ export function moveBlockActions(
       editorKey,
       name: 'move-inside-prev-sibling',
       label: 'move inside previous sibling',
-      icon: 'mdi-arrow-top-right',
+      icon: 'arrow_top_right',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('up-inside', pos),
       do: (editor, action) => editor.commands.moveChild('up-inside', pos),
@@ -203,7 +203,7 @@ export function moveBlockActions(
       editorKey,
       name: 'move-inside-next-sibling',
       label: 'move inside next sibling',
-      icon: 'mdi-arrow-bottom-right',
+      icon: 'arrow_bottom_right',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('down-inside', pos),
       do: (editor, action) => editor.commands.moveChild('down-inside', pos),

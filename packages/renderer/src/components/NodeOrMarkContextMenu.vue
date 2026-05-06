@@ -11,13 +11,18 @@
       </q-item-section>
       <q-item-section>{{ labelFor(action) }}</q-item-section>
       <q-item-section v-if="isGroup(action)" side>
-        <q-icon name="mdi-arrow-right" />
+        <q-icon name="arrow_right" />
       </q-item-section>
       <ActionsMenu v-if="isGroup(action)" :editor="editor" :node-or-mark="nodeOrMark"
         :actions="actionsOfGroup[action.name]" />
     </q-item>
   </q-list>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import {

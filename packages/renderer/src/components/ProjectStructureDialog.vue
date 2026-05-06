@@ -3,16 +3,16 @@
     <!-- <div class="shadow shadow-24 structure-dialog"> -->
     <q-card class="shadow shadow-24">
       <q-card-actions horizontal align="stretch" class="bg-primary">
-        <q-btn title="reload/refresh project structure" size="sm" icon="mdi-refresh" @click="reloadStructure()" />
+        <q-btn title="reload/refresh project structure" size="sm" icon="refresh" @click="reloadStructure()" />
         <q-space />
         <q-chip>{{ loaded?.id || loaded?.path || '' }}</q-chip>
         <q-space />
-        <q-btn title="open in main editor" size="sm" icon="mdi-open-in-app" :disabled="!selected"
+        <q-btn title="open in main editor" size="sm" icon="document_open_in_main_editor" :disabled="!selected"
           @click="openInMainEditor" />
         <q-space style="max-width: 2rem" />
         <q-btn :title="maximized ? 'minimize' : 'maximize'" size="sm"
-          :icon="maximized ? 'mdi-window-minimize' : 'mdi-window-maximize'" @click="maximizeMinimize()" />
-        <q-btn title="close" size="sm" icon="mdi-window-close" @click="closeDialog()" />
+          :icon="maximized ? 'window_minimize' : 'window_maximize'" @click="maximizeMinimize()" />
+        <q-btn title="close" size="sm" icon="window_close" @click="closeDialog()" />
       </q-card-actions>
       <q-card-section>
         <q-splitter v-model="splitterModel" :after-class="afterClass" :before-class="beforeClass"
@@ -46,8 +46,12 @@
   </q-dialog>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
-import { setupQuasarIcons } from './helpers/quasarIcons';
 import { EditorGUIPropsClass, getDocState, getEditorDocState, getEditorProject } from '../schema';
 import { DocumentContext, EditorKeyType, ProjectComponent, CxDocument } from '../common';
 import { QTreeNode } from 'quasar';
@@ -87,9 +91,9 @@ function docToTreeNode(doc: ProjectComponent, loaded: LoadedDocument): QTreeNode
   const is_loaded = isLoaded(doc, loaded)
   let icon
   if (sha1) {
-    icon = is_loaded ? 'mdi-folder-open' : undefined
+    icon = is_loaded ? 'document_open' : undefined
   } else {
-    icon = 'mdi-file-question'
+    icon = 'document_question'
   }
   const selectable = !!sha1
   const treeNode: QTreeNode = { label, id, src, format, icon, selectable }
@@ -103,9 +107,6 @@ const ProjectStructureDialog: Component = {
   components: {
     // see https://vuejs.org/guide/components/async.html#async-components
     "PundokEditor": defineAsyncComponent(() => import('./PundokEditor.vue'))
-  },
-  setup() {
-    setupQuasarIcons()
   },
   data() {
     return {
@@ -190,7 +191,7 @@ const ProjectStructureDialog: Component = {
           success: false,
           message,
           caption: "Project structure unavailable",
-          icon: "mdi-file-tree"
+          icon: "project_structure"
         })
         this.isLoadingStructure = false
       }

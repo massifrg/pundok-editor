@@ -8,7 +8,7 @@
           </template>
           <template v-slot:body-cell-standalone="props">
             <q-td :props="props">
-              <q-icon v-if="props.value === true" name="mdi-check" />
+              <q-icon v-if="props.value === true" name="check" />
             </q-td>
           </template>
         </q-table>
@@ -27,10 +27,14 @@
   </q-dialog>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { Ref, ref } from 'vue'
 import { QTableProps } from 'quasar';
-import { setupQuasarIcons } from './helpers/quasarIcons';
 import { FeedbackMessageType, OutputConverter, PandocOutputConverter } from '../common';
 import { getEditorConfiguration } from '../schema';
 
@@ -129,9 +133,6 @@ export default {
     columns() {
       return columns
     },
-  },
-  setup() {
-    setupQuasarIcons()
   },
   methods: {
     setOutputConverter() {

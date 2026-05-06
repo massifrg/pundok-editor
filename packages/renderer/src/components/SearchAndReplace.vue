@@ -4,25 +4,24 @@
       <q-card-section class="q-ma-xs" horizontal>
         <div class="flex flex-center">
           <q-chip :label="currentFoundItemShortText" :color="foundItemsColor" round class="q-pa-md" text-color="white"
-            icon="mdi-text-search" :title="foundItemsText" />
+            icon="search_text" :title="foundItemsText" />
         </div>
         <q-space />
-        <q-btn dense class="q-px-md" size="xs" icon="mdi-reload" title="reset" @click="resetSettings()" />
+        <q-btn dense class="q-px-md" size="xs" icon="reload" title="reset" @click="resetSettings()" />
         <q-space class="small" />
-        <q-btn dense class="q-px-md" size="xs" icon="mdi-content-save"
-          title="save the current search and replace settings">
+        <q-btn dense class="q-px-md" size="xs" icon="save" title="save the current search and replace settings">
           <SaveConfigurationElementPopup :editor="editor" :existing-ones="knownSettings" @save-settings="saveSettings"
             @delete-settings="deleteSettings" />
         </q-btn>
         <q-space class="big" />
-        <q-btn round class="q-pa-sm" size="sm" icon="mdi-pencil-lock" color="primary" :outline="!optionSearchOnly"
+        <q-btn round class="q-pa-sm" size="sm" icon="search_only" color="primary" :outline="!optionSearchOnly"
           title="just search, don't replace" @click="optionSearchOnly = !optionSearchOnly" />
         <q-space class="small" />
         <q-btn round class="q-pa-sm" size="sm" icon="css_selectors" color="primary" :outline="!cssMode"
           title="search with CSS selectors" @click="cssMode = !cssMode" />
         <q-space v-if="!cssMode && searchAndReplaces.length > 0" class="small" />
         <q-btn v-if="!cssMode && searchAndReplaces.length > 0" round class="q-pa-sm" size="sm" color="primary" label=""
-          title="load a predefined search and replace config" icon="mdi-playlist-star">
+          title="load a predefined search and replace config" icon="load_predefined">
           <q-menu anchor="bottom start" self="bottom end">
             <q-list>
               <q-item v-for="sar in searchAndReplaces" clickable v-close-popup dense :title="sar.description"
@@ -34,7 +33,7 @@
         </q-btn>
         <q-space v-if="cssMode && cssSelections.length > 0" class="small" />
         <q-btn v-if="cssMode && cssSelections.length > 0" round class="q-pa-sm" size="sm" color="primary" label=""
-          title="load a predefined CSS selector" icon="mdi-playlist-star">
+          title="load a predefined CSS selector" icon="load_predefined">
           <q-menu anchor="bottom start" self="bottom end">
             <q-list>
               <q-item v-for="sel in cssSelections" clickable v-close-popup dense :title="sel.description"
@@ -45,21 +44,19 @@
           </q-menu>
         </q-btn>
         <q-space class="small" />
-        <!-- <q-toggle v-model="showIndicesButtons" icon="mdi-cursor-pointer" title="show buttons for indices" /> -->
         <q-btn v-if="indices.length > 0" round class="q-pa-sm" size="sm" color="primary" :outline="!showIndicesButtons"
-          icon="mdi-cursor-pointer" title="show buttons for indices"
-          @click="showIndicesButtons = !showIndicesButtons" />
+          icon="indices" title="show buttons for indices" @click="showIndicesButtons = !showIndicesButtons" />
         <q-space class="big" />
         <q-btn dense class="q-px-md" :icon="expandIcon" :title="expandTooltip" size="xs"
           @click="() => { showFields = !showFields }"></q-btn>
-        <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="mdi-arrow-up"
+        <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="arrow_upward"
           title="move this dialog to the top" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
-        <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="mdi-arrow-down"
+        <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="arrow_downward"
           title="move this dialog to the bottom" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
-        <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="mdi-arrow-right"
+        <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="arrow_right"
           title="move this dialog to the right" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
         <q-space />
-        <q-btn icon="mdi-close" size="xs" title="close" @click="closeDialog()" />
+        <q-btn icon="close" size="xs" title="close" @click="closeDialog()" />
       </q-card-section>
       <q-card-section v-if="showFields">
         <q-card-section horizontal>
@@ -67,29 +64,28 @@
             :label="searchLabel" stack-label @update:model-value="updateSearchInput" @keypress="keypressed"
             @keyup="keyup" />
           <div class="q-pt-md q-gutter-none">
-            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="mdi-find-replace"
+            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="search_cycle"
               title="cycle through found texts" @click="optionCycle = !optionCycle" />
             <q-btn v-if="cssMode" class="q-ma-xs" size="sm" round color="primary"
-              :outline="!optionMergeSameAdjacentMarks" icon="mdi-set-merge"
+              :outline="!optionMergeSameAdjacentMarks" icon="marks_merge"
               title="merge adjacent text ranges with the same marks"
               @click="optionMergeSameAdjacentMarks = !optionMergeSameAdjacentMarks" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionCaseInsensitive"
-              icon="mdi-format-letter-case" title="case insensitive search"
+              icon="search_case_insensitive" title="case insensitive search"
               @click="optionCaseInsensitive = !optionCaseInsensitive" />
-            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionRegex"
-              icon="mdi-regex" title="search with regular expressions (Unicode aware)"
-              @click="optionRegex = !optionRegex" />
+            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionRegex" icon="regex"
+              title="search with regular expressions (Unicode aware)" @click="optionRegex = !optionRegex" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord"
               icon="whole_word" title="whole words" @click="optionWholeWord = !optionWholeWord" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!searchFilterSwitch"
-              icon="mdi-filter-outline" title="filter searched text styles"
+              icon="search_filter" title="filter searched text styles"
               @click="searchFilterSwitch = !searchFilterSwitch" />
             <ActionsOnReplaceDropdown v-if="optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
               :searchOnly="optionSearchOnly" title="actions on found texts" @update-actions="updateActions" />
           </div>
         </q-card-section>
         <q-card-section v-if="!cssMode && searchFilterSwitch" horizontal>
-          <MarksPaletteDropdown :editor="editor" icon="mdi-filter-outline" :addable-marks="baseMarksAndCustomStyles()"
+          <MarksPaletteDropdown :editor="editor" icon="search_filter" :addable-marks="baseMarksAndCustomStyles()"
             none-selected-label="no filter" :positiveMarks="filterMarkPresence" :negativeMarks="filterMarkAbsence"
             @selected-marks="setMarksFilters" />
         </q-card-section>
@@ -101,19 +97,19 @@
         </q-card-section>
       </q-card-section>
       <q-card-actions>
-        <q-btn icon="mdi-magnify" title="search" size="md" padding="md" @click="startSearch()" />
-        <q-btn :disabled="!canPrevFound()" icon="mdi-chevron-left" size="md" padding="md" title="select previous found"
+        <q-btn icon="search" title="search" size="md" padding="md" @click="startSearch()" />
+        <q-btn :disabled="!canPrevFound()" icon="search_prev" size="md" padding="md" title="select previous found"
           @click="prevFound()" />
-        <q-btn :disabled="!canNextFound()" icon="mdi-chevron-right" size="md" padding="md" title="select next found"
+        <q-btn :disabled="!canNextFound()" icon="search_next" size="md" padding="md" title="select next found"
           @click="nextFound(true)" />
-        <q-btn icon="mdi-autorenew" size="md" padding="md" title="replace selected" @click="replaceSelected" />
+        <q-btn icon="search_replace" size="md" padding="md" title="replace selected" @click="replaceSelected" />
         <q-btn size="md" padding="md" title="replace & select next found" @click="replaceNextText">
-          <q-icon name="mdi-autorenew"></q-icon>
-          <q-icon name="mdi-chevron-right"></q-icon>
+          <q-icon name="search_replace"></q-icon>
+          <q-icon name="search_next"></q-icon>
         </q-btn>
         <q-btn size="md" padding="md" title="replace all" @click="replaceAll">
-          <q-icon name="mdi-autorenew"></q-icon>
-          <q-icon name="mdi-chevron-double-right"></q-icon>
+          <q-icon name="search_replace"></q-icon>
+          <q-icon name="search_next_all"></q-icon>
         </q-btn>
         <q-space style="min-width: 1rem" />
         <IndicesButtons v-if="showIndicesButtons" enable-alternative-buttons="true" :editor="editor" size="md"
@@ -122,6 +118,11 @@
     </q-card>
   </q-dialog>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import {
@@ -157,7 +158,6 @@ import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
 import MarksPaletteDropdown from './MarksPaletteDropdown.vue';
 import SaveConfigurationElementPopup from './SaveConfigurationElementPopup.vue';
-import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
   CssSelectOptions,
   LabeledNodeOrMark,
@@ -219,9 +219,6 @@ export default {
   },
   props: ['visible', 'editor', 'nodeOrMarkToLabel'],
   emits: ['hideSearchAndReplaceDialog'],
-  setup() {
-    setupQuasarIcons()
-  },
   data() {
     return {
       cssMode: false,
@@ -360,7 +357,7 @@ export default {
       return ''
     },
     expandIcon() {
-      return this.showFields ? 'mdi-arrow-collapse-vertical' : 'mdi-arrow-expand-vertical'
+      return this.showFields ? 'collapse_vertical' : 'expand_vertical'
     },
     expandTooltip() {
       return `show ${this.showFields ? 'less' : 'more'}`

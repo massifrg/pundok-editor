@@ -1,6 +1,6 @@
 <template>
   <span v-for="{ node } in stylableBlocks">
-    <ToolbarButton icon="mdi-palette-swatch" :label="label(node)" :styleactive="customStylesOfNode(node).length > 0"
+    <ToolbarButton icon="custom_blocks" :label="label(node)" :styleactive="customStylesOfNode(node).length > 0"
       :disabled="false" no-caps size="small" dense :title="title(node)">
       <q-menu auto-close>
         <q-list>
@@ -18,6 +18,11 @@
     <span class="button-separator" />
   </span>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { Node } from '@tiptap/pm/model';

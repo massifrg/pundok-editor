@@ -1,6 +1,6 @@
 <template>
-  <q-btn-dropdown v-if="converters.length > 0" :title="dropDownTitle" icon="mdi-file-export" color="grey-5" split dense
-    size="sm" dropdown-icon="mdi-menu-down" :disable-main-btn="!defaultOutputConverter"
+  <q-btn-dropdown v-if="converters.length > 0" :title="dropDownTitle" icon="export" color="grey-5" split dense size="sm"
+    dropdown-icon="menu_down" :disable-main-btn="!defaultOutputConverter"
     @click="exportWithConverter(defaultOutputConverter)">
     <q-list>
       <q-item v-for="(oc, index) in converters" :key="index" :title="oc.description" clickable v-close-popup
@@ -16,6 +16,11 @@
     </q-list>
   </q-btn-dropdown>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { OutputConverter, CxDocument, DocumentFormat } from '../common';

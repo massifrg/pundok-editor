@@ -23,7 +23,7 @@
           </q-item>
         </q-list>
       </q-btn-dropdown>
-      <q-btn v-if="currentSource.type !== 'json-file'" icon="mdi-refresh" color="primary" size="sm"
+      <q-btn v-if="currentSource.type !== 'json-file'" icon="reload" color="primary" size="sm"
         title="refresh project indices" @click="refreshIndicesCache" />
     </template>
   </q-input>
@@ -41,6 +41,11 @@
   </q-table>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { mapState } from 'pinia';
 import { useBackend, useProjectCache } from '../../stores';
@@ -54,9 +59,7 @@ import {
   searchQueryResults
 } from '../../common';
 import { QTableProps } from 'quasar';
-import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { getDocState, SearchTextVariant, termsOfDocumentIndex } from '../../schema';
-import { Editor } from '@tiptap/vue-3';
 
 const SEARCHTEXT_MIN_LENGTH = 1
 
@@ -78,9 +81,6 @@ const columns: QTableProps['columns'] = [
 ]
 
 export default {
-  setup() {
-    setupQuasarIcons();
-  },
   props: [
     'editor',
     'indexName',

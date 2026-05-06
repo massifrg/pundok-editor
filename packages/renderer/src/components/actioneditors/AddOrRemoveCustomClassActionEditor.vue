@@ -14,7 +14,7 @@
         </q-item>
       </q-list>
     </q-btn-dropdown>
-    <q-btn color="primary" icon="mdi-playlist-edit">
+    <q-btn color="primary" icon="attributes_edit">
       <q-popup-proxy>
         <q-banner>Attributes related to class "{{ className }}":</q-banner>
         <OtherAttributesEditor :editor="editor" attrName="kv" :originalEntries="attrEntries"
@@ -25,9 +25,13 @@
   </q-card-actions>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { AddOrRemoveCustomClassActionProps, CustomAttribute, CustomClass } from '../../common';
-import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { getEditorConfiguration } from '../../schema';
 import { defaultPropsFor } from '../../actions';
 import OtherAttributesEditor from '../attreditors/OtherAttributesEditor.vue';
@@ -77,9 +81,6 @@ export default {
           + ae.map(([k, v]) => '<li>' + k + '=' + v + '</li>').join('')
           + '</ul>'
     }
-  },
-  setup() {
-    setupQuasarIcons()
   },
   methods: {
     updateAttribute(_: string, newValue?: Record<string, string>) {

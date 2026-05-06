@@ -1,10 +1,14 @@
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import {
   ACTION_DOCUMENT_RENDER,
   setActionCommand
 } from '../actions';
 import { editorKeyFromState, getDocState } from '../schema';
-import { setupQuasarIcons } from './helpers';
 import ToolbarButton from './ToolbarButton.vue';
 
 export default {
@@ -25,7 +29,7 @@ export default {
         .filter(oc => oc.longRendering)
     },
     compactItemIcon() {
-      return this.isCompact ? 'mdi-expand-all' : 'mdi-collapse-all'
+      return this.isCompact ? 'expand' : 'collapse'
     },
     compactItemText() {
       return this.isCompact ? 'expand' : 'compact'
@@ -33,9 +37,6 @@ export default {
     compactItemTitle() {
       return this.isCompact ? 'show all buttons for render...' : 'show render... as a dropdown button'
     },
-  },
-  setup() {
-    setupQuasarIcons()
   },
   methods: {
     docState() {
@@ -66,7 +67,7 @@ export default {
     </ToolbarButton>
     <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="mdi-content-save-edit" title="save as"
       @click="saveAs" /> -->
-    <q-btn-dropdown class="toolbar-button" :title="dropDownTitle()" split dense dropdown-icon="mdi-menu-down"
+    <q-btn-dropdown class="toolbar-button" :title="dropDownTitle()" split dense dropdown-icon="menu_down"
       @click="dropDownClick()" elevation="3" size="xs" color="grey-5" auto-close>
       <template v-slot:label>
         <div :class="`row, items-center no-wrap`">

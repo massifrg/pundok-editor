@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { mapState } from 'pinia';
 import {
@@ -7,7 +12,6 @@ import {
 import { bookmarkLabel, DocumentBookmark, DocumentOpenActionProps, ProjectBookmark, PundokBookmark } from '../common';
 import { editorKeyFromState, getDocState } from '../schema';
 import { useBackend } from '../stores';
-import { setupQuasarIcons } from './helpers';
 
 export default {
   props: ['editor'],
@@ -22,9 +26,6 @@ export default {
     editorKey() {
       return editorKeyFromState(this.editor?.state)
     },
-  },
-  setup() {
-    setupQuasarIcons()
   },
   methods: {
     docState() {
@@ -68,8 +69,8 @@ export default {
 </script>
 
 <template>
-  <q-btn-dropdown class="toolbar-button" title="open document" split dense icon="mdi-folder-open"
-    dropdown-icon="mdi-menu-down" @click="openDocument()" @before-show="loadBookmarks()" elevation="3" size="sm"
+  <q-btn-dropdown class="toolbar-button" title="open document" split dense icon="document_open"
+    dropdown-icon="menu_down" @click="openDocument()" @before-show="loadBookmarks()" elevation="3" size="sm"
     color="grey-5">
     <q-list dense>
       <q-item :disable="projectBookmarks.length === 0" key="recent-projects" title="open recent project" clickable>
@@ -77,7 +78,7 @@ export default {
           <q-item-label>recent projects</q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-icon name="mdi-menu-right" />
+          <q-icon name="menu_right" />
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>
@@ -95,7 +96,7 @@ export default {
           <q-item-label>recent documents</q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-icon name="mdi-menu-right" />
+          <q-icon name="menu_right" />
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>

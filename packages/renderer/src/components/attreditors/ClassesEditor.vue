@@ -7,10 +7,10 @@
       </q-chip>
     </div>
     <q-card-actions horizontal align="center">
-      <q-btn v-for="c in addableCustomClasses" :key="c.name" icon="mdi-plus" :title="addableClassTitle(c)"
+      <q-btn v-for="c in addableCustomClasses" :key="c.name" icon="custom_classes_add" :title="addableClassTitle(c)"
         @click="addNewClass(c.name)" :label="c.name" size="sm" color="primary" no-caps />
       <q-space />
-      <q-btn icon="mdi-plus" color="primary" title="add a class" @click="showAddClassDialog = true" />
+      <q-btn icon="classes_add" color="primary" title="add a class" @click="showAddClassDialog = true" />
       <q-dialog v-model="showAddClassDialog">
         <q-card class="q-pa-3">
           <q-card-section>
@@ -27,6 +27,11 @@
     </q-card-actions>
   </q-card>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { isString } from 'lodash-es';

@@ -23,9 +23,9 @@
         <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
       </div>
       <div class="q-mini-drawer-hide absolute" style="top: 210px; right: -17px">
-        <q-btn dense round unelevated color="secondary" icon="mdi-arrow-left-right"
-          @mousedown="startSettingLeftDrawerWidth" @mousemove="changeLeftDrawerWidth"
-          @mouseup="stopSettingLeftDrawerWidth" @mouseleave="stopSettingLeftDrawerWidth" />
+        <q-btn dense round unelevated color="secondary" icon="arrow_left_right" @mousedown="startSettingLeftDrawerWidth"
+          @mousemove="changeLeftDrawerWidth" @mouseup="stopSettingLeftDrawerWidth"
+          @mouseleave="stopSettingLeftDrawerWidth" />
       </div>
     </q-drawer>
     <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
@@ -67,12 +67,16 @@
   </q-layout>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { Component, defineAsyncComponent, toRaw } from 'vue';
 import { Editor, EditorContent, NodeWithPos } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorState } from '@tiptap/pm/state';
-import { applyDevTools } from 'prosemirror-dev-toolkit';
 import { isString } from 'lodash-es';
 import { mapState } from 'pinia';
 import {
@@ -680,9 +684,12 @@ export default {
         const oldDocState = this.docState()
         // @ts-ignore
         this.editor = editor;
+        if (process.env.NODE_ENV === 'development') {
+          const { applyDevTools } = await import('prosemirror-dev-toolkit');
+          if (applyDevTools) applyDevTools(editor.view);
+        }
         if (!this.configuration)
           await this.setConfiguration(getHardcodedEditorConfig());
-        if (process.env.MODE !== 'production') applyDevTools(editor.view);
         this.updateEditorDocState({
           unsavedChanges: false,
           unsavedChangesAsCopy: false,

@@ -5,12 +5,12 @@
         <q-list>
           <q-item key="0" clickable v-close-popup density="compact" :value="null" title="remove custom style" dense
             @click="updateValue(null)">
-            <q-item-section avatar><q-icon v-if="!value" name="mdi-check" size="xs" /></q-item-section>
+            <q-item-section avatar><q-icon v-if="!value" name="check" size="xs" /></q-item-section>
             <q-item-section no-wrap><i>no custom style</i></q-item-section>
           </q-item>
           <q-item v-for="(styleItem, index) in styles" :key="index + 1" clickable v-close-popup density="compact"
             :value="index" :title="description(styleItem)" dense @click="updateValue(styleItem.styleDef.name)">
-            <q-item-section avatar><q-icon v-if="value === styleItem.styleDef.name" name="mdi-check"
+            <q-item-section avatar><q-icon v-if="value === styleItem.styleDef.name" name="check"
                 size="xs" /></q-item-section>
             <q-item-section no-wrap v-html="styleLabel(styleItem)" />
           </q-item>
@@ -25,6 +25,11 @@
     <b>This custom style is deprecated.</b>
   </q-card-section>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { CustomStyleInstance, customStylesForType } from '../../common';

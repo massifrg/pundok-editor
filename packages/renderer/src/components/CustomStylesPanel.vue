@@ -5,7 +5,7 @@
       <template v-slot:before>
         <q-tabs v-model="tab" vertical fit>
           <q-tab name="summary" title="custom styles summary at cursor">
-            <q-icon name="mdi-table-of-contents" size="sm" round @mouseover="tab = 'summary'">
+            <q-icon name="summary" size="sm" round @mouseover="tab = 'summary'">
               <q-badge v-if="summary.find(s => s.type === 'style')" color="primary" floating rounded />
             </q-icon>
           </q-tab>
@@ -18,7 +18,7 @@
           </q-tab>
 
           <q-tab name="header" v-if="innerParaLike" title="custom header styles (classes)" :disable="!innerParaLike">
-            <q-icon name="mdi-format-header-pound" size="sm" round @mouseover="tab = 'header'">
+            <q-icon name="header_style" size="sm" round @mouseover="tab = 'header'">
               <q-badge v-if="isHeader && !isHeaderWithoutStyles()" color="primary" floating rounded />
             </q-icon>
           </q-tab>
@@ -34,7 +34,7 @@
           </q-tab>
           <!-- 
           <q-tab name="cell" disable>
-            <q-icon name="mdi-table" size="sm" round @mouseover="tab = 'cell'">
+            <q-icon name="table_style" size="sm" round @mouseover="tab = 'cell'">
               <q-badge v-if="!isParaWithoutStyles()" color="primary" floating rounded />
             </q-icon>
           </q-tab>
@@ -169,8 +169,12 @@
   </div>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
-import { setupQuasarIcons } from './helpers/quasarIcons';
 import { Node } from '@tiptap/pm/model';
 import { MarkRange, NodeWithPos } from '@tiptap/core';
 import {
@@ -201,9 +205,6 @@ const MINI_SPLITTER_VALUE = 20
 export default {
   props: ['editor', 'currentBlocks', 'activeCustomStyles', 'panelState'],
   // emits: ['unsetCustomStyle', 'setCustomStyle'],
-  setup() {
-    setupQuasarIcons()
-  },
   watch: {
     panelState(newState) {
       if (newState === 'mini') {

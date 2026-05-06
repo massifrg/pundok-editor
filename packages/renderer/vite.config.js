@@ -29,7 +29,6 @@ export default defineConfig({
     },
   },
   plugins: [
-    // analyzer(),
     vue({
       template: { transformAssetUrls },
     }),
@@ -47,6 +46,10 @@ export default defineConfig({
         './src/assets/css/quasar.variables.scss',
       ),
     }),
+    // analyzer({
+    //   analyzerMode: 'server',
+    //   brotliOptions: {},
+    // }),
     // visualizer({
     // filename: 'stats.html', // output file
     // template: 'network', // "sunburst" | "treemap" | "network"

@@ -1,8 +1,13 @@
 <template>
-  <ToolbarButton icon="mdi-code-tags" v-if="formats.length > 0" title="insert or convert RawInline">
+  <ToolbarButton icon="raw_inline" v-if="formats.length > 0" title="insert or convert RawInline">
     <RawInlineMenu :editor="editor" :sortable="sortable" @raw-inline-selected="insertRawInline" />
   </ToolbarButton>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import ToolbarButton from './ToolbarButton.vue';

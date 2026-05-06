@@ -10,16 +10,16 @@
       <q-card-actions>
         <q-badge :label="idValue" />
         <q-space />
-        <q-btn icon="mdi-delete" title="delete note" size="sm" @click="deleteNode" />
+        <q-btn icon="delete" title="delete note" size="sm" @click="deleteNode" />
         <q-space style="max-width: 3rem" />
-        <q-btn icon="mdi-note-remove" title="unwrap/convert note to text" size="sm"
-          :disabled="!editor?.can().noteToText()" @click="noteToText()" />
-        <q-btn icon="mdi-refresh" title="refresh/fix note numbers" size="sm" @click="refreshNotes()" />
+        <q-btn icon="note_to_text" title="unwrap/convert note to text" size="sm" :disabled="!editor?.can().noteToText()"
+          @click="noteToText()" />
+        <q-btn icon="refresh" title="refresh/fix note numbers" size="sm" @click="refreshNotes()" />
         <q-space style="max-width: 3rem" />
-        <q-btn icon="mdi-close" title="close note" size="sm" @click="hide()" />
-        <q-btn icon="mdi-close-box-multiple-outline" :title="'close every ' + noteType" size="sm"
+        <q-btn icon="close" title="close note" size="sm" @click="hide()" />
+        <q-btn icon="notes_close_all_of_type" :title="'close every ' + noteType" size="sm"
           @click="hideAllOfTheSameType()" />
-        <q-btn icon="mdi-close-box-multiple" title="close every note of ANY type" size="sm" @click="hideAllNotes()" />
+        <q-btn icon="notes_close_all" title="close every note of ANY type" size="sm" @click="hideAllNotes()" />
       </q-card-actions>
       <q-card-section>
         <node-view-content as="div" class="note-text"
@@ -28,6 +28,11 @@
     </q-card>
   </node-view-wrapper>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';

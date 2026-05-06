@@ -12,7 +12,7 @@
         <q-item-section :class="classFor(lnom)" side>{{ lnom.node ? 'N' : 'M' }}</q-item-section>
         <q-item-section>{{ lnom.label }}</q-item-section>
         <q-item-section :class="classFor(lnom)" side>
-          <q-icon name="mdi-arrow-right" />
+          <q-icon name="arrow_right" />
         </q-item-section>
         <q-menu v-if="actionsFor(lnom).length > 0" anchor="top end" self="top start">
           <NodeOrMarkContextMenu :editor="editor" :node-or-mark="lnom" />
@@ -21,6 +21,11 @@
     </q-list>
   </q-menu>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { CustomStyleInstance, CustomStyleDef } from '../common'

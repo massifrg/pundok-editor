@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import IndexTerms from './globalprocedures/IndexTerms.vue';
 
@@ -27,9 +32,7 @@ export default {
             <q-card>
               <q-card-section>
                 <q-tabs v-model="tab" vertical>
-                  <q-tab name="indices" icon="mdi-cursor-pointer" label="Indices" />
-                  <!-- <q-tab name="alarms" icon="mdi-alarm" label="Alarms" />
-              <q-tab name="movies" icon="mdi-movie" label="Movies" /> -->
+                  <q-tab name="indices" icon="indices" label="Indices" />
                 </q-tabs>
               </q-card-section>
             </q-card>
@@ -41,8 +44,6 @@ export default {
                 <q-tab-panel name="indices">
                   <IndexTerms :editor="editor" />
                 </q-tab-panel>
-                <!-- <q-tab-panel name="alarm"></q-tab-panel>
-            <q-tab-panel name="movie"></q-tab-panel> -->
               </q-tab-panels>
             </div>
           </template>

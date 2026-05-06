@@ -1,9 +1,14 @@
 <template>
   <q-space />
   <q-card-actions align="center">
-    <q-btn icon="mdi-reload" :title="title" size="xs" @click="$emit('reset-attribute', attributeName)" />
+    <q-btn icon="reload" :title="title" size="xs" @click="$emit('reset-attribute', attributeName)" />
   </q-card-actions>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 export default {

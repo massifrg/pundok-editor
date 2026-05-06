@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
@@ -638,7 +643,7 @@ export default {
         <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name"
           @blur="adjustDocumentExtension()" @keyup.enter="selectDocument()" />
         <q-space />
-        <q-btn v-if="!isInputDialog" icon="mdi-folder-plus" size="sm" color="primary" title="create new folder"
+        <q-btn v-if="!isInputDialog" icon="folder_new" size="sm" color="primary" title="create new folder"
           @click="askForFolderToCreate" />
         <q-space />
         <span class="q-pa-md">Go to a recent:</span>
@@ -656,7 +661,7 @@ export default {
             <q-item v-for="db in docBookmarks" clickable @click="gotoUrl(db.url, db.configurationName)">
               <q-item-section>
                 <q-item-label :title="db.url">{{ splitFolderAndDoc(decodeURIComponent(db.url)).document
-                  }}</q-item-label>
+                }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -682,7 +687,7 @@ export default {
               row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
               v-model:pagination="pagination" :rows-per-page-options="[0]">
               <template v-slot:body-selection="scope">
-                <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="mdi-check" />
+                <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="check" />
               </template>
               <template v-slot:body-cell-name="props">
                 <q-td :props="props">

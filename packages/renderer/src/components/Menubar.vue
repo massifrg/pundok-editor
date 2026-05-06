@@ -4,12 +4,7 @@
       <NewDocumentButton v-if="gui.newDocument" @new-document="newDocument" />
       <span v-if="gui.newDocument" class="button-separator" />
 
-      <!-- <ToolbarButton v-if="gui.openButton" icon="mdi-folder-open" @click="$emit('openDocument')"
-        title="open document" /> -->
       <OpenButton v-if="gui.openButton" :editor="editor" />
-      <!-- <ToolbarButton icon="mdi-content-save" @click="$emit('saveContent')" title="save (pandoc JSON)">
-        <q-badge v-if="!!savedExportedColor" :color="savedExportedColor" floating rounded />
-      </ToolbarButton> -->
 
       <SaveButton :editor="editor" :text-color="savedColor" />
 
@@ -44,35 +39,18 @@
         editor.commands.runRepeatableCommand('togglePlain', 'Plain ↔ Para')
         " title="toggle Plain/Para" />
 
-      <!-- <span class="button-separator" /> -->
-
-      <!--
-      <CustomBlocksButtons v-if="!nonEmptySelection" :editor="editor" :current-blocks="currentNodesWithPos"
-        @set-custom-style="setCustomStyle" @unset-custom-style="unsetCustomStyle" />
-        -->
-
-      <!-- <ToolbarButton icon="mdi-palette-swatch-variant" :styleactive="isInlineCustomStyleActive"
-        :disabled="!nonEmptySelection" no-caps size="small" dense :label="currentInlineCustomStylesLabel"
-        :title="`inline custom style (currently active: ${currentInlineCustomStylesLabel})`">
-        <CustomMarkMenu :editor="editor"
-          :active-custom-styles="currentInlineCustomStyles.map(s => s.mark.attrs.customStyle)"
-          @unset-custom-mark="unsetCustomMark" @set-custom-mark="setCustomMark" />
-      </ToolbarButton> -->
-
-      <!-- <span class="button-separator" /> -->
-
       <CustomWrapperMenu :editor="editor" wrapper-type-name="div" pandoc-type="Div" :shortcut="SK.TOGGLE_DIV" />
 
       <span class="button-separator" />
 
       <CustomWrapperMenu :editor="editor" wrapper-type-name="figure" pandoc-type="Figure" :shortcut="SK.TOGGLE_FIGURE"
-        wrap-icon="mdi-application-import" unwrap-icon="mdi-application-export" />
-      <ToolbarButton v-if="inFigure()" icon="mdi-page-layout-header" title="wrap selection in Caption"
+        wrap-icon="figure_wrap" unwrap-icon="figure_unwrap" />
+      <ToolbarButton v-if="inFigure()" icon="caption" title="wrap selection in Caption"
         @click="wrapInFigureCaption()" />
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-format-quote-close" title="toggle blockquote" :shortcut="SK.TOGGLE_BLOCKQUOTE"
+      <ToolbarButton icon="blockquote" title="toggle blockquote" :shortcut="SK.TOGGLE_BLOCKQUOTE"
         :disabled="!editor.can().toggleBlockquote()" @click="
           editor
             .chain()
@@ -81,7 +59,7 @@
             .run()
           " />
 
-      <ToolbarButton icon="mdi-format-list-bulleted" title="toggle bullet list" :shortcut="SK.TOGGLE_BULLETLIST"
+      <ToolbarButton icon="bulletlist" title="toggle bullet list" :shortcut="SK.TOGGLE_BULLETLIST"
         :disabled="!editor.can().toggleBulletList()" @click="
           editor
             .chain()
@@ -90,7 +68,7 @@
             .run()
           " />
 
-      <ToolbarButton icon="mdi-format-list-numbered" title="toggle ordered list" :shortcut="SK.TOGGLE_ORDEREDLIST"
+      <ToolbarButton icon="orderedlist" title="toggle ordered list" :shortcut="SK.TOGGLE_ORDEREDLIST"
         :disabled="!editor.can().toggleOrderedList()" @click="
           editor
             .chain()
@@ -114,7 +92,7 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-minus" title="insert HorizontalRule" :disabled="!editor.can().setHorizontalRule()"
+      <ToolbarButton icon="horizontal_rule" title="insert HorizontalRule" :disabled="!editor.can().setHorizontalRule()"
         @click="
           editor.commands.runRepeatableCommand(
             'setHorizontalRule',
@@ -124,18 +102,17 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton v-if="gui.projectStructure && project" icon="mdi-file-tree" title="show project structure"
+      <ToolbarButton v-if="gui.projectStructure && project" icon="project_structure" title="show project structure"
         @click="showProjectStructure()" />
 
       <q-space />
-      <ToolbarButton v-if="gui.isDevelopmentMode" icon="mdi-bug" title="debug" @click="debug" />
+      <ToolbarButton v-if="gui.isDevelopmentMode" icon="debug" title="debug" @click="debug" />
 
       <q-badge v-if="gui.showEditorVersion" color="positive"><i>{{ version }}</i></q-badge>
     </q-bar>
     <q-bar v-if="editor" class="q-py-xs">
-      <ToolbarButton icon="mdi-tag-remove" :disabled="!editor.can().removeAllMarks()"
-        title="clear all marks in selection" :shortcut="SK.REMOVE_MARKS"
-        @click="editor.chain().removeAllMarks().focus().run()" />
+      <ToolbarButton icon="marks_clear" :disabled="!editor.can().removeAllMarks()" title="clear all marks in selection"
+        :shortcut="SK.REMOVE_MARKS" @click="editor.chain().removeAllMarks().focus().run()" />
       <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" title="emphasis" :shortcut="SK.TOGGLE_EMPH"
         @click="
           editor
@@ -240,21 +217,21 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-format-letter-case-lower" title="convert to lower case" :shortcut="SK.LOWERCASE" @click="
+      <ToolbarButton icon="case_to_lower" title="convert to lower case" :shortcut="SK.LOWERCASE" @click="
         editor
           .chain()
           .runRepeatableCommand('toLowercase', 'convert to lower case')
           .focus()
           .run()
         " />
-      <ToolbarButton icon="mdi-format-letter-case-upper" title="convert to upper case" :shortcut="SK.UPPERCASE" @click="
+      <ToolbarButton icon="case_to_upper" title="convert to upper case" :shortcut="SK.UPPERCASE" @click="
         editor
           .chain()
           .runRepeatableCommand('toUppercase', 'convert to upper case')
           .focus()
           .run()
         " />
-      <ToolbarButton icon="mdi-format-letter-case" title="convert to upper case the first letter of every word"
+      <ToolbarButton icon="case_to_upperfirst" title="convert to upper case the first letter of every word"
         :shortcut="SK.UPPERCASEFIRST" @click="
           editor
             .chain()
@@ -277,21 +254,18 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="mdi-magnify" title="search and replace" :shortcut="SK.SHOW_SEARCH_DIALOG"
+      <ToolbarButton icon="search" title="search and replace" :shortcut="SK.SHOW_SEARCH_DIALOG"
         @click="$emit('toggleSearchAndReplaceDialog')" />
 
       <WholeDocTransformsButton :editor="editor" />
 
       <span class="button-separator" />
 
-      <!-- <ElementSelectionButton :editor="editor" /> -->
-
       <!-- <ToolbarButton icon="mdi-cog-play" title="procedures on the whole document"
         @click="globalProceduresDialogVisible = !globalProceduresDialogVisible">
         <GlobalProceduresDialog :visible="globalProceduresDialogVisible" :editor="editor"
           @show="globalProceduresDialogVisible = true" @hide="globalProceduresDialogVisible = false" />
       </ToolbarButton> -->
-      <!-- <ToolbarButton icon="mdi-bug-check" @click="debug()" /> -->
 
       <q-space />
 

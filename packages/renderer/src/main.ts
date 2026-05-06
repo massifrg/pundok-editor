@@ -5,7 +5,7 @@ import { Quasar, Dialog, Notify } from 'quasar';
 import App from './PundokApp.vue';
 
 // TODO: remove the next one to reduce the bundle size
-import '@quasar/extras/mdi-v7/mdi-v7.css';
+// import '@quasar/extras/mdi-v7/mdi-v7.css';
 
 // Import Quasar css
 import 'quasar/src/css/index.sass';

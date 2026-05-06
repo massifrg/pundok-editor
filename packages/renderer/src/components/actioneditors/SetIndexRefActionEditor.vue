@@ -1,6 +1,6 @@
 <template>
   <q-card-actions style="min-width: 300px">
-    <q-btn-dropdown :label="selectedIndex?.indexName" :icon="selectedIndex?.iconSvg || 'mdi-cursor-pointer'" no-caps>
+    <q-btn-dropdown :label="selectedIndex?.indexName" :icon="selectedIndex?.iconSvg || 'index'" no-caps>
       <q-list>
         <q-item v-for="i in indices" dense clickable v-close-popup
           :title="`add a reference to a term in index ${i.indexName}`" @click="setIndexName(i)">

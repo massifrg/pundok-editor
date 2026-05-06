@@ -12,7 +12,7 @@
       </q-popup-proxy>
     </q-btn>
     <q-space style="min-width:0.5rem" />
-    <q-btn icon="mdi-playlist-star" size="sm" color="primary" title="select predefined RawInline(s)">
+    <q-btn icon="load_predefined" size="sm" color="primary" title="select predefined RawInline(s)">
       <RawInlineMenu :editor="editor" :sortable="true" @raw-inline-selected="rawInlineSelected" />
     </q-btn>
     <q-space style="min-width:0.5rem" />
@@ -20,9 +20,13 @@
   </q-card-actions>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { DEFAULT_RAW_INLINE_FORMAT, InsertRawInlineActionProps } from '../../common';
-import { setupQuasarIcons } from '../helpers/quasarIcons';
 import RawInlineMenu from '../RawInlineMenu.vue';
 import { defaultPropsFor } from '../../actions';
 import { getEditorConfiguration, RawInline } from '../../schema';
@@ -43,9 +47,6 @@ export default {
   },
   components: { RawInlineMenu },
   emits: ['set-props'],
-  setup() {
-    setupQuasarIcons()
-  },
   computed: {
     configuration() {
       return getEditorConfiguration(this.editor)

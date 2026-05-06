@@ -20,8 +20,8 @@
         <q-btn v-if="customMetadata.length === 1" no-caps size="sm" color="primary"
           :icon="iconForCustomMeta(customMetadata[0])" :label="'append ' + customMetadata[0].name"
           :title="customMetadata[0].description" @click="appendCustomMetaMapEntry(customMetadata[0])" />
-        <q-btn-dropdown v-if="customMetadata.length > 1" no-caps size="sm" color="primary"
-          icon="mdi-help-circle-outline" label="append custom" title="append custom metadata from configuration">
+        <q-btn-dropdown v-if="customMetadata.length > 1" no-caps size="sm" color="primary" icon="metadata_custom"
+          label="append custom" title="append custom metadata from configuration">
           <q-list>
             <q-item v-for="cm in customMetadata" :key="cm.name" :title="cm.description" dense clickable v-close-popup
               color="primary" @click="appendCustomMetaMapEntry(cm)">
@@ -38,6 +38,11 @@
     </div>
   </node-view-wrapper>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps, Editor } from '@tiptap/vue-3';

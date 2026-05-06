@@ -12,7 +12,7 @@
         </q-card-section>
       </q-card-section>
       <q-card-actions>
-        <q-btn round icon="mdi-content-copy" title="copy message to clipboard" @click="copyToClipboard()" />
+        <q-btn round icon="clipboard_copy" title="copy message to clipboard" @click="copyContent()" />
         <span style="width: 1rem"> </span>
         <q-badge v-if="copiedToClipboard" color="info">message copied</q-badge>
         <q-space />
@@ -21,6 +21,11 @@
     </q-card>
   </q-dialog>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { FeedbackMessageType } from '../common';
@@ -63,7 +68,7 @@ export default {
     }
   },
   methods: {
-    copyToClipboard() {
+    copyContent() {
       copyToClipboard(this.message.message)
         .then(() => {
           this.copiedToClipboard = true

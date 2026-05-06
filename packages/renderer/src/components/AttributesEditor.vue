@@ -6,7 +6,7 @@
         <q-icon :name="nodeOrMarkIcon" />
         <div>{{ nodeOrMarkLabel }}</div>
         <q-space />
-        <q-btn dense flat icon="mdi-close" @click="doCancel()">
+        <q-btn dense flat icon="close" @click="doCancel()">
           <q-tooltip>Close</q-tooltip>
         </q-btn>
       </q-bar>
@@ -88,7 +88,7 @@
           <!-- 
           <q-space />
           <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset index ref placement" size="xs"
+            <q-btn icon="reload" title="reset index ref placement" size="xs"
               @click="resetAttribute('putIndexRef')" />
           </q-card-actions> -->
         </q-tab-panel>
@@ -209,7 +209,7 @@
       </q-tab-panels>
       <q-card-actions>
         <q-btn v-if="!noAttrModified" color="primary" title="reset all attributes" @click="resetAllAttributes()">
-          <q-icon name="mdi-reload" />
+          <q-icon name="reload" />
         </q-btn>
         <q-space />
         <q-btn label="Change" color="primary" @click="doChange()" />
@@ -218,6 +218,11 @@
     </q-card>
   </q-dialog>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers/quasarIcons';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { isEmpty, isEqual } from 'lodash-es';
@@ -282,7 +287,6 @@ import { toRaw } from 'vue';
 import { createLowlight } from 'lowlight';
 import { ACTION_ADD_CLASS } from '../actions';
 import { showIncludeDocumentDialog } from './helpers';
-import { setupQuasarIcons } from './helpers/quasarIcons';
 import { relative } from 'path-browserify';
 
 const lowlight = createLowlight();
@@ -307,9 +311,6 @@ export default {
     IndexTermIdEditor,
     ResetAttributeActions,
     TargetEditor,
-  },
-  setup() {
-    setupQuasarIcons()
   },
   props: ['editor', 'selectedNodeOrMark', 'startTab', 'onAttributesEditorShow'],
   emits: ['closeAttributesEditor'],

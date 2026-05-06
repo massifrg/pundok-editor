@@ -2,7 +2,7 @@
   <div class="modal-content" :style="{ display, top: modalTop, left: modalLeft }" @mousemove="move">
     <div class="modal-header">
       <div class="modal-handle" @dragstart="start" @mousedown="start" @drag="move" @mousemove="move" @mouseup="drop">
-        <q-icon name="mdi-dots-grid" />
+        <q-icon name="drag_handle" />
       </div>
       <div class="modal-transparent" />
     </div>
@@ -11,6 +11,11 @@
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 export default {

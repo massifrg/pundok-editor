@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import {
   ACTION_DOCUMENT_SAVE,
@@ -6,7 +11,6 @@ import {
   setActionCommand
 } from '../actions';
 import { editorKeyFromState, getDocState } from '../schema';
-import { setupQuasarIcons } from './helpers';
 import ToolbarButton from './ToolbarButton.vue';
 
 export default {
@@ -22,7 +26,7 @@ export default {
       return editorKeyFromState(this.editor?.state)
     },
     compactItemIcon() {
-      return this.isCompact ? 'mdi-expand-all' : 'mdi-collapse-all'
+      return this.isCompact ? 'expand' : 'collapse'
     },
     compactItemText() {
       return this.isCompact ? 'expand' : 'compact'
@@ -31,15 +35,12 @@ export default {
       return this.isCompact ? 'show all buttons for save/save as/save a copy' : 'show save/save as/save a copy as a dropdown button'
     },
   },
-  setup() {
-    setupQuasarIcons()
-  },
   methods: {
     docState() {
       return getDocState(this.editor)
     },
     dropDownIcon() {
-      return this.isCompact ? 'mdi-content-save' : 'save_copy'
+      return this.isCompact ? 'document_save' : 'document_save_copy'
     },
     dropDownTitle() {
       return this.isCompact ? 'save' : 'save a copy'
@@ -65,12 +66,12 @@ export default {
 
 <template>
   <q-btn-group class="toolbar-button">
-    <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="mdi-content-save" title="save"
-      :text-color="textColor" @click="save">
+    <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="document_save" title="save" :text-color="textColor"
+      @click="save">
     </ToolbarButton>
-    <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="mdi-content-save-edit" title="save as"
+    <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="document_save_as" title="save as"
       :text-color="textColor" @click="saveAs" />
-    <q-btn-dropdown class="toolbar-button" :title="dropDownTitle()" split dense dropdown-icon="mdi-menu-down"
+    <q-btn-dropdown class="toolbar-button" :title="dropDownTitle()" split dense dropdown-icon="menu_down"
       @click="dropDownClick()" elevation="3" size="xs" color="grey-5" auto-close>
       <template v-slot:label>
         <div :class="`row, items-center no-wrap text-${textColor}`">
@@ -80,16 +81,16 @@ export default {
       <q-list dense>
         <q-item v-if="isCompact" key="save" title="save" clickable @click="save()">
           <q-item-section avatar>
-            <q-icon name="mdi-content-save" :text-color="textColor" />
+            <q-icon name="document_save" :text-color="textColor" />
           </q-item-section>
           <q-item-section>Save</q-item-section>
         </q-item>
         <q-item v-if="isCompact" key="saveAs" title="save as" clickable @click="saveAs()">
-          <q-item-section avatar><q-icon name="mdi-content-save-edit" :text-color="textColor" /></q-item-section>
+          <q-item-section avatar><q-icon name="document_save_as" :text-color="textColor" /></q-item-section>
           <q-item-section>Save as</q-item-section>
         </q-item>
         <q-item v-if="isCompact" key="saveCopy" title="save a copy" clickable @click="saveCopy()">
-          <q-item-section avatar><q-icon name="save_copy" :text-color="textColor" /></q-item-section>
+          <q-item-section avatar><q-icon name="document_save_copy" :text-color="textColor" /></q-item-section>
           <q-item-section>Save a copy</q-item-section>
         </q-item>
         <q-item key="compact" :title="compactItemTitle" clickable @click="isCompact = !isCompact">

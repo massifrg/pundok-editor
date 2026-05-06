@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { toRaw } from 'vue';
 import { ActionName, availableAction, availableActionsNames } from '../actions';
@@ -150,20 +155,19 @@ export default {
             <q-chip>{{ index + 1 }}</q-chip>
           </q-item-section>
           <q-item-section side>
-            <!-- <q-btn size="xs" icon="mdi-trash-can" @click="removeActionItem(index)" /> -->
-            <q-icon size="xs" name="mdi-trash-can" @click="removeActionItem(index)" @click.stop.prevent />
+            <q-icon size="xs" name="delete" @click="removeActionItem(index)" @click.stop.prevent />
           </q-item-section>
           <q-item-section side>
-            <q-icon v-if="index > 0" size="xs" name="mdi-arrow-up" @click="moveActionItemUp(index)"
+            <q-icon v-if="index > 0" size="xs" name="arrow_upward" @click="moveActionItemUp(index)"
               @click.stop.prevent />
-            <q-icon v-if="index < actions.length - 1" size="xs" name="mdi-arrow-down" @click="moveActionItemDown(index)"
+            <q-icon v-if="index < actions.length - 1" size="xs" name="arrow_downward" @click="moveActionItemDown(index)"
               @click.stop.prevent />
           </q-item-section>
           <q-item-section>
             <q-btn-dropdown :label="a.name" :title="actionLabel(a.name)" :icon="actionIcon(a.name)">
               <q-item clickable @click="removeActionItem(index)" v-close-popup>
                 <q-item-section side>
-                  <q-icon name="mdi-trash-can" />
+                  <q-icon name="delete" />
                 </q-item-section>
                 <q-item-section color="negative">
                   <q-item-label>remove action</q-item-label>
@@ -201,9 +205,9 @@ export default {
       </q-list>
     </q-card-section>
     <q-card-actions align="center">
-      <q-btn size="sm" icon="mdi-plus" label="new" :title="appendNewActionTooltip" @click="newActionItem()" />
+      <q-btn size="sm" icon="add_action" label="new" :title="appendNewActionTooltip" @click="newActionItem()" />
       <q-space />
-      <q-btn size="sm" icon="mdi-close" label="close" @click="$emit('close')" />
+      <q-btn size="sm" icon="close" label="close" @click="$emit('close')" />
     </q-card-actions>
   </q-card>
 </template>
