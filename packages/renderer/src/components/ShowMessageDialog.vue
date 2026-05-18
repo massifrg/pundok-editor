@@ -51,10 +51,10 @@ export default {
     },
     messageIcon() {
       if (this.icon) return this.icon;
-      if (this.messageType === 'error') return 'mdi-alert-circle';
-      if (this.messageType === 'command-line') return 'mdi-bash';
-      if (this.messageType === 'success') return 'mdi-check';
-      return 'mdi-alert-circle';
+      if (this.messageType === 'error') return 'message_error';
+      if (this.messageType === 'command-line') return 'message_cli';
+      if (this.messageType === 'success') return 'message_success';
+      return 'message_error';
     },
     messageColor() {
       if (this.color) return this.color;

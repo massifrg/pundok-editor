@@ -523,11 +523,11 @@ export default {
       return PANDOC_OUTPUT_FORMATS.map(([name, description, icon]) => ({
         name,
         description,
-        icon: icon || (this.isRawBlock ? 'code_block_tags' : 'mdi-code-tags')
+        icon: icon || (this.isRawBlock ? 'raw_block' : 'raw_inline')
       }))
     },
     codeLanguages() {
-      return lowlight.listLanguages().map(name => ({ name, icon: `mdi-language-${name}` }))
+      return lowlight.listLanguages().map(name => ({ name, icon: `language_${name}` }))
     },
     indexNameAttr() {
       return INDEX_NAME_ATTR

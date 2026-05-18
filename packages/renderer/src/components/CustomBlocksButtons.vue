@@ -7,8 +7,7 @@
           <q-item v-for="(styleItem, index) in availableStylesForNode(node)" :key="index" clickable density="compact"
             :value="index" :title="description(styleItem)" dense @click="toggleStyle(styleItem, node)">
             <q-item-section side>
-              <q-icon :name="isCustomStyleActive(styleItem, node) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
-                size="xs" />
+              <q-icon :name="isCustomStyleActive(styleItem, node) ? 'radiobox_marked' : 'radiobox_blank'" size="xs" />
             </q-item-section>
             <q-item-section no-wrap v-html="styleLabel(styleItem)" />
           </q-item>

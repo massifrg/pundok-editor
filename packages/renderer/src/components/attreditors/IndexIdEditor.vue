@@ -161,13 +161,13 @@ export default {
       const sourceType = (source || this.currentSource).type
       switch (sourceType) {
         case 'document':
-          return 'mdi-file-document-outline'
+          return 'source_document'
         case 'project':
-          return 'mdi-file-tree'
+          return 'source_project'
         case 'json-file':
-          return 'mdi-code-json'
+          return 'source_json'
         default:
-          return 'mdi-book-alphabet'
+          return 'source_generic'
       }
     },
     sourceTitle(source?: IndexSource) {

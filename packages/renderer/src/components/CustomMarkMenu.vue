@@ -4,14 +4,18 @@
       <q-item v-for="(styleItem, index) in styles" :key="index" clickable density="compact" :value="index"
         :title="description(styleItem)" dense @click="toggleStyle(styleItem)">
         <q-item-section side>
-          <q-icon :name="isStyleActive(styleItem.styleDef.name) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
-            size="xs" />
+          <q-icon :name="isStyleActive(styleItem.styleDef.name) ? 'radiobox_marked' : 'radiobox_blank'" size="xs" />
         </q-item-section>
         <q-item-section no-wrap v-html="styleLabel(styleItem)" />
       </q-item>
     </q-list>
   </q-menu>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { CustomStyleInstance, PundokEditorConfig, customStylesForType } from '../common';

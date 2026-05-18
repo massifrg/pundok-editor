@@ -60,8 +60,8 @@ export default {
     },
     whereIcon() {
       return this.isPair
-        ? 'mdi-unfold-more-vertical'
-        : this.where === 'after' ? 'mdi-chevron-right' : 'mdi-chevron-left'
+        ? 'place_around'
+        : this.where === 'after' ? 'arrow_right' : 'arrow_left'
     },
     leftRawInline(): string {
       return this.isPair ? this.content[0] || '' : this.content as string

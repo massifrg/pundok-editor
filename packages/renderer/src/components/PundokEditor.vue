@@ -558,7 +558,7 @@ export default {
               this.$q.notify({
                 message,
                 caption: 'Success',
-                icon: 'mdi-check',
+                icon: 'check',
                 position: 'top',
                 color: 'positive',
                 timeout: isSuccess ? 2000 : 5000,
@@ -1046,7 +1046,7 @@ export default {
               success: false,
               caption: 'SAVE ERROR',
               message: JSON.stringify(response.error),
-              icon: 'mdi-content-save-alert'
+              icon: 'content_save_alert'
             });
             return Promise.reject(errmsg);
           } else {
@@ -1076,7 +1076,7 @@ export default {
               success: true,
               caption: 'SAVE SUCCESS',
               message: `saved as ${response.doc.path || response.doc.id}`,
-              icon: 'mdi-content-save-check'
+              icon: 'content_save_check'
             });
             if (!isCopy)
               this.setWindowTitleFromDoc(response.doc);
@@ -1093,7 +1093,7 @@ export default {
           success: false,
           caption: 'SAVE ERROR',
           message,
-          icon: 'mdi-content-save-alert'
+          icon: 'content_save_alert'
         });
         console.log(message);
         return Promise.reject(errmsg);

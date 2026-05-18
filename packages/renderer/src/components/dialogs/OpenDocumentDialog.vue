@@ -53,14 +53,14 @@ function isNotHidden(filename: string, platform?: string) {
 }
 
 const placeIcons: Record<string, string> = {
-  home: 'mdi-folder-home',
-  root: 'mdi-folder',
-  pictures: 'mdi-folder-image',
-  documents: 'mdi-folder-file',
-  downloads: 'mdi-folder-download',
-  music: 'mdi-folder-music',
-  videos: 'mdi-folder-play',
-  desktop: 'mdi-folder-table',
+  home: 'folder_home',
+  root: 'folder_root',
+  pictures: 'folder_pictures',
+  documents: 'folder_documents',
+  downloads: 'folder_downloads',
+  music: 'folder_music',
+  videos: 'folder_videos',
+  desktop: 'folder_desktop',
 }
 
 const cols: QTableColumn[] = [{
@@ -81,7 +81,7 @@ const guessImageFormats = [
     ftype: 'guess',
     name: 'raster image',
     description: 'all raster image formats',
-    icon: 'mdi-checkerboard',
+    icon: 'image_raster',
     extensions: uniq(rasterFormats.reduce((acc, rf) =>
       [...acc, ...(rf as ImageFormatDescription).extensions], [] as string[]))
   },
@@ -89,7 +89,7 @@ const guessImageFormats = [
     ftype: 'guess',
     name: 'vector image',
     description: 'all vector image formats',
-    icon: 'mdi-vector-polygon',
+    icon: 'image_vector',
     extensions: uniq(vectorFormats.reduce((acc, vf) =>
       [...acc, ...(vf as ImageFormatDescription).extensions], [] as string[]))
   }
@@ -162,7 +162,7 @@ export default {
       const folders = this.hideFolders ? [] : this.folders.map(folder => ({
         name: folder.name,
         label: folder.name,
-        icon: 'mdi-folder',
+        icon: 'folder',
         isFolder: true,
         isDocument: false,
       })).filter(f => notHiddenFilter(f.name))
@@ -170,7 +170,7 @@ export default {
         .map(doc => ({
           name: doc.name,
           label: doc.name,
-          icon: 'mdi-file-document',
+          icon: 'document_file',
           isFolder: false,
           isDocument: true,
         })).filter(f => notHiddenFilter(f.name))
@@ -341,7 +341,7 @@ export default {
         this.$q.notify({
           message: 'Error',
           caption: `Can't retrieve folder contents of ${path}: \n${err}`,
-          icon: 'mdi-folder-alert',
+          icon: 'folder_alert',
           position: 'top',
           color: 'negative',
           timeout: 3000,
@@ -424,8 +424,8 @@ export default {
     },
     placeIcon(place: Place) {
       return placeIcons[place.name.toLowerCase()]
-        || (place.type === 'disk' && 'mdi-harddisk')
-        || 'mdi-folder-arrow-right-outline'
+        || (place.type === 'disk' && 'harddisk')
+        || 'folder_link'
     },
     gotoPlace(place: Place) {
       if (place.href.startsWith('file://')) {
@@ -448,7 +448,7 @@ export default {
           this.$q.notify({
             message: 'Warning',
             caption: `Format set to ${gf.format.name} to match "${path}" extension.`,
-            icon: 'mdi-message-alert',
+            icon: 'message_warning',
             position: 'top',
             color: 'warning',
             timeout: 3000,
@@ -564,10 +564,10 @@ export default {
         const gf = this.guessedFormat?.format
         icon = gf?.icon
           || format?.icon
-          || (gf?.ftype === 'input-converter' && 'mdi-import')
-          || (gf?.ftype === 'output-converter' && 'mdi-export')
+          || (gf?.ftype === 'input-converter' && 'input_converter')
+          || (gf?.ftype === 'output-converter' && 'output_converter')
       }
-      return icon || documentFormatIcon(format) || guessFormat.icon || 'mdi-code-tags'
+      return icon || documentFormatIcon(format) || guessFormat.icon || 'document_question'
     },
     formatLabel(format?: DocumentFormat) {
       if (format && format.ftype !== 'guess') {

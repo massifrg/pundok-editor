@@ -2,7 +2,7 @@
   <q-card>
     <div v-if="newClasses.length > 0" class="q-pa-md">
       <q-chip v-for="c in (newClasses as string[])" :key="c" :v-model="c" :removable="!isImportant(c)"
-        icon-remove="mdi-close-circle-outline" @remove="removeClass(c)" title="remove this class">
+        icon-remove="remove_item" @remove="removeClass(c)" title="remove this class">
         {{ c }}
       </q-chip>
     </div>

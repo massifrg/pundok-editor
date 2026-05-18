@@ -10,7 +10,7 @@ export const IMAGE_FORMATS: ImageFormatDescription[] = [
   {
     name: 'jpeg',
     description: 'JPEG image',
-    icon: 'mdi-file-jpg-box',
+    icon: 'format_jpg',
     extensions: ['jpg', 'jpeg'],
     isVectorial: false,
   },
@@ -23,14 +23,14 @@ export const IMAGE_FORMATS: ImageFormatDescription[] = [
   {
     name: 'png',
     description: 'PNG image',
-    icon: 'mdi-file-png-box',
+    icon: 'format_png',
     extensions: ['png'],
     isVectorial: false,
   },
   {
     name: 'gif',
     description: 'GIF image',
-    icon: 'mdi-file-gif-box',
+    icon: 'format_gif',
     extensions: ['gif'],
     isVectorial: false,
   },
@@ -43,11 +43,11 @@ export const IMAGE_FORMATS: ImageFormatDescription[] = [
   {
     name: 'pdf',
     description: 'PDF image',
-    icon: 'mdi-file-pdf-box',
+    icon: 'format_pdf',
     extensions: ['pdf'],
     isVectorial: true,
   },
-].map(f => ({ icon: 'mdi-image', ...f }))
+].map(f => ({ icon: 'image', ...f }))
 
 /**
  * Guess the image format from its filename.

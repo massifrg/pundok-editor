@@ -66,8 +66,7 @@
               <q-item v-for="(cs, index) in availableStylesForNode(b.node)" :key="index" clickable density="compact"
                 :value="index" :title="cs.styleDef.description" class="q-pa-xs" @click="toggleStyle(cs, b.node, b.pos)">
                 <q-item-section side>
-                  <q-icon :name="isCustomStyleActive(cs, b.node) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
-                    size="xs" />
+                  <q-icon :name="isCustomStyleActive(cs, b.node) ? 'radiobox_marked' : 'radiobox_blank'" size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap v-html="cs.styleDef.name" />
               </q-item>
@@ -77,9 +76,7 @@
                 :value="index" :title="cc.description" class="q-pa-xs"
                 @click="editor.commands.toggleCustomClass(cc, b.pos, configuration)">
                 <q-item-section side>
-                  <q-icon
-                    :name="isCustomClassActive(cc, b.node) ? 'mdi-checkbox-outline' : 'mdi-checkbox-blank-outline'"
-                    size="xs" />
+                  <q-icon :name="isCustomClassActive(cc, b.node) ? 'checkbox_marked' : 'checkbox_blank'" size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap v-html="cc.name" />
               </q-item>
@@ -93,18 +90,16 @@
               <q-item :key="`h${level}-no-style`" clickable :title="`level ${level} header without custom class`" dense
                 class="q-pa-xs" @click="setHeaderWithoutCustomStyles(level)">
                 <q-item-section side>
-                  <q-icon :name="isHeaderWithoutStyles(level) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
-                    size="xs" />
+                  <q-icon :name="isHeaderWithoutStyles(level) ? 'radiobox_marked' : 'radiobox_blank'" size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap><span class="style-item">H{{ level
-                    }}&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
+                }}&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
               </q-item>
               <q-item v-for="(styleItem, index) in availableHeaderStylesForNode(innerParaLike, level)" :key="index"
                 clickable :value="index" :title="description(styleItem)" dense class="q-pa-xs"
                 @click="setHeaderStyle(styleItem)">
                 <q-item-section side>
-                  <q-icon
-                    :name="isCustomStyleActive(styleItem, innerParaLike) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                  <q-icon :name="isCustomStyleActive(styleItem, innerParaLike) ? 'radiobox_marked' : 'radiobox_blank'"
                     size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap v-html="styleLabel(styleItem)" />
@@ -118,7 +113,7 @@
               <q-item key="p-no-style" clickable title="normal paragraph without custom style" dense class="q-pa-xs"
                 @click="setParaWithoutCustomStyles()">
                 <q-item-section side>
-                  <q-icon :name="isParaWithoutStyles() ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'" size="xs" />
+                  <q-icon :name="isParaWithoutStyles() ? 'radiobox_marked' : 'radiobox_blank'" size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap><span class="style-item">P&nbsp;<i>(no&nbsp;style)</i></span></q-item-section>
               </q-item>
@@ -126,8 +121,7 @@
               <q-item v-for="(styleItem, index) in availableParaStylesForNode(innerParaLike)" :key="index" clickable
                 :value="index" :title="description(styleItem)" class="q-pa-xs" @click="setParaStyle(styleItem)">
                 <q-item-section side>
-                  <q-icon
-                    :name="isCustomStyleActive(styleItem, innerParaLike) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
+                  <q-icon :name="isCustomStyleActive(styleItem, innerParaLike) ? 'radiobox_marked' : 'radiobox_blank'"
                     size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap v-html="styleLabel(styleItem)" />
@@ -140,8 +134,7 @@
               <q-item key="char-no-style" clickable title="normal text without custom style" dense class="q-pa-xs"
                 @click="unsetAllCharStyles()">
                 <q-item-section side>
-                  <q-icon :name="activeCharStyles.length === 0 ? 'mdi-checkbox-outline' : 'mdi-checkbox-blank-outline'"
-                    size="xs" />
+                  <q-icon :name="activeCharStyles.length === 0 ? 'checkbox_marked' : 'checkbox_blank'" size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap><span
                     class="style-item">&nbsp;<i>(no&nbsp;char&nbsp;style)</i></span></q-item-section>
@@ -150,8 +143,7 @@
               <q-item v-for="s in charStyles" clickable :value="s.styleDef.name" :title="description(s)" class="q-pa-xs"
                 dense @click="toggleCharStyle(s)">
                 <q-item-section side>
-                  <q-icon :name="isCharStyleActive(s) ? 'mdi-checkbox-outline' : 'mdi-checkbox-blank-outline'"
-                    size="xs" />
+                  <q-icon :name="isCharStyleActive(s) ? 'checkbox_marked' : 'checkbox_blank'" size="xs" />
                 </q-item-section>
                 <q-item-section no-wrap v-html="s.styleDef.name" />
               </q-item>
@@ -339,7 +331,7 @@ export default {
               summ.push({
                 type: 'style',
                 label: csname,
-                icon: 'mdi-palette-swatch-variant'
+                icon: 'custom_style'
               })
             })
           stylable = stylableBlocks[++st_index]
@@ -388,7 +380,7 @@ export default {
       if (typeName === NODE_NAME_PARAGRAPH)
         return 'paragraph_style'
       else if (typeName === NODE_NAME_HEADING)
-        return 'mdi-format-header-pound'
+        return 'header_style'
       return nodeIcon(node.type.name)
     },
     blockName(n: Node) {

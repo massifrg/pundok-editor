@@ -77,7 +77,7 @@ export default {
       return this.configuration?.customMetadata || []
     },
     icon() {
-      return this.showMetadata ? 'mdi-minus' : 'mdi-plus'
+      return this.showMetadata ? 'collapse' : 'expand'
     },
     label() {
       return this.showMetadata ? 'hide document metadata' : 'show document metadata'
