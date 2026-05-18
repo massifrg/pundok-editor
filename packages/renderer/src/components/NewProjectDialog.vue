@@ -10,7 +10,7 @@
         <q-btn-dropdown icon="add" title="add configurations to inherit">
           <q-list>
             <q-item v-for="c in unselectedConfigs" dense clickable v-close-popup @click="addConfig(c.name)">
-              <q-list-item-section><b>{{ c.name }}</b> - {{ c.description }}</q-list-item-section>
+              <q-item-section><b>{{ c.name }}</b> - {{ c.description }}</q-item-section>
             </q-item>
           </q-list>
         </q-btn-dropdown>

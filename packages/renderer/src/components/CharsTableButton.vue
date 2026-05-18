@@ -4,9 +4,9 @@
       <q-card>
         <q-card-actions>
           <q-select v-model="block" use-input input-debounce="0" label="Unicode block" :options="filteredBlocks"
-            size="sm" behavior="menu" dense style="max-width: 180px" @filter="filterBlock"></q-select>
+            behavior="menu" dense style="max-width: 180px" @filter="filterBlock"></q-select>
           <q-space style="max-width: 1rem" />
-          <q-select v-model="category" use-input input-debounce="0" label="Category" :options="categories" size="sm"
+          <q-select v-model="category" use-input input-debounce="0" label="Category" :options="categories"
             behavior="menu" dense style="max-width: 240px"></q-select>
           <q-space />
           <q-btn icon="close" title="close characters table [ESC]" @click="tableVisible = false" size="sm" />
