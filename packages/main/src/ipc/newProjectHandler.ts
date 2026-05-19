@@ -6,7 +6,7 @@ import { DEFAULT_PROJECT_FILENAME, serializeProject } from "../common"
 import { localizePath, writeFile } from "../filesystem"
 
 export const newProjectHandler = (hub: IpcHub) =>
-  async (e: IpcMainInvokeEvent, dir: string, jsonProject: string) => {
+  async (e: IpcMainInvokeEvent, dir: string, jsonProject: string): Promise<void> => {
     try {
       const path = localizePath(dir)
       if (isReadableDir(path)) {

@@ -1,7 +1,5 @@
 import type {
   Backend,
-  BackendConfig,
-  Ipc,
   IpcRendererListener,
 } from './backend';
 import {
@@ -67,21 +65,18 @@ import {
   setActionSetupViewer,
 } from '../actions';
 import { useActions } from '../stores';
-import { IPC_CHANNELS } from '../common';
 
 type Listener = () => void;
 
 export class LocalBackend implements Backend {
-  ipc?: Ipc;
   private listeners: Listener[] = [];
 
-  constructor(config: BackendConfig) {
-    this.ipc = config.ipc;
+  constructor() {
     this.registerListeners();
   }
 
   private registerListeners() {
-    const ipc = this.ipc;
+    const ipc = window.ipc;
     if (ipc) {
       this.listeners.forEach((removeListener) => {
         removeListener();
@@ -92,7 +87,7 @@ export class LocalBackend implements Backend {
         channel: IpcMainToRendererChannel,
         listener: IpcRendererListener,
       ) => {
-        const l = ipc.on(channel, listener);
+        const l = ipc.listen(channel, listener);
         if (l) {
           listeners.push(l);
         }
@@ -119,7 +114,7 @@ export class LocalBackend implements Backend {
           let { editorKey, project } = setProjectMsg;
           project = await computeProjectConfiguration(
             project,
-            getConfigurationFunction(this.ipc),
+            getConfigurationFunction(window.ipc),
           );
           console.log(project);
           const action: EditorAction = {
@@ -150,7 +145,7 @@ export class LocalBackend implements Backend {
           const project_with_conf: PundokEditorProject | undefined = project
             ? await computeProjectConfiguration(
               project,
-              getConfigurationFunction(this.ipc),
+              getConfigurationFunction(window.ipc),
             )
             : undefined;
           const action: EditorAction = project_with_conf
@@ -227,18 +222,18 @@ export class LocalBackend implements Backend {
     }
   }
 
-  private async invokeIpc(
-    channel: IpcRendererToMainChannel,
-    ...args: any[]
-  ): Promise<any> {
-    const c = IPC_CHANNELS[channel];
-    if (c && c.dir === 'r2m')
-      return this.ipc?.invoke(channel, ...args);
-    else
-      return Promise.reject(
-        `"${channel}" is not a valid <Renderer -> Main> channel`,
-      );
-  }
+  // private async invokeIpc(
+  //   channel: IpcRendererToMainChannel,
+  //   ...args: any[]
+  // ): Promise<any> {
+  //   const c = IPC_CHANNELS[channel];
+  //   if (c && c.dir === 'r2m')
+  //     return window.ipc?.invoke(channel, ...args);
+  //   else
+  //     return Promise.reject(
+  //       `"${channel}" is not a valid <Renderer -> Main> channel`,
+  //     );
+  // }
 
   loggedin() {
     return Promise.resolve(true);
@@ -253,24 +248,24 @@ export class LocalBackend implements Backend {
   }
 
   async editorReady(editorKey?: EditorKeyType) {
-    this.invokeIpc('editor-ready', editorKey);
+    window.ipc.editorReady(editorKey);
   }
 
   getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents> {
-    return this.invokeIpc('get-folder-contents', JSON.stringify(context))
+    return window.ipc.getFolderContents(JSON.stringify(context))
   }
 
   async createFolder(path: string): Promise<string> {
-    return this.invokeIpc('create-folder', path)
+    return window.ipc.createFolder(path)
   }
 
   async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
-    return this.invokeIpc('get-bookmarks', bookmarkType)
+    return window.ipc.getBookmarks(bookmarkType)
   }
 
   async open(context: DocumentContext): Promise<CxDocument> {
     try {
-      return this.ipc?.invoke('open-document', JSON.stringify(context));
+      return window.ipc.openDocument(JSON.stringify(context));
     } catch (error) {
       return Promise.reject(error);
     }
@@ -285,28 +280,28 @@ export class LocalBackend implements Backend {
       preview = {
         inPundokEditor: openResult === 'editor',
       };
-    const ipc = this.ipc;
+    const ipc = window.ipc;
     if (ipc) {
-      return ipc.invoke('save-document', JSON.stringify(doc));
+      return ipc.saveDocument(JSON.stringify(doc));
     } else {
       throw new Error('Method not implemented.');
     }
   }
 
   async debugInfo(): Promise<object> {
-    return this.invokeIpc('debug-info');
+    return window.ipc.debugInfo();
   }
 
   async getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined> {
-    return this.invokeIpc('get-project', options);
+    return window.ipc.getProject(options);
   }
 
   async createProject(path: string, project: Partial<PundokEditorProject>): Promise<void> {
-    return this.invokeIpc('new-project', path, JSON.stringify(project));
+    return window.ipc.newProject(path, JSON.stringify(project));
   }
 
   async availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]> {
-    const ipc = this.ipc;
+    const ipc = window.ipc;
     let configs: ConfigurationSummary[] = [
       {
         name: HARDCODED_CONFIG_NAME,
@@ -315,7 +310,7 @@ export class LocalBackend implements Backend {
       },
     ];
     if (ipc) {
-      const maybeConfigs = await ipc.invoke('available-configurations', options);
+      const maybeConfigs = await window.ipc.availableConfigurations(options);
       configs = configs.concat(maybeConfigs || []);
     }
     return configs;
@@ -325,12 +320,9 @@ export class LocalBackend implements Backend {
     if (!name || name === HARDCODED_CONFIG_NAME)
       return Promise.resolve(getHardcodedEditorConfig());
     const notFound = `Configuration "${name}" not found`;
-    const ipc = this.ipc;
+    const ipc = window.ipc;
     if (ipc) {
-      const configInit: PundokEditorConfigInit = await ipc.invoke(
-        'load-configuration',
-        name,
-      );
+      const configInit = await ipc.loadConfiguration(name);
       return configInit
         ? new PundokEditorConfig(configInit)
         : Promise.reject(notFound);
@@ -346,15 +338,15 @@ export class LocalBackend implements Backend {
     if (filename === 'custom.css') {
       return getHardcodedCustomCss();
     }
-    return this.invokeIpc('file-contents', filename, options);
+    return window.ipc.fileContents(filename, options);
   }
 
   async setValue(key: string, value?: any): Promise<void> {
-    this.invokeIpc('set-value', key, JSON.stringify(value));
+    window.ipc.setValue(key, JSON.stringify(value));
   }
 
   pandocFeature(featureName: PandocFeatureName, options?: PandocFeatureOptions): Promise<any[]> {
-    return this.invokeIpc('pandoc-feature', featureName, options)
+    return window.ipc.pandocFeature(featureName, options)
   }
 
   // async openViewer(
@@ -364,12 +356,12 @@ export class LocalBackend implements Backend {
   //   const opts = options?.project && !isString(options?.project)
   //     ? { ...options, project: JSON.stringify(options.project) }
   //     : options
-  //   this.invokeIpc('open-viewer', docName, opts)
+  //   window.ipc.open-viewer( docName, opts)
   // }
 
   async queryDatabase(query: Query): Promise<QueryResult[]> {
     try {
-      return this.invokeIpc('query', JSON.stringify(query)) as Promise<QueryResult[]>;
+      return window.ipc.query(JSON.stringify(query)) as Promise<QueryResult[]>;
     } catch (err) {
       return Promise.reject(err);
     }
@@ -379,10 +371,7 @@ export class LocalBackend implements Backend {
     project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined> {
     try {
-      const structure = await this.invokeIpc(
-        'get-inclusion-tree',
-        JSON.stringify(project),
-      );
+      const structure = await window.ipc.getInclusionTree(JSON.stringify(project));
       if (structure) {
         return JSON.parse(structure) as ProjectComponent;
       }
@@ -397,8 +386,7 @@ export class LocalBackend implements Backend {
     transform: PandocFilterTransform
   ): Promise<string> {
     console.log(doc)
-    return this.invokeIpc(
-      'transform-json',
+    return window.ipc.transformJson(
       JSON.stringify(doc),
       JSON.stringify(transform || {}),
     );
@@ -408,19 +396,19 @@ export class LocalBackend implements Backend {
     editorKey: EditorKeyType,
     info: SynctexInfo,
   ): Promise<void> {
-    this.invokeIpc('get-source-file', editorKey, info)
+    window.ipc.getSourceFile(editorKey, info)
   }
 
   async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    this.invokeIpc('show-rendered-again', hash, editorKey)
+    window.ipc.showRenderedAgain(hash, editorKey)
   }
 
   async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    this.invokeIpc('render-again', hash, editorKey)
+    window.ipc.renderAgain(hash, editorKey)
   }
 
   async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
-    const job_as_string: string | undefined = await this.invokeIpc('get-rendering-job', hash)
+    const job_as_string: string | undefined = await window.ipc.getRenderingJob(hash)
     return job_as_string && JSON.parse(job_as_string) as RenderingJob || undefined
   }
 
@@ -432,7 +420,7 @@ export class LocalBackend implements Backend {
     configNameOrProjectPath: string
   ): Promise<void> {
     console.log(`calling backend to update configuration`)
-    return this.invokeIpc('update-config', where, JSON.stringify(obj), isDeletion, isProject, configNameOrProjectPath)
+    return window.ipc.updateConfig(where, JSON.stringify(obj), isDeletion, isProject, configNameOrProjectPath)
   }
 }
 

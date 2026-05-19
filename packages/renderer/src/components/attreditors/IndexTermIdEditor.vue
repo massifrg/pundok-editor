@@ -14,7 +14,8 @@
 </template>
 
 <script lang="ts">
-import IndexIdEditor, { SearchTextVariant } from './IndexIdEditor.vue';
+import IndexIdEditor from './IndexIdEditor.vue';
+import { SearchTextVariant } from '../../schema';
 
 export default {
   components: { IndexIdEditor },

@@ -11,8 +11,6 @@ import { createBackend } from './backend/backend';
 import testingContent from './assets/test-pandoc.json?raw';
 import { EditorGUIPropsClass } from './schema';
 
-const electronIpc = window && window.ipc;
-
 export default defineComponent({
   name: 'PandocApp',
   components: {
@@ -20,7 +18,7 @@ export default defineComponent({
   },
   setup() {
     const backendStore = useBackend();
-    backendStore.setBackend(createBackend({ ipc: electronIpc }));
+    backendStore.setBackend(createBackend());
   },
   data() {
     return {

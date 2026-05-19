@@ -1,4 +1,4 @@
-import type { Backend, BackendConfig } from './backend';
+import type { Backend } from './backend';
 import {
   type ConfigurationSummary,
   type PundokEditorConfig,
@@ -30,12 +30,6 @@ import {
 } from '../common';
 
 export class NetBackend implements Backend {
-  private config: BackendConfig = {};
-
-  constructor(config: BackendConfig) {
-    this.config = config;
-  }
-
   loggedin() {
     return Promise.resolve(false);
   }

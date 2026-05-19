@@ -10,7 +10,7 @@ export default {
   },
   data() {
     return {
-      backend: createBackend({ ipc: window.ipc }),
+      backend: createBackend(),
     }
   },
   computed: {

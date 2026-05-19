@@ -31,19 +31,6 @@ export type IpcRendererListener = (
   ...args: any[]
 ) => void;
 
-export interface Ipc {
-  send: (channel: string, data: any) => void;
-  on: (
-    channel: string,
-    listener: IpcRendererListener,
-  ) => (() => void) | undefined;
-  invoke: (channel: string, ...args: any) => Promise<any>;
-}
-
-export interface BackendConfig {
-  ipc?: Ipc;
-}
-
 export type WhyAskingForIdOrPath =
   | 'edit'      // document to open and edit
   | 'inclusion' // inclusion of a (sub-)document
@@ -232,10 +219,10 @@ export interface Backend {
   ): Promise<void>;
 }
 
-export function createBackend(config: BackendConfig): Backend {
-  if (config.ipc) {
-    return new LocalBackend(config);
+export function createBackend(): Backend {
+  if (window.ipc) {
+    return new LocalBackend();
   } else {
-    return new NetBackend(config);
+    return new NetBackend();
   }
 }

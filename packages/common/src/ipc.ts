@@ -12,7 +12,7 @@ export type IpcDirection = 'm2r' | 'r2m' | 'both';
 /**
  * The description of an IPC channel of communication between Main and Renderer.
  */
-interface IpcChannelDescription {
+export interface IpcChannelDescription {
   /** The direction of messages */
   dir: IpcDirection;
   /** The description of the channel */
@@ -193,6 +193,18 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   }
 };
 
+export function isMainToRendererChannel(channel: IpcChannel) {
+  const cdesc: IpcChannelDescription = IPC_CHANNELS[channel as IpcChannel]
+  const dir = cdesc?.dir
+  return dir === 'm2r' || dir === 'both'
+}
+
+// export function isRendererToMainChannel(channel: IpcChannel) {
+//   const cdesc: IpcChannelDescription = IPC_CHANNELS[channel as IpcChannel]
+//   const dir = cdesc?.dir
+//   return dir === 'r2m' || dir === 'both'
+// }
+
 export const IPC_VALUE_NEW_PROJECT_NAME = 'new-project-name';
 export const IPC_VALUE_WINDOW_TITLE = 'window-title';
 export const IPC_MAIN_EDITOR_KEY = 'main-editor-key';
@@ -258,3 +270,9 @@ export interface ServerMessageForViewer extends ServerMessage {
   type: 'viewer';
   setup: ViewerSetup;
 }
+
+export type IpcRendererListener = (
+  e: Electron.IpcRendererEvent,
+  ...args: any[]
+) => void;
+

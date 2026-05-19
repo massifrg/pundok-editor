@@ -102,10 +102,10 @@ const setupPreloadPackageWatcher = ({ ws }) =>
     configFile: 'packages/preload/vite.config.js',
     writeBundle() {
       // Generating exposedInMainWorld.d.ts when preload package is changed.
-      generateAsync({
-        input: 'packages/preload/src/**/*.ts',
-        output: 'packages/preload/exposedInMainWorld.d.ts',
-      });
+      // generateAsync({
+      //   input: 'packages/preload/src/**/*.ts',
+      //   output: 'packages/preload/exposedInMainWorld.d.ts',
+      // });
 
       ws.send({
         type: 'full-reload',
