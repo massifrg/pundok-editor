@@ -44,7 +44,7 @@ export default defineConfig({
       // locale messages resource pre-compile option
       include: resolve(
         dirname(fileURLToPath(import.meta.url)),
-        './src/i18n/**',
+        './src/locales/**',
       ),
     }),
     // analyzer({

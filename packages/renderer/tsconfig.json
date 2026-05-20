@@ -5,6 +5,8 @@
     "target": "ESNext",
     "sourceMap": false,
     "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "importHelpers": true,
     "skipLibCheck": true,
     "strict": true,

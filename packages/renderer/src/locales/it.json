@@ -1,0 +1,59 @@
+{
+  "undo": "annulla",
+  "redo": "ripeti",
+  "toggle_": "commuta",
+  "blockquote": "citazione a pacchetto",
+  "failed": "Operazione fallita",
+  "success": "Azione eseguita con successo",
+  "wrapIn": {
+    "Caption": "racchiudi il testo selezionato in una Caption",
+    "Div": "racchiudi il testo selezionato in un Div",
+    "Figure": "racchiudi il testo selezionato in una Figure"
+  },
+  "BulletList": "BulletList (elenco puntato)",
+  "OrderedList": "OrderedList (elenco numerato)",
+  "Blockquote": "Blockquote (citazione a pacchetto)",
+  "toggle": {
+    "Blockquote": "commuta citazione a pacchetto",
+    "BulletList": "commuta elenco puntato",
+    "OrderedList": "commuta elenco numerato",
+    "Emph": "metti/togli enfasi",
+    "Strong": "metti/togli enfasi forte",
+    "Underline": "metti/togli sottolineato",
+    "Cite": "metti/togli riferimento bibliografico",
+    "Math": "rendi o meno come formula matematica",
+    "Link": "metti/togli collegamento",
+    "Code": "rendi o meno come codice di programma",
+    "singleQuoted": "metti/togli virgolette singole",
+    "doubleQuoted": "metti/togli virgolette doppie",
+    "smallCaps": "metti/togli maiuscoletto",
+    "Superscript": "metti o meno in apice",
+    "Subscript": "metti o meno al pedice",
+    "Strikeout": "metti/togli barrato"
+  },
+  "repeatLastCommand": "ripeti ultimo comando",
+  "changeAttributesOf": "modifica gli attributi di",
+  "emphasis": "enfasi",
+  "clearAllMarks": "togli tutti gli stili",
+  "strong": "enfasi forte",
+  "underline": "sottolineato",
+  "clickTo": {
+    "allowVerticalSwappingWith": "permetti di spostare verticalmente blocchi/paragrafi con",
+    "preventVerticalSwappingWith": "impedisci di spostare verticalmente blocchi/paragrafi con"
+  },
+  "insert": {
+    "HorizontalRule": "inserisci una barra di separazione"
+  },
+  "show": {
+    "projectStructure": "mostra la struttura del progetto",
+    "searchAndReplace": "cerca e sostituisci"
+  },
+  "capitalize": {
+    "lower": "rendi minuscolo",
+    "upper": "rendi maiuscolo",
+    "upperFirst": "rendi maiuscole le iniziali di ogni parola"
+  },
+  "document": {
+    "reloadWithConfiguration": "ricarica il documento con un'altra configurazione"
+  }
+}

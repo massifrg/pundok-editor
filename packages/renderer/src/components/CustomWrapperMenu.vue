@@ -13,7 +13,9 @@
 
 <script setup lang="ts">
 import { setupQuasarIcons } from './helpers';
+import { useI18n } from 'vue-i18n'
 setupQuasarIcons()
+const { t } = useI18n()
 </script>
 
 <script lang="ts">
@@ -49,7 +51,7 @@ export default {
       return !this.editor.can().wrapIn(this.wrapperType)
     },
     title() {
-      return `wrap selection in a ${this.pandocType}` + shortcutSuffix(this.shortcut)
+      return this.$t(`wrapIn.${this.pandocType}`) + shortcutSuffix(this.shortcut)
     }
   },
   methods: {

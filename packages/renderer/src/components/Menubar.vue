@@ -11,10 +11,7 @@
       <RenderButton :editor="editor" />
 
       <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
-      <!--
-      <ImportToolbarButton v-if="gui.importButton" :editor="editor" />
-      <ExportToolbarButton v-if="gui.exportButton" :editor="editor" />
-      -->
+
       <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
 
       <span class="button-separator" />
@@ -36,8 +33,8 @@
         @click="editor.commands.toggleSwapBlocks()" />
 
       <ToolbarButton icon="toggle_plain" :disabled="!editor.can().togglePlain()" :shortcut="SK.TOGGLE_PLAIN" @click="
-        editor.commands.runRepeatableCommand('togglePlain', 'Plain ↔ Para')
-        " title="toggle Plain/Para" />
+        editor.commands.runRepeatableCommand('togglePlain', $t('Plain ↔ Para'))"
+        :title="$t('toggle_') + ' Plain/Para'" />
 
       <CustomWrapperMenu :editor="editor" wrapper-type-name="div" pandoc-type="Div" :shortcut="SK.TOGGLE_DIV" />
 
@@ -45,34 +42,33 @@
 
       <CustomWrapperMenu :editor="editor" wrapper-type-name="figure" pandoc-type="Figure" :shortcut="SK.TOGGLE_FIGURE"
         wrap-icon="figure_wrap" unwrap-icon="figure_unwrap" />
-      <ToolbarButton v-if="inFigure()" icon="caption" title="wrap selection in Caption"
-        @click="wrapInFigureCaption()" />
+      <ToolbarButton v-if="inFigure()" icon="caption" :title='$t("wrapIn.Caption")' @click="wrapInFigureCaption()" />
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="blockquote" title="toggle blockquote" :shortcut="SK.TOGGLE_BLOCKQUOTE"
+      <ToolbarButton icon="blockquote" :title="$t('toggle.Blockquote')" :shortcut="SK.TOGGLE_BLOCKQUOTE"
         :disabled="!editor.can().toggleBlockquote()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleBlockquote', 'toggle Blockquote')
+            .runRepeatableCommand('toggleBlockquote', $t('toggle.Blockquote'))
             .focus()
             .run()
           " />
 
-      <ToolbarButton icon="bulletlist" title="toggle bullet list" :shortcut="SK.TOGGLE_BULLETLIST"
+      <ToolbarButton icon="bulletlist" :title="$t('toggle.BulletList')" :shortcut="SK.TOGGLE_BULLETLIST"
         :disabled="!editor.can().toggleBulletList()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleBulletList', 'toggle BulletList')
+            .runRepeatableCommand('toggleBulletList', $t('toggle.BulletList'))
             .focus()
             .run()
           " />
 
-      <ToolbarButton icon="orderedlist" title="toggle ordered list" :shortcut="SK.TOGGLE_ORDEREDLIST"
+      <ToolbarButton icon="orderedlist" :title="$t('toggle.OrderedList')" :shortcut="SK.TOGGLE_ORDEREDLIST"
         :disabled="!editor.can().toggleOrderedList()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleOrderedList', 'toggle OrderedList')
+            .runRepeatableCommand('toggleOrderedList', $t('toggle.OrderedList'))
             .focus()
             .run()
           " />
@@ -92,18 +88,18 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="horizontal_rule" title="insert HorizontalRule" :disabled="!editor.can().setHorizontalRule()"
-        @click="
+      <ToolbarButton icon="horizontal_rule" :title="$t('insert.HorizontalRule')"
+        :disabled="!editor.can().setHorizontalRule()" @click="
           editor.commands.runRepeatableCommand(
             'setHorizontalRule',
-            'insert HorizontalRule',
+            $t('insert.HorizontalRule'),
           )
           " />
 
       <span class="button-separator" />
 
-      <ToolbarButton v-if="gui.projectStructure && project" icon="project_structure" title="show project structure"
-        @click="showProjectStructure()" />
+      <ToolbarButton v-if="gui.projectStructure && project" icon="project_structure"
+        :title="$t('show.projectStructure')" @click="showProjectStructure()" />
 
       <q-space />
       <ToolbarButton v-if="gui.isDevelopmentMode" icon="debug" title="debug" @click="debug" />
@@ -111,104 +107,104 @@
       <q-badge v-if="gui.showEditorVersion" color="positive"><i>{{ version }}</i></q-badge>
     </q-bar>
     <q-bar v-if="editor" class="q-py-xs">
-      <ToolbarButton icon="marks_clear" :disabled="!editor.can().removeAllMarks()" title="clear all marks in selection"
+      <ToolbarButton icon="marks_clear" :disabled="!editor.can().removeAllMarks()" :title="$t('clearAllMarks')"
         :shortcut="SK.REMOVE_MARKS" @click="editor.chain().removeAllMarks().focus().run()" />
-      <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" title="emphasis" :shortcut="SK.TOGGLE_EMPH"
-        @click="
+      <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" :title="$t('emphasis')"
+        :shortcut="SK.TOGGLE_EMPH" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleEmph', 'toggle Emph')
+            .runRepeatableCommand('toggleEmph', $t('toggle.Emph'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Strong')" :styleactive="isActive('strong')" title="strong"
+      <ToolbarButton :icon="iconFor('Strong')" :styleactive="isActive('strong')" :title="$t('strong')"
         :shortcut="SK.TOGGLE_STRONG" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleStrong', 'toggle Strong')
+            .runRepeatableCommand('toggleStrong', $t('toggle.Strong'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Underline')" :styleactive="isActive('underline')" title="underline"
+      <ToolbarButton :icon="iconFor('Underline')" :styleactive="isActive('underline')" :title="$t('underline')"
         :shortcut="SK.TOGGLE_UNDERLINE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleUnderline', 'toggle Underline')
+            .runRepeatableCommand('toggleUnderline', $t('toggle.Underline'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Strikeout')" :styleactive="isActive('strikeout')" title="strikeout"
+      <ToolbarButton :icon="iconFor('Strikeout')" :styleactive="isActive('strikeout')" :title="$t('toggle.Strikeout')"
         :shortcut="SK.TOGGLE_STRIKEOUT" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleStrikeout', 'toggle Strikeout')
+            .runRepeatableCommand('toggleStrikeout', $t('toggle.Strikeout'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Superscript')" :styleactive="isActive('superscript')" title="superscript"
-        :shortcut="SK.TOGGLE_SUPERSCRIPT" @click="
+      <ToolbarButton :icon="iconFor('Superscript')" :styleactive="isActive('superscript')"
+        :title="$t('toggle.Superscript')" :shortcut="SK.TOGGLE_SUPERSCRIPT" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSuperscript', 'toggle Superscript')
+            .runRepeatableCommand('toggleSuperscript', $t('toggle.Superscript'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Subscript')" :styleactive="isActive('subscript')" title="subscript"
+      <ToolbarButton :icon="iconFor('Subscript')" :styleactive="isActive('subscript')" :title="$t('toggle.Subscript')"
         :shortcut="SK.TOGGLE_SUBSCRIPT"
-        @click="editor.chain().runRepeatableCommand('toggleSubscript', 'toggle Subscript').focus().run()" />
-      <ToolbarButton :icon="iconFor('smallcaps')" :styleactive="isActive('smallcaps')" title="small caps"
+        @click="editor.chain().runRepeatableCommand('toggleSubscript', $t('toggle.Subscript')).focus().run()" />
+      <ToolbarButton :icon="iconFor('smallcaps')" :styleactive="isActive('smallcaps')" :title="$t('toggle.smallCaps')"
         :shortcut="SK.TOGGLE_SMALLCAPS" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSmallcaps', 'toggle Smallcaps')
+            .runRepeatableCommand('toggleSmallcaps', $t('toggle.smallCaps'))
             .focus()
             .run()
           " />
       <ToolbarButton :icon="iconFor('singleQuoted')" :styleactive="isActive('quoted', { quoteType: 'SingleQuote' })"
-        title="single quoted" :shortcut="SK.TOGGLE_SINGLEQUOTE" @click="
+        :title="$t('toggle.singleQuoted')" :shortcut="SK.TOGGLE_SINGLEQUOTE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSingleQuoted', 'toggle SingleQuoted')
+            .runRepeatableCommand('toggleSingleQuoted', $t('toggle.singleQuoted'))
             .focus()
             .run()
           " />
       <ToolbarButton :icon="iconFor('doubleQuoted')" :styleactive="isActive('quoted', { quoteType: 'DoubleQuote' })"
-        title="double quoted" :shortcut="SK.TOGGLE_DOUBLEQUOTE" @click="
+        :title="$t('toggle.doubleQuoted')" :shortcut="SK.TOGGLE_DOUBLEQUOTE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleDoubleQuoted', 'toggle DoubleQuoted')
+            .runRepeatableCommand('toggleDoubleQuoted', $t('toggle.doubleQuoted'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Code')" :styleactive="isActive('code')" title="toggle Code"
+      <ToolbarButton :icon="iconFor('Code')" :styleactive="isActive('code')" :title="$t('toggle.Code')"
         :shortcut="SK.TOGGLE_CODE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleCode', 'toggle Code')
+            .runRepeatableCommand('toggleCode', $t('toggle.Code'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Link')" :styleactive="isActive('link')" title="toggle Link"
+      <ToolbarButton :icon="iconFor('Link')" :styleactive="isActive('link')" :title="$t('toggle.Link')"
         :shortcut="SK.TOGGLE_LINK" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleLink', 'toggle Link')
+            .runRepeatableCommand('toggleLink', $t('toggle.Link'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Cite')" :styleactive="isActive('cite')" title="toggle Cite"
+      <ToolbarButton :icon="iconFor('Cite')" :styleactive="isActive('cite')" :title="$t('toggle.Cite')"
         :shortcut="SK.TOGGLE_CITE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleCite', 'toggle Cite')
+            .runRepeatableCommand('toggleCite', $t('toggle.Cite'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Math')" :styleactive="isActive('math')" title="math" :shortcut="SK.TOGGLE_MATH"
-        @click="
+      <ToolbarButton :icon="iconFor('Math')" :styleactive="isActive('math')" :title="$t('toggle.Math')"
+        :shortcut="SK.TOGGLE_MATH" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleMath', 'toggle Math')
+            .runRepeatableCommand('toggleMath', $t('toggle.Math'))
             .focus()
             .run()
           " />
@@ -217,27 +213,27 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="case_to_lower" title="convert to lower case" :shortcut="SK.LOWERCASE" @click="
+      <ToolbarButton icon="case_to_lower" :title="$t('capitalize.lower')" :shortcut="SK.LOWERCASE" @click="
         editor
           .chain()
-          .runRepeatableCommand('toLowercase', 'convert to lower case')
+          .runRepeatableCommand('toLowercase', $t('capitalize.lower'))
           .focus()
           .run()
         " />
-      <ToolbarButton icon="case_to_upper" title="convert to upper case" :shortcut="SK.UPPERCASE" @click="
+      <ToolbarButton icon="case_to_upper" :title="$t('capitalize.upper')" :shortcut="SK.UPPERCASE" @click="
         editor
           .chain()
-          .runRepeatableCommand('toUppercase', 'convert to upper case')
+          .runRepeatableCommand('toUppercase', $t('capitalize.upper'))
           .focus()
           .run()
         " />
-      <ToolbarButton icon="case_to_upperfirst" title="convert to upper case the first letter of every word"
-        :shortcut="SK.UPPERCASEFIRST" @click="
+      <ToolbarButton icon="case_to_upperfirst" :title="$t('capitalize.upperFirst')" :shortcut="SK.UPPERCASEFIRST"
+        @click="
           editor
             .chain()
             .runRepeatableCommand(
               'toUppercaseFirst',
-              'convert to uppercase the first letter of every word',
+              $t('capitalize.upperFirst'),
             )
             .focus()
             .run()
@@ -254,14 +250,14 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="search" title="search and replace" :shortcut="SK.SHOW_SEARCH_DIALOG"
+      <ToolbarButton icon="search" :title="$t('show.searchAndReplace')" :shortcut="SK.SHOW_SEARCH_DIALOG"
         @click="$emit('toggleSearchAndReplaceDialog')" />
 
       <WholeDocTransformsButton :editor="editor" />
 
       <span class="button-separator" />
 
-      <!-- <ToolbarButton icon="mdi-cog-play" title="procedures on the whole document"
+      <!-- <ToolbarButton icon="mdi-cog-play" :title="$t('procedures on the whole document')"
         @click="globalProceduresDialogVisible = !globalProceduresDialogVisible">
         <GlobalProceduresDialog :visible="globalProceduresDialogVisible" :editor="editor"
           @show="globalProceduresDialogVisible = true" @hide="globalProceduresDialogVisible = false" />
@@ -277,7 +273,7 @@
       <q-badge v-if="gui.showConfiguration && configSummaries.length === 1" color="accent"><b>{{ configuration?.name ||
         'unknown' }}</b></q-badge>
       <ChooseConfigButton :current-configuration-name="configuration?.name"
-        title="reload document with a different configuration" @change-configuration="reloadWithConfiguration" />
+        :title="$t('document.reloadWithConfiguration')" @change-configuration="reloadWithConfiguration" />
       <q-badge v-if="gui.showEditorKey" color="secondary"><b>{{ editorKey }}</b></q-badge>
     </q-bar>
     <BreadCrumb v-if="editor" :editor="editor" :current-nodes-with-pos="currentNodesWithPos"
@@ -301,8 +297,6 @@ import CharsTableButton from './CharsTableButton.vue';
 import ChooseConfigButton from './ChooseConfigButton.vue';
 import CodemirrorButton from './CodemirrorButton.vue';
 import CustomWrapperMenu from './CustomWrapperMenu.vue';
-// import CustomMarkMenu from './CustomMarkMenu.vue'
-// import CustomBlocksButtons from './CustomBlocksButtons.vue';
 import ElementSelectionButton from './ElementSelectionButton.vue';
 import GlobalProceduresDialog from './GlobalProceduresDialog.vue';
 import ImageButton from './ImageButton.vue';
@@ -599,7 +593,7 @@ export default {
     },
     swapBlocksToggleTooltip() {
       const what = this.swapBlocksActive ? 'prevent' : 'allow'
-      return `click to ${what} moving/swapping paragraphs or blocks vertically with ${SK.MOVE_NODE_UP}/${SK.MOVE_NODE_DOWN}`
+      return this.$t('clickTo.' + what + 'VerticalSwappingWith') + ` ${SK.MOVE_NODE_UP}/${SK.MOVE_NODE_DOWN}`
     },
     async debug() {
       showDocStateDialog(this.editor)

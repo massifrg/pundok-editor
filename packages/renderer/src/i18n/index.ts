@@ -1,7 +1,18 @@
-import enUS from './en-US';
-import it from './it';
+import enUS from '../locales/en.json';
+import it from '../locales/it.json';
+import { Lang } from 'quasar';
+import { createI18n } from 'vue-i18n';
 
-export default {
+const messages = {
   'en-US': enUS,
   it,
 };
+
+const locale = Lang.getLocale()
+export const i18n = createI18n({
+  locale: locale || 'en-US',
+  legacy: false,
+  messages,
+});
+
+export default messages

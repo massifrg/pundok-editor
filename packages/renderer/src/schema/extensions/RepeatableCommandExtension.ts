@@ -20,6 +20,8 @@ import {
   NODE_NAME_TABLE_CELL, NODE_NAME_TABLE_HEADER, NODE_NAME_TABLE_ROW, shortcutSuffix, SK
 } from '../../common';
 import { isString } from 'lodash-es';
+import { i18n } from '../../i18n'
+const t = i18n.global.t
 
 const REPEATABLE_COMMAND_PLUGIN = 'repeatable-command-plugin';
 const SET_REPEATABLE_COMMAND = 'set-repeatable-command';
@@ -368,7 +370,7 @@ export function getCurrentRepeatableCommand(
 }
 
 export function currentRepeatableCommandTooltip(state: EditorState): string {
-  let tooltip = 'repeat last command' + shortcutSuffix('SK.REPEAT_COMMAND');
+  let tooltip = t('repeatLastCommand') + shortcutSuffix('SK.REPEAT_COMMAND');
   const repeatable = getCurrentRepeatableCommand(state);
   if (repeatable) tooltip += `: ${describeRepeatableCommand(repeatable)}`;
   return tooltip;
@@ -379,7 +381,7 @@ function describeRepeatableCommand(rep: RepeatableSingleCommand): string {
   if (commandName === 'applyAttrsChange') {
     const change = args && args[0];
     return change
-      ? `change attributes of a "${change.elemType}":\n${describeAttrsChange(
+      ? t('changeAttributesOf') + ` "${change.elemType}":\n${describeAttrsChange(
         change,
       )}`
       : '';

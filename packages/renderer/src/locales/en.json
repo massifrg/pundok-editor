@@ -1,0 +1,58 @@
+{
+  "failed": "Action failed",
+  "success": "Action was successful",
+  "toggle_": "toggle",
+  "wrapIn": {
+    "Caption": "wrap selection in a Caption",
+    "Div": "wrap selection in a Div",
+    "Figure": "wrap selection in a Figure"
+  },
+  "blockquote": "blockquote",
+  "Blockquote": "Blockquote",
+  "BulletList": "BulletList",
+  "toggle": {
+    "Blockquote": "toggle Blockquote",
+    "BulletList": "toggle BulletList",
+    "OrderedList": "toggle OrderedList",
+    "Emph": "toggle emphasis",
+    "Strong": "strong emphasis",
+    "Underline": "toggle underline",
+    "Cite": "toggle Cite (citations)",
+    "Math": "toggle Math",
+    "Link": "toggle Link",
+    "Code": "toggle Code",
+    "singleQuoted": "toggle single quoted",
+    "doubleQuoted": "toggle double quoted",
+    "smallCaps": "toggle small caps",
+    "Superscript": "toggle superscript",
+    "Subscript": "toggle subscript",
+    "Strikeout": "toggle strike through"
+  },
+  "repeatLastCommand": "repeat last command",
+  "changeAttributesOf": "change attributes of",
+  "emphasis": "emphasis",
+  "redo": "redo",
+  "undo": "undo",
+  "clearAllMarks": "clear all marks/styles",
+  "strong": "strong emphasis",
+  "underline": "underline",
+  "clickTo": {
+    "allowVerticalSwappingWith": "allow moving/swapping blocks/paragraphs vertically with",
+    "preventVerticalSwappingWith": "prevent moving/swapping blocks/paragraphs vertically with"
+  },
+  "insert": {
+    "HorizontalRule": "insert horizontal rule"
+  },
+  "show": {
+    "projectStructure": "show project structure",
+    "searchAndReplace": "search and replace"
+  },
+  "capitalize": {
+    "lower": "convert to lower case",
+    "upper": "convert to upper case",
+    "upperFirst": "uppercase the first letter of any word"
+  },
+  "document": {
+    "reloadWithConfiguration": "reload document with a different configuration"
+  }
+}
