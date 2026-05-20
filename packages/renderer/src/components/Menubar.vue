@@ -23,9 +23,9 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="undo" :disabled="!editor.can().undo()" title="undo" :shortcut="SK.UNDO"
+      <ToolbarButton icon="undo" :disabled="!editor.can().undo()" :title="$t('undo')" :shortcut="SK.UNDO"
         @click="editor.chain().undo().redecorateIndexRefs().run()" />
-      <ToolbarButton icon="redo" :disabled="!editor.can().redo()" title="redo" :shortcut="SK.REDO"
+      <ToolbarButton icon="redo" :disabled="!editor.can().redo()" :title="$t('redo')" :shortcut="SK.REDO"
         @click="editor.commands.redo()" />
 
       <span class="button-separator" />
@@ -288,7 +288,9 @@
 <script setup lang="ts">
 import { SK } from '../common'
 import { setupQuasarIcons } from './helpers/quasarIcons';
+import { useI18n } from 'vue-i18n'
 setupQuasarIcons()
+const { t } = useI18n()
 </script>
 
 <script lang="ts">

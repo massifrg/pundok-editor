@@ -1,5 +1,4 @@
 /* eslint-env node */
-
 import { defineConfig } from 'vite';
 import { getChromeVersion } from '../electron-versions/index.js';
 import { join } from 'path';
@@ -25,12 +24,20 @@ export default defineConfig({
   root: PACKAGE_ROOT,
   resolve: {
     alias: {
-      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      // '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      '#q-app': fileURLToPath(new URL('./.quasar/imports', import.meta.url)),
+      app: PACKAGE_ROOT,
     },
   },
   plugins: [
     vue({
       template: { transformAssetUrls },
+    }),
+    quasar({
+      sassVariables: resolve(
+        dirname(fileURLToPath(import.meta.url)),
+        './src/assets/css/quasar.variables.scss',
+      ),
     }),
     VueI18nPlugin({
       /* options */
@@ -38,12 +45,6 @@ export default defineConfig({
       include: resolve(
         dirname(fileURLToPath(import.meta.url)),
         './src/i18n/**',
-      ),
-    }),
-    quasar({
-      sassVariables: resolve(
-        dirname(fileURLToPath(import.meta.url)),
-        './src/assets/css/quasar.variables.scss',
       ),
     }),
     // analyzer({

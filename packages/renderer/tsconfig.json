@@ -16,7 +16,8 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "/@/*": ["./src/*"]
+      "/@/*": ["./src/*"],
+      "app/src/App.vue": ["src/PundokApp.vue"]
     },
     "lib": ["ESNext", "dom", "dom.iterable"]
   },
