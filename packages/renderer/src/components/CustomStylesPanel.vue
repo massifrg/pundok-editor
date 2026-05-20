@@ -4,7 +4,7 @@
 
       <template v-slot:before>
         <q-tabs v-model="tab" vertical fit>
-          <q-tab name="summary" title="custom styles summary at cursor">
+          <q-tab name="summary" :title="$t('customStyles.summary')">
             <q-icon name="summary" size="sm" round @mouseover="tab = 'summary'">
               <q-badge v-if="summary.find(s => s.type === 'style')" color="primary" floating rounded />
             </q-icon>
@@ -17,18 +17,19 @@
             </q-icon>
           </q-tab>
 
-          <q-tab name="header" v-if="innerParaLike" title="custom header styles (classes)" :disable="!innerParaLike">
+          <q-tab name="header" v-if="innerParaLike" :title="$t('customStyles.header')" :disable="!innerParaLike">
             <q-icon name="header_style" size="sm" round @mouseover="tab = 'header'">
               <q-badge v-if="isHeader && !isHeaderWithoutStyles()" color="primary" floating rounded />
             </q-icon>
           </q-tab>
-          <q-tab name="para" v-if="innerParaLike" title="custom paragraph styles" :disable="!innerParaLike">
+          <q-tab name="para" v-if="innerParaLike" :title="$t('customStyles.paragraph')" :disable="!innerParaLike">
             <q-icon name="paragraph_style" size="sm" round @mouseover="tab = 'para'">
               <q-badge v-if="isParagraph && !isParaWithoutStyles()" color="primary" floating rounded />
             </q-icon>
           </q-tab>
           <q-tab name="char">
-            <q-icon name="character_style" size="sm" round @mouseover="tab = 'char'">
+            <q-icon name="character_style" :title="$t('customStyles.character')" size="sm" round
+              @mouseover="tab = 'char'">
               <q-badge v-if="activeCharStyles.length > 0" color="primary" floating rounded />
             </q-icon>
           </q-tab>
@@ -87,7 +88,7 @@
           <q-tab-panel v-if="innerParaLike" name="header" class="q-pa-none">
             <q-list v-if="innerParaLike" v-for="(level, index) in headingLevels" dense>
               <q-separator v-if="index !== 0" />
-              <q-item :key="`h${level}-no-style`" clickable :title="`level ${level} header without custom class`" dense
+              <q-item :key="`h${level}-no-style`" clickable :title="$t('customStyles.headerNoStyle', { level })" dense
                 class="q-pa-xs" @click="setHeaderWithoutCustomStyles(level)">
                 <q-item-section side>
                   <q-icon :name="isHeaderWithoutStyles(level) ? 'radiobox_marked' : 'radiobox_blank'" size="xs" />
@@ -110,7 +111,7 @@
           <!-- PARAGRAPHS -->
           <q-tab-panel v-if="innerParaLike" name="para" class="q-pa-none">
             <q-list dense>
-              <q-item key="p-no-style" clickable title="normal paragraph without custom style" dense class="q-pa-xs"
+              <q-item key="p-no-style" clickable :title="$t('customStyles.paraNoStyle')" dense class="q-pa-xs"
                 @click="setParaWithoutCustomStyles()">
                 <q-item-section side>
                   <q-icon :name="isParaWithoutStyles() ? 'radiobox_marked' : 'radiobox_blank'" size="xs" />
@@ -131,7 +132,7 @@
 
           <q-tab-panel name="char" class="q-pa-none">
             <q-list dense>
-              <q-item key="char-no-style" clickable title="normal text without custom style" dense class="q-pa-xs"
+              <q-item key="char-no-style" clickable :title="$t('customStyles.spanNoStyle')" dense class="q-pa-xs"
                 @click="unsetAllCharStyles()">
                 <q-item-section side>
                   <q-icon :name="activeCharStyles.length === 0 ? 'checkbox_marked' : 'checkbox_blank'" size="xs" />
@@ -190,6 +191,7 @@ import {
 import { getEditorConfiguration, Heading } from '../schema';
 import { getTextMarkRangesBetween, nodeIcon, nodeOrMarkToPandocName } from '../schema/helpers';
 import { isString } from 'lodash-es';
+import { t } from '../i18n'
 
 const STARTING_TAB = 'summary'
 const MINI_SPLITTER_VALUE = 20

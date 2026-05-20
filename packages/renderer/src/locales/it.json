@@ -45,10 +45,13 @@
     "HorizontalRule": "inserisci una barra di separazione"
   },
   "show": {
+    "less": "mostra meno",
+    "more": "mostra di più",
     "saveButtonsLine": "mostra bottoni affiancati",
     "saveButtonsDropdown": "mostra bottoni a tendina",
     "projectStructure": "mostra la struttura del progetto",
-    "searchAndReplace": "cerca e sostituisci"
+    "searchAndReplace": "cerca e sostituisci",
+    "indicesButtons": "mostra i bottoni per i riferimenti ad indice"
   },
   "capitalize": {
     "lower": "rendi minuscolo",
@@ -70,5 +73,133 @@
   "recent": {
     "projects": "progetti recenti",
     "documents": "documenti recenti"
-  }
+  },
+  "customStyles": {
+    "summary": "sommario degli stili personalizzati alla posizione del cursore",
+    "header": "stili personalizzati per i titoli",
+    "paragraph": "stili personalizzati di paragrafo",
+    "character": "stili personalizzati di carattere (Span)",
+    "headerNoStyle": "titolo di livello {level} senza stili personalizzati",
+    "paraNoStyle": "paragrafo senza stili personalizzati",
+    "spanNoStyle": "testo senza stili personalizzati"
+  },
+  "tables": {
+    "tools": "strumenti per le tabelle",
+    "tableControls": "tabella: nuova/elimina/correggi, aggiungi/rimuovi didascalia (Caption), aggiungi intestazione/piede",
+    "bodyHeadersControls": "imposta numero di righe e colonne di intestazione delle sezioni della tabella",
+    "sectionControls": "crea/elimina sezione dati/intestazione/piede",
+    "rowsAndColumnsControls": "aggiungi/rimuovi righe/colonne",
+    "alignControls": "allineamenti orizzontale/verticale delle celle",
+    "cellsControls": "controlli per le celle: unisci/dividi, determina su quante righe/colonne si estendono",
+    "table": "tabella",
+    "bodyHeaders": "intestazioni sezioni dati",
+    "sections": "sezioni",
+    "rowsAndColumns": "righe & colonne",
+    "columnsAlignments": "allineamento colonna",
+    "cellAlignment": "allineamento",
+    "cells": "celle",
+    "align": {
+      "default": "allineamento predefinito della colonna (vedi ColSpec della tabella)",
+      "left": "allinea a sinistra",
+      "center": "allinea al centro",
+      "right": "allinea a destra",
+      "top": "allinea in alto",
+      "middle": "allinea verticalmente al centro",
+      "bottom": "allinea in basso",
+      "baseLine": "allineamento verticale alla linea di base del testo"
+    },
+    "columnAlign": {
+      "default": "allineamento della colonna predefinito (AlignDefault)",
+      "left": "allineamento della colonna a sinistra (AlignLeft)",
+      "center": "allineamento della colonna al centro (AlignCenter)",
+      "right": "allineamento della colonna a destra (AlignRight)"
+    },
+    "addColumnBefore": "aggiungi una colonna a sinistra",
+    "addColumnAfter": "aggiungi una colonna a destra",
+    "addRowBefore": "aggiungi una riga sopra",
+    "addRowAfter": "aggiungi una riga sotto",
+    "removeRow": "elimina riga/righe",
+    "removeColumn": "elimina colonna(e)",
+    "removeSection": "elimina sezione",
+    "addFoot": "aggiungi piede della tabella",
+    "makeFoot": "imposta il piede della tabella con le righe selezionate",
+    "addBodyAfter": "aggiungi una sezione sotto",
+    "addBodyBefore": "aggiunge una sezione sopra",
+    "makeBody": "crea una nuova sezione con le righe selezionate",
+    "makeHead": "imposta l'intestazione della tabella con le righe selezionate",
+    "addHead": "aggiungi l'intestazione della tabella",
+    "increaseBodyHeaderColumns": "aumenta le colonne dell'intestazione di sezione",
+    "decreaseBodyHeaderColumns": "riduci le colonne dell'intestazione di sezione",
+    "increaseBodyHeaderRows": "aumenta il numero di righe dell'intestazione di sezione",
+    "decreaseBodyHeaderRows": "riduci il numero di righe dell'intestazione di sezione",
+    "equalizeColumnWidths": "colonne con la stessa larghezza",
+    "checkAndFix": "controlla e correggi la tabella",
+    "deleteTable": "elimina la tabella",
+    "convertToText": "converti la tabella in testo",
+    "convertFromText": "converti testo in tabella",
+    "createNewTable": "crea una nuova tabella",
+    "deleteCaption": "elimina la didascalia",
+    "addCaption": "aggiungi la didascalia",
+    "textVsTable": {
+      "regexSeparator": "il separatore è un'espressione regolare",
+      "commonSeparators": "separatori predefiniti",
+      "sep": {
+        "twoOrMoreSpaces": "due o più spazi",
+        "oneOrMoreSpaces": "uno o più spazi",
+        "bar": "barra verticale",
+        "semicolonAndSpace": "punto e virgola seguito da spazio",
+        "doubleSpace": "doppio spazio",
+        "semicolon": "punto e virgola (con eventuali spazi ai lati)",
+        "comma": "virgola (con eventuali spazi ai lati)"
+      }
+    },
+    "mergeCells": "unisci celle",
+    "splitCell": "dividi cella"
+  },
+  "move": "sposta {side}",
+  "top": "in alto",
+  "bottom": "in basso",
+  "right": "a destra",
+  "left": "a sinistra",
+  "table": {
+    "maximizeTableWidth": "tabella a piena larghezza"
+  },
+  "cancel": "annulla",
+  "convert": "converti",
+  "reset": "ripristina",
+  "search": {
+    "saveCurrentSearchSettings": "salva le impostazioni correnti di cerca e sostituisci",
+    "withCssSelectors": "cerca con i selettori CSS",
+    "loadSearchSettings": "carica impostazioni di cerca e sostituisci predefinite o salvate in precedenza",
+    "loadCssSearchSettings": "carica impostazioni di ricerca con selettori CSS predefinite o salvate in precedenza",
+    "cycleFoundItems": "spostamento ciclico tra i risultati della ricerca",
+    "mergeAdjacentMarks": "unisci gli intervalli adiacenti di testi con lo stesso stile (Mark)",
+    "caseInsensitive": "non distinguere maiuscole/minuscole",
+    "wholeWords": "parole intere",
+    "selectPrev": "vai al risultato precedente",
+    "selectNext": "vai al risultato successivo",
+    "replaceSelected": "sostituisci il risultato selezionato",
+    "replaceSelectedAndNext": "sostituisci il risultato selezionato e passa al successivo",
+    "replaceAll": "sostituisci tutti",
+    "search": "inizia la ricerca",
+    "regex": "cerca con espressioni regolari (Unicode compatibili)",
+    "label": {
+      "cssSelector": "selettore(i) CSS",
+      "searchRegex": "cerca espressione regolare",
+      "searchText": "cerca testo",
+      "replaceWith": "sostituisci con",
+      "foundCount": "nessuna occorrenza di \"{what}\" trovata | trovata 1 occorrenza di \"{what}\" | trovate {count} occorrenze di \"{what}\"",
+      "whichFoundSelected": "(selezionata la #{index})"
+    },
+    "actions": {
+      "onFoundItems": "azione da eseguire sui risultati trovati | azioni da eseguire sui risultati trovati",
+      "onReplacedItems": "azione da eseguire sui risultati sostituiti | azioni da eseguire sui risultati sostituiti",
+      "noAction": "(nessuna azione)",
+      "remove": "rimuovi azione"
+    },
+    "appendNewAction": "aggiungi nuova",
+    "searchNotReplace": "cerca soltanto, non sostituire"
+  },
+  "close": "chiudi",
+  "newF": "nuova"
 }

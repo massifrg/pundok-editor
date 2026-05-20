@@ -16,6 +16,7 @@ import SetIndexRefActionEditor from './actioneditors/SetIndexRefActionEditor.vue
 import SetSpanActionEditor from './actioneditors/SetSpanActionEditor.vue'
 import { defaultPropsFor } from '../actions/defaultProps';
 import { getEditorConfiguration } from '../schema';
+import { t } from '../i18n'
 
 export default {
   props: ['editor', 'startActions', 'searchOnly'],
@@ -37,7 +38,9 @@ export default {
       return availableActionsNames()
     },
     appendNewActionTooltip() {
-      return `append new action to be applied on ${this.searchOnly ? 'found' : 'replaced'} texts`
+      return this.$t('search.appendNewAction')
+        + ' '
+        + this.$t(this.searchOnly ? 'search.actions.onFoundItems' : 'search.actions.onFoundItems', 1)
     }
   },
   watch: {
@@ -148,7 +151,9 @@ export default {
 <template>
   <q-card>
     <q-card-section class="q-px-xs">
-      <div class="q-text-h6 q-ma-md">Actions to be applied on {{ searchOnly ? 'found' : 'replaced' }} texts:</div>
+      <div class="q-text-h6 q-ma-md">{{ $t(searchOnly ? 'search.actions.onFoundItems' :
+        'search.actions.onReplacedItems',
+        2) }}:</div>
       <q-list>
         <q-item v-for="(a, index) in actions" dense>
           <q-item-section side>
@@ -165,24 +170,26 @@ export default {
           </q-item-section>
           <q-item-section>
             <q-btn-dropdown :label="a.name" :title="actionLabel(a.name)" :icon="actionIcon(a.name)">
-              <q-item clickable @click="removeActionItem(index)" v-close-popup>
-                <q-item-section side>
-                  <q-icon name="delete" />
-                </q-item-section>
-                <q-item-section color="negative">
-                  <q-item-label>remove action</q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-separator />
-              <q-item v-for="action_name in availableActionsNames" clickable @click="setActionItem(index, action_name)"
-                v-close-popup>
-                <q-item-section side>
-                  <q-icon :name="actionIcon(action_name)"></q-icon>
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ actionLabel(action_name) }}</q-item-label>
-                </q-item-section>
-              </q-item>
+              <q-list>
+                <q-item clickable key="remove" @click="removeActionItem(index)" v-close-popup>
+                  <q-item-section side>
+                    <q-icon name="delete" />
+                  </q-item-section>
+                  <q-item-section color="negative">
+                    <q-item-label>{{ $t('search.actions.remove') }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-separator />
+                <q-item v-for="action_name in availableActionsNames" :key="action_name" clickable
+                  @click="setActionItem(index, action_name)" v-close-popup>
+                  <q-item-section side>
+                    <q-icon :name="actionIcon(action_name)"></q-icon>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ actionLabel(action_name) }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
             </q-btn-dropdown>
           </q-item-section>
           <q-item-section side>
@@ -205,9 +212,9 @@ export default {
       </q-list>
     </q-card-section>
     <q-card-actions align="center">
-      <q-btn size="sm" icon="add_action" label="new" :title="appendNewActionTooltip" @click="newActionItem()" />
+      <q-btn size="sm" icon="add_action" :label="$t('newF')" :title="appendNewActionTooltip" @click="newActionItem()" />
       <q-space />
-      <q-btn size="sm" icon="close" label="close" @click="$emit('close')" />
+      <q-btn size="sm" icon="close" :label="$t('close')" @click="$emit('close')" />
     </q-card-actions>
   </q-card>
 </template>

@@ -16,10 +16,11 @@ import {
 } from '../common';
 import ActionsList from './ActionsList.vue';
 import { getEditorConfiguration } from '../schema';
+import { t } from '../i18n'
 
 function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConfig) {
   if (!actions || actions.length === 0)
-    return '(no actions)'
+    return t('search.actions.noAction')
   return actions.map(a => {
     const actionName = a.name as ActionName
     const prefix = actionName.startsWith('add')

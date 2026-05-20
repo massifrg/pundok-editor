@@ -1,52 +1,52 @@
 <template>
-  <ToolbarButton icon="table" title="tools for tables" @click="open()">
+  <ToolbarButton icon="table" :title="$t('tables.tools')" @click="open()">
     <q-dialog :model-value="visible" :position="dialogPosition" seamless>
       <q-card class="q-pa-sm q-gutter-sm">
         <q-card-section class="q-ma-xs" horizontal>
           <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="arrow_upward"
-            title="move this dialog to the top" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
+            :title="$t('move', { side: $t('top') })" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
           <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="arrow_downward"
-            title="move this dialog to the bottom" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
+            :title="$t('move', { side: $t('bottom') })" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
           <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="arrow_right"
-            title="move this dialog to the right" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
+            :title="$t('move', { side: $t('right') })" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
           <q-btn v-if="dialogPosition != 'left'" dense class="q-px-md" icon="arrow_left"
-            title="move this dialog to the left" size="xs" @click="() => { dialogPosition = 'left' }"></q-btn>
+            :title="$t('move', { side: $t('left') })" size="xs" @click="() => { dialogPosition = 'left' }"></q-btn>
           <q-space />
-          <q-toggle v-model="showTableControls" icon="table_controls"
-            title="table controls: new/delete/fix table, add/remove caption, add head/foot" />
+          <q-toggle v-model="showTableControls" icon="table_controls" :title="$t('tables.tableControls')" />
           <q-toggle v-model="showBodyHeadersControls" icon="table_body_headers_controls"
-            title="add/remove top/left body headers" />
-          <q-toggle v-model="showSectionsControls" icon="table_sections_controls" title="make/delete body/head/foot" />
-          <q-toggle v-model="showRowsColsControls" icon="table_rows_cols_controls" title="add/remove rows/columns" />
-          <q-toggle v-model="showAlignControls" icon="table_align_controls"
-            title="horizontal/vertical cells alignment" />
-          <q-toggle v-model="showCellsControls" icon="table_cells_controls"
-            title="cells: merge/split, increase/decrease rows/columns span" />
+            :title="$t('tables.bodyHeadersControls')" />
+          <q-toggle v-model="showSectionsControls" icon="table_sections_controls"
+            :title="$t('tables.sectionControls')" />
+          <q-toggle v-model="showRowsColsControls" icon="table_rows_cols_controls"
+            :title="$t('tables.rowsAndColumnsControls')" />
+          <q-toggle v-model="showAlignControls" icon="table_align_controls" :title="$t('tables.alignControls')" />
+          <q-toggle v-model="showCellsControls" icon="table_cells_controls" :title="$t('tables.cellsControls')" />
           <q-space />
           <q-btn dense icon="close" size:xs @click="visible = false" />
         </q-card-section>
         <q-card-section v-if="showTableControls" horizontal class="q-mt-md">
-          <div class="q-pt-sm q-mr-sm">table:</div>
+          <div class="q-pt-sm q-mr-sm">{{ $t('tables.table') }}:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
-            <q-btn :size="butSize" color="primary" rounded icon="table_new" title="create new table"
+            <q-btn :size="butSize" color="primary" rounded icon="table_new" :title="$t('tables.createNewTable')"
               @click="newTable()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_from_text" title="convert text to table"
+            <q-btn :size="butSize" color="primary" rounded icon="table_from_text" :title="$t('tables.convertFromText')"
               @click="conversionMode = 'text2table'; showConversionDialog = true"
               :disabled="!editor.can().textToTable()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_to_text" title="convert table to text"
+            <q-btn :size="butSize" color="primary" rounded icon="table_to_text" :title="$t('tables.convertToText')"
               @click="conversionMode = 'table2text'; showConversionDialog = true"
               :disabled="!editor.can().tableToText()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_delete" title="delete table"
+            <q-btn :size="butSize" color="primary" rounded icon="table_delete" :title="$t('tables.deleteTable')"
               :disabled="!isCursorInTable" @click="deleteTable()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_check_and_fix" title="check and fix table"
+            <q-btn :size="butSize" color="primary" rounded icon="table_check_and_fix" :title="$t('tables.checkAndFix')"
               :disabled="!editor.can().fixPandocTable()" @click="fixTable()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_full_width" title="maximise table width"
-              :disabled="!editor.can().tableToFullWidth()" @click="editor?.commands.tableToFullWidth()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_sync" title="equalize column widths"
+            <q-btn :size="butSize" color="primary" rounded icon="table_full_width"
+              :title="$t('table.maximizeTableWidth')" :disabled="!editor.can().tableToFullWidth()"
+              @click="editor?.commands.tableToFullWidth()" />
+            <q-btn :size="butSize" color="primary" rounded icon="table_sync" :title="$t('tables.equalizeColumnWidths')"
               :disabled="!editor.can().equalizeColumnWidths()" @click="editor?.commands.equalizeColumnWidths()" />
             <!-- <q-btn color="primary" rounded icon="mdi-table-lock"
-              title="secure current column widths into table column specs (default widths get an actual value)"
+              :title="$t('secure current column widths into table column specs (default widths get an actual value)')"
               :disabled="!editor.can().secureColumnWidths()" @click="editor?.commands.secureColumnWidths()" /> -->
           </div>
           <!-- <div class="q-pt-sm q-mr-sm">caption:</div> -->
@@ -56,27 +56,27 @@
           </div>
         </q-card-section>
         <q-card-section v-if="showBodyHeadersControls" horizontal class="q-mt-md">
-          <div class="q-pt-sm q-mr-sm">body headers:</div>
+          <div class="q-pt-sm q-mr-sm">{{ $t('tables.bodyHeaders') }}:</div>
           <q-space></q-space>
           <div class="q-gutter-xs q-mr-md">
-            <q-btn color="primary" rounded dense title="decrease body's header rows"
+            <q-btn color="primary" rounded dense :title="$t('tables.decreaseBodyHeaderRows')"
               :disabled="!editor.can().decreaseTableBodyHeaderRows()" @click="decreaseTableBodyHeaderRows()">
               <q-icon name="table_row" />
               <q-icon name="arrow_upward" size="xs" />
             </q-btn>
-            <q-btn color="primary" rounded dense title="increase body's header rows"
+            <q-btn color="primary" rounded dense :title="$t('tables.increaseBodyHeaderRows')"
               :disabled="!editor.can().increaseTableBodyHeaderRows()" @click="increaseTableBodyHeaderRows()">
               <q-icon name="table_row" />
               <q-icon name="arrow_downward" size="xs" />
             </q-btn>
           </div>
           <div class="q-gutter-xs">
-            <q-btn color="primary" rounded dense title="decrease body's header columns"
+            <q-btn color="primary" rounded dense :title="$t('tables.decreaseBodyHeaderColumns')"
               :disabled="!editor.can().decreaseTableBodyHeaderColumns()" @click="decreaseTableBodyHeaderColumns()">
               <q-icon name="table_column" />
               <q-icon name="arrow_left" size="xs" />
             </q-btn>
-            <q-btn color="primary" rounded dense title="increase body's header columns"
+            <q-btn color="primary" rounded dense :title="$t('tables.increaseBodyHeaderColumns')"
               :disabled="!editor.can().increaseTableBodyHeaderColumns()" @click="increaseTableBodyHeaderColumns()">
               <q-icon name="table_column" />
               <q-icon name="arrow_right" size="xs" />
@@ -84,140 +84,143 @@
           </div>
         </q-card-section>
         <q-card-section v-if="showSectionsControls" horizontal class="q-mt-md">
-          <div class="q-pt-sm q-mr-sm">sections:</div>
+          <div class="q-pt-sm q-mr-sm">{{ $t('tables.sections') }}:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
-            <q-btn color="primary" rounded dense size="sm" title="add table head"
+            <q-btn color="primary" rounded dense size="sm" :title="$t('tables.addHead')"
               :disabled="!editor.can().addTableHead()" @click="addTableHead()">
               <q-icon name="table_head" size="xs" />
               <q-icon name="add" size="xs" />
             </q-btn>
-            <q-btn color="primary" rounded size="sm" icon="table_head" title="make the table head with selected rows"
+            <q-btn color="primary" rounded size="sm" icon="table_head" :title="$t('tables.makeHead')"
               :disabled="!editor.can().makeTableHead()" @click="makeTableHead()" />
           </div>
           <div class="q-gutter-xs q-mr-md">
-            <q-btn color="primary" rounded dense size="sm" title="add table body before"
+            <q-btn color="primary" rounded dense size="sm" :title="$t('tables.addBodyBefore')"
               :disabled="!editor.can().addTableBodyBefore()" @click="addTableBodyBefore()">
               <q-icon name="table_body" size="xs" />
               <q-icon name="table_row_add_before" size="xs" />
             </q-btn>
-            <q-btn color="primary" rounded size="sm" icon="table_body" title="make new table body with selected rows"
+            <q-btn color="primary" rounded size="sm" icon="table_body" :title="$t('tables.makeBody')"
               :disabled="!isCursorInTable || !editor.can().makeTableBody()" @click="makeTableBody()" />
-            <q-btn color="primary" rounded dense size="sm" title="add table body after"
+            <q-btn color="primary" rounded dense size="sm" :title="$t('tables.addBodyAfter')"
               :disabled="!editor.can().addTableBodyAfter()" @click="addTableBodyAfter()">
               <q-icon name="table_body" size="xs" />
               <q-icon name="table_row_add_after" size="xs" />
             </q-btn>
           </div>
           <div class="q-gutter-xs q-mr-md">
-            <q-btn color="primary" rounded size="sm" icon="table_foot" title="make the table foot with selected rows"
+            <q-btn color="primary" rounded size="sm" icon="table_foot" :title="$t('tables.makeFoot')"
               :disabled="!editor.can().makeTableFoot()" @click="makeTableFoot()" />
-            <q-btn color="primary" rounded dense size="sm" title="add table foot"
+            <q-btn color="primary" rounded dense size="sm" :title="$t('tables.addFoot')"
               :disabled="!editor.can().addTableFoot()" @click="addTableFoot()">
               <q-icon name="table_foot" size="xs" />
               <q-icon name="add" size="xs" />
             </q-btn>
           </div>
           <div class="q-gutter-xs">
-            <q-btn color="primary" rounded size="sm" icon="table_section_delete" title="delete table section"
+            <q-btn color="primary" rounded size="sm" icon="table_section_delete" :title="$t('tables.removeSection')"
               :disabled="!editor.can().deleteSection()" @click="deleteSection()" />
           </div>
         </q-card-section>
         <q-card-section v-if="showRowsColsControls" horizontal class="q-mt-md">
-          <div class="q-pt-sm q-mr-sm">rows & columns:</div>
+          <div class="q-pt-sm q-mr-sm">{{ $t('tables.rowsAndColumns') }}:</div>
           <q-space></q-space>
           <div class="q-gutter-xs q-mr-md">
-            <q-btn :size="butSize" color="primary" rounded icon="table_row_add_before" title="add a row before"
-              :disabled="!isCursorInTable" @click="addRowBefore()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_row_add_after" title="add a row after"
+            <q-btn :size="butSize" color="primary" rounded icon="table_row_add_before"
+              :title="$t('tables.addRowBefore')" :disabled="!isCursorInTable" @click="addRowBefore()" />
+            <q-btn :size="butSize" color="primary" rounded icon="table_row_add_after" :title="$t('tables.addRowAfter')"
               :disabled="!isCursorInTable" @click="addRowAfter()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_row_delete" title="remove row(s)"
+            <q-btn :size="butSize" color="primary" rounded icon="table_row_delete" :title="$t('tables.removeRow')"
               :disabled="!isCursorInTable" @click="deleteRow()" />
           </div>
           <div class="q-gutter-xs">
-            <q-btn :size="butSize" color="primary" rounded icon="table_column_add_before" title="add a column before"
-              :disabled="!isCursorInTable" @click="addColumnBefore()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_column_add_after" title="add a column after"
-              :disabled="!isCursorInTable" @click="addColumnAfter()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_column_delete" title="remove column(s)"
+            <q-btn :size="butSize" color="primary" rounded icon="table_column_add_before"
+              :title="$t('tables.addColumnBefore')" :disabled="!isCursorInTable" @click="addColumnBefore()" />
+            <q-btn :size="butSize" color="primary" rounded icon="table_column_add_after"
+              :title="$t('tables.addColumnAfter')" :disabled="!isCursorInTable" @click="addColumnAfter()" />
+            <q-btn :size="butSize" color="primary" rounded icon="table_column_delete" :title="$t('tables.removeColumn')"
               :disabled="!isCursorInTable" @click="deleteColumn()" />
           </div>
         </q-card-section>
         <q-card-section v-if="showAlignControls" horizontal class="q-mt-md">
-          <div class="q-pt-sm q-mr-sm">columns alignment:</div>
+          <div class="q-pt-sm q-mr-sm">{{ $t('tables.columnsAlignments') }}:</div>
           <q-space />
           <div class="q-gutter-xs">
             <q-btn :disabled="!isCursorInTable" :size="butSize" :outline="!isColTextAlign('AlignDefault')"
-              title="column alignment: AlignDefault" color="primary" rounded
+              :title="$t('tables.columnAlign.default')" color="primary" rounded
               @click="setColumnAlignment('AlignDefault')">
               <q-icon name="table_column" />
               <q-icon name="table_format_column" />
             </q-btn>
             <q-btn :disabled="!isCursorInTable" :size="butSize" :outline="!isColTextAlign('AlignLeft')"
-              title="column alignment: AlignLeft" color="primary" rounded @click="setColumnAlignment('AlignLeft')">
+              :title="$t('tables.columnAlign.left')" color="primary" rounded @click="setColumnAlignment('AlignLeft')">
               <q-icon name="table_column" />
               <q-icon name="align_left" />
             </q-btn>
             <q-btn :disabled="!isCursorInTable" :size="butSize" :outline="!isColTextAlign('AlignCenter')"
-              title="column alignment: AlignCenter" color="primary" rounded @click="setColumnAlignment('AlignCenter')">
+              :title="$t('tables.columnAlign.center')" color="primary" rounded
+              @click="setColumnAlignment('AlignCenter')">
               <q-icon name="table_column" />
               <q-icon name="align_center" />
             </q-btn>
             <q-btn :disabled="!isCursorInTable" :size="butSize" :outline="!isColTextAlign('AlignRight')"
-              title="column alignment: AlignRight" color="primary" rounded @click="setColumnAlignment('AlignRight')">
+              :title="$t('tables.columnAlign.right')" color="primary" rounded @click="setColumnAlignment('AlignRight')">
               <q-icon name="table_column" />
               <q-icon name="align_right" />
             </q-btn>
           </div>
         </q-card-section>
         <q-card-section v-if="showAlignControls" horizontal class="q-mt-md">
-          <div class="q-pt-sm q-mr-sm">alignment:</div>
+          <div class="q-pt-sm q-mr-sm">{{ $t('tables.cellAlignment') }}:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
             <q-btn :disabled="!isCursorInTable" :size="butSize" :outline="!isSelTextAlign('default')"
-              icon="align_default" title="default alignment of the column (see table's ColSpec)" color="primary" rounded
+              icon="align_default" :title="$t('tables.align.default')" color="primary" rounded
               @click="unsetTextAlign()" />
             <q-btn :disabled="!isCursorInTable" :size="butSize" :outline="!isSelTextAlign('left')" icon="align_left"
-              title="align left" color="primary" rounded @click="setTextAlign('left')" />
+              :title="$t('tables.align.left')" color="primary" rounded @click="setTextAlign('left')" />
             <q-btn :disabled="!isCursorInTable" :size="butSize" :outline="!isSelTextAlign('center')" icon="align_center"
-              title="align center" color="primary" rounded @click="setTextAlign('center')" />
+              :title="$t('tables.align.center')" color="primary" rounded @click="setTextAlign('center')" />
             <q-btn :disabled="!isCursorInTable" :size="butSize" :outline="!isSelTextAlign('right')" icon="align_right"
-              title="align right" color="primary" rounded @click="setTextAlign('right')" />
+              :title="$t('tables.align.right')" color="primary" rounded @click="setTextAlign('right')" />
           </div>
           <div class="q-gutter-xs">
             <q-btn :disabled="!isCursorInTable" :size="butSize" icon="align_baseline"
-              :outline="!isSelVertAlign('baseline')" title="vertical alignment to the base line" color="primary" rounded
+              :outline="!isSelVertAlign('baseline')" :title="$t('tables.align.baseLine')" color="primary" rounded
               @click="setVerticalAlign('baseline')" />
             <q-btn :disabled="!isCursorInTable" :size="butSize" icon="align_top" :outline="!isSelVertAlign('top')"
-              title="vertical alignment top" color="primary" rounded @click="setVerticalAlign('top')" />
+              :title="$t('tables.align.top')" color="primary" rounded @click="setVerticalAlign('top')" />
             <q-btn :disabled="!isCursorInTable" :size="butSize" icon="align_middle" :outline="!isSelVertAlign('middle')"
-              title="vertical alignment middle" color="primary" rounded @click="setVerticalAlign('middle')" />
+              :title="$t('tables.align.middle')" color="primary" rounded @click="setVerticalAlign('middle')" />
             <q-btn :disabled="!isCursorInTable" :size="butSize" icon="align_bottom" :outline="!isSelVertAlign('bottom')"
-              title="vertical alignment bottom" color="primary" rounded @click="setVerticalAlign('bottom')" />
+              :title="$t('tables.align.bottom')" color="primary" rounded @click="setVerticalAlign('bottom')" />
           </div>
         </q-card-section>
         <q-card-section v-if="showCellsControls" horizontal class="q-mt-md">
           <!-- <div class="q-pt-sm q-mr-sm">cell spans:</div> -->
-          <div class="q-pt-sm q-mr-sm">cells:</div>
+          <div class="q-pt-sm q-mr-sm">{{ $t('tables.cells') }}:</div>
           <q-space />
           <div class="q-gutter-xs q-mr-md">
             <q-btn :size="butSize" color="primary" rounded icon="table_cell_colspan_decrease"
-              title="decrease cell's column span" :disabled="!editor.can().decreaseColspan()"
+              :title="$t('decrease cell\'s column span')" :disabled="!editor.can().decreaseColspan()"
               @click="decreaseColspan()" />
             <q-btn :size="butSize" color="primary" rounded icon="table_cell_colspan_increase"
-              title="increase cell's column span" :disabled="!editor.can().increaseColspan()"
+              :title="$t('increase cell\'s column span')" :disabled="!editor.can().increaseColspan()"
               @click="increaseColspan()" />
           </div>
           <div class="q-gutter-xs q-mr-md">
             <q-btn :size="butSize" color="primary" rounded icon="table_cell_rowspan_decrease"
-              title="decrease cell's row span" :disabled="!editor.can().decreaseRowspan()" @click="decreaseRowspan()" />
+              :title="$t('decrease cell\'s row span')" :disabled="!editor.can().decreaseRowspan()"
+              @click="decreaseRowspan()" />
             <q-btn :size="butSize" color="primary" rounded icon="table_cell_rowspan_increase"
-              title="increase cell's row span" :disabled="!editor.can().increaseRowspan()" @click="increaseRowspan()" />
+              :title="$t('increase cell\'s row span')" :disabled="!editor.can().increaseRowspan()"
+              @click="increaseRowspan()" />
           </div>
           <div class="q-gutter-xs">
-            <q-btn :size="butSize" color="primary" rounded icon="table_cells_merge" title="merge cells"
+            <q-btn :size="butSize" color="primary" rounded icon="table_cells_merge" :title="$t('tables.mergeCells')"
               :disabled="!editor.can().mergeCells()" @click="mergeCells()" />
-            <q-btn :size="butSize" color="primary" rounded icon="table_cell_split" title="split cell"
+            <q-btn :size="butSize" color="primary" rounded icon="table_cell_split" :title="$t('tables.splitCell')"
               :disabled="!editor.can().splitCell()" @click="splitCell()" />
           </div>
         </q-card-section>
@@ -226,8 +229,8 @@
     <q-dialog :model-value="visible && showConversionDialog">
       <q-card>
         <q-card-section horizontal>
-          <q-btn class="q-ma-xs" size="sm" rounded color="primary" label="" title="common separators"
-            icon="load_predefined">
+          <q-btn class="q-ma-xs" size="sm" rounded color="primary" label=""
+            :title="$t('tables.textVsTable.commonSeparators')" icon="load_predefined">
             <q-menu anchor="bottom start" self="bottom end" auto-close>
               <q-list>
                 <q-item v-for="sep in predefinedSeparators(conversionMode === 'table2text')" clickable
@@ -241,15 +244,15 @@
           <q-input :model-value="separator" @update:model-value="setSeparator" />
           <q-space />
           <q-btn v-if="conversionMode === 'text2table'" class="q-ma-xs" size="sm" rounded color="primary" label=""
-            :outline="!regexSeparator" icon="regex" title="separator is a regular expression"
+            :outline="!regexSeparator" icon="regex" :title="$t('tables.textVsTable.regexSeparator')"
             @click="regexSeparator = !regexSeparator" />
         </q-card-section>
         <q-card-actions>
           <q-space />
-          <q-btn icon="cancel" label="cancel" color="primary" @click="showSectionsControls = false" />
-          <q-btn v-if="conversionMode === 'text2table'" icon="check" label="convert" color="primary"
+          <q-btn icon="cancel" :label="$t('cancel')" color="primary" @click="showConversionDialog = false" />
+          <q-btn v-if="conversionMode === 'text2table'" icon="check" :label="$t('convert')" color="primary"
             @click="textToTable()" />
-          <q-btn v-if="conversionMode === 'table2text'" icon="check" label="convert" color="primary"
+          <q-btn v-if="conversionMode === 'table2text'" icon="check" :label="$t('convert')" color="primary"
             @click="tableToText()" />
         </q-card-actions>
       </q-card>
@@ -264,7 +267,7 @@ setupQuasarIcons()
 
 <script lang="ts">
 import { NodeWithPos } from '@tiptap/core';
-import { CellSelection, isInTable, TableMap } from '@massifrg/prosemirror-tables-sections'
+import { CellSelection, isInTable, TableMap, tableSectionsCount } from '@massifrg/prosemirror-tables-sections'
 import { depthOfInnerNodeType } from '../schema/helpers';
 import ToolbarButton from './ToolbarButton.vue';
 import { Alignment } from '../pandoc';
@@ -388,8 +391,8 @@ export default {
       const editor = this.editor
       const state = editor?.state
       return state && isInTable(state) && editor.can().deleteTableCaption()
-        ? "delete caption"
-        : "add caption"
+        ? this.$t('tables.deleteCaption')
+        : this.$t('tables.addCaption')
     },
     toggleCaption() {
       const editor = this.editor
@@ -526,14 +529,15 @@ export default {
       )
     },
     predefinedSeparators(noRegex?: boolean): { separator: string, regex: boolean, description: string }[] {
+      const t = this.$t
       return ([
-        { separator: "\\s{2,}", regex: true, description: "2 or more spaces" },
-        { separator: "\\s+", regex: true, description: "1 or more spaces" },
-        { separator: "|", regex: false, description: "vertical bar" },
-        { separator: "\\s*,\\s*", regex: true, description: "comma (with eventual spaces around)" },
-        { separator: "\\s*;\\s*", regex: true, description: "semicolon (with eventual spaces around)" },
-        { separator: "  ", regex: false, description: "double space" },
-        { separator: "; ", regex: false, description: "semicolon and space" },
+        { separator: "\\s{2,}", regex: true, description: t('tables.textVsTable.sep.twoOrMoreSpaces') },
+        { separator: "\\s+", regex: true, description: t('tables.textVsTable.sep.oneOrMoreSpaces') },
+        { separator: "|", regex: false, description: t('tables.textVsTable.sep.bar') },
+        { separator: "\\s*,\\s*", regex: true, description: t('tables.textVsTable.sep.comma') },
+        { separator: "\\s*;\\s*", regex: true, description: t('tables.textVsTable.sep.semicolon') },
+        { separator: "  ", regex: false, description: t('tables.textVsTable.sep.doubleSpace') },
+        { separator: "; ", regex: false, description: t('tables.textVsTable.sep.semicolonAndSpace') },
       ]).filter(s => !(noRegex && s.regex))
     },
     setSeparator(separator: string | number | null, regex?: boolean) {

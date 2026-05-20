@@ -10,7 +10,8 @@ const messages = {
 
 const locale = Lang.getLocale()
 export const i18n = createI18n({
-  locale: locale || 'en-US',
+  locale,
+  fallbackLocale: 'en-US',
   legacy: false,
   messages,
 });

@@ -44,10 +44,13 @@
     "HorizontalRule": "insert horizontal rule"
   },
   "show": {
+    "less": "show less",
+    "more": "show more",
     "saveButtonsLine": "show all buttons for save/save as/save a copy",
     "saveButtonsDropdown": "show save/save as/save a copy as a dropdown button",
     "projectStructure": "show project structure",
-    "searchAndReplace": "search and replace"
+    "searchAndReplace": "search and replace",
+    "indicesButtons": "show buttons for indices' references"
   },
   "capitalize": {
     "lower": "convert to lower case",
@@ -70,5 +73,133 @@
     "projects": "recent projects",
     "documents": "recent documents",
     "projectsLong": "newdocumentb"
-  }
+  },
+  "customStyles": {
+    "summary": "custom styles summary at cursor",
+    "header": "custom styles for headers",
+    "paragraph": "custom styles for paragraphs",
+    "character": "custom character styles (Span)",
+    "headerNoStyle": "level {level} header without custom style",
+    "paraNoStyle": "paragraph with no custom style",
+    "spanNoStyle": "normal text without custom style"
+  },
+  "tables": {
+    "tools": "tools for tables",
+    "tableControls": "table controls: new/delete/fix table, add/remove caption, add head/foot",
+    "bodyHeadersControls": "add/remove top/left body headers",
+    "sectionControls": "make/delete body/head/foot",
+    "rowsAndColumnsControls": "add/remove rows/columns",
+    "alignControls": "horizontal/vertical cells alignment",
+    "cellsControls": "cells: merge/split, increase/decrease rows/columns span",
+    "table": "table",
+    "bodyHeaders": "body headers",
+    "sections": "sections",
+    "rowsAndColumns": "rows & columns",
+    "columnsAlignments": "default column align",
+    "cellAlignment": "alignment",
+    "cells": "cells",
+    "align": {
+      "default": "default alignment of the column (see table's ColSpec)",
+      "left": "align to the left",
+      "center": "align to the center",
+      "right": "align to the right",
+      "top": "vertical alignment to the top",
+      "middle": "vertical alignment to the center",
+      "bottom": "align to the bottom",
+      "baseLine": "vertical alignment to the base line"
+    },
+    "columnAlign": {
+      "default": "default column alignment (AlignDefault)",
+      "left": "column alignment to the left (AlignLeft)",
+      "center": "column alignment to the center (AlignCenter)",
+      "right": "column alignment to the right (AlignRight)"
+    },
+    "addColumnBefore": "add a column before",
+    "addColumnAfter": "add a column after",
+    "addRowBefore": "add a row before",
+    "addRowAfter": "add a row after",
+    "removeRow": "remove row(s)",
+    "removeColumn": "remove column(s)",
+    "removeSection": "delete table section",
+    "addFoot": "add table foot",
+    "makeFoot": "make the table foot with selected rows",
+    "addBodyAfter": "add table body after",
+    "addBodyBefore": "add table body before",
+    "makeBody": "make new table body with selected rows",
+    "makeHead": "make the table head with selected rows",
+    "addHead": "add table head",
+    "increaseBodyHeaderColumns": "increase body's header columns",
+    "decreaseBodyHeaderColumns": "decrease body's header columns",
+    "increaseBodyHeaderRows": "increase body's header rows",
+    "decreaseBodyHeaderRows": "decrease body's header rows",
+    "equalizeColumnWidths": "equalize column widths",
+    "convertToText": "convert table to text",
+    "addCaption": "add caption",
+    "createNewTable": "create new table",
+    "convertFromText": "convert text to table",
+    "deleteTable": "delete table",
+    "checkAndFix": "check and fix table",
+    "textVsTable": {
+      "regexSeparator": "separator is a regular expression",
+      "commonSeparators": "common separators",
+      "sep": {
+        "twoOrMoreSpaces": "2 or more spaces",
+        "oneOrMoreSpaces": "1 or more spaces",
+        "bar": "vertical bar",
+        "semicolonAndSpace": "semicolon and space",
+        "doubleSpace": "double space",
+        "semicolon": "semicolon (with eventual spaces around)",
+        "comma": "comma (with eventual spaces around)"
+      }
+    },
+    "mergeCells": "merge cells",
+    "splitCell": "split cell"
+  },
+  "move": "move to the {side}",
+  "top": "top",
+  "bottom": "bottom",
+  "right": "right",
+  "left": "left",
+  "table": {
+    "maximizeTableWidth": "maximise table width"
+  },
+  "cancel": "cancel",
+  "convert": "convert",
+  "reset": "reset",
+  "search": {
+    "saveCurrentSearchSettings": "save the current search and replace settings",
+    "withCssSelectors": "search with CSS selectors",
+    "loadSearchSettings": "load predefined or previously saved search and replace settings",
+    "loadCssSearchSettings": "load predefined/previously saved CSS selector settings",
+    "cycleFoundItems": "cycle through found texts",
+    "mergeAdjacentMarks": "merge adjacent text ranges with the same marks",
+    "caseInsensitive": "case insensitive search",
+    "wholeWords": "whole words",
+    "filterByStyles": "filter searched text styles",
+    "selectPrev": "select previous found",
+    "selectNext": "select next found",
+    "replaceSelected": "replace selected",
+    "replaceSelectedAndNext": "replace & select next found",
+    "replaceAll": "replace all",
+    "search": "start searching",
+    "regex": "search with regular expressions (Unicode aware)",
+    "label": {
+      "cssSelector": "CSS selector(s)",
+      "searchRegex": "search regular expression",
+      "searchText": "search text",
+      "replaceWith": "replace with",
+      "foundCount": "no occurrencies of \"{what}\" found | found 1 occurrency of \"{what}\" | found {count} occurrencies of \"{what}\"",
+      "whichFoundSelected": "(#{index} selected)"
+    },
+    "actions": {
+      "onFoundItems": "action on found texts/items | actions on found texts/items",
+      "onReplacedItems": "action on replaced texts/items | actions on replaced texts",
+      "noAction": "(no actions)",
+      "remove": "remove action"
+    },
+    "appendNewAction": "append new",
+    "searchNotReplace": "just search, don't replace"
+  },
+  "close": "close",
+  "newF": "new"
 }
