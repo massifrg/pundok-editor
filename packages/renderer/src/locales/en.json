@@ -44,6 +44,8 @@
     "HorizontalRule": "insert horizontal rule"
   },
   "show": {
+    "saveButtonsLine": "show all buttons for save/save as/save a copy",
+    "saveButtonsDropdown": "show save/save as/save a copy as a dropdown button",
     "projectStructure": "show project structure",
     "searchAndReplace": "search and replace"
   },
@@ -53,6 +55,20 @@
     "upperFirst": "uppercase the first letter of any word"
   },
   "document": {
-    "reloadWithConfiguration": "reload document with a different configuration"
+    "open": "open document",
+    "newEmpty": "new empty document",
+    "newEmptyWithConfig": "new empty document with configuration",
+    "reloadWithConfiguration": "reload document with a different configuration",
+    "append": "append document"
+  },
+  "save": "save",
+  "saveAs": "save as",
+  "saveCopy": "save a copy",
+  "expand": "expand",
+  "compact": "compact",
+  "recent": {
+    "projects": "recent projects",
+    "documents": "recent documents",
+    "projectsLong": "newdocumentb"
   }
 }

@@ -69,13 +69,13 @@ export default {
 </script>
 
 <template>
-  <q-btn-dropdown class="toolbar-button" title="open document" split dense icon="document_open"
+  <q-btn-dropdown class="toolbar-button" :title="$t('document.open')" split dense icon="document_open"
     dropdown-icon="menu_down" @click="openDocument()" @before-show="loadBookmarks()" elevation="3" size="sm"
     color="grey-5">
     <q-list dense>
-      <q-item :disable="projectBookmarks.length === 0" key="recent-projects" title="open recent project" clickable>
+      <q-item :disable="projectBookmarks.length === 0" key="recent-projects" clickable>
         <q-item-section>
-          <q-item-label>recent projects</q-item-label>
+          <q-item-label>{{ $t('recent.projects') }}</q-item-label>
         </q-item-section>
         <q-item-section side>
           <q-icon name="menu_right" />
@@ -91,9 +91,9 @@ export default {
           </q-list>
         </q-menu>
       </q-item>
-      <q-item :disable="docBookmarks.length === 0" key="recent-documents" title="open recent document" clickable>
+      <q-item :disable="docBookmarks.length === 0" key="recent-documents" clickable>
         <q-item-section>
-          <q-item-label>recent documents</q-item-label>
+          <q-item-label>{{ $t('recent.documents') }}</q-item-label>
         </q-item-section>
         <q-item-section side>
           <q-icon name="menu_right" />

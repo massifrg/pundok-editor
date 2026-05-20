@@ -283,10 +283,9 @@
 
 <script setup lang="ts">
 import { SK } from '../common'
-import { setupQuasarIcons } from './helpers/quasarIcons';
-import { useI18n } from 'vue-i18n'
+import { setupQuasarIcons } from './helpers';
+import { t } from '../i18n'
 setupQuasarIcons()
-const { t } = useI18n()
 </script>
 
 <script lang="ts">

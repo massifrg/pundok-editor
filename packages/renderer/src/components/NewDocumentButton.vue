@@ -1,9 +1,9 @@
 <template>
   <q-btn v-if="configurations.length <= 1" class="toolbar-button" elevation="3" size="sm" color="grey-5"
-    @click="$emit('newDocument')" title="new empty document" icon="document_new" split dense></q-btn>
-  <q-btn-dropdown v-if="configurations.length > 1" class="toolbar-button" title="new empty document" icon="document_new"
-    split dense dropdown-icon="menu_down" @click="$emit('newDocument')" elevation="3" size="sm" color="grey-5"
-    auto-close>
+    @click="$emit('newDocument')" :title="$t('document.newEmpty')" icon="document_new" split dense></q-btn>
+  <q-btn-dropdown v-if="configurations.length > 1" class="toolbar-button" :title="$t('document.newEmpty')"
+    icon="document_new" split dense dropdown-icon="menu_down" @click="$emit('newDocument')" elevation="3" size="sm"
+    color="grey-5" auto-close>
     <q-list>
       <q-item v-for="c in configurations" :key="c.name" clickable :value="c.name" :title="configTitle(c)" dense
         @click="$emit('newDocument', c.name)">{{ c.name }}
@@ -21,6 +21,7 @@ setupQuasarIcons()
 import { mapState } from 'pinia'
 import { ConfigurationSummary } from '../common';
 import { useBackend } from '../stores';
+import { t } from '../i18n'
 
 export default {
   emits: ['newDocument'],
@@ -39,7 +40,7 @@ export default {
   },
   methods: {
     configTitle(conf: ConfigurationSummary) {
-      return `new empty "${conf.name}" document (${conf.description})`
+      return this.$t('document.newEmptyWithConfig') + ` "${conf.name}" (${conf.description})`
     }
   }
 };

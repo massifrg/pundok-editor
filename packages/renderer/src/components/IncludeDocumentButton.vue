@@ -1,5 +1,5 @@
 <template>
-  <ToolbarButton icon="add_document" @click="showDialog" />
+  <ToolbarButton icon="add_document" @click="showDialog" :title="$t('document.append')" />
 </template>
 
 <script lang="ts">
@@ -18,6 +18,7 @@ import {
 import { DocStateUpdate, editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject, updateDocState } from '../schema';
 import { useBackend } from '../stores';
 import { setupQuasarIcons, showImportDocumentDialog } from './helpers';
+import { t } from '../i18n'
 
 export default {
   props: ['editor'],
@@ -47,12 +48,13 @@ export default {
     showDialog() {
       const editorKey = this.editorKey
       if (!editorKey) return
+      const t = this.$t
       const docState = getEditorDocState(this.editor)
       const { includeFolder, includeFormat, workingFolder, workingFormat } = docState || {}
       showImportDocumentDialog({
         editor: this.editor,
         options: {
-          prompt: 'Append document:',
+          prompt: t('document.append') + ":",
           startFolder: includeFolder || workingFolder,
           startFormat: includeFormat || workingFormat,
         },

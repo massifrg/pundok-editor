@@ -15,4 +15,6 @@ export const i18n = createI18n({
   messages,
 });
 
+export const t = i18n.global.t
+
 export default messages

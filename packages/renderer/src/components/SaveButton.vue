@@ -29,10 +29,10 @@ export default {
       return this.isCompact ? 'expand' : 'collapse'
     },
     compactItemText() {
-      return this.isCompact ? 'expand' : 'compact'
+      return this.$t(this.isCompact ? 'expand' : 'compact')
     },
     compactItemTitle() {
-      return this.isCompact ? 'show all buttons for save/save as/save a copy' : 'show save/save as/save a copy as a dropdown button'
+      return this.$t(this.isCompact ? 'show.saveButtonsLine' : 'show.saveButtonsDropdown');
     },
   },
   methods: {
@@ -43,7 +43,7 @@ export default {
       return this.isCompact ? 'document_save' : 'document_save_copy'
     },
     dropDownTitle() {
-      return this.isCompact ? 'save' : 'save a copy'
+      return this.isCompact ? this.$t('save') : this.$t('saveCopy')
     },
     dropDownClick() {
       if (this.isCompact)
@@ -66,10 +66,10 @@ export default {
 
 <template>
   <q-btn-group class="toolbar-button">
-    <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="document_save" title="save" :text-color="textColor"
-      @click="save">
+    <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="document_save" :title="$t('save')"
+      text-color="textColor" @click="save">
     </ToolbarButton>
-    <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="document_save_as" title="save as"
+    <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="document_save_as" :title="$t('saveAs')"
       :text-color="textColor" @click="saveAs" />
     <q-btn-dropdown class="toolbar-button" :title="dropDownTitle()" split dense dropdown-icon="menu_down"
       @click="dropDownClick()" elevation="3" size="xs" color="grey-5" auto-close>
@@ -79,19 +79,19 @@ export default {
         </div>
       </template>
       <q-list dense>
-        <q-item v-if="isCompact" key="save" title="save" clickable @click="save()">
+        <q-item v-if="isCompact" key="save" clickable @click="save()">
           <q-item-section avatar>
             <q-icon name="document_save" :text-color="textColor" />
           </q-item-section>
-          <q-item-section>Save</q-item-section>
+          <q-item-section>{{ $t('save') }}</q-item-section>
         </q-item>
-        <q-item v-if="isCompact" key="saveAs" title="save as" clickable @click="saveAs()">
+        <q-item v-if="isCompact" key="saveAs" clickable @click="saveAs()">
           <q-item-section avatar><q-icon name="document_save_as" :text-color="textColor" /></q-item-section>
-          <q-item-section>Save as</q-item-section>
+          <q-item-section>{{ $t('saveAs') }}</q-item-section>
         </q-item>
-        <q-item v-if="isCompact" key="saveCopy" title="save a copy" clickable @click="saveCopy()">
+        <q-item v-if="isCompact" key="saveCopy" clickable @click="saveCopy()">
           <q-item-section avatar><q-icon name="document_save_copy" :text-color="textColor" /></q-item-section>
-          <q-item-section>Save a copy</q-item-section>
+          <q-item-section>{{ $t('saveCopy') }}</q-item-section>
         </q-item>
         <q-item key="compact" :title="compactItemTitle" clickable @click="isCompact = !isCompact">
           <q-item-section avatar><q-icon :name="compactItemIcon" :text-color="textColor" /></q-item-section>

@@ -45,6 +45,8 @@
     "HorizontalRule": "inserisci una barra di separazione"
   },
   "show": {
+    "saveButtonsLine": "mostra bottoni affiancati",
+    "saveButtonsDropdown": "mostra bottoni a tendina",
     "projectStructure": "mostra la struttura del progetto",
     "searchAndReplace": "cerca e sostituisci"
   },
@@ -54,6 +56,19 @@
     "upperFirst": "rendi maiuscole le iniziali di ogni parola"
   },
   "document": {
-    "reloadWithConfiguration": "ricarica il documento con un'altra configurazione"
+    "open": "apri documento",
+    "newEmpty": "nuovo documento vuoto",
+    "newEmptyWithConfig": "nuovo documento con la configurazione",
+    "reloadWithConfiguration": "ricarica il documento con un'altra configurazione",
+    "append": "accoda documento"
+  },
+  "save": "salva",
+  "saveAs": "salva come",
+  "saveCopy": "salva una copia",
+  "expand": "espandi",
+  "compact": "compatta",
+  "recent": {
+    "projects": "progetti recenti",
+    "documents": "documenti recenti"
   }
 }
