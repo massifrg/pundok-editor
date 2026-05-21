@@ -25,6 +25,77 @@
       "customMeta": "append custom Meta (from current configuration)"
     }
   },
+  "attributesEditor": {
+    "attribute": "attribute \"{name}\"",
+    "button": {
+      "cancel": "Cancel",
+      "change": "Change"
+    },
+    "description": {
+      "customStyle": "custom style",
+      "indexName": "index name",
+      "mathType": "math type",
+      "noteType": "note type",
+      "otherAttributes": "other attributes",
+      "putIndexRef": "index ref placement",
+      "refClass": "class for index references"
+    },
+    "label": {
+      "propagateIdRef": "propagate idref to the refs with the same indexed text"
+    },
+    "mathType": {
+      "DisplayMath": "display math",
+      "InlineMath": "inline math"
+    },
+    "numberDelim": {
+      "DefaultDelim": "default delimiter",
+      "OneParen": "one parenthesis",
+      "Period": "period",
+      "TwoParens": "two parentheses",
+      "description": "number delimiter"
+    },
+    "numberStyle": {
+      "Decimal": "decimal numbers",
+      "DefaultStyle": "default style",
+      "Example": "example style",
+      "LowerAlpha": "lower case letters",
+      "LowerRoman": "lower case roman numbers",
+      "UpperAlpha": "upper case letters",
+      "UpperRoman": "upper case roman numbers",
+      "description": "number style"
+    },
+    "putIndexRef": {
+      "after": "index reference is put after the selected text",
+      "before": "index reference is put before the selected text"
+    },
+    "resetAllAttributes": "reset all attributes",
+    "resetAttribute": "reset {name}",
+    "start": {
+      "description": "list start number"
+    },
+    "tab": {
+      "classes": "classes",
+      "customStyle": "custom style",
+      "format": "format",
+      "headRows": "head rows",
+      "id": "identifier",
+      "idref": "idref",
+      "kv": "attributes",
+      "language": "language",
+      "level": "level",
+      "mathType": "math type",
+      "noteType": "note type",
+      "numberDelim": "delimiter",
+      "numberStyle": "style",
+      "put-index-ref": "index ref position",
+      "ref-class": "index ref class",
+      "rowHeadColumns": "head columns",
+      "sort-key": "sort key",
+      "start": "start",
+      "target": "target",
+      "text": "text"
+    }
+  },
   "blockquote": "blockquote",
   "bottom": "bottom",
   "cancel": "cancel",

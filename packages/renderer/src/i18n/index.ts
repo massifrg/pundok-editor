@@ -18,7 +18,15 @@ export const i18n = createI18n({
 
 export const t = i18n.global.t
 export const te = i18n.global.te
-export const tfb = (key: string, fallback: string) =>
-  te(key) ? t(key) : fallback
+
+/**
+ * If a term has a translation, use it, otherwise use the fallback string.
+ * @param key The key of the term to be translated.
+ * @param fallback The fallback string.
+ * @returns 
+ */
+export function tfb(key: string, fallback: string): string {
+  return te(key) ? t(key) : fallback
+}
 
 export default messages

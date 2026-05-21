@@ -11,12 +11,17 @@ setupQuasarIcons()
 </script>
 
 <script lang="ts">
+import { t } from '../../i18n'
 export default {
   props: ['attributeName', 'attributeDesc'],
   emits: ['reset-attribute'],
   computed: {
     title() {
-      return 'reset ' + (this.attributeDesc || `attribute "${this.attributeName}"`)
+      return this.$t('attributesEditor.resetAttribute', {
+        name: this.attributeDesc || this.$t('attributesEditor.attribute', {
+          name: this.attributeName
+        })
+      })
     }
   }
 }

@@ -12,7 +12,7 @@
       </q-bar>
       <q-tabs v-model="tab" dense class="text-grey" active-color="primary" indicator-color="primary" align="justify"
         narrow-indicator>
-        <q-tab v-for="tabName in editorTabs" :key="tabName" :name="tabName" :label="labelForTab(tabName)"
+        <q-tab v-for="tabName in editorTabs" :key="tabName" :name="tabName" :label="translated(tabName)"
           :alert="isAttributeModifiedInTab(tabName)" />
       </q-tabs>
       <q-separator />
@@ -42,19 +42,19 @@
           <OtherAttributesEditor :editor="editor" :node-or-mark="nodeOrMark" attr-name="kv"
             :original-entries="objectEntries('kv', originalAttrs)" :initial-entries="objectEntries('kv', attrs)"
             :classes="attrs.classes || []" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="kv" attribute-desc="other attributes"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="kv"
+            :attribute-desc="$t('attributesEditor.description.otherAttributes')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('customStyle')" name="customStyle">
           <CustomStyleEditor :editor="editor" :original-value="attrs.customStyle" :type="nodeOrMarkName"
             :level="nodeOrMark?.attrs?.level" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="customStyle" attribute-desc="custom style"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="customStyle"
+            :attribute-desc="$t('attributesEditor.description.customStyle')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('noteType')" name="noteType">
           <NoteTypeEditor :editor="editor" :original-value="attrs.noteType" :type="nodeOrMarkName"
             @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="noteType" attribute-desc="note type"
+          <ResetAttributeActions attribute-name="noteType" :attribute-desc="$t('attributesEditor.description.noteType')"
             @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('headRows')" name="headRows">
@@ -75,16 +75,16 @@
         <q-tab-panel v-if="hasAttribute('ref-class')" name="ref-class">
           <TextAttrEditor :start-value="attrs.kv['ref-class']" attr-name="ref-class" enter-commits
             @update-attribute="updateKvAttribute" @commit="doChange" />
-          <ResetAttributeActions attribute-name="refClass" attribute-desc="class for index references"
+          <ResetAttributeActions attribute-name="refClass" :attribute-desc="$t('attributesEditor.description.refClass')"
             @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('put-index-ref')" name="put-index-ref">
           <SelectValueEditor :start-value="attrs.putIndexRef" attr-name="put-index-ref" :options="[
-            { label: 'Before', value: 'before', title: 'index reference is put before the selected text' },
-            { label: 'After', value: 'after', title: 'index reference is put after the selected text' }
+            { label: 'Before', value: 'before', title: $t('attributesEditor.putIndexRef.before') },
+            { label: 'After', value: 'after', title: $t('attributesEditor.putIndexRef.after') }
           ]" @update-attribute="updateKvAttribute" />
-          <ResetAttributeActions attribute-name="putIndexRef" attribute-desc="index ref placement"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="putIndexRef"
+            :attribute-desc="$t('attributesEditor.description.putIndexRef')" @reset-attribute="resetAttribute" />
           <!-- 
           <q-space />
           <q-card-actions align="center">
@@ -148,22 +148,22 @@
           <IndexRefEditor :editor="editor" :node-or-mark="nodeOrMark"
             :original-entries="objectEntries('kv', originalAttrs)" :initial-entries="objectEntries('kv', attrs)"
             @update-attribute="updateAttribute" @commit="doChange" @cancel="doCancel" />
-          <q-toggle v-model="optionPropagateIdref" label="propagate idref to the refs with the same indexed text" />
+          <q-toggle v-model="optionPropagateIdref" :label="$t('attributesEditor.label.propagateIdRef')" />
           <ResetAttributeActions attribute-name="idref" @reset-attribute="resetKvAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute(indexNameAttr())" :name="indexNameAttr()">
           <IndexNameEditor :indices-names="availableIndicesNames"
             :start-value="attrs.kv[indexNameAttr()] || availableIndicesNames[0]"
             @update-attribute="updateKvAttribute" />
-          <ResetAttributeActions attribute-name="indexName" attribute-desc="index name"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="indexName"
+            :attribute-desc="$t('attributesEditor.description.indexName')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('mathType')" name="mathType">
           <SelectValueEditor :start-value="attrs.mathType" attr-name="mathType" :options="[
-            { label: 'Inline', value: 'InlineMath', title: 'inline math' },
-            { label: 'Display', value: 'DisplayMath', title: 'display math' }
+            { label: 'Inline', value: 'InlineMath', title: $t('attributesEditor.mathType.InlineMath') },
+            { label: 'Display', value: 'DisplayMath', title: $t('attributesEditor.mathType.DisplayMath') }
           ]" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="mathType" attribute-desc="math type"
+          <ResetAttributeActions attribute-name="mathType" :attribute-desc="$t('attributesEditor.description.mathType')"
             @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="isImage || isLink" name="target">
@@ -180,40 +180,41 @@
         <q-tab-panel v-if="hasAttribute('start')" name="start">
           <IntegerEditor attr-name="start" :start-value="attrs.start" :min-value="1" :max-value="100"
             @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="start" attribute-desc="list start number"
+          <ResetAttributeActions attribute-name="start" :attribute-desc="$t('attributesEditor.start.description')"
             @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('numberStyle')" name="numberStyle">
           <SelectValueEditor attr-name="numberStyle" :start-value="attrs.numberStyle" :options="[
-            { label: 'default', value: 'DefaultStyle', title: 'default style' },
-            { label: 'example', value: 'Example', title: 'example style' },
-            { label: '1, 2, 3', value: 'Decimal', title: 'decimal numbers' },
-            { label: 'i, ii, iii, ...', value: 'LowerRoman', title: 'lower case roman numbers' },
-            { label: 'I, II, III, ...', value: 'UpperRoman', title: 'upper case roman numbers' },
-            { label: 'a, b, c, ...', value: 'LowerAlpha', title: 'lower case letters' },
-            { label: 'A, B, C, ...', value: 'UpperAlpha', title: 'upper case letters' }
+            { label: 'default', value: 'DefaultStyle', title: $t('attributesEditor.numberStyle.DefaultStyle') },
+            { label: 'example', value: 'Example', title: $t('attributesEditor.numberStyle.Example') },
+            { label: '1, 2, 3', value: 'Decimal', title: $t('attributesEditor.numberStyle.Decimal') },
+            { label: 'i, ii, iii, ...', value: 'LowerRoman', title: $t('attributesEditor.numberStyle.LowerRoman') },
+            { label: 'I, II, III, ...', value: 'UpperRoman', title: $t('attributesEditor.numberStyle.UpperRoman') },
+            { label: 'a, b, c, ...', value: 'LowerAlpha', title: $t('attributesEditor.numberStyle.LowerAlpha') },
+            { label: 'A, B, C, ...', value: 'UpperAlpha', title: $t('attributesEditor.numberStyle.UpperAlpha') }
           ]" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="numberStyle" attribute-desc="number style"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="numberStyle"
+            :attribute-desc="$t('attributesEditor.numberStyle.description')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('numberDelim')" name="numberDelim">
           <SelectValueEditor attr-name="numberDelim" :start-value="attrs.numberDelim" :options="[
-            { label: 'default', value: 'DefaultDelim', title: 'default delimiter' },
-            { label: '.', value: 'Period', title: 'period' },
-            { label: ')', value: 'OneParen', title: 'one parenthesis' },
-            { label: '))', value: 'TwoParens', title: 'two parentheses' }
+            { label: 'default', value: 'DefaultDelim', title: $t('attributesEditor.numberDelim.DefaultDelim') },
+            { label: '.', value: 'Period', title: $t('attributesEditor.numberDelim.Period') },
+            { label: ')', value: 'OneParen', title: $t('attributesEditor.numberDelim.OneParen') },
+            { label: '))', value: 'TwoParens', title: $t('attributesEditor.numberDelim.TwoParens') }
           ]" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="numberDelim" attribute-desc="number delimiter"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="numberDelim"
+            :attribute-desc="$t('attributesEditor.numberDelim.description')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
       </q-tab-panels>
       <q-card-actions>
-        <q-btn v-if="!noAttrModified" color="primary" title="reset all attributes" @click="resetAllAttributes()">
+        <q-btn v-if="!noAttrModified" color="primary" :title="$t('attributesEditor.resetAllAttributes')"
+          @click="resetAllAttributes()">
           <q-icon name="reload" />
         </q-btn>
         <q-space />
-        <q-btn label="Change" color="primary" @click="doChange()" />
-        <q-btn label="Cancel" color="primary" @click="doCancel()" />
+        <q-btn :label="$t('attributesEditor.button.change')" color="primary" @click="doChange()" />
+        <q-btn :label="$t('attributesEditor.button.cancel')" color="primary" @click="doCancel()" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -288,6 +289,7 @@ import { createLowlight } from 'lowlight';
 import { ACTION_ADD_CLASS } from '../actions';
 import { showIncludeDocumentDialog } from './helpers';
 import { relative } from 'path-browserify';
+import { t, tfb } from '../i18n'
 
 const lowlight = createLowlight();
 
@@ -502,6 +504,9 @@ export default {
     hide() {
       this.tab = undefined
     },
+    translated(tabName: string) {
+      return tfb(`attributesEditor.tab.${tabName}`, tabName)
+    },
     setTab(_tab?: string) {
       const tab = _tab || this.startTab || this.tab
       const node = this.nodeOrMark
@@ -531,14 +536,6 @@ export default {
     },
     indexNameAttr() {
       return INDEX_NAME_ATTR
-    },
-    labelForTab(attrName: string): string {
-      switch (attrName) {
-        case 'kv':
-          return 'attributes'
-        default:
-          return attrName
-      }
     },
     hasAttribute(attrName: string): boolean {
       return this.editableAttributes.includes(attrName);
