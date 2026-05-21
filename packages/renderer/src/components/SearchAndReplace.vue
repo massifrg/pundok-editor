@@ -365,7 +365,8 @@ export default {
       return this.showFields ? 'collapse_vertical' : 'expand_vertical'
     },
     expandTooltip() {
-      return this.$t(`show.${this.showFields ? 'less' : 'more'}`)
+      const t = this.$t
+      return t('show.lessOrMore', { what: this.showFields ? t('less') : t('more') })
     },
     // a function to filter search results
     filterResult(): SearchResultFilter | undefined {

@@ -34,9 +34,6 @@ export default {
     customStyles() {
       return this.configuration?.customStyles
     },
-    availableActionsNames() {
-      return availableActionsNames()
-    },
     appendNewActionTooltip() {
       return this.$t('search.appendNewAction')
         + ' '
@@ -62,7 +59,7 @@ export default {
       return availableAction(actionName)
     },
     notifyActions(actions: ActionNameWithProps[]) {
-      this.$emit('update-actions', actions)
+      this.$emit('update-actions', toRaw(actions))
     },
     actionIcon(actionName: string) {
       return this.getAction(actionName)?.icon
@@ -96,7 +93,7 @@ export default {
       return (a.name as ActionName) === 'insert-raw-inline'
     },
     newActionItem(_name?: string) {
-      const name = _name || this.availableActionsNames[0]
+      const name = _name || availableActionsNames()[0]
       console.log(`name=${name}`)
       const newAction = {
         name,
@@ -180,8 +177,8 @@ export default {
                   </q-item-section>
                 </q-item>
                 <q-separator />
-                <q-item v-for="action_name in availableActionsNames" :key="action_name" clickable
-                  @click="setActionItem(index, action_name)" v-close-popup>
+                <q-item v-for="action_name in availableActionsNames().filter(an => an !== a.name)" :key="action_name"
+                  clickable @click="setActionItem(index, action_name)" v-close-popup>
                   <q-item-section side>
                     <q-icon :name="actionIcon(action_name)"></q-icon>
                   </q-item-section>

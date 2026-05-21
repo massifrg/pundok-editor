@@ -1,7 +1,7 @@
 <template>
   <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :icon="icon" :outline="isNoneSelected"
-    :label="label" :title="title || 'Select marks or custom styles that must be present or absent'"
-    :no-caps="isNoneSelected" :menu-anchor="menuAnchor" :menu-self="menuSelf">
+    :label="label" :title="title || $t('search.marksPalette.title')" :no-caps="isNoneSelected" :menu-anchor="menuAnchor"
+    :menu-self="menuSelf">
     <MarksPalette :editor="editor" :addableMarks="addableMarks" :positiveMarks='positiveMarks'
       :negativeMarks='negativeMarks' @selected-marks="forwardSelectedMarks" />
   </q-btn-dropdown>
@@ -9,9 +9,8 @@
 
 <script lang="ts">
 import { AddableMark } from './helpers/addableMark';
-import MarksPalette from './MarksPalette.vue'
-
-const NONE_SELECTED_LABEL = 'no filter'
+import { t } from "../i18n"
+import MarksPalette from './MarksPalette.vue';
 
 export default {
   components: { MarksPalette },
@@ -22,7 +21,6 @@ export default {
     'addableMarks',      // AddableMark[]
     'positiveMarks',     // AddableMark[]
     'negativeMarks',     // AddableMark[]
-    'noneSelectedLabel',
     'menuAnchor',
     'menuSelf'
   ],
@@ -40,7 +38,7 @@ export default {
   methods: {
     computeLabel(positive: AddableMark[], negative: AddableMark[]) {
       return (positive?.length || 0) + (negative?.length || 0) === 0
-        ? this.noneSelectedLabel || NONE_SELECTED_LABEL
+        ? this.$t('search.filter.noFilter')
         : [...positive.map(p => `+${p.name}`), ...negative.map(n => `-${n.name}`)].join(',')
     },
     forwardSelectedMarks(positive: AddableMark[], negative: AddableMark[]) {

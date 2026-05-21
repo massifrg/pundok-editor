@@ -21,6 +21,7 @@
 
 <script lang="ts">
 import { isEqual } from 'lodash-es';
+import { tfb } from "../i18n"
 import { AddableMark } from './helpers/addableMark';
 
 export default {
@@ -81,8 +82,8 @@ export default {
     },
     titleFor(am: AddableMark) {
       const state = this.getState(am)
-      const suffix = state === 0 ? '' : (state > 0 ? ' present' : ' absent')
-      return am.title + suffix
+      const suffix = state === 0 ? '' : ' ' + this.$t(state > 0 ? 'present' : 'absent')
+      return tfb('marks.title.' + am.name, am.title) + suffix
     },
     toggleMark(addableMark: AddableMark) {
       let state = this.getState(addableMark)

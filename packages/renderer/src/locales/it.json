@@ -1,205 +1,246 @@
 {
-  "undo": "annulla",
-  "redo": "ripeti",
-  "toggle_": "commuta",
+  "Hide": "Nascondi",
+  "Show": "Mostra",
+  "absent": "assente",
+  "allow": "permetti",
+  "appendMeta": {
+    "label": {
+      "MetaBlocks": "aggiungi MetaBlocks",
+      "MetaBool": "aggiungi MetaBool",
+      "MetaInlines": "aggiungi MetaInlines",
+      "MetaList": "aggiungi MetaList",
+      "MetaMap": "aggiungi MetaMap",
+      "MetaString": "aggiungi MetaString",
+      "customMeta": "aggiungi {name}",
+      "customMetaDefaultName": "metadato personalizzato"
+    },
+    "title": {
+      "MetaBlocks": "aggiungi un metadato fatto di blocchi di testo (es. più paragrafi)",
+      "MetaBool": "aggiungi un metadato vero/falso",
+      "MetaInlines": "aggiungi medatato costituito da una riga di testo formattato",
+      "MetaList": "aggiungi un metadato di tipo lista",
+      "MetaMap": "aggiungi un metadato di tipo dizionario (chiave/valore)",
+      "MetaString": "aggiungi un metadato costituito da una riga di testo non formattato",
+      "customMeta": "aggiungi un metadato personalizzato (preso dalla configurazione corrente)"
+    }
+  },
   "blockquote": "citazione a pacchetto",
-  "failed": "Operazione fallita",
-  "success": "Azione eseguita con successo",
-  "wrapIn": {
-    "Caption": "racchiudi il testo selezionato in una Caption",
-    "Div": "racchiudi il testo selezionato in un Div",
-    "Figure": "racchiudi il testo selezionato in una Figure"
-  },
-  "BulletList": "BulletList (elenco puntato)",
-  "OrderedList": "OrderedList (elenco numerato)",
-  "Blockquote": "Blockquote (citazione a pacchetto)",
-  "toggle": {
-    "Blockquote": "commuta citazione a pacchetto",
-    "BulletList": "commuta elenco puntato",
-    "OrderedList": "commuta elenco numerato",
-    "Emph": "metti/togli enfasi",
-    "Strong": "metti/togli enfasi forte",
-    "Underline": "metti/togli sottolineato",
-    "Cite": "metti/togli riferimento bibliografico",
-    "Math": "rendi o meno come formula matematica",
-    "Link": "metti/togli collegamento",
-    "Code": "rendi o meno come codice di programma",
-    "singleQuoted": "metti/togli virgolette singole",
-    "doubleQuoted": "metti/togli virgolette doppie",
-    "smallCaps": "metti/togli maiuscoletto",
-    "Superscript": "metti o meno in apice",
-    "Subscript": "metti o meno al pedice",
-    "Strikeout": "metti/togli barrato"
-  },
-  "repeatLastCommand": "ripeti ultimo comando",
-  "changeAttributesOf": "modifica gli attributi di",
-  "emphasis": "enfasi",
-  "clearAllMarks": "togli tutti gli stili",
-  "strong": "enfasi forte",
-  "underline": "sottolineato",
-  "clickTo": {
-    "allowVerticalSwappingWith": "permetti di spostare verticalmente blocchi/paragrafi con",
-    "preventVerticalSwappingWith": "impedisci di spostare verticalmente blocchi/paragrafi con"
-  },
-  "insert": {
-    "HorizontalRule": "inserisci una barra di separazione"
-  },
-  "show": {
-    "less": "mostra meno",
-    "more": "mostra di più",
-    "saveButtonsLine": "mostra bottoni affiancati",
-    "saveButtonsDropdown": "mostra bottoni a tendina",
-    "projectStructure": "mostra la struttura del progetto",
-    "searchAndReplace": "cerca e sostituisci",
-    "indicesButtons": "mostra i bottoni per i riferimenti ad indice"
-  },
+  "bottom": "in basso",
+  "cancel": "annulla",
   "capitalize": {
     "lower": "rendi minuscolo",
     "upper": "rendi maiuscolo",
     "upperFirst": "rendi maiuscole le iniziali di ogni parola"
   },
+  "changeAttributesOf": "modifica gli attributi di",
+  "clearAllMarks": "togli tutti gli stili",
+  "clickTo": {
+    "moveOrSwapVertically": "spostamento verticale di blocchi/paragrafi con {shortcut}: {state}"
+  },
+  "close": "chiudi",
+  "compact": "compatta",
+  "convert": "converti",
+  "customStyles": {
+    "character": "stili personalizzati di carattere (Span)",
+    "header": "stili personalizzati per i titoli",
+    "headerNoStyle": "titolo di livello {level} senza stili personalizzati",
+    "paraNoStyle": "paragrafo senza stili personalizzati",
+    "paragraph": "stili personalizzati di paragrafo",
+    "spanNoStyle": "testo senza stili personalizzati",
+    "summary": "sommario degli stili personalizzati alla posizione del cursore"
+  },
+  "disabled": "non attivo",
   "document": {
-    "open": "apri documento",
+    "append": "accoda documento",
     "newEmpty": "nuovo documento vuoto",
     "newEmptyWithConfig": "nuovo documento con la configurazione",
-    "reloadWithConfiguration": "ricarica il documento con un'altra configurazione",
-    "append": "accoda documento"
+    "open": "apri documento",
+    "reloadWithConfiguration": "ricarica il documento con un'altra configurazione"
   },
+  "emphasis": "enfasi",
+  "enabled": "attivo",
+  "expand": "espandi",
+  "failed": "Operazione fallita",
+  "insert": {
+    "HorizontalRule": "inserisci una barra di separazione"
+  },
+  "left": "a sinistra",
+  "less": "meno",
+  "marks": {
+    "title": {
+      "cite": "Cite (riferimento bibliografico)",
+      "code": "Code",
+      "doubleQuoted": "Quoted(DoubleQuote) (virgolette doppie)",
+      "emph": "Emph (enfasi)",
+      "link": "Link (collegamento)",
+      "math": "Math (formula matematica)",
+      "singleQuoted": "Quoted(SingleQuote) (virgolette singole)",
+      "smallCaps": "SmallCaps (maiuscoletto)",
+      "strikeout": "Strikeout (barrato)",
+      "strong": "Strong (enfasi forte)",
+      "subscript": "Subscript (pedice)",
+      "superscript": "Superscript (apice)",
+      "underline": "Underline (sottolineato)"
+    }
+  },
+  "more": "di più",
+  "move": "sposta {side}",
+  "newF": "nuova",
+  "nodes": {
+    "title": {
+      "blockquote": "Blockquote (citazione a pacchetto)",
+      "bulletList": "BulletList (elenco puntato)",
+      "orderedList": "OrderedList (elenco numerato)"
+    }
+  },
+  "present": "presente",
+  "prevent": "impedisci",
+  "recent": {
+    "documents": "documenti recenti",
+    "projects": "progetti recenti"
+  },
+  "redo": "ripeti",
+  "repeatLastCommand": "ripeti ultimo comando",
+  "reset": "ripristina",
+  "right": "a destra",
   "save": "salva",
   "saveAs": "salva come",
   "saveCopy": "salva una copia",
-  "expand": "espandi",
-  "compact": "compatta",
-  "recent": {
-    "projects": "progetti recenti",
-    "documents": "documenti recenti"
-  },
-  "customStyles": {
-    "summary": "sommario degli stili personalizzati alla posizione del cursore",
-    "header": "stili personalizzati per i titoli",
-    "paragraph": "stili personalizzati di paragrafo",
-    "character": "stili personalizzati di carattere (Span)",
-    "headerNoStyle": "titolo di livello {level} senza stili personalizzati",
-    "paraNoStyle": "paragrafo senza stili personalizzati",
-    "spanNoStyle": "testo senza stili personalizzati"
-  },
-  "tables": {
-    "tools": "strumenti per le tabelle",
-    "tableControls": "tabella: nuova/elimina/correggi, aggiungi/rimuovi didascalia (Caption), aggiungi intestazione/piede",
-    "bodyHeadersControls": "imposta numero di righe e colonne di intestazione delle sezioni della tabella",
-    "sectionControls": "crea/elimina sezione dati/intestazione/piede",
-    "rowsAndColumnsControls": "aggiungi/rimuovi righe/colonne",
-    "alignControls": "allineamenti orizzontale/verticale delle celle",
-    "cellsControls": "controlli per le celle: unisci/dividi, determina su quante righe/colonne si estendono",
-    "table": "tabella",
-    "bodyHeaders": "intestazioni sezioni dati",
-    "sections": "sezioni",
-    "rowsAndColumns": "righe & colonne",
-    "columnsAlignments": "allineamento colonna",
-    "cellAlignment": "allineamento",
-    "cells": "celle",
-    "align": {
-      "default": "allineamento predefinito della colonna (vedi ColSpec della tabella)",
-      "left": "allinea a sinistra",
-      "center": "allinea al centro",
-      "right": "allinea a destra",
-      "top": "allinea in alto",
-      "middle": "allinea verticalmente al centro",
-      "bottom": "allinea in basso",
-      "baseLine": "allineamento verticale alla linea di base del testo"
-    },
-    "columnAlign": {
-      "default": "allineamento della colonna predefinito (AlignDefault)",
-      "left": "allineamento della colonna a sinistra (AlignLeft)",
-      "center": "allineamento della colonna al centro (AlignCenter)",
-      "right": "allineamento della colonna a destra (AlignRight)"
-    },
-    "addColumnBefore": "aggiungi una colonna a sinistra",
-    "addColumnAfter": "aggiungi una colonna a destra",
-    "addRowBefore": "aggiungi una riga sopra",
-    "addRowAfter": "aggiungi una riga sotto",
-    "removeRow": "elimina riga/righe",
-    "removeColumn": "elimina colonna(e)",
-    "removeSection": "elimina sezione",
-    "addFoot": "aggiungi piede della tabella",
-    "makeFoot": "imposta il piede della tabella con le righe selezionate",
-    "addBodyAfter": "aggiungi una sezione sotto",
-    "addBodyBefore": "aggiunge una sezione sopra",
-    "makeBody": "crea una nuova sezione con le righe selezionate",
-    "makeHead": "imposta l'intestazione della tabella con le righe selezionate",
-    "addHead": "aggiungi l'intestazione della tabella",
-    "increaseBodyHeaderColumns": "aumenta le colonne dell'intestazione di sezione",
-    "decreaseBodyHeaderColumns": "riduci le colonne dell'intestazione di sezione",
-    "increaseBodyHeaderRows": "aumenta il numero di righe dell'intestazione di sezione",
-    "decreaseBodyHeaderRows": "riduci il numero di righe dell'intestazione di sezione",
-    "equalizeColumnWidths": "colonne con la stessa larghezza",
-    "checkAndFix": "controlla e correggi la tabella",
-    "deleteTable": "elimina la tabella",
-    "convertToText": "converti la tabella in testo",
-    "convertFromText": "converti testo in tabella",
-    "createNewTable": "crea una nuova tabella",
-    "deleteCaption": "elimina la didascalia",
-    "addCaption": "aggiungi la didascalia",
-    "textVsTable": {
-      "regexSeparator": "il separatore è un'espressione regolare",
-      "commonSeparators": "separatori predefiniti",
-      "sep": {
-        "twoOrMoreSpaces": "due o più spazi",
-        "oneOrMoreSpaces": "uno o più spazi",
-        "bar": "barra verticale",
-        "semicolonAndSpace": "punto e virgola seguito da spazio",
-        "doubleSpace": "doppio spazio",
-        "semicolon": "punto e virgola (con eventuali spazi ai lati)",
-        "comma": "virgola (con eventuali spazi ai lati)"
-      }
-    },
-    "mergeCells": "unisci celle",
-    "splitCell": "dividi cella"
-  },
-  "move": "sposta {side}",
-  "top": "in alto",
-  "bottom": "in basso",
-  "right": "a destra",
-  "left": "a sinistra",
-  "table": {
-    "maximizeTableWidth": "tabella a piena larghezza"
-  },
-  "cancel": "annulla",
-  "convert": "converti",
-  "reset": "ripristina",
   "search": {
-    "saveCurrentSearchSettings": "salva le impostazioni correnti di cerca e sostituisci",
-    "withCssSelectors": "cerca con i selettori CSS",
-    "loadSearchSettings": "carica impostazioni di cerca e sostituisci predefinite o salvate in precedenza",
-    "loadCssSearchSettings": "carica impostazioni di ricerca con selettori CSS predefinite o salvate in precedenza",
-    "cycleFoundItems": "spostamento ciclico tra i risultati della ricerca",
-    "mergeAdjacentMarks": "unisci gli intervalli adiacenti di testi con lo stesso stile (Mark)",
-    "caseInsensitive": "non distinguere maiuscole/minuscole",
-    "wholeWords": "parole intere",
-    "selectPrev": "vai al risultato precedente",
-    "selectNext": "vai al risultato successivo",
-    "replaceSelected": "sostituisci il risultato selezionato",
-    "replaceSelectedAndNext": "sostituisci il risultato selezionato e passa al successivo",
-    "replaceAll": "sostituisci tutti",
-    "search": "inizia la ricerca",
-    "regex": "cerca con espressioni regolari (Unicode compatibili)",
-    "label": {
-      "cssSelector": "selettore(i) CSS",
-      "searchRegex": "cerca espressione regolare",
-      "searchText": "cerca testo",
-      "replaceWith": "sostituisci con",
-      "foundCount": "nessuna occorrenza di \"{what}\" trovata | trovata 1 occorrenza di \"{what}\" | trovate {count} occorrenze di \"{what}\"",
-      "whichFoundSelected": "(selezionata la #{index})"
-    },
     "actions": {
+      "noAction": "(nessuna azione)",
       "onFoundItems": "azione da eseguire sui risultati trovati | azioni da eseguire sui risultati trovati",
       "onReplacedItems": "azione da eseguire sui risultati sostituiti | azioni da eseguire sui risultati sostituiti",
-      "noAction": "(nessuna azione)",
       "remove": "rimuovi azione"
     },
     "appendNewAction": "aggiungi nuova",
-    "searchNotReplace": "cerca soltanto, non sostituire"
+    "caseInsensitive": "non distinguere maiuscole/minuscole",
+    "cycleFoundItems": "spostamento ciclico tra i risultati della ricerca",
+    "filter": {
+      "noFilter": "nessun filtro"
+    },
+    "filterByStyles": "filtra in base agli stili",
+    "label": {
+      "cssSelector": "selettore(i) CSS",
+      "foundCount": "nessuna occorrenza di \"{what}\" trovata | trovata 1 occorrenza di \"{what}\" | trovate {count} occorrenze di \"{what}\"",
+      "replaceWith": "sostituisci con",
+      "searchRegex": "cerca espressione regolare",
+      "searchText": "cerca testo",
+      "whichFoundSelected": "(selezionata la #{index})"
+    },
+    "loadCssSearchSettings": "carica impostazioni di ricerca con selettori CSS predefinite o salvate in precedenza",
+    "loadSearchSettings": "carica impostazioni di cerca e sostituisci predefinite o salvate in precedenza",
+    "marksPalette": {
+      "title": "Seleziona stili predefiniti o personalizzati che devono essere presenti/assenti"
+    },
+    "mergeAdjacentMarks": "unisci gli intervalli adiacenti di testi con lo stesso stile (Mark)",
+    "regex": "cerca con espressioni regolari (Unicode compatibili)",
+    "replaceAll": "sostituisci tutti",
+    "replaceSelected": "sostituisci il risultato selezionato",
+    "replaceSelectedAndNext": "sostituisci il risultato selezionato e passa al successivo",
+    "saveCurrentSearchSettings": "salva le impostazioni correnti di cerca e sostituisci",
+    "search": "inizia la ricerca",
+    "searchNotReplace": "cerca soltanto, non sostituire",
+    "selectNext": "vai al risultato successivo",
+    "selectPrev": "vai al risultato precedente",
+    "wholeWords": "parole intere",
+    "withCssSelectors": "cerca con i selettori CSS"
   },
-  "close": "chiudi",
-  "newF": "nuova"
+  "show": {
+    "indicesButtons": "mostra i bottoni per i riferimenti ad indice",
+    "lessOrMore": "mostra {what}",
+    "projectStructure": "mostra la struttura del progetto",
+    "saveButtonsDropdown": "mostra bottoni a tendina",
+    "saveButtonsLine": "mostra bottoni affiancati",
+    "searchAndReplace": "cerca e sostituisci"
+  },
+  "showHideMetadata": "{action} i metadati del documento",
+  "strong": "enfasi forte",
+  "success": "Azione eseguita con successo",
+  "table": {
+    "maximizeTableWidth": "tabella a piena larghezza"
+  },
+  "tables": {
+    "addBodyAfter": "aggiungi una sezione sotto",
+    "addBodyBefore": "aggiunge una sezione sopra",
+    "addCaption": "aggiungi la didascalia",
+    "addColumnAfter": "aggiungi una colonna a destra",
+    "addColumnBefore": "aggiungi una colonna a sinistra",
+    "addFoot": "aggiungi piede della tabella",
+    "addHead": "aggiungi l'intestazione della tabella",
+    "addRowAfter": "aggiungi una riga sotto",
+    "addRowBefore": "aggiungi una riga sopra",
+    "align": {
+      "baseLine": "allineamento verticale alla linea di base del testo",
+      "bottom": "allinea in basso",
+      "center": "allinea al centro",
+      "default": "allineamento predefinito della colonna (vedi ColSpec della tabella)",
+      "left": "allinea a sinistra",
+      "middle": "allinea verticalmente al centro",
+      "right": "allinea a destra",
+      "top": "allinea in alto"
+    },
+    "alignControls": "allineamenti orizzontale/verticale delle celle",
+    "bodyHeaders": "intestazioni sezioni dati",
+    "bodyHeadersControls": "imposta numero di righe e colonne di intestazione delle sezioni della tabella",
+    "cellAlignment": "allineamento",
+    "cells": "celle",
+    "cellsControls": "controlli per le celle: unisci/dividi, determina su quante righe/colonne si estendono",
+    "checkAndFix": "controlla e correggi la tabella",
+    "columnAlign": {
+      "center": "allineamento della colonna al centro (AlignCenter)",
+      "default": "allineamento della colonna predefinito (AlignDefault)",
+      "left": "allineamento della colonna a sinistra (AlignLeft)",
+      "right": "allineamento della colonna a destra (AlignRight)"
+    },
+    "columnsAlignments": "allineamento colonna",
+    "convertFromText": "converti testo in tabella",
+    "convertToText": "converti la tabella in testo",
+    "createNewTable": "crea una nuova tabella",
+    "decreaseBodyHeaderColumns": "riduci le colonne dell'intestazione di sezione",
+    "decreaseBodyHeaderRows": "riduci il numero di righe dell'intestazione di sezione",
+    "deleteCaption": "elimina la didascalia",
+    "deleteTable": "elimina la tabella",
+    "equalizeColumnWidths": "colonne con la stessa larghezza",
+    "increaseBodyHeaderColumns": "aumenta le colonne dell'intestazione di sezione",
+    "increaseBodyHeaderRows": "aumenta il numero di righe dell'intestazione di sezione",
+    "makeBody": "crea una nuova sezione con le righe selezionate",
+    "makeFoot": "imposta il piede della tabella con le righe selezionate",
+    "makeHead": "imposta l'intestazione della tabella con le righe selezionate",
+    "mergeCells": "unisci celle",
+    "removeColumn": "elimina colonna(e)",
+    "removeRow": "elimina riga/righe",
+    "removeSection": "elimina sezione",
+    "rowsAndColumns": "righe & colonne",
+    "rowsAndColumnsControls": "aggiungi/rimuovi righe/colonne",
+    "sectionControls": "crea/elimina sezione dati/intestazione/piede",
+    "sections": "sezioni",
+    "splitCell": "dividi cella",
+    "table": "tabella",
+    "tableControls": "tabella: nuova/elimina/correggi, aggiungi/rimuovi didascalia (Caption), aggiungi intestazione/piede",
+    "textVsTable": {
+      "commonSeparators": "separatori predefiniti",
+      "regexSeparator": "il separatore è un'espressione regolare",
+      "sep": {
+        "bar": "barra verticale",
+        "comma": "virgola (con eventuali spazi ai lati)",
+        "doubleSpace": "doppio spazio",
+        "oneOrMoreSpaces": "uno o più spazi",
+        "semicolon": "punto e virgola (con eventuali spazi ai lati)",
+        "semicolonAndSpace": "punto e virgola seguito da spazio",
+        "twoOrMoreSpaces": "due o più spazi"
+      }
+    },
+    "tools": "strumenti per le tabelle"
+  },
+  "toggle": "metti/togli {what}",
+  "togglePlainPara": "Plain/Para",
+  "top": "in alto",
+  "underline": "sottolineato",
+  "undo": "annulla",
+  "wrapIn": {
+    "Caption": "racchiudi il testo selezionato in una Caption",
+    "Div": "racchiudi il testo selezionato in un Div",
+    "Figure": "racchiudi il testo selezionato in una Figure"
+  }
 }

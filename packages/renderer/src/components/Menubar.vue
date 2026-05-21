@@ -33,8 +33,7 @@
         @click="editor.commands.toggleSwapBlocks()" />
 
       <ToolbarButton icon="toggle_plain" :disabled="!editor.can().togglePlain()" :shortcut="SK.TOGGLE_PLAIN" @click="
-        editor.commands.runRepeatableCommand('togglePlain', $t('Plain ↔ Para'))"
-        :title="$t('toggle_') + ' Plain/Para'" />
+        editor.commands.runRepeatableCommand('togglePlain', $t('togglePlainPara'))" :title="$t('togglePlainPara')" />
 
       <CustomWrapperMenu :editor="editor" wrapper-type-name="div" pandoc-type="Div" :shortcut="SK.TOGGLE_DIV" />
 
@@ -46,29 +45,29 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton icon="blockquote" :title="$t('toggle.Blockquote')" :shortcut="SK.TOGGLE_BLOCKQUOTE"
+      <ToolbarButton icon="blockquote" :title="toggleLabelForNode('blockquote')" :shortcut="SK.TOGGLE_BLOCKQUOTE"
         :disabled="!editor.can().toggleBlockquote()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleBlockquote', $t('toggle.Blockquote'))
+            .runRepeatableCommand('toggleBlockquote', toggleLabelForNode('blockquote'))
             .focus()
             .run()
           " />
 
-      <ToolbarButton icon="bulletlist" :title="$t('toggle.BulletList')" :shortcut="SK.TOGGLE_BULLETLIST"
+      <ToolbarButton icon="bulletlist" :title="toggleLabelForNode('bulletList')" :shortcut="SK.TOGGLE_BULLETLIST"
         :disabled="!editor.can().toggleBulletList()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleBulletList', $t('toggle.BulletList'))
+            .runRepeatableCommand('toggleBulletList', toggleLabelForNode('bulletList'))
             .focus()
             .run()
           " />
 
-      <ToolbarButton icon="orderedlist" :title="$t('toggle.OrderedList')" :shortcut="SK.TOGGLE_ORDEREDLIST"
+      <ToolbarButton icon="orderedlist" :title="toggleLabelForNode('orderedList')" :shortcut="SK.TOGGLE_ORDEREDLIST"
         :disabled="!editor.can().toggleOrderedList()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleOrderedList', $t('toggle.OrderedList'))
+            .runRepeatableCommand('toggleOrderedList', toggleLabelForNode('orderedList'))
             .focus()
             .run()
           " />
@@ -109,102 +108,102 @@
     <q-bar v-if="editor" class="q-py-xs">
       <ToolbarButton icon="marks_clear" :disabled="!editor.can().removeAllMarks()" :title="$t('clearAllMarks')"
         :shortcut="SK.REMOVE_MARKS" @click="editor.chain().removeAllMarks().focus().run()" />
-      <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" :title="$t('emphasis')"
+      <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" :title="toggleLabelForMark('emph')"
         :shortcut="SK.TOGGLE_EMPH" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleEmph', $t('toggle.Emph'))
+            .runRepeatableCommand('toggleEmph', toggleLabelForMark('emph'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Strong')" :styleactive="isActive('strong')" :title="$t('strong')"
+      <ToolbarButton :icon="iconFor('Strong')" :styleactive="isActive('strong')" :title="toggleLabelForMark('strong')"
         :shortcut="SK.TOGGLE_STRONG" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleStrong', $t('toggle.Strong'))
+            .runRepeatableCommand('toggleStrong', toggleLabelForMark('strong'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Underline')" :styleactive="isActive('underline')" :title="$t('underline')"
-        :shortcut="SK.TOGGLE_UNDERLINE" @click="
+      <ToolbarButton :icon="iconFor('Underline')" :styleactive="isActive('underline')"
+        :title="toggleLabelForMark('underline')" :shortcut="SK.TOGGLE_UNDERLINE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleUnderline', $t('toggle.Underline'))
+            .runRepeatableCommand('toggleUnderline', toggleLabelForMark('underline'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Strikeout')" :styleactive="isActive('strikeout')" :title="$t('toggle.Strikeout')"
-        :shortcut="SK.TOGGLE_STRIKEOUT" @click="
+      <ToolbarButton :icon="iconFor('Strikeout')" :styleactive="isActive('strikeout')"
+        :title="toggleLabelForMark('strikeout')" :shortcut="SK.TOGGLE_STRIKEOUT" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleStrikeout', $t('toggle.Strikeout'))
+            .runRepeatableCommand('toggleStrikeout', toggleLabelForMark('strikeout'))
             .focus()
             .run()
           " />
       <ToolbarButton :icon="iconFor('Superscript')" :styleactive="isActive('superscript')"
-        :title="$t('toggle.Superscript')" :shortcut="SK.TOGGLE_SUPERSCRIPT" @click="
+        :title="toggleLabelForMark('superscript')" :shortcut="SK.TOGGLE_SUPERSCRIPT" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSuperscript', $t('toggle.Superscript'))
+            .runRepeatableCommand('toggleSuperscript', toggleLabelForMark('superscript'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Subscript')" :styleactive="isActive('subscript')" :title="$t('toggle.Subscript')"
-        :shortcut="SK.TOGGLE_SUBSCRIPT"
-        @click="editor.chain().runRepeatableCommand('toggleSubscript', $t('toggle.Subscript')).focus().run()" />
-      <ToolbarButton :icon="iconFor('smallcaps')" :styleactive="isActive('smallcaps')" :title="$t('toggle.smallCaps')"
-        :shortcut="SK.TOGGLE_SMALLCAPS" @click="
+      <ToolbarButton :icon="iconFor('Subscript')" :styleactive="isActive('subscript')"
+        :title="toggleLabelForMark('subscript')" :shortcut="SK.TOGGLE_SUBSCRIPT"
+        @click="editor.chain().runRepeatableCommand('toggleSubscript', toggleLabelForMark('Subscript')).focus().run()" />
+      <ToolbarButton :icon="iconFor('smallcaps')" :styleactive="isActive('smallcaps')"
+        :title="toggleLabelForMark('smallCaps')" :shortcut="SK.TOGGLE_SMALLCAPS" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSmallcaps', $t('toggle.smallCaps'))
+            .runRepeatableCommand('toggleSmallcaps', toggleLabelForMark('smallCaps'))
             .focus()
             .run()
           " />
       <ToolbarButton :icon="iconFor('singleQuoted')" :styleactive="isActive('quoted', { quoteType: 'SingleQuote' })"
-        :title="$t('toggle.singleQuoted')" :shortcut="SK.TOGGLE_SINGLEQUOTE" @click="
+        :title="toggleLabelForMark('singleQuoted')" :shortcut="SK.TOGGLE_SINGLEQUOTE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSingleQuoted', $t('toggle.singleQuoted'))
+            .runRepeatableCommand('toggleSingleQuoted', toggleLabelForMark('singleQuoted'))
             .focus()
             .run()
           " />
       <ToolbarButton :icon="iconFor('doubleQuoted')" :styleactive="isActive('quoted', { quoteType: 'DoubleQuote' })"
-        :title="$t('toggle.doubleQuoted')" :shortcut="SK.TOGGLE_DOUBLEQUOTE" @click="
+        :title="toggleLabelForMark('doubleQuoted')" :shortcut="SK.TOGGLE_DOUBLEQUOTE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleDoubleQuoted', $t('toggle.doubleQuoted'))
+            .runRepeatableCommand('toggleDoubleQuoted', toggleLabelForMark('doubleQuoted'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Code')" :styleactive="isActive('code')" :title="$t('toggle.Code')"
+      <ToolbarButton :icon="iconFor('Code')" :styleactive="isActive('code')" :title="toggleLabelForMark('Code')"
         :shortcut="SK.TOGGLE_CODE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleCode', $t('toggle.Code'))
+            .runRepeatableCommand('toggleCode', toggleLabelForMark('code'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Link')" :styleactive="isActive('link')" :title="$t('toggle.Link')"
+      <ToolbarButton :icon="iconFor('Link')" :styleactive="isActive('link')" :title="toggleLabelForMark('Link')"
         :shortcut="SK.TOGGLE_LINK" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleLink', $t('toggle.Link'))
+            .runRepeatableCommand('toggleLink', toggleLabelForMark('link'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Cite')" :styleactive="isActive('cite')" :title="$t('toggle.Cite')"
+      <ToolbarButton :icon="iconFor('Cite')" :styleactive="isActive('cite')" :title="toggleLabelForMark('Cite')"
         :shortcut="SK.TOGGLE_CITE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleCite', $t('toggle.Cite'))
+            .runRepeatableCommand('toggleCite', toggleLabelForMark('cite'))
             .focus()
             .run()
           " />
-      <ToolbarButton :icon="iconFor('Math')" :styleactive="isActive('math')" :title="$t('toggle.Math')"
+      <ToolbarButton :icon="iconFor('Math')" :styleactive="isActive('math')" :title="toggleLabelForMark('Math')"
         :shortcut="SK.TOGGLE_MATH" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleMath', $t('toggle.Math'))
+            .runRepeatableCommand('toggleMath', toggleLabelForMark('math'))
             .focus()
             .run()
           " />
@@ -284,7 +283,7 @@
 <script setup lang="ts">
 import { SK } from '../common'
 import { setupQuasarIcons } from './helpers';
-import { t } from '../i18n'
+import { t, tfb } from '../i18n'
 setupQuasarIcons()
 </script>
 
@@ -500,6 +499,16 @@ export default {
     iconFor(typename: string) {
       return iconFor(typename)
     },
+    toggleLabelForMark(markname: string) {
+      return this.$t('toggle', {
+        what: tfb('marks.title.' + markname, markname)
+      })
+    },
+    toggleLabelForNode(nodename: string) {
+      return this.$t('toggle', {
+        what: tfb('nodes.title.' + nodename, nodename)
+      })
+    },
     getAttribute(name: string, attrName: string) {
       const attrs = this.editor && this.editor.getAttributes(name);
       return (attrs && attrs[attrName]) || '';
@@ -591,8 +600,10 @@ export default {
       this.$emit('reloadWithConfiguration', configurationName);
     },
     swapBlocksToggleTooltip() {
-      const what = this.swapBlocksActive ? 'prevent' : 'allow'
-      return this.$t('clickTo.' + what + 'VerticalSwappingWith') + ` ${SK.MOVE_NODE_UP}/${SK.MOVE_NODE_DOWN}`
+      return this.$t('clickTo.moveOrSwapVertically', {
+        state: this.$t(this.swapBlocksActive ? 'enabled' : 'disabled'),
+        shortcut: `${SK.MOVE_NODE_UP}/${SK.MOVE_NODE_DOWN}`
+      })
     },
     async debug() {
       showDocStateDialog(this.editor)

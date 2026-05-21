@@ -5,23 +5,27 @@
         @click="toggleMetadata" />
       <node-view-content :class="classAttr" style="margin-top: 0.3rem" />
       <div :style="{ display: showMetadata ? 'inline-block' : 'none' }">
-        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaString')" label="append a string"
-          title="append MetaString" @click="appendMetaString" />
-        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaInlines')" label="append a line"
-          title="append MetaInlines" @click="appendMetaInlines" />
-        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaBlocks')" label="append blocks"
-          title="append MetaBlocks" @click="appendMetaBlocks" />
-        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaBool')" label="append boolean"
-          title="append MetaBool" @click="appendMetaBool" />
-        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaList')" label="append list" title="append MetaList"
-          @click="appendMetaList" />
-        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaMap')" label="append map" title="append MetaMap"
-          @click="appendMetaMap" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaString')"
+          :label="$t('appendMeta.label.MetaString')" :title="$t('appendMeta.title.MetaString')"
+          @click="appendMetaString" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaInlines')"
+          :label="$t('appendMeta.label.MetaInlines')" alabel="append a line" :title="$t('appendMeta.title.MetaInlines')"
+          @click="appendMetaInlines" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaBlocks')"
+          :label="$t('appendMeta.label.MetaBlocks')" alabel="append blocks" :title="$t('appendMeta.title.MetaBlocks')"
+          @click="appendMetaBlocks" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaBool')" :label="$t('appendMeta.label.MetaBool')"
+          alabel="append boolean" :title="$t('appendMeta.title.MetaBool')" @click="appendMetaBool" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaList')" :label="$t('appendMeta.label.MetaList')"
+          alabel="append list" :title="$t('appendMeta.title.MetaList')" @click="appendMetaList" />
+        <q-btn no-caps size="sm" color="primary" :icon="iconFor('metaMap')" :label="$t('appendMeta.label.MetaMap')"
+          alabel="append map" :title="$t('appendMeta.title.MetaMap')" @click="appendMetaMap" />
         <q-btn v-if="customMetadata.length === 1" no-caps size="sm" color="primary"
-          :icon="iconForCustomMeta(customMetadata[0])" :label="'append ' + customMetadata[0].name"
+          :icon="iconForCustomMeta(customMetadata[0])"
+          :label="$t('appendMeta.label.customMeta', { name: customMetadata[0].name || $t('appendMeta.label.customMetaDefaultName') })"
           :title="customMetadata[0].description" @click="appendCustomMetaMapEntry(customMetadata[0])" />
         <q-btn-dropdown v-if="customMetadata.length > 1" no-caps size="sm" color="primary" icon="metadata_custom"
-          label="append custom" title="append custom metadata from configuration">
+          :label="$t('appendMeta.label.customMeta')" :title="$t('appendMeta.title.customMeta')">
           <q-list>
             <q-item v-for="cm in customMetadata" :key="cm.name" :title="cm.description" dense clickable v-close-popup
               color="primary" @click="appendCustomMetaMapEntry(cm)">
@@ -54,6 +58,7 @@ import {
   nodeIcon,
   nodeOrMarkToPandocName
 } from '../../schema/helpers';
+import { t } from "../../i18n"
 
 export default {
   components: {
@@ -80,7 +85,8 @@ export default {
       return this.showMetadata ? 'collapse' : 'expand'
     },
     label() {
-      return this.showMetadata ? 'hide document metadata' : 'show document metadata'
+      const t = this.$t
+      return t('showHideMetadata', { action: this.showMetadata ? t('Hide') : t('Show') })
     },
     classAttr() {
       return this.showMetadata ? 'metadata-visible' : 'metadata-hidden'
