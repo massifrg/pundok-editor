@@ -33,6 +33,18 @@
     "upperFirst": "rendi maiuscole le iniziali di ogni parola"
   },
   "changeAttributesOf": "modifica gli attributi di",
+  "classesEditor": {
+    "addAClass": "aggiungi una classe",
+    "addClass": "aggiungi classe \"{name}\"",
+    "button": {
+      "add": "aggiungi",
+      "cancel": "annulla"
+    },
+    "classAlreadyPresent": "classe già presente",
+    "classForbiddenHere": "classe non permessa qui",
+    "newClass": "nuova classe",
+    "removeThisClass": "rimuovi questa classe"
+  },
   "clearAllMarks": "togli tutti gli stili",
   "clickTo": {
     "moveOrSwapVertically": "spostamento verticale di blocchi/paragrafi con {shortcut}: {state}"

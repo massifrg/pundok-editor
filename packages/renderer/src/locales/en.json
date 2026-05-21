@@ -34,6 +34,18 @@
     "upperFirst": "uppercase the first letter of any word"
   },
   "changeAttributesOf": "change attributes of",
+  "classesEditor": {
+    "addAClass": "add a class",
+    "addClass": "add class \"{name}\"",
+    "button": {
+      "add": "add",
+      "cancel": "cancel"
+    },
+    "classAlreadyPresent": "class already present",
+    "classForbiddenHere": "class is forbidden here",
+    "newClass": "new class",
+    "removeThisClass": "remove this class"
+  },
   "clearAllMarks": "clear all marks/styles",
   "clickTo": {
     "moveOrSwapVertically": "moving/swapping locks/paragraphs vertically with {shortcut}: {state}"
