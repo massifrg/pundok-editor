@@ -34,7 +34,7 @@ setupQuasarIcons()
 </script>
 
 <script lang="ts">
-import { isString } from 'lodash-es';
+import { isArray, isString } from 'lodash-es';
 import {
   CustomClass,
   CustomStyleInstance,
@@ -99,7 +99,8 @@ export default {
       return cc.description ? `${title}: ${cc.description}` : title
     },
     isImportant(c: string) {
-      return (this.importantClasses || []).includes(c);
+      let impc = this.importantClasses
+      return impc && Array.isArray(impc) ? impc.includes(c) : false;
     },
     removeClass(rc: string) {
       if (!this.isImportant(rc)) {

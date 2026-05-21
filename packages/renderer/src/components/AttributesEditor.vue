@@ -34,7 +34,7 @@
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('classes')" name="classes">
           <ClassesEditor :editor="editor" :node-or-mark="nodeOrMark" :start-value="attrs.classes"
-            :important-classes="importantClasses" @update-attribute="updateAttribute" @add-class="addClass"
+            :important-classes="importantClasses(nodeOrMark)" @update-attribute="updateAttribute" @add-class="addClass"
             @remove-class="removeClass" />
           <ResetAttributeActions attribute-name="classes" @reset-attribute="resetAttribute" />
         </q-tab-panel>
