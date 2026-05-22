@@ -954,16 +954,20 @@ export default {
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
       const docState = this.docState()
+      const { documentName, copyFolder, workingFolder, configuration, workingFormat } = docState || {}
       let path = props?.path
       if (!path) {
-        const { documentName, copyFolder, workingFolder } = docState || {}
         const folder = isCopy ? copyFolder : workingFolder
         path = folder && documentName && `${folder}/${documentName}` || undefined
       }
       const isSave = !isSaveAs && !isCopy
-      const { configuration, workingFormat } = docState || {}
       let documentFormat = asOutputFormat(props?.documentFormat || workingFormat, configuration)
-      if (!path || isSaveAs || (isCopy && !dontAskCopyPath) || (isSave && !documentFormat)) {
+      if (
+        !path
+        || isSaveAs
+        || (isCopy && !dontAskCopyPath)
+        || (isSave && !documentFormat)
+      ) {
         if (isCopy) {
           const { documentName, copyFolder, copyFormat, workingFolder } = docState || {}
           const startFilename = documentName && copyFormat
@@ -1024,7 +1028,7 @@ export default {
       try {
         const docState = this.docState();
         console.log(toRaw(props))
-        const documentFormat = toRaw(props?.documentFormat || (
+        documentFormat = toRaw(documentFormat || (
           isCopy
             ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
             : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT
