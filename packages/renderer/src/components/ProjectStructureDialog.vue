@@ -1,18 +1,24 @@
 <template>
-  <q-dialog :model-value="visible" full-width :full-height="maximized" seamless>
+  <q-dialog :model-value="visible" :full-width="!minimized" :full-height="maximized"
+    :position="minimized ? 'right' : 'standard'" seamless>
     <!-- <div class="shadow shadow-24 structure-dialog"> -->
     <q-card class="shadow shadow-24">
       <q-card-actions horizontal align="stretch" class="bg-primary">
-        <q-btn title="reload/refresh project structure" size="sm" icon="refresh" @click="reloadStructure()" />
-        <q-space />
-        <q-chip>{{ loaded?.id || loaded?.path || '' }}</q-chip>
-        <q-space />
-        <q-btn title="open in main editor" size="sm" icon="document_open_in_main_editor" :disabled="!selected"
-          @click="openInMainEditor" />
-        <q-space style="max-width: 2rem" />
-        <q-btn :title="maximized ? 'minimize' : 'maximize'" size="sm"
-          :icon="maximized ? 'window_minimize' : 'window_maximize'" @click="maximizeMinimize()" />
-        <q-btn title="close" size="sm" icon="window_close" @click="closeDialog()" />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.reloadStructure')" size="sm" icon="refresh"
+          @click="reloadStructure()" />
+        <q-space v-if="!minimized" />
+        <q-chip v-if="!minimized">{{ loaded?.id || loaded?.path || '' }}</q-chip>
+        <q-space v-if="!minimized" />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.openInMainEditor')" size="sm"
+          icon="document_open_in_main_editor" :disabled="!selected" @click="openInMainEditor" />
+        <q-space v-if="!minimized" style="max-width: 2rem" />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.minimize')" size="sm" icon="dialog_minimize"
+          @click="setShowMode('minimized')" />
+        <q-btn v-if="!normalSized" :title="$t('projectStructureDialog.normalSize')" size="sm" icon="dialog_normal"
+          @click="setShowMode('normal')" />
+        <q-btn v-if="!maximized" :title="$t('projectStructureDialog.maximize')" size="sm" icon="dialog_maximize"
+          @click="setShowMode('maximized')" />
+        <q-btn :title="$t('close')" size="sm" icon="window_close" @click="closeDialog()" />
       </q-card-actions>
       <q-card-section>
         <q-splitter v-model="splitterModel" :after-class="afterClass" :before-class="beforeClass"
@@ -41,7 +47,7 @@
       </q-card-section>
     </q-card>
     <!-- </div> -->
-    <q-inner-loading :showing="isLoadingStructure" label="Loading project structure..." label-class="text-teal"
+    <q-inner-loading :showing="isLoadingStructure" :label="$t('projectStructureDialog.loading')" label-class="text-teal"
       label-style="font-size: 1.1em" />
   </q-dialog>
 </template>
@@ -101,6 +107,8 @@ function docToTreeNode(doc: ProjectComponent, loaded: LoadedDocument): QTreeNode
   return treeNode
 }
 
+type ShowMode = 'normal' | 'maximized' | 'minimized'
+
 const ProjectStructureDialog: Component = {
   props: ['mainEditor', 'project', 'visible'],
   emits: ['close-project-structure-dialog', 'new-editor'],
@@ -110,7 +118,7 @@ const ProjectStructureDialog: Component = {
   },
   data() {
     return {
-      maximized: false,
+      showMode: 'normal' as ShowMode,
       splitterModel: 25,
       isLoadingStructure: false,
       docTree: [] as QTreeNode[],
@@ -140,6 +148,15 @@ const ProjectStructureDialog: Component = {
     },
     afterClass(): string {
       return this.maximized ? 'embedded-editor-max' : 'embedded-editor-min'
+    },
+    minimized(): boolean {
+      return this.showMode === 'minimized'
+    },
+    normalSized(): boolean {
+      return this.showMode === 'normal'
+    },
+    maximized(): boolean {
+      return this.showMode === 'maximized'
     },
     height(): string {
       return this.maximized ? '87vh' : '50vh'
@@ -246,8 +263,8 @@ const ProjectStructureDialog: Component = {
       }
       this.subEditor = editor
     },
-    maximizeMinimize() {
-      this.maximized = !this.maximized
+    setShowMode(showMode: ShowMode) {
+      this.showMode = showMode
     },
     closeDialog(force?: boolean) {
       const subEditor = this.subEditor

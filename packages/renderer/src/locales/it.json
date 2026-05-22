@@ -178,6 +178,14 @@
   },
   "present": "presente",
   "prevent": "impedisci",
+  "projectStructureDialog": {
+    "loading": "caricamento della struttura del progetto...",
+    "maximize": "ingrandisci",
+    "minimize": "riduci",
+    "normalSize": "dimensioni predefinite",
+    "openInMainEditor": "apri nell'editor principale",
+    "reloadStructure": "ricarica la struttura del progetto"
+  },
   "recent": {
     "documents": "documenti recenti",
     "projects": "progetti recenti"

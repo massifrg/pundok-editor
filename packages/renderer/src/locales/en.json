@@ -179,6 +179,14 @@
   },
   "present": "present",
   "prevent": "prevent",
+  "projectStructureDialog": {
+    "loading": "Loading project structure...",
+    "maximize": "maximize",
+    "minimize": "minimize",
+    "normalSize": "normal size",
+    "openInMainEditor": "open in main editor",
+    "reloadStructure": "reload/refresh project structure"
+  },
   "recent": {
     "documents": "recent documents",
     "projects": "recent projects",

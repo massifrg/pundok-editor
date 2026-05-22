@@ -194,7 +194,6 @@ import {
   mdiSelect,
   mdiBookArrowDown,
   mdiCheckboxOutline,
-  mdiCheckboxMarkedOutline,
   mdiRadioboxBlank,
   mdiRadioboxMarked,
   mdiPaletteSwatchVariant,
@@ -242,12 +241,13 @@ import {
   mdiFileJpgBox,
   mdiFilePngBox,
   mdiFileGifBox,
-  mdiSvg,
   mdiFileWord,
   mdiXml,
   mdiFileExcel,
   mdiComment,
   mdiSelection,
+  mdiArrowAll,
+  mdiArrowCollapseRight,
 } from '@quasar/extras/mdi-v7';
 
 import {
@@ -352,6 +352,9 @@ export const icons: Record<string, string> = {
   custom_style: mdiPaletteSwatchVariant,
   debug: mdiBug,
   delete: mdiTrashCan,
+  dialog_minimize: mdiArrowCollapseRight,
+  dialog_maximize: mdiArrowAll,
+  dialog_normal: mdiArrowExpandHorizontal,
   document_file: mdiFileDocument,
   document_go_to_line: mdiDebugStepInto,
   document_new: mdiFileDocument,
