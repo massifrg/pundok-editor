@@ -99,3 +99,5 @@ yarn-error.log*
 out/
 staticResources/other/UnicodeData.txt
 packages/renderer/stats.html
+packages/renderer/quasar.config.js.temporary.compiled.1779206680707.mjs
+packages/renderer/.quasar

@@ -1,7 +1,7 @@
 import { Editor } from "@tiptap/vue-3";
 import { Node as PmNode } from '@tiptap/pm/model'
 import { EditorState } from "@tiptap/pm/state";
-import { isAbsolute, parse as parsePath, relative as relativePath } from 'path-browserify'
+import { isAbsolute, relative as relativePath } from 'path-browserify'
 import {
   DocumentFormat,
   EditorKeyType,
@@ -9,12 +9,15 @@ import {
   PundokEditorProject,
 } from "../../common";
 import { getIndexingState, pundokEditorUtilsPluginKey } from "../extensions";
-import { nodeToPandocJsonString, PandocJsonExporterOptions } from "./PandocJsonExporter";
+import { EditorGUIProps, EditorGUIPropsClass } from "./EditorGUIProps";
 import { mergeIndices } from "./indices";
+import { nodeToPandocJsonString, PandocJsonExporterOptions } from "./PandocJsonExporter";
 
 export interface DocState {
   /** The unique key of the editor. */
   readonly editorKey: EditorKeyType;
+  /** Properties that modify the editor's behavior. */
+  readonly guiProps: EditorGUIProps;
   /** The name of the document being edited. */
   readonly documentName?: string;
   /** The path or base URL where documents are read */
@@ -50,6 +53,7 @@ export interface DocState {
 /** An interface to update the {@link DocState}. */
 export interface DocStateUpdate {
   documentName: string | null;
+  guiProps: Partial<EditorGUIProps> | null;
   resourcePath: string[] | null;
   workingFolder: string | null;
   copyFolder: string | null;
@@ -74,6 +78,10 @@ export function getDocState(state?: EditorState): DocState | undefined {
 
 export function getEditorDocState(editor?: Editor): DocState | undefined {
   return getDocState(editor?.state);
+}
+
+export function getEditorGuiProps(editor?: Editor): EditorGUIProps | undefined {
+  return getEditorDocState(editor)?.guiProps
 }
 
 export function getEditorConfiguration(
@@ -130,10 +138,17 @@ export function updateDocState(
       }
       if (key !== 'savedDoc')
         console.log(`updateDocState: updated ${key} to ${JSON.stringify(value)}`)
-      newDocState =
-        value === null
-          ? { ...newDocState, [key]: undefined }
-          : { ...newDocState, [key]: value };
+      if (key === 'guiProps') {
+        const guiProps = value !== null
+          ? { ...newDocState.guiProps, ...(value as Partial<EditorGUIProps>) }
+          : new EditorGUIPropsClass()
+        newDocState = { ...newDocState, guiProps }
+      } else {
+        newDocState =
+          value === null
+            ? { ...newDocState, [key]: undefined }
+            : { ...newDocState, [key]: value };
+      }
     });
     if (modified) return {
       ...newDocState,

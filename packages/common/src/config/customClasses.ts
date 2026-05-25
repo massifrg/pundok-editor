@@ -3,17 +3,14 @@ import { CustomAttribute } from './customAttributes';
 import { CustomStyleInstance, activeCustomStyles } from './customStyles';
 import { appliesTo } from './appliesTo';
 import { isString } from 'lodash-es';
+import { NamedAndDescribed } from './types';
 
 /**
  * A custom class for Pandoc's `Block`s and `Inline`s with an `Attr`
  * (`CodeBlock`, `Header`, `Table`, `Figure`, `TableHead`, `TableBody`,
  *  `TableFoot`, `Row`, `Cell`, `Code`, `Link`, `Image`, `Span`).
  */
-export interface CustomClass {
-  /** the name and value of the class */
-  name: string;
-  /** an optional description */
-  description?: string;
+export interface CustomClass extends NamedAndDescribed {
   /** the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`) */
   appliesTo?: string[];
   /**

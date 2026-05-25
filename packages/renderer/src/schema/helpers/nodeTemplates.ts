@@ -13,12 +13,10 @@ import {
   NODE_NAME_DEFINITION_LIST,
   NODE_NAME_DEFINITION_TERM,
   NODE_NAME_DIV,
-  NODE_NAME_EMPTY_SPAN,
-  NODE_NAME_FIGURE,
   NODE_NAME_FIGURE_CAPTION,
+  NODE_NAME_FIGURE,
   NODE_NAME_HEADING,
   NODE_NAME_HORIZONTAL_RULE,
-  NODE_NAME_IMAGE,
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM,
   NODE_NAME_LINE,
@@ -32,13 +30,11 @@ import {
   NODE_NAME_META_MAP_ENTRY,
   NODE_NAME_META_STRING,
   NODE_NAME_METADATA,
-  NODE_NAME_NOTE,
   NODE_NAME_ORDERED_LIST,
   NODE_NAME_PANDOC_TABLE,
   NODE_NAME_PARAGRAPH,
   NODE_NAME_PLAIN,
   NODE_NAME_RAW_BLOCK,
-  NODE_NAME_RAW_INLINE,
   NODE_NAME_SHORT_CAPTION,
   PundokEditorConfig,
 } from '../../common';
@@ -46,6 +42,7 @@ import { isString } from 'lodash-es';
 import { RawBlock } from '../nodes';
 import { createPandocTable } from './pandocTable';
 import { innerNodeDepth } from './nodeDepth';
+import { icons } from '../../components/helpers';
 
 export function nodesWithTemplate(): string[] {
   return [
@@ -277,78 +274,7 @@ export function templateNode(
 }
 
 export function nodeIcon(typename?: string) {
-  switch (typename) {
-    // blocks
-    case NODE_NAME_PARAGRAPH:
-      return 'mdi-format-paragraph';
-    case NODE_NAME_DIV:
-      return 'mdi-alpha-d-circle-outline';
-    case NODE_NAME_DEFINITION_LIST:
-      return 'mdi-format-list-text';
-    case NODE_NAME_DEFINITION_TERM:
-      return 'mdi-alpha-t-box-outline';
-    case NODE_NAME_DEFINITION_DATA:
-      return 'mdi-alpha-d-box-outline';
-    case NODE_NAME_BULLET_LIST:
-      return 'mdi-format-list-bulleted';
-    case NODE_NAME_ORDERED_LIST:
-      return 'mdi-format-list-numbered';
-    case NODE_NAME_LIST_ITEM:
-      return 'mdi-playlist-plus';
-    case NODE_NAME_HORIZONTAL_RULE:
-      return 'mdi-minus';
-    case NODE_NAME_RAW_BLOCK:
-      return 'mdi-code-tags';
-    case NODE_NAME_PLAIN:
-      return 'mdi-alpha-p-box-outline';
-    case NODE_NAME_LINE_BLOCK:
-      return 'mdi-format-list-group';
-    case NODE_NAME_LINE:
-      return 'mdi-playlist-plus';
-    case NODE_NAME_CODE_BLOCK:
-      return 'mdi-code-braces';
-    case NODE_NAME_BLOCKQUOTE:
-      return 'mdi-format-quote-close';
-    case NODE_NAME_PANDOC_TABLE:
-      return 'mdi-table';
-    case NODE_NAME_FIGURE:
-      return 'mdi-image-frame';
-    case NODE_NAME_FIGURE_CAPTION:
-      return 'mdi-image-text';
-    case NODE_NAME_SHORT_CAPTION:
-      return 'mdi-tag-text-outline';
-    case NODE_NAME_INDEX_TERM:
-      return 'mdi-cursor-pointer';
-    case NODE_NAME_INDEX_DIV:
-      return 'mdi-book-alphabet';
-    // inlines
-    case NODE_NAME_EMPTY_SPAN:
-      return 'mdi-map-marker-outline';
-    case NODE_NAME_IMAGE:
-      return 'mdi-image-outline';
-    case NODE_NAME_NOTE:
-      return 'mdi-note';
-    case NODE_NAME_RAW_INLINE:
-      return 'mdi-code-tags';
-    // metadata
-    case NODE_NAME_METADATA:
-      return 'mdi-alpha-m-box';
-    case NODE_NAME_META_BLOCKS:
-      return 'mdi-alpha-b-circle';
-    case NODE_NAME_META_INLINES:
-      return 'mdi-alpha-i-circle';
-    case NODE_NAME_META_MAP:
-      return 'mdi-view-list';
-    case NODE_NAME_META_LIST:
-      return 'mdi-format-align-justify';
-    // return 'mdi-view-list-outline';
-    case NODE_NAME_META_STRING:
-      return 'mdi-alpha-s-circle';
-    case NODE_NAME_META_BOOL:
-      return 'mdi-checkbox-marked-circle';
-    default:
-      return 'mdi-square-rounded-outline';
-  }
+  return typename && icons[typename] || 'node_unknown';
 }
 
 export function compatibleNodes(typename: string): string[] {

@@ -1,5 +1,32 @@
-import enUS from './en-US';
+import enUS from '../locales/en.json';
+import it from '../locales/it.json';
+import { Lang } from 'quasar';
+import { createI18n } from 'vue-i18n';
 
-export default {
-  'en-US': enUS
+const messages = {
+  'en-US': enUS,
+  it,
 };
+
+const locale = Lang.getLocale()
+export const i18n = createI18n({
+  locale,
+  fallbackLocale: 'en-US',
+  legacy: false,
+  messages,
+});
+
+export const t = i18n.global.t
+export const te = i18n.global.te
+
+/**
+ * If a term has a translation, use it, otherwise use the fallback string.
+ * @param key The key of the term to be translated.
+ * @param fallback The fallback string.
+ * @returns 
+ */
+export function tfb(key: string, fallback: string): string {
+  return te(key) ? t(key) : fallback
+}
+
+export default messages

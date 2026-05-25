@@ -50,7 +50,7 @@ export const guessFormat: DocumentFormat = {
   ftype: 'guess',
   name: 'guess',
   description: 'let the editor guess the format from the file',
-  icon: 'mdi-file-question',
+  icon: 'document_question',
   input: true,
   output: false,
   extensions: [],
@@ -278,9 +278,9 @@ export function documentFormatsFromFilename(
 export function documentFormatIcon(format?: DocumentFormat, defaultIcon?: string): string | undefined {
   let icon
   if (format?.ftype === 'input-converter')
-    icon = format?.icon || 'mdi-import'
+    icon = format?.icon || 'input_converter'
   else if (format?.ftype === 'output-converter')
-    icon = format?.icon || 'mdi-export'
+    icon = format?.icon || 'output_converter'
   else
     icon = format?.icon
   return icon || defaultIcon

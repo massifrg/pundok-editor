@@ -10,7 +10,6 @@ import type {
   QueryResult,
   SaveResponse,
   CxDocument,
-  DocumentCoords,
   PandocFilterTransform,
   SynctexInfo,
   RenderingJob,
@@ -21,29 +20,16 @@ import type {
   PundokBookmark,
   PandocFeatureName,
   PandocFeatureOptions,
+  ConfigQueryOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
 import { NetBackend } from './netbackend';
-import { OpenDialogOptions } from 'electron';
 
 export type IpcRendererListener = (
   e: Electron.IpcRendererEvent,
   ...args: any[]
 ) => void;
-
-export interface Ipc {
-  send: (channel: string, data: any) => void;
-  on: (
-    channel: string,
-    listener: IpcRendererListener,
-  ) => (() => void) | undefined;
-  invoke: (channel: string, ...args: any) => Promise<any>;
-}
-
-export interface BackendConfig {
-  ipc?: Ipc;
-}
 
 export type WhyAskingForIdOrPath =
   | 'edit'      // document to open and edit
@@ -138,9 +124,16 @@ export interface Backend {
   ): Promise<ProjectComponent | undefined>;
 
   /**
-   * Retrieves all the available configurations for the editor.
+   * Create a folder for documents.
+   * @param path A path or URL of the folder to be created.
    */
-  availableConfigurations(): Promise<ConfigurationSummary[]>;
+  createFolder(path: string): Promise<string>;
+
+  /**
+   * Retrieves all the available configurations for the editor.
+   * @param options Options to select only a subset of the configurations.
+   */
+  availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]>;
 
   /**
    * Retrieves the configuration with a particular name.
@@ -226,10 +219,10 @@ export interface Backend {
   ): Promise<void>;
 }
 
-export function createBackend(config: BackendConfig): Backend {
-  if (config.ipc) {
-    return new LocalBackend(config);
+export function createBackend(): Backend {
+  if (window.ipc) {
+    return new LocalBackend();
   } else {
-    return new NetBackend(config);
+    return new NetBackend();
   }
 }

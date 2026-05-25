@@ -26,6 +26,8 @@ import {
   DocState,
   DocStateUpdate,
   editableAttrsForNodeOrMark,
+  EditorGUIProps,
+  EditorGUIPropsClass,
   editorKeyFromState,
   innerNodeDepth,
   META_UPDATE_DOC_STATE,
@@ -53,6 +55,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     pundokEditorUtils: {
       updateDocState: (update: Partial<DocStateUpdate>) => ReturnType;
+      toggleSwapBlocks: (value?: boolean) => ReturnType;
       editAttributes: (props?: EditAttributesActionProps) => ReturnType;
       gotoDocLine: (i: number) => ReturnType;
       nudgeNumericValue: (
@@ -88,6 +91,7 @@ export const PundokEditorUtilsExtension =
             init(config, instance): DocState {
               return {
                 editorKey: newEditorKey(),
+                guiProps: new EditorGUIPropsClass(),
               };
             },
             apply(tr, currentDocState, oldState, newState): DocState {
@@ -203,6 +207,18 @@ export const PundokEditorUtilsExtension =
               if (dispatch) dispatch(tr.setMeta(META_UPDATE_DOC_STATE, update));
               return true;
             },
+        toggleSwapBlocks: (value?: boolean) => ({ dispatch, state, tr }) => {
+          const docState = pundokEditorUtilsPluginKey.getState(state)
+          const currentlyActive = docState.guiProps?.swapBlocksActive
+          if (value === undefined && currentlyActive === undefined) return false
+          const swapBlocksActive = value === undefined ? !currentlyActive : value
+          if (dispatch) {
+            dispatch(tr.setMeta(META_UPDATE_DOC_STATE, {
+              guiProps: { swapBlocksActive } as Partial<EditorGUIProps>,
+            }))
+          }
+          return true
+        },
         editAttributes:
           (props) =>
             ({ dispatch, editor, state }) => {

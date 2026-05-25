@@ -6,13 +6,13 @@
         <q-icon :name="nodeOrMarkIcon" />
         <div>{{ nodeOrMarkLabel }}</div>
         <q-space />
-        <q-btn dense flat icon="mdi-close" @click="doCancel()">
+        <q-btn dense flat icon="close" @click="doCancel()">
           <q-tooltip>Close</q-tooltip>
         </q-btn>
       </q-bar>
       <q-tabs v-model="tab" dense class="text-grey" active-color="primary" indicator-color="primary" align="justify"
         narrow-indicator>
-        <q-tab v-for="tabName in editorTabs" :key="tabName" :name="tabName" :label="labelForTab(tabName)"
+        <q-tab v-for="tabName in editorTabs" :key="tabName" :name="tabName" :label="translated(tabName)"
           :alert="isAttributeModifiedInTab(tabName)" />
       </q-tabs>
       <q-separator />
@@ -34,7 +34,7 @@
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('classes')" name="classes">
           <ClassesEditor :editor="editor" :node-or-mark="nodeOrMark" :start-value="attrs.classes"
-            :important-classes="importantClasses" @update-attribute="updateAttribute" @add-class="addClass"
+            :important-classes="importantClasses(nodeOrMark)" @update-attribute="updateAttribute" @add-class="addClass"
             @remove-class="removeClass" />
           <ResetAttributeActions attribute-name="classes" @reset-attribute="resetAttribute" />
         </q-tab-panel>
@@ -42,19 +42,19 @@
           <OtherAttributesEditor :editor="editor" :node-or-mark="nodeOrMark" attr-name="kv"
             :original-entries="objectEntries('kv', originalAttrs)" :initial-entries="objectEntries('kv', attrs)"
             :classes="attrs.classes || []" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="kv" attribute-desc="other attributes"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="kv"
+            :attribute-desc="$t('attributesEditor.description.otherAttributes')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('customStyle')" name="customStyle">
           <CustomStyleEditor :editor="editor" :original-value="attrs.customStyle" :type="nodeOrMarkName"
             :level="nodeOrMark?.attrs?.level" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="customStyle" attribute-desc="custom style"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="customStyle"
+            :attribute-desc="$t('attributesEditor.description.customStyle')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('noteType')" name="noteType">
           <NoteTypeEditor :editor="editor" :original-value="attrs.noteType" :type="nodeOrMarkName"
             @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="noteType" attribute-desc="note type"
+          <ResetAttributeActions attribute-name="noteType" :attribute-desc="$t('attributesEditor.description.noteType')"
             @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('headRows')" name="headRows">
@@ -75,20 +75,20 @@
         <q-tab-panel v-if="hasAttribute('ref-class')" name="ref-class">
           <TextAttrEditor :start-value="attrs.kv['ref-class']" attr-name="ref-class" enter-commits
             @update-attribute="updateKvAttribute" @commit="doChange" />
-          <ResetAttributeActions attribute-name="refClass" attribute-desc="class for index references"
+          <ResetAttributeActions attribute-name="refClass" :attribute-desc="$t('attributesEditor.description.refClass')"
             @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('put-index-ref')" name="put-index-ref">
           <SelectValueEditor :start-value="attrs.putIndexRef" attr-name="put-index-ref" :options="[
-            { label: 'Before', value: 'before', title: 'index reference is put before the selected text' },
-            { label: 'After', value: 'after', title: 'index reference is put after the selected text' }
+            { label: 'Before', value: 'before', title: $t('attributesEditor.putIndexRef.before') },
+            { label: 'After', value: 'after', title: $t('attributesEditor.putIndexRef.after') }
           ]" @update-attribute="updateKvAttribute" />
-          <ResetAttributeActions attribute-name="putIndexRef" attribute-desc="index ref placement"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="putIndexRef"
+            :attribute-desc="$t('attributesEditor.description.putIndexRef')" @reset-attribute="resetAttribute" />
           <!-- 
           <q-space />
           <q-card-actions align="center">
-            <q-btn icon="mdi-reload" title="reset index ref placement" size="xs"
+            <q-btn icon="reload" title="reset index ref placement" size="xs"
               @click="resetAttribute('putIndexRef')" />
           </q-card-actions> -->
         </q-tab-panel>
@@ -148,22 +148,22 @@
           <IndexRefEditor :editor="editor" :node-or-mark="nodeOrMark"
             :original-entries="objectEntries('kv', originalAttrs)" :initial-entries="objectEntries('kv', attrs)"
             @update-attribute="updateAttribute" @commit="doChange" @cancel="doCancel" />
-          <q-toggle v-model="optionPropagateIdref" label="propagate idref to the refs with the same indexed text" />
+          <q-toggle v-model="optionPropagateIdref" :label="$t('attributesEditor.label.propagateIdRef')" />
           <ResetAttributeActions attribute-name="idref" @reset-attribute="resetKvAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute(indexNameAttr())" :name="indexNameAttr()">
           <IndexNameEditor :indices-names="availableIndicesNames"
             :start-value="attrs.kv[indexNameAttr()] || availableIndicesNames[0]"
             @update-attribute="updateKvAttribute" />
-          <ResetAttributeActions attribute-name="indexName" attribute-desc="index name"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="indexName"
+            :attribute-desc="$t('attributesEditor.description.indexName')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('mathType')" name="mathType">
           <SelectValueEditor :start-value="attrs.mathType" attr-name="mathType" :options="[
-            { label: 'Inline', value: 'InlineMath', title: 'inline math' },
-            { label: 'Display', value: 'DisplayMath', title: 'display math' }
+            { label: 'Inline', value: 'InlineMath', title: $t('attributesEditor.mathType.InlineMath') },
+            { label: 'Display', value: 'DisplayMath', title: $t('attributesEditor.mathType.DisplayMath') }
           ]" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="mathType" attribute-desc="math type"
+          <ResetAttributeActions attribute-name="mathType" :attribute-desc="$t('attributesEditor.description.mathType')"
             @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="isImage || isLink" name="target">
@@ -180,51 +180,56 @@
         <q-tab-panel v-if="hasAttribute('start')" name="start">
           <IntegerEditor attr-name="start" :start-value="attrs.start" :min-value="1" :max-value="100"
             @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="start" attribute-desc="list start number"
+          <ResetAttributeActions attribute-name="start" :attribute-desc="$t('attributesEditor.start.description')"
             @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('numberStyle')" name="numberStyle">
           <SelectValueEditor attr-name="numberStyle" :start-value="attrs.numberStyle" :options="[
-            { label: 'default', value: 'DefaultStyle', title: 'default style' },
-            { label: 'example', value: 'Example', title: 'example style' },
-            { label: '1, 2, 3', value: 'Decimal', title: 'decimal numbers' },
-            { label: 'i, ii, iii, ...', value: 'LowerRoman', title: 'lower case roman numbers' },
-            { label: 'I, II, III, ...', value: 'UpperRoman', title: 'upper case roman numbers' },
-            { label: 'a, b, c, ...', value: 'LowerAlpha', title: 'lower case letters' },
-            { label: 'A, B, C, ...', value: 'UpperAlpha', title: 'upper case letters' }
+            { label: 'default', value: 'DefaultStyle', title: $t('attributesEditor.numberStyle.DefaultStyle') },
+            { label: 'example', value: 'Example', title: $t('attributesEditor.numberStyle.Example') },
+            { label: '1, 2, 3', value: 'Decimal', title: $t('attributesEditor.numberStyle.Decimal') },
+            { label: 'i, ii, iii, ...', value: 'LowerRoman', title: $t('attributesEditor.numberStyle.LowerRoman') },
+            { label: 'I, II, III, ...', value: 'UpperRoman', title: $t('attributesEditor.numberStyle.UpperRoman') },
+            { label: 'a, b, c, ...', value: 'LowerAlpha', title: $t('attributesEditor.numberStyle.LowerAlpha') },
+            { label: 'A, B, C, ...', value: 'UpperAlpha', title: $t('attributesEditor.numberStyle.UpperAlpha') }
           ]" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="numberStyle" attribute-desc="number style"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="numberStyle"
+            :attribute-desc="$t('attributesEditor.numberStyle.description')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
         <q-tab-panel v-if="hasAttribute('numberDelim')" name="numberDelim">
           <SelectValueEditor attr-name="numberDelim" :start-value="attrs.numberDelim" :options="[
-            { label: 'default', value: 'DefaultDelim', title: 'default delimiter' },
-            { label: '.', value: 'Period', title: 'period' },
-            { label: ')', value: 'OneParen', title: 'one parenthesis' },
-            { label: '))', value: 'TwoParens', title: 'two parentheses' }
+            { label: 'default', value: 'DefaultDelim', title: $t('attributesEditor.numberDelim.DefaultDelim') },
+            { label: '.', value: 'Period', title: $t('attributesEditor.numberDelim.Period') },
+            { label: ')', value: 'OneParen', title: $t('attributesEditor.numberDelim.OneParen') },
+            { label: '))', value: 'TwoParens', title: $t('attributesEditor.numberDelim.TwoParens') }
           ]" @update-attribute="updateAttribute" />
-          <ResetAttributeActions attribute-name="numberDelim" attribute-desc="number delimiter"
-            @reset-attribute="resetAttribute" />
+          <ResetAttributeActions attribute-name="numberDelim"
+            :attribute-desc="$t('attributesEditor.numberDelim.description')" @reset-attribute="resetAttribute" />
         </q-tab-panel>
       </q-tab-panels>
       <q-card-actions>
-        <q-btn v-if="!noAttrModified" color="primary" title="reset all attributes" @click="resetAllAttributes()">
-          <q-icon name="mdi-reload" />
+        <q-btn v-if="!noAttrModified" color="primary" :title="$t('attributesEditor.resetAllAttributes')"
+          @click="resetAllAttributes()">
+          <q-icon name="reload" />
         </q-btn>
         <q-space />
-        <q-btn label="Change" color="primary" @click="doChange()" />
-        <q-btn label="Cancel" color="primary" @click="doCancel()" />
+        <q-btn :label="$t('attributesEditor.button.change')" color="primary" @click="doChange()" />
+        <q-btn :label="$t('attributesEditor.button.cancel')" color="primary" @click="doCancel()" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers/quasarIcons';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { isEmpty, isEqual } from 'lodash-es';
 import { Mark, Node } from '@tiptap/pm/model';
-import { useQuasar } from 'quasar';
-import { mdiChevronLeft, mdiChevronRight } from '@quasar/extras/mdi-v6/index.js'
 import {
+  DocStateUpdate,
   PANDOC_OUTPUT_FORMATS,
   editableAttrsForNodeOrMark,
   editableAttrsWithTab,
@@ -274,23 +279,21 @@ import {
   NODE_NAME_INDEX_TERM,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
-  NODE_NAME_TABLE_BODY
+  NODE_NAME_TABLE_BODY,
+  splitFolderAndDoc
 } from '../common';
 import { useBackend } from '../stores';
 import { mapState } from 'pinia';
 import { toRaw } from 'vue';
-import { createLowlight, all } from 'lowlight';
+import { createLowlight } from 'lowlight';
 import { ACTION_ADD_CLASS } from '../actions';
 import { showIncludeDocumentDialog } from './helpers';
-import { parse, relative } from 'path-browserify';
+import { relative } from 'path-browserify';
+import { t, tfb } from '../i18n'
 
-const lowlight = createLowlight(all);
+const lowlight = createLowlight();
 
-const myIcons: Record<string, string> = {
-  chevron_left: mdiChevronLeft,
-  chevron_right: mdiChevronRight,
-}
-
+const SHOW_INCLUDE_DIALOG_DELAY = 100
 const TARGET_ATTRS = ['src', 'href', 'title']
 const TEXT_CONTENT_TAB = 'content'
 
@@ -310,15 +313,6 @@ export default {
     IndexTermIdEditor,
     ResetAttributeActions,
     TargetEditor,
-  },
-  setup() {
-    const $q = useQuasar()
-    $q.iconMapFn = (iconName) => {
-      const icon = myIcons[iconName]
-      if (icon !== void 0) {
-        return { icon: icon }
-      }
-    }
   },
   props: ['editor', 'selectedNodeOrMark', 'startTab', 'onAttributesEditorShow'],
   emits: ['closeAttributesEditor'],
@@ -510,6 +504,9 @@ export default {
     hide() {
       this.tab = undefined
     },
+    translated(tabName: string) {
+      return tfb(`attributesEditor.tab.${tabName}`, tabName)
+    },
     setTab(_tab?: string) {
       const tab = _tab || this.startTab || this.tab
       const node = this.nodeOrMark
@@ -531,22 +528,14 @@ export default {
       return PANDOC_OUTPUT_FORMATS.map(([name, description, icon]) => ({
         name,
         description,
-        icon: icon || (this.isRawBlock ? 'code_block_tags' : 'mdi-code-tags')
+        icon: icon || (this.isRawBlock ? 'raw_block' : 'raw_inline')
       }))
     },
     codeLanguages() {
-      return lowlight.listLanguages().map(name => ({ name, icon: `mdi-language-${name}` }))
+      return lowlight.listLanguages().map(name => ({ name, icon: `language_${name}` }))
     },
     indexNameAttr() {
       return INDEX_NAME_ATTR
-    },
-    labelForTab(attrName: string): string {
-      switch (attrName) {
-        case 'kv':
-          return 'attributes'
-        default:
-          return attrName
-      }
     },
     hasAttribute(attrName: string): boolean {
       return this.editableAttributes.includes(attrName);
@@ -603,32 +592,51 @@ export default {
       return Object.fromEntries(this.modifiedAttrs().map(e => [e.attrName, e.to]));
     },
     setIncludedDocAttrs() {
-      const docState = getEditorDocState(this.editor.state)
-      let src: string | undefined = undefined
-      showIncludeDocumentDialog({
-        editor: this.editor,
-        startFolder: docState?.workingFolder,
-        callback: (context) => {
-          const { documentFormat, path, project } = context
-          if (path) {
-            const baseDir = project?.path || ''
-            src = baseDir ? relative(baseDir!, path!) : path
-            const id = parse(path).name
-            const formatName = documentFormat?.name
-            if (src) {
-              this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
-              if (id)
-                this.updateAttribute('id', id)
-              if (formatName)
-                this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
-            } else {
-              this.removeClass(INCLUDE_DOC_CLASS)
+      setTimeout(() => {
+        const docState = getEditorDocState(this.editor)
+        const { includeFolder, includeFormat, workingFolder, workingFormat } = docState || {}
+        let src: string | undefined = undefined
+        showIncludeDocumentDialog({
+          editor: this.editor,
+          options: {
+            startFolder: includeFolder || workingFolder,
+            startFormat: includeFormat || workingFormat,
+          },
+          callback: (context) => {
+            const { documentFormat, path, project } = context
+            if (path) {
+              const { folder, document } = splitFolderAndDoc(path)
+              console.log(`project.path=${project?.path}, path=${path}`)
+              let src
+              try {
+                src = project?.path ? relative(project.path, path!) : path
+              } catch (err) {
+                const projectPath = project?.path || ''
+                if (path.startsWith(projectPath))
+                  src = path.substring(projectPath.length)
+                src = src?.startsWith('/') ? src.substring(1) : src
+              }
+              const id = document?.replace(/[.][^.]+$/, '')
+              const formatName = documentFormat?.name
+              if (src) {
+                this.updateKvAttribute(INCLUDE_SRC_ATTR, src)
+                if (id)
+                  this.updateAttribute('id', id)
+                if (formatName)
+                  this.updateKvAttribute(INCLUDE_FORMAT_ATTR, formatName)
+                this.editor.commands.updateDocState({
+                  includeFolder: folder || includeFolder,
+                  includeFormat: documentFormat || includeFormat,
+                } as DocStateUpdate)
+              } else {
+                this.removeClass(INCLUDE_DOC_CLASS)
+              }
             }
           }
-        }
-      })
-      if (!src)
-        this.removeClass(INCLUDE_DOC_CLASS)
+        })
+      }, SHOW_INCLUDE_DIALOG_DELAY)
+      // if (!src)
+      //   this.removeClass(INCLUDE_DOC_CLASS)
     },
     doChange() {
       const snom: SelectedNodeOrMark = this.selectedNodeOrMark as SelectedNodeOrMark;

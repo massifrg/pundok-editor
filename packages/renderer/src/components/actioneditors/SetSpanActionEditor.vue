@@ -5,7 +5,7 @@
         <q-item v-for="alt in alternatives" dense clickable v-close-popup :title="alt.description"
           @click="selectAlternative(alt)">
           <q-item-section side>
-            <q-icon :name="alt.icon || 'mdi-invoice-list-outline'"></q-icon>
+            <q-icon :name="alt.icon || 'span_alternatives'"></q-icon>
           </q-item-section>
           <q-item-section>
             <q-item-label>{{ alt.name }}</q-item-label>
@@ -13,11 +13,11 @@
         </q-item>
       </q-list>
     </q-btn-dropdown>
-    <q-btn icon="mdi-playlist-edit" color="primary" no-caps>
+    <q-btn icon="span_edit" color="primary" no-caps>
       <q-popup-proxy>
         <q-tabs v-model="tab">
-          <q-tab name="classes" icon="mdi-octagram" label="Classes" />
-          <q-tab name="attributes" icon="mdi-playlist-edit" label="Attributes" />
+          <q-tab name="classes" icon="classes" label="Classes" />
+          <q-tab name="attributes" icon="attributes" label="Attributes" />
         </q-tabs>
         <q-tab-panels v-model="tab">
           <q-tab-panel name="classes">
@@ -35,9 +35,13 @@
   </q-card-actions>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { SetSpanActionProps, CustomAttribute, attrsToCssSelectorString, CustomSpan } from '../../common';
-import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { getEditorConfiguration } from '../../schema';
 import { defaultPropsFor } from '../../actions';
 import OtherAttributesEditor from '../attreditors/OtherAttributesEditor.vue';
@@ -112,9 +116,6 @@ export default {
       const index = this.selectedAlternativeIndex
       return index >= 0 && alternatives[index].name || this.computedLabel
     },
-  },
-  setup() {
-    setupQuasarIcons()
   },
   methods: {
     selectAlternative(alt: CustomSpan) {

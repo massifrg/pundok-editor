@@ -2,6 +2,7 @@ import { PundokEditorConfig } from './editorConfiguration';
 import { Capitalize } from '../capitalize';
 import { ActionNameWithProps } from '../actions';
 import { CustomSpan } from './customSpan';
+import { NamedAndDescribed } from './types';
 
 /**
  * Types of automations available:
@@ -26,10 +27,8 @@ export type AutomationType =
  * - transformation of the current document with Pandoc filters;
  * - search and replace operations.
  */
-export interface Automation extends Record<string, any> {
+export interface Automation extends NamedAndDescribed, Record<string, any> {
   type: AutomationType;
-  name: string;
-  description?: string;
 }
 
 /**

@@ -25,6 +25,7 @@ import {
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_ADD_CUSTOM_STYLE,
   ACTION_ADD_MARK,
+  ACTION_DELETE_CSS_SELECTED,
   ACTION_INSERT_RAW_INLINE,
   ACTION_LOWERCASE,
   ACTION_REMOVE_CLASS,
@@ -33,12 +34,14 @@ import {
   ACTION_REMOVE_MARK,
   ACTION_SET_INDEX_REF,
   ACTION_SET_SPAN,
+  ACTION_UNWRAP_CSS_SELECTED,
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
 } from '../../actions';
 import { setIndexRefCommand } from './IndexingExtension';
 import { insertRawInlineCommand } from '../nodes/RawInline';
 import { isString } from 'lodash-es';
+import { deleteCssSelectedCommand, unwrapCssSelectedCommand } from './CssSelectionExtension';
 
 export type TextTransformType =
   | 'add-mark'
@@ -280,6 +283,10 @@ function actionNameWithPropsToCommand(
         return insertRawInlineCommand(format, isSingleAfter ? ['', content] : content)
       }
       break
+    case ACTION_DELETE_CSS_SELECTED.name:
+      return deleteCssSelectedCommand;
+    case ACTION_UNWRAP_CSS_SELECTED.name:
+      return unwrapCssSelectedCommand;
     case ACTION_ADD_CUSTOM_CLASS.name:
     case ACTION_REMOVE_CUSTOM_CLASS.name:
     case ACTION_ADD_CLASS.name:

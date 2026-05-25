@@ -3,10 +3,12 @@ export interface EditorGUIProps {
   newDocument: boolean;
   /** open document button */
   openButton: boolean;
-  /** import document button */
+  /** import document button (DEPRECATED) */
   importButton: boolean;
-  /** export document button */
+  /** export document button (DEPRECATED) */
   exportButton: boolean;
+  /** allow line/blocks swapping (with Alt+Up and Alt+Down) */
+  swapBlocksActive: boolean;
   /** project structure button */
   projectStructure: boolean;
   showEditorVersion: boolean;
@@ -21,6 +23,7 @@ export class EditorGUIPropsClass implements EditorGUIProps {
   openButton: boolean = true;
   importButton: boolean = true;
   exportButton: boolean = true;
+  swapBlocksActive: boolean = true;
   projectStructure: boolean = true;
   showEditorVersion: boolean = true;
   showEditorKey: boolean = process.env.NODE_ENV !== 'production';

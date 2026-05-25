@@ -1,3 +1,5 @@
+import { NamedAndDescribed } from "./types";
+
 export type MetaValueName =
   | 'MetaBool'
   | 'MetaString'
@@ -9,9 +11,7 @@ export type MetaValueName =
 /**
  * A custom metadata field in the Metadata of a Pandoc document.
  */
-export interface CustomMetadata {
+export interface CustomMetadata extends NamedAndDescribed {
   type: MetaValueName;
-  name: string,
-  description?: string,
   default?: any;
 }

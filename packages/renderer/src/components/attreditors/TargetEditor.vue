@@ -2,12 +2,17 @@
   <q-input class="q-mx-xs" v-model="targetUrl" :autofocus="!isImage" label="URL" stack-label debounce="500"
     @update:model-value="updateTargetUrl">
     <template v-slot:append>
-      <q-icon v-if="isImage" name="mdi-file-image" @click="askTargetFileUrl" />
+      <q-icon v-if="isImage" name="image_file" @click="askTargetFileUrl" />
     </template>
   </q-input>
   <q-input class="q-mx-xs" v-model="targetTitle" :autofocus="isImage" label="title" stack-label debounce="500"
     @update:model-value="updateTargetTitle" />
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { mapState } from 'pinia';
@@ -73,9 +78,11 @@ export default {
         : docState?.imagesFormat
       showSelectImageDialog({
         editor: this.editor,
-        prompt: 'Choose an image:',
-        startFolder,
-        startFormat,
+        options: {
+          prompt: 'Choose an image:',
+          startFolder,
+          startFormat,
+        },
         callback: (context) => {
           const { path, documentFormat } = context
           this.editor.commands.updateDocState({

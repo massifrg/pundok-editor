@@ -24,11 +24,11 @@ const config = {
     minify: process.env.MODE !== 'development',
     lib: {
       entry: 'src/index.ts',
-      formats: ['cjs'],
+      formats: ['esm'],
     },
     rollupOptions: {
       output: {
-        entryFileNames: '[name].cjs',
+        entryFileNames: '[name].mjs',
       },
     },
     emptyOutDir: true,

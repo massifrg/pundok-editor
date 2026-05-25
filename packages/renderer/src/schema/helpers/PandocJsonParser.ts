@@ -506,7 +506,7 @@ export const getPandocAttrs = ([id, classes, attributes]: [
 ]) => {
   const kv: Record<string, string> = {};
   attributes.forEach(([k, v]) => {
-    kv[k] = v;
+    if (isString(v)) kv[k] = v;
   });
   return { id, classes, kv } as PandocAttr;
 };

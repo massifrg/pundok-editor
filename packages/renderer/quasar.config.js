@@ -9,7 +9,8 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
 import { defineConfig } from '#q-app/wrappers';
-const path = require('path');
+import { resolve } from 'path';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig((ctx) => {
   return {
@@ -22,13 +23,21 @@ export default defineConfig((ctx) => {
       errors: true,
     },
 
+    resolve: {
+      alias: {
+        'app/src/App.vue': fileURLToPath(
+          new URL('./src/PundokApp.vue', import.meta.url),
+        ),
+      },
+    },
+
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
 
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['i18n'],
+    boot: ['root', 'i18n'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ['app.scss'],
@@ -36,7 +45,7 @@ export default defineConfig((ctx) => {
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
       // 'ionicons-v4',
-      // 'mdi-v5',
+      'mdi-v7',
       // 'fontawesome-v6',
       // 'eva-icons',
       // 'themify',
@@ -50,41 +59,38 @@ export default defineConfig((ctx) => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
       target: {
-        browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],
-        node: 'node16',
+        browser: 'baseline-widely-available',
+        node: 'node22',
       },
 
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
-      // vueRouterBase,
-      // vueDevtools,
-      // vueOptionsAPI: false,
-
-      // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
-
-      // publicPath: '/',
-      // analyze: true,
-      // env: {},
-      // rawDefine: {}
-      // ignorePublicFolder: true,
-      // minify: false,
-      // polyfillModulePreload: true,
-      // distDir
-
-      // extendViteConf (viteConf) {},
-      // viteVuePluginOptions: {},
+      extendViteConf(viteConf, { isServer, isClient }) {
+        // We return an Object which will get deeply merged into
+        // the config, instead of directly tampering with viteConf
+        return {
+          build: {
+            chunkSizeWarningLimit: 750,
+          },
+        };
+        // equivalent of following vite.config.js/vite.config.ts:
+        // export default defineConfig({
+        //   build: {
+        //     chunkSizeWarningLimit: 750
+        //   }
+        // })
+      },
 
       vitePlugins: [
         [
-          '@intlify/vite-plugin-vue-i18n',
+          '@intlify/unplugin-vue-i18n/vite',
           {
             // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
             // compositionOnly: false,
-
             // you need to set i18n resource including paths !
-            include: path.resolve(__dirname, './src/i18n/**'),
+            include: [fileURLToPath(new URL('./src/i18n', import.meta.url))],
           },
         ],
       ],
+      // viteVuePluginOptions: {},
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
@@ -201,8 +207,7 @@ export default defineConfig((ctx) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
     bex: {
-      contentScripts: ['my-content-script'],
-
+      // contentScripts: ['my-content-script'],
       // extendBexScriptsConf (esbuildConf) {}
       // extendBexManifestJson (json) {}
     },

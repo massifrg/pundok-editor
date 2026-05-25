@@ -1,13 +1,18 @@
 <template>
   <q-btn-dropdown v-if="configurations.length > 1" class="toolbar-button" :label="currentConfigurationName"
-    :title="title" icon="mdi-sync-circle" dense dropdown-icon="mdi-menu-down" @click="" elevation="3" size="sm"
-    color="grey-5" auto-close>
+    :title="title" icon="reload_with_other_configuration" dense dropdown-icon="menu_down" @click="" elevation="3"
+    size="sm" color="grey-5" auto-close>
     <q-list>
       <q-item v-for="c in otherConfigurations" :key="c.name" clickable :value="c.name" :title="configTitle(c)" dense
         @click="$emit('change-configuration', c.name)">{{ c.name }}</q-item>
     </q-list>
   </q-btn-dropdown>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { mapState } from 'pinia'

@@ -134,18 +134,18 @@ export function getMark(
 export function markIcon(mark?: Mark) {
   switch (mark?.type.name) {
     case MARK_NAME_EMPH:
-      return 'mdi-format-italic';
+      return 'emph';
     case MARK_NAME_STRONG:
-      return 'mdi-format-bold';
+      return 'strong';
     //FIXME: add the remainder
     case MARK_NAME_LINK:
-      return 'mdi-link-variant';
+      return 'link';
     case MARK_NAME_SPAN:
-      if (mark.attrs.customStyle) return 'mdi-palette-swatch-variant';
+      if (mark.attrs.customStyle) return 'custom_style';
       break;
     default:
   }
-  return 'mdi-selection';
+  return 'selection';
 }
 
 /**

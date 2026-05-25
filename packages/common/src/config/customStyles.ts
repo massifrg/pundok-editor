@@ -12,6 +12,7 @@ import {
   NODE_NAME_TABLE_CELL,
   NODE_NAME_TABLE_HEADER
 } from '../prosemirrorNames';
+import { NamedAndDescribed } from './types';
 
 /**
  * The Nodes and Marks that are customizable with the `customStyle` attribute.
@@ -205,11 +206,7 @@ export const compatiblesWithType = (t: string | NodeType | MarkType) =>
  * - `paragraph` Nodes (through the same attr),
  * - `div` Nodes (through a class in the `classes` attribute)
  */
-export interface CustomStyleDef {
-  /** This becomes the value of the `custom-style` property or a class name. */
-  name: string;
-  /** A description of this style. */
-  description?: string;
+export interface CustomStyleDef extends NamedAndDescribed {
   /** Elements to which this style applies. */
   appliesTo: CustomizableElement[];
   /** Only for custom headings. */

@@ -6,7 +6,7 @@
         <q-tr :props="props" @wheel="(e: WheelEvent) => onWheel(e, props.row)">
           <q-td v-for="col in (props.cols as Record<string, string>[])" :key="col.name" :props="props">
             <span :class="classForAttributeName(props.row)" :title="props.row.description">{{ truncateValue(col.value)
-              }}</span>
+            }}</span>
             <q-popup-edit v-if="props.row.editable && col.name === 'value'" v-model="props.row.value"
               :title='`Edit the  value of "${props.row.key}" attribute:`' auto-save v-slot="scope"
               @before-show="setAttrBeingEdited(props.row)" @save="setAttrBeingEditedValue">
@@ -14,10 +14,10 @@
             </q-popup-edit>
           </q-td>
           <q-td auto-width>
-            <q-btn v-if="isAddable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-plus"
-              @click="add(props.row)" :title="titleForAvailableAttribute(props.row.key)" />
+            <q-btn v-if="isAddable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense
+              icon="attributes_add" @click="add(props.row)" :title="titleForAvailableAttribute(props.row.key)" />
             <q-btn v-if="hasSuggestions(props.row)" size="sm" class="q-mx-xs" color="accent" round dense
-              icon="mdi-dots-horizontal" title="suggestions...">
+              icon="attributes_suggestions" title="suggestions...">
               <q-menu auto-close>
                 <q-list>
                   <q-item v-for="s in (props.row.suggestions as string[])" dense clickable
@@ -26,7 +26,7 @@
               </q-menu>
             </q-btn>
             <q-btn v-if="hasFixedSetOfValues(props.row)" size="sm" class="q-mx-xs" color="accent" round dense
-              icon="mdi-dots-vertical" title="choose one from this set of values...">
+              icon="attributes_values" title="choose one from this set of values...">
               <q-menu auto-close>
                 <q-list>
                   <q-item v-for="v in (props.row.values as string[])" dense clickable
@@ -34,11 +34,11 @@
                 </q-list>
               </q-menu>
             </q-btn>
-            <!-- <q-btn v-if="isEditable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-pencil"
+            <!-- <q-btn v-if="isEditable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="attributes_edit"
               @click="edit(props.key)" title="edit" /> -->
-            <q-btn v-if="isRemovable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-close"
+            <q-btn v-if="isRemovable(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="close"
               @click="remove(props.key)" title="remove" />
-            <q-btn v-if="isModified(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="mdi-reload"
+            <q-btn v-if="isModified(props.row)" size="sm" class="q-mx-xs" color="accent" round dense icon="reload"
               @click="reset(props.key)" title="reset" />
           </q-td>
         </q-tr>
@@ -46,7 +46,7 @@
     </q-table>
     <q-space />
     <q-card-actions vertical align="center">
-      <q-btn icon="mdi-plus" color="primary" title="add an attribute" @click="showAddAttrDialog = true" />
+      <q-btn icon="attributes_add" color="primary" title="add an attribute" @click="showAddAttrDialog = true" />
       <q-dialog v-model="showAddAttrDialog" persistent>
         <q-card>
           <q-card-section>

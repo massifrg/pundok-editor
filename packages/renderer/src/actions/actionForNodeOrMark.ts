@@ -30,6 +30,7 @@ import {
   ACTION_REPEAT_CHANGE,
   ActionForNodeOrMark,
   ActionName,
+  BaseEditorAction,
   EditorAction,
   TABLE_CELL_ALIGNMENT_ACTIONS,
   UNWRAP_BLOCKS_ACTION
@@ -39,6 +40,7 @@ import {
   insertBlockAction,
   moveBlockActions
 } from './actionGroup';
+import { setActionCommand } from './actionCommands';
 
 export function actionsForNodeOrMark(
   state: EditorState,
@@ -75,7 +77,7 @@ export function actionsForNodeOrMark(
       editorKey,
       name: 'select-node',
       label: `select`,
-      icon: 'mdi-select',
+      icon: 'select',
       canDo: (editor) => editor.can().setNodeSelection(pos),
       do: (editor) => editor.chain().setNodeSelection(pos).focus().run(),
       nodeOrMark,
@@ -87,7 +89,7 @@ export function actionsForNodeOrMark(
       editorKey,
       name: 'copy-node',
       label: `copy`,
-      icon: 'mdi-content-copy',
+      icon: 'clipboard_copy',
       canDo: (editor) => editor.can().copyAsJson(nodeOrMark!.node),
       do: (editor) => editor.commands.copyAsJson(nodeOrMark!.node),
       nodeOrMark,
@@ -99,7 +101,7 @@ export function actionsForNodeOrMark(
       editorKey,
       name: 'delete-node',
       label: `delete`,
-      icon: 'mdi-delete',
+      icon: 'delete',
       canDo: (editor) => editor.can().deleteNodeAtPos(pos, { ...node } as Node),
       do: (editor) => editor.commands.deleteNodeAtPos(pos, { ...node } as Node),
       nodeOrMark,
@@ -111,7 +113,7 @@ export function actionsForNodeOrMark(
       editorKey,
       name: 'duplicate-node',
       label: 'duplicate',
-      icon: 'mdi-content-duplicate',
+      icon: 'duplicate',
       canDo: (editor) => editor.can().duplicateNode(pos),
       do: (editor) => editor.commands.duplicateNode(pos),
       nodeOrMark,
@@ -127,7 +129,7 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'add-table-caption',
         label: `add table caption`,
-        icon: 'mdi-page-layout-header',
+        icon: 'caption_add',
         canDo: (editor) => editor.can().addTableCaption(),
         do: (editor) => editor.commands.addTableCaption(),
         nodeOrMark,
@@ -136,7 +138,7 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'add-table-head',
         label: `add table head`,
-        icon: 'mdi-table-row-plus-before',
+        icon: 'table_head',
         canDo: (editor) => editor.can().addTableHead(),
         do: (editor) => editor.commands.addTableHead(),
         nodeOrMark,
@@ -145,7 +147,7 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'add-table-foot',
         label: `add table foot`,
-        icon: 'mdi-table-row-plus-after',
+        icon: 'table_foot',
         canDo: (editor) => editor.can().addTableFoot(),
         do: (editor) => editor.commands.addTableFoot(),
         nodeOrMark,
@@ -163,7 +165,7 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'prepend-table-body',
         label: 'new table body before this',
-        icon: 'mdi-table-row-plus-before',
+        icon: 'table_row_add_before',
         canDo: (editor) => editor.can().addTableBodyBefore(),
         do: (editor) => editor.commands.addTableBodyBefore(),
         nodeOrMark,
@@ -172,7 +174,7 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'append-table-body',
         label: 'new table body after this',
-        icon: 'mdi-table-row-plus-after',
+        icon: 'table_row_add_after',
         canDo: (editor) => editor.can().addTableBodyAfter(),
         do: (editor) => editor.commands.addTableBodyAfter(),
         nodeOrMark,
@@ -181,8 +183,8 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'decrease-table-body-header-rows',
         label: "decrease body's header rows",
-        icon: 'mdi-table-row',
-        iconRight: 'mdi-arrow-up',
+        icon: 'table_row',
+        iconRight: 'arrow_upward',
         canDo: (editor) => editor.can().decreaseTableBodyHeaderRows(),
         do: (editor) => editor.commands.decreaseTableBodyHeaderRows(),
         nodeOrMark,
@@ -191,8 +193,8 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'increase-table-body-header-rows',
         label: "increase body's header rows",
-        icon: 'mdi-table-row',
-        iconRight: 'mdi-arrow-down',
+        icon: 'table_row',
+        iconRight: 'arrow_downward',
         canDo: (editor) => editor.can().increaseTableBodyHeaderRows(),
         do: (editor) => editor.commands.increaseTableBodyHeaderRows(),
         nodeOrMark,
@@ -201,8 +203,8 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'decrease-table-body-header-columns',
         label: "decrease body's header columns",
-        icon: 'mdi-table-column',
-        iconRight: 'mdi-arrow-left',
+        icon: 'table_column',
+        iconRight: 'arrow_left',
         canDo: (editor) => editor.can().decreaseTableBodyHeaderColumns(),
         do: (editor) => editor.commands.decreaseTableBodyHeaderColumns(),
         nodeOrMark,
@@ -211,8 +213,8 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'increase-table-body-header-columns',
         label: "increase body's header columns",
-        icon: 'mdi-table-column',
-        iconRight: 'mdi-arrow-right',
+        icon: 'table_column',
+        iconRight: 'arrow_right',
         canDo: (editor) => editor.can().increaseTableBodyHeaderColumns(),
         do: (editor) => editor.commands.increaseTableBodyHeaderColumns(),
         nodeOrMark,
@@ -281,7 +283,7 @@ export function actionsForNodeOrMark(
         editorKey,
         name: 'propagate-index-name',
         label: 'propagate index name to index terms',
-        icon: 'mdi-book-arrow-down',
+        icon: 'index_propagate_name',
         canDo: (editor) => editor.can().propagateIndexNameToTerms(),
         do: (editor) => editor.commands.propagateIndexNameToTerms(),
         nodeOrMark,
@@ -301,20 +303,25 @@ export function actionsForNodeOrMark(
         || (path && pandocFormatsFromExtension(path, 'input')[0])
         || 'json'
       console.log(`id=${id}, path=${path}, format=${format}`)
+      const props = {
+        context: {
+          id,
+          path,
+          inputConverter: {
+            type: 'pandoc',
+            format,
+          } as InputConverter
+        } as DocumentContext
+      } as DocumentOpenActionProps
       if ((id || path) && format) {
         actions.push({
           ...ACTION_DOCUMENT_OPEN,
-          canDo: () => true,
-          props: {
-            context: {
-              id,
-              path,
-              inputConverter: {
-                type: 'pandoc',
-                format,
-              } as InputConverter
-            } as DocumentContext
-          } as DocumentOpenActionProps,
+          canDo: (editor) => editorKeyFromState(editor?.state) == editorKey,
+          do: (editor, a) => {
+            setActionCommand(editorKey, a as BaseEditorAction, props)
+            return true
+          },
+          props,
           editorKey
         })
       }
@@ -337,7 +344,7 @@ export function actionsForNodeOrMark(
       editorKey,
       name: 'select-mark-range',
       label: `select`,
-      icon: 'mdi-select',
+      icon: 'select',
       canDo: (editor) => editor.can().setTextSelectionRange(from, to),
       do: (editor) =>
         editor.chain().setTextSelectionRange(from, to).focus().run(),
@@ -350,7 +357,7 @@ export function actionsForNodeOrMark(
       editorKey,
       name: 'remove-mark',
       label: `remove ${mark?.type.name}`,
-      icon: 'mdi-tag-remove',
+      icon: 'marks_remove',
       canDo: (editor) => editor.can().removeMark(from, to, mark),
       do: (editor) => editor.commands.removeMark(from, to, mark),
       nodeOrMark,

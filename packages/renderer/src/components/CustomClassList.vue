@@ -2,12 +2,17 @@
   <q-list v-if="validCustomStyles.length > 0">
     <q-item v-for="(styleItem, index) in validCustomStyles" :key="index" clickable density="compact" :value="index"
       :title="description(styleItem)" dense @click="$emit('chosen-class', styleItem.styleDef.name)">
-      <q-item-section avatar v-if="!noAvatar"><q-icon v-if="isClassPresent(styleItem.styleDef.name)" name="mdi-check"
+      <q-item-section avatar v-if="!noAvatar"><q-icon v-if="isClassPresent(styleItem.styleDef.name)" name="check"
           size="xs" /></q-item-section>
       <q-item-section no-wrap v-html="classLabel(styleItem)" />
     </q-item>
   </q-list>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { CustomStyleInstance, customStylesForType } from '../common';

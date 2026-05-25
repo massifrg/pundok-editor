@@ -1,17 +1,15 @@
 import { PundokEditorConfigInit } from "./editorConfigInit";
-import { PundokEditorConfig } from "./editorConfiguration";
+import { getInheritedConfiguration, getPrunedConfigInit, InheritedConfigurationSpec, PundokEditorConfig } from "./editorConfiguration";
+import { NamedAndDescribed } from "./types";
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 
-export interface PundokEditorProject {
-  name: string;
+export interface PundokEditorProject extends NamedAndDescribed {
   path: string;
   /** The root (master) document of the document tree */
   rootDocument: string;
-  /** A description of the project */
-  description?: string;
   /** The names of configurations to inherit */
-  configurations?: string[];
+  configurations?: InheritedConfigurationSpec[];
   /** A complement to the inherited configurations */
   editorConfig: Partial<PundokEditorConfigInit>;
   /** The actual configuration computed from the inherited configurations and complemented with editorConfig  */
@@ -62,13 +60,16 @@ export async function computeProjectConfiguration(
     computedConfig = projectConfig;
   } else {
     try {
-      computedConfig = await getConfiguration(inherited.shift());
+      let { name: configName, remove, keep } = getInheritedConfiguration(inherited.shift())
+      computedConfig = await getConfiguration(configName);
       if (computedConfig) {
+        computedConfig = getPrunedConfigInit(computedConfig, remove, keep)
         while (inherited.length > 0) {
-          const configurationName = inherited.shift();
-          const onTop = await getConfiguration(configurationName!);
+          const { name: configurationName, remove, keep } = getInheritedConfiguration(inherited.shift());
+          let onTop = await getConfiguration(configurationName!);
           if (!onTop)
             return Promise.reject(`can't read configuration "${name}"`);
+          onTop = getPrunedConfigInit(onTop, remove, keep)
           computedConfig = computedConfig.addConfiguration(onTop);
         }
         computedConfig = computedConfig.addConfiguration(projectConfig);

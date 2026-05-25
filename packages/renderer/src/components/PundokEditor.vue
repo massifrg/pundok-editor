@@ -23,9 +23,9 @@
         <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
       </div>
       <div class="q-mini-drawer-hide absolute" style="top: 210px; right: -17px">
-        <q-btn dense round unelevated color="secondary" icon="mdi-arrow-left-right"
-          @mousedown="startSettingLeftDrawerWidth" @mousemove="changeLeftDrawerWidth"
-          @mouseup="stopSettingLeftDrawerWidth" @mouseleave="stopSettingLeftDrawerWidth" />
+        <q-btn dense round unelevated color="secondary" icon="arrow_left_right" @mousedown="startSettingLeftDrawerWidth"
+          @mousemove="changeLeftDrawerWidth" @mouseup="stopSettingLeftDrawerWidth"
+          @mouseleave="stopSettingLeftDrawerWidth" />
       </div>
     </q-drawer>
     <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
@@ -67,12 +67,16 @@
   </q-layout>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { Component, defineAsyncComponent, toRaw } from 'vue';
 import { Editor, EditorContent, NodeWithPos } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorState } from '@tiptap/pm/state';
-import { applyDevTools } from 'prosemirror-dev-toolkit';
 import { isString } from 'lodash-es';
 import { mapState } from 'pinia';
 import {
@@ -82,6 +86,10 @@ import {
   getDocState,
   getIndexingState,
   type SelectedNodeOrMark,
+  getEditorGuiProps,
+  EditorGUIPropsClass,
+  getDocAsJsonString,
+  CreateDocumentOptions,
 } from '../schema';
 // the next one is not imported from '../schema' to avoid a circular ref
 import { Pandoc } from '../schema/nodes/Pandoc'
@@ -188,8 +196,6 @@ import {
   ACTION_DOCUMENT_SAVE_COPY,
 } from '../actions';
 import { useQuasar } from 'quasar';
-import { EditorGUIPropsClass } from './EditorGUIProps';
-import { CreateDocumentOptions, getDocAsJsonString } from '../schema';
 import {
   PendingOperation,
   PendingOperationExtraValue,
@@ -291,6 +297,7 @@ export default {
       visibleProjectStructureDialog: false,
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
       visibleNewProjectDialog: false,
+      swapBlocksWasActive: this.guiProps.swapBlocksActive,
       inputTextDialogLabel: DEFAULT_INPUT_TEXT_DIALOG_LABEL,
       inputTextDialogStartValue: DEFAULT_INPUT_TEXT_DIALOG_START_VALUE,
       inputTextDialogCallback: undefined as
@@ -332,6 +339,15 @@ export default {
   },
 
   watch: {
+    visibleSearchAndReplaceDialog(visible: boolean) {
+      const editor = this.editor as Editor
+      if (visible) {
+        this.swapBlocksWasActive = getEditorGuiProps(editor)?.swapBlocksActive || false
+        editor?.commands.toggleSwapBlocks(false)
+      } else {
+        editor?.commands.toggleSwapBlocks(this.swapBlocksWasActive)
+      }
+    },
     lastAction(action: EditorAction) {
       const editor = this.editor as Editor;
       const editorKey = editorKeyFromState(editor.state);
@@ -542,7 +558,7 @@ export default {
               this.$q.notify({
                 message,
                 caption: 'Success',
-                icon: 'mdi-check',
+                icon: 'check',
                 position: 'top',
                 color: 'positive',
                 timeout: isSuccess ? 2000 : 5000,
@@ -668,12 +684,16 @@ export default {
         const oldDocState = this.docState()
         // @ts-ignore
         this.editor = editor;
+        if (process.env.NODE_ENV === 'development') {
+          const { applyDevTools } = await import('prosemirror-dev-toolkit');
+          if (applyDevTools) applyDevTools(editor.view);
+        }
         if (!this.configuration)
           await this.setConfiguration(getHardcodedEditorConfig());
-        if (process.env.MODE !== 'production') applyDevTools(editor.view);
         this.updateEditorDocState({
           unsavedChanges: false,
           unsavedChangesAsCopy: false,
+          guiProps: this.guiProps,
           workingFolder: oldDocState?.workingFolder,
           imagesFolder: oldDocState?.imagesFolder,
           includeFolder: oldDocState?.includeFolder,
@@ -830,9 +850,11 @@ export default {
           showOpenDocumentDialog({
             editor: this.editor,
             mode: 'open',
-            prompt: 'Open document',
-            startFolder: workingFolder,
-            startFormat: asInputFormat(workingFormat, configuration),
+            options: {
+              prompt: 'Open document',
+              startFolder: workingFolder,
+              startFormat: asInputFormat(workingFormat, configuration),
+            },
             callback: (context) => {
               if (context.path) {
                 setActionCommand(editorKey, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
@@ -932,16 +954,20 @@ export default {
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
       const docState = this.docState()
+      const { documentName, copyFolder, workingFolder, configuration, workingFormat } = docState || {}
       let path = props?.path
       if (!path) {
-        const { documentName, copyFolder, workingFolder } = docState || {}
         const folder = isCopy ? copyFolder : workingFolder
         path = folder && documentName && `${folder}/${documentName}` || undefined
       }
       const isSave = !isSaveAs && !isCopy
-      const { configuration, workingFormat } = docState || {}
       let documentFormat = asOutputFormat(props?.documentFormat || workingFormat, configuration)
-      if (!path || isSaveAs || (isCopy && !dontAskCopyPath) || (isSave && !documentFormat)) {
+      if (
+        !path
+        || isSaveAs
+        || (isCopy && !dontAskCopyPath)
+        || (isSave && !documentFormat)
+      ) {
         if (isCopy) {
           const { documentName, copyFolder, copyFormat, workingFolder } = docState || {}
           const startFilename = documentName && copyFormat
@@ -950,12 +976,14 @@ export default {
           const defaultCopyFormat = getDefaultCopyFormat(configuration)
           showSaveCopyDialog({
             editor: this.editor,
-            prompt: 'Save a copy to:',
-            startFolder: copyFolder || workingFolder,
-            startFormat: copyFormat || defaultCopyFormat
-              || asOutputFormat(workingFormat, configuration)
-              || DEFAULT_COPY_DOCUMENT_FORMAT,
-            startFilename,
+            options: {
+              prompt: 'Save a copy to:',
+              startFolder: copyFolder || workingFolder,
+              startFormat: copyFormat || defaultCopyFormat
+                || asOutputFormat(workingFormat, configuration)
+                || DEFAULT_COPY_DOCUMENT_FORMAT,
+              startFilename,
+            },
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {
@@ -978,10 +1006,12 @@ export default {
             : undefined
           showSaveDocumentDialog({
             editor: this.editor,
-            prompt: isSaveAs ? 'Save document as:' : 'Save document:',
-            startFolder: isSaveAs ? workingFolder : workingFolder,
-            startFormat,
-            startFilename,
+            options: {
+              prompt: isSaveAs ? 'Save document as:' : 'Save document:',
+              startFolder: isSaveAs ? workingFolder : workingFolder,
+              startFormat,
+              startFilename,
+            },
             callback: (context) => {
               const { editorKey, documentFormat, path } = context
               if (path) {
@@ -998,7 +1028,7 @@ export default {
       try {
         const docState = this.docState();
         console.log(toRaw(props))
-        const documentFormat = toRaw(props?.documentFormat || (
+        documentFormat = toRaw(documentFormat || (
           isCopy
             ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
             : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT
@@ -1020,7 +1050,7 @@ export default {
               success: false,
               caption: 'SAVE ERROR',
               message: JSON.stringify(response.error),
-              icon: 'mdi-content-save-alert'
+              icon: 'content_save_alert'
             });
             return Promise.reject(errmsg);
           } else {
@@ -1050,7 +1080,7 @@ export default {
               success: true,
               caption: 'SAVE SUCCESS',
               message: `saved as ${response.doc.path || response.doc.id}`,
-              icon: 'mdi-content-save-check'
+              icon: 'content_save_check'
             });
             if (!isCopy)
               this.setWindowTitleFromDoc(response.doc);
@@ -1067,7 +1097,7 @@ export default {
           success: false,
           caption: 'SAVE ERROR',
           message,
-          icon: 'mdi-content-save-alert'
+          icon: 'content_save_alert'
         });
         console.log(message);
         return Promise.reject(errmsg);

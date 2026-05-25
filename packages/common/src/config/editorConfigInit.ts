@@ -1,3 +1,4 @@
+import { Config } from 'electron';
 import { Automation } from './automations';
 import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';
@@ -8,17 +9,16 @@ import { InputConverter } from './inputConverters';
 import { NoteStyle } from './notes';
 import { OutputConverter } from './outputConverters';
 import { InsertableRaw } from './rawElements';
+import { NamedAndDescribed } from './types';
 
 /**
  * A configuration (customization) of PundokEditor.
  */
-export interface PundokEditorConfigInit {
-  /** the name of the configuration (please only letters, numbers and underscore) */
-  name: string;
+export interface PundokEditorConfigInit extends NamedAndDescribed {
   /** the minimal suitable version of the editor */
   version: number[];
-  /** a description of the aim of this configuration of the editor */
-  description: string;
+  /** the configuration is local (this is set by the editor, it's overridden if set by the user) */
+  isLocal?: boolean;
   /** the names of other configurations to derive this from */
   inherits?: string[];
   /** options for TipTap/Prosemirror `Node`s and `Mark`s */
@@ -66,3 +66,18 @@ export interface PundokEditorConfigInit {
 
 /** The fields allowed in a configuration init object. */
 export type ConfigInitField = keyof PundokEditorConfigInit
+
+export type PrunableConfigInitField = keyof Pick<PundokEditorConfigInit,
+  | 'autoDelimiters'
+  | 'automations'
+  | 'customAttributes'
+  | 'customClasses'
+  | 'customCss'
+  | 'customMetadata'
+  | 'customStyles'
+  | 'indices'
+  | 'inputConverters'
+  | 'mainFormats'
+  | 'noteStyles'
+  | 'outputConverters'
+>

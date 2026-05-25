@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core';
 import { Fragment, Slice } from '@tiptap/pm/model';
 import {
+  Command,
   EditorState,
   NodeSelection,
   Plugin,
@@ -12,6 +13,7 @@ import {
 import { Mapping } from '@tiptap/pm/transform';
 import { NODE_NAME_PARAGRAPH } from '../../common';
 import { CssSelectOptions, SelectedNodeOrMark, cssSelect } from '../helpers';
+import { unwrapNodeCommand } from './HelperCommandsExtension';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -20,6 +22,8 @@ declare module '@tiptap/core' {
       selectPrevCss: (wrap?: boolean) => ReturnType;
       selectNextCss: (wrap?: boolean) => ReturnType;
       replaceWithText: (text: string) => ReturnType;
+      deleteCssSelected: () => ReturnType;
+      unwrapCssSelected: () => ReturnType;
     };
   }
 }
@@ -46,10 +50,17 @@ export const CssSelectionExtension = Extension.create({
               const { selector, options } = setCssSelector;
               return cssSelect(newState, selector, options);
             } else if (tr.docChanged) {
+              const newdoc = newState.doc
               const mapping = tr.mapping;
               return selected
                 .map((s) => mapSelectedNodeOrMark(s, mapping))
-                .filter((s) => !!s) as SelectedNodeOrMark[];
+                .filter((s) => {
+                  if (s) {
+                    const { mark, from, to } = s
+                    return !(mark && !newdoc.rangeHasMark(from, to, mark))
+                  }
+                  return false
+                }) as SelectedNodeOrMark[];
             }
             // console.log(selected)
             return selected;
@@ -163,7 +174,11 @@ export const CssSelectionExtension = Extension.create({
             dispatch(tr)
         }
         return true
-      }
+      },
+      deleteCssSelected: () =>
+        ({ dispatch, state, view }) => deleteCssSelectedCommand(state, dispatch, view),
+      unwrapCssSelected: () =>
+        ({ dispatch, state, view }) => unwrapCssSelectedCommand(state, dispatch, view),
     };
   },
 });
@@ -194,9 +209,51 @@ export function getCssSelectionIndex(state: EditorState): number {
   return getCssSelected(state).findIndex(sel => sel.from === from && sel.to === to)
 }
 
+export function getCurrentCssSelected(state: EditorState): SelectedNodeOrMark | undefined {
+  const index = getCssSelectionIndex(state)
+  return index < 0
+    ? undefined
+    : getCssSelected(state)[index]
+}
+
 function setCssSelection(tr: Transaction, sel: SelectedNodeOrMark): Transaction {
   const selection: Selection = sel.mark
     ? TextSelection.create(tr.doc, sel.from, sel.to)
     : NodeSelection.create(tr.doc, sel.from)
   return tr.setSelection(selection)
+}
+
+export const deleteCssSelectedCommand: Command = (state, dispatch, view) => {
+  const selected = getCurrentCssSelected(state)
+  if (!selected) return false
+  const { mark, from, to, node, pos } = selected
+  if (node && pos) {
+    if (dispatch) {
+      const { doc, tr } = state
+      dispatch(tr.setSelection(NodeSelection.create(doc, pos)).deleteSelection())
+    }
+    return true
+  } else if (mark && from && to) {
+    if (dispatch) {
+      const { doc, tr } = state
+      dispatch(tr.setSelection(TextSelection.create(doc, from, to)).deleteSelection())
+    }
+    return true
+  }
+  return false
+}
+
+export const unwrapCssSelectedCommand: Command = (state, dispatch, view) => {
+  const selected = getCurrentCssSelected(state)
+  if (!selected) return false
+  const { mark, from, to, node, pos } = selected
+  if (node && pos) {
+    return unwrapNodeCommand(pos)(state, dispatch, view)
+  } else if (mark && from && to) {
+    if (dispatch) {
+      dispatch(state.tr.removeMark(from, to, mark))
+    }
+    return true
+  }
+  return false
 }

@@ -46,7 +46,10 @@ export const saveDocumentHandler = (hub: IpcHub) =>
       const doc: CxDocument = JSON.parse(storedDoc);
       editorKey = doc.editorKey
       const { configurationName, content, documentFormat, id, path, project } = doc
-      const outputConverter = documentFormatToOutputConverter(documentFormat as DocumentFormat)
+      const { ftype: formatType, name: formatName } = documentFormat || {}
+      const outputConverter = formatType === 'format' && formatName === 'json'
+        ? undefined
+        : documentFormatToOutputConverter(documentFormat as DocumentFormat)
       if (outputConverter) {
         response = await exportDocument(hub, doc);
         console.log(`EXPORT FINISHED`);
@@ -95,8 +98,10 @@ async function savePandocJsonDocument(hub: IpcHub, doc: CxDocument): Promise<Sav
   if (!path)
     return Promise.reject('You must provide a document (file) name to save!')
   try {
+    console.log(content)
     await writeFile(path, content!)
   } catch (error) {
+    console.log(error)
     return Promise.reject({
       error,
       message: JSON.stringify(error),

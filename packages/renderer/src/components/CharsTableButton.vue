@@ -1,22 +1,22 @@
 <template>
-  <ToolbarButton icon="mdi-alpha-c-box-outline" title="insert Unicode character" @click="tableVisible = !tableVisible">
+  <ToolbarButton icon="insert_unicode_char" title="insert Unicode character" @click="tableVisible = !tableVisible">
     <q-dialog v-model="tableVisible">
       <q-card>
         <q-card-actions>
           <q-select v-model="block" use-input input-debounce="0" label="Unicode block" :options="filteredBlocks"
-            size="sm" behavior="menu" dense style="max-width: 180px" @filter="filterBlock"></q-select>
+            behavior="menu" dense style="max-width: 180px" @filter="filterBlock"></q-select>
           <q-space style="max-width: 1rem" />
-          <q-select v-model="category" use-input input-debounce="0" label="Category" :options="categories" size="sm"
+          <q-select v-model="category" use-input input-debounce="0" label="Category" :options="categories"
             behavior="menu" dense style="max-width: 240px"></q-select>
           <q-space />
-          <q-btn icon="mdi-close" title="close characters table [ESC]" @click="tableVisible = false" size="sm" />
+          <q-btn icon="close" title="close characters table [ESC]" @click="tableVisible = false" size="sm" />
           <br />
           <q-input bottom-slots v-model="searchText" debounce="500" label="search" dense>
             <template v-slot:append>
-              <q-icon name="mdi-close" @click="resetSearchText()" class="cursor-pointer" />
+              <q-icon name="close" @click="resetSearchText()" class="cursor-pointer" />
             </template>
           </q-input>
-          <q-toggle v-model="showAs" checked-icon="mdi-table" color="primary" unchecked-icon="mdi-view-list"
+          <q-toggle v-model="showAs" checked-icon="tabular_view" color="primary" unchecked-icon="list_view"
             true-value="table" false-value="list" value="table" :title="`show selection as ${showAs}`" />
         </q-card-actions>
         <q-card-section>
@@ -75,13 +75,17 @@
 }
 </style>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers/quasarIcons';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { defineComponent } from 'vue';
 import ToolbarButton from './ToolbarButton.vue';
 import { mapState } from 'pinia';
 import { useBackend } from '../stores';
 import { flatten, isEmpty, range } from 'lodash-es';
-import { setupQuasarIcons } from './helpers/quasarIcons';
 
 interface CharDesc {
   value: number,
@@ -226,9 +230,6 @@ export default defineComponent({
         }
       }
     }
-  },
-  setup() {
-    setupQuasarIcons()
   },
   methods: {
     rowsOffsets(cd: CharDesc[]) {

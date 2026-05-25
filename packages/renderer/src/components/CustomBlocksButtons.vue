@@ -1,14 +1,13 @@
 <template>
   <span v-for="{ node } in stylableBlocks">
-    <ToolbarButton icon="mdi-palette-swatch" :label="label(node)" :styleactive="customStylesOfNode(node).length > 0"
+    <ToolbarButton icon="custom_blocks" :label="label(node)" :styleactive="customStylesOfNode(node).length > 0"
       :disabled="false" no-caps size="small" dense :title="title(node)">
       <q-menu auto-close>
         <q-list>
           <q-item v-for="(styleItem, index) in availableStylesForNode(node)" :key="index" clickable density="compact"
             :value="index" :title="description(styleItem)" dense @click="toggleStyle(styleItem, node)">
             <q-item-section side>
-              <q-icon :name="isCustomStyleActive(styleItem, node) ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
-                size="xs" />
+              <q-icon :name="isCustomStyleActive(styleItem, node) ? 'radiobox_marked' : 'radiobox_blank'" size="xs" />
             </q-item-section>
             <q-item-section no-wrap v-html="styleLabel(styleItem)" />
           </q-item>
@@ -18,6 +17,11 @@
     <span class="button-separator" />
   </span>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { Node } from '@tiptap/pm/model';

@@ -16,6 +16,7 @@ import {
   Fragment,
 } from '@tiptap/pm/model';
 import {
+  Command,
   NodeSelection,
   SelectionBookmark,
   TextSelection,
@@ -23,6 +24,7 @@ import {
 import { getEditorConfiguration } from '..';
 import {
   attrsForConversionTo,
+  getEditorGuiProps,
   getMarkRangesBetween,
   innerNodeDepth,
   pandocTableBodies,
@@ -308,10 +310,26 @@ export const HelperCommandsExtension = Extension.create({
 
   addKeyboardShortcuts() {
     return {
-      [SK.MOVE_NODE_UP]: () => this.editor.commands.moveChild('up'),
-      [SK.MOVE_NODE_DOWN]: () => this.editor.commands.moveChild('down'),
-      [SK.MOVE_NODE_UP_INSIDE]: () => this.editor.commands.moveChild('up-inside'),
-      [SK.MOVE_NODE_DOWN_INSIDE]: () => this.editor.commands.moveChild('down-inside'),
+      [SK.MOVE_NODE_UP]: () => {
+        const editor = this.editor as Editor
+        const canMove = getEditorGuiProps(editor)?.swapBlocksActive
+        return canMove
+          ? editor.commands.moveChild('up')
+          : false
+      },
+      [SK.MOVE_NODE_DOWN]: () => {
+        const editor = this.editor as Editor
+        const canMove = getEditorGuiProps(editor)?.swapBlocksActive
+        return canMove
+          ? editor.commands.moveChild('down')
+          : false
+      },
+      [SK.MOVE_NODE_UP_INSIDE]: () => {
+        return this.editor.commands.moveChild('up-inside')
+      },
+      [SK.MOVE_NODE_DOWN_INSIDE]: () => {
+        return this.editor.commands.moveChild('down-inside')
+      },
       [SK.UNWRAP_NODE]: () => this.editor.commands.unwrapNode(),
     };
   },
@@ -505,37 +523,8 @@ export const HelperCommandsExtension = Extension.create({
             ? moveChildInside(where, pos)
             : moveChild(where, pos),
 
-      unwrapNode:
-        (_pos?: number) =>
-          ({ dispatch, state, tr }) => {
-            const { doc, selection } = state;
-            let pos = !_pos && selection instanceof NodeSelection
-              ? (selection as NodeSelection).from
-              : _pos
-            if (!pos) {
-              const { $anchor } = selection
-              const depth = innerNodeDepth($anchor, isWrappingNode)
-              pos = depth && $anchor.start(depth) - 1
-            }
-            if (!pos) return false
-            let container = doc.nodeAt(pos)
-            if (!container) return false;
-            const name = container.type.name;
-            if (isWrappingNode(name)) {
-              // const targetDepth = doc.resolve(pos).depth;
-              let content = container.content
-              if (name === NODE_NAME_FIGURE && container.childCount > 0) {
-                const maybeCaption = container.child(0)
-                if (maybeCaption.type.name === NODE_NAME_FIGURE_CAPTION)
-                  content = container.slice(maybeCaption.nodeSize, content.size).content
-              }
-              if (dispatch) {
-                dispatch(tr.delete(pos, pos + container.nodeSize).insert(pos, content))
-              }
-              return true;
-            }
-            return false;
-          },
+      unwrapNode: (pos?: number) =>
+        ({ dispatch, state, view }) => unwrapNodeCommand(pos)(state, dispatch, view),
 
       setSelectionFromBookmark:
         (bookmark: SelectionBookmark) =>
@@ -722,6 +711,38 @@ function parentCantLiveWithoutNodeAtPos(doc: ProsemirrorNode, pos: number) {
   }
   return false;
 }
+
+export const unwrapNodeCommand: (_pos?: number) => Command =
+  (_pos) => (state, dispatch, view) => {
+    const { doc, selection } = state;
+    let pos = !_pos && selection instanceof NodeSelection
+      ? (selection as NodeSelection).from
+      : _pos
+    if (!pos) {
+      const { $anchor } = selection
+      const depth = innerNodeDepth($anchor, isWrappingNode)
+      pos = depth && $anchor.start(depth) - 1
+    }
+    if (!pos) return false
+    let container = doc.nodeAt(pos)
+    if (!container) return false;
+    const name = container.type.name;
+    if (isWrappingNode(name)) {
+      // const targetDepth = doc.resolve(pos).depth;
+      let content = container.content
+      if (name === NODE_NAME_FIGURE && container.childCount > 0) {
+        const maybeCaption = container.child(0)
+        if (maybeCaption.type.name === NODE_NAME_FIGURE_CAPTION)
+          content = container.slice(maybeCaption.nodeSize, content.size).content
+      }
+      if (dispatch) {
+        dispatch(state.tr.delete(pos, pos + container.nodeSize).insert(pos, content))
+      }
+      return true;
+    }
+    return false;
+  }
+
 
 function moveChild(where: 'up' | 'down' | 'start' | 'end' | 'before' | 'after', pos?: number): ((cp: CommandProps) => boolean) {
   return ({ dispatch, state, tr }) => {

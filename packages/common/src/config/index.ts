@@ -1,5 +1,6 @@
 export * from './appliesTo';
 export * from './automations';
+export * from './configQuery';
 export * from './customClasses';
 export * from './customAttributes';
 export * from './customMetadata';
@@ -15,3 +16,4 @@ export * from './notes';
 export * from './outputConverters';
 export * from './project';
 export * from './rawElements';
+export * from './types';

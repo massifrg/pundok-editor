@@ -4,25 +4,24 @@
       <q-card-section class="q-ma-xs" horizontal>
         <div class="flex flex-center">
           <q-chip :label="currentFoundItemShortText" :color="foundItemsColor" round class="q-pa-md" text-color="white"
-            icon="mdi-text-search" :title="foundItemsText" />
+            icon="search_text" :title="foundItemsText" />
         </div>
         <q-space />
-        <q-btn dense class="q-px-md" size="xs" icon="mdi-reload" title="reset" @click="resetSettings()" />
+        <q-btn dense class="q-px-md" size="xs" icon="reload" :title="$t('reset')" @click="resetSettings()" />
         <q-space class="small" />
-        <q-btn dense class="q-px-md" size="xs" icon="mdi-content-save"
-          title="save the current search and replace settings">
+        <q-btn dense class="q-px-md" size="xs" icon="save" :title="$t('search.saveCurrentSearchSettings')">
           <SaveConfigurationElementPopup :editor="editor" :existing-ones="knownSettings" @save-settings="saveSettings"
             @delete-settings="deleteSettings" />
         </q-btn>
         <q-space class="big" />
-        <q-btn round class="q-pa-sm" size="sm" icon="mdi-pencil-lock" color="primary" :outline="!optionSearchOnly"
-          title="just search, don't replace" @click="optionSearchOnly = !optionSearchOnly" />
+        <q-btn round class="q-pa-sm" size="sm" icon="search_only" color="primary" :outline="!optionSearchOnly"
+          :title="$t('search.searchNotReplace')" @click="optionSearchOnly = !optionSearchOnly" />
         <q-space class="small" />
         <q-btn round class="q-pa-sm" size="sm" icon="css_selectors" color="primary" :outline="!cssMode"
-          title="search with CSS selectors" @click="cssMode = !cssMode" />
+          :title="$t('search.withCssSelectors')" @click="cssMode = !cssMode" />
         <q-space v-if="!cssMode && searchAndReplaces.length > 0" class="small" />
         <q-btn v-if="!cssMode && searchAndReplaces.length > 0" round class="q-pa-sm" size="sm" color="primary" label=""
-          title="load a predefined search and replace config" icon="mdi-playlist-star">
+          :title="$t('search.loadSearchSettings')" icon="load_predefined">
           <q-menu anchor="bottom start" self="bottom end">
             <q-list>
               <q-item v-for="sar in searchAndReplaces" clickable v-close-popup dense :title="sar.description"
@@ -34,7 +33,7 @@
         </q-btn>
         <q-space v-if="cssMode && cssSelections.length > 0" class="small" />
         <q-btn v-if="cssMode && cssSelections.length > 0" round class="q-pa-sm" size="sm" color="primary" label=""
-          title="load a predefined CSS selector" icon="mdi-playlist-star">
+          :title="$t('search.loadCssSearchSettings')" icon="load_predefined">
           <q-menu anchor="bottom start" self="bottom end">
             <q-list>
               <q-item v-for="sel in cssSelections" clickable v-close-popup dense :title="sel.description"
@@ -45,21 +44,19 @@
           </q-menu>
         </q-btn>
         <q-space class="small" />
-        <!-- <q-toggle v-model="showIndicesButtons" icon="mdi-cursor-pointer" title="show buttons for indices" /> -->
         <q-btn v-if="indices.length > 0" round class="q-pa-sm" size="sm" color="primary" :outline="!showIndicesButtons"
-          icon="mdi-cursor-pointer" title="show buttons for indices"
-          @click="showIndicesButtons = !showIndicesButtons" />
+          icon="indices" :title="$t('show.indicesButtons')" @click="showIndicesButtons = !showIndicesButtons" />
         <q-space class="big" />
         <q-btn dense class="q-px-md" :icon="expandIcon" :title="expandTooltip" size="xs"
           @click="() => { showFields = !showFields }"></q-btn>
-        <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="mdi-arrow-up"
-          title="move this dialog to the top" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
-        <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="mdi-arrow-down"
-          title="move this dialog to the bottom" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
-        <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="mdi-arrow-right"
-          title="move this dialog to the right" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
+        <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="arrow_upward"
+          :title="$t('move', { side: $t('top') })" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
+        <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="arrow_downward"
+          :title="$t('move', { side: $t('bottom') })" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn>
+        <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="arrow_right"
+          :title="$t('move', { side: $t('right') })" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
         <q-space />
-        <q-btn icon="mdi-close" size="xs" title="close" @click="closeDialog()" />
+        <q-btn icon="close" size="xs" :title="$t('close')" @click="closeDialog()" />
       </q-card-section>
       <q-card-section v-if="showFields">
         <q-card-section horizontal>
@@ -67,53 +64,54 @@
             :label="searchLabel" stack-label @update:model-value="updateSearchInput" @keypress="keypressed"
             @keyup="keyup" />
           <div class="q-pt-md q-gutter-none">
-            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="mdi-find-replace"
-              title="cycle through found texts" @click="optionCycle = !optionCycle" />
+            <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="search_cycle"
+              :title="$t('search.cycleFoundItems')" @click="optionCycle = !optionCycle" />
             <q-btn v-if="cssMode" class="q-ma-xs" size="sm" round color="primary"
-              :outline="!optionMergeSameAdjacentMarks" icon="mdi-set-merge"
-              title="merge adjacent text ranges with the same marks"
+              :outline="!optionMergeSameAdjacentMarks" icon="marks_merge" :title="$t('search.mergeAdjacentMarks')"
               @click="optionMergeSameAdjacentMarks = !optionMergeSameAdjacentMarks" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionCaseInsensitive"
-              icon="mdi-format-letter-case" title="case insensitive search"
+              icon="search_case_insensitive" :title="$t('search.caseInsensitive')"
               @click="optionCaseInsensitive = !optionCaseInsensitive" />
-            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionRegex"
-              icon="mdi-regex" title="search with regular expressions (Unicode aware)"
-              @click="optionRegex = !optionRegex" />
+            <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionRegex" icon="regex"
+              :title="$t('search.regex')" @click="optionRegex = !optionRegex" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!optionWholeWord"
-              icon="whole_word" title="whole words" @click="optionWholeWord = !optionWholeWord" />
+              icon="whole_word" :title="$t('search.wholeWords')" @click="optionWholeWord = !optionWholeWord" />
             <q-btn v-if="!cssMode" class="q-ma-xs" size="sm" round color="primary" :outline="!searchFilterSwitch"
-              icon="mdi-filter-outline" title="filter searched text styles"
+              icon="search_filter" :title="$t('search.filterByStyles')"
               @click="searchFilterSwitch = !searchFilterSwitch" />
             <ActionsOnReplaceDropdown v-if="optionSearchOnly" :editor="editor" :actions="actionsOnReplace"
-              title="actions on selected text" @update-actions="updateActions" />
+              :searchOnly="optionSearchOnly" :title="$t('search.actions.onFoundItems', 2)"
+              @update-actions="updateActions" />
           </div>
         </q-card-section>
         <q-card-section v-if="!cssMode && searchFilterSwitch" horizontal>
-          <MarksPaletteDropdown :editor="editor" icon="mdi-filter-outline" :addable-marks="baseMarksAndCustomStyles()"
+          <MarksPaletteDropdown :editor="editor" icon="search_filter" :addable-marks="baseMarksAndCustomStyles()"
             none-selected-label="no filter" :positiveMarks="filterMarkPresence" :negativeMarks="filterMarkAbsence"
             @selected-marks="setMarksFilters" />
         </q-card-section>
         <q-card-section v-if="!optionSearchOnly" horizontal>
-          <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace" label="replace with"
-            stack-label @update:model-value="updateTextToReplace" @keyup="keyup" />
-          <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace" title="actions on replaced text"
-            @update-actions="updateActions" />
+          <q-input class="search-and-replace-textfield q-mx-xs" :model-value="textToReplace"
+            :label="$t('search.label.replaceWith')" stack-label @update:model-value="updateTextToReplace"
+            @keyup="keyup" />
+          <ActionsOnReplaceDropdown :editor="editor" :actions="actionsOnReplace"
+            :title="$t('search.actions.onReplacedItems', 2)" @update-actions="updateActions" />
         </q-card-section>
       </q-card-section>
       <q-card-actions>
-        <q-btn icon="mdi-magnify" title="search" size="md" padding="md" @click="startSearch()" />
-        <q-btn :disabled="!canPrevFound()" icon="mdi-chevron-left" size="md" padding="md" title="select previous found"
+        <q-btn icon="search" :title="$t('search.search')" size="md" padding="md" @click="startSearch()" />
+        <q-btn :disabled="!canPrevFound()" icon="search_prev" size="md" padding="md" :title="$t('search.selectPrev')"
           @click="prevFound()" />
-        <q-btn :disabled="!canNextFound()" icon="mdi-chevron-right" size="md" padding="md" title="select next found"
+        <q-btn :disabled="!canNextFound()" icon="search_next" size="md" padding="md" :title="$t('search.selectNext')"
           @click="nextFound(true)" />
-        <q-btn icon="mdi-autorenew" size="md" padding="md" title="replace selected" @click="replaceSelected" />
-        <q-btn size="md" padding="md" title="replace & select next found" @click="replaceNextText">
-          <q-icon name="mdi-autorenew"></q-icon>
-          <q-icon name="mdi-chevron-right"></q-icon>
+        <q-btn icon="search_replace" size="md" padding="md" :title="$t('search.replaceSelected')"
+          @click="replaceSelected" />
+        <q-btn size="md" padding="md" :title="$t('search.replaceSelectedAndNext')" @click="replaceNextText">
+          <q-icon name="search_replace"></q-icon>
+          <q-icon name="search_next"></q-icon>
         </q-btn>
-        <q-btn size="md" padding="md" title="replace all" @click="replaceAll">
-          <q-icon name="mdi-autorenew"></q-icon>
-          <q-icon name="mdi-chevron-double-right"></q-icon>
+        <q-btn size="md" padding="md" :title="$t('search.replaceAll')" @click="replaceAll">
+          <q-icon name="search_replace"></q-icon>
+          <q-icon name="search_next_all"></q-icon>
         </q-btn>
         <q-space style="min-width: 1rem" />
         <IndicesButtons v-if="showIndicesButtons" enable-alternative-buttons="true" :editor="editor" size="md"
@@ -122,6 +120,11 @@
     </q-card>
   </q-dialog>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import {
@@ -157,7 +160,6 @@ import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
 import MarksPaletteDropdown from './MarksPaletteDropdown.vue';
 import SaveConfigurationElementPopup from './SaveConfigurationElementPopup.vue';
-import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
   CssSelectOptions,
   LabeledNodeOrMark,
@@ -182,6 +184,7 @@ import {
   setActionCommand
 } from '../actions';
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { t } from '../i18n'
 import { toRaw } from 'vue';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
@@ -219,9 +222,6 @@ export default {
   },
   props: ['visible', 'editor', 'nodeOrMarkToLabel'],
   emits: ['hideSearchAndReplaceDialog'],
-  setup() {
-    setupQuasarIcons()
-  },
   data() {
     return {
       cssMode: false,
@@ -284,11 +284,12 @@ export default {
       return getEditorProject(this.editor)
     },
     searchLabel(): string {
+      const t = this.$t
       return this.cssMode
-        ? 'CSS selector(s)'
+        ? t('search.label.cssSelector')
         : this.optionRegex
-          ? 'search regular expression'
-          : 'search text'
+          ? t('search.label.searchRegex')
+          : t('search.label.searchText')
     },
     searchAndReplaces() {
       return getSearchAndReplaces(this.configuration)
@@ -327,13 +328,14 @@ export default {
     },
     foundItemsText() {
       if (this.searchStarted) {
-        if (this.foundCount > 0) {
-          let text = `found ${this.foundCount} occurrencies of "${this.textToSearch}"`;
-          if (this.foundIndex >= 0) text += ` (#${this.foundIndex + 1} selected)`;
-          return text;
-        } else {
-          return 'no occurrencies found';
-        }
+        let text = this.$t('search.label.foundCount', {
+          count: this.foundCount,
+          what: this.textToSearch,
+        })
+        if (this.foundIndex >= 0) text += ' ' + this.$t('search.label.whichFoundSelected', {
+          index: this.foundIndex + 1
+        })
+        return text;
       }
     },
     foundItemsColor() {
@@ -360,10 +362,11 @@ export default {
       return ''
     },
     expandIcon() {
-      return this.showFields ? 'mdi-arrow-collapse-vertical' : 'mdi-arrow-expand-vertical'
+      return this.showFields ? 'collapse_vertical' : 'expand_vertical'
     },
     expandTooltip() {
-      return `show ${this.showFields ? 'less' : 'more'}`
+      const t = this.$t
+      return t('show.lessOrMore', { what: this.showFields ? t('less') : t('more') })
     },
     // a function to filter search results
     filterResult(): SearchResultFilter | undefined {

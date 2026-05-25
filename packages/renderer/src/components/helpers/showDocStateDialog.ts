@@ -9,6 +9,8 @@ export function showDocStateDialog(editor: Editor) {
       'documentName',
       'workingFolder',
       'workingFormat',
+      'includeFolder',
+      'includeFormat',
       'copyFolder',
       'copyFormat',
       'imagesFolder',
@@ -16,6 +18,7 @@ export function showDocStateDialog(editor: Editor) {
       'unsavedChanges',
       'unsavedChangesAsCopy',
       'resourcePath',
+      'guiProps',
     ]
     let lines: string[] = fields.map(f => `<th>${f}</th><td>${JSON.stringify(docState[f])}</td>`)
     lines.push(`<th>project</th><td>${JSON.stringify(docState.project?.name)}</td>`)

@@ -1,18 +1,24 @@
 <template>
-  <q-dialog :model-value="visible" full-width :full-height="maximized" seamless>
+  <q-dialog :model-value="visible" :full-width="!minimized" :full-height="maximized"
+    :position="minimized ? 'right' : 'standard'" seamless>
     <!-- <div class="shadow shadow-24 structure-dialog"> -->
     <q-card class="shadow shadow-24">
       <q-card-actions horizontal align="stretch" class="bg-primary">
-        <q-btn title="reload/refresh project structure" size="sm" icon="mdi-refresh" @click="reloadStructure()" />
-        <q-space />
-        <q-chip>{{ loaded?.id || loaded?.path || '' }}</q-chip>
-        <q-space />
-        <q-btn title="open in main editor" size="sm" icon="mdi-open-in-app" :disabled="!selected"
-          @click="openInMainEditor" />
-        <q-space style="max-width: 2rem" />
-        <q-btn :title="maximized ? 'minimize' : 'maximize'" size="sm"
-          :icon="maximized ? 'mdi-window-minimize' : 'mdi-window-maximize'" @click="maximizeMinimize()" />
-        <q-btn title="close" size="sm" icon="mdi-window-close" @click="closeDialog()" />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.reloadStructure')" size="sm" icon="refresh"
+          @click="reloadStructure()" />
+        <q-space v-if="!minimized" />
+        <q-chip v-if="!minimized">{{ loaded?.id || loaded?.path || '' }}</q-chip>
+        <q-space v-if="!minimized" />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.openInMainEditor')" size="sm"
+          icon="document_open_in_main_editor" :disabled="!selected" @click="openInMainEditor" />
+        <q-space v-if="!minimized" style="max-width: 2rem" />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.minimize')" size="sm" icon="dialog_minimize"
+          @click="setShowMode('minimized')" />
+        <q-btn v-if="!normalSized" :title="$t('projectStructureDialog.normalSize')" size="sm" icon="dialog_normal"
+          @click="setShowMode('normal')" />
+        <q-btn v-if="!maximized" :title="$t('projectStructureDialog.maximize')" size="sm" icon="dialog_maximize"
+          @click="setShowMode('maximized')" />
+        <q-btn :title="$t('close')" size="sm" icon="window_close" @click="closeDialog()" />
       </q-card-actions>
       <q-card-section>
         <q-splitter v-model="splitterModel" :after-class="afterClass" :before-class="beforeClass"
@@ -32,9 +38,8 @@
           <template v-slot:after>
             <q-card class="q-pa-none">
               <q-card-section class="scroll q-pa-none">
-                <PundokEditor :height="height" :mainEditor="false" :gui-props="guiProps"
-                  @document-loaded="documentLoaded" @pending-confirmed="pendingCloseConfirmed"
-                  @new-editor="forwardEditorKey" />
+                <PundokEditor :height="height" :mainEditor="false" @document-loaded="documentLoaded"
+                  :gui-props="guiProps" @pending-confirmed="pendingCloseConfirmed" @new-editor="forwardEditorKey" />
               </q-card-section>
             </q-card>
           </template>
@@ -42,20 +47,23 @@
       </q-card-section>
     </q-card>
     <!-- </div> -->
-    <q-inner-loading :showing="isLoadingStructure" label="Loading project structure..." label-class="text-teal"
+    <q-inner-loading :showing="isLoadingStructure" :label="$t('projectStructureDialog.loading')" label-class="text-teal"
       label-style="font-size: 1.1em" />
   </q-dialog>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
-import { setupQuasarIcons } from './helpers/quasarIcons';
-import { getDocState, getEditorDocState, getEditorProject } from '../schema';
+import { EditorGUIPropsClass, getDocState, getEditorDocState, getEditorProject } from '../schema';
 import { DocumentContext, EditorKeyType, ProjectComponent, CxDocument } from '../common';
 import { QTreeNode } from 'quasar';
 import { Component, defineAsyncComponent } from 'vue';
 import { useBackend, useProjectCache } from '../stores';
 import { mapState } from 'pinia';
-import { EditorGUIPropsClass } from './EditorGUIProps';
 import { setActionOpenDocument, setActionCloseEditor, setActionShowResultMessage } from '../actions';
 import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/vue-3';
@@ -89,15 +97,17 @@ function docToTreeNode(doc: ProjectComponent, loaded: LoadedDocument): QTreeNode
   const is_loaded = isLoaded(doc, loaded)
   let icon
   if (sha1) {
-    icon = is_loaded ? 'mdi-folder-open' : undefined
+    icon = is_loaded ? 'document_open' : undefined
   } else {
-    icon = 'mdi-file-question'
+    icon = 'document_question'
   }
   const selectable = !!sha1
   const treeNode: QTreeNode = { label, id, src, format, icon, selectable }
   if (doc.children) treeNode.children = doc.children.map(c => docToTreeNode(c, loaded))
   return treeNode
 }
+
+type ShowMode = 'normal' | 'maximized' | 'minimized'
 
 const ProjectStructureDialog: Component = {
   props: ['mainEditor', 'project', 'visible'],
@@ -106,12 +116,9 @@ const ProjectStructureDialog: Component = {
     // see https://vuejs.org/guide/components/async.html#async-components
     "PundokEditor": defineAsyncComponent(() => import('./PundokEditor.vue'))
   },
-  setup() {
-    setupQuasarIcons()
-  },
   data() {
     return {
-      maximized: false,
+      showMode: 'normal' as ShowMode,
       splitterModel: 25,
       isLoadingStructure: false,
       docTree: [] as QTreeNode[],
@@ -129,6 +136,7 @@ const ProjectStructureDialog: Component = {
         projectStructure: false,
         showEditorVersion: false,
         showConfiguration: false,
+        swapBlocksActive: false,
       }),
     }
   },
@@ -140,6 +148,15 @@ const ProjectStructureDialog: Component = {
     },
     afterClass(): string {
       return this.maximized ? 'embedded-editor-max' : 'embedded-editor-min'
+    },
+    minimized(): boolean {
+      return this.showMode === 'minimized'
+    },
+    normalSized(): boolean {
+      return this.showMode === 'normal'
+    },
+    maximized(): boolean {
+      return this.showMode === 'maximized'
     },
     height(): string {
       return this.maximized ? '87vh' : '50vh'
@@ -191,7 +208,7 @@ const ProjectStructureDialog: Component = {
           success: false,
           message,
           caption: "Project structure unavailable",
-          icon: "mdi-file-tree"
+          icon: "project_structure"
         })
         this.isLoadingStructure = false
       }
@@ -246,8 +263,8 @@ const ProjectStructureDialog: Component = {
       }
       this.subEditor = editor
     },
-    maximizeMinimize() {
-      this.maximized = !this.maximized
+    setShowMode(showMode: ShowMode) {
+      this.showMode = showMode
     },
     closeDialog(force?: boolean) {
       const subEditor = this.subEditor

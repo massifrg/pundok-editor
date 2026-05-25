@@ -7,20 +7,20 @@
           @set-description="setDescription" />
       </q-card-section>
       <q-card-section horizontal class="q-mx-md">
-        <q-btn-dropdown icon="mdi-plus" title="add configurations to inherit">
+        <q-btn-dropdown icon="add" title="add configurations to inherit">
           <q-list>
             <q-item v-for="c in unselectedConfigs" dense clickable v-close-popup @click="addConfig(c.name)">
-              <q-list-item-section><b>{{ c.name }}</b> - {{ c.description }}</q-list-item-section>
+              <q-item-section><b>{{ c.name }}</b> - {{ c.description }}</q-item-section>
             </q-item>
           </q-list>
         </q-btn-dropdown>
         <div class="q-pa-sm">Configurations:</div>
-        <q-chip v-for="c in configurations" removable icon-remove="mdi-close-circle-outline" @remove="removeConfig(c)">
+        <q-chip v-for="c in configurations" removable icon-remove="remove_item" @remove="removeConfig(c)">
           {{ c }}
         </q-chip>
       </q-card-section>
       <q-card-section horizontal class="q-mx-md">
-        <q-btn icon="mdi-folder" title="select project folder" @click="selectFolder" />
+        <q-btn icon="folder" title="select project folder" @click="selectFolder" />
         <q-chip v-if="path !== undefined" square>{{ path }}</q-chip>
       </q-card-section>
       <q-card-section v-if="path !== undefined" horizontal class="q-mx-md">
@@ -36,13 +36,17 @@
   </q-dialog>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { mapState } from 'pinia';
 import { useBackend } from '../stores';
 import NameDescriptionEditor from './NameDescriptionEditor.vue';
-import { setupQuasarIcons } from './helpers/quasarIcons';
 import { parse as parsePath } from 'path-browserify';
-import { ConfigurationSummary, PundokEditorConfigInit, PundokEditorProject } from '../common';
+import { ConfigurationSummary, getInheritedConfigName, PundokEditorConfigInit, PundokEditorProject } from '../common';
 import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers';
 import { getEditorDocState } from '../schema';
 
@@ -74,9 +78,6 @@ export default {
         && this.path
     },
   },
-  setup() {
-    setupQuasarIcons();
-  },
   async mounted() {
     this.availableConfigs = await this.backend?.availableConfigurations() || []
   },
@@ -97,8 +98,10 @@ export default {
       const docState = getEditorDocState(this.editor)
       showSelectFolderDialog({
         editor: this.editor,
-        prompt: 'Select the project folder:',
-        startFolder: docState?.workingFolder,
+        options: {
+          prompt: 'Select the project folder:',
+          startFolder: docState?.workingFolder,
+        },
         callback: async ({ path }) => {
           if (path) {
             this.path = path
@@ -107,7 +110,8 @@ export default {
               const { name, description, configurations, rootDocument, editorConfig } = existingProject
               this.setName(name || '')
               this.setDescription(description || '')
-              this.configurations = configurations || []
+              this.configurations = configurations?.map(c =>
+                getInheritedConfigName(c) as string) || []
               this.rootDocument = rootDocument
               this.editorConfig = editorConfig
             }
@@ -119,8 +123,10 @@ export default {
       const startFolder = this.path && parsePath(this.path).dir || undefined
       showOpenDocumentDialog({
         editor: this.editor,
-        prompt: 'Select the root document:',
-        startFolder,
+        options: {
+          prompt: 'Select the root document:',
+          startFolder,
+        },
         callback: ({ path }) => {
           if (path) {
             const { dir, base } = parsePath(path)
@@ -130,7 +136,7 @@ export default {
               this.$q.notify({
                 message: 'the root document must be a file in the project folder',
                 caption: '',
-                icon: 'mdi-alert-circle',
+                icon: 'alert_circle',
                 position: 'top',
                 color: 'negative',
                 timeout: 3000,
@@ -156,7 +162,7 @@ export default {
         this.$q.notify({
           message: `project "${this.name}" successfully created in ${this.path}`,
           caption: '',
-          icon: 'mdi-check',
+          icon: 'check',
           position: 'top',
           color: 'positive',
           timeout: 2000,

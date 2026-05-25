@@ -553,7 +553,12 @@ export class Attr implements PandocItem {
 
   static from(obj: Partial<AttrInitObject> | Attr): Attr {
     if (obj instanceof Attr) return obj;
-    return new Attr(obj.id || '', obj.classes || [], obj.attributes || {});
+    return new Attr(
+      obj.id || '',                         // no null or undefined identifier
+      (obj.classes || []).filter(c => !!c), // no empty classes
+      Object.fromEntries(Object.entries(obj.attributes || {})
+        .filter(([k, v]) => [k, v || '']))  // no null or undefined values
+    );
   }
 
   static empty() {

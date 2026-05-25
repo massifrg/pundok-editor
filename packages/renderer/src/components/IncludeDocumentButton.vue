@@ -1,5 +1,5 @@
 <template>
-  <ToolbarButton icon="add_document" @click="showDialog" />
+  <ToolbarButton icon="add_document" @click="showDialog" :title="$t('document.append')" />
 </template>
 
 <script lang="ts">
@@ -12,11 +12,13 @@ import {
   EditorKeyType,
   PandocFilterTransform,
   PundokEditorProject,
+  splitFolderAndDoc,
   TransformDocumentActionProps
 } from '../common';
-import { editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject } from '../schema';
+import { DocStateUpdate, editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject, updateDocState } from '../schema';
 import { useBackend } from '../stores';
 import { setupQuasarIcons, showImportDocumentDialog } from './helpers';
+import { t } from '../i18n'
 
 export default {
   props: ['editor'],
@@ -46,11 +48,16 @@ export default {
     showDialog() {
       const editorKey = this.editorKey
       if (!editorKey) return
+      const t = this.$t
       const docState = getEditorDocState(this.editor)
+      const { includeFolder, includeFormat, workingFolder, workingFormat } = docState || {}
       showImportDocumentDialog({
         editor: this.editor,
-        prompt: 'Append document:',
-        startFolder: docState?.includeFolder || docState?.workingFolder,
+        options: {
+          prompt: t('document.append') + ":",
+          startFolder: includeFolder || workingFolder,
+          startFormat: includeFormat || workingFormat,
+        },
         callback: (context) => {
           const { documentFormat, path } = context
           console.log(context)
@@ -64,9 +71,19 @@ export default {
               toFormat: 'json',
               sources: [path],
             }
+            const docState = getEditorDocState(this.editor)
+            const { includeFolder, includeFormat } = docState || {}
+            const { folder } = splitFolderAndDoc(path)
+            this.editor?.commands.updateDocState({
+              includeFolder: folder || includeFolder,
+              includeFormat: documentFormat || includeFormat,
+            } as Partial<DocStateUpdate>)
             console.log(appendTransform)
-            setActionCommand(editorKey, ACTION_DOCUMENT_TRANSFORM,
-              { transform: appendTransform } as TransformDocumentActionProps)
+            setActionCommand(
+              editorKey,
+              ACTION_DOCUMENT_TRANSFORM,
+              { transform: appendTransform } as TransformDocumentActionProps
+            )
           }
         }
       })

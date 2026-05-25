@@ -1,6 +1,6 @@
 /* eslint-env node */
-
-import { chrome } from '../../.electron-vendors.cache.json';
+import { defineConfig } from 'vite';
+import { getChromeVersion } from '../electron-versions/index.js';
 import { join } from 'path';
 import { builtinModules } from 'module';
 import { resolve, dirname } from 'node:path';
@@ -10,7 +10,8 @@ import vue from '@vitejs/plugin-vue';
 // import vueI18n from '@intlify/vite-plugin-vue-i18n'
 // see https://vue-i18n.intlify.dev/guide/advanced/sfc.html
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
-import { visualizer } from 'rollup-plugin-visualizer';
+// import { visualizer } from 'rollup-plugin-visualizer';
+import { analyzer } from 'vite-bundle-analyzer';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -18,25 +19,19 @@ const PACKAGE_ROOT = __dirname;
  * @type {import('vite').UserConfig}
  * @see https://vitejs.dev/config/
  */
-const config = {
+export default defineConfig({
   mode: process.env.MODE,
   root: PACKAGE_ROOT,
   resolve: {
     alias: {
-      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      // '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      '#q-app': fileURLToPath(new URL('./.quasar/imports', import.meta.url)),
+      app: PACKAGE_ROOT,
     },
   },
   plugins: [
     vue({
       template: { transformAssetUrls },
-    }),
-    VueI18nPlugin({
-      /* options */
-      // locale messages resource pre-compile option
-      include: resolve(
-        dirname(fileURLToPath(import.meta.url)),
-        './src/i18n/**',
-      ),
     }),
     quasar({
       sassVariables: resolve(
@@ -44,12 +39,24 @@ const config = {
         './src/assets/css/quasar.variables.scss',
       ),
     }),
-    visualizer({
-      // filename: 'stats.html', // output file
-      // template: 'network', // "sunburst" | "treemap" | "network"
-      // gzipSize: true,
-      // brotliSize: true,
+    VueI18nPlugin({
+      /* options */
+      // locale messages resource pre-compile option
+      include: resolve(
+        dirname(fileURLToPath(import.meta.url)),
+        './src/locales/**',
+      ),
     }),
+    // analyzer({
+    //   analyzerMode: 'server',
+    //   brotliOptions: {},
+    // }),
+    // visualizer({
+    // filename: 'stats.html', // output file
+    // template: 'network', // "sunburst" | "treemap" | "network"
+    // gzipSize: true,
+    // brotliSize: true,
+    // }),
   ],
   pluginOptions: {},
   base: '',
@@ -64,7 +71,7 @@ const config = {
   },
   build: {
     sourcemap: true,
-    target: `chrome${chrome}`,
+    target: `chrome${getChromeVersion()}`,
     outDir: 'dist',
     assetsDir: '.',
     rollupOptions: {
@@ -84,9 +91,9 @@ const config = {
       'prosemirror-view',
     ],
   },
-  test: {
-    // environment: 'happy-dom',
-  },
+  // test: {
+  //   // environment: 'happy-dom',
+  // },
   // The next css section is from https://stackoverflow.com/questions/68147471/how-to-set-sassoptions-in-vite/78997875#78997875
   // to solve "Deprecation Warning: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0."
   css: {
@@ -97,6 +104,4 @@ const config = {
       },
     },
   },
-};
-
-export default config;
+});

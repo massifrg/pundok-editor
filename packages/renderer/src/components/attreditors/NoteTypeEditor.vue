@@ -5,7 +5,7 @@
         <q-list v-if="noteTypes.length > 0">
           <q-item v-for="(nt, index) in noteTypes" :key="index" clickable v-close-popup density="compact" :value="index"
             :title="nt" dense @click="updateValue(nt)">
-            <q-item-section avatar><q-icon v-if="value === nt" name="mdi-check" size="xs" /></q-item-section>
+            <q-item-section avatar><q-icon v-if="value === nt" name="check" size="xs" /></q-item-section>
             <q-item-section no-wrap>{{ nt }}</q-item-section>
           </q-item>
         </q-list>
@@ -16,6 +16,11 @@
     <!-- <span v-if="value"><b>{{ selectedLabel }}</b>: </span>{{ customStyleDescription(selectedStyle) }} -->
   </q-card-section>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { DEFAULT_NOTE_TYPE, NoteStyle } from '../../common';

@@ -4,16 +4,16 @@
       :full-height="dialogPosition == 'right' || dialogPosition == 'left'" seamless>
       <q-card>
         <q-card-section class="q-ma-xs" horizontal>
-          <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="mdi-arrow-right"
+          <q-btn v-if="dialogPosition != 'right'" dense class="q-px-md" icon="arrow_right"
             title="move this dialog to the right" size="xs" @click="() => { dialogPosition = 'right' }"></q-btn>
-          <q-btn v-if="dialogPosition != 'left'" dense class="q-px-md" icon="mdi-arrow-left"
+          <q-btn v-if="dialogPosition != 'left'" dense class="q-px-md" icon="arrow_left"
             title="move this dialog to the left" size="xs" @click="() => { dialogPosition = 'left' }"></q-btn>
-          <!-- <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="mdi-arrow-up"
+          <!-- <q-btn v-if="dialogPosition != 'top'" dense class="q-px-md" icon="arrow-upward"
             title="move this dialog to the top" size="xs" @click="() => { dialogPosition = 'top' }"></q-btn>
-          <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="mdi-arrow-down"
+          <q-btn v-if="dialogPosition != 'bottom'" dense class="q-px-md" icon="arrow_downward"
             title="move this dialog to the bottom" size="xs" @click="() => { dialogPosition = 'bottom' }"></q-btn> -->
           <q-space />
-          <q-btn dense icon="mdi-close" size:xs @click="showDialog = false" />
+          <q-btn dense icon="close" size:xs @click="showDialog = false" />
         </q-card-section>
         <q-card-section v-if="errorMessage">
           <q-banner inline-actions class="text-white bg-red">
@@ -28,7 +28,7 @@
         </q-card-section>
         <q-card-section horizontal>
           <q-btn v-if="selections.length > 0" class="q-ma-xs" size="sm" rounded color="primary" label=""
-            title="load a predefined CSS selector" icon="mdi-playlist-star">
+            title="load a predefined CSS selector" icon="load_predefined">
             <q-menu anchor="bottom start" self="bottom end">
               <q-list>
                 <q-item v-for="sel in selections" clickable v-close-popup dense :title="sel.description"
@@ -39,7 +39,7 @@
             </q-menu>
           </q-btn>
           <q-space />
-          <q-toggle v-model="mergeSameAdjacentMarks" icon="mdi-set-merge" title="merge same adjacent marks" />
+          <q-toggle v-model="mergeSameAdjacentMarks" icon="marks_merge" title="merge same adjacent marks" />
           <q-space />
           <q-btn label="select" size="sm" @click="applyCssSelector()" />
         </q-card-section>
@@ -55,7 +55,7 @@
               </q-item-section>
               <q-item-section @click="scrollAtElement(e)">{{ e.label }}</q-item-section>
               <q-item-section side>
-                <q-btn v-if="hasEditableAttributes(e)" icon="mdi-playlist-edit" size="xs" @click="editAttributes(e)" />
+                <q-btn v-if="hasEditableAttributes(e)" icon="attributes_edit" size="xs" @click="editAttributes(e)" />
               </q-item-section>
             </q-item>
           </q-list>
@@ -66,13 +66,18 @@
     </q-dialog>
   </ToolbarButton>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { Component } from 'vue';
 import { Editor } from '@tiptap/core'
 import { Node as PmNode } from '@tiptap/pm/model'
 import ToolbarButton from './ToolbarButton.vue'
 import { editorKeyFromState, getCssSelected, getEditorConfiguration } from '../schema'
-import { setupQuasarIcons } from './helpers/quasarIcons'
 import {
   editableAttrsForNodeOrMark,
   LabeledNodeOrMark,
@@ -137,9 +142,6 @@ export default {
   props: ['editor', 'nodeOrMarkToLabel'],
   components: {
     ToolbarButton
-  },
-  setup() {
-    setupQuasarIcons();
   },
   data() {
     return {

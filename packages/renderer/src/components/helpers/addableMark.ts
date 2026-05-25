@@ -20,12 +20,12 @@ export interface AddableMark {
 }
 
 const BASE_ADDABLE_MARKS: Partial<AddableMark>[] = [
-  { name: 'emph', title: 'Emph', icon: 'mdi-format-italic' },
-  { name: 'strong', title: 'Strong', icon: 'mdi-format-bold' },
-  { name: 'underline', title: 'Underline', icon: 'mdi-format-underline' },
-  { name: 'strikeout', title: 'Strikeout', icon: 'mdi-format-strikethrough' },
-  { name: 'superscript', title: 'Superscript', icon: 'mdi-format-superscript' },
-  { name: 'subscript', title: 'Subscript', icon: 'mdi-format-subscript' },
+  { name: 'emph', title: 'Emph', icon: 'emph' },
+  { name: 'strong', title: 'Strong', icon: 'strong' },
+  { name: 'underline', title: 'Underline', icon: 'underline' },
+  { name: 'strikeout', title: 'Strikeout', icon: 'strikeout' },
+  { name: 'superscript', title: 'Superscript', icon: 'superscript' },
+  { name: 'subscript', title: 'Subscript', icon: 'subscript' },
   { name: 'smallcaps', title: 'SmallCaps', label: 'K' },
   { name: 'singleQuoted', title: 'Quoted(Single)', label: '‘a’' },
   { name: 'doubleQuoted', title: 'Quoted(Double)', label: '“a”' },

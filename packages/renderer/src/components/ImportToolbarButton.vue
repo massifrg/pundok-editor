@@ -1,6 +1,6 @@
 <template>
-  <q-btn-dropdown v-if="inputConverters.length > 0" :title="dropDownTitle" icon="mdi-file-import" color="grey-5" split
-    dense size="sm" dropdown-icon="mdi-menu-down" :disable-main-btn="!defaultInputConverter"
+  <q-btn-dropdown v-if="inputConverters.length > 0" :title="dropDownTitle" icon="import" color="grey-5" split dense
+    size="sm" dropdown-icon="menu_down" :disable-main-btn="!defaultInputConverter"
     @click="importWithConverter(defaultInputConverter)">
     <q-list>
       <q-item v-for="(oc, index) in inputConverters" :key="index" :title="oc.description" clickable v-close-popup
@@ -16,6 +16,11 @@
     </q-list>
   </q-btn-dropdown>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { InputConverter } from '../common';

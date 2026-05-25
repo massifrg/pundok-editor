@@ -162,7 +162,7 @@ async function getUserPlacesWindows(): Promise<Place[]> {
     ['Desktop', 'Documents', 'Downloads', 'Pictures', 'Music', 'Videos'].forEach(p =>
       places.push({
         name: p,
-        href: pathToFileURLfixed(joinPath(user, p)).toString(),
+        href: pathToFileURLfixed(`${user}\\${p}`).toString(),
         type: 'known'
       })
     );
@@ -171,7 +171,7 @@ async function getUserPlacesWindows(): Promise<Place[]> {
       if (v) {
         places.push({
           name: p,
-          href: pathToFileURLfixed(joinPath(user, v)).toString(),
+          href: pathToFileURLfixed(v).toString(),
           type: 'known'
         })
       }

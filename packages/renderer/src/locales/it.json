@@ -1,0 +1,337 @@
+{
+  "Hide": "Nascondi",
+  "Show": "Mostra",
+  "absent": "assente",
+  "allow": "permetti",
+  "appendMeta": {
+    "label": {
+      "MetaBlocks": "aggiungi MetaBlocks",
+      "MetaBool": "aggiungi MetaBool",
+      "MetaInlines": "aggiungi MetaInlines",
+      "MetaList": "aggiungi MetaList",
+      "MetaMap": "aggiungi MetaMap",
+      "MetaString": "aggiungi MetaString",
+      "customMeta": "aggiungi {name}",
+      "customMetaDefaultName": "metadato personalizzato"
+    },
+    "title": {
+      "MetaBlocks": "aggiungi un metadato fatto di blocchi di testo (es. più paragrafi)",
+      "MetaBool": "aggiungi un metadato vero/falso",
+      "MetaInlines": "aggiungi medatato costituito da una riga di testo formattato",
+      "MetaList": "aggiungi un metadato di tipo lista",
+      "MetaMap": "aggiungi un metadato di tipo dizionario (chiave/valore)",
+      "MetaString": "aggiungi un metadato costituito da una riga di testo non formattato",
+      "customMeta": "aggiungi un metadato personalizzato (preso dalla configurazione corrente)"
+    }
+  },
+  "attributesEditor": {
+    "attribute": "attributo \"{name}\"",
+    "button": {
+      "cancel": "Annulla",
+      "change": "Cambia"
+    },
+    "description": {
+      "customStyle": "stile personalizzato",
+      "indexName": "nome dell'indice",
+      "mathType": "tipo di formula",
+      "noteType": "tipo di nota",
+      "otherAttributes": "altri attributi",
+      "putIndexRef": "posizione del riferimento all'indice",
+      "refClass": "classe dei riferimenti all'indice"
+    },
+    "label": {
+      "propagateIdRef": "propaga l'idref agli altri testi uguali a questo e marcati per lo stesso indice"
+    },
+    "mathType": {
+      "DisplayMath": "formula fuori testo",
+      "InlineMath": "formula nel testo"
+    },
+    "numberDelim": {
+      "DefaultDelim": "separatore predefinito",
+      "OneParen": "una parentesi",
+      "Period": "punto",
+      "TwoParens": "due parentesi",
+      "description": "separatore del numero"
+    },
+    "numberStyle": {
+      "Decimal": "numeri arabi",
+      "DefaultStyle": "stile predefinito",
+      "Example": "esempio",
+      "LowerAlpha": "lettere latine minuscole",
+      "LowerRoman": "numeri romani con lettere minuscole",
+      "UpperAlpha": "lettere latine maiuscole",
+      "UpperRoman": "numeri romani con lettere maiuscole",
+      "description": "stile dei numeri"
+    },
+    "putIndexRef": {
+      "after": "il riferimento a indice è posizionato alla fine del testo marcato",
+      "before": "il riferimento a indice è posizionato all'inizio del testo marcato"
+    },
+    "resetAllAttributes": "ripristina tutti gli attributi",
+    "resetAttribute": "ripristina {name}",
+    "start": {
+      "description": "primo numero dell'elenco"
+    },
+    "tab": {
+      "classes": "classi",
+      "customStyle": "stile personalizzato",
+      "format": "formato",
+      "headRows": "righe di intestazione",
+      "id": "id",
+      "idref": "idref",
+      "kv": "attributi",
+      "language": "linguaggio",
+      "level": "livello",
+      "mathType": "tipo formula",
+      "noteType": "tipo di nota",
+      "numberDelim": "separatore",
+      "numberStyle": "stile numero",
+      "put-index-ref": "posizione rif. indice",
+      "ref-class": "classe rif. indice",
+      "rowHeadColumns": "colonne di intestazione",
+      "sort-key": "ordinamento",
+      "start": "inizio",
+      "target": "destinazione",
+      "text": "testo"
+    }
+  },
+  "blockquote": "citazione a pacchetto",
+  "bottom": "in basso",
+  "cancel": "annulla",
+  "capitalize": {
+    "lower": "rendi minuscolo",
+    "upper": "rendi maiuscolo",
+    "upperFirst": "rendi maiuscole le iniziali di ogni parola"
+  },
+  "changeAttributesOf": "modifica gli attributi di",
+  "classesEditor": {
+    "addAClass": "aggiungi una classe",
+    "addClass": "aggiungi classe \"{name}\"",
+    "button": {
+      "add": "aggiungi",
+      "cancel": "annulla"
+    },
+    "classAlreadyPresent": "classe già presente",
+    "classForbiddenHere": "classe non permessa qui",
+    "newClass": "nuova classe",
+    "removeThisClass": "rimuovi questa classe"
+  },
+  "clearAllMarks": "togli tutti gli stili",
+  "clickTo": {
+    "moveOrSwapVertically": "spostamento verticale di blocchi/paragrafi con {shortcut}: {state}"
+  },
+  "close": "chiudi",
+  "compact": "compatta",
+  "convert": "converti",
+  "customStyles": {
+    "character": "stili personalizzati di carattere (Span)",
+    "header": "stili personalizzati per i titoli",
+    "headerNoStyle": "titolo di livello {level} senza stili personalizzati",
+    "paraNoStyle": "paragrafo senza stili personalizzati",
+    "paragraph": "stili personalizzati di paragrafo",
+    "spanNoStyle": "testo senza stili personalizzati",
+    "summary": "sommario degli stili personalizzati alla posizione del cursore"
+  },
+  "disabled": "non attivo",
+  "document": {
+    "append": "accoda documento",
+    "newEmpty": "nuovo documento vuoto",
+    "newEmptyWithConfig": "nuovo documento con la configurazione",
+    "open": "apri documento",
+    "reloadWithConfiguration": "ricarica il documento con un'altra configurazione"
+  },
+  "emphasis": "enfasi",
+  "enabled": "attivo",
+  "expand": "espandi",
+  "failed": "Operazione fallita",
+  "insert": {
+    "HorizontalRule": "inserisci una barra di separazione"
+  },
+  "left": "a sinistra",
+  "less": "meno",
+  "marks": {
+    "title": {
+      "cite": "Cite (riferimento bibliografico)",
+      "code": "Code",
+      "doubleQuoted": "Quoted(DoubleQuote) (virgolette doppie)",
+      "emph": "Emph (enfasi)",
+      "link": "Link (collegamento)",
+      "math": "Math (formula matematica)",
+      "singleQuoted": "Quoted(SingleQuote) (virgolette singole)",
+      "smallCaps": "SmallCaps (maiuscoletto)",
+      "strikeout": "Strikeout (barrato)",
+      "strong": "Strong (enfasi forte)",
+      "subscript": "Subscript (pedice)",
+      "superscript": "Superscript (apice)",
+      "underline": "Underline (sottolineato)"
+    }
+  },
+  "more": "di più",
+  "move": "sposta {side}",
+  "newF": "nuova",
+  "nodes": {
+    "title": {
+      "blockquote": "Blockquote (citazione a pacchetto)",
+      "bulletList": "BulletList (elenco puntato)",
+      "orderedList": "OrderedList (elenco numerato)"
+    }
+  },
+  "present": "presente",
+  "prevent": "impedisci",
+  "projectStructureDialog": {
+    "loading": "caricamento della struttura del progetto...",
+    "maximize": "ingrandisci",
+    "minimize": "riduci",
+    "normalSize": "dimensioni predefinite",
+    "openInMainEditor": "apri nell'editor principale",
+    "reloadStructure": "ricarica la struttura del progetto"
+  },
+  "recent": {
+    "documents": "documenti recenti",
+    "projects": "progetti recenti"
+  },
+  "redo": "ripeti",
+  "repeatLastCommand": "ripeti ultimo comando",
+  "reset": "ripristina",
+  "right": "a destra",
+  "save": "salva",
+  "saveAs": "salva come",
+  "saveCopy": "salva una copia",
+  "search": {
+    "actions": {
+      "noAction": "(nessuna azione)",
+      "onFoundItems": "azione da eseguire sui risultati trovati | azioni da eseguire sui risultati trovati",
+      "onReplacedItems": "azione da eseguire sui risultati sostituiti | azioni da eseguire sui risultati sostituiti",
+      "remove": "rimuovi azione"
+    },
+    "appendNewAction": "aggiungi nuova",
+    "caseInsensitive": "non distinguere maiuscole/minuscole",
+    "cycleFoundItems": "spostamento ciclico tra i risultati della ricerca",
+    "filter": {
+      "noFilter": "nessun filtro"
+    },
+    "filterByStyles": "filtra in base agli stili",
+    "label": {
+      "cssSelector": "selettore(i) CSS",
+      "foundCount": "nessuna occorrenza di \"{what}\" trovata | trovata 1 occorrenza di \"{what}\" | trovate {count} occorrenze di \"{what}\"",
+      "replaceWith": "sostituisci con",
+      "searchRegex": "cerca espressione regolare",
+      "searchText": "cerca testo",
+      "whichFoundSelected": "(selezionata la #{index})"
+    },
+    "loadCssSearchSettings": "carica impostazioni di ricerca con selettori CSS predefinite o salvate in precedenza",
+    "loadSearchSettings": "carica impostazioni di cerca e sostituisci predefinite o salvate in precedenza",
+    "marksPalette": {
+      "title": "Seleziona stili predefiniti o personalizzati che devono essere presenti/assenti"
+    },
+    "mergeAdjacentMarks": "unisci gli intervalli adiacenti di testi con lo stesso stile (Mark)",
+    "regex": "cerca con espressioni regolari (Unicode compatibili)",
+    "replaceAll": "sostituisci tutti",
+    "replaceSelected": "sostituisci il risultato selezionato",
+    "replaceSelectedAndNext": "sostituisci il risultato selezionato e passa al successivo",
+    "saveCurrentSearchSettings": "salva le impostazioni correnti di cerca e sostituisci",
+    "search": "inizia la ricerca",
+    "searchNotReplace": "cerca soltanto, non sostituire",
+    "selectNext": "vai al risultato successivo",
+    "selectPrev": "vai al risultato precedente",
+    "wholeWords": "parole intere",
+    "withCssSelectors": "cerca con i selettori CSS"
+  },
+  "show": {
+    "indicesButtons": "mostra i bottoni per i riferimenti ad indice",
+    "lessOrMore": "mostra {what}",
+    "projectStructure": "mostra la struttura del progetto",
+    "saveButtonsDropdown": "mostra bottoni a tendina",
+    "saveButtonsLine": "mostra bottoni affiancati",
+    "searchAndReplace": "cerca e sostituisci"
+  },
+  "showHideMetadata": "{action} i metadati del documento",
+  "strong": "enfasi forte",
+  "success": "Azione eseguita con successo",
+  "table": {
+    "maximizeTableWidth": "tabella a piena larghezza"
+  },
+  "tables": {
+    "addBodyAfter": "aggiungi una sezione sotto",
+    "addBodyBefore": "aggiunge una sezione sopra",
+    "addCaption": "aggiungi la didascalia",
+    "addColumnAfter": "aggiungi una colonna a destra",
+    "addColumnBefore": "aggiungi una colonna a sinistra",
+    "addFoot": "aggiungi piede della tabella",
+    "addHead": "aggiungi l'intestazione della tabella",
+    "addRowAfter": "aggiungi una riga sotto",
+    "addRowBefore": "aggiungi una riga sopra",
+    "align": {
+      "baseLine": "allineamento verticale alla linea di base del testo",
+      "bottom": "allinea in basso",
+      "center": "allinea al centro",
+      "default": "allineamento predefinito della colonna (vedi ColSpec della tabella)",
+      "left": "allinea a sinistra",
+      "middle": "allinea verticalmente al centro",
+      "right": "allinea a destra",
+      "top": "allinea in alto"
+    },
+    "alignControls": "allineamenti orizzontale/verticale delle celle",
+    "bodyHeaders": "intestazioni sezioni dati",
+    "bodyHeadersControls": "imposta numero di righe e colonne di intestazione delle sezioni della tabella",
+    "cellAlignment": "allineamento",
+    "cells": "celle",
+    "cellsControls": "controlli per le celle: unisci/dividi, determina su quante righe/colonne si estendono",
+    "checkAndFix": "controlla e correggi la tabella",
+    "columnAlign": {
+      "center": "allineamento della colonna al centro (AlignCenter)",
+      "default": "allineamento della colonna predefinito (AlignDefault)",
+      "left": "allineamento della colonna a sinistra (AlignLeft)",
+      "right": "allineamento della colonna a destra (AlignRight)"
+    },
+    "columnsAlignments": "allineamento colonna",
+    "convertFromText": "converti testo in tabella",
+    "convertToText": "converti la tabella in testo",
+    "createNewTable": "crea una nuova tabella",
+    "decreaseBodyHeaderColumns": "riduci le colonne dell'intestazione di sezione",
+    "decreaseBodyHeaderRows": "riduci il numero di righe dell'intestazione di sezione",
+    "deleteCaption": "elimina la didascalia",
+    "deleteTable": "elimina la tabella",
+    "equalizeColumnWidths": "colonne con la stessa larghezza",
+    "increaseBodyHeaderColumns": "aumenta le colonne dell'intestazione di sezione",
+    "increaseBodyHeaderRows": "aumenta il numero di righe dell'intestazione di sezione",
+    "makeBody": "crea una nuova sezione con le righe selezionate",
+    "makeFoot": "imposta il piede della tabella con le righe selezionate",
+    "makeHead": "imposta l'intestazione della tabella con le righe selezionate",
+    "mergeCells": "unisci celle",
+    "removeColumn": "elimina colonna(e)",
+    "removeRow": "elimina riga/righe",
+    "removeSection": "elimina sezione",
+    "rowsAndColumns": "righe & colonne",
+    "rowsAndColumnsControls": "aggiungi/rimuovi righe/colonne",
+    "sectionControls": "crea/elimina sezione dati/intestazione/piede",
+    "sections": "sezioni",
+    "splitCell": "dividi cella",
+    "table": "tabella",
+    "tableControls": "tabella: nuova/elimina/correggi, aggiungi/rimuovi didascalia (Caption), aggiungi intestazione/piede",
+    "textVsTable": {
+      "commonSeparators": "separatori predefiniti",
+      "regexSeparator": "il separatore è un'espressione regolare",
+      "sep": {
+        "bar": "barra verticale",
+        "comma": "virgola (con eventuali spazi ai lati)",
+        "doubleSpace": "doppio spazio",
+        "oneOrMoreSpaces": "uno o più spazi",
+        "semicolon": "punto e virgola (con eventuali spazi ai lati)",
+        "semicolonAndSpace": "punto e virgola seguito da spazio",
+        "twoOrMoreSpaces": "due o più spazi"
+      }
+    },
+    "tools": "strumenti per le tabelle"
+  },
+  "toggle": "metti/togli {what}",
+  "togglePlainPara": "Plain/Para",
+  "top": "in alto",
+  "underline": "sottolineato",
+  "undo": "annulla",
+  "wrapIn": {
+    "Caption": "racchiudi il testo selezionato in una Caption",
+    "Div": "racchiudi il testo selezionato in un Div",
+    "Figure": "racchiudi il testo selezionato in una Figure"
+  }
+}

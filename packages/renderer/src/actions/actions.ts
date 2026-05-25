@@ -2,7 +2,9 @@ import { Editor } from '@tiptap/core';
 import { currentRepeatableCommandTooltip, SearchTextVariant } from '../schema';
 import { DocState, SelectedNodeOrMark } from '../schema/helpers';
 import {
+  ActionProps,
   AddOrRemoveClassActionProps,
+  DocumentOpenActionProps,
   EditorKeyType,
   MetaMapTextActionProps,
   TableCellVertAlignActionProps,
@@ -10,6 +12,7 @@ import {
 } from '../common';
 import { ActionsGroup } from './actionGroup';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
+import isString from 'lodash-es/isString';
 
 export type ActionName =
   | 'update-doc-state'
@@ -25,6 +28,7 @@ export type ActionName =
   | 'save-document'
   | 'save-document-as'
   | 'save-document-copy'
+  | 'render-document'
   | 'new-project'
   | 'get-project'
   | 'include-document'
@@ -71,6 +75,8 @@ export type ActionName =
   | 'select-mark-range'
   | 'add-mark'
   | 'remove-mark'
+  | 'delete-css-selected'
+  | 'unwrap-css-selected'
   | 'set-span'
   | 'set-index-ref'
   | 'add-custom-style'
@@ -91,26 +97,41 @@ export type ActionName =
   | 'move-inside-prev-sibling'
   | 'move-inside-next-sibling'
 
+export type LabelForAction =
+  | string
+  | ((
+    editor?: Editor,
+    action?: ActionCore,
+  ) => string | undefined);
+
 export type TooltipForAction =
   | string
   | ((
     editor?: Editor,
-    action?: ActionCore, // ActionForNodeOrMark | EditorAction,
+    action?: ActionCore,
   ) => string | undefined);
+
+export type HighlightForAction =
+  | boolean
+  | ((
+    editor?: Editor,
+    action?: ActionCore,
+  ) => boolean | undefined);
 
 /** Core properties of actions */
 export interface ActionCore {
-  label: string;
+  label: LabelForAction;
   tooltip?: TooltipForAction;
   icon?: string;
   iconRight?: string;
   order?: number;
+  highlight?: HighlightForAction;
+  props?: ActionProps;
 }
 
 /** Editor action that is not linked to an editor instance */
 export interface BaseEditorAction extends ActionCore {
   name: ActionName;
-  props?: object;
 }
 
 /** Editor action that is relevant only to the editor having that editorKey */
@@ -196,19 +217,33 @@ export const ACTION_BACKEND_SET_CONTENT_WITH_PROJECT: BaseEditorAction = {
 export const ACTION_NEW_EMPTY_DOCUMENT: BaseEditorAction = {
   name: 'new-empty-document',
   label: 'new empty document',
-  icon: 'mdi-file-import',
+  icon: 'document_new',
 };
 
 export const ACTION_NEW_DOCUMENT: BaseEditorAction = {
   name: 'new-document',
   label: 'new document',
-  icon: 'mdi-file-import',
+  icon: 'document_new',
 };
 
 export const ACTION_DOCUMENT_OPEN: BaseEditorAction = {
   name: 'open-document',
-  label: 'open document',
-  icon: 'mdi-file-document-edit'
+  label: (_, action) => {
+    const path = (action?.props as DocumentOpenActionProps)?.context?.path
+    const suffix = path ? ` "${path}"` : ''
+    return `open document${suffix}`
+  },
+  tooltip: (_, action) => {
+    const props = action?.props as DocumentOpenActionProps
+    const path = props?.context?.path
+    const atLine = props?.atLine
+    let text = 'open document'
+    text = path ? `${text} "${path}"` : ''
+    text = atLine ? `${text} at line (paragraph) ${atLine}` : ''
+    return text
+  },
+  highlight: (_, action) => !!(action?.props as DocumentOpenActionProps)?.context?.path,
+  icon: 'document_open',
 };
 
 export const ACTION_DOCUMENT_SAVE: BaseEditorAction = {
@@ -224,6 +259,12 @@ export const ACTION_DOCUMENT_SAVE_AS: BaseEditorAction = {
 export const ACTION_DOCUMENT_SAVE_COPY: BaseEditorAction = {
   name: 'save-document-copy',
   label: 'save a copy',
+};
+
+export const ACTION_DOCUMENT_RENDER: BaseEditorAction = {
+  name: 'render-document',
+  label: 'render this document or project',
+  icon: 'document_render',
 };
 
 export const ACTION_DOCUMENT_INCLUDE: BaseEditorAction = {
@@ -244,7 +285,7 @@ export const ACTION_DOCUMENT_EXPORT: BaseEditorAction = {
 export const ACTION_DOCUMENT_TRANSFORM: BaseEditorAction = {
   name: 'transform-document',
   label: 'transform document',
-  icon: 'mdi-file-replace-outline',
+  icon: 'document_transform',
 };
 
 export const ACTION_SET_DOCUMENT_FORMAT: BaseEditorAction = {
@@ -255,62 +296,62 @@ export const ACTION_SET_DOCUMENT_FORMAT: BaseEditorAction = {
 export const ACTION_DOCUMENT_GO_TO_LINE: BaseEditorAction = {
   name: 'document-go-to-line',
   label: 'move the cursor to line',
-  icon: 'mdi-debug-step-into'
+  icon: 'document_go_to_line'
 }
 
 export const ACTION_SHOW_RESULT_MESSAGE: BaseEditorAction = {
   name: 'show-result-message',
   label: 'show message relative to the result of an operation',
-  icon: 'mdi-message-reply-outline',
+  icon: 'result_message',
 }
 
 export const ACTION_SHOW_EXPORT_DIALOG: BaseEditorAction = {
   name: 'show-export-dialog',
   label: 'open export dialog',
-  icon: 'mdi-file-export',
+  icon: 'export',
 };
 
 export const ACTION_SHOW_IMPORT_DIALOG: BaseEditorAction = {
   name: 'show-import-dialog',
   label: 'open import dialog',
-  icon: 'mdi-file-import',
+  icon: 'import',
 };
 
 export const ACTION_SHOW_SEARCH_DIALOG: BaseEditorAction = {
   name: 'show-search-dialog',
   label: 'open search dialog',
-  icon: 'mdi-magnify',
+  icon: 'search',
 };
 
 export const ACTION_SELECT_PREV: BaseEditorAction = {
   name: 'select-prev',
   label: 'select previous',
-  icon: 'mdi-chevron-left',
+  icon: 'search_prev',
 };
 
 export const ACTION_SELECT_NEXT: BaseEditorAction = {
   name: 'select-next',
   label: 'select next',
-  icon: 'mdi-chevron-right',
+  icon: 'search_next',
 };
 
 export const ACTION_SET_ALTERNATIVE: BaseEditorAction = {
   name: 'set-alternative',
   label: 'set alternative',
-  icon: 'mdi-numeric-1-box-outline'
+  icon: 'alternative_set'
 }
 
 export const ACTION_REPLACE_AND_SELECT_NEXT: BaseEditorAction = {
   name: 'replace-and-select-next',
   label: 'replace and select next',
-  icon: 'mdi-autorenew',
-  iconRight: 'mdi-chevron-right',
+  icon: 'search_replace',
+  iconRight: 'search_next',
 };
 
 export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
   name: 'repeat-change',
   label: 'repeat change',
-  icon: 'mdi-repeat-variant',
+  icon: 'repeat_command',
   tooltip: (editor, action) =>
     editor && currentRepeatableCommandTooltip(editor.state),
   canDo: (editor, action) => {
@@ -332,7 +373,7 @@ export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
 export const ACTION_LOWERCASE: BaseActionForNodeOrMark = {
   name: 'lowercase',
   label: "convert to lower case the selected text",
-  icon: "mdi-format-letter-case-lower",
+  icon: "case_to_lower",
   canDo: (editor) => editor.can().toLowercase(),
   do: (editor) => editor.commands.toLowercase(),
 }
@@ -340,7 +381,7 @@ export const ACTION_LOWERCASE: BaseActionForNodeOrMark = {
 export const ACTION_UPPERCASE: BaseActionForNodeOrMark = {
   name: 'uppercase',
   label: "convert to upper case the selected text",
-  icon: "mdi-format-letter-case-upper",
+  icon: "case_to_upper",
   canDo: (editor) => editor.can().toUppercase(),
   do: (editor) => editor.commands.toUppercase(),
 }
@@ -348,7 +389,7 @@ export const ACTION_UPPERCASE: BaseActionForNodeOrMark = {
 export const ACTION_UPPERCASE_FIRST: BaseActionForNodeOrMark = {
   name: 'uppercase-first',
   label: "convert to upper case the first letter of every word in selected text",
-  icon: "mdi-format-letter-case",
+  icon: "case_to_upperfirst",
   canDo: (editor) => editor.can().toUppercaseFirst(),
   do: (editor) => editor.commands.toUppercaseFirst(),
 }
@@ -356,7 +397,7 @@ export const ACTION_UPPERCASE_FIRST: BaseActionForNodeOrMark = {
 export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
   name: 'add-class',
   label: 'add a class',
-  icon: 'add_class',
+  icon: 'classes_add',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
     const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
@@ -396,7 +437,7 @@ export interface SearchIndexTermActionProps {
 export const ACTION_AUTO_SET_INDEX_TERM_ID: BaseActionForNodeOrMark = {
   name: 'auto-set-index-term-id',
   label: 'search and set the id of the index term automatically',
-  icon: 'mdi-database-search',
+  icon: 'index_auto_id',
   canDo: (editor, action) => editor.can().setIndexTermAutoId(
     (action?.props as SearchIndexTermActionProps)?.searchTextVariant),
   do: (editor, action) => editor.commands.runRepeatableCommand(
@@ -409,13 +450,13 @@ export const ACTION_AUTO_SET_INDEX_TERM_ID: BaseActionForNodeOrMark = {
 export const ACTION_ADD_MARK: BaseActionForNodeOrMark = {
   name: 'add-mark',
   label: 'add Mark (Emph, Strong, etc.)',
-  icon: 'mdi-tag-plus',
+  icon: 'marks_add',
 }
 
 export const ACTION_REMOVE_MARK: BaseActionForNodeOrMark = {
   name: 'remove-mark',
   label: 'remove Mark (Emph, Strong, etc.)',
-  icon: 'mdi-tag-minus',
+  icon: 'marks_remove',
 }
 
 export const ACTION_ADD_CUSTOM_STYLE: BaseActionForNodeOrMark = {
@@ -433,13 +474,13 @@ export const ACTION_REMOVE_CUSTOM_STYLE: BaseActionForNodeOrMark = {
 export const ACTION_SET_SPAN: BaseActionForNodeOrMark = {
   name: 'set-span',
   label: 'add Span (with optional classes and attributes)',
-  icon: 'mdi-text-box-plus',
+  icon: 'span_set',
 }
 
 export const ACTION_ADD_CUSTOM_CLASS: BaseActionForNodeOrMark = {
   name: 'add-custom-class',
   label: 'add a custom class (with its attributes)',
-  icon: 'add_custom_class'
+  icon: 'custom_classes_add'
 }
 
 export const ACTION_REMOVE_CUSTOM_CLASS: BaseActionForNodeOrMark = {
@@ -451,13 +492,25 @@ export const ACTION_REMOVE_CUSTOM_CLASS: BaseActionForNodeOrMark = {
 export const ACTION_SET_INDEX_REF: BaseActionForNodeOrMark = {
   name: 'set-index-ref',
   label: 'set an index reference at selection',
-  icon: 'mdi-cursor-pointer',
+  icon: 'index_ref',
 }
 
 export const ACTION_INSERT_RAW_INLINE: BaseActionForNodeOrMark = {
   name: 'insert-raw-inline',
   label: 'insert a RawInline before/after/around selection',
-  icon: 'mdi-code-tags',
+  icon: 'raw_inline',
+}
+
+export const ACTION_DELETE_CSS_SELECTED: BaseActionForNodeOrMark = {
+  name: 'delete-css-selected',
+  label: 'delete the current CSS-selected Node or Mark',
+  icon: 'delete'
+}
+
+export const ACTION_UNWRAP_CSS_SELECTED: BaseActionForNodeOrMark = {
+  name: 'unwrap-css-selected',
+  label: 'unwrap the contents of the current CSS-selected Node or remove Mark',
+  icon: 'unwrap'
 }
 
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
@@ -468,13 +521,13 @@ export const ACTION_SETUP_VIEWER: BaseEditorAction = {
 export const ACTION_EDIT_ATTRIBUTES: BaseActionForNodeOrMark = {
   name: 'edit-node-or-mark-attributes',
   label: 'edit attributes...',
-  icon: 'mdi-playlist-edit',
+  icon: 'attributes_edit',
 };
 
 export const ACTION_EDIT_META_MAP_TEXT: BaseEditorAction = {
   name: 'edit-meta-map-text',
   label: 'edit MetaMap text',
-  icon: 'mdi-pencil',
+  icon: 'metamap_edit_key',
 };
 
 export const ACTION_SET_META_MAP_TEXT: BaseActionForNodeOrMark = {
@@ -493,7 +546,7 @@ export const ACTION_SET_META_MAP_TEXT: BaseActionForNodeOrMark = {
 export const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
   name: 'unwrap-blocks',
   label: 'unwrap the contents',
-  icon: 'mdi-wrap-disabled',
+  icon: 'unwrap',
   canDo: (editor, action) =>
     !!action?.nodeOrMark?.pos &&
     editor.can().unwrapNode(action.nodeOrMark.pos),
@@ -507,7 +560,7 @@ export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: `set-text-align`,
     label: `horizontal ${alignment} align`,
-    icon: `mdi-format-align-${alignment}`,
+    icon: `align_${alignment}`,
     canDo: (editor, action) => editor.can().setTextAlign((action?.props as TextAlignmentActionProps)?.alignment),
     do: (editor, action) => editor.commands.setTextAlign((action?.props as TextAlignmentActionProps)?.alignment),
     props: { alignment } as TextAlignmentActionProps
@@ -517,7 +570,7 @@ export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: 'set-vertical-align',
     label: `vertical ${alignment} align`,
-    icon: `mdi-format-align-${alignment}`,
+    icon: `align_${alignment}`,
     canDo: (editor, action) => editor.can().setVerticalAlign((action?.props as TableCellVertAlignActionProps)?.alignment),
     do: (editor, action) => editor.commands.setVerticalAlign((action?.props as TableCellVertAlignActionProps)?.alignment),
     props: { alignment } as TableCellVertAlignActionProps
@@ -550,6 +603,8 @@ export function executeEditorAction(
 const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
   ACTION_ADD_MARK,
   ACTION_REMOVE_MARK,
+  ACTION_DELETE_CSS_SELECTED,
+  ACTION_UNWRAP_CSS_SELECTED,
   ACTION_ADD_CUSTOM_STYLE,
   ACTION_REMOVE_CUSTOM_STYLE,
   ACTION_LOWERCASE,
@@ -584,4 +639,28 @@ export function fillAvailableAction(
   const available = availableAction(actionName)
   if (available && editorKey)
     return { ...available, props, editorKey, nodeOrMark }
+}
+
+export function isHighlightedAction(action: ActionCore, editor?: Editor): boolean {
+  const hl = action?.highlight
+  if (!hl) return false
+  if (hl === true)
+    return true
+  return hl && hl(editor, action) || false
+}
+
+export function labelForAction(action: ActionCore, editor?: Editor): string | undefined {
+  const label = action?.label
+  if (label)
+    return isString(label)
+      ? label
+      : label(editor, action)
+}
+
+export function tooltipForAction(action: ActionCore, editor?: Editor): string | undefined {
+  const tooltip = action?.tooltip
+  if (tooltip)
+    return isString(tooltip)
+      ? tooltip
+      : tooltip(editor, action)
 }

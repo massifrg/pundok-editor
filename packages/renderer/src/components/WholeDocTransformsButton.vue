@@ -1,9 +1,9 @@
 <template>
   <q-btn-dropdown v-if="transforms.length > 0" title="make a transformation of the whole document" color="grey-5" dense
-    size="sm" dropdown-icon="mdi-menu-down">
+    size="sm" dropdown-icon="menu_down">
     <template v-slot:label>
       <q-circular-progress v-if="remoteWorkInProgress" indeterminate rounded color="red" />
-      <q-icon v-if="!remoteWorkInProgress" name="mdi-file-replace-outline" />
+      <q-icon v-if="!remoteWorkInProgress" name="document_transform" />
     </template>
     <q-list>
       <q-item v-for="(t, index) in transforms" :key="index" :title="t.description" clickable v-close-popup
@@ -13,6 +13,11 @@
     </q-list>
   </q-btn-dropdown>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { mapState } from 'pinia';

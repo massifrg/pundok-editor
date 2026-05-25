@@ -32,6 +32,7 @@ export const Link = TiptapLink.extend<LinkOptions>({
         // TODO:
         return false
       },
+      enableClickSelection: false,
     };
   },
 

@@ -7,7 +7,7 @@ import {
   PundokEditorProject,
   serializeProject
 } from '../common';
-import { getConfigurationInit } from './configurationHandlers';
+import { getConfigurationInit } from '../resourcesManager';
 import { loadProjectInDirectory, projectFileNameInDirectory } from './getProjectHandler';
 import { replaceFileExtension, stringify } from '../utils';
 import { copyFile, writeFile } from 'fs/promises';

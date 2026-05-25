@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "module": "esnext",
-    "target": "esnext",
+    "module": "ESNext",
+    "target": "ESNext",
     "sourceMap": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "importHelpers": true,
     "skipLibCheck": true,
     "strict": true,
@@ -12,12 +14,12 @@
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "jsx": "preserve",
-
     "types": ["node"],
-
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "/@/*": ["./src/*"]
+      "/@/*": ["./src/*"],
+      "app/src/App.vue": ["src/PundokApp.vue"]
     },
     "lib": ["ESNext", "dom", "dom.iterable"]
   },

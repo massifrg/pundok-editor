@@ -1,5 +1,6 @@
 <script lang="ts">
 import { toRaw } from 'vue';
+import { QBtnDropdown } from 'quasar';
 import { ActionName, defaultPropsFor } from '../actions';
 import {
   ActionNameWithProps,
@@ -15,10 +16,11 @@ import {
 } from '../common';
 import ActionsList from './ActionsList.vue';
 import { getEditorConfiguration } from '../schema';
+import { t } from '../i18n'
 
 function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConfig) {
   if (!actions || actions.length === 0)
-    return '(no actions)'
+    return t('search.actions.noAction')
   return actions.map(a => {
     const actionName = a.name as ActionName
     const prefix = actionName.startsWith('add')
@@ -84,7 +86,7 @@ function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConf
 }
 
 export default {
-  props: ['editor', 'actions'],
+  props: ['editor', 'actions', 'searchOnly'],
   emits: ['update-actions'],
   computed: {
     configuration() {
@@ -112,13 +114,18 @@ export default {
       this.label = actionsAsText(actions, this.configuration)
       // forward event
       this.$emit('update-actions', actions)
+    },
+    hideMenu() {
+      (this.$refs.actionsOnReplace as QBtnDropdown).hide()
     }
   }
 }
 </script>
 <template>
-  <q-btn-dropdown class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty" :label="label" no-caps>
+  <q-btn-dropdown ref="actionsOnReplace" class="q-ma-xs" size="sm" rounded color="primary" :outline="isEmpty"
+    :label="label" no-caps>
     <!-- :no-caps="noneActive || operation === 'remove all'" :menu-anchor="menuAnchor" :menu-self="menuSelf" -->
-    <ActionsList :editor="editor" :start-actions="actions" @update-actions="update" style="min-width: 100%;" />
+    <ActionsList :editor="editor" :start-actions="actions" :searchOnly="searchOnly" style="min-width: 100%;"
+      @update-actions="update" @close="hideMenu()" />
   </q-btn-dropdown>
 </template>

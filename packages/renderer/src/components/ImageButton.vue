@@ -1,7 +1,6 @@
 <template>
-  <!-- <ToolbarButton v-if="noteTypes.length <= 1" :disabled="disabled" icon="mdi-note-plus" @click="$emit('insertNote')" /> -->
-  <q-btn-dropdown auto-close icon="mdi-image-outline" :title="title" color="grey-5" split dense size="sm"
-    dropdown-icon="mdi-menu-down" :disable-main-btn="false" :disable-dropdown="false"
+  <q-btn-dropdown auto-close icon="image" :title="title" color="grey-5" split dense size="sm" dropdown-icon="menu_down"
+    :disable-main-btn="false" :disable-dropdown="false"
     @click="editor.commands.setImage({ src: '', title: 'new image' })">
     <q-list>
       <q-item density="compact" title="make absolute src relative in selection" dense style="cursor: pointer" clickable
@@ -18,10 +17,14 @@
   </q-btn-dropdown>
 </template>
 
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { shortcut } from '../common';
 import { getDocState } from '../schema';
-import { setupQuasarIcons } from './helpers/quasarIcons'
 
 export default {
   props: ['editor'],
@@ -38,8 +41,5 @@ export default {
       return imagesFolder || workingFolder
     },
   },
-  setup() {
-    setupQuasarIcons()
-  }
 }
 </script>

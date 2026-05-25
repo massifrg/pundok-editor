@@ -9,8 +9,7 @@ import {
   PundokEditorProject
 } from '../common';
 import { format as formatPath, parse as parsePath } from 'path';
-import { isReadableDir } from '../resourcesManager';
-import { getConfigurationInit } from './configurationHandlers';
+import { getConfigurationInit, isReadableDir } from '../resourcesManager';
 
 export const getProjectHandler =
   (hub: IpcHub) =>

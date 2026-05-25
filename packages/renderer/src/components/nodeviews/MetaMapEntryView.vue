@@ -4,13 +4,11 @@
       <q-card-actions class="no-padding" spellcheck="false">
         <q-btn size="sm" :icon="iconForContent" :label="node.attrs.text" :title="titleForContent" @click="editKey"
           no-caps />
-        <!-- <q-space /> -->
-        <!-- <q-btn icon="mdi-pencil" rounded size="xs" title="edit the metadata key" @click="editKey" /> -->
-        <q-btn icon="mdi-arrow-up" rounded size="xs" title="move this metadata entry up"
+        <q-btn icon="arrow_upward" rounded size="xs" title="move this metadata entry up"
           @click="editor.commands.moveMetaMapEntryUp(getPos())" />
-        <q-btn icon="mdi-arrow-down" rounded size="xs" title="move this metadata entry down"
+        <q-btn icon="arrow_downward" rounded size="xs" title="move this metadata entry down"
           @click="editor.commands.moveMetaMapEntryDown(getPos())" />
-        <q-btn icon="mdi-trash-can" rounded size="xs" title="remove this metadata entry" @click="deleteEntry" />
+        <q-btn icon="delete" rounded size="xs" title="remove this metadata entry" @click="deleteEntry" />
       </q-card-actions>
     </div>
     <div class="meta-map-entry-value" :style="entryValueStyle">
@@ -18,6 +16,11 @@
     </div>
   </node-view-wrapper>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { NodeViewWrapper, NodeViewContent, nodeViewProps } from '@tiptap/vue-3';

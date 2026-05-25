@@ -2,7 +2,7 @@
   <q-dialog :model-value="modelValue" persistent>
     <q-card>
       <q-card-section class="row items-center">
-        <q-avatar icon="mdi-content-save-alert" :color="color_unsaved" text-color="white" />
+        <q-avatar icon="unsaved_content" :color="color_unsaved" text-color="white" />
         <span class="q-ml-sm"><b>This editor has unsaved content!</b></span>
       </q-card-section>
       <q-card-section v-if="extraValues.length > 0">
@@ -18,6 +18,11 @@
     </q-card>
   </q-dialog>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from './helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { COLOR_UNSAVED } from '../common';

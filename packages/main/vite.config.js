@@ -25,9 +25,10 @@ const config = {
     minify: process.env.MODE !== 'development',
     lib: {
       entry: 'src/index.ts',
-      formats: ['cjs'],
+      formats: ['esm'],
     },
     rollupOptions: {
+      platform: 'node',
       external: [
         'electron',
         'electron-devtools-installer',
@@ -35,7 +36,7 @@ const config = {
         // 'drivelist',
       ],
       output: {
-        entryFileNames: '[name].cjs',
+        entryFileNames: '[name].mjs',
       },
     },
     emptyOutDir: true,

@@ -1,11 +1,12 @@
 // main file per Vue
+import { i18n } from './i18n'
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import { Quasar, Dialog, Notify } from 'quasar';
+import { Quasar, Dialog, Notify, QuasarPluginOptions } from 'quasar';
 import App from './PundokApp.vue';
 
-// Import icon libraries
-import '@quasar/extras/mdi-v6/mdi-v6.css';
+// TODO: remove the next one to reduce the bundle size
+// import '@quasar/extras/mdi-v7/mdi-v7.css';
 
 // Import Quasar css
 import 'quasar/src/css/index.sass';
@@ -15,6 +16,7 @@ const app = createApp(App);
 const pinia = createPinia();
 app.provide("SK", SK)
 app.use(pinia);
+app.use(i18n);
 app.use(Quasar, {
   plugins: {
     // import Quasar plugins and add here
@@ -23,6 +25,7 @@ app.use(Quasar, {
   },
   config: {
     notify: {},
-  },
-});
+
+  }
+} as QuasarPluginOptions);
 app.mount('#app');

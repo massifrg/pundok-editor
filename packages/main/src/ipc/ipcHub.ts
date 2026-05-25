@@ -18,6 +18,7 @@ import { renderAgainHandler } from './renderAgainHandler';
 import { getBookmarksHandler } from './getBookmarksHandler';
 import { getRenderingJobHandler } from './getRenderingJobHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
+import { createFolderHandler } from './createFolderHandler';
 import { getInclusionTreeHandler } from './getInclusionTreeHandler';
 import { getSourceFileHandler } from './getSourceFileHandler';
 import { fileContentsHandler } from './fileContentsHandler';
@@ -74,6 +75,7 @@ export class IpcHub {
   handleIpcMainEvents() {
     ipcMain.handle('editor-ready', editorReadyHandler(this));
     ipcMain.handle('get-folder-contents', getFolderContentsHandler(this));
+    ipcMain.handle('create-folder', createFolderHandler(this));
     ipcMain.handle('open-document', openDocumentHandler(this));
     ipcMain.handle('save-document', saveDocumentHandler(this));
     ipcMain.handle('debug-info', debugInfoHandler(this));

@@ -14,7 +14,7 @@ async function readBookmarksFile(): Promise<PundokBookmark[]> {
     // fix older bookmarks with path
     return bm.map(b => {
       return b.path && !b.url
-        ? { ...b, url: `file://${b.path}`, path: undefined }
+        ? { ...b, url: `file://${encodeURIComponent(b.path)}`, path: undefined }
         : b
     })
   } catch (err) {
@@ -33,7 +33,7 @@ async function saveBookmarksFile(bookmarks: PundokBookmark[]): Promise<boolean> 
 }
 
 function sameBookmark(b1: PundokBookmark, b2: PundokBookmark): boolean {
-  return !(b1.type !== b2.type || (b1.url && b1.url !== b2.url));
+  return !(b1.type !== b2.type || (b1.url && decodeURIComponent(b1.url) !== decodeURIComponent(b2.url)));
 }
 
 function updateBookmarks(

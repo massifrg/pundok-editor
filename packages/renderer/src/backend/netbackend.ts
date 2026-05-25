@@ -1,4 +1,4 @@
-import type { Backend, BackendConfig } from './backend';
+import type { Backend } from './backend';
 import {
   type ConfigurationSummary,
   type PundokEditorConfig,
@@ -26,15 +26,10 @@ import {
   PundokBookmark,
   PandocFeatureName,
   PandocFeatureOptions,
+  ConfigQueryOptions,
 } from '../common';
 
 export class NetBackend implements Backend {
-  private config: BackendConfig = {};
-
-  constructor(config: BackendConfig) {
-    this.config = config;
-  }
-
   loggedin() {
     return Promise.resolve(false);
   }
@@ -78,11 +73,16 @@ export class NetBackend implements Backend {
     throw new Error('Method not implemented.');
   }
 
-  async availableConfigurations(): Promise<ConfigurationSummary[]> {
+  async createFolder(path: string): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
+
+  async availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]> {
     return [
       {
         name: HARDCODED_CONFIG_NAME,
         description: HARDCODED_CONFIG_DESC,
+        isLocal: false,
       },
     ] as ConfigurationSummary[];
   }

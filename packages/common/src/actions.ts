@@ -1,6 +1,5 @@
 import {
   CustomSpan,
-  InputConverter,
   OutputConverter,
   PandocFilterTransform,
   PundokEditorConfig,
@@ -12,52 +11,54 @@ import { Node as ProsemirrorNode } from "@tiptap/pm/model"
 import { ViewerSetup } from './viewer';
 import { DocumentFormat } from './documentFormat';
 
+export type ActionProps = Record<string, any>
+
 export interface ActionNameWithProps {
   name: string,
-  props?: Record<string, any>
+  props?: ActionProps
 }
 
-export interface BackendFeedbackActionProps {
+export interface BackendFeedbackActionProps extends ActionProps {
   feedback: FeedbackMessage
 }
 
-export interface BackendSetProjectActionProps {
+export interface BackendSetProjectActionProps extends ActionProps {
   project: PundokEditorProject
 }
 
-export interface BackendSetConfigNameActionProps {
+export interface BackendSetConfigNameActionProps extends ActionProps {
   configurationName: string
 }
 
-export interface SetContentActionProps {
+export interface SetContentActionProps extends ActionProps {
   content: string
 }
 
-export interface BackendSetContentActionProps {
+export interface BackendSetContentActionProps extends ActionProps {
   content: CxDocument
 }
 
-export interface BackendSetContentWithProjectActionProps {
+export interface BackendSetContentWithProjectActionProps extends ActionProps {
   content: CxDocument,
   configuration: PundokEditorConfig,
   project: PundokEditorProject
 }
 
-export interface NewDocumentActionProps {
+export interface NewDocumentActionProps extends ActionProps {
   configurationName: string,
   content: string
 }
 
-export interface NewEmptyDocumentActionProps {
+export interface NewEmptyDocumentActionProps extends ActionProps {
   configurationName?: string
 }
 
-export interface DocumentOpenActionProps {
+export interface DocumentOpenActionProps extends ActionProps {
   context?: DocumentContext,
   atLine?: number
 }
 
-export interface DocumentSaveActionProps {
+export interface DocumentSaveActionProps extends ActionProps {
   /** The complete path of the document to be saved (folder and filename). */
   path?: string,
   /** The format in which the document must be saved. */
@@ -70,99 +71,99 @@ export interface DocumentSaveActionProps {
   dontAskCopyPath?: boolean,
 }
 
-export interface ImportDocumentActionProps {
+export interface ImportDocumentActionProps extends ActionProps {
   doc: Partial<CxDocument>
 }
 
-export interface ExportDocumentActionProps {
+export interface ExportDocumentActionProps extends ActionProps {
   doc: Partial<CxDocument>
 }
 
-export interface TransformDocumentActionProps {
+export interface TransformDocumentActionProps extends ActionProps {
   transform: PandocFilterTransform
 }
 
 export type WhichDocumentFormat = 'input' | 'output' | 'copy'
-export interface SetDocumentFormatActionProps {
+export interface SetDocumentFormatActionProps extends ActionProps {
   whichFormat: WhichDocumentFormat
   documentFormat: DocumentFormat
 }
 
-export interface GoToLineActionProps {
+export interface GoToLineActionProps extends ActionProps {
   atLine: number
 }
 
-export interface ResultMessageActionProps {
+export interface ResultMessageActionProps extends ActionProps {
   success: boolean,
   message: string,
   caption: string,
   icon: string,
 }
 
-export interface ShowExportDialogActionProps {
+export interface ShowExportDialogActionProps extends ActionProps {
   outputConverter: OutputConverter
 }
 
-export interface SetAlternativeActionProps {
+export interface SetAlternativeActionProps extends ActionProps {
   alternative: number,
   context?: 'indices' // | 'other-context' ... 
 }
 
-export interface SetupViewerActionProps {
+export interface SetupViewerActionProps extends ActionProps {
   setup: ViewerSetup
 }
 
-export interface EditAttributesActionProps {
+export interface EditAttributesActionProps extends ActionProps {
   tab?: string,
   action?: ActionNameWithProps,
   selectNode?: (node: ProsemirrorNode) => boolean,
 }
 
-export interface MetaMapTextActionProps {
+export interface MetaMapTextActionProps extends ActionProps {
   text: string,
   oldText?: string
 }
 
-export interface TextAlignmentActionProps {
+export interface TextAlignmentActionProps extends ActionProps {
   alignment: 'left' | 'center' | 'right'
 }
 
-export interface TableCellVertAlignActionProps {
+export interface TableCellVertAlignActionProps extends ActionProps {
   alignment: 'top' | 'middle' | 'bottom'
 }
 
-export interface AddOrRemoveClassActionProps {
+export interface AddOrRemoveClassActionProps extends ActionProps {
   className: string,
   typeName?: string,
 }
 
-export interface AddOrRemoveMarkActionProps {
+export interface AddOrRemoveMarkActionProps extends ActionProps {
   markType: string,
   attrs?: Record<string, string>,
 }
 
-export interface AddOrRemoveCustomStyleActionProps {
+export interface AddOrRemoveCustomStyleActionProps extends ActionProps {
   styleName: string,
 }
 
-export interface AddOrRemoveCustomClassActionProps {
+export interface AddOrRemoveCustomClassActionProps extends ActionProps {
   shortDesc?: string,
   className: string,
   attrs?: Record<string, string>,
 }
 
-export interface SetSpanActionProps {
+export interface SetSpanActionProps extends ActionProps {
   classes: string[],
   attrs: Record<string, string>,
   alternativeIndex: number,
   alternatives?: CustomSpan[],
 }
 
-export interface SetIndexRefActionProps {
+export interface SetIndexRefActionProps extends ActionProps {
   indexName: string,
 }
 
-export interface InsertRawInlineActionProps {
+export interface InsertRawInlineActionProps extends ActionProps {
   format: string,
   where: 'before' | 'after',
   content: string | string[],

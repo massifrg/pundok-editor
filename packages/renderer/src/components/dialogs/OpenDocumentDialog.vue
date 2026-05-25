@@ -1,7 +1,12 @@
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
+
 <script lang="ts">
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
-import { QTable, QTableColumn, useDialogPluginComponent } from 'quasar';
+import { QTable, QTableColumn, useDialogPluginComponent, useQuasar } from 'quasar';
 import {
   DocumentBookmark,
   DocumentFormat,
@@ -48,14 +53,14 @@ function isNotHidden(filename: string, platform?: string) {
 }
 
 const placeIcons: Record<string, string> = {
-  home: 'mdi-folder-home',
-  root: 'mdi-folder',
-  pictures: 'mdi-folder-image',
-  documents: 'mdi-folder-file',
-  downloads: 'mdi-folder-download',
-  music: 'mdi-folder-music',
-  videos: 'mdi-folder-play',
-  desktop: 'mdi-folder-table',
+  home: 'folder_home',
+  root: 'folder_root',
+  pictures: 'folder_pictures',
+  documents: 'folder_documents',
+  downloads: 'folder_downloads',
+  music: 'folder_music',
+  videos: 'folder_videos',
+  desktop: 'folder_desktop',
 }
 
 const cols: QTableColumn[] = [{
@@ -76,7 +81,7 @@ const guessImageFormats = [
     ftype: 'guess',
     name: 'raster image',
     description: 'all raster image formats',
-    icon: 'mdi-checkerboard',
+    icon: 'image_raster',
     extensions: uniq(rasterFormats.reduce((acc, rf) =>
       [...acc, ...(rf as ImageFormatDescription).extensions], [] as string[]))
   },
@@ -84,14 +89,19 @@ const guessImageFormats = [
     ftype: 'guess',
     name: 'vector image',
     description: 'all vector image formats',
-    icon: 'mdi-vector-polygon',
+    icon: 'image_vector',
     extensions: uniq(vectorFormats.reduce((acc, vf) =>
       [...acc, ...(vf as ImageFormatDescription).extensions], [] as string[]))
   }
 ]
 
 export default {
-  props: ['editor', 'mode', 'prompt', 'startFilename', 'startFormat', 'startFolder'],
+  setup() {
+    const $q = useQuasar()
+    console.log($q)
+    return { $q }
+  },
+  props: ['editor', 'mode', 'options'],
   emits: [...useDialogPluginComponent.emits],
   data() {
     return {
@@ -99,7 +109,7 @@ export default {
       /** The protocol of the URL to open (usually it's `file://`) */
       protocol: 'file:',
       /** An array of the folders' names of the current path */
-      currentFolder: this.startFolder,
+      currentFolder: this.options.startFolder,
       /** The sub folders in the current folder */
       folders: [] as Folder[],
       /** The documents (files) in the current folder */
@@ -109,7 +119,7 @@ export default {
       /** The name of the selected document  */
       selectedDocument: undefined as string | undefined,
       /** The name of the file to be saved (or opened) in the text input box */
-      filename: this.startFilename || '',
+      filename: this.options.startFilename || '',
       /** Pagination for QTable */
       pagination: { rowsPerPage: 0 },
       /** The horizontal share (max: 100) for places vs folders/docs */
@@ -119,7 +129,7 @@ export default {
       /** The available Pandoc formats and input/output converters */
       pandocFormats: [] as PandocFormatDescription[],
       /** The current, selected format/converter to use to read/save the document */
-      format: this.startFormat || guessFormat as DocumentFormat | undefined,
+      format: this.options.startFormat || guessFormat as DocumentFormat | undefined,
       /** The file extensions to filter the documents */
       extensions: [] as string[],
       /** Bookmarks to recent documents */
@@ -152,7 +162,7 @@ export default {
       const folders = this.hideFolders ? [] : this.folders.map(folder => ({
         name: folder.name,
         label: folder.name,
-        icon: 'mdi-folder',
+        icon: 'folder',
         isFolder: true,
         isDocument: false,
       })).filter(f => notHiddenFilter(f.name))
@@ -160,7 +170,7 @@ export default {
         .map(doc => ({
           name: doc.name,
           label: doc.name,
-          icon: 'mdi-file-document',
+          icon: 'document_file',
           isFolder: false,
           isDocument: true,
         })).filter(f => notHiddenFilter(f.name))
@@ -191,7 +201,7 @@ export default {
           : undefined
     },
     dialogPrompt() {
-      let prompt = this.prompt
+      let prompt = this.options.prompt
       if (!prompt) {
         switch (this.mode as DocumentDialogMode) {
           case 'save':
@@ -214,7 +224,7 @@ export default {
       return prompt
     },
     configuration() {
-      return getEditorConfiguration(this.editor.state)
+      return getEditorConfiguration(this.editor)
     },
     tempConfiguration(): PundokEditorConfigInit | undefined {
       return this.tempProject ? this.tempProject.computedConfig : undefined
@@ -227,7 +237,8 @@ export default {
       return [...current, ...temp]
     },
     outputConverters(): OutputConverter[] {
-      const current = this.configuration?.outputConverters || []
+      const current = (this.configuration?.outputConverters || [])
+        .filter(oc => !oc.longRendering)
       // read converters from the config of a project eventually present in the current folder
       const temp = (this.tempConfiguration?.outputConverters || [])
         .filter(t => !current.find(c => c.name === t.name))
@@ -267,7 +278,7 @@ export default {
     },
     formatDropdownTitle() {
       return this.formatTitle(this.format)
-    }
+    },
   },
   mounted() {
     const getFormatsAndBookmarks = async () => {
@@ -311,7 +322,8 @@ export default {
         const contents: FolderContents | undefined = await this.backend?.getFolderContents({ path })
         const baseUrl = contents?.baseUrl && URL.parse(contents.baseUrl)
         this.protocol = baseUrl ? baseUrl.protocol : this.protocol
-        this.currentFolder = baseUrl ? baseUrl.pathname : this.currentFolder
+        const pathname = baseUrl ? decodeURIComponent(baseUrl.pathname) : this.currentFolder
+        this.currentFolder = contents?.platform === 'win32' ? pathname.replace(/^\/([a-z]):/i, '$1:') : pathname
         this.folders = contents?.folders || this.folders
         this.documents = this.mode === 'folder'
           ? []
@@ -329,7 +341,7 @@ export default {
         this.$q.notify({
           message: 'Error',
           caption: `Can't retrieve folder contents of ${path}: \n${err}`,
-          icon: 'mdi-folder-alert',
+          icon: 'folder_alert',
           position: 'top',
           color: 'negative',
           timeout: 3000,
@@ -340,6 +352,47 @@ export default {
     },
     splitFolderAndDoc(path: string) {
       return splitFolderAndDoc(path)
+    },
+    async createFolder(folder: string) {
+      try {
+        const path = await this.backend?.createFolder(`${this.currentFolder}/${folder}`)
+        if (path) {
+          this.currentFolder = path
+          this.getContents()
+        }
+      } catch (err) {
+        console.log(err)
+        this.$q.dialog({
+          color: "negative",
+          title: 'Error',
+          message: `Can't create a "${folder}" folder in "${this.currentFolder}"`
+        })
+      }
+    },
+    askForFolderToCreate() {
+      this.$q.dialog({
+        title: 'Create new folder',
+        message: 'Folder name:',
+        prompt: {
+          model: '',
+          type: 'text',
+          isValid(v) {
+            return !!(v && v.length > 0 && v.match(/^(\p{L}|[_-]|\d)+$/u))
+          }
+        },
+        cancel: true,
+        persistent: false
+      })
+        .onOk(data => {
+          if (data)
+            this.createFolder(data)
+        })
+        .onCancel(() => {
+          // console.log('>>>> Cancel')
+        })
+        .onDismiss(() => {
+          // console.log('I am triggered on both OK and Cancel')
+        })
     },
     click(row: FileContentRow) {
       const isFolderMode = this.mode === 'folder'
@@ -371,14 +424,14 @@ export default {
     },
     placeIcon(place: Place) {
       return placeIcons[place.name.toLowerCase()]
-        || (place.type === 'disk' && 'mdi-harddisk')
-        || 'mdi-folder-arrow-right-outline'
+        || (place.type === 'disk' && 'harddisk')
+        || 'folder_link'
     },
     gotoPlace(place: Place) {
       if (place.href.startsWith('file://')) {
         const url = new URL(place.href)
         this.protocol = url && url.protocol || this.protocol
-        this.currentFolder = url && url.pathname || this.currentFolder
+        this.currentFolder = url && decodeURIComponent(url.pathname) || this.currentFolder
         this.getContents()
       }
     },
@@ -395,7 +448,7 @@ export default {
           this.$q.notify({
             message: 'Warning',
             caption: `Format set to ${gf.format.name} to match "${path}" extension.`,
-            icon: 'mdi-message-alert',
+            icon: 'message_warning',
             position: 'top',
             color: 'warning',
             timeout: 3000,
@@ -468,7 +521,7 @@ export default {
       return this.format
     },
     selectDocument() {
-      const editorKey = editorKeyFromState(this.editor.state)
+      const editorKey = editorKeyFromState(this.editor?.state)
       const path = this.targetPath
       if (editorKey && path) {
         if (this.mode == 'folder') {
@@ -511,10 +564,10 @@ export default {
         const gf = this.guessedFormat?.format
         icon = gf?.icon
           || format?.icon
-          || (gf?.ftype === 'input-converter' && 'mdi-import')
-          || (gf?.ftype === 'output-converter' && 'mdi-export')
+          || (gf?.ftype === 'input-converter' && 'input_converter')
+          || (gf?.ftype === 'output-converter' && 'output_converter')
       }
-      return icon || documentFormatIcon(format) || guessFormat.icon || 'mdi-code-tags'
+      return icon || documentFormatIcon(format) || guessFormat.icon || 'document_question'
     },
     formatLabel(format?: DocumentFormat) {
       if (format && format.ftype !== 'guess') {
@@ -548,6 +601,9 @@ export default {
     },
     adjustDocumentExtension(addIfMissing?: boolean) {
       this.filename = changeFileExtensionToFormat(this.filename, this.format, addIfMissing)
+    },
+    async gotoUrl(url: string, configurationName?: string) {
+      return this.gotoPath(decodeURIComponent(url), configurationName)
     },
     async gotoPath(path: string, configurationName?: string) {
       const { folder, document } = splitFolderAndDoc(path)
@@ -587,11 +643,14 @@ export default {
         <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name"
           @blur="adjustDocumentExtension()" @keyup.enter="selectDocument()" />
         <q-space />
+        <q-btn v-if="!isInputDialog" icon="folder_new" size="sm" color="primary" title="create new folder"
+          @click="askForFolderToCreate" />
+        <q-space />
         <span class="q-pa-md">Go to a recent:</span>
         <q-space style="max-width: .1rem;" />
         <q-btn-dropdown label="project" no-caps auto-close dense class="q-my-xs">
           <q-list>
-            <q-item v-for="pb in projectBookmarks" clickable @click="gotoPath(pb.url)">
+            <q-item v-for="pb in projectBookmarks" clickable @click="gotoUrl(pb.url)">
               <q-item-section>{{ pb.name }}</q-item-section>
             </q-item>
           </q-list>
@@ -599,9 +658,10 @@ export default {
         &nbsp;
         <q-btn-dropdown label="document" no-caps auto-close dense class="q-my-xs">
           <q-list>
-            <q-item v-for="db in docBookmarks" clickable @click="gotoPath(db.url, db.configurationName)">
+            <q-item v-for="db in docBookmarks" clickable @click="gotoUrl(db.url, db.configurationName)">
               <q-item-section>
-                <q-item-label :title="db.url">{{ splitFolderAndDoc(db.url).document }}</q-item-label>
+                <q-item-label :title="db.url">{{ splitFolderAndDoc(decodeURIComponent(db.url)).document
+                }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -627,7 +687,7 @@ export default {
               row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
               v-model:pagination="pagination" :rows-per-page-options="[0]">
               <template v-slot:body-selection="scope">
-                <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="mdi-check" />
+                <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="check" />
               </template>
               <template v-slot:body-cell-name="props">
                 <q-td :props="props">
@@ -655,7 +715,7 @@ export default {
           </template>
         </q-splitter>
       </q-card-section>
-      <q-card-section horizontal>
+      <q-card-section v-if="mode !== 'folder'" horizontal>
         <div class="q-pa-md">Format/Custom {{ isInputDialog ? 'reader' : 'writer' }}:</div>
         <q-btn-dropdown :label="formatDropdownLabel" :icon="formatDropdownIcon" :title="formatDropdownTitle" auto-close
           no-caps class="q-my-sm">

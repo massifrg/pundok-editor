@@ -1,0 +1,338 @@
+{
+  "Hide": "Hide",
+  "Show": "Show",
+  "absent": "absent",
+  "allow": "allow",
+  "append": "append",
+  "appendMeta": {
+    "label": {
+      "MetaBlocks": "append MetaBlocks",
+      "MetaBool": "append MetaBool",
+      "MetaInlines": "append MetaInlines",
+      "MetaList": "append MetaList",
+      "MetaMap": "append MetaMap",
+      "MetaString": "append MetaString",
+      "customMeta": "append {name}",
+      "customMetaDefaultName": "custom Meta"
+    },
+    "title": {
+      "MetaBlocks": "append a meta made of blocks",
+      "MetaBool": "append a boolean meta",
+      "MetaInlines": "append a formatted line meta",
+      "MetaList": "append a meta list",
+      "MetaMap": "append a meta dictionary",
+      "MetaString": "append an unformatted line meta",
+      "customMeta": "append custom Meta (from current configuration)"
+    }
+  },
+  "attributesEditor": {
+    "attribute": "attribute \"{name}\"",
+    "button": {
+      "cancel": "Cancel",
+      "change": "Change"
+    },
+    "description": {
+      "customStyle": "custom style",
+      "indexName": "index name",
+      "mathType": "math type",
+      "noteType": "note type",
+      "otherAttributes": "other attributes",
+      "putIndexRef": "index ref placement",
+      "refClass": "class for index references"
+    },
+    "label": {
+      "propagateIdRef": "propagate idref to the refs with the same indexed text"
+    },
+    "mathType": {
+      "DisplayMath": "display math",
+      "InlineMath": "inline math"
+    },
+    "numberDelim": {
+      "DefaultDelim": "default delimiter",
+      "OneParen": "one parenthesis",
+      "Period": "period",
+      "TwoParens": "two parentheses",
+      "description": "number delimiter"
+    },
+    "numberStyle": {
+      "Decimal": "decimal numbers",
+      "DefaultStyle": "default style",
+      "Example": "example style",
+      "LowerAlpha": "lower case letters",
+      "LowerRoman": "lower case roman numbers",
+      "UpperAlpha": "upper case letters",
+      "UpperRoman": "upper case roman numbers",
+      "description": "number style"
+    },
+    "putIndexRef": {
+      "after": "index reference is put after the selected text",
+      "before": "index reference is put before the selected text"
+    },
+    "resetAllAttributes": "reset all attributes",
+    "resetAttribute": "reset {name}",
+    "start": {
+      "description": "list start number"
+    },
+    "tab": {
+      "classes": "classes",
+      "customStyle": "custom style",
+      "format": "format",
+      "headRows": "head rows",
+      "id": "identifier",
+      "idref": "idref",
+      "kv": "attributes",
+      "language": "language",
+      "level": "level",
+      "mathType": "math type",
+      "noteType": "note type",
+      "numberDelim": "delimiter",
+      "numberStyle": "style",
+      "put-index-ref": "index ref position",
+      "ref-class": "index ref class",
+      "rowHeadColumns": "head columns",
+      "sort-key": "sort key",
+      "start": "start",
+      "target": "target",
+      "text": "text"
+    }
+  },
+  "blockquote": "blockquote",
+  "bottom": "bottom",
+  "cancel": "cancel",
+  "capitalize": {
+    "lower": "convert to lower case",
+    "upper": "convert to upper case",
+    "upperFirst": "uppercase the first letter of any word"
+  },
+  "changeAttributesOf": "change attributes of",
+  "classesEditor": {
+    "addAClass": "add a class",
+    "addClass": "add class \"{name}\"",
+    "button": {
+      "add": "add",
+      "cancel": "cancel"
+    },
+    "classAlreadyPresent": "class already present",
+    "classForbiddenHere": "class is forbidden here",
+    "newClass": "new class",
+    "removeThisClass": "remove this class"
+  },
+  "clearAllMarks": "clear all marks/styles",
+  "clickTo": {
+    "moveOrSwapVertically": "moving/swapping locks/paragraphs vertically with {shortcut}: {state}"
+  },
+  "close": "close",
+  "compact": "compact",
+  "convert": "convert",
+  "customStyles": {
+    "character": "custom character styles (Span)",
+    "header": "custom styles for headers",
+    "headerNoStyle": "level {level} header without custom style",
+    "paraNoStyle": "paragraph with no custom style",
+    "paragraph": "custom styles for paragraphs",
+    "spanNoStyle": "normal text without custom style",
+    "summary": "custom styles summary at cursor"
+  },
+  "disabled": "disabled",
+  "document": {
+    "append": "append document",
+    "newEmpty": "new empty document",
+    "newEmptyWithConfig": "new empty document with configuration",
+    "open": "open document",
+    "reloadWithConfiguration": "reload document with a different configuration"
+  },
+  "emphasis": "emphasis",
+  "enabled": "enabled",
+  "expand": "expand",
+  "failed": "Action failed",
+  "insert": {
+    "HorizontalRule": "insert horizontal rule"
+  },
+  "left": "left",
+  "less": "less",
+  "marks": {
+    "title": {
+      "cite": "Cite",
+      "code": "Code",
+      "doubleQuoted": "Quoted(DoubleQuote)",
+      "emph": "Emph",
+      "link": "Link",
+      "math": "Math",
+      "singleQuoted": "Quoted(SingleQuote)",
+      "smallCaps": "SmallCaps",
+      "strikeout": "Strikeout",
+      "strong": "Strong",
+      "subscript": "Subscript",
+      "superscript": "Superscript",
+      "underline": "Underline"
+    }
+  },
+  "more": "more",
+  "move": "move to the {side}",
+  "newF": "new",
+  "nodes": {
+    "title": {
+      "blockquote": "Blockquote",
+      "bulletList": "BulletList",
+      "orderedList": "OrderedList"
+    }
+  },
+  "present": "present",
+  "prevent": "prevent",
+  "projectStructureDialog": {
+    "loading": "Loading project structure...",
+    "maximize": "maximize",
+    "minimize": "minimize",
+    "normalSize": "normal size",
+    "openInMainEditor": "open in main editor",
+    "reloadStructure": "reload/refresh project structure"
+  },
+  "recent": {
+    "documents": "recent documents",
+    "projects": "recent projects",
+    "projectsLong": "newdocumentb"
+  },
+  "redo": "redo",
+  "repeatLastCommand": "repeat last command",
+  "reset": "reset",
+  "right": "right",
+  "save": "save",
+  "saveAs": "save as",
+  "saveCopy": "save a copy",
+  "search": {
+    "actions": {
+      "noAction": "(no actions)",
+      "onFoundItems": "action on found texts/items | actions on found texts/items",
+      "onReplacedItems": "action on replaced texts/items | actions on replaced texts",
+      "remove": "remove action"
+    },
+    "appendNewAction": "append new",
+    "caseInsensitive": "case insensitive search",
+    "cycleFoundItems": "cycle through found texts",
+    "filter": {
+      "noFilter": "no filter"
+    },
+    "filterByStyles": "filter searched text styles",
+    "label": {
+      "cssSelector": "CSS selector(s)",
+      "foundCount": "no occurrencies of \"{what}\" found | found 1 occurrency of \"{what}\" | found {count} occurrencies of \"{what}\"",
+      "replaceWith": "replace with",
+      "searchRegex": "search regular expression",
+      "searchText": "search text",
+      "whichFoundSelected": "(#{index} selected)"
+    },
+    "loadCssSearchSettings": "load predefined/previously saved CSS selector settings",
+    "loadSearchSettings": "load predefined or previously saved search and replace settings",
+    "marksPalette": {
+      "title": "Select marks or custom styles that must be present or absent"
+    },
+    "mergeAdjacentMarks": "merge adjacent text ranges with the same marks",
+    "regex": "search with regular expressions (Unicode aware)",
+    "replaceAll": "replace all",
+    "replaceSelected": "replace selected",
+    "replaceSelectedAndNext": "replace & select next found",
+    "saveCurrentSearchSettings": "save the current search and replace settings",
+    "search": "start searching",
+    "searchNotReplace": "just search, don't replace",
+    "selectNext": "select next found",
+    "selectPrev": "select previous found",
+    "wholeWords": "whole words",
+    "withCssSelectors": "search with CSS selectors"
+  },
+  "show": {
+    "indicesButtons": "show buttons for indices' references",
+    "lessOrMore": "show {what}",
+    "projectStructure": "show project structure",
+    "saveButtonsDropdown": "show save/save as/save a copy as a dropdown button",
+    "saveButtonsLine": "show all buttons for save/save as/save a copy",
+    "searchAndReplace": "search and replace"
+  },
+  "showHideMetadata": "{action} document metadata",
+  "strong": "strong emphasis",
+  "success": "Action was successful",
+  "table": {
+    "maximizeTableWidth": "maximise table width"
+  },
+  "tables": {
+    "addBodyAfter": "add table body after",
+    "addBodyBefore": "add table body before",
+    "addCaption": "add caption",
+    "addColumnAfter": "add a column after",
+    "addColumnBefore": "add a column before",
+    "addFoot": "add table foot",
+    "addHead": "add table head",
+    "addRowAfter": "add a row after",
+    "addRowBefore": "add a row before",
+    "align": {
+      "baseLine": "vertical alignment to the base line",
+      "bottom": "align to the bottom",
+      "center": "align to the center",
+      "default": "default alignment of the column (see table's ColSpec)",
+      "left": "align to the left",
+      "middle": "vertical alignment to the center",
+      "right": "align to the right",
+      "top": "vertical alignment to the top"
+    },
+    "alignControls": "horizontal/vertical cells alignment",
+    "bodyHeaders": "body headers",
+    "bodyHeadersControls": "add/remove top/left body headers",
+    "cellAlignment": "alignment",
+    "cells": "cells",
+    "cellsControls": "cells: merge/split, increase/decrease rows/columns span",
+    "checkAndFix": "check and fix table",
+    "columnAlign": {
+      "center": "column alignment to the center (AlignCenter)",
+      "default": "default column alignment (AlignDefault)",
+      "left": "column alignment to the left (AlignLeft)",
+      "right": "column alignment to the right (AlignRight)"
+    },
+    "columnsAlignments": "default column align",
+    "convertFromText": "convert text to table",
+    "convertToText": "convert table to text",
+    "createNewTable": "create new table",
+    "decreaseBodyHeaderColumns": "decrease body's header columns",
+    "decreaseBodyHeaderRows": "decrease body's header rows",
+    "deleteTable": "delete table",
+    "equalizeColumnWidths": "equalize column widths",
+    "increaseBodyHeaderColumns": "increase body's header columns",
+    "increaseBodyHeaderRows": "increase body's header rows",
+    "makeBody": "make new table body with selected rows",
+    "makeFoot": "make the table foot with selected rows",
+    "makeHead": "make the table head with selected rows",
+    "mergeCells": "merge cells",
+    "removeColumn": "remove column(s)",
+    "removeRow": "remove row(s)",
+    "removeSection": "delete table section",
+    "rowsAndColumns": "rows & columns",
+    "rowsAndColumnsControls": "add/remove rows/columns",
+    "sectionControls": "make/delete body/head/foot",
+    "sections": "sections",
+    "splitCell": "split cell",
+    "table": "table",
+    "tableControls": "table controls: new/delete/fix table, add/remove caption, add head/foot",
+    "textVsTable": {
+      "commonSeparators": "common separators",
+      "regexSeparator": "separator is a regular expression",
+      "sep": {
+        "bar": "vertical bar",
+        "comma": "comma (with eventual spaces around)",
+        "doubleSpace": "double space",
+        "oneOrMoreSpaces": "1 or more spaces",
+        "semicolon": "semicolon (with eventual spaces around)",
+        "semicolonAndSpace": "semicolon and space",
+        "twoOrMoreSpaces": "2 or more spaces"
+      }
+    },
+    "tools": "tools for tables"
+  },
+  "toggle": "toggle {what}",
+  "togglePlainPara": "Plain/Para",
+  "top": "top",
+  "underline": "underline",
+  "undo": "undo",
+  "wrapIn": {
+    "Caption": "wrap selection in a Caption",
+    "Div": "wrap selection in a Div",
+    "Figure": "wrap selection in a Figure"
+  }
+}

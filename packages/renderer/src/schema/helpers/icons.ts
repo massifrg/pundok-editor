@@ -15,19 +15,19 @@ import {
 } from "../../common";
 
 const TYPE_NAME_TO_ICON_NAME: Record<string, string> = Object.fromEntries([
-  [MARK_NAME_EMPH, 'mdi-format-italic'],
-  [MARK_NAME_STRONG, 'mdi-format-bold'],
-  [MARK_NAME_UNDERLINE, 'mdi-format-underline'],
-  [MARK_NAME_STRIKEOUT, 'mdi-format-strikethrough'],
-  [MARK_NAME_SUPERSCRIPT, 'mdi-format-superscript'],
-  [MARK_NAME_SUBSCRIPT, 'mdi-format-subscript'],
+  [MARK_NAME_EMPH, 'emph'],
+  [MARK_NAME_STRONG, 'strong'],
+  [MARK_NAME_UNDERLINE, 'underline'],
+  [MARK_NAME_STRIKEOUT, 'strikeout'],
+  [MARK_NAME_SUPERSCRIPT, 'superscript'],
+  [MARK_NAME_SUBSCRIPT, 'subscript'],
   [MARK_NAME_SMALLCAPS, 'smallcaps'], //'mdi-alpha-k-box'],
   [MARK_NAME_SINGLE_QUOTED, 'singlequoted'],
   [MARK_NAME_DOUBLE_QUOTED, 'doublequoted'],
-  [MARK_NAME_MATH, 'mdi-sigma'],
-  [MARK_NAME_LINK, 'mdi-link'],
-  [MARK_NAME_CITE, 'mdi-book-account'],
-  [MARK_NAME_CODE, 'mdi-language-c'],
+  [MARK_NAME_MATH, 'math'],
+  [MARK_NAME_LINK, 'link'],
+  [MARK_NAME_CITE, 'cite'],
+  [MARK_NAME_CODE, 'code'],
 ].map(([k, v]) => [k.toLowerCase(), v]))
 
 export function iconFor(typename: string): string | undefined {

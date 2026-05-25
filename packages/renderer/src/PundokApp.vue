@@ -3,27 +3,22 @@
 </template>
 
 <script lang="ts">
-// import './index.css'
 import { defineAsyncComponent, defineComponent } from 'vue';
 import { useQuasar } from 'quasar'
 import { mapState } from 'pinia';
 import { useBackend } from './stores';
 import { createBackend } from './backend/backend';
-// import PundokEditor from './components/PundokEditor.vue';
 import testingContent from './assets/test-pandoc.json?raw';
-import { EditorGUIPropsClass } from './components/EditorGUIProps';
-
-const electronIpc = window && window.ipc;
+import { EditorGUIPropsClass } from './schema';
 
 export default defineComponent({
   name: 'PandocApp',
   components: {
     "PundokEditor": defineAsyncComponent(() => import('./components/PundokEditor.vue'))
-    // PundokEditor
   },
   setup() {
     const backendStore = useBackend();
-    backendStore.setBackend(createBackend({ ipc: electronIpc }));
+    backendStore.setBackend(createBackend());
   },
   data() {
     return {
@@ -383,7 +378,7 @@ $color-fg-index: #dc7200;
     font-size: smaller;
   }
 
-  .unknown-custom-style {
+  .unstyled-custom-style {
     text-decoration: underline dotted 4px #8bc6ff;
   }
 

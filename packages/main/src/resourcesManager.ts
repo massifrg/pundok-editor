@@ -15,6 +15,8 @@ import {
   FindResourceOptions,
   ResourceType,
   RESOURCE_SUBPATHS,
+  getInheritedConfigName,
+  ConfigQueryOptions,
 } from './common';
 import {
   createReadStream,
@@ -32,6 +34,8 @@ import { stringify } from './utils';
 
 const APP_DATA_DIR = 'pundok-editor';
 const CONFIGS_DIR = 'configs';
+const LOCAL_CONFIGS_DIR = 'localconfigs';
+const CONFIG_FILE_EXT = '.config.json';
 const STARTUP_FILENAME = 'startup.json';
 
 /**
@@ -96,7 +100,7 @@ export function userAppDataDir(): string {
 }
 
 /**
- * The directory containing all the configurations.
+ * The directory containing the global configurations.
  * @returns 
  */
 export function configsDir(): string {
@@ -104,11 +108,11 @@ export function configsDir(): string {
 }
 
 /**
- * The path of the a configuration directory.
- * @param configurationName The name of the configuration.
+ * The directory containing the local configurations.
+ * @returns 
  */
-export function configDir(configurationName: string) {
-  return resolve(configsDir(), configurationName);
+export function localConfigsDir(): string {
+  return resolve(userAppDataDir(), LOCAL_CONFIGS_DIR);
 }
 
 /**
@@ -117,29 +121,82 @@ export function configDir(configurationName: string) {
 export function checkAndCreateAppDataDir() {
   checkAndAddFolder(userAppDataDir());
   checkAndAddFolder(configsDir());
+  checkAndAddFolder(localConfigsDir());
+}
+
+type ConfigurationCoords = {
+  name: string,
+  path: string,
+  file: string,
+  isLocal: boolean,
+}
+
+async function configFilesInDir(dirpath: string, isLocal: boolean): Promise<ConfigurationCoords[]> {
+  return (await readdir(dirpath))
+    .filter((f) => f.endsWith(CONFIG_FILE_EXT))
+    .map(f => ({
+      name: f.substring(0, f.length - CONFIG_FILE_EXT.length),
+      path: resolve(dirpath, f),
+      file: f,
+      isLocal: !!isLocal
+    }))
 }
 
 /**
- * Read and parse all the configurations in the configuration's directory.
+ * Parse the available configurations.
+ * @param options Options to select only a subset of the configurations.
+ * @returns 
+ */
+export async function allConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationCoords[]> {
+  const globalConfigs = !options?.onlyLocal
+    ? await configFilesInDir(configsDir(), false)
+    : []
+  const localConfigs = !options?.onlyGlobal
+    ? await configFilesInDir(localConfigsDir(), true)
+    : []
+  return [...localConfigs, ...globalConfigs]
+}
+
+/**
+ * Read and parse all the configurations in the configuration's directories.
  * @returns
  */
-export async function parseConfigurationFiles(): Promise<PundokEditorConfigInit[]> {
-  const path = configsDir();
-  const filenames = (await readdir(path)).filter((f) =>
-    f.endsWith('.config.json'),
-  );
-  // console.log(filenames);
-  const parsed = filenames
-    .map((fn) => readFileSync(resolve(path, fn)).toString())
-    .map((content) => {
+export async function parseConfigurationFiles(options?: ConfigQueryOptions): Promise<PundokEditorConfigInit[]> {
+  const parsed = (await allConfigurations(options))
+    .map(({ path, isLocal }) => ({ content: readFileSync(path).toString(), isLocal }))
+    .map(({ content, isLocal }) => {
       try {
-        return JSON.parse(content);
+        const c = JSON.parse(content);
+        c.isLocal = isLocal
+        return c
       } catch (err) {
         return null;
       }
     });
-  const valid = parsed.filter((p) => !!p) as PundokEditorConfigInit[];
-  return valid;
+  return parsed.filter((p) => !!p) as PundokEditorConfigInit[];
+}
+
+/**
+ * Read the contents of the configuration file of a configuration passed by name.
+ * @param configurationName The name of the configuration to read.
+ * @returns 
+ */
+export async function getConfigurationInit(
+  configurationName?: string
+): Promise<PundokEditorConfigInit | undefined> {
+  if (!configurationName) return undefined;
+  try {
+    const coords = (await allConfigurations()).find((c) => c.name === configurationName);
+    // console.log(coords);
+    if (coords) {
+      const c = JSON.parse(readFileSync(coords.path).toString())
+      c.isLocal = coords.isLocal
+      return c
+    }
+  } catch (err) {
+    console.log(err)
+  }
+  return undefined;
 }
 
 /**
@@ -189,6 +246,7 @@ export function validResourcePaths(
     || [];
 
   const configsdir = configsDir();
+  const localconfigsdir = localConfigsDir();
   let searchpaths: string[] = [];
   // 1. try the project path
   if (project?.path)
@@ -196,14 +254,16 @@ export function validResourcePaths(
   // 2. try the configurationName when there's no project
   if (!project?.path && configurationName)
     searchpaths = searchpaths.concat(
+      findValidPaths(resolve(localconfigsdir, configurationName)),
       findValidPaths(resolve(configsdir, configurationName)),
     );
   // 3. try the configurations inherited by the project, in reverse order
   if (project?.configurations) {
-    console.log(`inherited configurations: ${project.configurations.join()}`);
+    console.log(`inherited configurations: ${project.configurations.map(c => getInheritedConfigName(c)).join()}`);
     const reversed = project.configurations.map((c) => c).reverse();
-    reversed.forEach((configName) => {
-      searchpaths = searchpaths.concat(findValidPaths(resolve(configsdir, configName)));
+    reversed.forEach((c) => {
+      const configName = getInheritedConfigName(c)
+      searchpaths = searchpaths.concat(findValidPaths(resolve(configsdir, configName!)));
     });
   }
   // 4. try the application data dir
@@ -417,7 +477,7 @@ export async function askAndLoadConfFromFile() {
 }
 
 /**
- * Save a backup of all the configurations' files into zip file.
+ * Save a backup of all the gloabl configurations' files into a zip file.
  * See also {@link loadConfigurationsFromFile}.
  * @param filename 
  */

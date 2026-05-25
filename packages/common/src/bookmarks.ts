@@ -31,7 +31,7 @@ export function bookmarkLabel(b: PundokBookmark): BookmarkLabel {
   const isProject = type === 'project'
   const { name } = b as ProjectBookmark
   const { id, configurationName } = b as DocumentBookmark
-  const path = url?.replace(/^file:\/\//, '')
+  const path = url && decodeURIComponent(url.replace(/^file:\/\//, '')) || ''
   const { document } = splitFolderAndDoc(path)
   const suffix = configurationName && ` [${configurationName}]` || ''
   const label = isProject ? name : (id || document || path) + suffix

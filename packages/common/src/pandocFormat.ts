@@ -81,7 +81,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   bits: {
     description: 'Book Interchange Tag Suite (BITS)',
     extensions: ['xml'],
-    icon: 'mdi-xml',
+    icon: 'format_xml',
   },
   chunkedhtml: {
     description: 'zip archive of multiple linked HTML files',
@@ -133,7 +133,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
     priority: 1,
     description: 'Microsoft Word docx',
     extensions: ['docx'],
-    icon: 'mdi-file-word',
+    icon: 'format_docx',
   },
   dokuwiki: {
     description: 'DokuWiki',
@@ -146,7 +146,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   endnotexml: {
     description: 'EndNote XML',
     extensions: ['xml'],
-    icon: 'mdi-xml',
+    icon: 'format_xml',
   },
   epub: {
     description: 'EPUB v2/v3',
@@ -171,13 +171,13 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   haddock: {
     description: 'Haddock',
     extensions: ['hs', 'lhs'],
-    icon: 'mdi-language-haskell',
+    icon: 'language_haskell',
   },
   html: {
     priority: 1,
     description: '(X)HTML',
     extensions: ['html', 'htm', 'xhtml'],
-    icon: 'mdi-language-html5',
+    icon: 'format_html',
   },
   html4: {
     description: 'HTML v4',
@@ -199,7 +199,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   jats: {
     description: 'JATS (Journal Article Tag Suite)',
     extensions: ['xml', 'jats.xml', 'nxml'],
-    icon: 'mdi-xml',
+    icon: 'format_xml',
   },
   jats_archiving: {
     description: 'JATS (Archiving and Interchange Tag Set)',
@@ -216,13 +216,13 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   jira: {
     description: 'Jira',
     extensions: ['xml', 'json'],
-    icon: 'mdi-xml',
+    icon: 'format_xml',
   },
   json: {
     priority: 2,
     description: 'Pandoc JSON',
     extensions: ['json'],
-    icon: 'mdi-code-json',
+    icon: 'format_json',
   },
   latex: {
     description: 'LaTeX',
@@ -247,7 +247,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
       'text',
       'txt',
     ],
-    icon: 'mdi-language-markdown',
+    icon: 'language_markdown',
   },
   markdown_github: {
     description: 'GitHub flavoured Markdown (deprecated, use gfm)',
@@ -302,7 +302,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   opendocument: {
     description: 'OASIS OpenDocument XML',
     extensions: ['xml'],
-    icon: 'mdi-xml',
+    icon: 'format_xml',
   },
   opml: {
     description: 'Outline Processor Markup Language',
@@ -319,7 +319,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   pdf: {
     description: 'PDF',
     extensions: ['pdf'],
-    icon: 'mdi-file-pdf-box'
+    icon: 'format_pdf'
   },
   pod: {
     description: 'Perl Pod (Plain Old Documentation)',
@@ -402,12 +402,12 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   xlsx: {
     description: 'Excel XLSX',
     extensions: ['xlsx'],
-    icon: 'mdi-file-excel',
+    icon: 'format_xlsx',
   },
   xml: {
     description: 'XML native AST',
     extensions: ['xml'],
-    icon: 'mdi-xml',
+    icon: 'format_xml',
   },
   xwiki: {
     description: 'XWiki',

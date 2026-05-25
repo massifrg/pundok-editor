@@ -1,16 +1,17 @@
 <template>
   <q-card>
-    <div v-if="newClasses.length > 0" class="q-pa-md">
+    <q-card-section v-if="newClasses.length > 0" horizontal class="q-pa-md">
       <q-chip v-for="c in (newClasses as string[])" :key="c" :v-model="c" :removable="!isImportant(c)"
-        icon-remove="mdi-close-circle-outline" @remove="removeClass(c)" title="remove this class">
+        icon-remove="remove_item" @remove="removeClass(c)" :title="$t('classesEditor.removeThisClass')">
         {{ c }}
       </q-chip>
-    </div>
+    </q-card-section>
     <q-card-actions horizontal align="center">
-      <q-btn v-for="c in addableCustomClasses" :key="c.name" icon="mdi-plus" :title="addableClassTitle(c)"
+      <q-btn v-for="c in addableCustomClasses" :key="c.name" icon="custom_classes_add" :title="addableClassTitle(c)"
         @click="addNewClass(c.name)" :label="c.name" size="sm" color="primary" no-caps />
       <q-space />
-      <q-btn icon="mdi-plus" color="primary" title="add a class" @click="showAddClassDialog = true" />
+      <q-btn icon="classes_add" color="primary" :title="$t('classesEditor.addAClass')"
+        @click="showAddClassDialog = true" />
       <q-dialog v-model="showAddClassDialog">
         <q-card class="q-pa-3">
           <q-card-section>
@@ -19,14 +20,20 @@
           </q-card-section>
           <q-card-actions>
             <q-space />
-            <q-btn :disable="invalidClass" label="Add" color="primary" @click="addNewClass(classToAdd)" />
-            <q-btn label="Cancel" color="primary" @click="closeAddClassDialog" />
+            <q-btn :disable="invalidClass" :label="$t('classesEditor.button.add')" color="primary"
+              @click="addNewClass(classToAdd)" />
+            <q-btn :label="$t('classesEditor.button.cancel')" color="primary" @click="closeAddClassDialog" />
           </q-card-actions>
         </q-card>
       </q-dialog>
     </q-card-actions>
   </q-card>
 </template>
+
+<script setup lang="ts">
+import { setupQuasarIcons } from '../helpers';
+setupQuasarIcons()
+</script>
 
 <script lang="ts">
 import { isString } from 'lodash-es';
@@ -37,6 +44,7 @@ import {
   customClassesForNodeOrMark
 } from '../../common';
 import { IncludeDocCustomClass, getEditorConfiguration } from '../../schema';
+import { t } from '../../i18n'
 
 export default {
   props: ['editor', 'nodeOrMark', 'startValue', 'importantClasses', 'forbiddenClasses'],
@@ -72,15 +80,17 @@ export default {
       return this.availableCustomClasses.filter(acc => !this.newClasses.includes(acc.name))
     },
     invalidClassError(): string | undefined {
-      if (this.newClasses.includes(this.classToAdd)) return 'class already present!'
-      if ((this.forbiddenClasses || []).includes(this.classToAdd)) return 'class is forbidden here!'
+      if (this.newClasses.includes(this.classToAdd))
+        return this.$t('classesEditor.classAlreadyPresent') + '!'
+      if ((this.forbiddenClasses || []).includes(this.classToAdd))
+        return this.$t('classesEditor.classForbiddenHere') + '!'
       return undefined
     },
     invalidClass() {
       return (this.invalidClassError !== undefined) || this.classToAdd.length === 0
     },
     newClassLabel() {
-      return this.invalidClassError || 'new class'
+      return this.invalidClassError || this.$t('classesEditor.newClass')
     }
   },
   watch: {
@@ -90,11 +100,12 @@ export default {
   },
   methods: {
     addableClassTitle(cc: CustomClass) {
-      const title = `add class "${cc.name}"`
+      const title = this.$t('classesEditor.addClass', { name: cc.name })
       return cc.description ? `${title}: ${cc.description}` : title
     },
     isImportant(c: string) {
-      return (this.importantClasses || []).includes(c);
+      let impc = this.importantClasses
+      return impc && Array.isArray(impc) ? impc.includes(c) : false;
     },
     removeClass(rc: string) {
       if (!this.isImportant(rc)) {
