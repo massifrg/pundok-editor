@@ -9,7 +9,7 @@ import {
   pandocTargetToLinkPMAttrs,
 } from './target';
 import type { PandocJson, PandocJsonDocument } from '../../pandoc';
-import { DEFAULT_PANDOC_API_VERSION, isPandocJsonInline } from '../../pandoc';
+import { PANDOC_API_VERSION_DEFAULT, isPandocJsonInline } from '../../pandoc';
 import { pandocAlignmentToTextAlign } from './alignments';
 import {
   isCustomStyleOnly,
@@ -485,7 +485,7 @@ export function parseJsonFragmentToPMJson(
       ? [{ t: 'Plain', c: items }]
       : items;
   const pdoc: PandocJsonDocument = {
-    'pandoc-api-version': DEFAULT_PANDOC_API_VERSION,
+    'pandoc-api-version': PANDOC_API_VERSION_DEFAULT,
     meta: {},
     blocks,
   };
