@@ -2,7 +2,7 @@ import { isObject } from 'lodash-es';
 import {
   PandocJson,
   PandocJsonDocument,
-  DEFAULT_PANDOC_API_VERSION,
+  PANDOC_API_VERSION_DEFAULT,
 } from './PandocJson';
 
 type TagsPair = [open: string, close: string];
@@ -125,7 +125,7 @@ function attrToRecord(
 
 export function pandocJsonDocumentToXml(json: PandocJsonDocument): string {
   const apiVersion = (
-    json['pandoc-api-version'] || DEFAULT_PANDOC_API_VERSION
+    json['pandoc-api-version'] || PANDOC_API_VERSION_DEFAULT
   ).join('.');
   const [openPandoc, closePandoc] = tagsPair('Pandoc', {
     'pandoc-api-version': apiVersion,

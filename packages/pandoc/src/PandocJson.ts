@@ -11,9 +11,6 @@ export function isPandocJsonInline(json: PandocJson): boolean {
   return PANDOC_INLINES.includes(json.t);
 }
 
-// export const DEFAULT_PANDOC_API_VERSION: number[] = [1, 22, 2, 1];
-export const DEFAULT_PANDOC_API_VERSION: number[] = [1, 23];
-
 export interface PandocJsonDocument {
   meta: Record<string, PandocJson>;
   'pandoc-api-version': number[];
@@ -49,8 +46,7 @@ interface PandocItemWithContent extends PandocItem {
   content: PandocItem[];
 }
 
-// const PANDOC_API_VERSION_DEFAULT: number[] = [1, 22, 2, 1];
-const PANDOC_API_VERSION_DEFAULT: number[] = [1, 23];
+export const PANDOC_API_VERSION_DEFAULT: number[] = [1, 23, 1];
 
 export function pandocToJson(
   doc: Pandoc,
