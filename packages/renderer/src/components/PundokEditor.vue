@@ -875,7 +875,7 @@ export default {
             editorKey,
           });
           if (doc) {
-            this.loadDocument(doc, false, atLine);
+            await this.loadDocument(doc, false, atLine);
             const { configurationName, documentFormat, path, project } = doc
             const configuration = project?.computedConfig
               || (configurationName && await this.setConfiguration(configurationName))
@@ -905,10 +905,10 @@ export default {
         savedDoc: this.editor?.view.state.doc
       });
     },
-    async loadDocument(doc: CxDocument, ignoreUnsaved?: boolean, atLine?: number) {
+    async loadDocument(doc: CxDocument, ignoreUnsaved?: boolean, atLine?: number): Promise<void> {
       if (!ignoreUnsaved && this.askToSaveChanges) {
         this.setPendingBeforeLoadDoc({ doc })
-        return
+        return Promise.reject("operation pending...")
       }
       // ex TODO: remove history
       this.editor?.destroy();
