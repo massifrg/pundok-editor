@@ -25,6 +25,7 @@ import {
 import { toRaw } from 'vue';
 import {
   ACTION_AUTO_SET_INDEX_TERM_ID,
+  ACTION_AUTO_SET_INDEX_TERMS_IDS,
   ACTION_DOCUMENT_OPEN,
   ACTION_EDIT_ATTRIBUTES,
   ACTION_REPEAT_CHANGE,
@@ -288,6 +289,11 @@ export function actionsForNodeOrMark(
         do: (editor) => editor.commands.propagateIndexNameToTerms(),
         nodeOrMark,
       });
+      actions.push({
+        ...ACTION_AUTO_SET_INDEX_TERMS_IDS,
+        editorKey,
+        nodeOrMark,
+      })
     } else if (nodeTypeName === NODE_NAME_INDEX_TERM) {
       actions.push({
         ...ACTION_AUTO_SET_INDEX_TERM_ID,
