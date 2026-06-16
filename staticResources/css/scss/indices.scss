@@ -1,5 +1,6 @@
 $color-bg-index: #e7d49d;
 $color-bg-term: #fff9e6;
+$color-bg-term-no-id: #ffffff;
 $color-fg-index: #dc7200;
 
 .pundok-editor {
@@ -24,13 +25,17 @@ $color-fg-index: #dc7200;
     border: 0.2rem solid $color-fg-index;
     border-radius: 0.3rem;
     margin: 0.3rem 0.2rem;
-    background-color: $color-bg-term;
+    background-color: $color-bg-term-no-id;
 
     &::before {
       display: block;
       background-color: $color-fg-index;
       color: $color-bg-term;
       padding-left: 1rem;
+    }
+
+    &[id] {
+      background-color: $color-bg-term;
     }
 
     &[id]::before {

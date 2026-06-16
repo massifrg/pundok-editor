@@ -16,13 +16,16 @@
   border: 0.2rem solid #dc7200;
   border-radius: 0.3rem;
   margin: 0.3rem 0.2rem;
-  background-color: #fff9e6;
+  background-color: #ffffff;
 }
 .pundok-editor div.index-term::before {
   display: block;
   background-color: #dc7200;
   color: #fff9e6;
   padding-left: 1rem;
+}
+.pundok-editor div.index-term[id] {
+  background-color: #fff9e6;
 }
 .pundok-editor div.index-term[id]::before {
   content: 'id: "' attr(id) '"';
