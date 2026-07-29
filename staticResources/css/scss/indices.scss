@@ -4,6 +4,12 @@ $color-bg-term-no-id: #ffffff;
 $color-fg-index: #dc7200;
 
 .pundok-editor {
+  --base-index-bg: #e7d49d;
+  --shade-index-bg-1: #d6c288;
+  --shade-index-bg-2: #c4af72;
+  --shade-index-bg-3: #b19a5c;
+  --shade-index-bg-4: #9a8548;
+
   div.index {
     border: 0.2rem solid $color-fg-index;
     border-radius: 0.3rem;
@@ -19,39 +25,76 @@ $color-fg-index: #dc7200;
     &[data-index-name]::before {
       content: 'Index named "' attr(data-index-name) '"';
     }
-  }
 
-  div.index-term {
-    border: 0.2rem solid $color-fg-index;
-    border-radius: 0.3rem;
-    margin: 0.3rem 0.2rem;
-    background-color: $color-bg-term-no-id;
+    & div.index-term {
+      border: none;
+      padding-top: 0.5rem;
+      padding-bottom: 0.3rem;
+      background-color: var(--base-index-bg);
 
-    &::before {
-      display: block;
-      background-color: $color-fg-index;
-      color: $color-bg-term;
-      padding-left: 1rem;
+      & > :not(p:first-of-type) {
+        padding-left: 1.5rem;
+      }
+      // & > p {
+      //   display: list-item;
+      //   list-style: none inside;
+      //   &:first-of-type {
+      //     list-style: disc inside;
+      //     padding-left: 0rem;
+      //   }
+      // }
+      & > p:first-of-type {
+        display: list-item;
+        list-style: disc inside;
+        padding-left: 0rem;
+      }
+      &.see-term > p:first-of-type,
+      &.see-also-term > p:first-of-type {
+        list-style-type: circle;
+      }
+
+      & > div.index-term {
+        background-color: var(--shade-index-bg-1);
+        border: none;
+        margin-left: 2rem;
+
+        & > :not(div.index-term) {
+          margin-left: 1rem;
+        }
+
+        & > div.index-term {
+          background-color: var(--shade-index-bg-2);
+          & > div.index-term {
+            background-color: var(--shade-index-bg-3);
+            & > div.index-term {
+              background-color: var(--shade-index-bg-4);
+            }
+          }
+        }
+      }
+
+      // &::before {
+      //   display: block;
+      //   background-color: $color-fg-index;
+      //   color: $color-bg-term;
+      //   padding-left: 1rem;
+      // }
+
+      &[id] {
+        background-color: $color-bg-term;
+      }
+
+      &[id]::before {
+        content: 'id: "' attr(id) '"';
+      }
+
+      &[id][data-sort-key]::before {
+        content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
+      }
     }
 
-    &[id] {
-      background-color: $color-bg-term;
+    span.index-ref {
+      border-bottom: 3px solid $color-fg-index;
     }
-
-    &[id]::before {
-      content: 'id: "' attr(id) '"';
-    }
-
-    &[id][data-sort-key]::before {
-      content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
-    }
-
-    &.see-term {
-      border-left: 2rem;
-    }
-  }
-
-  span.index-ref {
-    border-bottom: 3px solid $color-fg-index;
   }
 }
