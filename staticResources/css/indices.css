@@ -55,11 +55,18 @@
 }
 .pundok-editor div.index div.index-term[id] {
   background-color: #fff9e6;
+  position: relative;
+  padding-top: 1.5rem;
 }
 .pundok-editor div.index div.index-term[id]::before {
   content: 'id: "' attr(id) '"';
+  position: absolute;
+  font-size: 67%;
+  padding: 0.1rem 0.1rem;
+  left: 0;
+  top: 0; /* tweak to align with first line */
 }
-.pundok-editor div.index div.index-term[id][data-sort-key]::before {
+.pundok-editor div.index div.index-term[id]::before[data-sort-key] {
   content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
 }
 .pundok-editor div.index span.index-ref {

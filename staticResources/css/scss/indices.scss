@@ -80,16 +80,34 @@ $color-fg-index: #dc7200;
       //   padding-left: 1rem;
       // }
 
+      // &[id] {
+      //   background-color: $color-bg-term;
+      // }
+
+      // &[id]::before {
+      //   content: 'id: "' attr(id) '"';
+      // }
+
+      // &[id][data-sort-key]::before {
+      //   content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
+      // }
+
       &[id] {
         background-color: $color-bg-term;
+        position: relative;
+        padding-top: 1.5rem;
       }
 
       &[id]::before {
         content: 'id: "' attr(id) '"';
-      }
-
-      &[id][data-sort-key]::before {
-        content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
+        position: absolute;
+        font-size: 67%;
+        padding: 0.1rem 0.1rem;
+        left: 0;
+        top: 0; /* tweak to align with first line */
+        &[data-sort-key] {
+          content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
+        }
       }
     }
 
