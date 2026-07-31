@@ -1,3 +1,10 @@
+.pundok-editor {
+  --base-index-bg: #e7d49d;
+  --shade-index-bg-1: #d6c288;
+  --shade-index-bg-2: #c4af72;
+  --shade-index-bg-3: #b19a5c;
+  --shade-index-bg-4: #9a8548;
+}
 .pundok-editor div.index {
   border: 0.2rem solid #dc7200;
   border-radius: 0.3rem;
@@ -12,27 +19,56 @@
 .pundok-editor div.index[data-index-name]::before {
   content: 'Index named "' attr(data-index-name) '"';
 }
-.pundok-editor div.index-term {
-  border: 0.2rem solid #dc7200;
-  border-radius: 0.3rem;
-  margin: 0.3rem 0.2rem;
+.pundok-editor div.index div.index-term {
+  border: none;
+  padding-top: 0.5rem;
+  padding-bottom: 0.3rem;
+  background-color: var(--base-index-bg);
+}
+.pundok-editor div.index div.index-term > :not(p:first-of-type) {
+  padding-left: 1.5rem;
+}
+.pundok-editor div.index div.index-term > p:first-of-type {
+  display: list-item;
+  list-style: disc inside;
+  padding-left: 0rem;
+}
+.pundok-editor div.index div.index-term.see-term > p:first-of-type, .pundok-editor div.index div.index-term.see-also-term > p:first-of-type {
+  list-style-type: circle;
+}
+.pundok-editor div.index div.index-term > div.index-term {
+  background-color: var(--shade-index-bg-1);
+  border: none;
+  margin-left: 2rem;
+}
+.pundok-editor div.index div.index-term > div.index-term > :not(div.index-term) {
+  margin-left: 1rem;
+}
+.pundok-editor div.index div.index-term > div.index-term > div.index-term {
+  background-color: var(--shade-index-bg-2);
+}
+.pundok-editor div.index div.index-term > div.index-term > div.index-term > div.index-term {
+  background-color: var(--shade-index-bg-3);
+}
+.pundok-editor div.index div.index-term > div.index-term > div.index-term > div.index-term > div.index-term {
+  background-color: var(--shade-index-bg-4);
+}
+.pundok-editor div.index div.index-term[id] {
   background-color: #fff9e6;
+  position: relative;
+  padding-top: 1.5rem;
 }
-.pundok-editor div.index-term::before {
-  display: block;
-  background-color: #dc7200;
-  color: #fff9e6;
-  padding-left: 1rem;
-}
-.pundok-editor div.index-term[id]::before {
+.pundok-editor div.index div.index-term[id]::before {
   content: 'id: "' attr(id) '"';
+  position: absolute;
+  font-size: 67%;
+  padding: 0.1rem 0.1rem;
+  left: 0;
+  top: 0; /* tweak to align with first line */
 }
-.pundok-editor div.index-term[id][data-sort-key]::before {
+.pundok-editor div.index div.index-term[id]::before[data-sort-key] {
   content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
 }
-.pundok-editor div.index-term.see-term {
-  border-left: 2rem;
-}
-.pundok-editor span.index-ref {
+.pundok-editor div.index span.index-ref {
   border-bottom: 3px solid #dc7200;
 }

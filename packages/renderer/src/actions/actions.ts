@@ -87,6 +87,7 @@ export type ActionName =
   | 'uppercase'
   | 'uppercase-first'
   | 'auto-set-index-term-id'
+  | 'auto-set-index-terms-ids'
   | 'insert-raw-inline'
   | 'move-before-first-sibling'
   | 'move-before-previous-sibling'
@@ -443,6 +444,17 @@ export const ACTION_AUTO_SET_INDEX_TERM_ID: BaseActionForNodeOrMark = {
   do: (editor, action) => editor.commands.runRepeatableCommand(
     'setIndexTermAutoId',
     'search and set the id of the current index term automatically',
+    (action?.props as SearchIndexTermActionProps)?.searchTextVariant
+  )
+}
+
+export const ACTION_AUTO_SET_INDEX_TERMS_IDS: BaseActionForNodeOrMark = {
+  name: 'auto-set-index-terms-ids',
+  label: 'search and set the ids of the index terms automatically',
+  icon: 'index_auto_id',
+  canDo: (editor, action) => editor.can().setIndexTermsAutoIds(
+    (action?.props as SearchIndexTermActionProps)?.searchTextVariant),
+  do: (editor, action) => editor.commands.setIndexTermsAutoIds(
     (action?.props as SearchIndexTermActionProps)?.searchTextVariant
   )
 }

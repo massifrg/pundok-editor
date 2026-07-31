@@ -1,8 +1,8 @@
-import { Command, EditorState, Plugin, PluginKey, Transaction } from '@tiptap/pm/state';
+import { Command, EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import { Extension } from '@tiptap/core';
-import { changedNodes } from '../helpers';
+import { changedNodes, DocState } from '../helpers';
 import type { NodeWithPos } from '@tiptap/vue-3';
 import {
   DEFAULT_INDEX_REF_CLASS,
@@ -49,6 +49,7 @@ declare module '@tiptap/core' {
       redecorateIndexRefs: () => ReturnType;
       detectDocumentIndices: () => ReturnType;
       setIndexTermAutoId: (stv?: SearchTextVariant) => ReturnType;
+      setIndexTermsAutoIds: (stv?: SearchTextVariant, force?: boolean) => ReturnType;
     };
   }
 }
@@ -300,6 +301,56 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
           })()
         }
         return true
+      },
+      setIndexTermsAutoIds: (stv, force) => ({ dispatch, state, view }) => {
+        const backend = useBackend().backend
+        if (!backend) return false
+        const $anchor = state.selection.$anchor
+        const indexDivDepth = innerNodeDepth($anchor, n => n.type.name === NODE_NAME_INDEX_DIV)
+        if (!indexDivDepth)
+          return false;
+        if (dispatch) {
+          const terms_pos: number[] = [];
+          const indexDivStart = $anchor.start(indexDivDepth)
+          const indexDiv = $anchor.node(indexDivDepth)
+          const indexName = indexDiv.attrs.kv[INDEX_NAME_ATTR]
+          indexDiv.descendants((node, pos) => {
+            if (node.type.name === NODE_NAME_INDEX_TERM)
+              terms_pos.push(indexDivStart + pos)
+            return true
+          });
+          terms_pos.sort((p1, p2) => p2 - p1)
+          const docState = getDocState(state)
+          const doc = state.doc;
+          Promise.all(
+            terms_pos.map((pos) => indexTermIdAtPos(
+              doc,
+              pos,
+              indexName,
+              docState!,
+              backend!,
+              stv || 'first-2-words',
+              force
+            )))
+            .then(pos_ids => pos_ids.filter(pi => !!pi.id))
+            .then(pos_ids => {
+              const state = view.state
+              const tr = state.tr
+              if (pos_ids.length > 0) {
+                pos_ids.forEach(({ pos, id }) => {
+                  const n = tr.doc.nodeAt(pos)
+                  if (n && n.type.name === NODE_NAME_INDEX_TERM) {
+                    tr.setNodeMarkup(pos, null, { ...n.attrs, id })
+                  }
+                })
+                view.dispatch(tr)
+              }
+            })
+            .catch(err => {
+              console.log(err)
+            })
+        }
+        return true
       }
     };
   },
@@ -402,75 +453,75 @@ export function setIndexRefCommand(optIndex?: Index | string): Command {
   }
 }
 
-export async function indexTermsIdAutoAssignFromJsonTransaction(
-  state: EditorState,
-  pos: number,
-  backend: Backend,
-  searchTextVariant: 'first-2-words' | 'first-3-words',
-  callback: (terms: number, withoutId: number, autoId: number) => void,
-): Promise<Transaction> {
-  const indexDiv = state.doc.nodeAt(pos)
-  if (indexDiv?.type.name !== NODE_NAME_INDEX_DIV)
-    return Promise.reject('not an index node')
-  const wordsCount = searchTextVariant === 'first-2-words'
-    ? 2
-    : searchTextVariant === 'first-3-words'
-      ? 3
-      : 2
-  const docState = getDocState(state)
-  let query: IndexTermQuery = {
-    type: 'index-term',
-    indexName: indexDiv?.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
-    searchText: '',
-    options: {
-      kind: 'index',
-      project: docState?.project,
-      configurationName: docState?.configuration?.name,
-    }
-  }
-  // check with dummy search
-  try {
-    await backend?.queryDatabase({ ...query, searchText: 'dummy' })
-  } catch (err) {
-    return Promise.reject(err)
-  }
-  const tr = state.tr
-  let p = pos + 1
-  let withoutIdCount = 0
-  let termsCount = 0
-  let autoAssignedCount = 0
-  for (let i = 0; i < indexDiv.childCount; i++) {
-    const child = indexDiv.child(i)
-    if (child) {
-      if (child.type.name === NODE_NAME_INDEX_TERM) {
-        termsCount++
-        if (!child.attrs.id) {
-          withoutIdCount++
-          const content = child.textContent || ''
-          const searchText = content
-            .split(/\P{Letter}+/u)
-            .filter(t => t.length > 0)
-            .slice(0, wordsCount)
-            .join(' ')
-          try {
-            const results = await backend?.queryDatabase({ ...query, searchText })
-            if (results.length === 1) {
-              const id = results[0].id
-              tr.setNodeMarkup(p, null, { ...child.attrs, id })
-              autoAssignedCount++
-            }
-          } catch (err) {
-            return Promise.reject(err)
-          }
-        }
-        callback(termsCount, withoutIdCount, autoAssignedCount)
-      }
-      p = p + child.nodeSize
-    } else
-      break
-  }
-  return tr
-}
+// export async function indexTermsIdAutoAssignFromJsonTransaction(
+//   state: EditorState,
+//   pos: number,
+//   backend: Backend,
+//   searchTextVariant: 'first-2-words' | 'first-3-words',
+//   callback: (terms: number, withoutId: number, autoId: number) => void,
+// ): Promise<Transaction> {
+//   const indexDiv = state.doc.nodeAt(pos)
+//   if (indexDiv?.type.name !== NODE_NAME_INDEX_DIV)
+//     return Promise.reject('not an index node')
+//   const wordsCount = searchTextVariant === 'first-2-words'
+//     ? 2
+//     : searchTextVariant === 'first-3-words'
+//       ? 3
+//       : 2
+//   const docState = getDocState(state)
+//   let query: IndexTermQuery = {
+//     type: 'index-term',
+//     indexName: indexDiv?.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
+//     searchText: '',
+//     options: {
+//       kind: 'index',
+//       project: docState?.project,
+//       configurationName: docState?.configuration?.name,
+//     }
+//   }
+//   // check with dummy search
+//   try {
+//     await backend?.queryDatabase({ ...query, searchText: 'dummy' })
+//   } catch (err) {
+//     return Promise.reject(err)
+//   }
+//   const tr = state.tr
+//   let p = pos + 1
+//   let withoutIdCount = 0
+//   let termsCount = 0
+//   let autoAssignedCount = 0
+//   for (let i = 0; i < indexDiv.childCount; i++) {
+//     const child = indexDiv.child(i)
+//     if (child) {
+//       if (child.type.name === NODE_NAME_INDEX_TERM) {
+//         termsCount++
+//         if (!child.attrs.id) {
+//           withoutIdCount++
+//           const content = child.textContent || ''
+//           const searchText = content
+//             .split(/\P{Letter}+/u)
+//             .filter(t => t.length > 0)
+//             .slice(0, wordsCount)
+//             .join(' ')
+//           try {
+//             const results = await backend?.queryDatabase({ ...query, searchText })
+//             if (results.length === 1) {
+//               const id = results[0].id
+//               tr.setNodeMarkup(p, null, { ...child.attrs, id })
+//               autoAssignedCount++
+//             }
+//           } catch (err) {
+//             return Promise.reject(err)
+//           }
+//         }
+//         callback(termsCount, withoutIdCount, autoAssignedCount)
+//       }
+//       p = p + child.nodeSize
+//     } else
+//       break
+//   }
+//   return tr
+// }
 
 function getIndexTermInSelection(state: EditorState): NodeWithPos | undefined {
   const $pos = state.selection.$anchor
@@ -537,6 +588,57 @@ export async function indexTermIdAutoSetCommand(
   } catch (err) {
     return Promise.reject(err)
   }
+}
+
+export async function indexTermIdAtPos(
+  doc: PmNode,
+  pos: number,
+  indexName: string,
+  docState: DocState,
+  backend: Backend,
+  searchTextVariant: 'first-2-words' | 'first-3-words',
+  force?: boolean,
+): Promise<{ pos: number, id?: string }> {
+  const id_not_found = { pos, id: undefined }
+  const indexTerm = doc.nodeAt(pos)
+  if (!indexTerm || indexTerm.type.name !== NODE_NAME_INDEX_TERM)
+    return id_not_found
+  const currentId = indexTerm.attrs.id
+  // if the id is already set, proceed only when `force === true`
+  if (currentId && currentId.length > 0 && !force)
+    return id_not_found
+  const wordsCount = searchTextVariant === 'first-2-words'
+    ? 2
+    : searchTextVariant === 'first-3-words'
+      ? 3
+      : 2
+  const content = indexTerm.textContent || ''
+  const searchText = content
+    .split(/\P{Letter}+/u)
+    .filter(t => t.length > 0)
+    .slice(0, wordsCount)
+  const query: IndexTermQuery = {
+    type: 'index-term',
+    indexName,
+    searchText,
+    options: {
+      kind: 'index',
+      project: docState?.project,
+      configurationName: docState?.configuration?.name,
+    }
+  }
+  try {
+    const results = await backend?.queryDatabase({ ...query, searchText })
+    if (results.length === 1) {
+      const id = results[0].id
+      // console.log(`id of index term "${indexTerm.textContent}" is "${id}"`)
+      return { pos, id }
+    }
+  } catch (err) {
+    console.log(err)
+    return Promise.resolve(id_not_found)
+  }
+  return id_not_found
 }
 
 export function getAllIndices(state?: EditorState): Index[] {
