@@ -8,17 +8,33 @@
  * - IndexRef, a Pandoc Span with a class that is not known in advance
  */
 
+/** The class for a `Div` to be considered an index */
 export const INDEX_CLASS = 'index';
+/** The class for a `Div` to be considered an index term */
 export const INDEX_TERM_CLASS = 'index-term';
-export const INDEX_SEE_TERM_CLASS = 'index-term';
-export const DEFAULT_INDEX_NAME = 'index';
-export const DEFAULT_INDEX_REF_CLASS = 'index-ref';
-export const DEFAULT_PUT_INDEX_REF: IndexRefPlacement = 'before';
+/** The class for non-preferred index terms */
+export const INDEX_SEE_TERM_CLASS = 'see-term';
+/** The attribute carrying the index name in indexes and index terms */
 export const INDEX_NAME_ATTR = 'index-name';
-export const INDEXED_TEXT_ATTR = 'indexed-text';
+/** The default (value of the) index name (attribute) */
+export const DEFAULT_INDEX_NAME = 'index';
+/** The attribute of an index `Div` that carries the class 
+  * the `Span` elements must have to be considered references to the terms of this index */
 export const INDEX_REF_CLASS_ATTR = 'ref-class';
-export const INDEX_SORT_KEY_ATTR = 'sort-key';
+/** The default class for a `Span` to be considered a reference to an index term */
+export const DEFAULT_INDEX_REF_CLASS = 'index-ref';
+/** The attribute of an index Div that specifies where to put references, relative to the selected text */
 export const INDEX_PUT_INDEX_REF_ATTR = 'put-index-ref';
+/** The default placement of index references, relative to the selected text */
+export const DEFAULT_PUT_INDEX_REF: IndexRefPlacement = 'before';
+/** The selected text of an index reference */
+export const INDEXED_TEXT_ATTR = 'indexed-text';
+/** The text of the index term referenced by a reference that has no selected text (empty references) */
+export const INDEX_REF_TERM_TEXT = 'index-term-text';
+/** The attribute used to sort index terms */
+export const INDEX_SORT_KEY_ATTR = 'sort-key';
+/** In a reference Span, the attribute that specifies if the indexing of the referenced term
+ * starts and/or ends here */
 export const INDEX_RANGE_ATTR = 'index-range';
 export const INDEX_COLORS_PALETTE = [
   '#dc7200', '#9edc00', '#00dccd', '#1600dc', '#ffff39'
