@@ -30,6 +30,7 @@ import {
   Index,
   INDEX_NAME_ATTR,
   INDEX_RANGE_ATTR,
+  INDEX_REF_TERM_TEXT,
   INDEXED_TEXT_ATTR,
   IndexSource,
   IndexSourceJsonFile
@@ -151,8 +152,11 @@ export default {
       else
         this.setNewValueForAttr(INDEX_RANGE_ATTR, newValue)
     },
-    idrefSelected(idref: string) {
+    idrefSelected(idref: string, text?: string) {
       this.setNewValueForAttr('idref', idref)
+      /** if there's no indexed text (empty reference, remember the text of the term) */
+      if (!this.indexedText && text)
+        this.setNewValueForAttr(INDEX_REF_TERM_TEXT, text)
     },
     keyup(e: KeyboardEvent) {
       if (e.code === 'Escape') this.$emit('cancel')

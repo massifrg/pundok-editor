@@ -17,6 +17,7 @@ import {
   DEFAULT_INDEX_NAME,
   Index,
   INDEX_NAME_ATTR,
+  INDEX_REF_TERM_TEXT,
   INDEXED_TEXT_ATTR
 } from '../../common';
 import { getEditorConfiguration, getIndexingState } from '../../schema';
@@ -53,15 +54,17 @@ export default {
     title() {
       const kv = this.node.attrs.kv || {};
       const text = kv[INDEXED_TEXT_ATTR];
+      const termText = kv[INDEX_REF_TERM_TEXT]
       const info: string[] = []
       const index = this.index
       const indexName = index && index.indexName || DEFAULT_INDEX_NAME
       info.push(`index "${indexName}"`)
       if (kv.idref)
-        info.push(`term with id "${kv.idref}"`)
+        info.push(`id "${kv.idref}"`)
       else
         info.push('no idref')
       if (text) info.push(`indexed text: "${text}"`)
+      if (termText) info.push(`term: "${termText}"`)
       return info.join(', ') || 'index ref'
     },
     idref() {
