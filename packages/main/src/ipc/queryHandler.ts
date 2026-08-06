@@ -7,7 +7,7 @@ import {
   ProjectIndexQuery,
   searchQueryResults,
 } from '../common';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
 import { findResourceFile } from '../resourcesManager';
@@ -73,6 +73,7 @@ async function projectIndexQueryHandler(
     const result = await runWriterOnMasterFile(project, 'indices2json.lua');
     if (!result) return [];
     const data = JSON.parse(result);
+    // writeFileSync("query-results.json", result) // TODO: remove, just for debugging
     const indexTerms = data?.terms[query.indexName] as QueryResult[];
     if (!indexTerms) return [];
     return indexTerms.map(({ id, text, html }) => ({ id, text, html }));
