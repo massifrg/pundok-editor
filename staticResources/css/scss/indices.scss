@@ -2,6 +2,7 @@ $color-bg-index: #e7d49d;
 $color-bg-term: #fff9e6;
 $color-bg-term-no-id: #ffffff;
 $color-fg-index: #dc7200;
+$color-term-border: #de9d56;
 
 .pundok-editor {
   --base-index-bg: #e7d49d;
@@ -27,7 +28,7 @@ $color-fg-index: #dc7200;
     }
 
     & div.index-term {
-      border: none;
+      border-top: 0.1rem solid $color-term-border;
       padding-top: 0.5rem;
       padding-bottom: 0.3rem;
       background-color: var(--base-index-bg);

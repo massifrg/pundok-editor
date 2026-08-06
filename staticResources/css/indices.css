@@ -20,7 +20,7 @@
   content: 'Index named "' attr(data-index-name) '"';
 }
 .pundok-editor div.index div.index-term {
-  border: none;
+  border-top: 0.1rem solid #de9d56;
   padding-top: 0.5rem;
   padding-bottom: 0.3rem;
   background-color: var(--base-index-bg);
