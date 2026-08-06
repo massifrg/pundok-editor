@@ -210,7 +210,7 @@ function defaultPropagate(refNode: PmNode, node: PmNode): boolean {
   const refIndexName = refkv[INDEX_NAME_ATTR];
   const refIndexedText = refkv[INDEXED_TEXT_ATTR];
   const kv = node.attrs.kv || {};
-  return (
+  return refIndexedText && refIndexedText.length > 0 && (
     node.type.name === NODE_NAME_INDEX_REF &&
     refIndexName &&
     refIndexName === kv[INDEX_NAME_ATTR] &&

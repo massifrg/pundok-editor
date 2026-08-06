@@ -274,7 +274,7 @@ export default {
     },
     selectResult(evt: Event, row: QueryResult, index: number) {
       this.selected = row.id
-      this.$emit('selected', row.id)
+      this.$emit('selected', row.id, row.text)
       this.$emit('update-attribute', this.idAttr || 'id', row.id)
     },
     selectResultAndCommit(evt: Event, row: QueryResult, index: number) {

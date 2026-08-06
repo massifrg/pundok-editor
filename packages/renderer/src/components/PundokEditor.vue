@@ -61,7 +61,7 @@
         <NewProjectDialog :editor="editor" :visible="visibleNewProjectDialog"
           @close="visibleNewProjectDialog = false" />
         <ContextMenu :editor="editor" />
-        <editor-content :editor="(editor as Editor)" />
+        <editor-content class="pundok-editor" :editor="(editor as Editor)" />
       </q-page>
     </q-page-container>
   </q-layout>
