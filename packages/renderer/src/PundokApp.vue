@@ -1,5 +1,5 @@
 <template>
-  <PundokEditor class="pundok-editor" ref="editor" v-model="content" main-editor :gui-props="guiProps" />
+  <PundokEditor ref="editor" v-model="content" main-editor :gui-props="guiProps" />
 </template>
 
 <script lang="ts">
@@ -542,45 +542,6 @@ $color-fg-index: #dc7200;
         padding: .3rem 0 .2rem 0;
       }
     }
-  }
-
-  div.index {
-    border: .2rem solid $color-fg-index;
-    border-radius: .3rem;
-  }
-
-  div.index::before {
-    display: block;
-    background-color: $color-fg-index;
-    color: $color-bg-index;
-    text-align: center;
-    content: 'Index';
-  }
-
-  div.index[data-index-name]::before {
-    content: 'Index named "' attr(data-index-name) '"';
-  }
-
-  div.index-term {
-    border: .2rem solid $color-fg-index;
-    border-radius: .3rem;
-    margin: .3rem .2rem;
-    background-color: $color-bg-term;
-  }
-
-  div.index-term::before {
-    display: block;
-    background-color: $color-fg-index;
-    color: $color-bg-term;
-    padding-left: 1rem;
-  }
-
-  div.index-term[id]::before {
-    content: 'id: "' attr(id) '"';
-  }
-
-  div.index-term[id][data-sort-key]::before {
-    content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
   }
 
   span.index-ref {
