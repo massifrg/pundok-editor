@@ -136,7 +136,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
    * @returns a new configuration resulting from the merge.
    */
   addConfiguration(onTop: PundokEditorConfig): PundokEditorConfig {
-    return enrichConfiguration(onTop, this);
+    return enrichConfiguration(this, onTop);
   }
 
   private ensureIndexCssRules(index: Index) {
