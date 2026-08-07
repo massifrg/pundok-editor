@@ -15,7 +15,6 @@ import {
   FindResourceOptions,
   ResourceType,
   RESOURCE_SUBPATHS,
-  getInheritedConfigName,
   ConfigQueryOptions,
 } from './common';
 import {
@@ -259,10 +258,9 @@ export function validResourcePaths(
     );
   // 3. try the configurations inherited by the project, in reverse order
   if (project?.configurations) {
-    console.log(`inherited configurations: ${project.configurations.map(c => getInheritedConfigName(c)).join()}`);
+    console.log(`inherited configurations: ${project.configurations.join()}`);
     const reversed = project.configurations.map((c) => c).reverse();
-    reversed.forEach((c) => {
-      const configName = getInheritedConfigName(c)
+    reversed.forEach((configName) => {
       searchpaths = searchpaths.concat(findValidPaths(resolve(configsdir, configName!)));
     });
   }

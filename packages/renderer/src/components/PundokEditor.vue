@@ -1334,15 +1334,18 @@ export default {
           if (configuration) {
             const prevConfiguration = this.configuration;
             this.configuration = configuration;
-            if (configuration.autoDelimiters) {
-              this.editor?.commands.registerAutoDelimiters(configuration.autoDelimiters)
-            }
-            if (configuration.indices) {
-              const indexingState = getIndexingState(
-                this.editor?.state as EditorState | undefined,
-              );
-              if (indexingState) indexingState.indices = configuration.indices;
-            }
+            // The next lines should not be necessary anymore, because autodelimiters
+            // and indices changes are detected through DocState updates.
+            //
+            // if (configuration.autoDelimiters) {
+            //   this.editor?.commands.registerAutoDelimiters(configuration.autoDelimiters)
+            // }
+            // if (configuration.indices) {
+            //   const indexingState = getIndexingState(
+            //     this.editor?.state as EditorState | undefined,
+            //   );
+            //   if (indexingState) indexingState.indices = configuration.indices;
+            // }
             if (prevConfiguration && prevConfiguration.customCss)
               this.removeCssStylesheets(prevConfiguration.customCss);
             this.updateEditorDocState({ configuration });
