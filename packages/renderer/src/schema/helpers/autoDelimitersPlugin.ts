@@ -10,6 +10,7 @@ import {
 } from "./autoDelimiters";
 import { MARK_NAME_DOUBLE_QUOTED, MARK_NAME_SINGLE_QUOTED } from "../../common";
 import { isString } from "lodash-es";
+import { DocStateUpdate, META_UPDATE_DOC_STATE } from "./DocState";
 
 export const REGISTER_AUTO_DELIMITER = 'register-auto-delimiter'
 
@@ -82,9 +83,16 @@ export const autoDelimitersPlugin = new Plugin({
       return new AutoDelimitersState([])
     },
     apply: function (tr, adState: AutoDelimitersState, oldState, newState): AutoDelimitersState {
-      const autoDelimitersDefs: Record<string, string[]> = tr.getMeta(REGISTER_AUTO_DELIMITER)
-      if (autoDelimitersDefs)
+      let autoDelimitersDefs: Record<string, string[]> | undefined =
+        tr.getMeta(REGISTER_AUTO_DELIMITER)
+      if (!autoDelimitersDefs) {
+        const updates: Partial<DocStateUpdate> = tr.getMeta(META_UPDATE_DOC_STATE);
+        autoDelimitersDefs = updates?.project?.computedConfig?.autoDelimiters
+          || updates?.configuration?.autoDelimiters
+      }
+      if (autoDelimitersDefs) {
         return adState.apply(newState, autoDelimitersDefs)
+      }
       return adState
     }
   },
