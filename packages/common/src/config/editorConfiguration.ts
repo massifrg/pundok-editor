@@ -372,118 +372,17 @@ export function enrichConfiguration(
   }
 }
 
-export interface PundokEditorConfigWithError {
-  config: PundokEditorConfig;
-  error: string;
-}
-
-export async function computeDerivedConfiguration(
-  config: PundokEditorConfig,
-  inherited: InheritedConfigurationSpec[],
-  getConfiguration: (configurationName: string) => Promise<PundokEditorConfig>,
-): Promise<PundokEditorConfig> {
-  const not_inherited: string[] = [];
-  const errors: string[] = [];
-  let derived = config;
-  while (inherited.length > 0) {
-    const c = inherited.pop();
-    let from: PundokEditorConfig | undefined = undefined;
-    try {
-      const configName = getInheritedConfigName(c!)
-      from = await getConfiguration(configName!);
-      if (from) {
-        const { remove, keep } = getInheritedConfiguration(from)
-        derived = getPrunedConfigInit(derived, remove, keep)
-        derived = enrichConfiguration(derived, from);
-      } else {
-        not_inherited.push(configName!);
-      }
-    } catch (err) {
-      const configName = getInheritedConfigName(c!) || 'unknown configuration'
-      errors.push(
-        `can't inherit config "${configName}"${isString(err) ? ': ' + err : ''}`,
-      );
-      not_inherited.push(configName);
-    }
-  }
-  if (not_inherited.length > 0) {
-    console.log(errors.join('; '));
-    return Promise.reject({
-      config: derived,
-      error: errors.join('; '),
-    } as PundokEditorConfigWithError);
-  }
-  return Promise.resolve(derived);
-}
-
-export function getRawInlineFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
-  return uniq(config?.rawInlines?.map((r) => r.format)) || [];
-}
-
-export function getRawBlockFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
-  return uniq(config?.rawBlocks?.map((r) => r.format)) || [];
-}
-
 /**
  * A description of the elements to prune from an inherited configuration.
  */
 export type ConfigurationPruning = Record<PrunableConfigInitField, string[]>
 
-/**
- * Description of an inherited configuration, where some elements are removed.
- */
-export interface InheritedConfiguration {
-  name: string,
-  /** The elements to be removed. */
-  remove?: ConfigurationPruning,
-  keep?: ConfigurationPruning,
-}
-
-/**
- * An inherited configuration can be specified:
- * - with its name (it's inherited as is)
- * - as an {@link InheritedConfiguration}, that specifies which elements are to be removed
- */
-export type InheritedConfigurationSpec = string | InheritedConfiguration
-
-/**
- * Gets the name of an inherited configuration, regardless of how it is specified.
- * @param c 
- * @returns 
- */
-export function getInheritedConfigName(c?: InheritedConfigurationSpec): string | undefined {
-  if (c) {
-    if (isString(c))
-      return c
-    return c.name
-  }
-}
-
-/**
- * Gets an {@link InheritedConfiguration}, regardless of how it is specified.
- * @param c 
- * @returns an {@link InheritedConfiguration} or an empty object if `c` is falsy.
- */
-export function getInheritedConfiguration(c?: InheritedConfigurationSpec): InheritedConfiguration {
-  if (c) {
-    if (isString(c))
-      return { name: c }
-    return c
-  }
-  return {} as InheritedConfiguration
-}
-
-function removeOrKeepFromConfig(
-  kr: 'keep' | 'remove',
+function prunedFieldsFromConfig(
   pruning: ConfigurationPruning,
   c: PundokEditorConfigInit | PundokEditorConfig,
   init: Partial<Record<PrunableConfigInitField, any>> = {}
 ): Partial<Record<PrunableConfigInitField, any>> {
-  const modified = { ...init }
-  const omit_or_pick = kr === 'remove' ? omit : pick
-  const notIfRemoving = kr === 'remove'
-    ? (b: boolean) => !b
-    : (b: boolean) => b
+  const pruned = { ...init } as Partial<Record<PrunableConfigInitField, any>>
   Object.entries(pruning).forEach(entry => {
     const k = entry[0] as PrunableConfigInitField
     const ids: string[] = entry[1] || []
@@ -492,7 +391,7 @@ function removeOrKeepFromConfig(
       let newValue = undefined
       switch (k as PrunableConfigInitField) {
         case 'autoDelimiters':
-          newValue = omit_or_pick(oldValue as object, ids) as Record<string, string[]>
+          newValue = omit(oldValue as object, ids) as Record<string, string[]>
           break
         case 'automations':
         case 'customAttributes':
@@ -501,49 +400,48 @@ function removeOrKeepFromConfig(
         case 'customStyles':
         case 'inputConverters':
         case 'outputConverters':
-          newValue = (oldValue as NamedAndDescribed[])
-            .filter(o => notIfRemoving(ids.includes(o.name)))
+          newValue = (oldValue as NamedAndDescribed[]).filter(o => !ids.includes(o.name))
           break
         case 'indices':
-          newValue = (oldValue as Index[]).filter(o =>
-            notIfRemoving(ids.includes(o.indexName)))
+          newValue = (oldValue as Index[]).filter(o => !ids.includes(o.indexName))
           break
         case 'noteStyles':
-          newValue = (oldValue as NoteStyle[])
-            .filter(o => notIfRemoving(ids.includes(o.noteType)))
+          newValue = (oldValue as NoteStyle[]).filter(o => !ids.includes(o.noteType))
           break
         case 'customCss':
         case 'mainFormats':
-          newValue = (oldValue as string[])
-            .filter(o => notIfRemoving(ids.includes(o)))
+          newValue = (oldValue as string[]).filter(o => !ids.includes(o))
           break
       }
       if (newValue !== undefined) {
-        modified[k] = newValue
-        console.log(`prune(${kr}) Config ${c.name}: ${JSON.stringify(oldValue)} => ${JSON.stringify(newValue)} `)
+        pruned[k] = newValue
+        // console.log(`prune Config ${c.name}: ${JSON.stringify(oldValue)} => ${JSON.stringify(newValue)} `)
       }
     }
   })
-  return modified
+  return pruned
 }
 
 /**
  * Return a modified {@link PundokEditorConfig} where the values of some properties
  * are removed and other ones are kept (the removal goes first).
  * @param c The initial configuration.
- * @param remove The values to be removed in specific fields of the configuration.
+ * @param prune The values to be removed in specific fields of the configuration.
  * @param keep The values to be kept in specific fields of the configuration.
  * @returns A modified configuration.
  */
 export function getPrunedConfigInit(
   c: PundokEditorConfigInit | PundokEditorConfig,
-  remove?: ConfigurationPruning,
-  keep?: ConfigurationPruning,
+  prune: ConfigurationPruning,
 ): PundokEditorConfig {
-  let modified: Partial<Record<PrunableConfigInitField, any>> = {}
-  if (remove)
-    modified = removeOrKeepFromConfig('remove', remove, c, modified)
-  if (keep)
-    modified = removeOrKeepFromConfig('keep', keep, c, modified)
-  return new PundokEditorConfig({ ...c, ...modified })
+  let modified_fields: Partial<Record<PrunableConfigInitField, any>> = prunedFieldsFromConfig(prune, c)
+  return new PundokEditorConfig({ ...c, ...modified_fields })
+}
+
+export function getRawInlineFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
+  return uniq(config?.rawInlines?.map((r) => r.format)) || [];
+}
+
+export function getRawBlockFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
+  return uniq(config?.rawBlocks?.map((r) => r.format)) || [];
 }
