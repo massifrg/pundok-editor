@@ -1,9 +1,8 @@
 /* eslint-env node */
 import { defineConfig } from 'vite';
 import { getChromeVersion } from '../electron-versions/index.js';
-import { join } from 'path';
 import { builtinModules } from 'module';
-import { resolve, dirname } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 import vue from '@vitejs/plugin-vue';
@@ -12,6 +11,9 @@ import vue from '@vitejs/plugin-vue';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 // import { visualizer } from 'rollup-plugin-visualizer';
 import { analyzer } from 'vite-bundle-analyzer';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const PACKAGE_ROOT = __dirname;
 
