@@ -1,12 +1,12 @@
 {
   "name": "pundok-editor",
-  "version": "0.15.9",
+  "version": "0.15.10",
   "author": "mf",
   "homepage": "https://github.com/massifrg/pundok-editor",
   "description": "A visual editor for Pandoc AST documents",
   "private": true,
   "engines": {
-    "node": ">=v16.13",
+    "node": ">=v20.19",
     "npm": ">=8.1"
   },
   "type": "module",
@@ -78,7 +78,7 @@
     "electron": "^43.4.0",
     "electron-builder": "^26.15.3",
     "electron-devtools-installer": "^4.0.0",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.10.0",
     "happy-dom": "^20.11.2",
