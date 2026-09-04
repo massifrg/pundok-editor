@@ -1,4 +1,3 @@
-/* eslint-env node */
 import { defineConfig } from 'vite';
 import { getChromeVersion } from '../electron-versions/index.js';
 import { builtinModules } from 'module';

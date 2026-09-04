@@ -151,7 +151,7 @@ export default [
       'prefer-promise-reject-errors': 'off',
 
       // Formatting belongs to Prettier.
-      quotes: ['warn', 'single', { avoidEscape: true }],
+      // quotes: ['warn', 'single', { avoidEscape: true }],
     },
   },
 
