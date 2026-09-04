@@ -144,20 +144,20 @@ module.exports = {
 
     // electron-builder:
     //   linux.target = "AppImage"
-    {
-      // name: '@electron-forge/maker-appimage',
-      name: 'electron-forge-maker-appimage',
-      platforms: ['linux'],
-      config: {
-        options: {
-          name: 'pundok-editor',
-          productName: 'pundok-editor',
-          categories: ['Office'],
-          maintainer: 'mf <massifrg@gmail.com>',
-          genericName: 'Pandoc document editor',
-        },
-      },
-    },
+    // {
+    //   // name: '@electron-forge/maker-appimage',
+    //   name: 'electron-forge-maker-appimage',
+    //   platforms: ['linux'],
+    //   config: {
+    //     options: {
+    //       name: 'pundok-editor',
+    //       productName: 'pundok-editor',
+    //       categories: ['Office'],
+    //       maintainer: 'mf <massifrg@gmail.com>',
+    //       genericName: 'Pandoc document editor',
+    //     },
+    //   },
+    // },
 
     // electron-builder:
     //   deb.packageName = "pundok-editor"
