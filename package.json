@@ -83,7 +83,6 @@
     "electron": "^43.4.0",
     "electron-builder": "^26.15.3",
     "electron-devtools-installer": "^4.0.0",
-    "electron-forge-maker-appimage": "^26.15.3",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.10.0",

@@ -43,7 +43,7 @@ function ignore(filePath) {
   const alwaysIgnore = [
     /^\/(?:\.git|\.github|\.vscode)(?:\/|$)/,
     /^\/(?:src|test|tests)(?:\/|$)/,
-    /^\/(?:coverage|dist)(?:\/|$)/,
+    /^\/(?:coverage|dist|out|buildResources)(?:\/|$)/,
 
     // Package source/configuration; the compiled dist directories are
     // kept by the rules above.
@@ -68,11 +68,11 @@ function ignore(filePath) {
 
   // Keep only the paths that correspond reasonably closely to
   // electron-builder's `files` configuration.
-  const explicitlyKept = keepPaths.some((pattern) => pattern.test(normalized));
+  // const explicitlyKept = keepPaths.some((pattern) => pattern.test(normalized));
 
-  if (explicitlyKept) {
-    return false;
-  }
+  // if (explicitlyKept) {
+  //   return false;
+  // }
 
   // Keep staticResources out of the application bundle here because
   // it is copied to the Resources directory through extraResource.
@@ -143,23 +143,6 @@ module.exports = {
     */
 
     // electron-builder:
-    //   linux.target = "AppImage"
-    // {
-    //   // name: '@electron-forge/maker-appimage',
-    //   name: 'electron-forge-maker-appimage',
-    //   platforms: ['linux'],
-    //   config: {
-    //     options: {
-    //       name: 'pundok-editor',
-    //       productName: 'pundok-editor',
-    //       categories: ['Office'],
-    //       maintainer: 'mf <massifrg@gmail.com>',
-    //       genericName: 'Pandoc document editor',
-    //     },
-    //   },
-    // },
-
-    // electron-builder:
     //   deb.packageName = "pundok-editor"
     //   deb.packageCategory = "editors"
     //   deb.category = "Office; Utility;"
@@ -173,7 +156,7 @@ module.exports = {
           categories: ['Office', 'Utility'],
           maintainer: 'mf <massifrg@gmail.com>',
           synopsis: 'A visual editor for Pandoc AST types',
-          icon: path.join(root, 'icon'),
+          icon: path.join(root, 'buildResources', 'icon.png'),
 
           depends: [
             'libgtk-3-0',
