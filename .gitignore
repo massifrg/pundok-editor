@@ -1,9 +1,9 @@
 node_modules
 .DS_Store
 dist
+todo
 *.local
 thumbs.db
-package-lock.json
 quasar-project
 local-config
 
