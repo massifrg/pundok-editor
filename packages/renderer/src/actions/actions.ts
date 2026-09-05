@@ -403,13 +403,13 @@ export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
     const { nodeOrMark, props } = action || {}
     const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
-    return typ && className && editor.can().addPandocAttrClass(typ, className) || false
+    return className && editor.can().addPandocAttrClass(className, typ) || false
   },
   do: (editor, action) => {
     const { nodeOrMark, props } = action || {}
     const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
-    return typ && className && editor.commands.addPandocAttrClass(typ, className) || false
+    return className && editor.commands.addPandocAttrClass(className, typ) || false
   }
 }
 
@@ -421,13 +421,13 @@ export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
     const { nodeOrMark, props } = action || {}
     const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
-    return typ && className && editor.can().removePandocAttrClass(typ, className) || false
+    return typ && className && editor.can().removePandocAttrClass(className, typ) || false
   },
   do: (editor, action) => {
     const { nodeOrMark, props } = action || {}
     const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
-    return typ && className && editor.commands.removePandocAttrClass(typ, className) || false
+    return typ && className && editor.commands.removePandocAttrClass(className, typ) || false
   }
 }
 
@@ -625,8 +625,8 @@ const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEn
   ACTION_SET_SPAN,
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_REMOVE_CUSTOM_CLASS,
-  // ACTION_ADD_CLASS,
-  // ACTION_REMOVE_CLASS,
+  ACTION_ADD_CLASS,
+  ACTION_REMOVE_CLASS,
   ACTION_SET_INDEX_REF,
   ACTION_INSERT_RAW_INLINE,
 ].map(action => [action.name, action]))

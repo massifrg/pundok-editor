@@ -9,9 +9,11 @@ import {
   upperCaseFirstTransaction,
   upperCaseTransaction,
 } from '../../commands';
-import { getMark } from '../helpers';
+import { getMark, SelectedNodeOrMark } from '../helpers';
 import {
   ActionNameWithProps,
+  AddOrRemoveClassActionProps,
+  AddOrRemoveCustomClassActionProps,
   AddOrRemoveCustomStyleActionProps,
   AddOrRemoveMarkActionProps,
   InsertRawInlineActionProps,
@@ -42,6 +44,7 @@ import { setIndexRefCommand } from './IndexingExtension';
 import { insertRawInlineCommand } from '../nodes/RawInline';
 import { isString } from 'lodash-es';
 import { deleteCssSelectedCommand, unwrapCssSelectedCommand } from './CssSelectionExtension';
+import { addPandocAttrClassCommand, removePandocAttrClassCommand } from './HelperCommandsExtension';
 
 export type TextTransformType =
   | 'add-mark'
@@ -72,7 +75,10 @@ declare module '@tiptap/core' {
       toUppercase: (locales?: string | string[]) => ReturnType;
       toUppercaseFirst: (locales?: string | string[]) => ReturnType;
       applyTextTransforms: (transforms: TextTransform[]) => ReturnType;
-      applyActions: (actions: ActionNameWithProps[]) => ReturnType;
+      applyActions: (
+        actions: ActionNameWithProps[],
+        selectedNodeOrMark?: SelectedNodeOrMark
+      ) => ReturnType;
     };
   }
 }
@@ -97,8 +103,8 @@ export const TextTransformExtension = Extension.create({
       applyTextTransforms,
       // TODO: the next one should go in a file of its own
       applyActions:
-        (actions: ActionNameWithProps[]) =>
-          ({ state, dispatch, view }) => applyActions(actions)(state, dispatch, view),
+        (actions: ActionNameWithProps[], selectedNodeOrMark) =>
+          ({ state, dispatch, view }) => applyActions(actions, selectedNodeOrMark)(state, dispatch, view),
     };
   },
   addKeyboardShortcuts() {
@@ -223,8 +229,10 @@ function applyTextTransformsCommand(transforms: TextTransform[]): Command {
 
 function actionNameWithPropsToCommand(
   action: ActionNameWithProps,
+  selectedNodeOrMark?: SelectedNodeOrMark,
 ): Command {
   const { name, props } = action
+  const typeName = (selectedNodeOrMark?.node || selectedNodeOrMark?.mark)?.type.name
   switch (name) {
     case ACTION_ADD_MARK.name:
     case ACTION_REMOVE_MARK.name:
@@ -288,18 +296,25 @@ function actionNameWithPropsToCommand(
     case ACTION_UNWRAP_CSS_SELECTED.name:
       return unwrapCssSelectedCommand;
     case ACTION_ADD_CUSTOM_CLASS.name:
+      return addPandocAttrClassCommand((props as AddOrRemoveCustomClassActionProps).className, typeName)
     case ACTION_REMOVE_CUSTOM_CLASS.name:
+      return removePandocAttrClassCommand((props as AddOrRemoveCustomClassActionProps).className, typeName)
     case ACTION_ADD_CLASS.name:
+      return addPandocAttrClassCommand((props as AddOrRemoveClassActionProps).className, typeName)
     case ACTION_REMOVE_CLASS.name:
+      return removePandocAttrClassCommand((props as AddOrRemoveClassActionProps).className, typeName)
     default:
       // pass-through command
       return () => true
   }
 }
 
-const applyActions: (actions: ActionNameWithProps[]) => Command =
-  (actions: ActionNameWithProps[]) => {
-    const commands = actions.map(a => actionNameWithPropsToCommand(a))
+const applyActions: (
+  actions: ActionNameWithProps[],
+  selectedNodeOrMark?: SelectedNodeOrMark,
+) => Command =
+  (actions: ActionNameWithProps[], selectedNodeOrMark) => {
+    const commands = actions.map(a => actionNameWithPropsToCommand(a, selectedNodeOrMark))
     return (state, dispatch, view) => {
       return commands.every(cmd => cmd(state, dispatch, view))
     }

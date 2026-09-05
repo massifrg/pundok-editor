@@ -147,6 +147,7 @@ import {
   getAllIndices,
   getCssSelected,
   getCssSelectionIndex,
+  getCurrentCssSelected,
   getEditorConfiguration,
 } from '../schema';
 import {
@@ -575,12 +576,12 @@ export default {
     },
     replaceSelected() {
       if (this.optionSearchOnly) {
-        this.editor.commands.applyActions(this.actionsOnReplace)
+        this.editor.commands.applyActions(this.actionsOnReplace, getCurrentCssSelected(this.editor.state))
       } else {
         if (this.cssMode)
           this.editor.chain()
             .replaceWithText(this.textToReplace)
-            .applyActions(this.actionsOnReplace)
+            .applyActions(this.actionsOnReplace, getCurrentCssSelected(this.editor.state))
             .run()
         else
           this.editor.chain()

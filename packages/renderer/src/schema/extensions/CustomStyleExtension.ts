@@ -16,7 +16,7 @@ import {
   TypeOrNode,
   UpdateNodeOrMarkCallback,
   nodeTypeOf,
-  updateAttributesCommand,
+  updateAttributesTiptapCommand,
 } from './HelperCommandsExtension';
 import { CommandProps } from '@tiptap/vue-3';
 import { cloneDeep, isArray, isString } from 'lodash-es';
@@ -199,7 +199,7 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
                 }),
               );
             }
-            return updateAttributesCommand(
+            return updateAttributesTiptapCommand(
               typeOrNode,
               setNodeCustomStyleCallback(typeOrNode, cs, schema),
             )({ ...cp, tr });
@@ -233,7 +233,7 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
               return true;
             } else {
               const schema = cp.state.schema;
-              return updateAttributesCommand(
+              return updateAttributesTiptapCommand(
                 typeOrNode,
                 unsetNodeCustomStyleCallback(typeOrNode, cs, schema),
               )(cp);
@@ -313,7 +313,7 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
               cs,
               schema,
             );
-            return updateAttributesCommand(typeOrNode, (n) =>
+            return updateAttributesTiptapCommand(typeOrNode, (n) =>
               isCustomStyleActive(cs, n) ? unsetCallback(n) : setCallback(n),
             )(cp);
           },
