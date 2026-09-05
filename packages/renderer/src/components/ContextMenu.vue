@@ -107,9 +107,14 @@ export default {
       // this.$forceUpdate()
     },
     labelForAction(a: ActionCore) {
-      return labelForAction(a, this.editor)
+      // pass the Vue i18n `$t` translator if available
+      // @ts-ignore
+      const t = (this as any).$t ? (this as any).$t.bind(this) : undefined
+      return labelForAction(a, this.editor, t)
     },
     tooltipForAction(a: ActionCore) {
+      // @ts-ignore
+      const t = (this as any).$t ? (this as any).$t.bind(this) : undefined
       return tooltipForAction(a, this.editor)
     },
     setAction(a: ActionForNodeOrMark) {

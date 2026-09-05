@@ -175,7 +175,8 @@ export interface InsertRawInlineActionProps extends ActionProps {
  * @param n2 The name of the second action.
  * @returns 
  */
-export function isOppositeAction(n1: string, n2: string): boolean {
-  return n1 !== n2
-    && n1.replace(/^(add|remove)/, '') === n2.replace(/^(add|remove)/, '')
+export function isOppositeAction(n1: string | null | undefined, n2: string | null | undefined): boolean {
+  if (!n1 || !n2) return false
+  const normalize = (s: string) => s.trim().toLowerCase().replace(/^(add|remove)/, '')
+  return n1 !== n2 && normalize(n1) === normalize(n2)
 }

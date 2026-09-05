@@ -1,4 +1,5 @@
 export * from './actions';
+export * from './actionsDescriptors';
 export * from './attrsToString';
 export * from './bookmarks';
 export * from './capitalize';

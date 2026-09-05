@@ -334,5 +334,23 @@
     "Caption": "wrap selection in a Caption",
     "Div": "wrap selection in a Div",
     "Figure": "wrap selection in a Figure"
+  },
+  "actions": {
+    "addMark": "add Mark",
+    "removeMark": "remove Mark",
+    "deleteCssSelected": "delete the current CSS-selected Node or Mark",
+    "unwrapCssSelected": "unwrap the contents of the current CSS-selected Node or remove Mark",
+    "addCustomStyle": "add custom style",
+    "removeCustomStyle": "remove custom style",
+    "lowercase": "convert to lower case",
+    "uppercase": "convert to upper case",
+    "uppercaseFirst": "convert to upper case the first letter of every word",
+    "setSpan": "add Span (with optional classes and attributes)",
+    "addCustomClass": "add a custom class (with its attributes)",
+    "removeCustomClass": "remove a custom class (with its attributes)",
+    "addClass": "add a class",
+    "removeClass": "remove a class",
+    "setIndexRef": "set an index reference at selection",
+    "insertRawInline": "insert a RawInline before/after/around selection"
   }
 }

@@ -5,6 +5,7 @@ import {
   ActionProps,
   AddOrRemoveClassActionProps,
   DocumentOpenActionProps,
+  ActionDescriptor,
   EditorKeyType,
   MetaMapTextActionProps,
   TableCellVertAlignActionProps,
@@ -12,7 +13,13 @@ import {
 } from '../common';
 import { ActionsGroup } from './actionGroup';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
-import isString from 'lodash-es/isString';
+import {
+  isHighlightedAction as _isHighlightedAction,
+  labelForAction as _labelForAction,
+  tooltipForAction as _tooltipForAction,
+  executeEditorAction as _executeEditorAction,
+} from './helpers'
+import { ACTION_DESCRIPTORS } from '../common'
 
 export type ActionName =
   | 'update-doc-state'
@@ -566,9 +573,14 @@ export const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
     !!action?.nodeOrMark?.pos &&
     editor.commands.unwrapNode(action.nodeOrMark.pos),
 };
+export const HORIZONTAL_ALIGNMENTS = ['left', 'center', 'right'] as const;
+export type HorizontalAlignment = typeof HORIZONTAL_ALIGNMENTS[number];
+
+export const VERTICAL_ALIGNMENTS = ['top', 'middle', 'bottom'] as const;
+export type VerticalAlignment = typeof VERTICAL_ALIGNMENTS[number];
 
 export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
-(['left', 'center', 'right'] as string[]).forEach((alignment) => {
+HORIZONTAL_ALIGNMENTS.forEach((alignment) => {
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: `set-text-align`,
     label: `horizontal ${alignment} align`,
@@ -578,7 +590,7 @@ export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
     props: { alignment } as TextAlignmentActionProps
   });
 });
-(['top', 'middle', 'bottom'] as string[]).forEach((alignment) => {
+VERTICAL_ALIGNMENTS.forEach((alignment) => {
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: 'set-vertical-align',
     label: `vertical ${alignment} align`,
@@ -596,23 +608,9 @@ export function canExecuteEditorAction(
   return !action.canDo || action.canDo(editor, action);
 }
 
-export function executeEditorAction(
-  action: ActionForNodeOrMark,
-  editor: Editor,
-): void {
-  const { canDo: canDoAction, do: doAction } = action;
-  if (canDoAction && doAction) {
-    if (canDoAction(editor, action)) {
-      const bookmark =
-        (action as ActionForNodeOrMark).restoreSelection &&
-        editor.state.selection.getBookmark();
-      doAction(editor, action);
-      if (bookmark) editor.commands.setSelectionFromBookmark(bookmark);
-    }
-  }
-}
+export const executeEditorAction = _executeEditorAction
 
-const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
+const ACTION_LIST: BaseActionForNodeOrMark[] = [
   ACTION_ADD_MARK,
   ACTION_REMOVE_MARK,
   ACTION_DELETE_CSS_SELECTED,
@@ -629,14 +627,31 @@ const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEn
   ACTION_REMOVE_CLASS,
   ACTION_SET_INDEX_REF,
   ACTION_INSERT_RAW_INLINE,
-].map(action => [action.name, action]))
+]
 
-export function availableActionsNames(): string[] {
-  return Object.keys(AVAILABLE_ACTIONS)
+function mergeWithDescriptor(action: BaseActionForNodeOrMark) {
+  const desc = ACTION_DESCRIPTORS[action.name]
+  const label = action.label
+  const icon = action.icon ?? desc?.icon
+  const iconRight = action.iconRight ?? (desc as any)?.iconRight
+  return { ...action, label, icon, iconRight }
 }
 
-export function availableAction(actionName: string): BaseActionForNodeOrMark | undefined {
-  return AVAILABLE_ACTIONS[actionName]
+const AVAILABLE_ACTIONS: Readonly<Record<string, BaseActionForNodeOrMark>> = Object.freeze(Object.fromEntries(
+  ACTION_LIST.map(a => {
+    const merged = mergeWithDescriptor(a)
+    return [a.name, merged]
+  })
+))
+
+export function availableActionsNames(): string[] {
+  const runtimeNames = Object.keys(AVAILABLE_ACTIONS)
+  const descNames = Object.keys(ACTION_DESCRIPTORS)
+  return Array.from(new Set([...runtimeNames, ...descNames]))
+}
+
+export function availableAction(actionName: string): BaseActionForNodeOrMark | ActionDescriptor | undefined {
+  return (AVAILABLE_ACTIONS as any)[actionName] || (ACTION_DESCRIPTORS as any)[actionName]
 }
 
 export function fillAvailableAction(
@@ -648,31 +663,21 @@ export function fillAvailableAction(
   }
 ): ActionForNodeOrMark | undefined {
   const { props, editorKey, nodeOrMark } = fields
-  const available = availableAction(actionName)
-  if (available && editorKey)
-    return { ...available, props, editorKey, nodeOrMark }
+  const available = AVAILABLE_ACTIONS[actionName] as BaseActionForNodeOrMark | undefined
+  if (available && editorKey) return { ...available, props, editorKey, nodeOrMark }
+  const desc = ACTION_DESCRIPTORS[actionName]
+  if (desc && editorKey) return { ...desc, props, editorKey, nodeOrMark } as ActionForNodeOrMark
+  return undefined
 }
 
 export function isHighlightedAction(action: ActionCore, editor?: Editor): boolean {
-  const hl = action?.highlight
-  if (!hl) return false
-  if (hl === true)
-    return true
-  return hl && hl(editor, action) || false
+  return _isHighlightedAction(action as any, editor)
 }
 
-export function labelForAction(action: ActionCore, editor?: Editor): string | undefined {
-  const label = action?.label
-  if (label)
-    return isString(label)
-      ? label
-      : label(editor, action)
+export function labelForAction(action: ActionCore, editor?: Editor, t?: (key: string, vars?: Record<string, any>) => string): string | undefined {
+  return _labelForAction(action as any, editor, t)
 }
 
 export function tooltipForAction(action: ActionCore, editor?: Editor): string | undefined {
-  const tooltip = action?.tooltip
-  if (tooltip)
-    return isString(tooltip)
-      ? tooltip
-      : tooltip(editor, action)
+  return _tooltipForAction(action as any, editor)
 }
