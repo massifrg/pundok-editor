@@ -66,11 +66,6 @@ export const Note = Node.create<NoteOptions>({
         renderHTML: (attrs) =>
           attrs.noteType ? { class: attrs.noteType } : {},
       },
-      // id: {
-      //   default: null,
-      //   parseHTML: (e) => e.getAttribute('id'),
-      //   renderHTML: (attrs) => (attrs.id ? { id: attrs.id } : {}),
-      // },
     };
   },
 

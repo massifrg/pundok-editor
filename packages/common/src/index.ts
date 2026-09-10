@@ -16,6 +16,7 @@ export * from './imageFormats';
 export * from './ipc';
 export * from './pandocFeatures';
 export * from './pandocFormat';
+export * from './pandocHelpers';
 export * from './pandocOptions';
 export * from './prosemirrorNames';
 export * from './query';

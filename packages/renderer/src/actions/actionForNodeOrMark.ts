@@ -13,6 +13,7 @@ import { nodesWithTemplate, compatibleNodes, SelectedNodeOrMark } from '../schem
 import {
   DocumentContext,
   DocumentOpenActionProps,
+  emptyIdentifier,
   InputConverter,
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM,
@@ -303,7 +304,7 @@ export function actionsForNodeOrMark(
     }
 
     if (node?.attrs.classes?.includes(INCLUDE_DOC_CLASS)) {
-      const id = node?.attrs.id
+      const id = node?.attrs.id || ''
       const path = node?.attrs.kv[INCLUDE_SRC_ATTR]
       const format = node?.attrs.kv[INCLUDE_FORMAT_ATTR]
         || (path && pandocFormatsFromExtension(path, 'input')[0])
@@ -319,7 +320,7 @@ export function actionsForNodeOrMark(
           } as InputConverter
         } as DocumentContext
       } as DocumentOpenActionProps
-      if ((id || path) && format) {
+      if ((!emptyIdentifier(id) || path) && format) {
         actions.push({
           ...ACTION_DOCUMENT_OPEN,
           canDo: (editor) => editorKeyFromState(editor?.state) == editorKey,

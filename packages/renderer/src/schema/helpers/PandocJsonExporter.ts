@@ -77,6 +77,7 @@ import {
   NODE_NAME_PARAGRAPH,
   NODE_NAME_SHORT_CAPTION,
   NOTE_TYPE_ATTRIBUTE,
+  emptyIdentifier,
 } from '../../common';
 import {
   INDEX_RANGE_START,
@@ -198,7 +199,7 @@ export const defaultCompareMarks: CompareMarksFunction = (
     if (m.type !== 'span') return v;
     const ma = m.attrs || {};
     const k = Object.keys(ma.kv || {});
-    return !ma.id &&
+    return emptyIdentifier(ma.id) &&
       !ma.classes &&
       (k.length === 0 || isEqual(k, ['custom-style']))
       ? 0
@@ -1069,7 +1070,7 @@ export function isPlainFootnote(note: PmJsonNode): boolean {
   if (noteType && noteType !== DEFAULT_NOTE_TYPE) return false;
   const keys = Object.keys(kv || {})
   console.log(`id=${JSON.stringify(id)}, classes=${JSON.stringify(classes)}, keys=${JSON.stringify(keys)}`)
-  return (!id || id === '')
+  return emptyIdentifier(id)
     && (!classes || classes.length === 0)
     && (keys.length === 0 || (keys.length === 1 && keys[0] === NOTE_TYPE_ATTRIBUTE))
 }

@@ -4,6 +4,7 @@ import {
   pandocAttrIdToHtmlAttrs,
   pandocAttrKvToHtmlAttrs,
 } from '../helpers';
+import { emptyIdentifier } from '../../common';
 
 export interface PandocAttrOptions {
   types: string[];
@@ -57,7 +58,7 @@ export const PandocAttrExtension = Extension.create<PandocAttrOptions>({
             default: '',
             renderHTML: (attributes) => {
               const id = attributes.id;
-              return id ? { id, ...pandocAttrIdToHtmlAttrs(id) } : {};
+              return emptyIdentifier(id) ? {} : { id, ...pandocAttrIdToHtmlAttrs(id) };
             },
           },
           classes: {

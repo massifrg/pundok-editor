@@ -1,0 +1,1 @@
+export const emptyIdentifier: (id: string | null | undefined) => boolean = (id) => !id || id === ''

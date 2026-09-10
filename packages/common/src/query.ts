@@ -1,5 +1,6 @@
 import { isArray, isObject } from 'lodash-es';
 import { FindResourceOptions } from './resources';
+import { emptyIdentifier } from './pandocHelpers';
 
 /** Types of possible queries. */
 export type QueryType = 'project-index' | 'index-term';
@@ -106,7 +107,7 @@ export function searchQueryResults(data: any[], searchText: string | string[]) {
     data.forEach((record) => {
       if (isObject(record)) {
         const { id, text, html } = record as Record<string, any>;
-        if (id && text) {
+        if (!emptyIdentifier(id) && text) {
           const lowtext = text.toLocaleLowerCase();
           const found = st.map((t) => lowtext.indexOf(t)).filter((i) => i >= 0);
           if (found.length === st.length) {

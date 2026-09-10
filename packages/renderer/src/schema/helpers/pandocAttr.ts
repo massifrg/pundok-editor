@@ -1,5 +1,6 @@
 import type { Attrs as PMAttrs } from '@tiptap/pm/model';
 import type { Attributes } from '@tiptap/core';
+import { emptyIdentifier } from '../../common';
 
 const PANDOC_PREFIX = ''; // 'pandoc-';
 const PANDOC_ATTR_PREFIX = `data-${PANDOC_PREFIX}`;
@@ -100,7 +101,7 @@ export function pandocAttrsAsTiptapAttrs(): Attributes {
 
 export function isCustomStyleOnly(attr: PandocAttr) {
   return (
-    (attr.id || '') === '' &&
+    emptyIdentifier(attr.id) &&
     attr.classes.length === 0 &&
     attr.kv['custom-style'] &&
     Object.keys(attr.kv).length === 1
