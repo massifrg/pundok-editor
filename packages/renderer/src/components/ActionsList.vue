@@ -5,7 +5,7 @@ setupQuasarIcons()
 
 <script lang="ts">
 import { toRaw } from 'vue';
-import { ActionName, availableAction, availableActionsNames } from '../actions';
+import { ActionCore, ActionName, availableAction, availableActionsNames, labelForAction } from '../actions';
 import { ActionNameWithProps, isOppositeAction } from '../common';
 import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassActionEditor.vue'
 import AddOrRemoveCustomClassActionEditor from './actioneditors/AddOrRemoveCustomClassActionEditor.vue'
@@ -65,7 +65,7 @@ export default {
       return this.getAction(actionName)?.icon
     },
     actionLabel(actionName: string) {
-      return availableAction(actionName)?.label
+      return labelForAction(availableAction(actionName) as ActionCore, this.editor, t)
     },
     isAddOrRemoveClassAction(a: ActionNameWithProps) {
       const name = a.name as ActionName

@@ -36,6 +36,12 @@ describe('actions helpers', () => {
         expect(labelForAction(dynAction)).toBe('dyn')
     })
 
+    it('labelForAction translates a descriptor labelKey when a translator is supplied', () => {
+        const descriptor: any = { name: 'add-mark', labelKey: 'actions.addMark' }
+        const translated = labelForAction(descriptor, undefined, (key: string) => `translated:${key}`)
+        expect(translated).toBe('translated:actions.addMark')
+    })
+
     it('tooltipForAction returns static and dynamic tooltips', () => {
         const staticAction: any = { tooltip: 'tip' }
         expect(tooltipForAction(staticAction)).toBe('tip')
