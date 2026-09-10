@@ -22,5 +22,5 @@
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
-  "chat.disableAIFeatures": false
+  "chat.disableAIFeatures": true
 }
