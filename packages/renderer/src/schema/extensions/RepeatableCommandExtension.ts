@@ -22,6 +22,11 @@ import {
 import { isString } from 'lodash-es';
 import { t } from '../../i18n'
 
+type RepeatableCommandName = keyof RawCommands;
+type RepeatableCommandArgs<T extends RepeatableCommandName = RepeatableCommandName> = any[];
+type RepeatableCommandTuple = [RepeatableCommandName, ...any[]];
+type RepeatableCommandList = RepeatableCommandTuple[];
+
 const REPEATABLE_COMMAND_PLUGIN = 'repeatable-command-plugin';
 const SET_REPEATABLE_COMMAND = 'set-repeatable-command';
 const RESET_REPEATABLE_COMMAND = 'reset-repeatable-command';
@@ -49,13 +54,13 @@ declare module '@tiptap/core' {
     repeatableChange: {
       setRepeatableCommand: (repeatable: RepeatableCommand) => ReturnType;
       resetRepeatableCommand: () => ReturnType;
-      runRepeatableCommand: (
-        command: keyof UnionCommands,
+      runRepeatableCommand: <K extends RepeatableCommandName>(
+        command: K,
         description: string,
-        ...args: any[]
+        ...args: RepeatableCommandArgs<K>
       ) => ReturnType;
       runRepeatableCommandsChain: (
-        commandsList: any[][],
+        commandsList: RepeatableCommandList,
         description: string,
       ) => ReturnType;
       repeatCommand: (...extraArgs: any[]) => ReturnType;
@@ -118,19 +123,24 @@ export const RepeatableCommandExtension = Extension.create({
             return true;
           },
       runRepeatableCommand:
-        (
-          commandName: keyof RawCommands,
+        <K extends RepeatableCommandName>(
+          commandName: K,
           description: string = '',
-          ...args: any[]
+          ...args: RepeatableCommandArgs<K>
         ) =>
           ({ can, commands, dispatch, tr }) => {
-            const command = commands[commandName];
+            const command = commands[commandName] as (
+              ...args: RepeatableCommandArgs<K>
+            ) => boolean;
             if (!command) {
               console.log(`command "${commandName}" not repeatable`);
               return false;
             }
-            // @ts-expect-error
-            const ret = dispatch ? command(...args) : can()[commandName](...args);
+            const ret = dispatch
+              ? command(...args)
+              : (can()[commandName] as (
+                ...args: RepeatableCommandArgs<K>
+              ) => boolean)(...args);
             // console.log(
             //   `runRepeatableCommand, ret=${ret}, dispatch=${!!dispatch}`,
             // );
@@ -146,13 +156,13 @@ export const RepeatableCommandExtension = Extension.create({
             return ret;
           },
       runRepeatableCommandsChain:
-        (commandsList: any[][], description: string = '') =>
+        (commandsList: RepeatableCommandList, description: string = '') =>
           ({ commands, dispatch, editor, state }) => {
-            const cmdNames: (keyof UnionCommands)[] = [];
+            const cmdNames: RepeatableCommandName[] = [];
             const cmdArgs: any[][] = [];
             for (let i = 0; i < commandsList.length; i++) {
               const cmd = commandsList[i];
-              const cmdName = cmd[0] as keyof UnionCommands;
+              const cmdName = cmd[0] as RepeatableCommandName;
               if (!isString(cmdName)) return false;
               if (!commands[cmdName]) return false;
               cmdNames.push(cmdName);
@@ -167,8 +177,10 @@ export const RepeatableCommandExtension = Extension.create({
             for (let i = 0; i < cmdNames.length; i++) {
               const commandName = cmdNames[i];
               const args = cmdArgs[i];
-              // @ts-expect-error
-              chain = chain[commandName](...args);
+              const chainCommand = (chain as any)[commandName] as (
+                ...args: any[]
+              ) => typeof chain;
+              chain = chainCommand(...args);
               repeatableCommands.push({ commandName, args });
             }
             // console.log(repeatableCommands)
@@ -193,14 +205,17 @@ export const RepeatableCommandExtension = Extension.create({
               args = args || [];
               args = extraArgs ? [...args, ...extraArgs] : args;
               // console.log(repeatable)
-              const command = commands[commandName];
+              const command = commands[commandName] as (
+                ...args: any[]
+              ) => boolean;
               if (!command) {
                 console.log(`command "${commandName}" not repeatable`);
                 return false;
               }
               // console.log(args)
-              // @ts-expect-error
-              return dispatch ? command(...args) : can()[commandName](...args);
+              return dispatch
+                ? command(...args)
+                : (can()[commandName] as (...args: any[]) => boolean)(...args);
             } else {
               const { repeatableCommands } =
                 repeatable as RepeatableCommandsChain;
@@ -209,8 +224,10 @@ export const RepeatableCommandExtension = Extension.create({
               let chain = dispatch ? cm.createChain() : cm.createCan().chain();
               repeatableCommands.forEach((rcmd) => {
                 const { commandName, args } = rcmd;
-                // @ts-expect-error
-                chain = chain[commandName](...args);
+                const chainCommand = (chain as any)[commandName] as (
+                  ...args: any[]
+                ) => typeof chain;
+                chain = chainCommand(...args);
               });
               return chain.run();
             }
