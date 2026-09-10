@@ -349,7 +349,12 @@
     "removeCustomClass": "rimuovi una classe personalizzata (con i suoi eventuali attributi)",
     "addClass": "assegna una classe",
     "removeClass": "rimuovi una classe",
+    "renameClass": "rinomina una classe",
     "setIndexRef": "inserisci un riferimento a indice alla selezione",
-    "insertRawInline": "inserisci un RawInline prima/dopo/attorno alla selezione"
+    "insertRawInline": "inserisci un RawInline prima/dopo/attorno alla selezione",
+    "editors": {
+      "class": "classe",
+      "rename to": "rinomina in"
+    }
   }
 }

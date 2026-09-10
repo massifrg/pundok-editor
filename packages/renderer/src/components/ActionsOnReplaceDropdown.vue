@@ -4,10 +4,10 @@ import { QBtnDropdown } from 'quasar';
 import { ActionName, defaultPropsFor } from '../actions';
 import {
   ActionNameWithProps,
-  AddOrRemoveClassActionProps,
-  AddOrRemoveCustomClassActionProps,
-  AddOrRemoveCustomStyleActionProps,
-  AddOrRemoveMarkActionProps,
+  AddRemoveRenameClassActionProps,
+  AddRemoveCustomClassActionProps,
+  AddRemoveCustomStyleActionProps,
+  AddRemoveMarkActionProps,
   attrsToCssSelectorString,
   InsertRawInlineActionProps,
   PundokEditorConfig,
@@ -33,19 +33,19 @@ function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConf
       case 'add-mark':
       case 'remove-mark':
         {
-          const { markType } = props as AddOrRemoveMarkActionProps
+          const { markType } = props as AddRemoveMarkActionProps
           return `${prefix}${markType}`
         }
       case 'add-custom-style':
       case 'remove-custom-style':
         {
-          const { styleName } = props as AddOrRemoveCustomStyleActionProps
+          const { styleName } = props as AddRemoveCustomStyleActionProps
           return `${prefix}${styleName}`
         }
       case 'add-custom-class':
       case 'remove-custom-class':
         {
-          const { shortDesc, className, attrs } = props as AddOrRemoveCustomClassActionProps
+          const { shortDesc, className, attrs } = props as AddRemoveCustomClassActionProps
           const attrstext = !shortDesc && attrs
             ? attrsToCssSelectorString({ attributes: attrs })
             : ''
@@ -53,9 +53,12 @@ function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConf
         }
       case 'add-class':
       case 'remove-class':
+      case 'rename-class':
         {
-          const { className } = props as AddOrRemoveClassActionProps
-          return `${prefix}.${className}`
+          const { className, newName } = props as AddRemoveRenameClassActionProps
+          return actionName.startsWith('rename')
+            ? `.${className}->.${newName}`
+            : `.${className}`
         }
       case 'set-span':
         {

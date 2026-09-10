@@ -265,7 +265,7 @@ import {
 } from '../schema';
 import {
   ActionNameWithProps,
-  AddOrRemoveClassActionProps,
+  AddRemoveRenameClassActionProps,
   DEFAULT_INDEX_NAME,
   INDEX_NAME_ATTR,
   Index,
@@ -479,7 +479,7 @@ export default {
         if (this.onAttributesEditorShow) {
           const { name, props } = this.onAttributesEditorShow as ActionNameWithProps
           if (name === ACTION_ADD_CLASS.name) {
-            const class_to_add = (props as AddOrRemoveClassActionProps)?.className
+            const class_to_add = (props as AddRemoveRenameClassActionProps)?.className
             if (class_to_add) {
               this.addClass(class_to_add)
             }

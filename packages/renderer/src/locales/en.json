@@ -350,7 +350,12 @@
     "removeCustomClass": "remove a custom class (with its attributes)",
     "addClass": "add a class",
     "removeClass": "remove a class",
+    "renameClass": "rename a class",
     "setIndexRef": "set an index reference at selection",
-    "insertRawInline": "insert a RawInline before/after/around selection"
+    "insertRawInline": "insert a RawInline before/after/around selection",
+    "editors": {
+      "class": "class",
+      "rename to": "rename to"
+    }
   }
 }

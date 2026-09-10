@@ -132,21 +132,22 @@ export interface TableCellVertAlignActionProps extends ActionProps {
   alignment: 'top' | 'middle' | 'bottom'
 }
 
-export interface AddOrRemoveClassActionProps extends ActionProps {
+export interface AddRemoveRenameClassActionProps extends ActionProps {
   className: string,
+  newName: string,
   typeName?: string,
 }
 
-export interface AddOrRemoveMarkActionProps extends ActionProps {
+export interface AddRemoveMarkActionProps extends ActionProps {
   markType: string,
   attrs?: Record<string, string>,
 }
 
-export interface AddOrRemoveCustomStyleActionProps extends ActionProps {
+export interface AddRemoveCustomStyleActionProps extends ActionProps {
   styleName: string,
 }
 
-export interface AddOrRemoveCustomClassActionProps extends ActionProps {
+export interface AddRemoveCustomClassActionProps extends ActionProps {
   shortDesc?: string,
   className: string,
   attrs?: Record<string, string>,

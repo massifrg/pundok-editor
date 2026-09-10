@@ -21,6 +21,7 @@ export const ACTION_DESCRIPTORS: Readonly<Record<string, ActionDescriptor>> = {
     'remove-custom-class': { name: 'remove-custom-class', labelKey: 'actions.removeCustomClass', icon: 'remove_custom_class' },
     'add-class': { name: 'add-class', labelKey: 'actions.addClass', icon: 'classes_add' },
     'remove-class': { name: 'remove-class', labelKey: 'actions.removeClass', icon: 'remove_class' },
+    'rename-class': { name: 'rename-class', labelKey: 'actions.renameClass', icon: 'rename_class' },
     'set-index-ref': { name: 'set-index-ref', labelKey: 'actions.setIndexRef', icon: 'index_ref' },
     'insert-raw-inline': { name: 'insert-raw-inline', labelKey: 'actions.insertRawInline', icon: 'raw_inline' },
 }

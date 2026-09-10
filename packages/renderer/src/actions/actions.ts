@@ -3,7 +3,7 @@ import { currentRepeatableCommandTooltip, SearchTextVariant } from '../schema';
 import { DocState, SelectedNodeOrMark } from '../schema/helpers';
 import {
   ActionProps,
-  AddOrRemoveClassActionProps,
+  AddRemoveRenameClassActionProps,
   DocumentOpenActionProps,
   ActionDescriptor,
   EditorKeyType,
@@ -56,6 +56,7 @@ export type ActionName =
   | 'modify-metamap-entry-key'
   | 'add-class'
   | 'remove-class'
+  | 'rename-class'
   | 'new-empty-document'
   | 'new-document'
   | 'setup-viewer'
@@ -408,13 +409,13 @@ export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
   icon: 'classes_add',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddRemoveRenameClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return className && editor.can().addPandocAttrClass(className, typ) || false
   },
   do: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddRemoveRenameClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return className && editor.commands.addPandocAttrClass(className, typ) || false
   }
@@ -426,15 +427,33 @@ export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
   icon: 'remove_class',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddRemoveRenameClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return typ && className && editor.can().removePandocAttrClass(className, typ) || false
   },
   do: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddRemoveRenameClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
     return typ && className && editor.commands.removePandocAttrClass(className, typ) || false
+  }
+}
+
+export const ACTION_RENAME_CLASS: BaseActionForNodeOrMark = {
+  name: 'rename-class',
+  label: 'rename a class',
+  icon: 'rename_class',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { className, newName, typeName } = (props as AddRemoveRenameClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.can().renamePandocAttrClass(className, newName, typ) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { className, newName, typeName } = (props as AddRemoveRenameClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.commands.renamePandocAttrClass(className, newName, typ) || false
   }
 }
 
@@ -625,6 +644,7 @@ const ACTION_LIST: BaseActionForNodeOrMark[] = [
   ACTION_REMOVE_CUSTOM_CLASS,
   ACTION_ADD_CLASS,
   ACTION_REMOVE_CLASS,
+  ACTION_RENAME_CLASS,
   ACTION_SET_INDEX_REF,
   ACTION_INSERT_RAW_INLINE,
 ]

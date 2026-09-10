@@ -13,12 +13,12 @@ import {
   ACTION_INSERT_RAW_INLINE,
 } from './actions';
 import {
-  AddOrRemoveClassActionProps,
-  AddOrRemoveCustomStyleActionProps,
-  AddOrRemoveMarkActionProps,
+  AddRemoveRenameClassActionProps,
+  AddRemoveCustomStyleActionProps,
+  AddRemoveMarkActionProps,
   SetSpanActionProps,
   PundokEditorConfig,
-  AddOrRemoveCustomClassActionProps,
+  AddRemoveCustomClassActionProps,
   SetIndexRefActionProps,
   DEFAULT_INDEX_NAME,
   Index,
@@ -34,13 +34,13 @@ export function defaultPropsFor(actionName: ActionName, config?: PundokEditorCon
     case ACTION_REMOVE_MARK.name:
       return {
         markType: 'emph'
-      } as AddOrRemoveMarkActionProps
+      } as AddRemoveMarkActionProps
     case ACTION_ADD_CUSTOM_STYLE.name:
     case ACTION_REMOVE_CUSTOM_STYLE.name:
       const firstStyle = config?.customStyles && config.customStyles[0]
       return {
         styleName: firstStyle?.name || 'style-name'
-      } as AddOrRemoveCustomStyleActionProps
+      } as AddRemoveCustomStyleActionProps
     case ACTION_ADD_CUSTOM_CLASS.name:
     case ACTION_REMOVE_CUSTOM_CLASS.name:
       const cclasses = config?.customClasses || []
@@ -53,7 +53,7 @@ export function defaultPropsFor(actionName: ActionName, config?: PundokEditorCon
       return {
         className: firstClass?.name || 'class-name',
         attrs
-      } as AddOrRemoveCustomClassActionProps
+      } as AddRemoveCustomClassActionProps
     case ACTION_SET_SPAN.name:
       return {
         classes: [],
@@ -68,7 +68,7 @@ export function defaultPropsFor(actionName: ActionName, config?: PundokEditorCon
         const firstClass = classes && classes[0]
         return {
           className: firstClass?.name || 'class-name'
-        } as AddOrRemoveClassActionProps
+        } as AddRemoveRenameClassActionProps
       }
     case ACTION_SET_INDEX_REF.name:
       {

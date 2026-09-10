@@ -67,9 +67,9 @@ export default {
     actionLabel(actionName: string) {
       return labelForAction(availableAction(actionName) as ActionCore, this.editor, t)
     },
-    isAddOrRemoveClassAction(a: ActionNameWithProps) {
+    isAddRemoveRenameClassAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
-      return name === 'add-class' || name === 'remove-class'
+      return name === 'add-class' || name === 'remove-class' || name === 'rename-class'
     },
     isAddOrRemoveCustomStyleAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
@@ -190,7 +190,7 @@ export default {
             </q-btn-dropdown>
           </q-item-section>
           <q-item-section side>
-            <AddOrRemoveClassActionEditor v-if="isAddOrRemoveClassAction(a)" :index="index" :action='a'
+            <AddOrRemoveClassActionEditor v-if="isAddRemoveRenameClassAction(a)" :index="index" :action='a'
               @set-props="setActionProps" />
             <AddOrRemoveCustomStyleActionEditor v-if="isAddOrRemoveCustomStyleAction(a)" :editor="editor" :index="index"
               :action='a' @set-props="setActionProps" />

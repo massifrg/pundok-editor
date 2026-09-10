@@ -12,10 +12,10 @@ import {
 import { getMark, SelectedNodeOrMark } from '../helpers';
 import {
   ActionNameWithProps,
-  AddOrRemoveClassActionProps,
-  AddOrRemoveCustomClassActionProps,
-  AddOrRemoveCustomStyleActionProps,
-  AddOrRemoveMarkActionProps,
+  AddRemoveRenameClassActionProps,
+  AddRemoveCustomClassActionProps,
+  AddRemoveCustomStyleActionProps,
+  AddRemoveMarkActionProps,
   InsertRawInlineActionProps,
   MARK_NAME_SPAN,
   SetIndexRefActionProps,
@@ -34,6 +34,7 @@ import {
   ACTION_REMOVE_CUSTOM_CLASS,
   ACTION_REMOVE_CUSTOM_STYLE,
   ACTION_REMOVE_MARK,
+  ACTION_RENAME_CLASS,
   ACTION_SET_INDEX_REF,
   ACTION_SET_SPAN,
   ACTION_UNWRAP_CSS_SELECTED,
@@ -44,7 +45,7 @@ import { setIndexRefCommand } from './IndexingExtension';
 import { insertRawInlineCommand } from '../nodes/RawInline';
 import { isString } from 'lodash-es';
 import { deleteCssSelectedCommand, unwrapCssSelectedCommand } from './CssSelectionExtension';
-import { addPandocAttrClassCommand, removePandocAttrClassCommand } from './HelperCommandsExtension';
+import { addPandocAttrClassCommand, removePandocAttrClassCommand, renamePandocAttrClassCommand } from './HelperCommandsExtension';
 
 export type TextTransformType =
   | 'add-mark'
@@ -237,7 +238,7 @@ function actionNameWithPropsToCommand(
     case ACTION_ADD_MARK.name:
     case ACTION_REMOVE_MARK.name:
       {
-        const { markType, attrs } = (props || {}) as AddOrRemoveMarkActionProps
+        const { markType, attrs } = (props || {}) as AddRemoveMarkActionProps
         return applyTextTransformsCommand([{
           type: ACTION_ADD_MARK.name === name ? 'add-mark' : 'remove-mark',
           mark: markType,
@@ -248,7 +249,7 @@ function actionNameWithPropsToCommand(
     case ACTION_ADD_CUSTOM_STYLE.name:
     case ACTION_REMOVE_CUSTOM_STYLE.name:
       {
-        const { styleName } = (props || {}) as AddOrRemoveCustomStyleActionProps
+        const { styleName } = (props || {}) as AddRemoveCustomStyleActionProps
         const attrs = {
           customStyle: styleName,
           kv: {
@@ -296,13 +297,19 @@ function actionNameWithPropsToCommand(
     case ACTION_UNWRAP_CSS_SELECTED.name:
       return unwrapCssSelectedCommand;
     case ACTION_ADD_CUSTOM_CLASS.name:
-      return addPandocAttrClassCommand((props as AddOrRemoveCustomClassActionProps).className, typeName)
+      return addPandocAttrClassCommand((props as AddRemoveCustomClassActionProps).className, typeName)
     case ACTION_REMOVE_CUSTOM_CLASS.name:
-      return removePandocAttrClassCommand((props as AddOrRemoveCustomClassActionProps).className, typeName)
+      return removePandocAttrClassCommand((props as AddRemoveCustomClassActionProps).className, typeName)
     case ACTION_ADD_CLASS.name:
-      return addPandocAttrClassCommand((props as AddOrRemoveClassActionProps).className, typeName)
+      return addPandocAttrClassCommand((props as AddRemoveRenameClassActionProps).className, typeName)
     case ACTION_REMOVE_CLASS.name:
-      return removePandocAttrClassCommand((props as AddOrRemoveClassActionProps).className, typeName)
+      return removePandocAttrClassCommand((props as AddRemoveRenameClassActionProps).className, typeName)
+    case ACTION_RENAME_CLASS.name:
+      return renamePandocAttrClassCommand(
+        (props as AddRemoveRenameClassActionProps).className,
+        (props as AddRemoveRenameClassActionProps).newName,
+        typeName
+      )
     default:
       // pass-through command
       return () => true

@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/core';
 import { innerNodeDepth } from '../helpers';
 import {
   ActionNameWithProps,
-  AddOrRemoveClassActionProps,
+  AddRemoveRenameClassActionProps,
   CustomClass,
   EditAttributesActionProps,
   NODE_NAME_DIV,
@@ -74,7 +74,7 @@ export const IncludeDivExtension = Extension.create({
             ...ACTION_ADD_CLASS,
             props: {
               className: INCLUDE_DOC_CLASS
-            } as AddOrRemoveClassActionProps
+            } as AddRemoveRenameClassActionProps
           } as ActionNameWithProps,
           selectNode: (node) => node.type.name === NODE_NAME_DIV
         } as EditAttributesActionProps)

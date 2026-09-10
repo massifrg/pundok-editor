@@ -129,8 +129,8 @@ setupQuasarIcons()
 <script lang="ts">
 import {
   ActionNameWithProps,
-  AddOrRemoveCustomStyleActionProps,
-  AddOrRemoveMarkActionProps,
+  AddRemoveCustomStyleActionProps,
+  AddRemoveMarkActionProps,
   Automation,
   CustomStyleInstance,
   ElementsSelection,
@@ -681,7 +681,7 @@ export default {
           name: 'add-mark' as ActionName,
           props: {
             markType: m
-          } as AddOrRemoveMarkActionProps
+          } as AddRemoveMarkActionProps
         } as ActionNameWithProps)
       })
       // styles
@@ -690,7 +690,7 @@ export default {
           name: 'add-custom-style' as ActionName,
           props: {
             styleName: s
-          } as AddOrRemoveCustomStyleActionProps
+          } as AddRemoveCustomStyleActionProps
         } as ActionNameWithProps)
       })
       // spans

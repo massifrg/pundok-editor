@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import {
-  AddOrRemoveCustomStyleActionProps,
+  AddRemoveCustomStyleActionProps,
   appliesTo,
   CustomStyleInstance,
   MARK_NAME_SPAN
@@ -31,7 +31,7 @@ export default {
         .filter(cs => appliesTo(cs, MARK_NAME_SPAN))
     },
     selectedStyleName() {
-      return (this.action?.props as AddOrRemoveCustomStyleActionProps)?.styleName || ""
+      return (this.action?.props as AddRemoveCustomStyleActionProps)?.styleName || ""
     }
   },
   setup() {
@@ -39,7 +39,7 @@ export default {
   },
   methods: {
     setStyleName(styleName: string) {
-      this.$emit('set-props', this.index, { styleName } as AddOrRemoveCustomStyleActionProps)
+      this.$emit('set-props', this.index, { styleName } as AddRemoveCustomStyleActionProps)
     }
   }
 }

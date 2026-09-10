@@ -105,6 +105,10 @@ declare module '@tiptap/core' {
        */
       removePandocAttrClass: (c: string, typeOrNode?: TypeOrNode) => ReturnType;
       /**
+       * Rename a (Pandoc Attrs's) class, if present, to the nodes or marks of typeOrNode in current selection
+       */
+      renamePandocAttrClass: (c: string, newName: string, typeOrNode?: TypeOrNode) => ReturnType;
+      /**
        * Set a (Pandoc Attrs's) attribute to the nodes or marks of typeOrNode in current selection
        */
       setPandocAttrAttribute: (
@@ -384,6 +388,9 @@ export const HelperCommandsExtension = Extension.create({
 
       removePandocAttrClass: (c, typeOrNode) =>
         removePandocAttrClassTiptapCommand(c, typeOrNode),
+
+      renamePandocAttrClass: (c, typeOrNode) =>
+        renamePandocAttrClassTiptapCommand(c, typeOrNode),
 
       setPandocAttrAttribute: (typeOrNode, name, value) => {
         if (name && value && name.length > 0)
@@ -969,6 +976,25 @@ export function removePandocAttrClassCommand(className: string, typeOrNode?: Typ
   return () => false;
 }
 
+export function renamePandocAttrClassCommand(
+  className: string,
+  newName: string,
+  typeOrNode?: TypeOrNode
+): Command {
+  if (typeOrNode && className && className.length > 0 && newName && newName.length > 0)
+    return updateAttributesCommand(typeOrNode, (n) => {
+      const attrs = n.attrs;
+      let classes: string[] | null | undefined = attrs.classes;
+      if (classes === undefined) return undefined;
+      classes = classes || [];
+      if (!classes.includes(className)) return undefined;
+      classes = classes.filter((oc) => oc !== className);
+      classes.push(newName)
+      return { attrs: { ...attrs, classes } };
+    });
+  return () => false;
+}
+
 export function addPandocAttrClassTiptapCommand(className: string, typeOrNode?: TypeOrNode):
   (props: CommandProps) => boolean {
   if (typeOrNode && className && className.length > 0)
@@ -997,5 +1023,23 @@ export function removePandocAttrClassTiptapCommand(className: string, typeOrNode
       return { attrs: { ...attrs, classes } };
     });
   return doNothingCommand;
+}
 
+export function renamePandocAttrClassTiptapCommand(
+  className: string,
+  newName: string,
+  typeOrNode?: TypeOrNode
+): (props: CommandProps) => boolean {
+  if (typeOrNode && className && className.length > 0)
+    return updateAttributesTiptapCommand(typeOrNode, (n) => {
+      const attrs = n.attrs;
+      let classes: string[] | null | undefined = attrs.classes;
+      if (classes === undefined) return undefined;
+      classes = classes || [];
+      if (!classes.includes(className)) return undefined;
+      classes = classes.filter((oc) => oc !== className);
+      classes.push(newName)
+      return { attrs: { ...attrs, classes } };
+    });
+  return doNothingCommand;
 }

@@ -248,6 +248,7 @@ import {
   mdiSelection,
   mdiArrowAll,
   mdiArrowCollapseRight,
+  mdiOctagramEdit,
 } from '@quasar/extras/mdi-v7';
 
 import {
@@ -485,6 +486,7 @@ export const icons: Record<string, string> = {
   remove_class: mdiOctagramMinus,
   remove_custom_class: mdiOctagramMinusOutline,
   remove_item: mdiCloseCircleOutline,
+  rename_class: mdiOctagramEdit,
   render: mdiBookCog,
   repeat_command: mdiRepeatVariant,
   result_message: mdiMessageReplyOutline,
