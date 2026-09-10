@@ -21,5 +21,6 @@
   "i18n-ally.sortKeys": true,
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
-  }
+  },
+  "chat.disableAIFeatures": false
 }
