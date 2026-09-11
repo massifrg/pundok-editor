@@ -2,6 +2,34 @@
   "Hide": "Nascondi",
   "Show": "Mostra",
   "absent": "assente",
+  "actions": {
+    "addAttribute": "aggiungi un attributo",
+    "addClass": "assegna una classe",
+    "addCustomClass": "assegna una classe (con eventuali attributi)",
+    "addCustomStyle": "assegna stile personalizzato",
+    "addMark": "aggiungi Mark",
+    "deleteCssSelected": "cancella il Node/Mark selezionato con CSS",
+    "editors": {
+      "attributeName": "aggiungi attributo",
+      "attributeValue": "valore dell'attributo",
+      "class": "classe",
+      "rename to": "rinomina in"
+    },
+    "insertRawInline": "inserisci un RawInline prima/dopo/attorno alla selezione",
+    "lowercase": "converti in minuscolo",
+    "removeAttribute": "rimuovi un attributo",
+    "removeClass": "rimuovi una classe",
+    "removeCustomClass": "rimuovi una classe personalizzata (con i suoi eventuali attributi)",
+    "removeCustomStyle": "rimuovi stile personalizzato",
+    "removeMark": "rimuovi Mark",
+    "renameAttribute": "rinomina un attributo",
+    "renameClass": "rinomina una classe",
+    "setIndexRef": "inserisci un riferimento a indice alla selezione",
+    "setSpan": "crea uno Span (con eventuali classi e attributi)",
+    "unwrapCssSelected": "sostituisci il Node/Mark selezionato con CSS con i suoi contenuti",
+    "uppercase": "converti in maiuscolo",
+    "uppercaseFirst": "converti in maiuscolo la prima lettera di ogni parola"
+  },
   "allow": "permetti",
   "appendMeta": {
     "label": {
@@ -333,28 +361,5 @@
     "Caption": "racchiudi il testo selezionato in una Caption",
     "Div": "racchiudi il testo selezionato in un Div",
     "Figure": "racchiudi il testo selezionato in una Figure"
-  },
-  "actions": {
-    "addMark": "aggiungi Mark",
-    "removeMark": "rimuovi Mark",
-    "deleteCssSelected": "cancella il Node/Mark selezionato con CSS",
-    "unwrapCssSelected": "sostituisci il Node/Mark selezionato con CSS con i suoi contenuti",
-    "addCustomStyle": "assegna stile personalizzato",
-    "removeCustomStyle": "rimuovi stile personalizzato",
-    "lowercase": "converti in minuscolo",
-    "uppercase": "converti in maiuscolo",
-    "uppercaseFirst": "converti in maiuscolo la prima lettera di ogni parola",
-    "setSpan": "crea uno Span (con eventuali classi e attributi)",
-    "addCustomClass": "assegna una classe (con eventuali attributi)",
-    "removeCustomClass": "rimuovi una classe personalizzata (con i suoi eventuali attributi)",
-    "addClass": "assegna una classe",
-    "removeClass": "rimuovi una classe",
-    "renameClass": "rinomina una classe",
-    "setIndexRef": "inserisci un riferimento a indice alla selezione",
-    "insertRawInline": "inserisci un RawInline prima/dopo/attorno alla selezione",
-    "editors": {
-      "class": "classe",
-      "rename to": "rinomina in"
-    }
   }
 }

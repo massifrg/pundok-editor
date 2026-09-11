@@ -12,7 +12,8 @@ import {
   InsertRawInlineActionProps,
   PundokEditorConfig,
   SetIndexRefActionProps,
-  SetSpanActionProps
+  SetSpanActionProps,
+  AddRemoveRenameAttributeActionProps
 } from '../common';
 import ActionsList from './ActionsList.vue';
 import { getEditorConfiguration } from '../schema';
@@ -50,6 +51,17 @@ function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConf
             ? attrsToCssSelectorString({ attributes: attrs })
             : ''
           return `${prefix}${shortDesc || className + attrstext}`
+        }
+      case 'add-attribute':
+      case 'remove-attribute':
+      case 'rename-attribute':
+        {
+          const { attrName, attrValue, newName } = props as AddRemoveRenameAttributeActionProps
+          const isRemoving = actionName.startsWith('remove')
+          const v = attrValue || ''
+          return actionName.startsWith('rename')
+            ? `[${attrName}]->[${newName}]`
+            : `${isRemoving ? '-' : '+'}[${attrName}]${isRemoving ? '' : '="' + v + '"'}`
         }
       case 'add-class':
       case 'remove-class':

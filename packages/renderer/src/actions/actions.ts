@@ -9,7 +9,8 @@ import {
   EditorKeyType,
   MetaMapTextActionProps,
   TableCellVertAlignActionProps,
-  TextAlignmentActionProps
+  TextAlignmentActionProps,
+  AddRemoveRenameAttributeActionProps
 } from '../common';
 import { ActionsGroup } from './actionGroup';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
@@ -57,6 +58,9 @@ export type ActionName =
   | 'add-class'
   | 'remove-class'
   | 'rename-class'
+  | 'add-attribute'
+  | 'remove-attribute'
+  | 'rename-attribute'
   | 'new-empty-document'
   | 'new-document'
   | 'setup-viewer'
@@ -457,6 +461,60 @@ export const ACTION_RENAME_CLASS: BaseActionForNodeOrMark = {
   }
 }
 
+export const ACTION_ADD_ATTRIBUTE: BaseActionForNodeOrMark = {
+  name: 'add-attribute',
+  label: 'add an attribute',
+  icon: 'add_attribute',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, attrValue, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().addPandocAttribute(attrName, attrValue, typ) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, attrValue, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().addPandocAttribute(attrName, attrValue, typ) || false
+  }
+}
+
+export const ACTION_REMOVE_ATTRIBUTE: BaseActionForNodeOrMark = {
+  name: 'remove-attribute',
+  label: 'remove an attribute',
+  icon: 'remove_attribute',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().removePandocAttribute(attrName, typ) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().removePandocAttribute(attrName, typ) || false
+  }
+}
+
+export const ACTION_RENAME_ATTRIBUTE: BaseActionForNodeOrMark = {
+  name: 'rename-attribute',
+  label: 'rename an attribute',
+  icon: 'rename_attribute',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, newName, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().renamePandocAttribute(attrName, newName, typ) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, newName, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().renamePandocAttribute(attrName, newName, typ) || false
+  }
+}
+
 export interface SearchIndexTermActionProps {
   searchTextVariant: SearchTextVariant
 }
@@ -645,6 +703,9 @@ const ACTION_LIST: BaseActionForNodeOrMark[] = [
   ACTION_ADD_CLASS,
   ACTION_REMOVE_CLASS,
   ACTION_RENAME_CLASS,
+  ACTION_ADD_ATTRIBUTE,
+  ACTION_REMOVE_ATTRIBUTE,
+  ACTION_RENAME_ATTRIBUTE,
   ACTION_SET_INDEX_REF,
   ACTION_INSERT_RAW_INLINE,
 ]

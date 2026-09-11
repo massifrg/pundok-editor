@@ -138,6 +138,13 @@ export interface AddRemoveRenameClassActionProps extends ActionProps {
   typeName?: string,
 }
 
+export interface AddRemoveRenameAttributeActionProps extends ActionProps {
+  attrName: string,
+  attrValue?: string,
+  newName: string,
+  typeName?: string,
+}
+
 export interface AddRemoveMarkActionProps extends ActionProps {
   markType: string,
   attrs?: Record<string, string>,

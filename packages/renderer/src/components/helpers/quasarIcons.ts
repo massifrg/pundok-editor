@@ -249,6 +249,8 @@ import {
   mdiArrowAll,
   mdiArrowCollapseRight,
   mdiOctagramEdit,
+  mdiInvoiceTextEdit,
+  mdiInvoiceTextPlus,
 } from '@quasar/extras/mdi-v7';
 
 import {
@@ -290,6 +292,7 @@ import {
 export const icons: Record<string, string> = {
   ...commonIcons,
   add: mdiPlus,
+  add_attribute: mdiInvoiceTextPlus,
   add_document: mdiFileDocumentPlus,
   add_action: mdiPlus,
   alert_circle: mdiAlertCircle,
@@ -483,9 +486,11 @@ export const icons: Record<string, string> = {
   refresh: mdiReload,
   reload: mdiReload,
   reload_with_other_configuration: mdiSyncCircle,
+  remove_attribute: mdiInvoiceTextPlus,
   remove_class: mdiOctagramMinus,
   remove_custom_class: mdiOctagramMinusOutline,
   remove_item: mdiCloseCircleOutline,
+  rename_attribute: mdiInvoiceTextEdit,
   rename_class: mdiOctagramEdit,
   render: mdiBookCog,
   repeat_command: mdiRepeatVariant,

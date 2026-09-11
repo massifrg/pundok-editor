@@ -7,6 +7,7 @@ setupQuasarIcons()
 import { toRaw } from 'vue';
 import { ActionCore, ActionName, availableAction, availableActionsNames, labelForAction } from '../actions';
 import { ActionNameWithProps, isOppositeAction } from '../common';
+import AddOrRemoveAttributeActionEditor from './actioneditors/AddOrRemoveAttributeActionEditor.vue'
 import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassActionEditor.vue'
 import AddOrRemoveCustomClassActionEditor from './actioneditors/AddOrRemoveCustomClassActionEditor.vue'
 import AddOrRemoveCustomStyleActionEditor from './actioneditors/AddOrRemoveCustomStyleActionEditor.vue'
@@ -46,6 +47,7 @@ export default {
     }
   },
   components: {
+    AddOrRemoveAttributeActionEditor,
     AddOrRemoveClassActionEditor,
     AddOrRemoveCustomClassActionEditor,
     AddOrRemoveCustomStyleActionEditor,
@@ -66,6 +68,10 @@ export default {
     },
     actionLabel(actionName: string) {
       return labelForAction(availableAction(actionName) as ActionCore, this.editor, t)
+    },
+    isAddRemoveRenameAttributeAction(a: ActionNameWithProps) {
+      const name = a.name as ActionName
+      return name === 'add-attribute' || name === 'remove-attribute' || name === 'rename-attribute'
     },
     isAddRemoveRenameClassAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
@@ -190,6 +196,8 @@ export default {
             </q-btn-dropdown>
           </q-item-section>
           <q-item-section side>
+            <AddOrRemoveAttributeActionEditor v-if="isAddRemoveRenameAttributeAction(a)" :index="index" :action='a'
+              @set-props="setActionProps" />
             <AddOrRemoveClassActionEditor v-if="isAddRemoveRenameClassAction(a)" :index="index" :action='a'
               @set-props="setActionProps" />
             <AddOrRemoveCustomStyleActionEditor v-if="isAddOrRemoveCustomStyleAction(a)" :editor="editor" :index="index"

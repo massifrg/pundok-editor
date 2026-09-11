@@ -109,19 +109,28 @@ declare module '@tiptap/core' {
        */
       renamePandocAttrClass: (c: string, newName: string, typeOrNode?: TypeOrNode) => ReturnType;
       /**
-       * Set a (Pandoc Attrs's) attribute to the nodes or marks of typeOrNode in current selection
+       * Add a (Pandoc Attrs's) attribute to the nodes or marks of typeOrNode in current selection
        */
-      setPandocAttrAttribute: (
-        typeOrNode: TypeOrNode,
-        name: string,
-        value: string,
+      addPandocAttribute: (
+        attrName: string,
+        value?: string,
+        typeOrNode?: TypeOrNode,
       ) => ReturnType;
       /**
-       * Unset (delete) a (Pandoc Attrs's) attribute from the nodes or marks of typeOrNode in current selection
+       * Remove a (Pandoc Attrs's) attribute from the nodes or marks of typeOrNode in current selection
        */
-      unsetPandocAttrAttribute: (
-        typeOrNode: TypeOrNode,
-        name: string,
+      removePandocAttribute: (
+        attrName: string,
+        typeOrNode?: TypeOrNode,
+      ) => ReturnType;
+
+      /**
+       * Rename a (Pandoc Attrs's) attribute from the nodes or marks of typeOrNode in current selection
+       */
+      renamePandocAttribute: (
+        attrName: string,
+        newName: string,
+        typeOrNode?: TypeOrNode,
       ) => ReturnType;
 
       /**
@@ -392,32 +401,14 @@ export const HelperCommandsExtension = Extension.create({
       renamePandocAttrClass: (c, typeOrNode) =>
         renamePandocAttrClassTiptapCommand(c, typeOrNode),
 
-      setPandocAttrAttribute: (typeOrNode, name, value) => {
-        if (name && value && name.length > 0)
-          return updateAttributesTiptapCommand(typeOrNode, (n) => {
-            const attrs = n.attrs;
-            let kv: Record<string, string> | null | undefined = attrs.kv;
-            if (kv === undefined) return undefined;
-            kv = kv || {};
-            kv[name] = value;
-            return { attrs: { ...attrs, kv } };
-          });
-        return doNothingCommand;
-      },
+      addPandocAttribute: (name, value, typeOrNode) =>
+        addPandocAttributeTiptapCommand(name, value, typeOrNode),
 
-      unsetPandocAttrAttribute: (typeOrNode, name) => {
-        if (name && name.length > 0)
-          return updateAttributesTiptapCommand(typeOrNode, (n) => {
-            const attrs = n.attrs;
-            let kv: Record<string, string> | null | undefined = attrs.kv;
-            if (!isObject(kv)) return undefined;
-            kv = Object.fromEntries(
-              Object.entries(kv).filter(([k, v]) => k !== name),
-            );
-            return { attrs: { ...attrs, kv } };
-          });
-        return doNothingCommand;
-      },
+      removePandocAttribute: (attrName, typeOrNode) =>
+        removePandocAttributeTiptapCommand(attrName, typeOrNode),
+
+      renamePandocAttribute: (attrName, newName, typeOrNode) =>
+        renamePandocAttributeTiptapCommand(attrName, newName, typeOrNode),
 
       deleteNodeAtPos:
         (pos, node) =>
@@ -1042,4 +1033,93 @@ export function renamePandocAttrClassTiptapCommand(
       return { attrs: { ...attrs, classes } };
     });
   return doNothingCommand;
+}
+
+export function addPandocAttributeTiptapCommand(attrName: string, value?: string, typeOrNode?: TypeOrNode):
+  (props: CommandProps) => boolean {
+  if (typeOrNode && attrName && attrName.length > 0)
+    return updateAttributesTiptapCommand(typeOrNode, (n) => {
+      const attrs = n.attrs;
+      let kv: Record<string, string> | null | undefined = attrs.kv;
+      if (kv === undefined) return undefined;
+      kv = kv || {};
+      kv[attrName] = value || "";
+      return { attrs: { ...attrs, kv } };
+    });
+  return doNothingCommand;
+}
+
+export function removePandocAttributeTiptapCommand(attrName: string, typeOrNode?: TypeOrNode):
+  (props: CommandProps) => boolean {
+  if (typeOrNode && attrName && attrName.length > 0)
+    return updateAttributesTiptapCommand(typeOrNode, (n) => {
+      const attrs = n.attrs;
+      let kv: Record<string, string> | null | undefined = attrs.kv;
+      if (!isObject(kv)) return undefined;
+      kv = Object.fromEntries(
+        Object.entries(kv).filter(([k, v]) => k !== attrName),
+      );
+      return { attrs: { ...attrs, kv } };
+    });
+  return doNothingCommand;
+}
+
+export function renamePandocAttributeTiptapCommand(attrName: string, newName: string, typeOrNode?: TypeOrNode):
+  (props: CommandProps) => boolean {
+  if (typeOrNode && attrName && attrName.length > 0)
+    return updateAttributesTiptapCommand(typeOrNode, (n) => {
+      const attrs = n.attrs;
+      let kv: Record<string, string> | null | undefined = attrs.kv;
+      if (!isObject(kv)) return undefined;
+      const value = kv[attrName]
+      kv = Object.fromEntries(
+        Object.entries(kv).filter(([k, v]) => k !== attrName),
+      );
+      kv[newName] = value
+      return { attrs: { ...attrs, kv } };
+    });
+  return doNothingCommand;
+}
+
+export function addPandocAttributeCommand(attrName: string, value?: string, typeOrNode?: TypeOrNode): Command {
+  if (typeOrNode && attrName && attrName.length > 0)
+    return updateAttributesCommand(typeOrNode, (n) => {
+      const attrs = n.attrs;
+      let kv: Record<string, string> | null | undefined = attrs.kv;
+      if (kv === undefined) return undefined;
+      kv = kv || {};
+      kv[attrName] = value || "";
+      return { attrs: { ...attrs, kv } };
+    });
+  return () => false;
+}
+
+export function removePandocAttributeCommand(attrName: string, typeOrNode?: TypeOrNode): Command {
+  if (typeOrNode && attrName && attrName.length > 0)
+    return updateAttributesCommand(typeOrNode, (n) => {
+      const attrs = n.attrs;
+      let kv: Record<string, string> | null | undefined = attrs.kv;
+      if (!isObject(kv)) return undefined;
+      kv = Object.fromEntries(
+        Object.entries(kv).filter(([k, v]) => k !== attrName),
+      );
+      return { attrs: { ...attrs, kv } };
+    });
+  return () => false;
+}
+
+export function renamePandocAttributeCommand(attrName: string, newName: string, typeOrNode?: TypeOrNode): Command {
+  if (typeOrNode && attrName && attrName.length > 0)
+    return updateAttributesCommand(typeOrNode, (n) => {
+      const attrs = n.attrs;
+      let kv: Record<string, string> | null | undefined = attrs.kv;
+      if (!isObject(kv)) return undefined;
+      const value = kv[attrName]
+      kv = Object.fromEntries(
+        Object.entries(kv).filter(([k, v]) => k !== attrName),
+      );
+      kv[newName] = value
+      return { attrs: { ...attrs, kv } };
+    });
+  return () => false;
 }

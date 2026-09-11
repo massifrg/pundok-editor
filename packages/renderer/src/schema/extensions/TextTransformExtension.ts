@@ -20,9 +20,11 @@ import {
   MARK_NAME_SPAN,
   SetIndexRefActionProps,
   SetSpanActionProps,
-  SK
+  SK,
+  AddRemoveRenameAttributeActionProps
 } from '../../common';
 import {
+  ACTION_ADD_ATTRIBUTE,
   ACTION_ADD_CLASS,
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_ADD_CUSTOM_STYLE,
@@ -30,10 +32,12 @@ import {
   ACTION_DELETE_CSS_SELECTED,
   ACTION_INSERT_RAW_INLINE,
   ACTION_LOWERCASE,
+  ACTION_REMOVE_ATTRIBUTE,
   ACTION_REMOVE_CLASS,
   ACTION_REMOVE_CUSTOM_CLASS,
   ACTION_REMOVE_CUSTOM_STYLE,
   ACTION_REMOVE_MARK,
+  ACTION_RENAME_ATTRIBUTE,
   ACTION_RENAME_CLASS,
   ACTION_SET_INDEX_REF,
   ACTION_SET_SPAN,
@@ -45,7 +49,7 @@ import { setIndexRefCommand } from './IndexingExtension';
 import { insertRawInlineCommand } from '../nodes/RawInline';
 import { isString } from 'lodash-es';
 import { deleteCssSelectedCommand, unwrapCssSelectedCommand } from './CssSelectionExtension';
-import { addPandocAttrClassCommand, removePandocAttrClassCommand, renamePandocAttrClassCommand } from './HelperCommandsExtension';
+import { addPandocAttrClassCommand, addPandocAttributeCommand, removePandocAttrClassCommand, removePandocAttributeCommand, renamePandocAttrClassCommand, renamePandocAttributeCommand } from './HelperCommandsExtension';
 
 export type TextTransformType =
   | 'add-mark'
@@ -308,6 +312,20 @@ function actionNameWithPropsToCommand(
       return renamePandocAttrClassCommand(
         (props as AddRemoveRenameClassActionProps).className,
         (props as AddRemoveRenameClassActionProps).newName,
+        typeName
+      )
+    case ACTION_ADD_ATTRIBUTE.name:
+      return addPandocAttributeCommand(
+        (props as AddRemoveRenameAttributeActionProps).attrName,
+        (props as AddRemoveRenameAttributeActionProps).attrValue,
+        typeName
+      )
+    case ACTION_REMOVE_ATTRIBUTE.name:
+      return removePandocAttributeCommand((props as AddRemoveRenameAttributeActionProps).attrName, typeName)
+    case ACTION_RENAME_ATTRIBUTE.name:
+      return renamePandocAttributeCommand(
+        (props as AddRemoveRenameAttributeActionProps).attrName,
+        (props as AddRemoveRenameAttributeActionProps).newName,
         typeName
       )
     default:
