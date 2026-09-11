@@ -51,8 +51,7 @@ export async function computeProjectConfiguration(
     configurationName?: string
   ) => Promise<PundokEditorConfig | undefined>
 ): Promise<PundokEditorProject> {
-  let computedConfig: PundokEditorConfig | undefined;
-  const projectConfig = new PundokEditorConfig({
+  let computedConfig: PundokEditorConfig = new PundokEditorConfig({
     name: project.name,
     description: project.description,
     version: [],
@@ -60,32 +59,23 @@ export async function computeProjectConfiguration(
     ...project.editorConfig,
   } as PundokEditorConfigInit);
   const inherited = project.configurations ? [...project.configurations] : [];
-  if (inherited.length === 0) {
-    computedConfig = projectConfig;
-  } else {
-    try {
+  try {
+    while (inherited.length > 0) {
       let configName = inherited.shift()
-      computedConfig = await getConfiguration(configName);
-      if (computedConfig) {
-        while (inherited.length > 0) {
-          const configurationName = inherited.shift();
-          let onTop = await getConfiguration(configurationName!);
-          if (!onTop)
-            return Promise.reject(`can't read configuration "${name}"`);
-          computedConfig = computedConfig.addConfiguration(onTop);
-        }
-        computedConfig = computedConfig.addConfiguration(projectConfig);
-        const pruning = project.editorConfig.remove
-        if (pruning)
-          computedConfig = getPrunedConfigInit(computedConfig, pruning)
-      }
-    } catch (err) {
-      // console.log(err);
-      return Promise.reject(`can't read configuration "${name}"`);
+      let inheritedConfig = await getConfiguration(configName);
+      if (!inheritedConfig)
+        return Promise.reject(`can't read configuration "${configName}"`);
+      computedConfig = computedConfig.addConfiguration(inheritedConfig);
     }
+    const pruning = project.editorConfig.remove
+    if (pruning)
+      computedConfig = getPrunedConfigInit(computedConfig, pruning)
+  } catch (err) {
+    // console.log(err);
+    return Promise.reject(`can't compute configuration for project "${project.name}"`);
   }
   // console.log(computedConfig);
-  return computedConfig ? { ...project, computedConfig } : project;
+  return { ...project, computedConfig }
 }
 
 export interface GetProjectOptions {
