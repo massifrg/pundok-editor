@@ -10,7 +10,7 @@
     "addMark": "aggiungi Mark",
     "deleteCssSelected": "cancella il Node/Mark selezionato con CSS",
     "editors": {
-      "attributeName": "aggiungi attributo",
+      "attributeName": "nome dell'attributo",
       "attributeValue": "valore dell'attributo",
       "class": "classe",
       "rename to": "rinomina in"
