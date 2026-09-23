@@ -71,7 +71,11 @@ const setupMainPackageWatcher = ({ config: { server } }) => {
       }
 
       const argv = process.argv.slice(2);
-      spawnProcess = spawn(String(electronPath), ['.', ...argv]);
+      const electronArgs =
+        process.platform === 'linux'
+          ? ['.', '--no-sandbox', ...argv]
+          : ['.', ...argv];
+      spawnProcess = spawn(String(electronPath), electronArgs);
 
       spawnProcess.stdout.on(
         'data',
