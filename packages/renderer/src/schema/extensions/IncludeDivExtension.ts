@@ -1,4 +1,6 @@
 import { Extension } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
+import { asTiptapCommand } from '../helpers/command';
 import { innerNodeDepth } from '../helpers';
 import {
   ActionNameWithProps,
@@ -38,30 +40,7 @@ export const IncludeDivExtension = Extension.create({
     return {
       setIncludeDiv:
         (inclAttrs?: Partial<IncludeDivAttrs>, divPos?: number) =>
-          ({ dispatch, editor, state, tr }) => {
-            let pos = divPos;
-            if (!pos) {
-              const { $from } = state.selection;
-              const d = innerNodeDepth($from, (n) => n.type.name === NODE_NAME_DIV);
-              if (!d) return false;
-              pos = $from.start(d) - 1;
-            }
-            if (!pos) return false;
-            const div = state.doc.nodeAt(pos);
-            if (!div || div.type.name !== NODE_NAME_DIV) return false;
-            if (dispatch) {
-              const classes = div.attrs.classes || [];
-              if (!classes.includes(INCLUDE_DOC_CLASS))
-                classes.push(INCLUDE_DOC_CLASS);
-              tr.setNodeMarkup(pos, undefined, {
-                ...div.attrs,
-                classes,
-                [INCLUDE_SRC_ATTR]: inclAttrs?.src,
-                [INCLUDE_FORMAT_ATTR]: inclAttrs?.format,
-              });
-            }
-            return true;
-          },
+          asTiptapCommand(setIncludeDivCommand(inclAttrs, divPos)),
     };
   },
 
@@ -82,6 +61,34 @@ export const IncludeDivExtension = Extension.create({
     }
   }
 });
+
+const setIncludeDivCommand = (
+  inclAttrs?: Partial<IncludeDivAttrs>,
+  divPos?: number,
+): Command => (state, dispatch) => {
+  const tr = state.tr;
+  let pos = divPos;
+  if (!pos) {
+    const { $from } = state.selection;
+    const d = innerNodeDepth($from, (n) => n.type.name === NODE_NAME_DIV);
+    if (!d) return false;
+    pos = $from.start(d) - 1;
+  }
+  if (!pos) return false;
+  const div = state.doc.nodeAt(pos);
+  if (!div || div.type.name !== NODE_NAME_DIV) return false;
+  if (dispatch) {
+    const classes = div.attrs.classes || [];
+    if (!classes.includes(INCLUDE_DOC_CLASS)) classes.push(INCLUDE_DOC_CLASS);
+    dispatch(tr.setNodeMarkup(pos, undefined, {
+      ...div.attrs,
+      classes,
+      [INCLUDE_SRC_ATTR]: inclAttrs?.src,
+      [INCLUDE_FORMAT_ATTR]: inclAttrs?.format,
+    }));
+  }
+  return true;
+};
 
 export const IncludeDocCustomClass: CustomClass = {
   name: INCLUDE_DOC_CLASS,

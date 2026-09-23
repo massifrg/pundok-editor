@@ -30,6 +30,7 @@ import {
   pandocTableBodies,
   pandocTableSectionRows,
 } from '../helpers';
+import { asTiptapCommand, type TiptapCommand } from '../helpers/command';
 import { Editor } from '@tiptap/vue-3';
 import {
   NODE_NAME_BLOCKQUOTE,
@@ -310,11 +311,8 @@ export function updateAttributesCommand(
 export function updateAttributesTiptapCommand(
   typeOrNode: TypeOrNode,
   callback: UpdateNodeOrMarkCallback,
-) {
-  return (props: CommandProps) => {
-    const { state, dispatch, view } = props;
-    return updateAttributesCommand(typeOrNode, callback)(state, dispatch, view)
-  }
+): TiptapCommand {
+  return asTiptapCommand(updateAttributesCommand(typeOrNode, callback));
 }
 
 function isWrappingNode(n: ProsemirrorNode | NodeType | string) {
@@ -987,98 +985,44 @@ export function renamePandocAttrClassCommand(
 }
 
 export function addPandocAttrClassTiptapCommand(className: string, typeOrNode?: TypeOrNode):
-  (props: CommandProps) => boolean {
-  if (typeOrNode && className && className.length > 0)
-    return updateAttributesTiptapCommand(typeOrNode, (n) => {
-      const attrs = n.attrs;
-      let classes: string[] | null | undefined = attrs.classes;
-      if (classes === undefined) return undefined;
-      classes = classes || [];
-      if (classes.includes(className)) return undefined;
-      classes = [...classes, className];
-      return { attrs: { ...attrs, classes } };
-    });
-  return doNothingCommand;
+  TiptapCommand {
+  return asTiptapCommand(addPandocAttrClassCommand(className, typeOrNode));
 }
 
 export function removePandocAttrClassTiptapCommand(className: string, typeOrNode?: TypeOrNode):
-  (props: CommandProps) => boolean {
-  if (typeOrNode && className && className.length > 0)
-    return updateAttributesTiptapCommand(typeOrNode, (n) => {
-      const attrs = n.attrs;
-      let classes: string[] | null | undefined = attrs.classes;
-      if (classes === undefined) return undefined;
-      classes = classes || [];
-      if (!classes.includes(className)) return undefined;
-      classes = classes.filter((oc) => oc !== className);
-      return { attrs: { ...attrs, classes } };
-    });
-  return doNothingCommand;
+  TiptapCommand {
+  return asTiptapCommand(removePandocAttrClassCommand(className, typeOrNode));
 }
 
 export function renamePandocAttrClassTiptapCommand(
   className: string,
   newName: string,
   typeOrNode?: TypeOrNode
-): (props: CommandProps) => boolean {
-  if (typeOrNode && className && className.length > 0)
-    return updateAttributesTiptapCommand(typeOrNode, (n) => {
-      const attrs = n.attrs;
-      let classes: string[] | null | undefined = attrs.classes;
-      if (classes === undefined) return undefined;
-      classes = classes || [];
-      if (!classes.includes(className)) return undefined;
-      classes = classes.filter((oc) => oc !== className);
-      classes.push(newName)
-      return { attrs: { ...attrs, classes } };
-    });
-  return doNothingCommand;
+): TiptapCommand {
+  return asTiptapCommand(
+    renamePandocAttrClassCommand(className, newName, typeOrNode),
+  );
 }
 
 export function addPandocAttributeTiptapCommand(attrName: string, value?: string, typeOrNode?: TypeOrNode):
-  (props: CommandProps) => boolean {
-  if (typeOrNode && attrName && attrName.length > 0)
-    return updateAttributesTiptapCommand(typeOrNode, (n) => {
-      const attrs = n.attrs;
-      let kv: Record<string, string> | null | undefined = attrs.kv;
-      if (kv === undefined) return undefined;
-      kv = kv || {};
-      kv[attrName] = value || "";
-      return { attrs: { ...attrs, kv } };
-    });
-  return doNothingCommand;
+  TiptapCommand {
+  return asTiptapCommand(
+    addPandocAttributeCommand(attrName, value, typeOrNode),
+  );
 }
 
 export function removePandocAttributeTiptapCommand(attrName: string, typeOrNode?: TypeOrNode):
-  (props: CommandProps) => boolean {
-  if (typeOrNode && attrName && attrName.length > 0)
-    return updateAttributesTiptapCommand(typeOrNode, (n) => {
-      const attrs = n.attrs;
-      let kv: Record<string, string> | null | undefined = attrs.kv;
-      if (!isObject(kv)) return undefined;
-      kv = Object.fromEntries(
-        Object.entries(kv).filter(([k, v]) => k !== attrName),
-      );
-      return { attrs: { ...attrs, kv } };
-    });
-  return doNothingCommand;
+  TiptapCommand {
+  return asTiptapCommand(
+    removePandocAttributeCommand(attrName, typeOrNode),
+  );
 }
 
 export function renamePandocAttributeTiptapCommand(attrName: string, newName: string, typeOrNode?: TypeOrNode):
-  (props: CommandProps) => boolean {
-  if (typeOrNode && attrName && attrName.length > 0)
-    return updateAttributesTiptapCommand(typeOrNode, (n) => {
-      const attrs = n.attrs;
-      let kv: Record<string, string> | null | undefined = attrs.kv;
-      if (!isObject(kv)) return undefined;
-      const value = kv[attrName]
-      kv = Object.fromEntries(
-        Object.entries(kv).filter(([k, v]) => k !== attrName),
-      );
-      kv[newName] = value
-      return { attrs: { ...attrs, kv } };
-    });
-  return doNothingCommand;
+  TiptapCommand {
+  return asTiptapCommand(
+    renamePandocAttributeCommand(attrName, newName, typeOrNode),
+  );
 }
 
 export function addPandocAttributeCommand(attrName: string, value?: string, typeOrNode?: TypeOrNode): Command {

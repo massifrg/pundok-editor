@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core';
+import { asTiptapCommand } from '../helpers/command';
 import { Node } from '@tiptap/pm/model';
-import { EditorState, Transaction } from '@tiptap/pm/state';
+import { Command, EditorState, Transaction } from '@tiptap/pm/state';
 import {
   DEFAULT_INDEX_NAME,
   INDEX_CLASS,
@@ -42,23 +43,26 @@ export const FixDocStructureExtension = Extension.create({
     return {
       fixNodeAtPos:
         (pos, config) =>
-          ({ dispatch, state, tr }) => {
-            const node = state.doc.nodeAt(pos);
-            if (node) {
-              let transaction = nodeFromAttrsFixer(config)({
-                node,
-                pos,
-                state,
-                tr,
-              });
-              if (dispatch) dispatch(transaction);
-              return true;
-            }
-            return false;
-          },
+          asTiptapCommand(fixNodeAtPosCommand(pos, config)),
     };
   },
 });
+
+const fixNodeAtPosCommand = (
+  pos: number,
+  config?: Partial<PundokEditorConfig>,
+): Command => (state, dispatch) => {
+  const node = state.doc.nodeAt(pos);
+  if (!node) return false;
+  const transaction = nodeFromAttrsFixer(config)({
+    node,
+    pos,
+    state,
+    tr: state.tr,
+  });
+  if (dispatch) dispatch(transaction);
+  return true;
+};
 
 // const indexRefFixer: ProsemirrorPandocFixer = ({ state, tr, node, pos }) => {
 //   const transaction = tr || state.tr

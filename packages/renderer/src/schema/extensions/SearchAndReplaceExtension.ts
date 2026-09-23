@@ -19,6 +19,8 @@ import {
   ACTION_SELECT_PREV,
   setActionCommand
 } from '../../actions';
+import { asTiptapCommand } from '../helpers/command';
+import type { Command } from '@tiptap/pm/state';
 
 const SEARCH_AND_REPLACE_EXT_NAME = 'searchAndReplace';
 
@@ -52,37 +54,25 @@ export const SearchAndReplaceExtension = Extension.create({
     return {
       startSearch:
         (query) =>
-          ({ dispatch, tr }) => {
-            if (dispatch) dispatch(setSearchState(tr, query));
-            return true;
-          },
+          asTiptapCommand(startSearchCommand(query)),
       selectPrevFoundText:
         (wrap) =>
-          ({ dispatch, state }) =>
-            (wrap ? findPrev : findPrevNoWrap)(state, dispatch),
+          asTiptapCommand(selectPrevFoundTextCommand(wrap)),
       selectNextFoundText:
         (wrap) =>
-          ({ dispatch, state }) =>
-            (wrap ? findNext : findNextNoWrap)(state, dispatch),
+          asTiptapCommand(selectNextFoundTextCommand(wrap)),
       replaceSelectedText:
         () =>
-          ({ dispatch, state }) =>
-            replaceCurrent(state, dispatch),
+          asTiptapCommand(replaceSelectedTextCommand()),
       replaceNextText:
         (wrap) =>
-          ({ dispatch, state }) =>
-            (wrap ? replaceNext : replaceNextNoWrap)(state, dispatch),
+          asTiptapCommand(replaceNextTextCommand(wrap)),
       replaceAll:
         () =>
-          ({ dispatch, state }) =>
-            replaceAll(state, dispatch),
+          asTiptapCommand(replaceAllCommand()),
       hideFoundTexts:
         () =>
-          ({ dispatch, tr }) => {
-            if (dispatch)
-              dispatch(setSearchState(tr, new SearchQuery({ search: '' })));
-            return true;
-          },
+          asTiptapCommand(hideFoundTextsCommand()),
     };
   },
 
@@ -94,3 +84,26 @@ export const SearchAndReplaceExtension = Extension.create({
     }
   }
 });
+
+const startSearchCommand = (query: SearchQuery): Command => (state, dispatch) => {
+  if (dispatch) dispatch(setSearchState(state.tr, query));
+  return true;
+};
+
+const selectPrevFoundTextCommand = (wrap?: boolean): Command => (state, dispatch) =>
+  (wrap ? findPrev : findPrevNoWrap)(state, dispatch);
+
+const selectNextFoundTextCommand = (wrap?: boolean): Command => (state, dispatch) =>
+  (wrap ? findNext : findNextNoWrap)(state, dispatch);
+
+const replaceSelectedTextCommand = (): Command => (state, dispatch) =>
+  replaceCurrent(state, dispatch);
+
+const replaceNextTextCommand = (wrap?: boolean): Command => (state, dispatch) =>
+  (wrap ? replaceNext : replaceNextNoWrap)(state, dispatch);
+
+const replaceAllCommand = (): Command => (state, dispatch) =>
+  replaceAll(state, dispatch);
+
+const hideFoundTextsCommand = (): Command =>
+  startSearchCommand(new SearchQuery({ search: '' }));

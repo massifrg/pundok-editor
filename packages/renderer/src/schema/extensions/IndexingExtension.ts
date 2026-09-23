@@ -2,6 +2,7 @@ import { Command, EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import { Extension } from '@tiptap/core';
+import { asTiptapCommand } from '../helpers/command';
 import { changedNodes, DocState } from '../helpers';
 import type { NodeWithPos } from '@tiptap/vue-3';
 import {
@@ -18,6 +19,16 @@ import {
   SK,
   indexRefDecorationCss,
 } from '../../common';
+
+const redecorateIndexRefsCommand = (): Command => (state, dispatch) => {
+  if (dispatch) dispatch(state.tr.setMeta(META_REDECORATE_INDEX_REFS, true));
+  return true;
+};
+
+const detectDocumentIndicesCommand = (): Command => (state, dispatch) => {
+  if (dispatch) dispatch(state.tr.setMeta(META_DETECT_DOCUMENT_INDICES, true));
+  return true;
+};
 import { DEFAULT_INDEX_NAME } from '../../common';
 import { documentIndices, mergeIndices } from '../helpers/indices';
 import {
@@ -271,23 +282,13 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
     return {
       addIndexRef:
         (optIndex?: Index | string) =>
-          ({ state, dispatch }) => setIndexRefCommand(optIndex)(state, dispatch),
+          asTiptapCommand(setIndexRefCommand(optIndex)),
       redecorateIndexRefs:
         () =>
-          ({ tr, dispatch }) => {
-            if (dispatch) {
-              tr.setMeta(META_REDECORATE_INDEX_REFS, true);
-            }
-            return true;
-          },
+          asTiptapCommand(redecorateIndexRefsCommand()),
       detectDocumentIndices:
         () =>
-          ({ tr, dispatch }) => {
-            if (dispatch) {
-              tr.setMeta(META_DETECT_DOCUMENT_INDICES, true);
-            }
-            return true;
-          },
+          asTiptapCommand(detectDocumentIndicesCommand()),
       setIndexTermAutoId: (stv) => ({ dispatch, editor, state }) => {
         const backend = useBackend().backend
         if (!backend) return false
@@ -319,6 +320,7 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
               terms_pos.push(indexDivStart + pos)
             return true
           });
+
           terms_pos.sort((p1, p2) => p2 - p1)
           const docState = getDocState(state)
           const doc = state.doc;

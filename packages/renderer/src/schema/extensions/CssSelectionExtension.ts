@@ -14,6 +14,7 @@ import { Mapping } from '@tiptap/pm/transform';
 import { NODE_NAME_PARAGRAPH } from '../../common';
 import { CssSelectOptions, SelectedNodeOrMark, cssSelect } from '../helpers';
 import { unwrapNodeCommand } from './HelperCommandsExtension';
+import { asTiptapCommand } from '../helpers/command';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -74,45 +75,57 @@ export const CssSelectionExtension = Extension.create({
     return {
       cssSelect:
         (selector, options) =>
-          ({ dispatch, tr }) => {
-            if (dispatch) {
-              dispatch(tr.setMeta(META_SET_CSS_SELECTOR, { selector, options }));
-            }
-            return true;
-          },
-      selectPrevCss: (wrap) => ({ dispatch, state, tr }) => {
-        const selections = getCssSelected(state)
-        const count = selections.length
-        if (count === 0) return false
-        const from = state.selection.$anchor.pos
-        const lastIndex = count - 1
-        let index = lastIndex
-        while (index > 0 && selections[index].from >= from)
-          index -= 1
-        if (index === 0 && selections[0].from >= from)
-          index = wrap ? lastIndex : -1
-        if (index < 0 || index >= count) return false
-        if (dispatch)
-          dispatch(setCssSelection(tr, selections[index]))
-        return true
-      },
-      selectNextCss: (wrap) => ({ dispatch, state, tr }) => {
-        const selections = getCssSelected(state)
-        const count = selections.length
-        if (count === 0) return false
-        const from = state.selection.$anchor.pos
-        const lastIndex = count - 1
-        let index = 0
-        while (index < lastIndex && selections[index].from <= from)
-          index += 1
-        if (index === lastIndex && selections[lastIndex].from <= from)
-          index = wrap ? 0 : count
-        if (index < 0 || index >= count) return false
-        if (dispatch)
-          dispatch(setCssSelection(tr, selections[index]))
-        return true
-      },
-      replaceWithText: (text: string) => ({ dispatch, state, tr }) => {
+          asTiptapCommand(cssSelectCommand(selector, options)),
+      selectPrevCss: (wrap) => asTiptapCommand(selectPrevCssCommand(wrap)),
+      selectNextCss: (wrap) => asTiptapCommand(selectNextCssCommand(wrap)),
+      replaceWithText: (text: string) => asTiptapCommand(replaceWithTextCommand(text)),
+      deleteCssSelected: () =>
+        ({ dispatch, state, view }) => deleteCssSelectedCommand(state, dispatch, view),
+      unwrapCssSelected: () =>
+        ({ dispatch, state, view }) => unwrapCssSelectedCommand(state, dispatch, view),
+    };
+  },
+});
+
+const cssSelectCommand = (selector: string, options: CssSelectOptions): Command => (state, dispatch) => {
+  if (dispatch)
+    dispatch(state.tr.setMeta(META_SET_CSS_SELECTOR, { selector, options }));
+  return true;
+};
+
+const selectPrevCssCommand = (wrap: boolean | undefined): Command => (state, dispatch) => {
+  const tr = state.tr;
+  const selections = getCssSelected(state);
+  const count = selections.length;
+  if (count === 0) return false;
+  const from = state.selection.$anchor.pos;
+  const lastIndex = count - 1;
+  let index = lastIndex;
+  while (index > 0 && selections[index].from >= from) index -= 1;
+  if (index === 0 && selections[0].from >= from) index = wrap ? lastIndex : -1;
+  if (index < 0 || index >= count) return false;
+  if (dispatch) dispatch(setCssSelection(tr, selections[index]));
+  return true;
+};
+
+const selectNextCssCommand = (wrap: boolean | undefined): Command => (state, dispatch) => {
+  const tr = state.tr;
+  const selections = getCssSelected(state);
+  const count = selections.length;
+  if (count === 0) return false;
+  const from = state.selection.$anchor.pos;
+  const lastIndex = count - 1;
+  let index = 0;
+  while (index < lastIndex && selections[index].from <= from) index += 1;
+  if (index === lastIndex && selections[lastIndex].from <= from)
+    index = wrap ? 0 : count;
+  if (index < 0 || index >= count) return false;
+  if (dispatch) dispatch(setCssSelection(tr, selections[index]));
+  return true;
+};
+
+const replaceWithTextCommand = (text: string): Command => (state, dispatch) => {
+        const tr = state.tr;
         const { doc, schema, selection } = state
         if (selection.empty) return false
         if (dispatch) {
@@ -174,14 +187,7 @@ export const CssSelectionExtension = Extension.create({
             dispatch(tr)
         }
         return true
-      },
-      deleteCssSelected: () =>
-        ({ dispatch, state, view }) => deleteCssSelectedCommand(state, dispatch, view),
-      unwrapCssSelected: () =>
-        ({ dispatch, state, view }) => unwrapCssSelectedCommand(state, dispatch, view),
-    };
-  },
-});
+};
 
 function mapSelectedNodeOrMark(
   selected: SelectedNodeOrMark,

@@ -1,4 +1,5 @@
 import { CommandProps, Extension } from '@tiptap/core';
+import { asTiptapCommand } from '../helpers/command';
 import { Attrs, Mark, MarkType } from '@tiptap/pm/model';
 import { Command } from '@tiptap/pm/state';
 import {
@@ -95,17 +96,15 @@ export const TextTransformExtension = Extension.create({
     return {
       toLowercase:
         (locales?: string | string[]) =>
-          ({ dispatch, state }) =>
-            lowerCaseCommand(locales)(state, dispatch),
+          asTiptapCommand(lowerCaseCommand(locales)),
       toUppercase:
         (locales?: string | string[]) =>
-          ({ dispatch, state }) =>
-            upperCaseCommand(locales)(state, dispatch),
+          asTiptapCommand(upperCaseCommand(locales)),
       toUppercaseFirst:
         (locales?: string | string[]) =>
-          ({ dispatch, state }) =>
-            upperCaseFirstCommand(locales)(state, dispatch),
-      applyTextTransforms,
+          asTiptapCommand(upperCaseFirstCommand(locales)),
+      applyTextTransforms: (transforms) =>
+        asTiptapCommand(applyTextTransformsCommand(transforms)),
       // TODO: the next one should go in a file of its own
       applyActions:
         (actions: ActionNameWithProps[], selectedNodeOrMark) =>
@@ -120,61 +119,6 @@ export const TextTransformExtension = Extension.create({
     }
   }
 });
-
-const applyTextTransforms: (transforms: TextTransform[]) => (cp: CommandProps) => boolean =
-  (transforms: TextTransform[]) =>
-    ({ dispatch, state, tr }) => {
-      const { empty, from, to } = state.selection;
-      if (empty) return false;
-      if (dispatch) {
-        const schema = state.schema;
-        let mark: Mark | undefined;
-        transforms.forEach((t) => {
-          switch (t.type) {
-            case 'add-mark':
-              mark = getMark(
-                (t as MarkTransform).mark,
-                (t as MarkTransform).attrs,
-                schema
-              );
-              if (mark) tr.addMark(from, to, mark);
-              break;
-            case 'remove-mark':
-              mark = getMark(
-                (t as MarkTransform).mark,
-                (t as MarkTransform).attrs,
-                schema
-              );
-              if (mark) tr.removeMark(from, to, mark);
-              break;
-            case 'lowercase':
-              lowerCaseTransaction(
-                tr,
-                schema,
-                (t as CapitalizeTransform).locales
-              );
-              break;
-            case 'uppercase':
-              upperCaseTransaction(
-                tr,
-                schema,
-                (t as CapitalizeTransform).locales
-              );
-              break;
-            case 'uppercase-first':
-              upperCaseFirstTransaction(
-                tr,
-                schema,
-                (t as CapitalizeTransform).locales
-              );
-              break;
-            // TODO: add/remove class, add/remove custom class
-          }
-        });
-        dispatch(tr);
-      }
-      return true;
-    }
 
 function applyTextTransformsCommand(transforms: TextTransform[]): Command {
   return (state, dispatch, view) => {

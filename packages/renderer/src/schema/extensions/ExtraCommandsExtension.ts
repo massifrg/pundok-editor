@@ -1,5 +1,7 @@
 import { Extension } from '@tiptap/core';
+import { asTiptapCommand } from '../helpers/command';
 import { Attrs, MarkType, Node as ProsemirrorNode } from '@tiptap/pm/model';
+import type { Command } from '@tiptap/pm/state';
 import { isString } from 'lodash-es';
 import { ChangeMarkOptions } from '../helpers';
 import {
@@ -61,70 +63,18 @@ export const ExtraCommandsExtension = Extension.create({
 
   addCommands() {
     return {
-      setMarkNoAtoms:
-        (
-          mark: MarkType | string,
-          attrs: Attrs | null = null,
-          options?: ChangeMarkOptions
-        ) =>
-          ({ state, dispatch }) => {
-            const markType: MarkType = isString(mark)
-              ? state.schema.marks[mark]
-              : mark;
-            if (!markType) return false;
-            const opts = options || { excludeNonLeafAtoms: 'only-content' };
-            return setMarkNoAtoms(markType, attrs, opts)(state, dispatch);
-          },
-      unsetMarkNoAtoms:
-        (mark: MarkType | string, options?: ChangeMarkOptions) =>
-          ({ state, dispatch }) => {
-            const markType: MarkType = isString(mark)
-              ? state.schema.marks[mark]
-              : mark;
-            if (!markType) return false;
-            const opts = options || { excludeNonLeafAtoms: 'only-content' };
-            return unsetMarkNoAtoms(markType, opts)(state, dispatch);
-          },
+      setMarkNoAtoms: (mark, attrs, options) =>
+        asTiptapCommand(setMarkNoAtomsCommand(mark, attrs, options)),
+      unsetMarkNoAtoms: (mark, options) =>
+        asTiptapCommand(unsetMarkNoAtomsCommand(mark, options)),
       toggleMarkNoAtoms:
         (
           mark: MarkType | string,
           attrs: Attrs | null = null,
           options?: ChangeMarkOptions
         ) =>
-          ({ state, dispatch }) => {
-            const markType: MarkType = isString(mark)
-              ? state.schema.marks[mark]
-              : mark;
-            if (!markType) return false;
-            const opts = options || {
-              removeWhenPresent: false,
-              excludeNonLeafAtoms: 'only-content',
-            };
-            return toggleMarkNoAtoms(markType, attrs, opts)(state, dispatch);
-          },
-      duplicateNode: (pos?: number) => ({ dispatch, state, tr }) => {
-        let node: ProsemirrorNode | null
-        let insertPos: number
-        const { doc, selection } = state
-        if (pos) {
-          node = doc.nodeAt(pos)
-          if (!node || !isNodeDuplicable(node)) return false
-          insertPos = pos + node.nodeSize
-        } else {
-          const $anchor = selection.$anchor
-          let depth = $anchor.depth
-          node = $anchor.node(depth)
-          while (depth > 0 && !isNodeDuplicable(node)) depth--
-          insertPos = $anchor.end(depth) + 1
-        }
-        if (!node) return false
-        if (dispatch) {
-          const duplicate = node.type.createAndFill(node.attrs, node.content)
-          if (!duplicate) return false
-          tr.insert(insertPos, duplicate)
-        }
-        return true
-      }
+          asTiptapCommand(toggleMarkNoAtomsCommand(mark, attrs, options)),
+      duplicateNode: (pos?: number) => asTiptapCommand(duplicateNodeCommand(pos)),
     };
   },
 
@@ -134,6 +84,64 @@ export const ExtraCommandsExtension = Extension.create({
     }
   }
 });
+
+const setMarkNoAtomsCommand = (
+  mark: MarkType | string,
+  attrs: Attrs | null = null,
+  options?: ChangeMarkOptions,
+): Command => (state, dispatch) => {
+  const markType: MarkType = isString(mark) ? state.schema.marks[mark] : mark;
+  if (!markType) return false;
+  return setMarkNoAtoms(markType, attrs, options || { excludeNonLeafAtoms: 'only-content' })(state, dispatch);
+};
+
+const unsetMarkNoAtomsCommand = (
+  mark: MarkType | string,
+  options?: ChangeMarkOptions,
+): Command => (state, dispatch) => {
+  const markType: MarkType = isString(mark) ? state.schema.marks[mark] : mark;
+  if (!markType) return false;
+  return unsetMarkNoAtoms(markType, options || { excludeNonLeafAtoms: 'only-content' })(state, dispatch);
+};
+
+const toggleMarkNoAtomsCommand = (
+  mark: MarkType | string,
+  attrs: Attrs | null = null,
+  options?: ChangeMarkOptions,
+): Command => (state, dispatch) => {
+  const markType: MarkType = isString(mark) ? state.schema.marks[mark] : mark;
+  if (!markType) return false;
+  return toggleMarkNoAtoms(markType, attrs, options || {
+    removeWhenPresent: false,
+    excludeNonLeafAtoms: 'only-content',
+  })(state, dispatch);
+};
+
+const duplicateNodeCommand = (pos?: number): Command => (state, dispatch) => {
+  const tr = state.tr;
+  let node: ProsemirrorNode | null;
+  let insertPos: number;
+  const { doc, selection } = state;
+  if (pos) {
+    node = doc.nodeAt(pos);
+    if (!node || !isNodeDuplicable(node)) return false;
+    insertPos = pos + node.nodeSize;
+  } else {
+    const $anchor = selection.$anchor;
+    let depth = $anchor.depth;
+    node = $anchor.node(depth);
+    while (depth > 0 && !isNodeDuplicable(node)) depth--;
+    insertPos = $anchor.end(depth) + 1;
+  }
+  if (!node) return false;
+  if (dispatch) {
+    const duplicate = node.type.createAndFill(node.attrs, node.content);
+    if (!duplicate) return false;
+    tr.insert(insertPos, duplicate);
+    dispatch(tr);
+  }
+  return true;
+};
 
 function isNodeDuplicable(node: ProsemirrorNode): boolean {
   if (!node) return false

@@ -15,6 +15,7 @@ import {
   getAutoDelimitersState
 } from '../helpers';
 import { Command } from '@tiptap/pm/state';
+import { asTiptapCommand } from '../helpers/command';
 
 export interface AutoDelimitersOptions {
   HTMLAttributes: Record<string, any>;
@@ -120,19 +121,29 @@ export const AutoDelimitersExtension = Extension.create<AutoDelimitersOptions>({
 
   addCommands() {
     return {
-      registerAutoDelimiters: (delimiters: Record<string, string[]>) => ({ dispatch, tr }) => {
-        if (dispatch) {
-          dispatch(tr.setMeta(REGISTER_AUTO_DELIMITER, delimiters))
-        }
-        return true
-      },
-      fixAutoDelimiters: (fixFrom?: number, fixTo?: number) => ({ dispatch, state }) =>
-        fixAutoDelimitersInRange(fixFrom, fixTo)(state, dispatch),
-      fixAllAutoDelimiters: () => ({ dispatch, state }) =>
-        fixAutoDelimitersInRange(0, state.doc.nodeSize)(state, dispatch),
+      registerAutoDelimiters: (delimiters: Record<string, string[]>) =>
+        asTiptapCommand(registerAutoDelimitersCommand(delimiters)),
+      fixAutoDelimiters: (fixFrom?: number, fixTo?: number) =>
+        asTiptapCommand(fixAutoDelimitersCommand(fixFrom, fixTo)),
+      fixAllAutoDelimiters: () => asTiptapCommand(fixAllAutoDelimitersCommand()),
     };
   },
 });
+
+const registerAutoDelimitersCommand = (
+  delimiters: Record<string, string[]>,
+): Command => (state, dispatch) => {
+  if (dispatch) dispatch(state.tr.setMeta(REGISTER_AUTO_DELIMITER, delimiters));
+  return true;
+};
+
+const fixAutoDelimitersCommand = (
+  fixFrom?: number,
+  fixTo?: number,
+): Command => fixAutoDelimitersInRange(fixFrom, fixTo);
+
+const fixAllAutoDelimitersCommand = (): Command => (state, dispatch) =>
+  fixAutoDelimitersInRange(0, state.doc.nodeSize)(state, dispatch);
 
 export const fixAutoDelimitersInRange: (fixFrom?: number, fixTo?: number) => Command =
   (fixFrom, fixTo) => (state, dispatch, view) => {
