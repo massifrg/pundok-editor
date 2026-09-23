@@ -288,12 +288,11 @@ setupQuasarIcons()
 </script>
 
 <script lang="ts">
+import { defineAsyncComponent } from 'vue';
 import type { Node, Mark } from '@tiptap/pm/model';
 import { MarkRange, NodeWithPos } from '@tiptap/vue-3';
 import BreadCrumb from './BreadCrumb.vue';
-import CharsTableButton from './CharsTableButton.vue';
 import ChooseConfigButton from './ChooseConfigButton.vue';
-import CodemirrorButton from './CodemirrorButton.vue';
 import CustomWrapperMenu from './CustomWrapperMenu.vue';
 import ElementSelectionButton from './ElementSelectionButton.vue';
 import GlobalProceduresDialog from './GlobalProceduresDialog.vue';
@@ -308,7 +307,6 @@ import RawInlineButton from './RawInlineButton.vue';
 import RawBlockMenu from './RawBlockMenu.vue';
 import RenderButton from './RenderButton.vue';
 import SaveButton from './SaveButton.vue';
-import TableTools from './TableTools.vue';
 import ToolbarButton from './ToolbarButton.vue';
 import WholeDocTransformsButton from './WholeDocTransformsButton.vue';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
@@ -347,6 +345,14 @@ import ExportProgress from './ExportProgress.vue';
 import OpenButton from './OpenButton.vue';
 import { showDocStateDialog } from './helpers';
 // import { SK } from '../common'
+
+const CodemirrorButton = defineAsyncComponent(
+  () => import('./CodemirrorButton.vue'),
+);
+const CharsTableButton = defineAsyncComponent(
+  () => import('./CharsTableButton.vue'),
+);
+const TableTools = defineAsyncComponent(() => import('./TableTools.vue'));
 
 export default {
   components: {

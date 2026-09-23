@@ -113,12 +113,6 @@ import {
 import { CreateDocumentOptions, createDocumentCommand } from '../helpers';
 import type { PandocJsonDocument } from '../../pandoc';
 
-// load all languages with "all" or common languages with "common"
-import { createLowlight } from 'lowlight';
-import javascript from 'highlight.js/lib/languages/javascript';
-import typescript from 'highlight.js/lib/languages/typescript';
-import lua from 'highlight.js/lib/languages/lua';
-import latex from 'highlight.js/lib/languages/latex';
 import 'highlight.js/styles/github-dark.min.css';
 import {
   fixPreArrowUpPlugin,
@@ -189,13 +183,7 @@ import {
   SK,
 } from '../../common';
 import { setActionShowSearchDialog } from '../../actions';
-
-
-const lowlight = createLowlight();
-lowlight.register('javascript', javascript);
-lowlight.register('typescript', typescript);
-lowlight.register('lua', lua);
-lowlight.register('latex', latex);
+import { lowlight } from '../helpers/lowlight';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

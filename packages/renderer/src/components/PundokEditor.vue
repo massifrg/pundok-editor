@@ -143,18 +143,12 @@ import {
   getDefaultCopyFormat,
 } from '../common';
 import { useActions, useBackend, useProjectCache } from '../stores';
-import AttributesEditor from './AttributesEditor.vue'
-import ConfigurationsDialog from './ConfigurationsDialog.vue'
 import ContextMenu from './ContextMenu.vue'
-import CustomStylesPanel from './CustomStylesPanel.vue'
-import ExportDialog from './ExportDialog.vue'
-import ImportDialog from './ImportDialog.vue'
 import InputTextDialog from './InputTextDialog.vue'
 import Menubar from './Menubar.vue';
 import NewProjectDialog from './NewProjectDialog.vue'
 import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue'
 import PendingOperationDialog from './PendingOperationDialog.vue'
-import SearchAndReplace from './SearchAndReplace.vue'
 import ShowMessageDialog from './ShowMessageDialog.vue'
 import {
   ActionForNodeOrMark,
@@ -224,6 +218,21 @@ const COMPLAIN_IF_SAVED_ONLY_AS_COPY_TOGGLE: PendingOperationExtraValue = {
 function cssfilename2id(cssfilename: string) {
   return cssfilename ? cssfilename.replace(/[^_0-9A-Za-z]+/g, '-') : '';
 }
+
+const AttributesEditor = defineAsyncComponent(
+  () => import('./AttributesEditor.vue'),
+);
+const ConfigurationsDialog = defineAsyncComponent(
+  () => import('./ConfigurationsDialog.vue'),
+);
+const CustomStylesPanel = defineAsyncComponent(
+  () => import('./CustomStylesPanel.vue'),
+);
+const ExportDialog = defineAsyncComponent(() => import('./ExportDialog.vue'));
+const ImportDialog = defineAsyncComponent(() => import('./ImportDialog.vue'));
+const SearchAndReplace = defineAsyncComponent(
+  () => import('./SearchAndReplace.vue'),
+);
 
 export default {
   components: {
