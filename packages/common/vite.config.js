@@ -1,6 +1,8 @@
-import { node } from '../../.electron-vendors.cache.json' with { type: 'json' };
+import vendors from '../../.electron-vendors.cache.json' with { type: 'json' };
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'node:url';
+
+const { node } = vendors;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
