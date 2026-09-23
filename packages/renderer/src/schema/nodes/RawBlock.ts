@@ -25,6 +25,8 @@ import { RawBlockView } from '../../components';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
 import { Component } from 'vue';
+import type { Command } from '@tiptap/pm/state';
+import { asTiptapCommand } from '../helpers/command';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -32,7 +34,7 @@ declare module '@tiptap/core' {
       insertRawBlock: (format?: string, text?: string | string[]) => ReturnType;
       convertToRawBlock: (format?: string) => ReturnType;
       rawBlockToText: () => ReturnType;
-    };
+    }
   }
 }
 
@@ -224,9 +226,21 @@ export const RawBlock = Node.create<RawBlockOptions>({
 
   addCommands() {
     return {
-      insertRawBlock:
-        (rawformat?: string, rawtext?: string | string[]) =>
-          ({ state, dispatch, tr }) => {
+      insertRawBlock: (rawformat?: string, rawtext?: string | string[]) =>
+        asTiptapCommand(insertRawBlockCommand(this.options.defaultFormat, rawformat, rawtext)),
+      convertToRawBlock: (format?: string) =>
+        asTiptapCommand(convertToRawBlockCommand(this.options.defaultFormat, format)),
+      rawBlockToText: () => asTiptapCommand(rawBlockToTextCommand),
+    };
+  },
+});
+
+const insertRawBlockCommand = (
+  defaultFormat: string | undefined,
+  rawformat?: string,
+  rawtext?: string | string[],
+): Command => (state, dispatch) => {
+            let tr = state.tr;
             const rawBlockType = state.schema.nodes[NODE_NAME_RAW_BLOCK];
             const { doc, selection, schema } = state;
             const { empty, from, to, $from, $to } = selection;
@@ -265,7 +279,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                 const format =
                   rawformat ||
                   config?.defaultRawFormat ||
-                  this.options.defaultFormat ||
+                  defaultFormat ||
                   DEFAULT_RAW_BLOCK_FORMAT;
                 const rawBlock1 =
                   (rt1 && rawBlockType.create({ format }, textNode(schema, rt1))) ||
@@ -292,7 +306,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
               const format =
                 rawformat ||
                 config?.defaultRawFormat ||
-                this.options.defaultFormat ||
+                defaultFormat ||
                 DEFAULT_RAW_BLOCK_FORMAT;
               if (isarray) {
                 // two texts
@@ -354,10 +368,10 @@ export const RawBlock = Node.create<RawBlockOptions>({
               dispatch(tr);
             }
             return true;
-          },
-      convertToRawBlock:
-        (format) =>
-          ({ state, dispatch }) => {
+          };
+
+const convertToRawBlockCommand = (defaultFormat: string | undefined, format?: string): Command =>
+  (state, dispatch) => {
             const { empty, $from } = state.selection;
             if (!empty) return false;
             const depth = depthOfInnerNodeType($from, [
@@ -372,7 +386,7 @@ export const RawBlock = Node.create<RawBlockOptions>({
                 node.attrs?.format ||
                 node.attrs?.kv?.format ||
                 config?.defaultRawFormat ||
-                this.options?.defaultFormat ||
+                defaultFormat ||
                 DEFAULT_RAW_BLOCK_FORMAT;
               const rawBlock = state.schema.nodes[NODE_NAME_RAW_BLOCK].create(
                 { format: format || currentFormat },
@@ -382,10 +396,9 @@ export const RawBlock = Node.create<RawBlockOptions>({
               dispatch(state.tr.setSelection(sel).replaceSelectionWith(rawBlock));
             }
             return true;
-          },
-      rawBlockToText:
-        () =>
-          ({ state, dispatch }) => {
+          };
+
+const rawBlockToTextCommand: Command = (state, dispatch) => {
             const { empty, $from } = state.selection;
             if (!empty) return false;
             const depth = depthOfInnerNodeType($from, [NODE_NAME_RAW_BLOCK]);
@@ -410,10 +423,8 @@ export const RawBlock = Node.create<RawBlockOptions>({
               );
             }
             return true;
-          },
-    };
-  },
-});
+          };
+
 
 function toRawBlockText(node: PmNode): string {
   return node.type.name === NODE_NAME_RAW_INLINE ? node.attrs.text : '';

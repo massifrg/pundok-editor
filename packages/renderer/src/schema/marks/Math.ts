@@ -5,6 +5,8 @@ import {
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 import {
   domToMathType,
   PANDOC_DEFAULT_MATH_TYPE,
@@ -14,6 +16,7 @@ import {
   MathType,
 } from '../helpers';
 import { MARK_NAME_MATH, SK } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
 
 export interface MathOptions {
   HTMLAttributes: Record<string, any>;
@@ -85,70 +88,10 @@ export const Math = Mark.create<MathOptions>({
 
   addCommands() {
     return {
-      setMath:
-        () =>
-          ({ commands }) => {
-            return commands.setMark(this.name);
-          },
-      toggleMath:
-        () =>
-          ({ commands }) => {
-            return commands.toggleMark(this.name);
-          },
-      unsetMath:
-        () =>
-          ({ commands }) => {
-            return commands.unsetMark(this.name);
-          },
-      toggleMathType:
-        () =>
-          ({ dispatch, state, tr }) => {
-            const { doc, schema, selection } = state
-            const mathTypeName = this.name
-            const mathMarkType = schema.marks[mathTypeName]
-            const { empty, from } = selection
-            if (isMarkActive(state, mathTypeName)) {
-              if (dispatch) {
-                const positions: { from: number, to: number, mathType: MathType }[] = []
-                if (empty) {
-                  const node = doc.nodeAt(from)
-                  if (node) {
-                    const start = doc.resolve(from).start()
-                    const currentMathMark = node.marks.find(m => m.type.name === mathTypeName)
-                    if (currentMathMark)
-                      positions.push({
-                        from: start,
-                        to: start + node.nodeSize,
-                        mathType: currentMathMark.attrs.mathType
-                      })
-                  }
-                } else {
-                  selection.content().content.descendants((node, pos) => {
-                    const currentMathMark = node.marks.find(m => m.type.name === mathTypeName)
-                    if (currentMathMark) {
-                      const start = from + pos - 1
-                      positions.push({
-                        from: start,
-                        to: start + node.nodeSize,
-                        mathType: currentMathMark.attrs.mathType
-                      })
-                    }
-                  })
-                }
-                positions.forEach(({ from, to, mathType }) => {
-                  const node = doc.nodeAt(from)
-                  if (node) {
-                    const mark = mathMarkType.create({ mathType: nextMathType(mathType) })
-                    tr.removeMark(from, to, mathMarkType)
-                      .addMark(from, to, mark)
-                  }
-                })
-                dispatch(tr)
-              }
-              return true
-            }
-            return false
-          },
+      setMath: () => asTiptapCommand(setMathCommand),
+      toggleMath: () => asTiptapCommand(toggleMathCommand),
+      unsetMath: () => asTiptapCommand(unsetMathCommand),
+      toggleMathType: () => asTiptapCommand(toggleMathTypeCommand),
     };
   },
 
@@ -177,3 +120,42 @@ export const Math = Mark.create<MathOptions>({
   //   ]
   // },
 });
+
+const setMathCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_MATH];
+  return !!mark && setMarkNoAtoms(mark)(state, dispatch);
+};
+const toggleMathCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_MATH];
+  return !!mark && toggleMarkNoAtoms(mark)(state, dispatch);
+};
+const unsetMathCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_MATH];
+  return !!mark && unsetMarkNoAtoms(mark)(state, dispatch);
+};
+const toggleMathTypeCommand: Command = (state, dispatch) => {
+  const { doc, schema, selection } = state;
+  const mathMarkType = schema.marks[MARK_NAME_MATH];
+  if (!mathMarkType || !isMarkActive(state, MARK_NAME_MATH)) return false;
+  const positions: { from: number; to: number; mathType: MathType }[] = [];
+  if (selection.empty) {
+    const node = doc.nodeAt(selection.from);
+    if (node) {
+      const start = doc.resolve(selection.from).start();
+      const current = node.marks.find((m) => m.type === mathMarkType);
+      if (current) positions.push({ from: start, to: start + node.nodeSize, mathType: current.attrs.mathType });
+    }
+  } else {
+    selection.content().content.descendants((node, pos) => {
+      const current = node.marks.find((m) => m.type === mathMarkType);
+      if (current) positions.push({ from: selection.from + pos - 1, to: selection.from + pos - 1 + node.nodeSize, mathType: current.attrs.mathType });
+    });
+  }
+  if (dispatch) {
+    positions.forEach(({ from, to, mathType }) => {
+      state.tr.removeMark(from, to, mathMarkType).addMark(from, to, mathMarkType.create({ mathType: nextMathType(mathType) }));
+    });
+    dispatch(state.tr);
+  }
+  return true;
+};

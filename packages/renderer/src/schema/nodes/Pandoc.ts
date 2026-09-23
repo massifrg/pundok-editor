@@ -4,6 +4,7 @@ import { Gapcursor } from '@tiptap/extension-gapcursor';
 import { History, type HistoryOptions } from '@tiptap/extension-history';
 import { Text } from '@tiptap/extension-text';
 import { Selection } from '@tiptap/pm/state';
+import type { Command } from '@tiptap/pm/state';
 
 import { Blockquote, BlockquoteOptions } from '@tiptap/extension-blockquote'
 import { Break, BreakOptions } from './Break'
@@ -110,7 +111,7 @@ import {
   VerticalAlign,
   VerticalAlignOptions,
 } from '../extensions';
-import { CreateDocumentOptions, createDocumentCommand } from '../helpers';
+import { CreateDocumentOptions, createDocumentNodeFromJson } from '../helpers';
 import type { PandocJsonDocument } from '../../pandoc';
 
 import 'highlight.js/styles/github-dark.min.css';
@@ -184,6 +185,7 @@ import {
 } from '../../common';
 import { setActionShowSearchDialog } from '../../actions';
 import { lowlight } from '../helpers/lowlight';
+import { asTiptapCommand } from '../helpers/command';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -450,33 +452,9 @@ export const Pandoc = Document.extend<PandocOptions>({
       setPandocContent: (
         json: string | PandocJsonDocument,
         options?: CreateDocumentOptions,
-      ) => createDocumentCommand(json, options),
-      scrollIntoViewAtTop:
-        () =>
-          ({ dispatch, state, tr }) => {
-            if (dispatch) {
-              const doc = state.doc;
-              const sel = Selection.atStart(doc);
-              let { $anchor, from } = sel;
-              const depth = $anchor.depth;
-              for (let d = 0; d <= depth; d++) {
-                if ($anchor.node(d).type.name === NODE_NAME_METADATA) {
-                  from = $anchor.after(d);
-                  break;
-                }
-              }
-              tr.setSelection(Selection.near(doc.resolve(from))).scrollIntoView();
-            }
-            return true;
-          },
-      scrollIntoViewAtBottom:
-        () =>
-          ({ dispatch, state, tr }) => {
-            if (dispatch) {
-              tr.setSelection(Selection.atEnd(state.doc)).scrollIntoView();
-            }
-            return true;
-          },
+      ) => asTiptapCommand(setPandocContentCommand(json, options)),
+      scrollIntoViewAtTop: () => asTiptapCommand(scrollIntoViewAtTopCommand),
+      scrollIntoViewAtBottom: () => asTiptapCommand(scrollIntoViewAtBottomCommand),
     };
   },
 
@@ -494,3 +472,34 @@ export const Pandoc = Document.extend<PandocOptions>({
     }
   }
 });
+
+const setPandocContentCommand = (
+  json: string | PandocJsonDocument,
+  options?: CreateDocumentOptions,
+): Command => (state, dispatch) => {
+  const node = createDocumentNodeFromJson(json, state.schema, options);
+  if (!node) return false;
+  if (dispatch) dispatch(state.tr.replaceWith(0, state.doc.content.size, node).setMeta('preventUpdate', !options?.emitUpdate));
+  return true;
+};
+
+const scrollIntoViewAtTopCommand: Command = (state, dispatch) => {
+  if (dispatch) {
+    const doc = state.doc;
+    const sel = Selection.atStart(doc);
+    let { $anchor, from } = sel;
+    for (let d = 0; d <= $anchor.depth; d++) {
+      if ($anchor.node(d).type.name === NODE_NAME_METADATA) {
+        from = $anchor.after(d);
+        break;
+      }
+    }
+    dispatch(state.tr.setSelection(Selection.near(doc.resolve(from))).scrollIntoView());
+  }
+  return true;
+};
+
+const scrollIntoViewAtBottomCommand: Command = (state, dispatch) => {
+  if (dispatch) dispatch(state.tr.setSelection(Selection.atEnd(state.doc)).scrollIntoView());
+  return true;
+};

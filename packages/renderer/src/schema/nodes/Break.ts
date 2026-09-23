@@ -1,7 +1,9 @@
 import { mergeAttributes } from '@tiptap/core';
 import { HardBreak, type HardBreakOptions } from '@tiptap/extension-hard-break';
+import type { Command } from '@tiptap/pm/state';
 import { NODE_BREAK_CLASS, NODE_BREAK_SOFT_CLASS, NODE_NAME_BREAK, SK } from '../../common';
 import { getSpanAttrs } from '../helpers';
+import { asTiptapCommand } from '../helpers/command';
 
 export type BreakOptions = HardBreakOptions;
 
@@ -49,43 +51,7 @@ export const Break = HardBreak.extend<BreakOptions>({
 
   addCommands() {
     return {
-      setBreak:
-        (soft?: boolean) =>
-          ({ commands, chain, state, editor }) => {
-            return commands.first([
-              () => commands.exitCode(),
-              () =>
-                commands.command(() => {
-                  const { selection, storedMarks } = state;
-
-                  if (selection.$from.parent.type.spec.isolating) {
-                    return false;
-                  }
-
-                  const { keepMarks } = this.options;
-                  const { splittableMarks } = editor.extensionManager;
-                  const marks =
-                    storedMarks ||
-                    (selection.$to.parentOffset && selection.$from.marks());
-
-                  const attrs = soft ? { soft: true } : {};
-                  return chain()
-                    .insertContent({ type: this.name, attrs })
-                    .command(({ tr, dispatch }) => {
-                      if (dispatch && marks && keepMarks) {
-                        const filteredMarks = marks.filter((mark) =>
-                          splittableMarks.includes(mark.type.name),
-                        );
-
-                        tr.ensureMarks(filteredMarks);
-                      }
-
-                      return true;
-                    })
-                    .run();
-                }),
-            ]);
-          },
+      setBreak: (soft?: boolean) => asTiptapCommand(setBreakCommand(soft)),
     };
   },
 
@@ -97,3 +63,15 @@ export const Break = HardBreak.extend<BreakOptions>({
     };
   },
 });
+
+const setBreakCommand = (soft = false): Command => (state, dispatch) => {
+  const { selection, storedMarks } = state;
+  if (selection.$from.parent.type.spec.isolating) return false;
+  const breakType = state.schema.nodes[NODE_NAME_BREAK];
+  if (!breakType) return false;
+  const marks = storedMarks || (selection.$to.parentOffset && selection.$from.marks());
+  const tr = state.tr.replaceSelectionWith(breakType.create(soft ? { soft: true } : {}));
+  if (marks) tr.ensureMarks(marks);
+  if (dispatch) dispatch(tr);
+  return true;
+};

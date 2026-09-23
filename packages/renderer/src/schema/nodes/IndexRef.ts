@@ -1,5 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { Node as PmNode } from '@tiptap/pm/model';
+import type { Command } from '@tiptap/pm/state';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { Component } from 'vue';
 import { IndexRefView } from '../../components';
@@ -15,6 +16,7 @@ import {
 } from '../../common';
 import { documentIndices } from '../helpers/indices';
 import { getSpanAttrs } from '../helpers';
+import { asTiptapCommand } from '../helpers/command';
 
 export const INDEX_RANGE_START_CLASS = 'index-start';
 export const INDEX_RANGE_STOP_CLASS = 'index-stop';
@@ -141,19 +143,24 @@ export const IndexRef = Node.create<IndexRefOptions>({
 
   addCommands() {
     return {
-      propagateIdref:
-        (
-          refNode: PmNode,
-          propagate: (
-            refNode: PmNode,
-            node: PmNode,
-          ) => boolean = defaultPropagate,
-        ) =>
-          ({ dispatch, state, tr }) => {
+      propagateIdref: (
+        refNode: PmNode,
+        propagate: (refNode: PmNode, node: PmNode) => boolean = defaultPropagate,
+      ) => asTiptapCommand(propagateIdrefCommand(refNode, propagate)),
+      fixIndexRefs: () => asTiptapCommand(fixIndexRefsCommand),
+    };
+  },
+});
+
+const propagateIdrefCommand = (
+  refNode: PmNode,
+  propagate: (refNode: PmNode, node: PmNode) => boolean = defaultPropagate,
+): Command => (state, dispatch) => {
             if (refNode.type.name !== NODE_NAME_INDEX_REF) return false;
             const idref = refNode.attrs.kv.idref;
             if (!idref) return false;
             if (dispatch) {
+              const tr = state.tr;
               state.doc.descendants((node, pos) => {
                 if (refNode !== node && node.type.name === NODE_NAME_INDEX_REF) {
                   if (propagate(refNode, node)) {
@@ -169,8 +176,10 @@ export const IndexRef = Node.create<IndexRefOptions>({
               dispatch(tr);
             }
             return true;
-          },
-      fixIndexRefs: () => ({ dispatch, state, tr }) => {
+          };
+
+const fixIndexRefsCommand: Command = (state, dispatch) => {
+        const tr = state.tr;
         const { doc, schema } = state
         const indices = documentIndices(doc)
         if (indices.length === 0)
@@ -200,10 +209,7 @@ export const IndexRef = Node.create<IndexRefOptions>({
           dispatch(tr)
         }
         return true
-      }
-    };
-  },
-});
+};
 
 function defaultPropagate(refNode: PmNode, node: PmNode): boolean {
   const refkv = refNode.attrs.kv || {};

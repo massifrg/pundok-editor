@@ -1,6 +1,10 @@
 import { Mark, mergeAttributes } from '@tiptap/core';
+import type { Attrs } from '@tiptap/pm/model';
+import type { Command } from '@tiptap/pm/state';
 import { appliesTo, MARK_NAME_SPAN, SK } from '../../common';
 import { getDocState, getSpanAttrs } from '../helpers';
+import { asTiptapCommand } from '../helpers/command';
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface SpanOptions {
   HTMLAttributes: Record<string, any>;
@@ -93,28 +97,9 @@ export const Span = Mark.create<SpanOptions>({
 
   addCommands() {
     return {
-      setSpan:
-        (attributes) =>
-          ({ commands }) => {
-            return commands.setMarkNoAtoms(this.name, attributes, {
-              excludeNonLeafAtoms: 'only-content',
-            });
-          },
-      toggleSpan:
-        (attributes) =>
-          ({ commands }) => {
-            return commands.toggleMarkNoAtoms(this.name, attributes, {
-              excludeNonLeafAtoms: 'only-content',
-              extendEmptyMarkRange: true,
-            });
-          },
-      unsetSpan:
-        () =>
-          ({ commands }) => {
-            return commands.unsetMarkNoAtoms(this.name, {
-              excludeNonLeafAtoms: 'only-content',
-            });
-          },
+      setSpan: (attributes) => asTiptapCommand(setSpanCommand(attributes)),
+      toggleSpan: (attributes) => asTiptapCommand(toggleSpanCommand(attributes)),
+      unsetSpan: () => asTiptapCommand(unsetSpanCommand),
     };
   },
 
@@ -124,3 +109,16 @@ export const Span = Mark.create<SpanOptions>({
     };
   },
 });
+
+const setSpanCommand = (attributes?: Attrs): Command => (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_SPAN];
+  return !!mark && setMarkNoAtoms(mark, attributes, { excludeNonLeafAtoms: 'only-content' })(state, dispatch);
+};
+const toggleSpanCommand = (attributes?: Attrs): Command => (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_SPAN];
+  return !!mark && toggleMarkNoAtoms(mark, attributes, { excludeNonLeafAtoms: 'only-content', extendEmptyMarkRange: true })(state, dispatch);
+};
+const unsetSpanCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_SPAN];
+  return !!mark && unsetMarkNoAtoms(mark, { excludeNonLeafAtoms: 'only-content' })(state, dispatch);
+};

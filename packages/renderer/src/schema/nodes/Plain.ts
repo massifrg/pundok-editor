@@ -1,7 +1,10 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
-import { NODE_NAME_PLAIN, NODE_PLAIN_CLASS, SK } from '../../common';
+import type { Command } from '@tiptap/pm/state';
+import { setBlockType } from '@tiptap/pm/commands';
+import { NODE_NAME_BREAK, NODE_NAME_PLAIN, NODE_PLAIN_CLASS, SK } from '../../common';
 import { isCellSelection } from '../helpers/pandocTable';
+import { asTiptapCommand } from '../helpers/command';
 
 export interface PlainOptions {
   HTMLAttributes: Record<string, any>;
@@ -72,49 +75,9 @@ export const Plain = Node.create<PlainOptions>({
 
   addCommands() {
     return {
-      setPlain:
-        () =>
-          ({ commands }) =>
-            commands.setNode(this.name),
-      setBreakInPlain:
-        () =>
-          ({ commands, state }) => {
-            const { doc, selection } = state;
-            const { empty, from } = selection;
-            if (empty) {
-              let inPlain = false;
-              doc.nodesBetween(from, from, (node) => {
-                if (node.type.name === this.name) {
-                  inPlain = true;
-                  return false;
-                }
-                return true;
-              });
-              if (inPlain) return commands.setBreak();
-            }
-            return false;
-          },
-      togglePlain:
-        () =>
-          ({ commands, state }) => {
-            const sel = state.selection;
-            if (isCellSelection(sel)) {
-              let plains = 0,
-                paras = 0;
-              (sel as CellSelection).forEachCell((cell) => {
-                if (cell.firstChild) {
-                  const firstTypeName = cell.firstChild.type.name;
-                  if (firstTypeName == 'paragraph') paras++;
-                  else if (firstTypeName == 'plain') plains++;
-                }
-              });
-              return commands.setCellContentType(
-                paras > plains ? 'plain' : 'paragraph',
-              );
-            } else {
-              return commands.toggleNode(this.name, 'paragraph');
-            }
-          },
+      setPlain: () => asTiptapCommand(setPlainCommand),
+      setBreakInPlain: () => asTiptapCommand(setBreakInPlainCommand),
+      togglePlain: () => asTiptapCommand(togglePlainCommand),
     };
   },
 
@@ -125,3 +88,50 @@ export const Plain = Node.create<PlainOptions>({
     };
   },
 });
+
+const setPlainCommand: Command = (state, dispatch) =>
+  setBlockType(state.schema.nodes[NODE_NAME_PLAIN])(state, dispatch);
+
+const setBreakInPlainCommand: Command = (state, dispatch) => {
+  const { empty, from } = state.selection;
+  if (!empty) return false;
+  let inPlain = false;
+  state.doc.nodesBetween(from, from, (node) => {
+    if (node.type.name === NODE_NAME_PLAIN) {
+      inPlain = true;
+      return false;
+    }
+    return true;
+  });
+  if (!inPlain) return false;
+  const breakType = state.schema.nodes[NODE_NAME_BREAK];
+  if (!breakType) return false;
+  if (dispatch) dispatch(state.tr.replaceSelectionWith(breakType.create()));
+  return true;
+};
+
+const togglePlainCommand: Command = (state, dispatch) => {
+  const sel = state.selection;
+  if (isCellSelection(sel)) {
+    let plains = 0, paras = 0;
+    (sel as CellSelection).forEachCell((cell) => {
+      if (cell.firstChild?.type.name === 'paragraph') paras++;
+      else if (cell.firstChild?.type.name === NODE_NAME_PLAIN) plains++;
+    });
+    const type = state.schema.nodes[paras > plains ? NODE_NAME_PLAIN : 'paragraph'];
+    if (!type) return false;
+    if (dispatch) {
+      const tr = state.tr;
+      (sel as CellSelection).forEachCell((cell, pos) => {
+        if (cell.childCount === 1 && cell.firstChild!.type !== type)
+          tr.replaceRangeWith(pos + 1, pos + 1 + cell.content.size, type.create(null, cell.firstChild!.content));
+      });
+      dispatch(tr);
+    }
+    return true;
+  }
+  const target = sel.$from.parent.type.name === NODE_NAME_PLAIN
+    ? state.schema.nodes.paragraph
+    : state.schema.nodes[NODE_NAME_PLAIN];
+  return !!target && setBlockType(target)(state, dispatch);
+};

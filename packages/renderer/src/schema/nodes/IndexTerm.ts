@@ -1,5 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { NodeSelection } from '@tiptap/pm/state';
+import type { Command } from '@tiptap/pm/state';
 import {
   DEFAULT_INDEX_NAME,
   INDEX_NAME_ATTR,
@@ -8,6 +9,7 @@ import {
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM,
 } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -83,7 +85,15 @@ export const IndexTerm = Node.create<IndexTermOptions>({
 
   addCommands() {
     return {
-      fixIndexTerms: () => ({ dispatch, state, tr }) => {
+      fixIndexTerms: () => asTiptapCommand(fixIndexTermsCommand),
+      convertDivToIndexTerm: () => asTiptapCommand(convertDivToIndexTermCommand),
+      convertIndexTermToDiv: () => asTiptapCommand(convertIndexTermToDivCommand),
+    };
+  },
+});
+
+const fixIndexTermsCommand: Command = (state, dispatch) => {
+        const tr = state.tr;
         const { doc, schema } = state
         const indexTermType = schema.nodes[NODE_NAME_INDEX_TERM]
         if (!indexTermType) return false
@@ -111,15 +121,15 @@ export const IndexTerm = Node.create<IndexTermOptions>({
           dispatch(tr)
         }
         return true
-      },
-      convertDivToIndexTerm:
-        () =>
-          ({ state, tr, dispatch }) => {
+};
+
+const convertDivToIndexTermCommand: Command = (state, dispatch) => {
             const { doc, schema, selection } = state;
             if (selection instanceof NodeSelection) {
               const maybeDiv = doc.nodeAt(selection.from);
               if (maybeDiv && maybeDiv.type.name === NODE_NAME_DIV) {
                 if (dispatch) {
+                  const tr = state.tr;
                   let { id, kv } = maybeDiv.attrs;
                   kv = kv || {};
                   const indexTerm = schema.nodes[NODE_NAME_INDEX_TERM].createAndFill(
@@ -137,15 +147,14 @@ export const IndexTerm = Node.create<IndexTermOptions>({
               }
             }
             return false;
-          },
-      convertIndexTermToDiv:
-        () =>
-          ({ state, tr, dispatch }) => {
+          };
+const convertIndexTermToDivCommand: Command = (state, dispatch) => {
             const { doc, schema, selection } = state;
             if (selection instanceof NodeSelection) {
               const maybeIndexTerm = doc.nodeAt(selection.from);
               if (maybeIndexTerm && maybeIndexTerm.type.name === IndexTerm.name) {
                 if (dispatch) {
+                  const tr = state.tr;
                   let { id, indexName, sortKey } = maybeIndexTerm.attrs;
                   const div = schema.nodes[NODE_NAME_DIV].createAndFill(
                     {
@@ -165,7 +174,4 @@ export const IndexTerm = Node.create<IndexTermOptions>({
               }
             }
             return false;
-          },
-    };
-  },
-});
+};

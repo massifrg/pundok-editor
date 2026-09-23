@@ -4,6 +4,7 @@ import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { Command, NodeSelection } from '@tiptap/pm/state';
 import { getEditorConfiguration, marksEnding, marksStarting, textNode } from '../helpers';
 import { intersection } from 'lodash-es';
+import { asTiptapCommand } from '../helpers/command';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -85,49 +86,10 @@ export const RawInline = Node.create<RawInlineOptions>({
 
   addCommands() {
     return {
-      insertRawInline:
-        (rawformat?: string, rawtext?: string | string[]) => ({ state, dispatch, view }) =>
-          insertRawInlineCommand(rawformat || this.options?.defaultFormat, rawtext)(state, dispatch, view),
-      rawInlineToText:
-        () =>
-          ({ state, dispatch }) => {
-            const { empty, from, to } = state.selection;
-            if (empty) return false;
-            const { doc, schema, tr } = state;
-            const positions: number[] = [];
-            const texts: string[] = [];
-            doc.nodesBetween(from, to, (node, pos) => {
-              if (node.type.name == NODE_NAME_RAW_INLINE) {
-                positions.push(pos);
-                texts.push(node.attrs.text);
-              }
-            });
-            if (positions.length === 0) return false;
-            if (dispatch) {
-              positions.sort();
-              positions.forEach((p, i) => {
-                tr.replaceWith(p, p + 1, textNode(schema, texts[i]) || []);
-              });
-              dispatch(tr);
-            }
-            return true;
-          },
-      toggleRawInline:
-        () =>
-          ({ dispatch, editor, state }) => {
-            const { selection } = state;
-            if (
-              selection instanceof NodeSelection &&
-              selection.node.type.name === NODE_NAME_RAW_INLINE
-            )
-              return dispatch
-                ? editor.commands.rawInlineToText()
-                : editor.can().rawInlineToText();
-            else
-              return dispatch
-                ? editor.commands.insertRawInline()
-                : editor.can().insertRawInline();
-          },
+      insertRawInline: (rawformat?: string, rawtext?: string | string[]) =>
+        asTiptapCommand(insertRawInlineCommand(rawformat || this.options?.defaultFormat, rawtext)),
+      rawInlineToText: () => asTiptapCommand(rawInlineToTextCommand),
+      toggleRawInline: () => asTiptapCommand(toggleRawInlineCommand),
     };
   },
 
@@ -137,6 +99,21 @@ export const RawInline = Node.create<RawInlineOptions>({
     };
   },
 });
+
+const rawInlineToTextCommand: Command = (state, dispatch) => {
+  const { empty, from, to } = state.selection;
+  if (empty) return false;
+  const { doc, schema } = state;
+  const positions: number[] = [], texts: string[] = [];
+  doc.nodesBetween(from, to, (node, pos) => { if (node.type.name === NODE_NAME_RAW_INLINE) { positions.push(pos); texts.push(node.attrs.text); } });
+  if (!positions.length) return false;
+  if (dispatch) { const tr = state.tr; positions.sort((a,b) => a-b).forEach((pos, i) => tr.replaceWith(pos, pos + 1, textNode(schema, texts[i]) || [])); dispatch(tr); }
+  return true;
+};
+
+const toggleRawInlineCommand: Command = (state, dispatch) =>
+  state.selection instanceof NodeSelection && state.selection.node.type.name === NODE_NAME_RAW_INLINE
+    ? rawInlineToTextCommand(state, dispatch) : insertRawInlineCommand()(state, dispatch);
 
 export function insertRawInlineCommand(rawformat?: string, rawtext?: string | string[]): Command {
   return (state, dispatch, view) => {

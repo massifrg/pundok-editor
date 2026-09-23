@@ -4,7 +4,10 @@ import {
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
 import { MARK_NAME_SMALLCAPS, SK } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface SmallcapsOptions {
   HTMLAttributes: Record<string, any>;
@@ -68,27 +71,9 @@ export const Smallcaps = Mark.create<SmallcapsOptions>({
 
   addCommands() {
     return {
-      setSmallcaps:
-        () =>
-          ({ commands }) => {
-            return commands.setMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
-      toggleSmallcaps:
-        () =>
-          ({ commands }) => {
-            return commands.toggleMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
-      unsetSmallcaps:
-        () =>
-          ({ commands }) => {
-            return commands.unsetMarkNoAtoms(this.name, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
+      setSmallcaps: () => asTiptapCommand(setSmallcapsCommand),
+      toggleSmallcaps: () => asTiptapCommand(toggleSmallcapsCommand),
+      unsetSmallcaps: () => asTiptapCommand(unsetSmallcapsCommand),
     };
   },
 
@@ -116,3 +101,10 @@ export const Smallcaps = Mark.create<SmallcapsOptions>({
   //   ]
   // },
 });
+
+const setSmallcapsCommand: Command = (state, dispatch) =>
+  setMarkNoAtoms(state.schema.marks[MARK_NAME_SMALLCAPS], null, { excludeNonLeafAtoms: 'whole' })(state, dispatch);
+const toggleSmallcapsCommand: Command = (state, dispatch) =>
+  toggleMarkNoAtoms(state.schema.marks[MARK_NAME_SMALLCAPS], null, { excludeNonLeafAtoms: 'whole' })(state, dispatch);
+const unsetSmallcapsCommand: Command = (state, dispatch) =>
+  unsetMarkNoAtoms(state.schema.marks[MARK_NAME_SMALLCAPS], { excludeNonLeafAtoms: 'whole' })(state, dispatch);

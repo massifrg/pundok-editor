@@ -6,7 +6,10 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
 import { MARK_NAME_STRONG, SK } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface StrongOptions {
   HTMLAttributes: Record<string, any>;
@@ -72,27 +75,9 @@ export const Strong = Mark.create<StrongOptions>({
 
   addCommands() {
     return {
-      setStrong:
-        () =>
-          ({ commands }) => {
-            return commands.setMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
-      toggleStrong:
-        () =>
-          ({ commands }) => {
-            return commands.toggleMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
-      unsetStrong:
-        () =>
-          ({ commands }) => {
-            return commands.unsetMarkNoAtoms(this.name, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
+      setStrong: () => asTiptapCommand(setStrongCommand),
+      toggleStrong: () => asTiptapCommand(toggleStrongCommand),
+      unsetStrong: () => asTiptapCommand(unsetStrongCommand),
     };
   },
 
@@ -129,3 +114,16 @@ export const Strong = Mark.create<StrongOptions>({
     ];
   },
 });
+
+const setStrongCommand: Command = (state, dispatch) =>
+  setMarkNoAtoms(state.schema.marks[MARK_NAME_STRONG], null, {
+    excludeNonLeafAtoms: 'whole',
+  })(state, dispatch);
+const toggleStrongCommand: Command = (state, dispatch) =>
+  toggleMarkNoAtoms(state.schema.marks[MARK_NAME_STRONG], null, {
+    excludeNonLeafAtoms: 'whole',
+  })(state, dispatch);
+const unsetStrongCommand: Command = (state, dispatch) =>
+  unsetMarkNoAtoms(state.schema.marks[MARK_NAME_STRONG], {
+    excludeNonLeafAtoms: 'whole',
+  })(state, dispatch);

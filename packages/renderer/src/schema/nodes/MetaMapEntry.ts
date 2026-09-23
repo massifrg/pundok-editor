@@ -1,7 +1,9 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { Fragment, Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { TextSelection } from '@tiptap/pm/state';
+import type { Command } from '@tiptap/pm/state';
+import { asTiptapCommand } from '../helpers/command';
 import { Component } from 'vue';
 import { innerNodeDepth, templateNode } from '../helpers';
 import { MetaMapEntryView } from '../../components';
@@ -71,82 +73,61 @@ export const MetaMapEntry = Node.create<MetaMapEntryOptions>({
   },
 
   addCommands() {
-    const self = this
     return {
-      appendMetaMapEntry:
-        (text: string, metaTypeNameOrValue: string | ProsemirrorNode, pos?: number) =>
-          ({ dispatch, state, tr }) => {
-            const { doc, schema, selection } = state;
-            const metavalue = isString(metaTypeNameOrValue)
-              ? templateNode(schema, metaTypeNameOrValue)
-              : { node: metaTypeNameOrValue, attrs: metaTypeNameOrValue.attrs }
-            // console.log(metavalue)
-            if (!metavalue) return false;
-            const entryType = schema.nodes[self.name];
-            if (!entryType) return false;
-            const $pos = pos ? doc.resolve(pos) : selection.$from
-            const mapDepth = innerNodeDepth($pos, node => {
-              const ntn = node.type.name
-              return ntn === NODE_NAME_METADATA || ntn === NODE_NAME_META_MAP
-            })
-            let metamap: ProsemirrorNode | null
-            console.log(`appendMetaMapEntry, pos = ${JSON.stringify(pos)}`)
-            let inspos: number
-            if (mapDepth) {
-              metamap = $pos.node(mapDepth)
-              inspos = $pos.start(mapDepth) + metamap.content.size
-              console.log(`appendMetaMapEntry, $pos.start(mapDepth) = ${$pos.start(mapDepth)}`)
-            } else {
-              metamap = doc.firstChild
-              inspos = metamap!.nodeSize - 1
-              if (metamap!.type.name !== NODE_NAME_METADATA)
-                return false
-            }
-            console.log(`appendMetaMapEntry, found ${metamap?.type.name}, insertion pos: ${inspos}`)
-            if (dispatch) {
-              const entry = entryType.create({ text }, metavalue.node);
-              if (!entry) return false;
-              if (metamap) {
-                tr.insert(inspos, entry)
-                tr.setSelection(new TextSelection(tr.doc.resolve(inspos + 1)))
-              } else {
-                tr.insert(0, schema.nodes[NODE_NAME_METADATA].create(null, entry))
-                tr.setSelection(new TextSelection(tr.doc.resolve(1)))
-              }
-              dispatch(tr)
-            }
-            return true;
-          },
-      setMetaMapEntryText:
-        (text: string, pos?: number) =>
-          ({ dispatch, state, tr }) => {
-            if (!text) return false;
-            const mmPos = pos || state.selection.from;
-            const metamap = state.doc.nodeAt(mmPos);
-            if (!metamap || !(metamap.type.name === this.name)) return false;
-            if (dispatch) dispatch(tr.setNodeAttribute(mmPos, 'text', text));
-            return true;
-          },
-      moveMetaMapEntryDown:
-        (pos?: number) =>
-          ({ commands, state }) => {
-            const p = pos || state.selection.from;
-            const metamap = state.doc.nodeAt(p);
-            if (!metamap || !(metamap.type.name === this.name)) return false;
-            const r = state.doc.resolve(p);
-            if (r.parent.type.name !== NODE_NAME_METADATA) return false;
-            return commands.moveChild('down', pos);
-          },
-      moveMetaMapEntryUp:
-        (pos?: number) =>
-          ({ commands, state }) => {
-            const p = pos || state.selection.from;
-            const metamap = state.doc.nodeAt(p);
-            if (!metamap || !(metamap.type.name === this.name)) return false;
-            const r = state.doc.resolve(p);
-            if (r.parent.type.name !== NODE_NAME_METADATA) return false;
-            return commands.moveChild('up', pos);
-          },
+      appendMetaMapEntry: (text: string, metaTypeNameOrValue: string | ProsemirrorNode, pos?: number) =>
+        asTiptapCommand(appendMetaMapEntryCommand(text, metaTypeNameOrValue, pos)),
+      setMetaMapEntryText: (text: string, pos?: number) => asTiptapCommand(setMetaMapEntryTextCommand(text, pos)),
+      moveMetaMapEntryDown: (pos?: number) => asTiptapCommand(moveMetaMapEntryDownCommand(pos)),
+      moveMetaMapEntryUp: (pos?: number) => asTiptapCommand(moveMetaMapEntryUpCommand(pos)),
     };
   },
 });
+
+const appendMetaMapEntryCommand = (text: string, metaTypeNameOrValue: string | ProsemirrorNode, pos?: number): Command => (state, dispatch) => {
+  const { doc, schema, selection } = state;
+  const metavalue = isString(metaTypeNameOrValue) ? templateNode(schema, metaTypeNameOrValue) : { node: metaTypeNameOrValue, attrs: metaTypeNameOrValue.attrs };
+  if (!metavalue) return false;
+  const entryType = schema.nodes[NODE_NAME_META_MAP_ENTRY];
+  if (!entryType) return false;
+  const $pos = pos ? doc.resolve(pos) : selection.$from;
+  const mapDepth = innerNodeDepth($pos, node => node.type.name === NODE_NAME_METADATA || node.type.name === NODE_NAME_META_MAP);
+  let metamap = mapDepth ? $pos.node(mapDepth) : doc.firstChild;
+  if (!metamap || (!mapDepth && metamap.type.name !== NODE_NAME_METADATA)) return false;
+  const inspos = mapDepth ? $pos.start(mapDepth) + metamap.content.size : metamap.nodeSize - 1;
+  if (dispatch) {
+    const entry = entryType.create({ text }, metavalue.node);
+    if (!entry) return false;
+    const tr = state.tr;
+    tr.insert(inspos, entry).setSelection(new TextSelection(tr.doc.resolve(inspos + 1)));
+    dispatch(tr);
+  }
+  return true;
+};
+
+const setMetaMapEntryTextCommand = (text: string, pos?: number): Command => (state, dispatch) => {
+  if (!text) return false;
+  const mmPos = pos || state.selection.from;
+  const node = state.doc.nodeAt(mmPos);
+  if (!node || node.type.name !== NODE_NAME_META_MAP_ENTRY) return false;
+  if (dispatch) dispatch(state.tr.setNodeAttribute(mmPos, 'text', text));
+  return true;
+};
+
+const moveMetaMapEntryCommand = (direction: -1 | 1, pos?: number): Command => (state, dispatch) => {
+  const p = pos || state.selection.from;
+  const $pos = state.doc.resolve(p);
+  if ($pos.parent.type.name !== NODE_NAME_METADATA) return false;
+  const index = $pos.index();
+  const otherIndex = index + direction;
+  if (otherIndex < 0 || otherIndex >= $pos.parent.childCount) return false;
+  const current = $pos.parent.child(index), other = $pos.parent.child(otherIndex);
+  let offset = $pos.start($pos.depth);
+  for (let i = 0; i < Math.min(index, otherIndex); i++) offset += $pos.parent.child(i).nodeSize;
+  if (dispatch) {
+    const ordered = direction > 0 ? [other, current] : [current, other];
+    dispatch(state.tr.replaceWith(offset, offset + current.nodeSize + other.nodeSize, Fragment.from(ordered)));
+  }
+  return true;
+};
+const moveMetaMapEntryDownCommand = (pos?: number): Command => moveMetaMapEntryCommand(1, pos);
+const moveMetaMapEntryUpCommand = (pos?: number): Command => moveMetaMapEntryCommand(-1, pos);

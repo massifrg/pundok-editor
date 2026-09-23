@@ -6,7 +6,10 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
 import { MARK_NAME_STRIKEOUT, SK } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface StrikeoutOptions {
   HTMLAttributes: Record<string, any>;
@@ -72,27 +75,9 @@ export const Strikeout = Mark.create<StrikeoutOptions>({
 
   addCommands() {
     return {
-      setStrikeout:
-        () =>
-          ({ commands }) => {
-            return commands.setMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
-      toggleStrikeout:
-        () =>
-          ({ commands }) => {
-            return commands.toggleMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
-      unsetStrikeout:
-        () =>
-          ({ commands }) => {
-            return commands.unsetMarkNoAtoms(this.name, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
+      setStrikeout: () => asTiptapCommand(setStrikeoutCommand),
+      toggleStrikeout: () => asTiptapCommand(toggleStrikeoutCommand),
+      unsetStrikeout: () => asTiptapCommand(unsetStrikeoutCommand),
     };
   },
 
@@ -120,3 +105,10 @@ export const Strikeout = Mark.create<StrikeoutOptions>({
     ];
   },
 });
+
+const setStrikeoutCommand: Command = (state, dispatch) =>
+  setMarkNoAtoms(state.schema.marks[MARK_NAME_STRIKEOUT], null, { excludeNonLeafAtoms: 'whole' })(state, dispatch);
+const toggleStrikeoutCommand: Command = (state, dispatch) =>
+  toggleMarkNoAtoms(state.schema.marks[MARK_NAME_STRIKEOUT], null, { excludeNonLeafAtoms: 'whole' })(state, dispatch);
+const unsetStrikeoutCommand: Command = (state, dispatch) =>
+  unsetMarkNoAtoms(state.schema.marks[MARK_NAME_STRIKEOUT], { excludeNonLeafAtoms: 'whole' })(state, dispatch);

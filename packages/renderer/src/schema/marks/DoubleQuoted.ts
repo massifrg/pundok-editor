@@ -4,8 +4,11 @@ import {
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
 import { DOUBLE_QUOTED_CLASS } from '../helpers/quoted';
 import { MARK_NAME_DOUBLE_QUOTED, SK } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface DoubleQuotedOptions {
   HTMLAttributes: Record<string, any>;
@@ -59,29 +62,9 @@ export const DoubleQuoted = Mark.create<DoubleQuotedOptions>({
 
   addCommands() {
     return {
-      setDoubleQuoted:
-        () =>
-          ({ commands }) => {
-            return commands.setMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-              includeSpaces: true,
-            });
-          },
-      toggleDoubleQuoted:
-        () =>
-          ({ commands }) => {
-            return commands.toggleMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-              includeSpaces: true,
-            });
-          },
-      unsetDoubleQuoted:
-        () =>
-          ({ commands }) => {
-            return commands.unsetMarkNoAtoms(this.name, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
+      setDoubleQuoted: () => asTiptapCommand(setDoubleQuotedCommand),
+      toggleDoubleQuoted: () => asTiptapCommand(toggleDoubleQuotedCommand),
+      unsetDoubleQuoted: () => asTiptapCommand(unsetDoubleQuotedCommand),
     };
   },
 
@@ -109,3 +92,16 @@ export const DoubleQuoted = Mark.create<DoubleQuotedOptions>({
   //   ]
   // },
 });
+
+const setDoubleQuotedCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_DOUBLE_QUOTED];
+  return !!mark && setMarkNoAtoms(mark, null, { excludeNonLeafAtoms: 'whole', includeSpaces: true })(state, dispatch);
+};
+const toggleDoubleQuotedCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_DOUBLE_QUOTED];
+  return !!mark && toggleMarkNoAtoms(mark, null, { excludeNonLeafAtoms: 'whole', includeSpaces: true })(state, dispatch);
+};
+const unsetDoubleQuotedCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_DOUBLE_QUOTED];
+  return !!mark && unsetMarkNoAtoms(mark, { excludeNonLeafAtoms: 'whole' })(state, dispatch);
+};

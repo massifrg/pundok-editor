@@ -1,5 +1,8 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
+import { lift, wrapIn } from '@tiptap/pm/commands';
 import { NODE_NAME_FIGURE, SK } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
 
 export interface FigureOptions {
   HTMLAttributes: Record<string, any>;
@@ -42,21 +45,9 @@ export const Figure = Node.create<FigureOptions>({
 
   addCommands() {
     return {
-      setFigure:
-        () =>
-          ({ commands }) => {
-            return commands.wrapIn(this.name);
-          },
-      toggleFigure:
-        () =>
-          ({ commands }) => {
-            return commands.toggleWrap(this.name);
-          },
-      unsetFigure:
-        () =>
-          ({ commands }) => {
-            return commands.lift(this.name);
-          },
+      setFigure: () => asTiptapCommand(setFigureCommand),
+      toggleFigure: () => asTiptapCommand(toggleFigureCommand),
+      unsetFigure: () => asTiptapCommand(unsetFigureCommand),
     };
   },
 
@@ -67,3 +58,12 @@ export const Figure = Node.create<FigureOptions>({
     };
   },
 });
+
+const setFigureCommand: Command = (state, dispatch) => wrapIn(state.schema.nodes[NODE_NAME_FIGURE])(state, dispatch);
+const toggleFigureCommand: Command = (state, dispatch) => {
+  const type = state.schema.nodes[NODE_NAME_FIGURE];
+  return state.selection.$from.node(-1)?.type === type
+    ? lift(state, dispatch)
+    : wrapIn(type)(state, dispatch);
+};
+const unsetFigureCommand: Command = (state, dispatch) => lift(state, dispatch);

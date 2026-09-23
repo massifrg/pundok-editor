@@ -1,5 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
+import type { Command } from '@tiptap/pm/state';
 import {
   INDEX_CLASS,
   INDEX_NAME_ATTR,
@@ -7,6 +8,7 @@ import {
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM
 } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -53,7 +55,15 @@ export const IndexDiv = Node.create<IndexDivOptions>({
 
   addCommands() {
     return {
-      fixIndexDivs: () => ({ dispatch, state, tr }) => {
+      fixIndexDivs: () => asTiptapCommand(fixIndexDivsCommand),
+      propagateIndexNameToTerms: (indexPos?: number) =>
+        asTiptapCommand(propagateIndexNameToTermsCommand(indexPos)),
+    };
+  },
+});
+
+const fixIndexDivsCommand: Command = (state, dispatch) => {
+        const tr = state.tr;
         const { doc, schema } = state
         const indexDivType = schema.nodes[NODE_NAME_INDEX_DIV]
         if (!indexDivType) return false
@@ -75,19 +85,19 @@ export const IndexDiv = Node.create<IndexDivOptions>({
           dispatch(tr)
         }
         return true
-      },
-      propagateIndexNameToTerms:
-        (indexPos?: number) =>
-          ({ dispatch, state, tr }) => {
+};
+
+const propagateIndexNameToTermsCommand = (indexPos?: number): Command => (state, dispatch) => {
+            let tr = state.tr;
             let indexNode: ProsemirrorNode | undefined | null = undefined;
             let start = indexPos && indexPos + 1;
             const { doc, selection } = state;
             if (indexPos) indexNode = doc.nodeAt(indexPos);
-            if (!indexNode || indexNode.type.name !== this.name) {
+            if (!indexNode || indexNode.type.name !== NODE_NAME_INDEX_DIV) {
               const $from = selection.$from;
               for (let d = $from.depth; d > 0; d--) {
                 const node = $from.node(d);
-                if (node.type.name === this.name) {
+                if (node.type.name === NODE_NAME_INDEX_DIV) {
                   indexNode = node;
                   start = $from.start(d);
                   break;
@@ -108,7 +118,4 @@ export const IndexDiv = Node.create<IndexDivOptions>({
               dispatch(tr);
             }
             return true;
-          },
-    };
-  },
-});
+};

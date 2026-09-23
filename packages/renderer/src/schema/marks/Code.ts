@@ -1,5 +1,8 @@
 import { Mark, mergeAttributes } from '@tiptap/core'
+import type { Command } from '@tiptap/pm/state'
 import { MARK_NAME_CODE, SK } from '../../common'
+import { asTiptapCommand } from '../helpers/command'
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands'
 
 export interface CodeOptions {
   /**
@@ -91,15 +94,9 @@ export const Code = Mark.create<CodeOptions>({
 
   addCommands() {
     return {
-      setCode: () => ({ commands }) => {
-        return commands.setMark(this.name)
-      },
-      toggleCode: () => ({ commands }) => {
-        return commands.toggleMark(this.name)
-      },
-      unsetCode: () => ({ commands }) => {
-        return commands.unsetMark(this.name)
-      },
+      setCode: () => asTiptapCommand(setCodeCommand),
+      toggleCode: () => asTiptapCommand(toggleCodeCommand),
+      unsetCode: () => asTiptapCommand(unsetCodeCommand),
     }
   },
 
@@ -110,3 +107,16 @@ export const Code = Mark.create<CodeOptions>({
   },
 
 })
+
+const setCodeCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_CODE]
+  return !!mark && setMarkNoAtoms(mark)(state, dispatch)
+}
+const toggleCodeCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_CODE]
+  return !!mark && toggleMarkNoAtoms(mark)(state, dispatch)
+}
+const unsetCodeCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_CODE]
+  return !!mark && unsetMarkNoAtoms(mark)(state, dispatch)
+}

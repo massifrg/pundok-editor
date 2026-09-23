@@ -1,5 +1,6 @@
 import { MarkType } from '@tiptap/pm/model'
 import { EditorState, Transaction } from '@tiptap/pm/state';
+import type { Command } from '@tiptap/pm/state';
 import {
   Mark,
   // markInputRule,
@@ -8,6 +9,7 @@ import {
 } from '@tiptap/core';
 import { PundokCitation, textToCitations } from '../helpers';
 import { MARK_NAME_CITE, NODE_NAME_NOTE } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
 
 export interface CiteOptions {
   HTMLAttributes: Record<string, any>,
@@ -76,9 +78,17 @@ export const Cite = Mark.create<CiteOptions>({
 
   addCommands() {
     return {
-      toggleCite: () => ({ dispatch, state, tr }) => {
-        const { schema, selection } = state
-        const citeMarkType = schema.marks[this.name]
+      toggleCite: () => asTiptapCommand(toggleCiteCommand),
+      unsetCite: () => asTiptapCommand(unsetCiteCommand),
+      fixCites: (pos?: number) => asTiptapCommand(fixCitesCommand(pos)),
+    };
+  },
+});
+
+const toggleCiteCommand: Command = (state, dispatch) => {
+        const { schema, selection } = state;
+        const tr = state.tr;
+        const citeMarkType = schema.marks[MARK_NAME_CITE]
         if (!citeMarkType) return false
         const { $from, $to, from, to, empty } = selection
         const fromNode = $from.node()
@@ -93,7 +103,7 @@ export const Cite = Mark.create<CiteOptions>({
           if (childEnd > from && childStart < to) {
             if (child.type.name === NODE_NAME_NOTE)
               return false
-            if (!citePresent && child.marks.find(m => m.type.name === this.name))
+            if (!citePresent && child.marks.find(m => m.type.name === MARK_NAME_CITE))
               citePresent = true
           }
           childStart = childEnd
@@ -121,47 +131,25 @@ export const Cite = Mark.create<CiteOptions>({
           }
         }
         return true
-      },
-      unsetCite: () => ({ commands }) => {
-        return commands.unsetMark(this.name);
-      },
-      fixCites: (pos?: number) => ({ dispatch, state, tr }) => {
-        const citeMarkType = state.schema.marks[this.name]
+};
+
+const unsetCiteCommand: Command = (state, dispatch) => {
+  const citeMarkType = state.schema.marks[MARK_NAME_CITE];
+  if (!citeMarkType) return false;
+  if (dispatch) dispatch(state.tr.removeMark(state.selection.from, state.selection.to, citeMarkType));
+  return true;
+};
+
+const fixCitesCommand = (pos?: number): Command => (state, dispatch) => {
+        const citeMarkType = state.schema.marks[MARK_NAME_CITE]
         if (!citeMarkType) return false
-        const ok = fixCites(state, tr, citeMarkType, dispatch, pos)
+        const ok = fixCites(state, state.tr, citeMarkType, dispatch, pos)
         if (dispatch && ok) {
-          dispatch(tr)
+          dispatch(state.tr)
           return true
         }
         return ok
-      },
-    };
-  },
-
-  // addKeyboardShortcuts() {
-  //   return {
-  //     'Mod-k': () => this.editor.commands.toggleCite(),
-  //   }
-  // },
-
-  // addInputRules() {
-  //   return [
-  //     markInputRule({
-  //       find: inputRegex,
-  //       type: this.type,
-  //     }),
-  //   ]
-  // },
-
-  // addPasteRules() {
-  //   return [
-  //     markPasteRule({
-  //       find: pasteRegex,
-  //       type: this.type,
-  //     }),
-  //   ]
-  // },
-});
+};
 
 function fixCites(
   state: EditorState,

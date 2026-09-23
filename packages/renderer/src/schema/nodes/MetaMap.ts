@@ -1,10 +1,12 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { TextSelection } from '@tiptap/pm/state';
+import type { Command } from '@tiptap/pm/state';
 import { Component } from 'vue';
 import { NODE_NAME_META_LIST, NODE_NAME_META_MAP } from '../../common';
 import { innerNodeDepth, templateNode } from '../helpers';
 import { MetaMapView } from '../../components';
+import { asTiptapCommand } from '../helpers/command';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -45,14 +47,18 @@ export const MetaMap = Node.create<MetaMapOptions>({
   },
 
   addCommands() {
-    const self = this
     return {
-      appendMetaMap: (pos?: number) => ({ dispatch, state, tr }) => {
+      appendMetaMap: (pos?: number) => asTiptapCommand(appendMetaMapCommand(pos)),
+    }
+  }
+})
+
+const appendMetaMapCommand = (pos?: number): Command => (state, dispatch) => {
         const { doc, schema, selection } = state;
         const metamap = templateNode(schema, NODE_NAME_META_MAP)
         if (!metamap) return false
         // console.log(metavalue)
-        const entryType = schema.nodes[self.name];
+        const entryType = schema.nodes[NODE_NAME_META_MAP];
         if (!entryType) return false;
         const $pos = pos ? doc.resolve(pos) : selection.$from
         const listDepth = innerNodeDepth($pos, node => node.type.name === NODE_NAME_META_LIST)
@@ -62,12 +68,10 @@ export const MetaMap = Node.create<MetaMapOptions>({
         inspos = $pos.start(listDepth) + metalist.content.size
         // console.log(`appendMetaMap, found metaList@${$pos.start(listDepth) - 1}, insertion pos: ${inspos}`)
         if (dispatch) {
+          const tr = state.tr;
           tr.insert(inspos, metamap.node)
           tr.setSelection(new TextSelection(tr.doc.resolve(inspos + 1)))
           dispatch(tr)
         }
         return true;
-      },
-    }
-  }
-})
+};

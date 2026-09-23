@@ -4,8 +4,11 @@ import {
   // markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
 import { SINGLE_QUOTED_CLASS } from '../helpers';
 import { MARK_NAME_SINGLE_QUOTED, SK } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface SingleQuotedOptions {
   HTMLAttributes: Record<string, any>;
@@ -59,29 +62,9 @@ export const SingleQuoted = Mark.create<SingleQuotedOptions>({
 
   addCommands() {
     return {
-      setSingleQuoted:
-        () =>
-          ({ commands }) => {
-            return commands.setMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-              includeSpaces: true,
-            });
-          },
-      toggleSingleQuoted:
-        () =>
-          ({ commands }) => {
-            return commands.toggleMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-              includeSpaces: true,
-            });
-          },
-      unsetSingleQuoted:
-        () =>
-          ({ commands }) => {
-            return commands.unsetMarkNoAtoms(this.name, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
+      setSingleQuoted: () => asTiptapCommand(setSingleQuotedCommand),
+      toggleSingleQuoted: () => asTiptapCommand(toggleSingleQuotedCommand),
+      unsetSingleQuoted: () => asTiptapCommand(unsetSingleQuotedCommand),
     };
   },
 
@@ -109,3 +92,16 @@ export const SingleQuoted = Mark.create<SingleQuotedOptions>({
   //   ]
   // },
 });
+
+const setSingleQuotedCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_SINGLE_QUOTED];
+  return !!mark && setMarkNoAtoms(mark, null, { excludeNonLeafAtoms: 'whole', includeSpaces: true })(state, dispatch);
+};
+const toggleSingleQuotedCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_SINGLE_QUOTED];
+  return !!mark && toggleMarkNoAtoms(mark, null, { excludeNonLeafAtoms: 'whole', includeSpaces: true })(state, dispatch);
+};
+const unsetSingleQuotedCommand: Command = (state, dispatch) => {
+  const mark = state.schema.marks[MARK_NAME_SINGLE_QUOTED];
+  return !!mark && unsetMarkNoAtoms(mark, { excludeNonLeafAtoms: 'whole' })(state, dispatch);
+};

@@ -6,7 +6,10 @@ import {
   markPasteRule,
   mergeAttributes,
 } from '@tiptap/core';
+import type { Command } from '@tiptap/pm/state';
 import { MARK_NAME_EMPH, SK } from '../../common';
+import { asTiptapCommand } from '../helpers/command';
+import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface EmphOptions {
   HTMLAttributes: Record<string, any>;
@@ -71,27 +74,9 @@ export const Emph = Mark.create<EmphOptions>({
 
   addCommands() {
     return {
-      setEmph:
-        () =>
-          ({ commands }) => {
-            return commands.setMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
-      toggleEmph:
-        () =>
-          ({ commands }) => {
-            return commands.toggleMarkNoAtoms(this.name, null, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
-      unsetEmph:
-        () =>
-          ({ commands }) => {
-            return commands.unsetMarkNoAtoms(this.name, {
-              excludeNonLeafAtoms: 'whole',
-            });
-          },
+      setEmph: () => asTiptapCommand(setEmphCommand),
+      toggleEmph: () => asTiptapCommand(toggleEmphCommand),
+      unsetEmph: () => asTiptapCommand(unsetEmphCommand),
     };
   },
 
@@ -127,3 +112,10 @@ export const Emph = Mark.create<EmphOptions>({
     ];
   },
 });
+
+const setEmphCommand: Command = (state, dispatch) =>
+  setMarkNoAtoms(state.schema.marks[MARK_NAME_EMPH], null, { excludeNonLeafAtoms: 'whole' })(state, dispatch);
+const toggleEmphCommand: Command = (state, dispatch) =>
+  toggleMarkNoAtoms(state.schema.marks[MARK_NAME_EMPH], null, { excludeNonLeafAtoms: 'whole' })(state, dispatch);
+const unsetEmphCommand: Command = (state, dispatch) =>
+  unsetMarkNoAtoms(state.schema.marks[MARK_NAME_EMPH], { excludeNonLeafAtoms: 'whole' })(state, dispatch);
