@@ -251,7 +251,7 @@ import {
   mdiOctagramEdit,
   mdiInvoiceTextEdit,
   mdiInvoiceTextPlus,
-} from '@quasar/extras/mdi-v7';
+} from '@mdi/js';
 
 import {
   commonIcons,
