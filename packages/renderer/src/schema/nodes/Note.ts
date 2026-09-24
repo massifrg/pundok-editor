@@ -8,7 +8,7 @@ import { NoteView } from '../../components';
 import { NodeSelection } from '@tiptap/pm/state';
 import type { Command } from '@tiptap/pm/state';
 import { wrapIn } from '@tiptap/pm/commands';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

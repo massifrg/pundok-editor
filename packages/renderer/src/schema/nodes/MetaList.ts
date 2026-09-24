@@ -5,7 +5,7 @@ import { Component } from 'vue';
 import { innerNodeDepth, templateNode } from '../helpers';
 import { NODE_NAME_META_LIST } from '../../common';
 import { MetaListView } from '../../components';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

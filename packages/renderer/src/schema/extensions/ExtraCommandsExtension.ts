@@ -1,5 +1,5 @@
 import { Extension } from '@tiptap/core';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { Attrs, MarkType, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import type { Command } from '@tiptap/pm/state';
 import { isString } from 'lodash-es';

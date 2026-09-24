@@ -9,7 +9,7 @@ import {
 } from '@tiptap/core';
 import { PundokCitation, textToCitations } from '../helpers';
 import { MARK_NAME_CITE, NODE_NAME_NOTE } from '../../common';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 export interface CiteOptions {
   HTMLAttributes: Record<string, any>,
@@ -86,51 +86,51 @@ export const Cite = Mark.create<CiteOptions>({
 });
 
 const toggleCiteCommand: Command = (state, dispatch) => {
-        const { schema, selection } = state;
-        const tr = state.tr;
-        const citeMarkType = schema.marks[MARK_NAME_CITE]
-        if (!citeMarkType) return false
-        const { $from, $to, from, to, empty } = selection
-        const fromNode = $from.node()
-        if (empty || fromNode !== $to.node() || !fromNode.inlineContent) return false
-        let citePresent = false // check whether any selected node has a Cite Mark
-        let childStart = $from.start()
-        let childEnd
-        for (let i = 0; i < fromNode.childCount; i++) {
-          const child = fromNode.child(i)
-          childEnd = childStart + child.nodeSize
-          console.log(`child ${i} from ${childStart} to ${childEnd}`)
-          if (childEnd > from && childStart < to) {
-            if (child.type.name === NODE_NAME_NOTE)
-              return false
-            if (!citePresent && child.marks.find(m => m.type.name === MARK_NAME_CITE))
-              citePresent = true
-          }
-          childStart = childEnd
-        }
-        // TODO: don't recompute citations before this paragraph (or inline container)
-        //       and fix just citationNoteNum in Cite marks in the following paragraphs.
-        if (citePresent) {
-          if (dispatch) {
-            tr.removeMark(from, to, citeMarkType)
-            fixCites(state, tr, citeMarkType, dispatch)
-            dispatch(tr)
-          }
-        } else {
-          if (dispatch) {
-            const text = state.doc.textBetween(from, to)
-            const citations = textToCitations(text, state, from)
-            if (citations.length === 0)
-              return false
-            const cite = citeMarkType.create({ citations })
-            if (!cite)
-              return false
-            tr.addMark(from, to, cite)
-            fixCites(state, tr, citeMarkType, dispatch)
-            dispatch(tr)
-          }
-        }
-        return true
+  const { schema, selection } = state;
+  const tr = state.tr;
+  const citeMarkType = schema.marks[MARK_NAME_CITE]
+  if (!citeMarkType) return false
+  const { $from, $to, from, to, empty } = selection
+  const fromNode = $from.node()
+  if (empty || fromNode !== $to.node() || !fromNode.inlineContent) return false
+  let citePresent = false // check whether any selected node has a Cite Mark
+  let childStart = $from.start()
+  let childEnd
+  for (let i = 0; i < fromNode.childCount; i++) {
+    const child = fromNode.child(i)
+    childEnd = childStart + child.nodeSize
+    console.log(`child ${i} from ${childStart} to ${childEnd}`)
+    if (childEnd > from && childStart < to) {
+      if (child.type.name === NODE_NAME_NOTE)
+        return false
+      if (!citePresent && child.marks.find(m => m.type.name === MARK_NAME_CITE))
+        citePresent = true
+    }
+    childStart = childEnd
+  }
+  // TODO: don't recompute citations before this paragraph (or inline container)
+  //       and fix just citationNoteNum in Cite marks in the following paragraphs.
+  if (citePresent) {
+    if (dispatch) {
+      tr.removeMark(from, to, citeMarkType)
+      fixCites(state, tr, citeMarkType, dispatch)
+      dispatch(tr)
+    }
+  } else {
+    if (dispatch) {
+      const text = state.doc.textBetween(from, to)
+      const citations = textToCitations(text, state, from)
+      if (citations.length === 0)
+        return false
+      const cite = citeMarkType.create({ citations })
+      if (!cite)
+        return false
+      tr.addMark(from, to, cite)
+      fixCites(state, tr, citeMarkType, dispatch)
+      dispatch(tr)
+    }
+  }
+  return true
 };
 
 const unsetCiteCommand: Command = (state, dispatch) => {
@@ -141,14 +141,14 @@ const unsetCiteCommand: Command = (state, dispatch) => {
 };
 
 const fixCitesCommand = (pos?: number): Command => (state, dispatch) => {
-        const citeMarkType = state.schema.marks[MARK_NAME_CITE]
-        if (!citeMarkType) return false
-        const ok = fixCites(state, state.tr, citeMarkType, dispatch, pos)
-        if (dispatch && ok) {
-          dispatch(state.tr)
-          return true
-        }
-        return ok
+  const citeMarkType = state.schema.marks[MARK_NAME_CITE]
+  if (!citeMarkType) return false
+  const ok = fixCites(state, state.tr, citeMarkType, dispatch, pos)
+  if (dispatch && ok) {
+    dispatch(state.tr)
+    return true
+  }
+  return ok
 };
 
 function fixCites(

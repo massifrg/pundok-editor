@@ -3,6 +3,7 @@ export * from './attributes';
 export * from './autoDelimiters';
 export * from './autoDelimitersPlugin';
 export * from './citation';
+export * from './command';
 export * from './createDocument';
 export * from './customAttribute';
 export * from './customClass';

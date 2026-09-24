@@ -7,7 +7,7 @@ import {
 import type { Command } from '@tiptap/pm/state';
 import { DOUBLE_QUOTED_CLASS } from '../helpers/quoted';
 import { MARK_NAME_DOUBLE_QUOTED, SK } from '../../common';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface DoubleQuotedOptions {

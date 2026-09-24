@@ -3,7 +3,7 @@ import { HardBreak, type HardBreakOptions } from '@tiptap/extension-hard-break';
 import type { Command } from '@tiptap/pm/state';
 import { NODE_BREAK_CLASS, NODE_BREAK_SOFT_CLASS, NODE_NAME_BREAK, SK } from '../../common';
 import { getSpanAttrs } from '../helpers';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 export type BreakOptions = HardBreakOptions;
 

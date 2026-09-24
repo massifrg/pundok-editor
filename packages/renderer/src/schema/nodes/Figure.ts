@@ -2,7 +2,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import type { Command } from '@tiptap/pm/state';
 import { lift, wrapIn } from '@tiptap/pm/commands';
 import { NODE_NAME_FIGURE, SK } from '../../common';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 export interface FigureOptions {
   HTMLAttributes: Record<string, any>;

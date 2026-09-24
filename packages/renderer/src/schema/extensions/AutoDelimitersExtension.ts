@@ -15,7 +15,7 @@ import {
   getAutoDelimitersState
 } from '../helpers';
 import { Command } from '@tiptap/pm/state';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 export interface AutoDelimitersOptions {
   HTMLAttributes: Record<string, any>;
@@ -140,12 +140,12 @@ const registerAutoDelimitersCommand = (
 const fixAutoDelimitersCommand = (
   fixFrom?: number,
   fixTo?: number,
-): Command => fixAutoDelimitersInRange(fixFrom, fixTo);
+): Command => fixAutoDelimitersInRangeCommand(fixFrom, fixTo);
 
 const fixAllAutoDelimitersCommand = (): Command => (state, dispatch) =>
-  fixAutoDelimitersInRange(0, state.doc.nodeSize)(state, dispatch);
+  fixAutoDelimitersInRangeCommand(0, state.doc.nodeSize)(state, dispatch);
 
-export const fixAutoDelimitersInRange: (fixFrom?: number, fixTo?: number) => Command =
+export const fixAutoDelimitersInRangeCommand: (fixFrom?: number, fixTo?: number) => Command =
   (fixFrom, fixTo) => (state, dispatch, view) => {
     const { doc, selection } = state;
     let from, to;

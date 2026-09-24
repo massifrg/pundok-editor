@@ -87,17 +87,4 @@ export const PandocAttrExtension = Extension.create<PandocAttrOptions>({
     ];
   },
 
-  addCommands() {
-    return {
-      // setAttr: (alignment: string) => ({ commands }) => {
-      //   if (!this.options.alignments.includes(alignment)) {
-      //     return false
-      //   }
-      //   return this.options.types.every(type => commands.updateAttributes(type, { verticalAlign: alignment }))
-      // },
-      // unsetAttr: () => ({ commands }) => {
-      //   return this.options.types.every(type => commands.resetAttributes(type, 'verticalAlign'))
-      // },
-    };
-  },
 });

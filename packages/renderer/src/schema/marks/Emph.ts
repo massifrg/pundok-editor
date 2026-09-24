@@ -8,7 +8,7 @@ import {
 } from '@tiptap/core';
 import type { Command } from '@tiptap/pm/state';
 import { MARK_NAME_EMPH, SK } from '../../common';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface EmphOptions {

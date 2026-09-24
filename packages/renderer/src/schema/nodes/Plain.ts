@@ -4,7 +4,7 @@ import type { Command } from '@tiptap/pm/state';
 import { setBlockType } from '@tiptap/pm/commands';
 import { NODE_NAME_BREAK, NODE_NAME_PLAIN, NODE_PLAIN_CLASS, SK } from '../../common';
 import { isCellSelection } from '../helpers/pandocTable';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 export interface PlainOptions {
   HTMLAttributes: Record<string, any>;

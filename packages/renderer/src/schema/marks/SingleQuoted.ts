@@ -7,7 +7,7 @@ import {
 import type { Command } from '@tiptap/pm/state';
 import { SINGLE_QUOTED_CLASS } from '../helpers';
 import { MARK_NAME_SINGLE_QUOTED, SK } from '../../common';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface SingleQuotedOptions {

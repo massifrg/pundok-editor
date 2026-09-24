@@ -3,7 +3,7 @@ import { Node as PmNode, NodeType } from '@tiptap/pm/model';
 import { Command, Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { SelectedNodeOrMark } from '../helpers';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 const highlightSectionCommand = (section: SelectedNodeOrMark): Command => (state, dispatch) => {
   if (section && (section.mark || section.node)) {

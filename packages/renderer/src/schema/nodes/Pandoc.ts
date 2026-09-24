@@ -185,7 +185,7 @@ import {
 } from '../../common';
 import { setActionShowSearchDialog } from '../../actions';
 import { lowlight } from '../helpers/lowlight';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

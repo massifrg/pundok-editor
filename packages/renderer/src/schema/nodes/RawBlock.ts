@@ -26,7 +26,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
 import { Component } from 'vue';
 import type { Command } from '@tiptap/pm/state';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -240,190 +240,190 @@ const insertRawBlockCommand = (
   rawformat?: string,
   rawtext?: string | string[],
 ): Command => (state, dispatch) => {
-            let tr = state.tr;
-            const rawBlockType = state.schema.nodes[NODE_NAME_RAW_BLOCK];
-            const { doc, selection, schema } = state;
-            const { empty, from, to, $from, $to } = selection;
-            const isarray = Array.isArray(rawtext);
-            if (isarray && rawtext.length < 1) return false;
-            const rt1: string | undefined = isarray ? rawtext[0] : rawtext;
-            const rt2: string | undefined = isarray ? rawtext[1] : undefined;
+  let tr = state.tr;
+  const rawBlockType = state.schema.nodes[NODE_NAME_RAW_BLOCK];
+  const { doc, selection, schema } = state;
+  const { empty, from, to, $from, $to } = selection;
+  const isarray = Array.isArray(rawtext);
+  if (isarray && rawtext.length < 1) return false;
+  const rt1: string | undefined = isarray ? rawtext[0] : rawtext;
+  const rt2: string | undefined = isarray ? rawtext[1] : undefined;
 
-            // the selection is a Block or a table CellSelection
-            const isBlockSelection =
-              selection instanceof NodeSelection && selection.node.isBlock;
-            const isCellSelection = selection instanceof CellSelection;
-            if (isBlockSelection || isCellSelection) {
-              let selectedNode: PmNode | null = null;
-              let insertPos1 = from;
-              if (isCellSelection) {
-                let d = $from.depth + 1;
-                do {
-                  d--;
-                  selectedNode = $from.node(d);
-                } while (
-                  d > 0 &&
-                  selectedNode &&
-                  selectedNode.type.name !== NODE_NAME_PANDOC_TABLE
-                );
-                insertPos1 = $from.start(d) - 1;
-              } else {
-                selectedNode = selection.node;
-                insertPos1 = from;
-              }
-              if (!selectedNode) return false;
-              const insertPos2 = insertPos1 + selectedNode.nodeSize;
-              if (dispatch) {
-                // console.log(selectedNode);
-                const config = getEditorConfiguration(state);
-                const format =
-                  rawformat ||
-                  config?.defaultRawFormat ||
-                  defaultFormat ||
-                  DEFAULT_RAW_BLOCK_FORMAT;
-                const rawBlock1 =
-                  (rt1 && rawBlockType.create({ format }, textNode(schema, rt1))) ||
-                  null;
-                const rawBlock2 =
-                  (rt2 && rawBlockType.create({ format }, textNode(schema, rt2))) ||
-                  null;
-                if (rawBlock2) tr.insert(insertPos2, rawBlock2);
-                if (rawBlock1) tr.insert(insertPos1, rawBlock1);
-                dispatch(tr);
-              }
-              return true;
-            }
+  // the selection is a Block or a table CellSelection
+  const isBlockSelection =
+    selection instanceof NodeSelection && selection.node.isBlock;
+  const isCellSelection = selection instanceof CellSelection;
+  if (isBlockSelection || isCellSelection) {
+    let selectedNode: PmNode | null = null;
+    let insertPos1 = from;
+    if (isCellSelection) {
+      let d = $from.depth + 1;
+      do {
+        d--;
+        selectedNode = $from.node(d);
+      } while (
+        d > 0 &&
+        selectedNode &&
+        selectedNode.type.name !== NODE_NAME_PANDOC_TABLE
+      );
+      insertPos1 = $from.start(d) - 1;
+    } else {
+      selectedNode = selection.node;
+      insertPos1 = from;
+    }
+    if (!selectedNode) return false;
+    const insertPos2 = insertPos1 + selectedNode.nodeSize;
+    if (dispatch) {
+      // console.log(selectedNode);
+      const config = getEditorConfiguration(state);
+      const format =
+        rawformat ||
+        config?.defaultRawFormat ||
+        defaultFormat ||
+        DEFAULT_RAW_BLOCK_FORMAT;
+      const rawBlock1 =
+        (rt1 && rawBlockType.create({ format }, textNode(schema, rt1))) ||
+        null;
+      const rawBlock2 =
+        (rt2 && rawBlockType.create({ format }, textNode(schema, rt2))) ||
+        null;
+      if (rawBlock2) tr.insert(insertPos2, rawBlock2);
+      if (rawBlock1) tr.insert(insertPos1, rawBlock1);
+      dispatch(tr);
+    }
+    return true;
+  }
 
-            const depth1 = innerBlockDepth($from);
-            const depth2 = innerBlockDepth($to);
-            // console.log(`depth1: ${depth1}, depth2: ${depth2}`);
-            if (depth1 < 0 || depth2 < 0) return false;
-            if (dispatch) {
-              const config = getEditorConfiguration(state);
-              const depth = Math.min(depth1, depth2);
-              const pos1 = $from.start(depth) - 1;
-              const pos2 = $to.start(depth) + $to.node(depth).nodeSize - 1;
-              const format =
-                rawformat ||
-                config?.defaultRawFormat ||
-                defaultFormat ||
-                DEFAULT_RAW_BLOCK_FORMAT;
-              if (isarray) {
-                // two texts
-                const rawBlock1 =
-                  (rt1 && rawBlockType.create({ format }, textNode(schema, rt1))) ||
-                  null;
-                const rawBlock2 =
-                  (rt2 && rawBlockType.create({ format }, textNode(schema, rt2))) ||
-                  null;
-                if (rawBlock2) tr.insert(pos2, rawBlock2);
-                if (rawBlock1) tr.insert(pos1, rawBlock1);
-              } else if (!rt1) {
-                // no text
-                if (empty) {
-                  // no text and empty selection
-                  const text = $from.node(depth1).textContent;
-                  const rawBlock = rawBlockType.create(
-                    { format },
-                    textNode(schema, text),
-                  );
-                  if (!rawBlock) return false;
-                  const pos = $from.start(depth1) - 1;
-                  tr.setSelection(
-                    new NodeSelection(doc.resolve(pos)),
-                  ).replaceSelectionWith(rawBlock);
-                } else {
-                  // no text and range selected
-                  const text = doc.textBetween(from, to, '\n', toRawBlockText);
-                  const rawBlock = rawBlockType.create(
-                    { format },
-                    textNode(schema, text),
-                  );
-                  tr.replaceRangeWith(from, to, rawBlock);
-                }
-              } else {
-                // one text
-                if (empty) {
-                  // one text and empty selection
-                  const rawBlock = rawBlockType.create(
-                    { format },
-                    textNode(schema, rt1),
-                  );
-                  const splitDepth = $from.depth - depth1;
-                  const offset = splitDepth;
-                  const isAtStart = $from.start() === from;
-                  const insertionPos = isAtStart ? from - 1 : from + offset;
-                  if (!isAtStart) tr = tr.split(from, splitDepth);
-                  tr.insert(insertionPos, rawBlock);
-                } else {
-                  // one text and range selected
-                  const text = doc.textBetween(from, to, '\n', toRawBlockText);
-                  const rawBlock = rawBlockType.create(
-                    { format },
-                    textNode(schema, rawtext + text),
-                  );
-                  tr.replaceRangeWith(from, to, rawBlock);
-                }
-              }
-              dispatch(tr);
-            }
-            return true;
-          };
+  const depth1 = innerBlockDepth($from);
+  const depth2 = innerBlockDepth($to);
+  // console.log(`depth1: ${depth1}, depth2: ${depth2}`);
+  if (depth1 < 0 || depth2 < 0) return false;
+  if (dispatch) {
+    const config = getEditorConfiguration(state);
+    const depth = Math.min(depth1, depth2);
+    const pos1 = $from.start(depth) - 1;
+    const pos2 = $to.start(depth) + $to.node(depth).nodeSize - 1;
+    const format =
+      rawformat ||
+      config?.defaultRawFormat ||
+      defaultFormat ||
+      DEFAULT_RAW_BLOCK_FORMAT;
+    if (isarray) {
+      // two texts
+      const rawBlock1 =
+        (rt1 && rawBlockType.create({ format }, textNode(schema, rt1))) ||
+        null;
+      const rawBlock2 =
+        (rt2 && rawBlockType.create({ format }, textNode(schema, rt2))) ||
+        null;
+      if (rawBlock2) tr.insert(pos2, rawBlock2);
+      if (rawBlock1) tr.insert(pos1, rawBlock1);
+    } else if (!rt1) {
+      // no text
+      if (empty) {
+        // no text and empty selection
+        const text = $from.node(depth1).textContent;
+        const rawBlock = rawBlockType.create(
+          { format },
+          textNode(schema, text),
+        );
+        if (!rawBlock) return false;
+        const pos = $from.start(depth1) - 1;
+        tr.setSelection(
+          new NodeSelection(doc.resolve(pos)),
+        ).replaceSelectionWith(rawBlock);
+      } else {
+        // no text and range selected
+        const text = doc.textBetween(from, to, '\n', toRawBlockText);
+        const rawBlock = rawBlockType.create(
+          { format },
+          textNode(schema, text),
+        );
+        tr.replaceRangeWith(from, to, rawBlock);
+      }
+    } else {
+      // one text
+      if (empty) {
+        // one text and empty selection
+        const rawBlock = rawBlockType.create(
+          { format },
+          textNode(schema, rt1),
+        );
+        const splitDepth = $from.depth - depth1;
+        const offset = splitDepth;
+        const isAtStart = $from.start() === from;
+        const insertionPos = isAtStart ? from - 1 : from + offset;
+        if (!isAtStart) tr = tr.split(from, splitDepth);
+        tr.insert(insertionPos, rawBlock);
+      } else {
+        // one text and range selected
+        const text = doc.textBetween(from, to, '\n', toRawBlockText);
+        const rawBlock = rawBlockType.create(
+          { format },
+          textNode(schema, rawtext + text),
+        );
+        tr.replaceRangeWith(from, to, rawBlock);
+      }
+    }
+    dispatch(tr);
+  }
+  return true;
+};
 
 const convertToRawBlockCommand = (defaultFormat: string | undefined, format?: string): Command =>
   (state, dispatch) => {
-            const { empty, $from } = state.selection;
-            if (!empty) return false;
-            const depth = depthOfInnerNodeType($from, [
-              NODE_NAME_RAW_BLOCK,
-              NODE_NAME_CODE_BLOCK,
-            ]);
-            if (!depth) return false;
-            if (dispatch) {
-              const node = $from.node(depth);
-              const config = getEditorConfiguration(state);
-              const currentFormat =
-                node.attrs?.format ||
-                node.attrs?.kv?.format ||
-                config?.defaultRawFormat ||
-                defaultFormat ||
-                DEFAULT_RAW_BLOCK_FORMAT;
-              const rawBlock = state.schema.nodes[NODE_NAME_RAW_BLOCK].create(
-                { format: format || currentFormat },
-                node.content,
-              );
-              const sel = NodeSelection.create(state.doc, $from.before(depth));
-              dispatch(state.tr.setSelection(sel).replaceSelectionWith(rawBlock));
-            }
-            return true;
-          };
+    const { empty, $from } = state.selection;
+    if (!empty) return false;
+    const depth = depthOfInnerNodeType($from, [
+      NODE_NAME_RAW_BLOCK,
+      NODE_NAME_CODE_BLOCK,
+    ]);
+    if (!depth) return false;
+    if (dispatch) {
+      const node = $from.node(depth);
+      const config = getEditorConfiguration(state);
+      const currentFormat =
+        node.attrs?.format ||
+        node.attrs?.kv?.format ||
+        config?.defaultRawFormat ||
+        defaultFormat ||
+        DEFAULT_RAW_BLOCK_FORMAT;
+      const rawBlock = state.schema.nodes[NODE_NAME_RAW_BLOCK].create(
+        { format: format || currentFormat },
+        node.content,
+      );
+      const sel = NodeSelection.create(state.doc, $from.before(depth));
+      dispatch(state.tr.setSelection(sel).replaceSelectionWith(rawBlock));
+    }
+    return true;
+  };
 
 const rawBlockToTextCommand: Command = (state, dispatch) => {
-            const { empty, $from } = state.selection;
-            if (!empty) return false;
-            const depth = depthOfInnerNodeType($from, [NODE_NAME_RAW_BLOCK]);
-            if (!depth) return false;
-            const node = $from.node(depth);
-            if (node.childCount !== 1) return false;
-            if (dispatch) {
-              const schema = state.schema
-              const lines = node
-                .firstChild!.textContent.split(/\r?\n/)
-                .map((t) => textNode(schema, t))
-                .filter(t => !!t)
-                .map((t) =>
-                  schema.nodes[NODE_NAME_PARAGRAPH].createAndFill(null, t),
-                ) as PmNode[];
-              dispatch(
-                state.tr.replaceWith(
-                  $from.before(depth),
-                  $from.after(depth),
-                  Fragment.from(lines),
-                ),
-              );
-            }
-            return true;
-          };
+  const { empty, $from } = state.selection;
+  if (!empty) return false;
+  const depth = depthOfInnerNodeType($from, [NODE_NAME_RAW_BLOCK]);
+  if (!depth) return false;
+  const node = $from.node(depth);
+  if (node.childCount !== 1) return false;
+  if (dispatch) {
+    const schema = state.schema
+    const lines = node
+      .firstChild!.textContent.split(/\r?\n/)
+      .map((t) => textNode(schema, t))
+      .filter(t => !!t)
+      .map((t) =>
+        schema.nodes[NODE_NAME_PARAGRAPH].createAndFill(null, t),
+      ) as PmNode[];
+    dispatch(
+      state.tr.replaceWith(
+        $from.before(depth),
+        $from.after(depth),
+        Fragment.from(lines),
+      ),
+    );
+  }
+  return true;
+};
 
 
 function toRawBlockText(node: PmNode): string {

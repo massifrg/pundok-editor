@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core';
 import type { Command } from '@tiptap/pm/state';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { innerNodeDepth } from '../helpers';
 import {
   ActionNameWithProps,

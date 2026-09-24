@@ -66,7 +66,7 @@ import {
 } from '@massifrg/prosemirror-tables-sections';
 import { PmColSpec, pmColSpecsToString } from '../helpers/colSpec';
 import { EditorView } from '@tiptap/pm/view';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { innerNodeDepth, pandocAlignmentToCellAlign } from '../helpers';
 import { Alignment } from '../../pandoc';
 import { isEqual } from 'lodash-es';
@@ -163,13 +163,13 @@ declare module '@tiptap/core' {
      * Table Role
      */
     tableRole?:
-      | string
-      | ((this: {
-          name: string;
-          options: Options;
-          storage: Storage;
-          parent: ParentConfig<NodeConfig<Options>>['tableRole'];
-        }) => string);
+    | string
+    | ((this: {
+      name: string;
+      options: Options;
+      storage: Storage;
+      parent: ParentConfig<NodeConfig<Options>>['tableRole'];
+    }) => string);
   }
 }
 
@@ -887,9 +887,9 @@ function setColumnAlignmentCommand(align: Alignment, column?: number): Command {
         const rect =
           selection instanceof CellSelection
             ? map.rectBetween(
-                $pos.pos - tableStart,
-                selection.$headCell.pos - tableStart,
-              )
+              $pos.pos - tableStart,
+              selection.$headCell.pos - tableStart,
+            )
             : map.findCell(cellPos! - tableStart);
         colStart = rect.left;
         colStop = rect.right;
@@ -1268,7 +1268,7 @@ function tableNodeAt(
 ): NodeWithPos | undefined {
   let d = 0;
   let node: PmNode | null = null;
-  for (;;) {
+  for (; ;) {
     node = $pos.node(d);
     if (node) {
       if (node.type.spec.tableRole === role)
@@ -1363,11 +1363,11 @@ function fixTableSectionCells(
               const fixedCell = cellType.createAndFill(
                 fixAlign || fixEdge
                   ? {
-                      ...cellNode.attrs,
-                      textAlign: fixAlign ? columnAlign : textAlign,
-                      leftEdge: isLeftEdge ? true : undefined,
-                      rightEdge: isRightEdge ? true : undefined,
-                    }
+                    ...cellNode.attrs,
+                    textAlign: fixAlign ? columnAlign : textAlign,
+                    leftEdge: isLeftEdge ? true : undefined,
+                    rightEdge: isRightEdge ? true : undefined,
+                  }
                   : cellNode.attrs,
                 cellNode.content,
               );

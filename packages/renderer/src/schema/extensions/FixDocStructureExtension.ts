@@ -1,5 +1,5 @@
 import { Extension } from '@tiptap/core';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { Node } from '@tiptap/pm/model';
 import { Command, EditorState, Transaction } from '@tiptap/pm/state';
 import {

@@ -4,7 +4,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { Component } from 'vue';
 import MetaBoolView from '../../components/nodeviews/MetaBoolView.vue';
 import { NODE_NAME_META_BOOL, NODE_NAME_META_LIST } from '../../common';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -66,23 +66,23 @@ export const MetaBool = Node.create<MetaBoolOptions>({
 });
 
 const appendMetaBoolCommand: Command = (state, dispatch) => {
-            const { from } = state.selection;
-            const doc = state.doc;
-            const r = doc.resolve(from);
-            const schema = state.schema;
-            for (let d = r.depth; d > 0; d--) {
-              const n = r.node(d);
-              if (n && n.type.name === NODE_NAME_META_LIST) {
-                if (dispatch) {
-                  const metaBoolType = schema.nodes[NODE_NAME_META_BOOL];
-                  if (!metaBoolType) return false;
-                  const metabool = metaBoolType.create({
-                    value: 'True',
-                  });
-                  dispatch(state.tr.insert(r.end(d), metabool));
-                }
-                return true;
-              }
-            }
-            return false;
+  const { from } = state.selection;
+  const doc = state.doc;
+  const r = doc.resolve(from);
+  const schema = state.schema;
+  for (let d = r.depth; d > 0; d--) {
+    const n = r.node(d);
+    if (n && n.type.name === NODE_NAME_META_LIST) {
+      if (dispatch) {
+        const metaBoolType = schema.nodes[NODE_NAME_META_BOOL];
+        if (!metaBoolType) return false;
+        const metabool = metaBoolType.create({
+          value: 'True',
+        });
+        dispatch(state.tr.insert(r.end(d), metabool));
+      }
+      return true;
+    }
+  }
+  return false;
 };

@@ -19,7 +19,7 @@ import {
   ACTION_SELECT_PREV,
   setActionCommand
 } from '../../actions';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import type { Command } from '@tiptap/pm/state';
 
 const SEARCH_AND_REPLACE_EXT_NAME = 'searchAndReplace';

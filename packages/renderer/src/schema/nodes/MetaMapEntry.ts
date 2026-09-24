@@ -3,7 +3,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { Fragment, Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { TextSelection } from '@tiptap/pm/state';
 import type { Command } from '@tiptap/pm/state';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { Component } from 'vue';
 import { innerNodeDepth, templateNode } from '../helpers';
 import { MetaMapEntryView } from '../../components';

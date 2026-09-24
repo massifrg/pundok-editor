@@ -1,5 +1,4 @@
-import { CommandProps, Extension } from '@tiptap/core';
-import { asTiptapCommand } from '../helpers/command';
+import { Extension } from '@tiptap/core';
 import { Attrs, Mark, MarkType } from '@tiptap/pm/model';
 import { Command } from '@tiptap/pm/state';
 import {
@@ -11,6 +10,7 @@ import {
   upperCaseTransaction,
 } from '../../commands';
 import { getMark, SelectedNodeOrMark } from '../helpers';
+import { asTiptapCommand } from '../helpers';
 import {
   ActionNameWithProps,
   AddRemoveRenameClassActionProps,

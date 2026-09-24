@@ -9,7 +9,7 @@ import {
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM,
 } from '../../common';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -50,31 +50,6 @@ export const IndexTerm = Node.create<IndexTermOptions>({
     };
   },
 
-  // addAttributes() {
-  //   return {
-  //     // the name of the index this term belongs to, i.e. "index", "names", "topics"
-  //     indexName: {
-  //       default: DEFAULT_INDEX_NAME,
-  //       parseHTML: (element) => element.getAttribute('data-index-name'),
-  //       renderHTML: (attributes) => ({
-  //         'data-index-name': attributes.indexName,
-  //       }),
-  //     },
-  //     // the term unique identifier
-  //     id: {
-  //       default: null,
-  //       parseHTML: (element) => element.getAttribute('id'),
-  //       renderHTML: (attributes) => ({ id: attributes.id }),
-  //     },
-  //     // a string according to which this term is sorted in the index
-  //     sortKey: {
-  //       default: null,
-  //       parseHTML: (element) => element.getAttribute('data-sort-key'),
-  //       renderHTML: (attributes) => ({ 'data-sort-key': attributes.sortKey }),
-  //     },
-  //   };
-  // },
-
   renderHTML({ HTMLAttributes, node }) {
     return [
       'div',
@@ -93,85 +68,85 @@ export const IndexTerm = Node.create<IndexTermOptions>({
 });
 
 const fixIndexTermsCommand: Command = (state, dispatch) => {
-        const tr = state.tr;
-        const { doc, schema } = state
-        const indexTermType = schema.nodes[NODE_NAME_INDEX_TERM]
-        if (!indexTermType) return false
-        if (dispatch) {
-          const positions: number[] = []
-          doc.descendants((node, pos, parent) => {
-            const isParentIndex = parent?.type.name === NODE_NAME_INDEX_DIV
-            const isParentTerm = parent?.type.name === NODE_NAME_INDEX_TERM
-            const classes = node.attrs?.classes || []
-            const mustBeTerm = node.type.name === NODE_NAME_DIV && classes.indexOf(INDEX_TERM_CLASS) >= 0
-            if ((isParentIndex || isParentTerm) && mustBeTerm)
-              positions.push(pos)
-          })
-          if (positions.length === 0)
-            return false
-          positions.sort((p1, p2) => p2 - p1)
-          positions.forEach(pos => {
-            const node = doc.nodeAt(pos)
-            if (node) {
-              const classes = node.attrs?.classes || []
-              if (classes.indexOf(INDEX_TERM_CLASS) < 0) classes.push(INDEX_TERM_CLASS)
-              tr.setNodeMarkup(pos, indexTermType, { ...node.attrs, classes })
-            }
-          })
-          dispatch(tr)
-        }
-        return true
+  const tr = state.tr;
+  const { doc, schema } = state
+  const indexTermType = schema.nodes[NODE_NAME_INDEX_TERM]
+  if (!indexTermType) return false
+  if (dispatch) {
+    const positions: number[] = []
+    doc.descendants((node, pos, parent) => {
+      const isParentIndex = parent?.type.name === NODE_NAME_INDEX_DIV
+      const isParentTerm = parent?.type.name === NODE_NAME_INDEX_TERM
+      const classes = node.attrs?.classes || []
+      const mustBeTerm = node.type.name === NODE_NAME_DIV && classes.indexOf(INDEX_TERM_CLASS) >= 0
+      if ((isParentIndex || isParentTerm) && mustBeTerm)
+        positions.push(pos)
+    })
+    if (positions.length === 0)
+      return false
+    positions.sort((p1, p2) => p2 - p1)
+    positions.forEach(pos => {
+      const node = doc.nodeAt(pos)
+      if (node) {
+        const classes = node.attrs?.classes || []
+        if (classes.indexOf(INDEX_TERM_CLASS) < 0) classes.push(INDEX_TERM_CLASS)
+        tr.setNodeMarkup(pos, indexTermType, { ...node.attrs, classes })
+      }
+    })
+    dispatch(tr)
+  }
+  return true
 };
 
 const convertDivToIndexTermCommand: Command = (state, dispatch) => {
-            const { doc, schema, selection } = state;
-            if (selection instanceof NodeSelection) {
-              const maybeDiv = doc.nodeAt(selection.from);
-              if (maybeDiv && maybeDiv.type.name === NODE_NAME_DIV) {
-                if (dispatch) {
-                  const tr = state.tr;
-                  let { id, kv } = maybeDiv.attrs;
-                  kv = kv || {};
-                  const indexTerm = schema.nodes[NODE_NAME_INDEX_TERM].createAndFill(
-                    {
-                      id,
-                      indexName: kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
-                      sortKey: kv['sort-key'],
-                    },
-                    maybeDiv.content
-                  );
-                  if (indexTerm) selection.replaceWith(tr, indexTerm);
-                  else return false;
-                  return true;
-                }
-              }
-            }
-            return false;
-          };
+  const { doc, schema, selection } = state;
+  if (selection instanceof NodeSelection) {
+    const maybeDiv = doc.nodeAt(selection.from);
+    if (maybeDiv && maybeDiv.type.name === NODE_NAME_DIV) {
+      if (dispatch) {
+        const tr = state.tr;
+        let { id, kv } = maybeDiv.attrs;
+        kv = kv || {};
+        const indexTerm = schema.nodes[NODE_NAME_INDEX_TERM].createAndFill(
+          {
+            id,
+            indexName: kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
+            sortKey: kv['sort-key'],
+          },
+          maybeDiv.content
+        );
+        if (indexTerm) selection.replaceWith(tr, indexTerm);
+        else return false;
+        return true;
+      }
+    }
+  }
+  return false;
+};
 const convertIndexTermToDivCommand: Command = (state, dispatch) => {
-            const { doc, schema, selection } = state;
-            if (selection instanceof NodeSelection) {
-              const maybeIndexTerm = doc.nodeAt(selection.from);
-              if (maybeIndexTerm && maybeIndexTerm.type.name === IndexTerm.name) {
-                if (dispatch) {
-                  const tr = state.tr;
-                  let { id, indexName, sortKey } = maybeIndexTerm.attrs;
-                  const div = schema.nodes[NODE_NAME_DIV].createAndFill(
-                    {
-                      id,
-                      classes: [],
-                      kv: {
-                        [INDEX_NAME_ATTR]: indexName,
-                        ['sort-key']: sortKey,
-                      },
-                    },
-                    maybeIndexTerm.content
-                  );
-                  if (div) selection.replaceWith(tr, div);
-                  else return false;
-                  return true;
-                }
-              }
-            }
-            return false;
+  const { doc, schema, selection } = state;
+  if (selection instanceof NodeSelection) {
+    const maybeIndexTerm = doc.nodeAt(selection.from);
+    if (maybeIndexTerm && maybeIndexTerm.type.name === IndexTerm.name) {
+      if (dispatch) {
+        const tr = state.tr;
+        let { id, indexName, sortKey } = maybeIndexTerm.attrs;
+        const div = schema.nodes[NODE_NAME_DIV].createAndFill(
+          {
+            id,
+            classes: [],
+            kv: {
+              [INDEX_NAME_ATTR]: indexName,
+              ['sort-key']: sortKey,
+            },
+          },
+          maybeIndexTerm.content
+        );
+        if (div) selection.replaceWith(tr, div);
+        else return false;
+        return true;
+      }
+    }
+  }
+  return false;
 };

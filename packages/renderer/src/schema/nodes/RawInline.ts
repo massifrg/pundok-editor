@@ -4,7 +4,7 @@ import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { Command, NodeSelection } from '@tiptap/pm/state';
 import { getEditorConfiguration, marksEnding, marksStarting, textNode } from '../helpers';
 import { intersection } from 'lodash-es';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -107,7 +107,7 @@ const rawInlineToTextCommand: Command = (state, dispatch) => {
   const positions: number[] = [], texts: string[] = [];
   doc.nodesBetween(from, to, (node, pos) => { if (node.type.name === NODE_NAME_RAW_INLINE) { positions.push(pos); texts.push(node.attrs.text); } });
   if (!positions.length) return false;
-  if (dispatch) { const tr = state.tr; positions.sort((a,b) => a-b).forEach((pos, i) => tr.replaceWith(pos, pos + 1, textNode(schema, texts[i]) || [])); dispatch(tr); }
+  if (dispatch) { const tr = state.tr; positions.sort((a, b) => a - b).forEach((pos, i) => tr.replaceWith(pos, pos + 1, textNode(schema, texts[i]) || [])); dispatch(tr); }
   return true;
 };
 

@@ -16,7 +16,7 @@ import {
   MathType,
 } from '../helpers';
 import { MARK_NAME_MATH, SK } from '../../common';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 
 export interface MathOptions {
   HTMLAttributes: Record<string, any>;

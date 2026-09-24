@@ -3,7 +3,7 @@ import type { Attrs } from '@tiptap/pm/model';
 import type { Command } from '@tiptap/pm/state';
 import { appliesTo, MARK_NAME_SPAN, SK } from '../../common';
 import { getDocState, getSpanAttrs } from '../helpers';
-import { asTiptapCommand } from '../helpers/command';
+import { asTiptapCommand } from '../helpers';
 import { setMarkNoAtoms, toggleMarkNoAtoms, unsetMarkNoAtoms } from '../../commands';
 
 export interface SpanOptions {
