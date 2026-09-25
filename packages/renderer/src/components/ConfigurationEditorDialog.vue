@@ -6,13 +6,8 @@
       </q-card-section>
 
       <q-card-section class="configuration-editor-dialog__body">
-        <q-tabs
-          v-model="activeTab"
-          vertical
-          class="configuration-editor-dialog__tabs text-primary"
-          outside-arrows
-          mobile-arrows
-        >
+        <q-tabs v-model="activeTab" vertical class="configuration-editor-dialog__tabs text-primary" outside-arrows
+          mobile-arrows>
           <q-tab v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label" />
         </q-tabs>
 
@@ -20,42 +15,17 @@
 
         <q-tab-panels v-model="activeTab" animated class="configuration-editor-dialog__panels">
           <q-tab-panel v-for="tab in tabs" :key="tab.name" :name="tab.name">
-            <InheritedConfigurationsEditor
-              v-if="tab.name === 'inherited-configurations'"
-              v-model="chosenConfigurations"
-            />
-            <CustomStylesEditor
-              v-else-if="tab.name === 'customStyles'"
-              v-model="values.customStyles"
-            />
+            <ProjectConfigurationsEditor v-if="tab.name === 'inherited-configurations'"
+              v-model="chosenConfigurations" />
+            <CustomStylesEditor v-else-if="tab.name === 'customStyles'" v-model="values.customStyles" />
             <div v-for="field in tab.fields" v-else :key="field.name" class="q-mb-md">
-              <q-input
-                v-if="field.kind === 'text'"
-                v-model="values[field.name]"
-                :label="field.label"
-                outlined
-                :type="field.name === 'description' ? 'textarea' : 'text'"
-                :hint="field.description"
-                clearable
-              />
-              <q-toggle
-                v-else-if="field.kind === 'boolean'"
-                v-model="values[field.name]"
-                :label="field.label"
-                :hint="field.description"
-              />
-              <q-input
-                v-else
-                v-model="jsonValues[field.name]"
-                :label="field.label"
-                type="textarea"
-                outlined
-                autogrow
-                :hint="field.description"
-                :error="!!jsonErrors[field.name]"
-                :error-message="jsonErrors[field.name]"
-                @update:model-value="clearJsonError(field.name)"
-              />
+              <q-input v-if="field.kind === 'text'" v-model="values[field.name]" :label="field.label" outlined
+                :type="field.name === 'description' ? 'textarea' : 'text'" :hint="field.description" clearable />
+              <q-toggle v-else-if="field.kind === 'boolean'" v-model="values[field.name]" :label="field.label"
+                :hint="field.description" />
+              <q-input v-else v-model="jsonValues[field.name]" :label="field.label" type="textarea" outlined autogrow
+                :hint="field.description" :error="!!jsonErrors[field.name]" :error-message="jsonErrors[field.name]"
+                @update:model-value="clearJsonError(field.name)" />
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -77,7 +47,7 @@ setupQuasarIcons()
 
 <script lang="ts">
 import { PundokEditorConfigInit } from '../common'
-import InheritedConfigurationsEditor from './confeditors/InheritedConfigurationsEditor.vue'
+import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEditor.vue'
 import CustomStylesEditor from './confeditors/CustomStylesEditor.vue'
 
 type EditorConfigField = {
@@ -144,7 +114,6 @@ const tabs: EditorConfigTab[] = [
       'description',
       'version',
       'isLocal',
-      'inherits',
       'tiptap',
       'workingFormat',
       'copyFormat',
@@ -165,11 +134,11 @@ export default {
   props: {
     visible: { type: Boolean, default: false },
     configuration: { type: Object, default: () => ({}) },
-    inheritedConfigurations: { type: Array, default: () => [] },
+    projectConfigurations: { type: Array, default: () => [] },
   },
   emits: ['save', 'close'],
   components: {
-    InheritedConfigurationsEditor,
+    ProjectConfigurationsEditor,
     CustomStylesEditor,
   },
   data() {
@@ -194,12 +163,11 @@ export default {
   methods: {
     loadConfiguration() {
       const source = this.configuration as Partial<PundokEditorConfigInit>
-      this.chosenConfigurations = [...(this.inheritedConfigurations as string[])]
+      this.chosenConfigurations = [...(this.projectConfigurations as string[])]
       const values: Record<string, any> = {}
       const jsonValues: Record<string, string> = {}
       fields.forEach(field => {
         const value = source[field.name]
-        if (field.name === 'inherits') return
         if (field.kind === 'json') {
           jsonValues[field.name] = JSON.stringify(value === undefined ? null : value, null, 2)
         } else if (field.name === 'customStyles') {
@@ -225,10 +193,11 @@ export default {
     },
     onSave() {
       const result: Record<string, any> = {
+        name: '',
+        version: [],
         ...(this.configuration as Record<string, any>),
         ...this.values,
       }
-      delete result.inherits
       const errors: Record<string, string> = {}
       fields.filter(field => field.kind === 'json').forEach(field => {
         try {
@@ -251,7 +220,7 @@ export default {
       Object.keys(result).forEach(key => {
         if (result[key] === undefined || result[key] === '') delete result[key]
       })
-      this.$emit('save', result, [...this.chosenConfigurations])
+      this.$emit('save', result as PundokEditorConfigInit, [...this.chosenConfigurations])
       this.$emit('close')
     },
   },
@@ -281,5 +250,4 @@ export default {
   flex: 1;
   overflow: auto;
 }
-
 </style>

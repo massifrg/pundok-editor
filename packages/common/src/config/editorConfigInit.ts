@@ -19,8 +19,8 @@ export interface PundokEditorConfigInit extends NamedAndDescribed {
   version: number[];
   /** the configuration is local (this is set by the editor, it's overridden if set by the user) */
   isLocal?: boolean;
-  /** the names of other configurations to derive this from */
-  inherits?: string[];
+  // /** the names of other configurations to derive this from */
+  // inherits?: string[];
   /** options for TipTap/Prosemirror `Node`s and `Mark`s */
   tiptap?: {
     options?: Record<string, any>;

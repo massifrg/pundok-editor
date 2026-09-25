@@ -111,7 +111,7 @@ export default {
       this.configurations = this.configurations.filter(c => c !== configName)
     },
     setEditorConfig(
-      configuration: Partial<PundokEditorConfigInit>,
+      configuration: PundokEditorConfigInit,
       configurations: string[],
     ) {
       this.editorConfig = configuration

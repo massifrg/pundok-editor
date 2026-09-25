@@ -1435,7 +1435,7 @@ export default {
       this.visibleProjectStructureDialog = false;
     },
     saveProjectEditorConfig(
-      editorConfig: Partial<PundokEditorConfigInit>,
+      editorConfig: PundokEditorConfigInit,
       configurations: string[],
     ) {
       const project = this.docState()?.project;
