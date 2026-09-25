@@ -40,7 +40,7 @@
   <ConfigurationEditorDialog
     :visible="configurationDialogVisible"
     :configuration="editorConfig"
-    :inherited-configurations="configurations"
+    :project-configurations="configurations"
     @save="setEditorConfig"
     @close="configurationDialogVisible = false"
   />

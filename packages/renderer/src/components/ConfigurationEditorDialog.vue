@@ -2,29 +2,29 @@
   <q-dialog :model-value="visible" full-width full-height @hide="onCancel">
     <q-card class="configuration-editor-dialog">
       <q-card-section>
-        <div class="text-h6">Edit editor configuration</div>
+        <div class="text-h6">{{ $t('configEditor.title') }}</div>
       </q-card-section>
 
       <q-card-section class="configuration-editor-dialog__body">
         <q-tabs v-model="activeTab" vertical class="configuration-editor-dialog__tabs text-primary" outside-arrows
           mobile-arrows>
-          <q-tab v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label" />
+          <q-tab v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="$t(tab.label)" />
         </q-tabs>
 
         <q-separator vertical />
 
         <q-tab-panels v-model="activeTab" animated class="configuration-editor-dialog__panels">
           <q-tab-panel v-for="tab in tabs" :key="tab.name" :name="tab.name">
-            <ProjectConfigurationsEditor v-if="tab.name === 'inherited-configurations'"
+            <ProjectConfigurationsEditor v-if="tab.name === 'project-configurations'"
               v-model="chosenConfigurations" />
             <CustomStylesEditor v-else-if="tab.name === 'customStyles'" v-model="values.customStyles" />
             <div v-for="field in tab.fields" v-else :key="field.name" class="q-mb-md">
-              <q-input v-if="field.kind === 'text'" v-model="values[field.name]" :label="field.label" outlined
-                :type="field.name === 'description' ? 'textarea' : 'text'" :hint="field.description" clearable />
-              <q-toggle v-else-if="field.kind === 'boolean'" v-model="values[field.name]" :label="field.label"
-                :hint="field.description" />
-              <q-input v-else v-model="jsonValues[field.name]" :label="field.label" type="textarea" outlined autogrow
-                :hint="field.description" :error="!!jsonErrors[field.name]" :error-message="jsonErrors[field.name]"
+              <q-input v-if="field.kind === 'text'" v-model="values[field.name]" :label="$t(field.label)" outlined
+                :type="field.name === 'description' ? 'textarea' : 'text'" :hint="$t(field.description)" clearable />
+              <q-toggle v-else-if="field.kind === 'boolean'" v-model="values[field.name]" :label="$t(field.label)"
+                :hint="$t(field.description)" />
+              <q-input v-else v-model="jsonValues[field.name]" :label="$t(field.label)" type="textarea" outlined autogrow
+                :hint="$t(field.description)" :error="!!jsonErrors[field.name]" :error-message="jsonErrors[field.name]"
                 @update:model-value="clearJsonError(field.name)" />
             </div>
           </q-tab-panel>
@@ -32,8 +32,8 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn label="Cancel" @click="onCancel" />
-        <q-btn label="Save" color="primary" @click="onSave" />
+        <q-btn :label="$t('configEditor.buttons.cancel')" @click="onCancel" />
+        <q-btn :label="$t('configEditor.buttons.save')" color="primary" @click="onSave" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -64,29 +64,29 @@ type EditorConfigTab = {
 }
 
 const fields: EditorConfigField[] = [
-  { name: 'name', label: 'Name', description: 'The configuration name.', kind: 'text' },
-  { name: 'description', label: 'Description', description: 'An optional description.', kind: 'text' },
-  { name: 'version', label: 'Version', description: 'Minimal suitable editor version, as a JSON array of numbers.', kind: 'json' },
-  { name: 'isLocal', label: 'Local', description: 'Whether this is a local configuration.', kind: 'boolean' },
-  { name: 'tiptap', label: 'TipTap', description: 'TipTap/ProseMirror options, as a JSON object.', kind: 'json' },
-  { name: 'workingFormat', label: 'Working format', description: 'Default format used to open documents.', kind: 'text' },
-  { name: 'copyFormat', label: 'Copy format', description: 'Format used by Save a copy.', kind: 'text' },
-  { name: 'mainFormats', label: 'Main formats', description: 'Formats shown prominently, as a JSON array of strings.', kind: 'json' },
-  { name: 'documentTemplate', label: 'Document template', description: 'JSON-stringified template for new documents.', kind: 'text' },
-  { name: 'autoDelimiters', label: 'Automatic delimiters', description: 'Delimiter pairs, as a JSON object.', kind: 'json' },
-  { name: 'customStyles', label: 'Custom styles', description: 'Custom style definitions.', kind: 'customStyles' },
-  { name: 'customClasses', label: 'Custom classes', description: 'Custom class definitions, as a JSON array.', kind: 'json' },
-  { name: 'customAttributes', label: 'Custom attributes', description: 'Custom attribute definitions, as a JSON array.', kind: 'json' },
-  { name: 'customMetadata', label: 'Custom metadata', description: 'Custom metadata definitions, as a JSON array.', kind: 'json' },
-  { name: 'noteStyles', label: 'Note styles', description: 'Note style definitions, as a JSON array.', kind: 'json' },
-  { name: 'customCss', label: 'Custom CSS', description: 'CSS file paths, as a JSON array of strings.', kind: 'json' },
-  { name: 'indices', label: 'Indices', description: 'Index definitions, as a JSON array.', kind: 'json' },
-  { name: 'defaultRawFormat', label: 'Default raw format', description: 'Default format for raw inline and block elements.', kind: 'text' },
-  { name: 'rawInlines', label: 'Raw inlines', description: 'Insertable raw inline samples, as a JSON array.', kind: 'json' },
-  { name: 'rawBlocks', label: 'Raw blocks', description: 'Insertable raw block samples, as a JSON array.', kind: 'json' },
-  { name: 'inputConverters', label: 'Input converters', description: 'Document input converters, as a JSON array.', kind: 'json' },
-  { name: 'outputConverters', label: 'Output converters', description: 'Document output converters, as a JSON array.', kind: 'json' },
-  { name: 'automations', label: 'Automations', description: 'Predefined editor automations, as a JSON array.', kind: 'json' },
+  { name: 'name', label: 'configEditor.general.name', description: 'configEditor.general.nameDescription', kind: 'text' },
+  { name: 'description', label: 'configEditor.general.description', description: 'configEditor.general.descriptionDescription', kind: 'text' },
+  { name: 'version', label: 'configEditor.general.version', description: 'configEditor.general.versionDescription', kind: 'json' },
+  { name: 'isLocal', label: 'configEditor.general.local', description: 'configEditor.general.localDescription', kind: 'boolean' },
+  { name: 'tiptap', label: 'configEditor.general.tiptap', description: 'configEditor.general.tiptapDescription', kind: 'json' },
+  { name: 'workingFormat', label: 'configEditor.fileFormats.workingFormat', description: 'configEditor.fileFormats.workingFormatDescription', kind: 'text' },
+  { name: 'copyFormat', label: 'configEditor.fileFormats.copyFormat', description: 'configEditor.fileFormats.copyFormatDescription', kind: 'text' },
+  { name: 'mainFormats', label: 'configEditor.fileFormats.mainFormats', description: 'configEditor.fileFormats.mainFormatsDescription', kind: 'json' },
+  { name: 'documentTemplate', label: 'configEditor.documentTemplate.label', description: 'configEditor.documentTemplate.description', kind: 'text' },
+  { name: 'autoDelimiters', label: 'configEditor.autoDelimiters.label', description: 'configEditor.autoDelimiters.description', kind: 'json' },
+  { name: 'customStyles', label: 'configEditor.customStyles.label', description: 'configEditor.customStyles.description', kind: 'customStyles' },
+  { name: 'customClasses', label: 'configEditor.customClasses.label', description: 'configEditor.customClasses.description', kind: 'json' },
+  { name: 'customAttributes', label: 'configEditor.customAttributes.label', description: 'configEditor.customAttributes.description', kind: 'json' },
+  { name: 'customMetadata', label: 'configEditor.customMetadata.label', description: 'configEditor.customMetadata.description', kind: 'json' },
+  { name: 'noteStyles', label: 'configEditor.noteStyles.label', description: 'configEditor.noteStyles.description', kind: 'json' },
+  { name: 'customCss', label: 'configEditor.customCss.label', description: 'configEditor.customCss.description', kind: 'json' },
+  { name: 'indices', label: 'configEditor.indices.label', description: 'configEditor.indices.description', kind: 'json' },
+  { name: 'defaultRawFormat', label: 'configEditor.rawElements.defaultRawFormat', description: 'configEditor.rawElements.defaultRawFormatDescription', kind: 'text' },
+  { name: 'rawInlines', label: 'configEditor.rawElements.rawInlines', description: 'configEditor.rawElements.rawInlinesDescription', kind: 'json' },
+  { name: 'rawBlocks', label: 'configEditor.rawElements.rawBlocks', description: 'configEditor.rawElements.rawBlocksDescription', kind: 'json' },
+  { name: 'inputConverters', label: 'configEditor.inputConverters.label', description: 'configEditor.inputConverters.description', kind: 'json' },
+  { name: 'outputConverters', label: 'configEditor.outputConverters.label', description: 'configEditor.outputConverters.description', kind: 'json' },
+  { name: 'automations', label: 'configEditor.automations.label', description: 'configEditor.automations.description', kind: 'json' },
 ]
 
 const groupedFields = (names: (keyof PundokEditorConfigInit)[]) =>
@@ -95,17 +95,17 @@ const groupedFields = (names: (keyof PundokEditorConfigInit)[]) =>
 const tabs: EditorConfigTab[] = [
   {
     name: 'general',
-    label: 'General',
+    label: 'configEditor.tabs.general',
     fields: groupedFields(['name', 'description', 'version', 'isLocal', 'tiptap']),
   },
   {
     name: 'file-formats',
-    label: 'File formats',
+    label: 'configEditor.tabs.fileFormats',
     fields: groupedFields(['workingFormat', 'copyFormat', 'mainFormats']),
   },
   {
-    name: 'inherited-configurations',
-    label: 'Inherited configuration',
+    name: 'project-configurations',
+    label: 'configEditor.tabs.projectConfigurations',
     fields: [],
   },
   ...fields
@@ -122,10 +122,10 @@ const tabs: EditorConfigTab[] = [
       'rawInlines',
       'rawBlocks',
     ].includes(field.name))
-    .map(field => ({ name: field.name, label: field.label, fields: [field] })),
+    .map(field => ({ name: field.name,     label: `configEditor.tabs.${field.name}`, fields: [field] })),
   {
     name: 'raw-elements',
-    label: 'Raw elements',
+    label: 'configEditor.tabs.rawElements',
     fields: groupedFields(['defaultRawFormat', 'rawInlines', 'rawBlocks']),
   },
 ]

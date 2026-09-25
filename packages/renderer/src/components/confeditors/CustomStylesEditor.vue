@@ -1,9 +1,9 @@
 <template>
   <div class="custom-styles-editor">
     <div class="row items-center q-mb-sm">
-      <div class="text-subtitle1">Custom styles</div>
+      <div class="text-subtitle1">{{ $t('configEditor.customStyles.title') }}</div>
       <q-space />
-      <q-btn dense icon="add" label="New style" @click="newStyle" />
+      <q-btn dense icon="add" :label="$t('configEditor.customStyles.newStyle')" @click="newStyle" />
     </div>
 
     <q-list v-if="styles.length > 0" bordered separator>
@@ -14,27 +14,28 @@
         </q-item-section>
         <q-item-section side>
           <div class="row no-wrap q-gutter-xs">
-            <q-btn dense flat round icon="edit" title="Edit style" @click="editStyle(style.name)" />
-            <q-btn dense flat round icon="remove" title="Delete style" @click="deleteStyle(style.name)" />
+            <q-btn dense flat round icon="edit" :title="$t('configEditor.customStyles.editStyle')" @click="editStyle(style.name)" />
+            <q-btn dense flat round icon="remove" :title="$t('configEditor.customStyles.deleteStyle')" @click="deleteStyle(style.name)" />
           </div>
         </q-item-section>
       </q-item>
     </q-list>
-    <div v-else class="text-caption q-pa-sm">No custom styles defined.</div>
+    <div v-else class="text-caption q-pa-sm">{{ $t('configEditor.customStyles.none') }}</div>
 
     <q-card v-if="draft" flat bordered class="q-mt-md">
       <q-card-section class="q-pb-sm">
-        <div class="text-subtitle2">{{ editingIndex === null ? 'New custom style' : 'Edit custom style' }}</div>
+        <div class="text-subtitle2">{{ $t(editingIndex === null ? 'configEditor.customStyles.newTitle' : 'configEditor.customStyles.editTitle') }}</div>
       </q-card-section>
       <q-card-section class="q-pt-none">
-        <q-input v-model="draft.name" label="Name" outlined dense :readonly="editingIndex !== null"
+        <q-input v-model="draft.name" :label="$t('configEditor.customStyles.name')" outlined dense :readonly="editingIndex !== null"
           :error="!!nameError" :error-message="nameError">
           <template #error>
             <q-icon name="alert_circle" size="xs" class="q-mr-xs" />
             {{ nameError }}
           </template>
         </q-input>
-        <q-select v-model="draft.appliesTo" :options="appliesToOptions" label="Applies to"
+        <q-separator class="q-my-md" />
+        <q-select v-model="draft.appliesTo" :options="appliesToOptions" :label="$t('configEditor.customStyles.appliesTo')"
           multiple emit-value map-options outlined dense @update:model-value="onAppliesToChanged">
           <template #selected-item="scope">
             <q-chip dense removable icon-remove="remove_item" @remove="scope.removeAtIndex(scope.index)">
@@ -43,13 +44,16 @@
           </template>
         </q-select>
         <div v-if="headingSelected" class="q-mt-md">
-          <div class="text-caption q-mb-xs">Heading levels</div>
+          <div class="text-caption q-mb-xs">{{ $t('configEditor.customStyles.headingLevels') }}</div>
           <div class="row q-gutter-sm">
             <q-checkbox v-for="level in headingLevels" :key="level" v-model="draft.levels" :val="level"
               :label="String(level)" dense />
           </div>
+          <q-separator class="q-my-md" />
         </div>
-        <q-select v-model="draft.deprecatedFor" :options="deprecatedElementOptions" label="Deprecated for"
+        <CssPropertiesEditor v-model="draft.css" class="q-mt-md" />
+        <q-separator class="q-my-md" />
+        <q-select v-model="draft.deprecatedFor" :options="deprecatedElementOptions" :label="$t('configEditor.customStyles.deprecatedFor')"
           multiple emit-value map-options outlined dense @update:model-value="onDeprecatedForChanged">
           <template #selected-item="scope">
             <q-chip dense removable icon-remove="remove_item" @remove="scope.removeAtIndex(scope.index)">
@@ -59,8 +63,8 @@
         </q-select>
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat label="Cancel" @click="cancelEdit" />
-        <q-btn color="primary" label="Apply" :disable="!canApply" @click="applyEdit" />
+        <q-btn flat :label="$t('configEditor.buttons.cancel')" @click="cancelEdit" />
+        <q-btn color="primary" :label="$t('configEditor.buttons.apply')" :disable="!canApply" @click="applyEdit" />
       </q-card-actions>
     </q-card>
   </div>
@@ -74,6 +78,7 @@ import {
   NODE_NAME_HEADING,
 } from '../../common'
 import { setupQuasarIcons } from '../helpers/quasarIcons'
+import CssPropertiesEditor from './CssPropertiesEditor.vue'
 
 type CustomStyleDraft = CustomStyleDef
 
@@ -92,6 +97,9 @@ export default {
       editingIndex: null as number | null,
       nameError: '',
     }
+  },
+  components: {
+    CssPropertiesEditor,
   },
   computed: {
     customizableElementOptions(): { label: string, value: CustomizableElement }[] {
@@ -141,7 +149,12 @@ export default {
         appliesTo: [...appliesTo] as CustomizableElement[],
         deprecatedFor: style.deprecatedFor ? [...style.deprecatedFor] : undefined,
         levels: style.levels ? [...style.levels] : undefined,
-        css: style.css ? style.css.map(property => [...property] as [string, string]) : undefined,
+        css: style.css
+          ? style.css.map(([propertyName, propertyValue]) => [
+            String(propertyName),
+            String(propertyValue),
+          ] as [string, string])
+          : undefined,
         classes: style.classes ? [...style.classes] : undefined,
         attributes: style.attributes ? [...style.attributes] : undefined,
       }
@@ -195,13 +208,13 @@ export default {
     },
     applyEdit() {
       if (!this.draft || !this.draft.name.trim()) {
-        this.nameError = 'A name is required.'
+        this.nameError = this.$t('configEditor.customStyles.nameRequired')
         return
       }
       if (this.draft.appliesTo.length === 0) return
       const name = this.draft.name.trim()
       if (this.editingIndex === null && this.styles.some(style => style.name === name)) {
-        this.nameError = 'A style with this name already exists.'
+        this.nameError = this.$t('configEditor.customStyles.duplicateName')
         return
       }
       const style = this.copyStyle({ ...this.draft, name })

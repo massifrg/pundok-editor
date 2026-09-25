@@ -3,6 +3,7 @@ export { default as BreadCrumb } from './BreadCrumb.vue';
 export { default as ConfigurationsDialog } from './ConfigurationsDialog.vue';
 export { default as ConfigurationEditorDialog } from './ConfigurationEditorDialog.vue';
 export { default as CustomStylesEditor } from './confeditors/CustomStylesEditor.vue';
+export { default as CssPropertiesEditor } from './confeditors/CssPropertiesEditor.vue';
 export { default as ContextMenu } from './ContextMenu.vue';
 export { default as CustomClassList } from './CustomClassList.vue';
 export { default as CustomStylesPanel } from './CustomStylesPanel.vue';

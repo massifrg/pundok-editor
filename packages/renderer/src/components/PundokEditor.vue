@@ -61,7 +61,7 @@
           @new-editor="newSubEditor" />
         <ConfigurationEditorDialog :visible="visibleConfigurationEditor"
           :configuration="docState()?.project?.editorConfig || {}"
-          :inherited-configurations="docState()?.project?.configurations || []"
+          :project-configurations="docState()?.project?.configurations || []"
           @save="saveProjectEditorConfig"
           @close="visibleConfigurationEditor = false" />
         <NewProjectDialog :editor="editor" :visible="visibleNewProjectDialog"

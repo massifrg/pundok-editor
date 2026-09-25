@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="text-subtitle1 q-mb-sm">Inherited configurations (drag to reorder)</div>
+    <div class="text-subtitle1 q-mb-sm">{{ $t('configEditor.projectConfigurations.title') }}</div>
     <q-list
       bordered
       dense
@@ -8,7 +8,7 @@
       :class="{ 'inherited-configurations-editor__inherited-list--empty': modelValue.length === 0 }"
     >
       <q-item v-if="modelValue.length === 0">
-        <q-item-section class="text-grey">No inherited configurations selected.</q-item-section>
+        <q-item-section class="text-grey">{{ $t('configEditor.projectConfigurations.noneSelected') }}</q-item-section>
       </q-item>
       <q-item
         v-for="(configurationName, index) in modelValue"
@@ -25,16 +25,16 @@
         </q-item-section>
         <q-item-section>{{ configurationName }}</q-item-section>
         <q-item-section side>
-          <q-btn flat round dense size="sm" icon="remove" title="Remove"
+          <q-btn flat round dense size="sm" icon="remove" :title="$t('configEditor.projectConfigurations.remove')"
             @click="removeConfiguration(index)" />
         </q-item-section>
       </q-item>
     </q-list>
 
-    <div class="text-subtitle1 q-mb-sm">Available configurations</div>
+    <div class="text-subtitle1 q-mb-sm">{{ $t('configEditor.projectConfigurations.available') }}</div>
     <q-list bordered separator dense class="inherited-configurations-editor__available-list">
       <q-item v-if="availableConfigurations.length === 0">
-        <q-item-section class="text-grey">No configurations available.</q-item-section>
+        <q-item-section class="text-grey">{{ $t('configEditor.projectConfigurations.noneAvailable') }}</q-item-section>
       </q-item>
       <q-item
         v-for="configuration in availableConfigurations"
@@ -50,7 +50,7 @@
           </q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-btn flat round dense size="sm" icon="add" title="Add configuration"
+          <q-btn flat round dense size="sm" icon="add" :title="$t('configEditor.projectConfigurations.add')"
             :disable="modelValue.includes(configuration.name)"
             @click="addConfiguration(configuration.name)" />
         </q-item-section>

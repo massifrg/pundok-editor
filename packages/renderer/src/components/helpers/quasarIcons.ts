@@ -25,6 +25,7 @@ import {
   mdiRepeatVariant,
   mdiSwapVertical,
   mdiFormatParagraph,
+  mdiFormatLineStyle,
   mdiTrashCan,
   mdiPlus,
   mdiClose,
@@ -35,6 +36,9 @@ import {
   mdiSyncCircle,
   mdiArrowRight,
   mdiArrowLeft,
+  mdiPaletteOutline,
+  mdiPaletteSwatchOutline,
+  mdiTuneVariant,
   mdiPaletteSwatch,
   mdiCheck,
   mdiTableOfContents,
@@ -354,6 +358,9 @@ export const icons: Record<string, string> = {
   custom_blocks: mdiPaletteSwatch,
   custom_classes_add: mdiOctagramPlusOutline,
   custom_style: mdiPaletteSwatchVariant,
+  // 'mdi-gradient-vertical': mdiPaletteOutline,
+  // 'mdi-tune': mdiTuneVariant,
+  // 'mdi-palette-swatch': mdiPaletteSwatchOutline,
   debug: mdiBug,
   delete: mdiTrashCan,
   dialog_minimize: mdiArrowCollapseRight,
@@ -380,6 +387,7 @@ export const icons: Record<string, string> = {
   figure_wrap: mdiApplicationImport,
   figure_unwrap: mdiApplicationExport,
   filter: mdiFilterOutline,
+  format_line_style: mdiFormatLineStyle,
   first_page: mdiPageFirst,
   folder: mdiFolder,
   folder_alert: mdiFolderAlert,
@@ -608,6 +616,9 @@ export const icons: Record<string, string> = {
 
 export function setupQuasarIcons() {
   const $q = useQuasar();
+  $q.iconSet.colorPicker.spectrum = mdiPaletteOutline;
+  $q.iconSet.colorPicker.tune = mdiTuneVariant;
+  $q.iconSet.colorPicker.palette = mdiPaletteSwatchOutline;
   $q.iconMapFn = (iconName) => {
     const icon = icons[iconName];
     if (icon !== void 0) {
