@@ -769,13 +769,12 @@ export default {
       }
       // console.log(serializeConfiguration(this.configuration!))
       if (isProject && this.project)
-        await this.backend?.storeInConfiguration(
-          'automations',
-          obj,
-          !!isDeletion,
-          isProject,
-          this.project.path
-        )
+        await this.backend?.storeInConfiguration({
+          projectPath: this.project.path,
+          field: 'automations',
+          value: JSON.stringify(obj),
+          operation: isDeletion ? 'delete' : 'append'
+        })
       setActionCommand(this.editor.state, ACTION_GET_PROJECT, {
         path: this.project?.path,
         computeConfig: true,

@@ -21,6 +21,7 @@ import type {
   PandocFeatureName,
   PandocFeatureOptions,
   ConfigQueryOptions,
+  ConfigurationUpdateOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -205,18 +206,8 @@ export interface Backend {
   /**
    * Update a configuration or project JSON file adding/updating an object
    * like `CustomStyle`, `Automation`, etc.
-   * @param where The configuration's key where the object must go ("automations", "customStyles", etc.).
-   * @param obj The added/updated object.
-   * @param isProject When `false` the next argument is the configuration name, when `true` it's the project path.
-   * @param configNameOrProjectPath The configuration name or the project path when `isProject` is `true`.
    */
-  storeInConfiguration(
-    where: ConfigInitField,
-    obj: object,
-    isDeletion: boolean,
-    isProject: boolean,
-    configNameOrProjectPath: string
-  ): Promise<void>;
+  storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void>;
 }
 
 export function createBackend(): Backend {

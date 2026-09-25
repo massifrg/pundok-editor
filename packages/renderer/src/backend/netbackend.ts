@@ -1,4 +1,4 @@
-import type { Backend } from './backend';
+import type { Backend, ConfigurationUpdateOptions } from './backend';
 import {
   type ConfigurationSummary,
   type PundokEditorConfig,
@@ -159,13 +159,7 @@ export class NetBackend implements Backend {
     return Promise.reject('method non implemented');
   }
 
-  async storeInConfiguration(
-    where: ConfigInitField,
-    obj: object,
-    isDeletion: boolean,
-    isProject: boolean,
-    configNameOrProjectPath: string
-  ): Promise<void> {
+  async storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void> {
     return Promise.reject('method non implemented');
   }
 }

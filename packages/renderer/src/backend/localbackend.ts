@@ -47,6 +47,7 @@ import {
   PandocFeatureName,
   PandocFeatureOptions,
   ConfigQueryOptions,
+  ConfigurationUpdateOptions,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -65,6 +66,7 @@ import {
   setActionSetupViewer,
 } from '../actions';
 import { useActions } from '../stores';
+import { isString } from 'lodash-es';
 
 type Listener = () => void;
 
@@ -412,15 +414,9 @@ export class LocalBackend implements Backend {
     return job_as_string && JSON.parse(job_as_string) as RenderingJob || undefined
   }
 
-  async storeInConfiguration(
-    where: ConfigInitField,
-    obj: object,
-    isDeletion: boolean,
-    isProject: boolean,
-    configNameOrProjectPath: string
-  ): Promise<void> {
+  async storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void> {
     console.log(`calling backend to update configuration`)
-    return window.ipc.updateConfig(where, JSON.stringify(obj), isDeletion, isProject, configNameOrProjectPath)
+    return window.ipc.updateConfig(options)
   }
 }
 

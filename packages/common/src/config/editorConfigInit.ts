@@ -81,3 +81,17 @@ export type PrunableConfigInitField = keyof Pick<PundokEditorConfigInit,
   | 'noteStyles'
   | 'outputConverters'
 >
+
+export type ConfigurationUpdateOptions = {
+  /** The name of the configuration to be updated. */
+  configurationName?: string
+  /** The path of the project to be updated. */
+  projectPath?: string
+  /** The added/updated object (or the whole configuration), as a JSON-stringified object. */
+  value: string,
+  /** When updating a single section of the configuration, the name of the section ("automations", "customStyles", etc.). */
+  field?: ConfigInitField
+  /** When where is defined, what kind of operation to perform */
+  operation: "append" | "update" | "delete"
+}
+
