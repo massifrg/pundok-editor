@@ -99,6 +99,8 @@
 
       <ToolbarButton v-if="gui.projectStructure && project" icon="project_structure"
         :title="$t('show.projectStructure')" @click="showProjectStructure()" />
+      <ToolbarButton v-if="project" icon="edit" title="Edit project configuration"
+        @click="showConfigurationEditor()" />
 
       <q-space />
       <ToolbarButton v-if="gui.isDevelopmentMode" icon="debug" title="debug" @click="debug" />
@@ -395,6 +397,7 @@ export default {
     // 'saveContent',
     // 'exportAgain',
     'showConfigurationsDialog',
+    'showConfigurationEditor',
     'toggleSearchAndReplaceDialog',
     'editNodeOrMarkAttributes',
     'reloadWithConfiguration',
@@ -598,6 +601,9 @@ export default {
     },
     showProjectStructure() {
       setActionShowProjectStructureDialog(this.editor.state);
+    },
+    showConfigurationEditor() {
+      this.$emit('showConfigurationEditor');
     },
     repeatCommandTitle() {
       return currentRepeatableCommandTooltip(this.editor.state);

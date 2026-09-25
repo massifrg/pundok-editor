@@ -27,6 +27,9 @@
         <q-btn icon="root_document" title="select root document" @click="selectRootDocument" />
         <q-chip v-if="rootDocument !== undefined" square>{{ rootDocument }}</q-chip>
       </q-card-section>
+      <q-card-section horizontal class="q-mx-md">
+        <q-btn icon="edit" label="Edit editor configuration" @click="configurationDialogVisible = true" />
+      </q-card-section>
       <q-card-actions>
         <q-space />
         <q-btn :disabled="!canCreate" label="Ok" @click="onOk"></q-btn>
@@ -34,6 +37,13 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <ConfigurationEditorDialog
+    :visible="configurationDialogVisible"
+    :configuration="editorConfig"
+    :inherited-configurations="configurations"
+    @save="setEditorConfig"
+    @close="configurationDialogVisible = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -49,12 +59,17 @@ import { parse as parsePath } from 'path-browserify';
 import { ConfigurationSummary, PundokEditorConfigInit, PundokEditorProject } from '../common';
 import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers';
 import { getEditorDocState } from '../schema';
+import { defineAsyncComponent } from 'vue';
+const ConfigurationEditorDialog = defineAsyncComponent(
+  () => import('./ConfigurationEditorDialog.vue')
+);
 
 export default {
   props: ['editor', 'visible'],
   emits: ['close'],
   components: {
-    NameDescriptionEditor
+    NameDescriptionEditor,
+    ConfigurationEditorDialog,
   },
   data() {
     return {
@@ -65,6 +80,7 @@ export default {
       availableConfigs: [] as ConfigurationSummary[],
       configurations: [] as string[],
       editorConfig: {} as Partial<PundokEditorConfigInit>,
+      configurationDialogVisible: false,
     }
   },
   computed: {
@@ -93,6 +109,13 @@ export default {
     },
     removeConfig(configName: string) {
       this.configurations = this.configurations.filter(c => c !== configName)
+    },
+    setEditorConfig(
+      configuration: Partial<PundokEditorConfigInit>,
+      configurations: string[],
+    ) {
+      this.editorConfig = configuration
+      this.configurations = configurations
     },
     async selectFolder() {
       const docState = getEditorDocState(this.editor)

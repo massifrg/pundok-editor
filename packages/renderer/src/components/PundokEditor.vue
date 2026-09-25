@@ -8,6 +8,7 @@
             @open-document="openDocument()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
+            @show-configuration-editor="visibleConfigurationEditor = true"
             @reload-with-configuration="reloadWithConfiguration" />
         </q-toolbar-title>
       </q-toolbar>
@@ -58,6 +59,11 @@
         <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
           :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
           @new-editor="newSubEditor" />
+        <ConfigurationEditorDialog :visible="visibleConfigurationEditor"
+          :configuration="docState()?.project?.editorConfig || {}"
+          :inherited-configurations="docState()?.project?.configurations || []"
+          @save="saveProjectEditorConfig"
+          @close="visibleConfigurationEditor = false" />
         <NewProjectDialog :editor="editor" :visible="visibleNewProjectDialog"
           @close="visibleNewProjectDialog = false" />
         <ContextMenu :editor="editor" />
@@ -99,6 +105,7 @@ import {
   type InputConverter,
   type OutputConverter,
   type PundokEditorConfig,
+  type PundokEditorConfigInit,
   type PundokEditorProject,
   type SaveResponse,
   EditorKeyType,
@@ -251,6 +258,7 @@ export default {
     PendingOperationDialog,
     NewProjectDialog,
     "ProjectStructureDialog": defineAsyncComponent(() => import('./ProjectStructureDialog.vue')),
+    "ConfigurationEditorDialog": defineAsyncComponent(() => import('./ConfigurationEditorDialog.vue')),
     "PdfViewer": defineAsyncComponent(() => import('./PdfViewer.vue'))
   },
 
@@ -304,6 +312,7 @@ export default {
       visibleSearchAndReplaceDialog: false,
       visibleInputTextDialog: false,
       visibleProjectStructureDialog: false,
+      visibleConfigurationEditor: false,
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
       visibleNewProjectDialog: false,
       swapBlocksWasActive: this.guiProps.swapBlocksActive,
@@ -1424,6 +1433,22 @@ export default {
     },
     closeProjectStructureDialog() {
       this.visibleProjectStructureDialog = false;
+    },
+    saveProjectEditorConfig(
+      editorConfig: Partial<PundokEditorConfigInit>,
+      configurations: string[],
+    ) {
+      const project = this.docState()?.project;
+      if (project) {
+        this.updateEditorDocState({
+          project: {
+            ...project,
+            editorConfig,
+            configurations,
+          },
+        });
+      }
+      this.visibleConfigurationEditor = false;
     },
     onClose(event: Event) {
       if (this.askToSaveChanges) {
