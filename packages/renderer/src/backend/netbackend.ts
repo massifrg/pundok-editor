@@ -1,4 +1,4 @@
-import type { Backend, ConfigurationUpdateOptions } from './backend';
+import type { Backend } from './backend';
 import {
   type ConfigurationSummary,
   type PundokEditorConfig,
@@ -27,6 +27,7 @@ import {
   PandocFeatureName,
   PandocFeatureOptions,
   ConfigQueryOptions,
+  ConfigurationUpdateOptions,
 } from '../common';
 
 export class NetBackend implements Backend {
