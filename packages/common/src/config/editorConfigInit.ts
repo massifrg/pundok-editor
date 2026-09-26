@@ -22,9 +22,9 @@ export interface PundokEditorConfigInit extends NamedAndDescribed {
   // /** the names of other configurations to derive this from */
   // inherits?: string[];
   /** options for TipTap/Prosemirror `Node`s and `Mark`s */
-  tiptap?: {
-    options?: Record<string, any>;
-  };
+  // tiptap?: {
+  //   options?: Record<string, any>;
+  // };
   /** the name of a pandoc format or an InputConverter used as default to open documents. */
   workingFormat?: string;
   /** the name of the format (pandoc or custom) used with "Save a copy" */

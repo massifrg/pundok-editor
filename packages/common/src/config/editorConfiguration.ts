@@ -27,7 +27,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
   /** Description of the aim of this configuration. */
   description?: string;
   /** Options to configure [TipTap](https://tiptap.dev) components of the editor. */
-  tiptap: { options?: Record<string, any> | undefined };
+  // tiptap: { options?: Record<string, any> | undefined };
   /** the name of a pandoc format or an InputConverter used as default to open documents. */
   workingFormat?: string;
   /** the name of the format (pandoc or custom) used with "Save a copy" */
@@ -79,7 +79,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
     this.version = init.version || [];
     this.description = init.description || '';
     // this.inherits = init.inherits;
-    this.tiptap = init.tiptap || { options: {} };
+    // this.tiptap = init.tiptap || { options: {} };
     this.workingFormat = init.workingFormat || DEFAULT_FORMAT;
     this.copyFormat = init.copyFormat || DEFAULT_COPY_FORMAT;
     this.mainFormats = init.mainFormats || DEFAULT_MAIN_FORMATS;
@@ -109,9 +109,9 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
     this.customStylesInstances = styles;
   }
 
-  get tiptapOptions() {
-    return { ...this.tiptap?.options };
-  }
+  // get tiptapOptions() {
+  //   return { ...this.tiptap?.options };
+  // }
 
   /**
    * The search and replace automations of this configuration.
@@ -309,12 +309,12 @@ export function enrichConfiguration(
       version: minSuitableVersion(enriching.version, base.version || []),
       isLocal: base.isLocal || enriching.isLocal,
       description: base.description,
-      tiptap: {
-        options: mergeTiptapOptions(
-          enriching.tiptap?.options || {},
-          base.tiptap?.options || {},
-        ),
-      },
+      // tiptap: {
+      //   options: mergeTiptapOptions(
+      //     enriching.tiptap?.options || {},
+      //     base.tiptap?.options || {},
+      //   ),
+      // },
       workingFormat: enriching.workingFormat || base.workingFormat,
       copyFormat: enriching.copyFormat || base.copyFormat,
       mainFormats: enriching.mainFormats || base.mainFormats,

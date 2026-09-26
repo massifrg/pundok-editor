@@ -15,17 +15,16 @@
 
         <q-tab-panels v-model="activeTab" animated class="configuration-editor-dialog__panels">
           <q-tab-panel v-for="tab in tabs" :key="tab.name" :name="tab.name">
-            <ProjectConfigurationsEditor v-if="tab.name === 'project-configurations'"
-              v-model="chosenConfigurations" />
+            <ProjectConfigurationsEditor v-if="tab.name === 'project-configurations'" v-model="chosenConfigurations" />
             <CustomStylesEditor v-else-if="tab.name === 'customStyles'" v-model="values.customStyles" />
             <div v-for="field in tab.fields" v-else :key="field.name" class="q-mb-md">
               <q-input v-if="field.kind === 'text'" v-model="values[field.name]" :label="$t(field.label)" outlined
                 :type="field.name === 'description' ? 'textarea' : 'text'" :hint="$t(field.description)" clearable />
               <q-toggle v-else-if="field.kind === 'boolean'" v-model="values[field.name]" :label="$t(field.label)"
                 :hint="$t(field.description)" />
-              <q-input v-else v-model="jsonValues[field.name]" :label="$t(field.label)" type="textarea" outlined autogrow
-                :hint="$t(field.description)" :error="!!jsonErrors[field.name]" :error-message="jsonErrors[field.name]"
-                @update:model-value="clearJsonError(field.name)" />
+              <q-input v-else v-model="jsonValues[field.name]" :label="$t(field.label)" type="textarea" outlined
+                autogrow :hint="$t(field.description)" :error="!!jsonErrors[field.name]"
+                :error-message="jsonErrors[field.name]" @update:model-value="clearJsonError(field.name)" />
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -68,7 +67,7 @@ const fields: EditorConfigField[] = [
   { name: 'description', label: 'configEditor.general.description', description: 'configEditor.general.descriptionDescription', kind: 'text' },
   { name: 'version', label: 'configEditor.general.version', description: 'configEditor.general.versionDescription', kind: 'json' },
   { name: 'isLocal', label: 'configEditor.general.local', description: 'configEditor.general.localDescription', kind: 'boolean' },
-  { name: 'tiptap', label: 'configEditor.general.tiptap', description: 'configEditor.general.tiptapDescription', kind: 'json' },
+  // { name: 'tiptap', label: 'configEditor.general.tiptap', description: 'configEditor.general.tiptapDescription', kind: 'json' },
   { name: 'workingFormat', label: 'configEditor.fileFormats.workingFormat', description: 'configEditor.fileFormats.workingFormatDescription', kind: 'text' },
   { name: 'copyFormat', label: 'configEditor.fileFormats.copyFormat', description: 'configEditor.fileFormats.copyFormatDescription', kind: 'text' },
   { name: 'mainFormats', label: 'configEditor.fileFormats.mainFormats', description: 'configEditor.fileFormats.mainFormatsDescription', kind: 'json' },
@@ -96,7 +95,7 @@ const tabs: EditorConfigTab[] = [
   {
     name: 'general',
     label: 'configEditor.tabs.general',
-    fields: groupedFields(['name', 'description', 'version', 'isLocal', 'tiptap']),
+    fields: groupedFields(['name', 'description', 'version', 'isLocal' /*, 'tiptap' */]),
   },
   {
     name: 'file-formats',
@@ -114,7 +113,7 @@ const tabs: EditorConfigTab[] = [
       'description',
       'version',
       'isLocal',
-      'tiptap',
+      // 'tiptap',
       'workingFormat',
       'copyFormat',
       'mainFormats',
@@ -122,7 +121,7 @@ const tabs: EditorConfigTab[] = [
       'rawInlines',
       'rawBlocks',
     ].includes(field.name))
-    .map(field => ({ name: field.name,     label: `configEditor.tabs.${field.name}`, fields: [field] })),
+    .map(field => ({ name: field.name, label: `configEditor.tabs.${field.name}`, fields: [field] })),
   {
     name: 'raw-elements',
     label: 'configEditor.tabs.rawElements',

@@ -61,8 +61,7 @@
           @new-editor="newSubEditor" />
         <ConfigurationEditorDialog :visible="visibleConfigurationEditor"
           :configuration="docState()?.project?.editorConfig || {}"
-          :project-configurations="docState()?.project?.configurations || []"
-          @save="saveProjectEditorConfig"
+          :project-configurations="docState()?.project?.configurations || []" @save="saveProjectEditorConfig"
           @close="visibleConfigurationEditor = false" />
         <NewProjectDialog :editor="editor" :visible="visibleNewProjectDialog"
           @close="visibleNewProjectDialog = false" />
@@ -687,7 +686,7 @@ export default {
       const editor = new Editor({
         extensions: [
           Pandoc.configure({
-            // ...this.tiptapOptions,
+            //   // ...this.tiptapOptions,
           }),
         ],
         // content: '',

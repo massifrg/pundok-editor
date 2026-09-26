@@ -55,7 +55,7 @@ export async function computeProjectConfiguration(
     name: project.name,
     description: project.description,
     version: [],
-    tiptap: {},
+    // tiptap: {},
     ...project.editorConfig,
   } as PundokEditorConfigInit);
   const inherited = project.configurations ? [...project.configurations] : [];
