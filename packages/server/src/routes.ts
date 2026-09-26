@@ -40,6 +40,18 @@ export function createBackendRouter(
     }),
   );
 
+  router.get('/events', (req, res, next) => {
+    try {
+      const authenticatedUser = authentication.authenticate(
+        req.header('authorization'),
+      );
+      backend.prepareUser(authenticatedUser.username);
+      backend.events.connect(authenticatedUser.username, res);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   router.use((req, _res, next) => {
     try {
       const authenticatedUser = authentication.authenticate(
@@ -198,11 +210,6 @@ export function createBackendRouter(
       backend.storeInConfiguration(username(req), req.body?.options),
     ),
   );
-
-  // The `m2r` channels (`feedback`, `content`, `set-configuration`, `set-project`,
-  // `document`, `ask-value`, `show-in-viewer`, `new-empty-document`) are pushed
-  // from the server to the renderer (e.g. over a WebSocket or SSE connection)
-  // and are not implemented in this stub.
 
   return router;
 }

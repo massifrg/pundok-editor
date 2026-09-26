@@ -10,8 +10,12 @@ import {
   IpcMainToRendererChannel,
   ServerMessageSetProject,
 } from '../common';
+import type { RendererHub } from '../backend';
 // import FileManager from '../fileManager';
-import { availableConfigurationsHandler, loadConfigurationHandler } from './configurationHandlers';
+import {
+  availableConfigurationsHandler,
+  loadConfigurationHandler,
+} from './configurationHandlers';
 import { debugInfoHandler } from './debugInfoHandler';
 import { editorReadyHandler } from './editorReadyHandler';
 import { renderAgainHandler } from './renderAgainHandler';
@@ -36,19 +40,19 @@ import { updateConfigHandler } from './updateConfigHandler';
 /** An object describing a document's opening */
 export interface DocumentOpening {
   /** The path of the document to be opened */
-  path?: string,
+  path?: string;
   /** The configuration with which the document must be opened */
-  configurationName?: string,
+  configurationName?: string;
   /** After opening, go to line (paragraph)... */
-  atLine?: number,
+  atLine?: number;
   /** If there's no mainEditorKey yet, open when it's set (otherwise cancel the open document operation) */
-  whenEditorReady?: boolean
+  whenEditorReady?: boolean;
 }
 
 /**
  * A class to handle the communication between `main` and `renderer` processes.
  */
-export class IpcHub {
+export class IpcHub implements RendererHub {
   // readonly fileManager: FileManager = new FileManager();
   mainEditorKey: EditorKeyType | undefined = undefined;
   pendingDocumentOpen: DocumentOpening | undefined = undefined;
@@ -97,7 +101,7 @@ export class IpcHub {
     ipcMain.handle('show-rendered-again', showAgainHandler(this));
     ipcMain.handle('render-again', renderAgainHandler(this));
     ipcMain.handle('get-rendering-job', getRenderingJobHandler(this));
-    ipcMain.handle('update-config', updateConfigHandler(this))
+    ipcMain.handle('update-config', updateConfigHandler(this));
   }
 
   fireEventInRenderer(
@@ -123,11 +127,14 @@ export class IpcHub {
 
   fireEventOpenDocument(docToOpen?: DocumentOpening) {
     if (this.mainEditorKey) {
-      const { path, configurationName, atLine } = docToOpen || {}
-      this.fireEventInRenderer('document', 'open', { path, configurationName, atLine });
-      this.pendingDocumentOpen = undefined
-    } else if (docToOpen?.whenEditorReady)
-      this.pendingDocumentOpen = docToOpen
+      const { path, configurationName, atLine } = docToOpen || {};
+      this.fireEventInRenderer('document', 'open', {
+        path,
+        configurationName,
+        atLine,
+      });
+      this.pendingDocumentOpen = undefined;
+    } else if (docToOpen?.whenEditorReady) this.pendingDocumentOpen = docToOpen;
   }
 
   fireEventSaveCurrentDocument() {
@@ -154,8 +161,8 @@ export class IpcHub {
     const message: ServerMessageSetProject = {
       type: 'project',
       project,
-      editorKey: editorKey || this.mainEditorKey
-    }
-    this.editorView.webContents.send('set-project', message)
+      editorKey: editorKey || this.mainEditorKey,
+    };
+    this.editorView.webContents.send('set-project', message);
   }
 }

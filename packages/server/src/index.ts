@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { createBackendDirectories } from '../../backend/src';
 import { AuthenticationError, JwtAuthentication } from './auth';
+import { EditorEventHub } from './editorEventHub';
 import { PundokEditorServer } from './pundokEditorServer';
 import { createBackendRouter } from './routes';
 
@@ -37,13 +38,15 @@ if (
 
 async function startServer() {
   const authentication = await JwtAuthentication.fromEnvironment();
-  const backend = new PundokEditorServer((username) =>
-    createBackendDirectories(
-      username === testUsername && testUserDataDir
-        ? resolve(testUserDataDir)
-        : resolve(dataDir, 'users', username),
-      sharedConfigurationsDir,
-    ),
+  const backend = new PundokEditorServer(
+    (username) =>
+      createBackendDirectories(
+        username === testUsername && testUserDataDir
+          ? resolve(testUserDataDir)
+          : resolve(dataDir, 'users', username),
+        sharedConfigurationsDir,
+      ),
+    new EditorEventHub(),
   );
 
   const app = express();

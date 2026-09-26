@@ -32,7 +32,9 @@ import {
   getConfigurationInit,
   parseConfigurationFiles,
   type BackendDirectories,
+  type RendererHub,
 } from '../../backend/src';
+import { EditorEventHub } from './editorEventHub';
 
 /**
  * A stub implementation of {@link Backend}, meant to run on a server
@@ -58,10 +60,15 @@ export class PundokEditorServer {
     private readonly directoriesForUser: (
       username: string,
     ) => BackendDirectories,
+    readonly events: EditorEventHub,
   ) {}
 
   prepareUser(username: string): void {
     ensureBackendDirectories(this.directoriesForUser(username));
+  }
+
+  rendererHub(username: string): RendererHub {
+    return this.events.forUser(username);
   }
 
   async loggedin(_user: string): Promise<boolean> {

@@ -120,10 +120,25 @@ Content-Type: application/json
 
 The `/backend` routes cover the `NetBackend` methods. Configuration listing and
 loading use the shared backend package; most document, project, file, Pandoc,
-and rendering methods are currently stubs and return server errors. Methods
-that send events from the backend to the renderer (the Main-to-Renderer IPC
-channels) are not implemented yet; they will need a push transport such as
-WebSocket or Server-Sent Events.
+and rendering methods are currently stubs and return server errors.
+
+## Server-to-editor events
+
+`GET /backend/events` is an authenticated Server-Sent Events stream carrying
+the same Main-to-Renderer channel names and `ServerMessage` payloads that
+Electron delivers through `IpcHub.send`. The renderer opens it with `fetch` so
+the JWT remains in the `Authorization` header rather than a query parameter.
+The server routes each event to all currently connected browser tabs for the
+authenticated user. Events are not persisted or replayed after a disconnect.
+
+Backend code that needs to work with both Electron and the server should depend
+on `RendererHub` from `packages/backend`. `IpcHub` implements it in the desktop
+app; the server creates a user-bound implementation:
+
+```ts
+const hub = backend.rendererHub(username);
+hub.send('feedback', message);
+```
 
 ## Configure users
 
