@@ -21,7 +21,7 @@ import {
   innerBlockDepth,
   textNode,
 } from '../helpers';
-import { RawBlockView } from '../../components';
+import RawBlockView from '../../components/nodeviews/RawBlockView.vue';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { CellSelection } from '@massifrg/prosemirror-tables-sections';
 import { Component } from 'vue';

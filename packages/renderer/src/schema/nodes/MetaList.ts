@@ -4,7 +4,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { Component } from 'vue';
 import { innerNodeDepth, templateNode } from '../helpers';
 import { NODE_NAME_META_LIST } from '../../common';
-import { MetaListView } from '../../components';
+import MetaListView from '../../components/nodeviews/MetaListView.vue';
 import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {

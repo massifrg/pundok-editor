@@ -4,7 +4,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { DEFAULT_NOTE_TYPE, NODE_NAME_NOTE, NODE_NAME_PARAGRAPH, SK } from '../../common';
 import { Component } from 'vue';
 import { depthOfInnerNodeType, getDocState, META_REFRESH_NOTES, notesPlugin } from '../helpers';
-import { NoteView } from '../../components';
+import NoteView from '../../components/nodeviews/NoteView.vue';
 import { NodeSelection } from '@tiptap/pm/state';
 import type { Command } from '@tiptap/pm/state';
 import { wrapIn } from '@tiptap/pm/commands';

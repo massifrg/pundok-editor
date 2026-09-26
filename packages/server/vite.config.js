@@ -27,15 +27,15 @@ const config = {
     assetsDir: '.',
     minify: process.env.MODE !== 'development',
     lib: {
-      entry: 'src/index.ts',
+      entry: {
+        index: 'src/index.ts',
+        'create-user': 'src/createUser.ts',
+      },
       formats: ['esm'],
     },
     rollupOptions: {
       platform: 'node',
-      external: [
-        'express',
-        ...builtinModules.flatMap((p) => [p, `node:${p}`]),
-      ],
+      external: ['express', ...builtinModules.flatMap((p) => [p, `node:${p}`])],
       output: {
         entryFileNames: '[name].mjs',
       },

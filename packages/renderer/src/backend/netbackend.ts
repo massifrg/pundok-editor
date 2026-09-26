@@ -1,16 +1,11 @@
 import type { Backend } from './backend';
-import {
-  type ConfigurationSummary,
-  type PundokEditorConfig,
-  type SaveResponse,
-  type CxDocument,
-  getHardcodedCustomCss,
-  getHardcodedEditorConfig,
-  HARDCODED_CONFIG_NAME,
-  HARDCODED_CONFIG_DESC,
+import type {
+  ConfigurationSummary,
+  PundokEditorConfig,
+  SaveResponse,
+  CxDocument,
   Query,
   QueryResult,
-  IndexTermQuery,
   PundokEditorProject,
   EditorKeyType,
   FindResourceOptions,
@@ -29,181 +24,211 @@ import {
   ConfigurationUpdateOptions,
 } from '../common';
 
+class BackendHttpError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = 'BackendHttpError';
+  }
+}
+
+type LoginResponse = {
+  token: string;
+  user: string;
+};
+
+const TOKEN_STORAGE_KEY = 'pundok-editor.auth-token';
+
 export class NetBackend implements Backend {
-  loggedin() {
-    return Promise.resolve(false);
+  private token: string | undefined;
+  private readonly baseUrl = '/backend';
+
+  constructor() {
+    this.token = window.localStorage.getItem(TOKEN_STORAGE_KEY) || undefined;
+    window.addEventListener('storage', (event) => {
+      if (
+        event.storageArea === window.localStorage &&
+        event.key === TOKEN_STORAGE_KEY
+      ) {
+        this.token = event.newValue || undefined;
+      }
+    });
   }
 
-  login(user: string, password: string) {
-    return Promise.resolve(false);
+  async loggedin(): Promise<boolean> {
+    if (!this.token) return false;
+    try {
+      return await this.request<boolean>('loggedin');
+    } catch (error) {
+      if (error instanceof BackendHttpError && error.status === 401) {
+        this.setToken(undefined);
+        return false;
+      }
+      throw error;
+    }
   }
 
-  logout() {
-    return Promise.resolve(false);
+  async login(user: string, password: string): Promise<boolean> {
+    try {
+      const response = await this.request<LoginResponse>(
+        'login',
+        { user, password },
+        undefined,
+      );
+      this.setToken(response.token);
+      return true;
+    } catch (error) {
+      if (error instanceof BackendHttpError && error.status === 401)
+        return false;
+      throw error;
+    }
   }
 
-  async editorReady(editorKey?: EditorKeyType) { }
-
-  getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents> {
-    throw new Error('Method not implemented.');
+  async logout(): Promise<boolean> {
+    const token = this.token;
+    this.setToken(undefined);
+    if (!token) return false;
+    return this.request<boolean>('logout', {}, token);
   }
 
-  async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
-    throw new Error('Method not implemented.');
+  debugInfo(): Promise<object> {
+    return this.request('debug-info');
+  }
+
+  editorReady(editorKey?: EditorKeyType): Promise<void> {
+    return this.request('editor-ready', { editorKey });
+  }
+
+  getFolderContents(
+    context: Partial<DocumentContext>,
+  ): Promise<FolderContents> {
+    return this.request('get-folder-contents', { context });
+  }
+
+  getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
+    return this.request('get-bookmarks', { bookmarkType });
   }
 
   open(context: DocumentContext): Promise<CxDocument> {
-    throw new Error('Method not implemented.');
+    return this.request('open-document', { context });
   }
 
   save(doc: CxDocument): Promise<SaveResponse> {
-    console.log(doc.content);
-    throw new Error('Method not implemented.');
+    return this.request('save-document', { doc });
   }
 
-  async debugInfo(): Promise<object> {
-    return Promise.resolve({ info: 'no debug info yet for netbackend!' });
+  getProject(
+    options: GetProjectOptions,
+  ): Promise<PundokEditorProject | undefined> {
+    return this.request('get-project', { options });
   }
 
-  async getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined> {
-    throw new Error('Method not implemented.');
+  createProject(
+    path: string,
+    project: Partial<PundokEditorProject>,
+  ): Promise<void> {
+    return this.request('new-project', { path, project });
   }
 
-  async createProject(path: string, project: Partial<PundokEditorProject>): Promise<void> {
-    throw new Error('Method not implemented.');
+  getInclusionTree(
+    project: PundokEditorProject,
+  ): Promise<ProjectComponent | undefined> {
+    return this.request('get-inclusion-tree', { project });
   }
 
-  async createFolder(path: string): Promise<string> {
-    throw new Error('Method not implemented.');
+  createFolder(path: string): Promise<string> {
+    return this.request('create-folder', { path });
   }
 
-  async availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]> {
-    return [
-      {
-        name: HARDCODED_CONFIG_NAME,
-        description: HARDCODED_CONFIG_DESC,
-        isLocal: false,
-      },
-    ] as ConfigurationSummary[];
+  availableConfigurations(
+    options?: ConfigQueryOptions,
+  ): Promise<ConfigurationSummary[]> {
+    return this.request('available-configurations', { options });
   }
 
-  async configuration(name?: string): Promise<PundokEditorConfig> {
-    if (!name) return Promise.resolve(getHardcodedEditorConfig());
-
-    switch (name) {
-      case HARDCODED_CONFIG_NAME:
-      default:
-        return Promise.resolve(getHardcodedEditorConfig());
-    }
+  configuration(name?: string): Promise<PundokEditorConfig> {
+    return this.request('load-configuration', { name });
   }
 
   getFileContents(
     filename: string,
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
-    if (filename === 'default.css') return getHardcodedCustomCss();
-    return Promise.reject('Method not implemented');
+    return this.request('file-contents', { filename, options });
   }
 
-  async setValue(key: string, value?: any): Promise<void> {
-    // TODO: remember to JSON.stringify the value before sending it
+  queryDatabase(query: Query): Promise<QueryResult[]> {
+    return this.request('query', { query });
   }
 
-  pandocFeature(featureName: PandocFeatureName, options?: PandocFeatureOptions): Promise<any[]> {
-    return Promise.reject('Method not implemented');
+  setValue(key: string, value?: unknown): Promise<void> {
+    return this.request('set-value', { key, value });
   }
 
-  async queryDatabase(query: Query): Promise<QueryResult[]> {
-    if (!query) return Promise.reject('no query submitted');
-    if (!query.type) return Promise.reject('query type not specified');
-    if (query.type === 'index-term') {
-      return dummyQueryHandler(query as IndexTermQuery);
-    }
-    return Promise.reject('query type unknown');
-    // throw new Error('Method not implemented.');
+  pandocFeature(
+    featureName: PandocFeatureName,
+    options?: PandocFeatureOptions,
+  ): Promise<any[]> {
+    return this.request('pandoc-feature', { featureName, options });
   }
 
-  async getInclusionTree(
-    project: PundokEditorProject,
-  ): Promise<ProjectComponent | undefined> {
-    return undefined;
-  }
-
-  // openViewer(docName: string, options?: Partial<FindResourceOptions>): Promise<void> {
-  //   throw new Error('Method not implemented.');
-  // }
-
-  async transformPandocJson(
+  transformPandocJson(
     doc: Partial<CxDocument>,
-    transform: PandocFilterTransform
+    transform: PandocFilterTransform,
   ): Promise<string> {
-    return Promise.reject('method non implemented');
+    return this.request('transform-json', { doc, transform });
   }
 
-  gotoSource(
-    editorKey: EditorKeyType,
-    info: SynctexInfo,
-  ): Promise<void> {
-    return Promise.reject('method non implemented');
+  gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void> {
+    return this.request('get-source-file', { editorKey, info });
   }
 
-  async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    return Promise.reject('method non implemented');
+  renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    return this.request('render-again', { hash, editorKey });
   }
 
-  async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    return Promise.reject('method non implemented');
+  getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
+    return this.request('get-rendering-job', { hash });
   }
 
-  async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
-    return Promise.reject('method non implemented');
+  showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+    return this.request('show-rendered-again', { hash, editorKey });
   }
 
-  async storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void> {
-    return Promise.reject('method non implemented');
+  storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void> {
+    return this.request('update-config', { options });
   }
-}
 
-function dummyQueryHandler(query: IndexTermQuery): QueryResult[] {
-  const searchText = query.searchText;
-  const results: QueryResult[] = [];
-  const st: string[] = (
-    Array.isArray(searchText) ? searchText : [searchText]
-  ).filter((t) => t.toLocaleLowerCase());
-  dummyIndex.filter((record) => {
-    const { id, text, html } = record as Record<string, any>;
-    if (id && text) {
-      const lowtext = text.toLocaleLowerCase();
-      if (st.every((t) => lowtext.indexOf(t) >= 0))
-        results.push({ id, text, html });
+  private async request<T>(
+    endpoint: string,
+    body: unknown = {},
+    token = this.token,
+  ): Promise<T> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+    const responseBody = await response.json().catch(() => undefined);
+    if (!response.ok) {
+      throw new BackendHttpError(
+        responseBody?.error || response.statusText || 'Backend request failed',
+        response.status,
+      );
     }
-  });
-  return results;
-}
+    return responseBody as T;
+  }
 
-const dummyIndex: QueryResult[] = [
-  {
-    id: '12321',
-    text: 'Alice McDaniels',
-  },
-  {
-    id: '12323',
-    text: 'Bob Barrymore',
-  },
-  {
-    id: '12383',
-    text: 'Charlie Thomas',
-  },
-  {
-    id: '57386',
-    text: 'Diana McKenzie',
-  },
-  {
-    id: '3134',
-    text: 'Elisabeth Johnson',
-  },
-  {
-    id: '555',
-    text: 'Fabian Johnston',
-  },
-];
+  private setToken(token: string | undefined): void {
+    this.token = token;
+    if (token) window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    else window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+}

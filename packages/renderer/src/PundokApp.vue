@@ -1,5 +1,46 @@
 <template>
-  <PundokEditor ref="editor" v-model="content" main-editor :gui-props="guiProps" />
+  <main
+    v-if="isRemote && authState !== 'authenticated'"
+    class="server-login"
+    :aria-busy="authState === 'checking'"
+  >
+    <section v-if="authState === 'checking'" class="server-login__card" aria-live="polite">
+      Checking server session…
+    </section>
+    <form v-else class="server-login__card" @submit.prevent="submitLogin">
+      <h1>Sign in to Pundok Editor</h1>
+      <label for="server-login-user">Username</label>
+      <input
+        id="server-login-user"
+        v-model.trim="username"
+        autocomplete="username"
+        required
+        :disabled="submitting"
+      />
+      <label for="server-login-password">Password</label>
+      <input
+        id="server-login-password"
+        v-model="password"
+        type="password"
+        autocomplete="current-password"
+        required
+        :disabled="submitting"
+      />
+      <p v-if="loginError" class="server-login__error" role="alert">
+        {{ loginError }}
+      </p>
+      <button type="submit" :disabled="submitting">
+        {{ submitting ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+  </main>
+  <PundokEditor
+    v-else
+    ref="editor"
+    v-model="content"
+    main-editor
+    :gui-props="guiProps"
+  />
 </template>
 
 <script lang="ts">
@@ -8,6 +49,7 @@ import { useQuasar } from 'quasar'
 import { mapState } from 'pinia';
 import { useBackend } from './stores';
 import { createBackend } from './backend/backend';
+import { NetBackend } from './backend/netbackend';
 import testingContent from './assets/test-pandoc.json?raw';
 import { EditorGUIPropsClass } from './schema';
 
@@ -18,14 +60,60 @@ export default defineComponent({
   },
   setup() {
     const backendStore = useBackend();
-    backendStore.setBackend(createBackend());
+    const backend = createBackend();
+    backendStore.setBackend(backend);
+    return { isRemote: backend instanceof NetBackend };
   },
   data() {
     return {
       $q: useQuasar(),
       content: testingContent,
-      guiProps: new EditorGUIPropsClass()
+      guiProps: new EditorGUIPropsClass(),
+      authState: 'checking' as 'checking' | 'login' | 'authenticated',
+      username: '',
+      password: '',
+      loginError: '',
+      submitting: false,
     }
+  },
+  async mounted() {
+    if (!this.isRemote) {
+      this.authState = 'authenticated';
+      return;
+    }
+    try {
+      this.authState = (await this.backend?.loggedin())
+        ? 'authenticated'
+        : 'login';
+    } catch (error) {
+      this.authState = 'login';
+      this.loginError =
+        error instanceof Error ? error.message : 'Could not check server login.';
+    }
+  },
+  methods: {
+    async submitLogin() {
+      this.loginError = '';
+      if (!this.backend) {
+        this.loginError = 'The backend is not available.';
+        return;
+      }
+
+      this.submitting = true;
+      try {
+        if (await this.backend.login(this.username, this.password)) {
+          this.password = '';
+          this.authState = 'authenticated';
+        } else {
+          this.loginError = 'Invalid username or password.';
+        }
+      } catch (error) {
+        this.loginError =
+          error instanceof Error ? error.message : 'Could not sign in.';
+      } finally {
+        this.submitting = false;
+      }
+    },
   },
   computed: {
     ...mapState(useBackend, ['backend'])
@@ -590,5 +678,61 @@ $color-fg-index: #dc7200;
   }
 
   // end of gapcursor.css
+}
+</style>
+
+<style scoped lang="scss">
+.server-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: #f5f5f5;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.server-login__card {
+  display: grid;
+  gap: 0.75rem;
+  width: min(100%, 22rem);
+  padding: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  background: white;
+  box-shadow: 0 0.5rem 1.5rem #0002;
+}
+
+.server-login__card h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.4rem;
+}
+
+.server-login__card input,
+.server-login__card button {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #aaa;
+  border-radius: 0.25rem;
+  font: inherit;
+}
+
+.server-login__card button {
+  margin-top: 0.5rem;
+  border-color: #1769aa;
+  background: #1769aa;
+  color: white;
+  cursor: pointer;
+}
+
+.server-login__card button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.server-login__error {
+  margin: 0;
+  color: #b00020;
 }
 </style>

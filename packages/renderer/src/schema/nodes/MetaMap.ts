@@ -5,7 +5,7 @@ import type { Command } from '@tiptap/pm/state';
 import { Component } from 'vue';
 import { NODE_NAME_META_LIST, NODE_NAME_META_MAP } from '../../common';
 import { innerNodeDepth, templateNode } from '../helpers';
-import { MetaMapView } from '../../components';
+import MetaMapView from '../../components/nodeviews/MetaMapView.vue';
 import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {

@@ -2,7 +2,7 @@ import { mergeAttributes, Node } from '@tiptap/core';
 import type { Command } from '@tiptap/pm/state';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { NODE_NAME_EMPTY_SPAN, SK } from '../../common';
-import { EmptySpanView } from '../../components';
+import EmptySpanView from '../../components/nodeviews/EmptySpanView.vue';
 import { asTiptapCommand } from '../helpers';
 
 declare module '@tiptap/core' {

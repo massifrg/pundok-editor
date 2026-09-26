@@ -3,7 +3,7 @@ import { Node as PmNode } from '@tiptap/pm/model';
 import type { Command } from '@tiptap/pm/state';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { Component } from 'vue';
-import { IndexRefView } from '../../components';
+import IndexRefView from '../../components/nodeviews/IndexRefView.vue';
 import {
   DEFAULT_INDEX_NAME,
   DEFAULT_INDEX_REF_CLASS,

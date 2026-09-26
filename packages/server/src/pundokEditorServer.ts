@@ -1,6 +1,5 @@
 import type {
   ConfigurationSummary,
-  PundokEditorConfig,
   SaveResponse,
   CxDocument,
   Query,
@@ -22,6 +21,18 @@ import type {
   ConfigQueryOptions,
   ConfigurationUpdateOptions,
 } from './common';
+import {
+  getHardcodedEditorConfig,
+  HARDCODED_CONFIG_DESC,
+  HARDCODED_CONFIG_NAME,
+  PundokEditorConfig,
+} from './common';
+import {
+  ensureBackendDirectories,
+  getConfigurationInit,
+  parseConfigurationFiles,
+  type BackendDirectories,
+} from '../../backend/src';
 
 /**
  * A stub implementation of {@link Backend}, meant to run on a server
@@ -33,7 +44,8 @@ import type {
  * `LocalBackend` uses for the Main <-> Renderer IPC (see
  * `packages/common/src/ipc.ts`).
  *
- * This is just a stub: every method is empty/not implemented yet.
+ * Configuration access is implemented through the shared backend package;
+ * document and rendering operations remain stubs.
  *
  * The method signatures mirror `Backend`/`NetBackend`
  * (`packages/renderer/src/backend/backend.ts` and `netbackend.ts`), on purpose,
@@ -42,53 +54,67 @@ import type {
  * Keep the two in sync manually if `Backend` changes.
  */
 export class PundokEditorServer {
-  async loggedin(): Promise<boolean> {
+  constructor(
+    private readonly directoriesForUser: (
+      username: string,
+    ) => BackendDirectories,
+  ) {}
+
+  prepareUser(username: string): void {
+    ensureBackendDirectories(this.directoriesForUser(username));
+  }
+
+  async loggedin(_user: string): Promise<boolean> {
+    return true;
+  }
+
+  async login(_user: string, _password: string): Promise<boolean> {
+    throw new Error('Use the JWT login route');
+  }
+
+  async logout(_user: string): Promise<boolean> {
+    return true;
+  }
+
+  async debugInfo(_user: string): Promise<object> {
     throw new Error('Method not implemented.');
   }
 
-  async login(user: string, password: string): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  async logout(): Promise<boolean> {
-    throw new Error('Method not implemented.');
-  }
-
-  async debugInfo(): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-
-  async editorReady(editorKey?: EditorKeyType): Promise<void> {
+  async editorReady(_user: string, editorKey?: EditorKeyType): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
   async getFolderContents(
+    _user: string,
     context: Partial<DocumentContext>,
   ): Promise<FolderContents> {
     throw new Error('Method not implemented.');
   }
 
   async getBookmarks(
+    _user: string,
     bookmarkType?: PundokBookmarkType,
   ): Promise<PundokBookmark[]> {
     throw new Error('Method not implemented.');
   }
 
-  async open(context: DocumentContext): Promise<CxDocument> {
+  async open(_user: string, context: DocumentContext): Promise<CxDocument> {
     throw new Error('Method not implemented.');
   }
 
-  async save(doc: CxDocument): Promise<SaveResponse> {
+  async save(_user: string, doc: CxDocument): Promise<SaveResponse> {
     throw new Error('Method not implemented.');
   }
 
   async getProject(
+    _user: string,
     options: GetProjectOptions,
   ): Promise<PundokEditorProject | undefined> {
     throw new Error('Method not implemented.');
   }
 
   async createProject(
+    _user: string,
     path: string,
     project: Partial<PundokEditorProject>,
   ): Promise<void> {
@@ -96,41 +122,67 @@ export class PundokEditorServer {
   }
 
   async getInclusionTree(
+    _user: string,
     project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined> {
     throw new Error('Method not implemented.');
   }
 
-  async createFolder(path: string): Promise<string> {
+  async createFolder(_user: string, path: string): Promise<string> {
     throw new Error('Method not implemented.');
   }
 
   async availableConfigurations(
+    user: string,
     options?: ConfigQueryOptions,
   ): Promise<ConfigurationSummary[]> {
-    throw new Error('Method not implemented.');
+    const configurations = (
+      await parseConfigurationFiles(this.directoriesForUser(user), options)
+    ).map((config) => ({
+      name: config.name,
+      description: config.description,
+      isLocal: !!config.isLocal,
+    }));
+    if (!configurations.some(({ name }) => name === HARDCODED_CONFIG_NAME)) {
+      configurations.push({
+        name: HARDCODED_CONFIG_NAME,
+        description: HARDCODED_CONFIG_DESC,
+        isLocal: false,
+      });
+    }
+    return configurations;
   }
 
-  async configuration(name?: string): Promise<PundokEditorConfig> {
-    throw new Error('Method not implemented.');
+  async configuration(
+    user: string,
+    name?: string,
+  ): Promise<PundokEditorConfig> {
+    if (!name) return getHardcodedEditorConfig();
+    const config = await getConfigurationInit(
+      this.directoriesForUser(user),
+      name,
+    );
+    return config ? new PundokEditorConfig(config) : getHardcodedEditorConfig();
   }
 
   async getFileContents(
+    _user: string,
     filename: string,
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
     throw new Error('Method not implemented.');
   }
 
-  async queryDatabase(query: Query): Promise<QueryResult[]> {
+  async queryDatabase(_user: string, query: Query): Promise<QueryResult[]> {
     throw new Error('Method not implemented.');
   }
 
-  async setValue(key: string, value?: any): Promise<void> {
+  async setValue(_user: string, key: string, value?: any): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
   async pandocFeature(
+    _user: string,
     featureName: PandocFeatureName,
     options?: PandocFeatureOptions,
   ): Promise<any[]> {
@@ -138,29 +190,46 @@ export class PundokEditorServer {
   }
 
   async transformPandocJson(
+    _user: string,
     doc: Partial<CxDocument>,
     transform: PandocFilterTransform,
   ): Promise<string> {
     throw new Error('Method not implemented.');
   }
 
-  async gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void> {
+  async gotoSource(
+    _user: string,
+    editorKey: EditorKeyType,
+    info: SynctexInfo,
+  ): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+  async renderAgain(
+    _user: string,
+    hash: string,
+    editorKey: EditorKeyType,
+  ): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
-  async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
+  async getRenderingJob(
+    _user: string,
+    hash: string,
+  ): Promise<RenderingJob | undefined> {
     throw new Error('Method not implemented.');
   }
 
-  async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
+  async showAgain(
+    _user: string,
+    hash: string,
+    editorKey: EditorKeyType,
+  ): Promise<void> {
     throw new Error('Method not implemented.');
   }
 
   async storeInConfiguration(
+    _user: string,
     options: ConfigurationUpdateOptions,
   ): Promise<void> {
     throw new Error('Method not implemented.');

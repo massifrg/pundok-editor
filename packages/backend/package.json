@@ -1,0 +1,5 @@
+{
+  "name": "@pundok-editor/backend",
+  "private": true,
+  "type": "module"
+}

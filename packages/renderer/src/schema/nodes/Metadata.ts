@@ -1,6 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { MetadataView } from '../../components';
+import MetadataView from '../../components/nodeviews/MetadataView.vue';
 import { Component } from 'vue';
 import { NODE_NAME_METADATA } from '../../common';
 
