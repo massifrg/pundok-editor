@@ -25,7 +25,8 @@ import { externalProgramError, runExternalProgram } from '../runExternal';
 import { commandLineFeedback, errorFeedback } from './feedback';
 import { computeProjectFromDocFile } from './getProjectHandler';
 import { IpcHub } from './ipcHub';
-import { localizePath, readFile, toUnixPath } from '../filesystem';
+import { readFile, toUnixPath } from '../filesystem';
+import { localizePath } from '../backend';
 
 /**
  * Return a handler function for the messages that the `renderer` sends on the `open-document` channel,

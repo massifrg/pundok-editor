@@ -1,5 +1,5 @@
 import { parse, sep } from "path"
-import { localizePath } from "../../main/src/filesystem"
+import { localizePath } from './filesystem';
 
 /**
  * Expands expressions like `%NAME%`, `%BASE%` in the string array passed as first argument

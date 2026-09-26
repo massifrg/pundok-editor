@@ -11,11 +11,6 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": "."
   },
-  "include": [
-    "src/**/*.ts",
-    "../../types/**/*.d.ts",
-    "../backend/src/expandCommandArgs.ts",
-    "../backend/src/documentHash.ts"
-  ],
+  "include": ["src/**/*.ts", "../../types/**/*.d.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts"]
 }

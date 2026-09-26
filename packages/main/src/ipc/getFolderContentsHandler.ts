@@ -17,7 +17,8 @@ import {
   FolderContents,
   Place
 } from "../common";
-import { localizePath, pathToFileURLfixed, toUnixPath } from "../filesystem";
+import { pathToFileURLfixed, toUnixPath } from "../filesystem";
+import { localizePath } from "../backend";
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>
 type JumpListModule = {

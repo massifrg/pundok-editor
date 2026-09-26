@@ -8,6 +8,7 @@ import {
   writeFile as fs_writeFile,
 } from "fs/promises";
 import { PundokEditorProject } from "./common";
+import { localizePath } from './backend';
 import * as EventEmitter from "events";
 import * as Stream from "stream";
 
@@ -32,17 +33,6 @@ export function toUnixPath(path: string): string {
   return platform() === 'win32'
     ? path.replaceAll('\\', '/')
     : path
-}
-
-/**
- * Adjust the slashes/backslashes in a path according to the OS.
- * @param path 
- */
-export function localizePath(path: string): string {
-  const no_file_protocol = path.replace(/^file:\/\//, '')
-  return platform() === 'win32'
-    ? no_file_protocol.replaceAll('/', '\\').replace(/^\\([A-Z]:)/i, '$1')
-    : toUnixPath(no_file_protocol)
 }
 
 export function pathToUrl(path: string, project?: PundokEditorProject): string {

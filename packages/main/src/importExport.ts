@@ -34,9 +34,10 @@ import {
   resolve,
 } from 'path';
 import { encloseInDblQuotes } from './utils';
-import { existsSync, localizePath } from './filesystem';
+import { existsSync } from './filesystem';
 import { isArray, isObject, isString } from 'lodash-es';
 import { expandCommandArgs } from '../../backend/src/expandCommandArgs';
+import { localizePath } from './backend';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';
 

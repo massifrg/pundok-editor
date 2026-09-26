@@ -5,7 +5,7 @@ import {
   parse as parsePath,
   resolve,
 } from 'path';
-import { localizePath, toUnixPath, writeFile } from '../filesystem';
+import { toUnixPath, writeFile } from '../filesystem';
 import {
   commandLineFeedback,
   errorFeedback,
@@ -25,7 +25,7 @@ import {
   ExternalProgramResult,
   ServerMessageForViewer,
 } from '../common';
-import { rememberDocumentHash, expandCommandArgs } from '../backend';
+import { rememberDocumentHash, expandCommandArgs, localizePath } from '../backend';
 import { computeProjectFromDocFile } from './getProjectHandler';
 import { exportWithPandoc, exportWithScript } from '../importExport';
 import { validResourcePaths } from '../resourcesManager';

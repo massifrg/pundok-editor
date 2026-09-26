@@ -3,7 +3,8 @@ import { resolve } from "path"
 import { IpcHub } from "./ipcHub"
 import { isReadableDir } from "../resourcesManager"
 import { DEFAULT_PROJECT_FILENAME, serializeProject } from "../common"
-import { localizePath, writeFile } from "../filesystem"
+import { writeFile } from "../filesystem"
+import { localizePath } from "../backend"
 
 export const newProjectHandler = (hub: IpcHub) =>
   async (e: IpcMainInvokeEvent, dir: string, jsonProject: string): Promise<void> => {

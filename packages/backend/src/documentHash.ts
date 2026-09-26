@@ -1,4 +1,4 @@
-import { RenderingJob } from "../../main/src/common";
+import type { RenderingJob } from '../../common/src';
 
 const MAX_DOCUMENT_HASHES = 200
 interface DocHash {

@@ -9,7 +9,7 @@ import {
 } from 'path';
 import { readFile } from 'fs/promises';
 import { stringify } from '../utils';
-import { localizePath } from '../filesystem';
+import { localizePath } from '../backend';
 
 export const fileContentsHandler =
   (hub: IpcHub) =>
