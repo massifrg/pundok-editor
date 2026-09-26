@@ -1,6 +1,6 @@
 import { IpcMainInvokeEvent } from "electron";
 import { IpcHub } from "./ipcHub";
-import { getRenderingJobWithHash } from "./documentHash";
+import { getRenderingJobWithHash } from "../backend";
 import { EditorKeyType, ServerMessageForViewer } from "../common";
 import { isString } from "lodash-es";
 

@@ -36,7 +36,7 @@ import {
 import { encloseInDblQuotes } from './utils';
 import { existsSync, localizePath } from './filesystem';
 import { isArray, isObject, isString } from 'lodash-es';
-import { expandCommandArgs } from './ipc/expandCommandArgs';
+import { expandCommandArgs } from '../../backend/src/expandCommandArgs';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';
 

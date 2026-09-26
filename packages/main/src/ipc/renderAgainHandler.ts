@@ -1,7 +1,7 @@
 import { IpcHub } from "./ipcHub";
 import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
-import { getRenderingJobWithHash } from "./documentHash";
+import { getRenderingJobWithHash } from "../backend";
 import { EditorKeyType, CxDocument, DocumentFormat } from "../common";
 import { exportDocument } from "./saveDocumentHandler";
 

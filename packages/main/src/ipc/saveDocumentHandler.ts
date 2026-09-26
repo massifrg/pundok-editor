@@ -25,10 +25,9 @@ import {
   ExternalProgramResult,
   ServerMessageForViewer,
 } from '../common';
-import { rememberDocumentHash } from './documentHash';
+import { rememberDocumentHash, expandCommandArgs } from '../backend';
 import { computeProjectFromDocFile } from './getProjectHandler';
 import { exportWithPandoc, exportWithScript } from '../importExport';
-import { expandCommandArgs } from './expandCommandArgs';
 import { validResourcePaths } from '../resourcesManager';
 import { ProgressCallback } from '../runExternal';
 import { stringify } from '../utils';

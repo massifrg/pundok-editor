@@ -1,6 +1,6 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
-import { getRenderingJobWithHashAsJsonString } from './documentHash';
+import { getRenderingJobWithHashAsJsonString } from '../backend';
 
 export const getRenderingJobHandler =
   (hub: IpcHub) =>
