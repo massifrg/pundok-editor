@@ -17,7 +17,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 
 COPY . .
-RUN npm run build:common && npm run build:server
+RUN npm run build:common && npm run build:renderer && npm run build:server
 
 FROM node:22-slim AS runtime
 WORKDIR /app
@@ -28,6 +28,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 
 COPY --from=build /app/packages/server/dist ./packages/server/dist
+COPY --from=build /app/packages/renderer/dist ./packages/renderer/dist
 
 EXPOSE 3000
 CMD ["node", "packages/server/dist/index.mjs"]
