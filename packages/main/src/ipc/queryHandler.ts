@@ -7,7 +7,7 @@ import {
   ProjectIndexQuery,
   searchQueryResults,
 } from '../common';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { IpcMainInvokeEvent } from 'electron';
 import { IpcHub } from './ipcHub';
 import { findResourceFile } from '../resourcesManager';

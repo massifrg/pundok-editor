@@ -19,7 +19,6 @@ import {
   PandocFilterTransform,
   SynctexInfo,
   RenderingJob,
-  ConfigInitField,
   GetProjectOptions,
   FolderContents,
   PundokBookmarkType,

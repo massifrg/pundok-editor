@@ -2,7 +2,6 @@ import { IpcMainInvokeEvent } from "electron";
 import { homedir } from "os";
 import {
   dirname,
-  join as joinPath,
   resolve,
   sep as separator
 } from "path";
