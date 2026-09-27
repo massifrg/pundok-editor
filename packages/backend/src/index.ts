@@ -15,3 +15,4 @@ export * from './handlers/folder';
 export * from './handlers/fileContents';
 export * from './handlers/folderContents';
 export * from './handlers/inclusionTree';
+export * from './handlers/query';

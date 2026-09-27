@@ -39,6 +39,7 @@ import {
   parseConfigurationFiles,
   RenderingJobStore,
   getPandocFeature,
+  dispatchQuery,
   createFolder,
   editorReady,
   type BackendDirectories,
@@ -204,8 +205,11 @@ export class PundokEditorServer {
     );
   }
 
-  async queryDatabase(_user: string, query: Query): Promise<QueryResult[]> {
-    throw new Error('Method not implemented.');
+  async queryDatabase(user: string, query: Query): Promise<QueryResult[]> {
+    return dispatchQuery(
+      this.directoriesForUser(user),
+      this.queryForUser(user, query),
+    );
   }
 
   async setValue(_user: string, key: string, value?: any): Promise<void> {
@@ -273,6 +277,33 @@ export class PundokEditorServer {
       this.renderingJobsByUser.set(username, renderingJobs);
     }
     return renderingJobs;
+  }
+
+  private queryForUser(username: string, query: Query): Query {
+    const project = query.options?.project;
+    if (!project) return query;
+
+    const parsedProject =
+      typeof project === 'string'
+        ? (JSON.parse(project) as PundokEditorProject)
+        : project;
+    if (!parsedProject.path) return query;
+
+    const path = this.userPath(username, parsedProject.path);
+    const rootDocument = parsedProject.rootDocument
+      ? this.userPath(username, resolve(path, parsedProject.rootDocument))
+      : undefined;
+    return {
+      ...query,
+      options: {
+        ...query.options,
+        project: {
+          ...parsedProject,
+          path,
+          ...(rootDocument && { rootDocument }),
+        },
+      },
+    };
   }
 
   private userPath(username: string, path: string): string {

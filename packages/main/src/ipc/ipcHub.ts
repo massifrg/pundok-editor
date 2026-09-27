@@ -24,6 +24,7 @@ import {
   editorReady,
   getProject,
   getInclusionTree,
+  queryHandler,
 } from '../backend';
 import { backendDirectories } from '../resourcesManager';
 import { renderAgainHandler } from './renderAgainHandler';
@@ -31,7 +32,6 @@ import { getFolderContentsHandler } from './getFolderContentsHandler';
 import { getSourceFileHandler } from './getSourceFileHandler';
 import { openDocumentHandler } from './openDocumentHandler';
 import { pandocFeaturesHandler } from './pandocFeaturesHandler';
-import { queryHandler } from './queryHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
 import { showAgainHandler } from './showAgainHandler';
@@ -112,7 +112,9 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('transform-json', transformJsonHandler(this));
     ipcMain.handle('pandoc-feature', pandocFeaturesHandler(this));
-    ipcMain.handle('query', queryHandler(this));
+    ipcMain.handle('query', (_event, query) =>
+      queryHandler(backendDirectories(), query),
+    );
     ipcMain.handle('get-source-file', getSourceFileHandler(this));
     ipcMain.handle('show-rendered-again', showAgainHandler(this));
     ipcMain.handle('render-again', renderAgainHandler(this));
