@@ -25,6 +25,7 @@ import {
   getProject,
   getInclusionTree,
   queryHandler,
+  updateConfiguration,
 } from '../backend';
 import { backendDirectories } from '../resourcesManager';
 import { renderAgainHandler } from './renderAgainHandler';
@@ -36,7 +37,6 @@ import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
 import { showAgainHandler } from './showAgainHandler';
 import { transformJsonHandler } from './transformJsonHandler';
-import { updateConfigHandler } from './updateConfigHandler';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -121,7 +121,9 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('get-rendering-job', (_event, hash) =>
       getRenderingJobWithHashAsJsonString(hash),
     );
-    ipcMain.handle('update-config', updateConfigHandler(this));
+    ipcMain.handle('update-config', (_event, options) =>
+      updateConfiguration(options),
+    );
   }
 
   fireEventInRenderer(

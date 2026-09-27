@@ -8,6 +8,7 @@ export * from './runExternal';
 export * from './pandocFeatures';
 export * from './handlers/pandocFeatures';
 export * from './handlers/configuration';
+export * from './handlers/configurationUpdate';
 export * from './handlers/debug';
 export * from './handlers/project';
 export * from './handlers/editorReady';

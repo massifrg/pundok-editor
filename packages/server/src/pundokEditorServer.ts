@@ -40,6 +40,7 @@ import {
   RenderingJobStore,
   getPandocFeature,
   dispatchQuery,
+  updateConfiguration,
   createFolder,
   editorReady,
   type BackendDirectories,
@@ -264,10 +265,15 @@ export class PundokEditorServer {
   }
 
   async storeInConfiguration(
-    _user: string,
+    user: string,
     options: ConfigurationUpdateOptions,
   ): Promise<void> {
-    throw new Error('Method not implemented.');
+    if (!options.projectPath)
+      return updateConfiguration(options);
+    return updateConfiguration({
+      ...options,
+      projectPath: this.userPath(user, options.projectPath),
+    });
   }
 
   private renderingJobsForUser(username: string): RenderingJobStore {
