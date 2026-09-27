@@ -1,9 +1,14 @@
 import { IpcHub } from "./ipcHub";
 import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
-import { getRenderingJobWithHash } from "../backend";
+import {
+  desktopRenderingJobStore,
+  exportDocument,
+  feedbackSink,
+  getRenderingJobWithHash,
+} from "../backend";
 import { EditorKeyType, CxDocument, DocumentFormat } from "../common";
-import { exportDocument } from "./saveDocumentHandler";
+import { backendDirectories } from "../resourcesManager";
 
 export const renderAgainHandler =
   (hub: IpcHub) =>
@@ -28,7 +33,14 @@ export const renderAgainHandler =
           editorKey,
         }
         try {
-          exportDocument(hub, sdoc)
+          await exportDocument(
+            backendDirectories(),
+            hub,
+            feedbackSink(hub),
+            desktopRenderingJobStore(),
+            sdoc,
+            true,
+          )
         } catch (error) {
           const msg = stringify(error)
           console.log(msg)

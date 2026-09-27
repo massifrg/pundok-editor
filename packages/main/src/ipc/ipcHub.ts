@@ -1,7 +1,10 @@
 import type { BaseWindow, WebContentsView } from 'electron';
-import { ipcMain } from 'electron';
+import { ipcMain, shell } from 'electron';
 import {
   CommandToRenderer,
+  type CxDocument,
+  type DocumentContext,
+  documentFormatToOutputConverter,
   EditorKeyType,
   IPC_CHANNELS,
   PundokEditorProject,
@@ -32,12 +35,15 @@ import {
   showAgain,
   feedbackSink,
   getSourceLocation,
+  desktopRenderingJobStore,
+  openDocument,
+  saveDocument,
+  errorFeedback,
 } from '../backend';
 import { backendDirectories } from '../resourcesManager';
 import { renderAgainHandler } from './renderAgainHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
-import { openDocumentHandler } from './openDocumentHandler';
-import { saveDocumentHandler } from './saveDocumentHandler';
+import { refreshMainMenu } from '../mainWindow';
 import { setValueHandler } from './setValueHandler';
 
 /** An object describing a document's opening */
@@ -85,8 +91,38 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('get-folder-contents', getFolderContentsHandler(this));
     ipcMain.handle('create-folder', (_event, path) => createFolder(path));
-    ipcMain.handle('open-document', openDocumentHandler(this));
-    ipcMain.handle('save-document', saveDocumentHandler(this));
+    ipcMain.handle('open-document', async (_event, serializedContext) => {
+      const context = JSON.parse(serializedContext) as DocumentContext;
+      const document = await openDocument(
+        backendDirectories(),
+        feedbackSink(this),
+        { ...context, editorKey: context.editorKey || this.mainEditorKey },
+      );
+      refreshMainMenu(this);
+      return document;
+    });
+    ipcMain.handle('save-document', async (_event, serializedDocument) => {
+      const document = JSON.parse(serializedDocument) as CxDocument;
+      const response = await saveDocument(
+        backendDirectories(),
+        this,
+        feedbackSink(this),
+        desktopRenderingJobStore(),
+        document,
+      );
+      const converter = documentFormatToOutputConverter(document.documentFormat);
+      if (
+        !response.error &&
+        response.resultFile &&
+        converter?.openResult === 'os'
+      ) {
+        shell.openPath(response.resultFile).then((error) => {
+          if (error)
+            errorFeedback(feedbackSink(this), error, document.editorKey);
+        });
+      }
+      return response;
+    });
     ipcMain.handle('debug-info', () =>
       getBackendDebugInfo(backendDirectories()),
     );

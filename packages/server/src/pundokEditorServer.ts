@@ -26,6 +26,7 @@ import {
   HARDCODED_CONFIG_DESC,
   HARDCODED_CONFIG_NAME,
   PundokEditorConfig,
+  documentFormatToOutputConverter,
 } from './common';
 import {
   ensureBackendDirectories,
@@ -47,10 +48,13 @@ import {
   showAgain,
   createFolder,
   editorReady,
+  expandCommandArgs,
+  openDocument,
+  saveDocument,
   type BackendDirectories,
   type RendererHub,
 } from '../../backend/src';
-import { isAbsolute, relative, resolve } from 'node:path';
+import { isAbsolute, parse as parsePath, relative, resolve } from 'node:path';
 import { EditorEventHub } from './editorEventHub';
 
 /**
@@ -63,8 +67,8 @@ import { EditorEventHub } from './editorEventHub';
  * `LocalBackend` uses for the Main <-> Renderer IPC (see
  * `packages/common/src/ipc.ts`).
  *
- * Configuration access is implemented through the shared backend package;
- * document and rendering operations remain stubs.
+ * Shared backend operations run against the authenticated user's directories.
+ * Desktop-only window and shell behavior is intentionally not available here.
  *
  * The method signatures mirror `Backend`/`NetBackend`
  * (`packages/renderer/src/backend/backend.ts` and `netbackend.ts`), on purpose,
@@ -129,12 +133,22 @@ export class PundokEditorServer {
     return getBookmarks(this.directoriesForUser(user), bookmarkType);
   }
 
-  async open(_user: string, context: DocumentContext): Promise<CxDocument> {
-    throw new Error('Method not implemented.');
+  async open(user: string, context: DocumentContext): Promise<CxDocument> {
+    return openDocument(
+      this.directoriesForUser(user),
+      feedbackSink(this.rendererHub(user)),
+      this.documentForUser(user, context),
+    );
   }
 
-  async save(_user: string, doc: CxDocument): Promise<SaveResponse> {
-    throw new Error('Method not implemented.');
+  async save(user: string, doc: CxDocument): Promise<SaveResponse> {
+    return saveDocument(
+      this.directoriesForUser(user),
+      this.rendererHub(user),
+      feedbackSink(this.rendererHub(user)),
+      this.renderingJobsForUser(user),
+      this.documentForUser(user, doc) as CxDocument,
+    );
   }
 
   async getProject(
@@ -335,12 +349,19 @@ export class PundokEditorServer {
     username: string,
     document: Partial<CxDocument>,
   ): Partial<CxDocument> {
-    return document.project
-      ? {
-          ...document,
-          project: this.projectForUser(username, document.project),
-        }
-      : document;
+    this.validateOutputPath(username, document);
+    return {
+      ...document,
+      ...(document.path && { path: this.userPath(username, document.path) }),
+      ...(document.resourcePath && {
+        resourcePath: document.resourcePath.map((path) =>
+          this.resourcePathForUser(username, path),
+        ),
+      }),
+      ...(document.project && {
+        project: this.projectForUser(username, document.project),
+      }),
+    };
   }
 
   private projectForUser(
@@ -379,6 +400,25 @@ export class PundokEditorServer {
     if (path.split(/[\\/]/).includes('..'))
       throw new Error('Resource path must not leave the authenticated user directory');
     return resource;
+  }
+
+  private validateOutputPath(
+    username: string,
+    document: Partial<CxDocument>,
+  ): void {
+    const outputTemplate = documentFormatToOutputConverter(
+      document.documentFormat,
+    )?.resultFile;
+    if (!outputTemplate) return;
+    const outputPath = document.path
+      ? expandCommandArgs([outputTemplate], document.path)[0]
+      : outputTemplate;
+    this.userPath(
+      username,
+      isAbsolute(outputPath)
+        ? outputPath
+        : resolve(document.project?.path || parsePath(document.path || '').dir, outputPath),
+    );
   }
 
   private synctexInfoForUser(

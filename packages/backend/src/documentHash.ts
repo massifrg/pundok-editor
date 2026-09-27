@@ -55,6 +55,10 @@ export class RenderingJobStore {
 
 const desktopRenderingJobs = new RenderingJobStore();
 
+export function desktopRenderingJobStore(): RenderingJobStore {
+  return desktopRenderingJobs;
+}
+
 export function rememberDocumentHash(job: RenderingJob): Promise<string> {
   return desktopRenderingJobs.remember(job);
 }

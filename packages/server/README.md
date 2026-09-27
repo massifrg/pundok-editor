@@ -61,8 +61,10 @@ curl -sS -X POST http://localhost:3000/backend/available-configurations \
   -d '{"options":{}}'
 ```
 
-Configuration listing is implemented; most other backend operations remain
-stubs. For a container build and run, see `packages/server/Dockerfile`.
+Configuration, document open/save, Pandoc conversion, bookmarks, and related
+renderer events use the shared backend package. Some desktop-only operations
+(such as opening a result in the operating system) remain unavailable on the
+server. For a container build and run, see `packages/server/Dockerfile`.
 
 The server serves the renderer SPA and exposes its backend API under `/backend`.
 The renderer's `NetBackend` sends JSON requests to this API instead of using
@@ -123,9 +125,10 @@ Content-Type: application/json
 {"options":{}}
 ```
 
-The `/backend` routes cover the `NetBackend` methods. Configuration listing and
-loading use the shared backend package; most document, project, file, Pandoc,
-and rendering methods are currently stubs and return server errors.
+The `/backend` routes cover the `NetBackend` methods. Shared operations run
+with the authenticated user's backend directories. Document open/save and
+Pandoc/script conversion are available; desktop-only window and shell actions
+are intentionally not exposed by the server.
 
 ## Server-to-editor events
 
@@ -172,7 +175,9 @@ uses a separate `users/<username>` directory beneath it for each authenticated
 user. Shared configurations are read from `PUNDOK_CONFIGS_DIR` (default:
 `<PUNDOK_DATA_DIR>/configs`); per-user configurations are kept under each
 user's `localconfigs` subdirectory. The username used for these paths is taken
-from the verified JWT.
+from the verified JWT. User-supplied document, project, resource, and output
+paths are resolved under that user's directory; paths that escape it are
+rejected.
 
 For containers, persist the data directory and provide the users file and JWT
 secret through protected mounts or your container platform's secret manager.
