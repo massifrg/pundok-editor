@@ -16,6 +16,8 @@ import {
   getAvailableConfigurationSummaries,
   getBackendDebugInfo,
   getBookmarks,
+  getPandocFeature,
+  getRenderingJobWithHash,
   getRenderingJobWithHashAsJsonString,
   loadConfiguration,
   createProject,
@@ -27,16 +29,16 @@ import {
   queryHandler,
   updateConfiguration,
   transformJsonHandler,
+  showAgain,
+  feedbackSink,
+  getSourceLocation,
 } from '../backend';
 import { backendDirectories } from '../resourcesManager';
 import { renderAgainHandler } from './renderAgainHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
-import { getSourceFileHandler } from './getSourceFileHandler';
 import { openDocumentHandler } from './openDocumentHandler';
-import { pandocFeaturesHandler } from './pandocFeaturesHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
-import { showAgainHandler } from './showAgainHandler';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -113,12 +115,28 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('transform-json', (_event, document, transform) =>
       transformJsonHandler(backendDirectories(), document, transform),
     );
-    ipcMain.handle('pandoc-feature', pandocFeaturesHandler(this));
+    ipcMain.handle('pandoc-feature', (_event, featureName, options) =>
+      getPandocFeature(featureName, options),
+    );
     ipcMain.handle('query', (_event, query) =>
       queryHandler(backendDirectories(), query),
     );
-    ipcMain.handle('get-source-file', getSourceFileHandler(this));
-    ipcMain.handle('show-rendered-again', showAgainHandler(this));
+    ipcMain.handle('get-source-file', async (_event, editorKey, info) => {
+      const source = await getSourceLocation(
+        backendDirectories(),
+        feedbackSink(this),
+        editorKey,
+        info,
+      );
+      if (source)
+        this.fireEventOpenDocument({
+          path: source.path,
+          atLine: source.line,
+        });
+    });
+    ipcMain.handle('show-rendered-again', (_event, hash, editorKey) =>
+      showAgain(this, getRenderingJobWithHash(hash), hash, editorKey),
+    );
     ipcMain.handle('render-again', renderAgainHandler(this));
     ipcMain.handle('get-rendering-job', (_event, hash) =>
       getRenderingJobWithHashAsJsonString(hash),

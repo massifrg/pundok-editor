@@ -42,6 +42,9 @@ import {
   dispatchQuery,
   updateConfiguration,
   transformWithPandoc,
+  feedbackSink,
+  getSourceLocation,
+  showAgain,
   createFolder,
   editorReady,
   type BackendDirectories,
@@ -239,11 +242,24 @@ export class PundokEditorServer {
   }
 
   async gotoSource(
-    _user: string,
+    user: string,
     editorKey: EditorKeyType,
     info: SynctexInfo,
   ): Promise<void> {
-    throw new Error('Method not implemented.');
+    const source = await getSourceLocation(
+      this.directoriesForUser(user),
+      feedbackSink(this.rendererHub(user)),
+      editorKey,
+      this.synctexInfoForUser(user, info),
+    );
+    if (source)
+      this.rendererHub(user).send('document', {
+        type: 'command',
+        command: 'open',
+        editorKey,
+        path: this.userPath(user, source.path),
+        atLine: source.line,
+      });
   }
 
   async renderAgain(
@@ -262,11 +278,16 @@ export class PundokEditorServer {
   }
 
   async showAgain(
-    _user: string,
+    user: string,
     hash: string,
     editorKey: EditorKeyType,
   ): Promise<void> {
-    throw new Error('Method not implemented.');
+    showAgain(
+      this.rendererHub(user),
+      this.renderingJobsForUser(user).get(hash),
+      hash,
+      editorKey,
+    );
   }
 
   async storeInConfiguration(
@@ -358,6 +379,23 @@ export class PundokEditorServer {
     if (path.split(/[\\/]/).includes('..'))
       throw new Error('Resource path must not leave the authenticated user directory');
     return resource;
+  }
+
+  private synctexInfoForUser(
+    username: string,
+    info: SynctexInfo,
+  ): SynctexInfo {
+    const project = info.projectAsJson
+      ? this.projectForUser(
+          username,
+          JSON.parse(info.projectAsJson) as PundokEditorProject,
+        )
+      : undefined;
+    return {
+      ...info,
+      outputFile: this.userPath(username, info.outputFile),
+      projectAsJson: project ? JSON.stringify(project) : undefined,
+    };
   }
 
   private userPath(username: string, path: string): string {
