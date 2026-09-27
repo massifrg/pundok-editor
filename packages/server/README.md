@@ -69,6 +69,11 @@ The renderer's `NetBackend` sends JSON requests to this API instead of using
 Electron's Main-Renderer IPC. Backend calls use `POST`; API responses are JSON.
 The route names mirror the renderer-to-main IPC channel names where applicable.
 
+The production image is based on `debian:trixie-slim` and installs the
+upstream Pandoc GitHub release pinned by the Dockerfile's `PANDOC_VERSION`
+build argument (currently `3.11`). Update that argument when a newer release
+is required.
+
 ## Authentication and request flow
 
 1. When the editor logs in, `NetBackend` sends the username and password to

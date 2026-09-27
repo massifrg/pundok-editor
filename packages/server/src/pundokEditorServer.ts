@@ -31,6 +31,7 @@ import {
   ensureBackendDirectories,
   getConfigurationInit,
   parseConfigurationFiles,
+  getPandocFeature,
   type BackendDirectories,
   type RendererHub,
 } from '../../backend/src';
@@ -193,7 +194,7 @@ export class PundokEditorServer {
     featureName: PandocFeatureName,
     options?: PandocFeatureOptions,
   ): Promise<any[]> {
-    throw new Error('Method not implemented.');
+    return getPandocFeature(featureName, options);
   }
 
   async transformPandocJson(
