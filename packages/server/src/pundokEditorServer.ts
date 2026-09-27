@@ -33,6 +33,8 @@ import {
   getAvailableConfigurationSummaries,
   getBackendDebugInfo,
   getBookmarks,
+  getFileContents,
+  getFolderContents,
   parseConfigurationFiles,
   RenderingJobStore,
   getPandocFeature,
@@ -41,7 +43,7 @@ import {
   type BackendDirectories,
   type RendererHub,
 } from '../../backend/src';
-import { relative, resolve } from 'node:path';
+import { isAbsolute, relative, resolve } from 'node:path';
 import { EditorEventHub } from './editorEventHub';
 
 /**
@@ -106,10 +108,11 @@ export class PundokEditorServer {
   }
 
   async getFolderContents(
-    _user: string,
+    user: string,
     context: Partial<DocumentContext>,
   ): Promise<FolderContents> {
-    throw new Error('Method not implemented.');
+    const path = context.path || context.project?.path || '.';
+    return getFolderContents(this.userPath(user, path));
   }
 
   async getBookmarks(
@@ -184,11 +187,16 @@ export class PundokEditorServer {
   }
 
   async getFileContents(
-    _user: string,
+    user: string,
     filename: string,
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
-    throw new Error('Method not implemented.');
+    const path = filename.replace(/^file:\/\//, '');
+    return getFileContents(
+      this.directoriesForUser(user),
+      isAbsolute(path) ? this.userPath(user, path) : filename,
+      options,
+    );
   }
 
   async queryDatabase(_user: string, query: Query): Promise<QueryResult[]> {

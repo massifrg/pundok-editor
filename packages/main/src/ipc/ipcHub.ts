@@ -20,6 +20,7 @@ import {
   loadConfiguration,
   createProject,
   createFolder,
+  getFileContents,
   editorReady,
   getProject,
 } from '../backend';
@@ -28,7 +29,6 @@ import { renderAgainHandler } from './renderAgainHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
 import { getInclusionTreeHandler } from './getInclusionTreeHandler';
 import { getSourceFileHandler } from './getSourceFileHandler';
-import { fileContentsHandler } from './fileContentsHandler';
 import { openDocumentHandler } from './openDocumentHandler';
 import { pandocFeaturesHandler } from './pandocFeaturesHandler';
 import { queryHandler } from './queryHandler';
@@ -101,7 +101,9 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('load-configuration', (_event, configurationName) =>
       loadConfiguration(backendDirectories(), configurationName),
     );
-    ipcMain.handle('file-contents', fileContentsHandler(this));
+    ipcMain.handle('file-contents', (_event, filename, options) =>
+      getFileContents(backendDirectories(), filename, options),
+    );
     ipcMain.handle('set-value', setValueHandler(this));
     ipcMain.handle('new-project', (_event, directory, project) =>
       createProject(directory, JSON.parse(project)),

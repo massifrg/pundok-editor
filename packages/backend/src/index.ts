@@ -12,3 +12,5 @@ export * from './handlers/debug';
 export * from './handlers/project';
 export * from './handlers/editorReady';
 export * from './handlers/folder';
+export * from './handlers/fileContents';
+export * from './handlers/folderContents';
