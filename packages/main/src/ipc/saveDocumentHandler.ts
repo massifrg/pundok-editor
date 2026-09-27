@@ -1,16 +1,11 @@
 import { IpcMainInvokeEvent, shell } from 'electron';
-import {
-  basename,
-  isAbsolute,
-  parse as parsePath,
-  resolve,
-} from 'path';
+import { basename, isAbsolute, parse as parsePath, resolve } from 'path';
 import { toUnixPath, writeFile } from '../filesystem';
 import {
   commandLineFeedback,
   errorFeedback,
   messageFeedback,
-  progressFeedback
+  progressFeedback,
 } from './feedback';
 import { IpcHub } from './ipcHub';
 import { updateBookmarksFile } from '../bookmarks';
@@ -25,8 +20,13 @@ import {
   ExternalProgramResult,
   ServerMessageForViewer,
 } from '../common';
-import { rememberDocumentHash, expandCommandArgs, localizePath } from '../backend';
-import { computeProjectFromDocFile } from './getProjectHandler';
+import {
+  rememberDocumentHash,
+  expandCommandArgs,
+  localizePath,
+} from '../backend';
+import { computeProjectFromDocFile } from '../backend';
+import { backendDirectories } from '../resourcesManager';
 import { exportWithPandoc, exportWithScript } from '../importExport';
 import { validResourcePaths } from '../resourcesManager';
 import { ProgressCallback } from '../runExternal';
@@ -37,18 +37,21 @@ import { stringify } from '../utils';
  * to ask to save to a file the contents of a {@link CxDocument}.
  * @param hub the manager of the communications between `main` and `renderer`
  */
-export const saveDocumentHandler = (hub: IpcHub) =>
+export const saveDocumentHandler =
+  (hub: IpcHub) =>
   async (e: IpcMainInvokeEvent, storedDoc: string): Promise<SaveResponse> => {
     let response: SaveResponse;
-    let editorKey: EditorKeyType | undefined = undefined
+    let editorKey: EditorKeyType | undefined = undefined;
     try {
       const doc: CxDocument = JSON.parse(storedDoc);
-      editorKey = doc.editorKey
-      const { configurationName, content, documentFormat, id, path, project } = doc
-      const { ftype: formatType, name: formatName } = documentFormat || {}
-      const outputConverter = formatType === 'format' && formatName === 'json'
-        ? undefined
-        : documentFormatToOutputConverter(documentFormat as DocumentFormat)
+      editorKey = doc.editorKey;
+      const { configurationName, content, documentFormat, id, path, project } =
+        doc;
+      const { ftype: formatType, name: formatName } = documentFormat || {};
+      const outputConverter =
+        formatType === 'format' && formatName === 'json'
+          ? undefined
+          : documentFormatToOutputConverter(documentFormat as DocumentFormat);
       if (outputConverter) {
         response = await exportDocument(hub, doc);
         console.log(`EXPORT FINISHED`);
@@ -60,14 +63,14 @@ export const saveDocumentHandler = (hub: IpcHub) =>
           id,
           url: 'file://' + toUnixPath(path!),
           configurationName: project ? undefined : configurationName,
-        }
+        };
         await updateBookmarksFile([bookmark]);
       } else {
         response = {
           doc,
-          error: "you provided no content to save",
-          message: "you provided no content to save"
-        }
+          error: 'you provided no content to save',
+          message: 'you provided no content to save',
+        };
       }
       if (response.error) {
         const errmsg = stringify(response.error);
@@ -86,43 +89,51 @@ export const saveDocumentHandler = (hub: IpcHub) =>
   };
 
 /**
- * 
- * @param hub 
- * @param doc 
- * @returns 
+ *
+ * @param hub
+ * @param doc
+ * @returns
  */
-async function savePandocJsonDocument(hub: IpcHub, doc: CxDocument): Promise<SaveResponse> {
+async function savePandocJsonDocument(
+  hub: IpcHub,
+  doc: CxDocument,
+): Promise<SaveResponse> {
   const { configurationName, content, editorKey, path } = doc;
-  let project = doc.project
+  let project = doc.project;
   if (!path)
-    return Promise.reject('You must provide a document (file) name to save!')
+    return Promise.reject('You must provide a document (file) name to save!');
   try {
-    console.log(content)
-    await writeFile(path, content!)
+    console.log(content);
+    await writeFile(path, content!);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return Promise.reject({
       error,
       message: JSON.stringify(error),
       doc: { content, path },
     });
-  };
+  }
 
-  const docDir = parsePath(path).dir
+  const docDir = parsePath(path).dir;
   const id = doc.id || basename(path, '.json');
 
   // load the project, if the document has been saved in a project directory
   // TODO: what to do when a file in a project is saved in the directory of another project?
   if (path && !project) {
     try {
-      const dirProject = await computeProjectFromDocFile(path)
-      console.log(`dirProject is ${dirProject.name}`)
+      const dirProject = await computeProjectFromDocFile(
+        backendDirectories(),
+        path,
+      );
+      console.log(`dirProject is ${dirProject.name}`);
       if (dirProject) {
-        project = dirProject
-        hub.fireEventSetProject(dirProject)
+        project = dirProject;
+        hub.fireEventSetProject(dirProject);
       }
     } catch (err) {
-      console.log(`no project file in document folder (${parsePath(path).dir})`)
+      console.log(
+        `no project file in document folder (${parsePath(path).dir})`,
+      );
     }
   }
 
@@ -144,28 +155,36 @@ async function savePandocJsonDocument(hub: IpcHub, doc: CxDocument): Promise<Sav
 
 /**
  * Save a document in a format that is different from Pandoc JSON.
- * @param hub 
+ * @param hub
  * @param doc The document with context to be saved in a format different from Pandoc JSON.
  * @param isRendering When `true`, the export is a rendering that takes some time (e.g. PDF)
- * @returns 
+ * @returns
  */
 export async function exportDocument(
   hub: IpcHub,
   doc: CxDocument,
-  isRendering?: boolean
+  isRendering?: boolean,
 ): Promise<SaveResponse> {
-  const { configurationName, content, documentFormat, editorKey, id, path, project } = doc;
-  if (!path) return Promise.reject(`You must provide a document (file) name!`)
-  const converter = documentFormatToOutputConverter(documentFormat)
-  const { feedback, openResult } = converter || {}
+  const {
+    configurationName,
+    content,
+    documentFormat,
+    editorKey,
+    id,
+    path,
+    project,
+  } = doc;
+  if (!path) return Promise.reject(`You must provide a document (file) name!`);
+  const converter = documentFormatToOutputConverter(documentFormat);
+  const { feedback, openResult } = converter || {};
   const cwd = localizePath(project?.path || process.cwd());
 
-  const sourceFile = localizePath(path)
+  const sourceFile = localizePath(path);
   let resultFile = converter?.resultFile
     ? expandCommandArgs([converter.resultFile], sourceFile)[0]
-    : undefined
+    : undefined;
   if (resultFile && !isAbsolute(resultFile))
-    resultFile = resolve(cwd, resultFile)
+    resultFile = resolve(cwd, resultFile);
 
   const resourcesPaths = validResourcePaths(
     undefined,
@@ -173,16 +192,16 @@ export async function exportDocument(
     configurationName,
   );
 
-  let documentHash: string | undefined = undefined
+  let documentHash: string | undefined = undefined;
   if (sourceFile) {
     documentHash = await rememberDocumentHash({
       path: sourceFile,
       converter: documentFormatToOutputConverter(doc.documentFormat)!,
       configurationName: doc.configurationName,
       project,
-    })
+    });
   }
-  const operationName = isRendering ? 'rendering' : 'storage'
+  const operationName = isRendering ? 'rendering' : 'storage';
   try {
     let result: ExternalProgramResult;
     switch (converter?.type) {
@@ -216,7 +235,7 @@ export async function exportDocument(
           resultFile: resultFile || doc.path,
         });
     }
-    const { commandLine, error, exitCode, output } = result
+    const { commandLine, error, exitCode, output } = result;
     if (feedback) {
       switch (feedback) {
         case 'command-line':
@@ -246,7 +265,7 @@ export async function exportDocument(
         documentHash,
         commandLine,
         cwd,
-      }
+      };
       if (resultFile) {
         // EXPORT SUCCESSFUL
         console.log(`openResult = ${openResult}`);
@@ -257,7 +276,7 @@ export async function exportDocument(
             setup: {
               name: resultFile,
               projectAsJson: project ? JSON.stringify(project) : undefined,
-              documentHash: response.documentHash
+              documentHash: response.documentHash,
             },
           } as ServerMessageForViewer);
         } else if (openResult === 'os') {
@@ -266,7 +285,7 @@ export async function exportDocument(
           });
         }
       }
-      return Promise.resolve(response)
+      return Promise.resolve(response);
     } else {
       // EXPORT FAILED
       const message = `document ${operationName} failed with exitCode ${exitCode}`;
@@ -295,10 +314,13 @@ export async function exportDocument(
     return Promise.resolve({
       error,
       message: `${operationName} failed`,
-      doc: { content, format: converter?.format, configurationName } as CxDocument,
+      doc: {
+        content,
+        format: converter?.format,
+        configurationName,
+      } as CxDocument,
       resultFile,
       cwd,
     });
   }
 }
-

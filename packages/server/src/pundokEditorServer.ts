@@ -31,11 +31,17 @@ import {
   ensureBackendDirectories,
   getConfigurationInit,
   getAvailableConfigurationSummaries,
+  getBackendDebugInfo,
+  getBookmarks,
   parseConfigurationFiles,
+  RenderingJobStore,
   getPandocFeature,
+  createFolder,
+  editorReady,
   type BackendDirectories,
   type RendererHub,
 } from '../../backend/src';
+import { relative, resolve } from 'node:path';
 import { EditorEventHub } from './editorEventHub';
 
 /**
@@ -58,6 +64,8 @@ import { EditorEventHub } from './editorEventHub';
  * Keep the two in sync manually if `Backend` changes.
  */
 export class PundokEditorServer {
+  private readonly renderingJobsByUser = new Map<string, RenderingJobStore>();
+
   constructor(
     private readonly directoriesForUser: (
       username: string,
@@ -85,12 +93,16 @@ export class PundokEditorServer {
     return true;
   }
 
-  async debugInfo(_user: string): Promise<object> {
-    throw new Error('Method not implemented.');
+  async debugInfo(user: string): Promise<object> {
+    return getBackendDebugInfo(this.directoriesForUser(user));
   }
 
-  async editorReady(_user: string, editorKey?: EditorKeyType): Promise<void> {
-    throw new Error('Method not implemented.');
+  async editorReady(user: string, editorKey?: EditorKeyType): Promise<void> {
+    return editorReady(
+      this.directoriesForUser(user),
+      this.rendererHub(user),
+      editorKey,
+    );
   }
 
   async getFolderContents(
@@ -101,10 +113,10 @@ export class PundokEditorServer {
   }
 
   async getBookmarks(
-    _user: string,
+    user: string,
     bookmarkType?: PundokBookmarkType,
   ): Promise<PundokBookmark[]> {
-    throw new Error('Method not implemented.');
+    return getBookmarks(this.directoriesForUser(user), bookmarkType);
   }
 
   async open(_user: string, context: DocumentContext): Promise<CxDocument> {
@@ -137,8 +149,8 @@ export class PundokEditorServer {
     throw new Error('Method not implemented.');
   }
 
-  async createFolder(_user: string, path: string): Promise<string> {
-    throw new Error('Method not implemented.');
+  async createFolder(user: string, path: string): Promise<string> {
+    return createFolder(this.userPath(user, path));
   }
 
   async availableConfigurations(
@@ -220,10 +232,10 @@ export class PundokEditorServer {
   }
 
   async getRenderingJob(
-    _user: string,
+    user: string,
     hash: string,
   ): Promise<RenderingJob | undefined> {
-    throw new Error('Method not implemented.');
+    return this.renderingJobsForUser(user).get(hash);
   }
 
   async showAgain(
@@ -239,5 +251,26 @@ export class PundokEditorServer {
     options: ConfigurationUpdateOptions,
   ): Promise<void> {
     throw new Error('Method not implemented.');
+  }
+
+  private renderingJobsForUser(username: string): RenderingJobStore {
+    let renderingJobs = this.renderingJobsByUser.get(username);
+    if (!renderingJobs) {
+      renderingJobs = new RenderingJobStore();
+      this.renderingJobsByUser.set(username, renderingJobs);
+    }
+    return renderingJobs;
+  }
+
+  private userPath(username: string, path: string): string {
+    const root = resolve(this.directoriesForUser(username).userDataDir);
+    const candidate = resolve(root, path.replace(/^file:\/\//, ''));
+    const relativePath = relative(root, candidate);
+    if (
+      relativePath === '..' ||
+      relativePath.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)
+    )
+      throw new Error('Path must be within the authenticated user directory');
+    return candidate;
   }
 }

@@ -1,4 +1,5 @@
 export * from './documentHash';
+export * from './bookmarks';
 export * from './expandCommandArgs';
 export * from './filesystem';
 export * from './resourceManager';
@@ -7,3 +8,7 @@ export * from './runExternal';
 export * from './pandocFeatures';
 export * from './handlers/pandocFeatures';
 export * from './handlers/configuration';
+export * from './handlers/debug';
+export * from './handlers/project';
+export * from './handlers/editorReady';
+export * from './handlers/folder';

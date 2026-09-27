@@ -1,50 +1,76 @@
 import type { RenderingJob } from '../../common/src';
 
-const MAX_DOCUMENT_HASHES = 200
-interface DocHash {
-  hash: string,
-  json: string
-}
-let docHashes: DocHash[] = []
+const MAX_DOCUMENT_HASHES = 200;
 
-export async function newDocumentHash(json: string, algo = 'SHA-1'): Promise<string> {
+interface DocumentHash {
+  hash: string;
+  json: string;
+}
+
+export async function newDocumentHash(
+  json: string,
+  algo = 'SHA-1',
+): Promise<string> {
   return Array.from(
     new Uint8Array(
-      await crypto.subtle.digest(algo, new TextEncoder().encode(json))
+      await crypto.subtle.digest(algo, new TextEncoder().encode(json)),
     ),
-    (byte) => byte.toString(16).padStart(2, '0')
+    (byte) => byte.toString(16).padStart(2, '0'),
   ).join('');
 }
 
-export async function rememberDocumentHash(obj: RenderingJob): Promise<string> {
-  const json = JSON.stringify(obj)
-  const hash = await newDocumentHash(json)
-  const docHash = { hash, json }
-  docHashes.push(docHash)
-  if (docHashes.length > MAX_DOCUMENT_HASHES)
-    docHashes = docHashes.slice(1)
-  // console.log(`new hash ${hash} for: ${json}`)
-  return hash
-}
+export class RenderingJobStore {
+  private documentHashes: DocumentHash[] = [];
 
-function indexOfDocumentHash(search_hash: string): number {
-  for (let index = docHashes.length - 1; index >= 0; index--) {
-    if (search_hash === docHashes[index].hash)
-      return index
+  async remember(job: RenderingJob): Promise<string> {
+    const json = JSON.stringify(job);
+    const hash = await newDocumentHash(json);
+    this.documentHashes.push({ hash, json });
+    if (this.documentHashes.length > MAX_DOCUMENT_HASHES)
+      this.documentHashes = this.documentHashes.slice(1);
+    return hash;
   }
-  return -1
+
+  getAsJson(hash: string): string | undefined {
+    const job = this.find(hash);
+    return job?.json;
+  }
+
+  get(hash: string): RenderingJob | undefined {
+    const json = this.getAsJson(hash);
+    return json ? JSON.parse(json) : undefined;
+  }
+
+  isKnown(hash: string): boolean {
+    return !!this.find(hash);
+  }
+
+  private find(hash: string): DocumentHash | undefined {
+    for (let index = this.documentHashes.length - 1; index >= 0; index--) {
+      const job = this.documentHashes[index];
+      if (job.hash === hash) return job;
+    }
+  }
 }
 
-export function getRenderingJobWithHashAsJsonString(hash: string): string | undefined {
-  const index = indexOfDocumentHash(hash)
-  return index >= 0 ? docHashes[index].json : undefined
+const desktopRenderingJobs = new RenderingJobStore();
+
+export function rememberDocumentHash(job: RenderingJob): Promise<string> {
+  return desktopRenderingJobs.remember(job);
 }
 
-export function getRenderingJobWithHash(hash: string): RenderingJob | undefined {
-  const jsonstring = getRenderingJobWithHashAsJsonString(hash)
-  return jsonstring ? JSON.parse(jsonstring) : undefined
+export function getRenderingJobWithHashAsJsonString(
+  hash: string,
+): string | undefined {
+  return desktopRenderingJobs.getAsJson(hash);
+}
+
+export function getRenderingJobWithHash(
+  hash: string,
+): RenderingJob | undefined {
+  return desktopRenderingJobs.get(hash);
 }
 
 export function isKnownDocumentHash(hash: string): boolean {
-  return indexOfDocumentHash(hash) >= 0
+  return desktopRenderingJobs.isKnown(hash);
 }

@@ -14,21 +14,21 @@ import type { RendererHub } from '../backend';
 // import FileManager from '../fileManager';
 import {
   getAvailableConfigurationSummaries,
+  getBackendDebugInfo,
+  getBookmarks,
+  getRenderingJobWithHashAsJsonString,
   loadConfiguration,
+  createProject,
+  createFolder,
+  editorReady,
+  getProject,
 } from '../backend';
 import { backendDirectories } from '../resourcesManager';
-import { debugInfoHandler } from './debugInfoHandler';
-import { editorReadyHandler } from './editorReadyHandler';
 import { renderAgainHandler } from './renderAgainHandler';
-import { getBookmarksHandler } from './getBookmarksHandler';
-import { getRenderingJobHandler } from './getRenderingJobHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
-import { createFolderHandler } from './createFolderHandler';
 import { getInclusionTreeHandler } from './getInclusionTreeHandler';
 import { getSourceFileHandler } from './getSourceFileHandler';
 import { fileContentsHandler } from './fileContentsHandler';
-import { getProjectHandler } from './getProjectHandler';
-import { newProjectHandler } from './newProjectHandler';
 import { openDocumentHandler } from './openDocumentHandler';
 import { pandocFeaturesHandler } from './pandocFeaturesHandler';
 import { queryHandler } from './queryHandler';
@@ -78,15 +78,23 @@ export class IpcHub implements RendererHub {
   }
 
   handleIpcMainEvents() {
-    ipcMain.handle('editor-ready', editorReadyHandler(this));
+    ipcMain.handle('editor-ready', (_event, editorKey) =>
+      editorReady(backendDirectories(), this, editorKey),
+    );
     ipcMain.handle('get-folder-contents', getFolderContentsHandler(this));
-    ipcMain.handle('create-folder', createFolderHandler(this));
+    ipcMain.handle('create-folder', (_event, path) => createFolder(path));
     ipcMain.handle('open-document', openDocumentHandler(this));
     ipcMain.handle('save-document', saveDocumentHandler(this));
-    ipcMain.handle('debug-info', debugInfoHandler(this));
-    ipcMain.handle('get-project', getProjectHandler(this));
+    ipcMain.handle('debug-info', () =>
+      getBackendDebugInfo(backendDirectories()),
+    );
+    ipcMain.handle('get-project', (_event, options) =>
+      getProject(backendDirectories(), options),
+    );
     ipcMain.handle('get-inclusion-tree', getInclusionTreeHandler(this));
-    ipcMain.handle('get-bookmarks', getBookmarksHandler(this));
+    ipcMain.handle('get-bookmarks', (_event, bookmarkType) =>
+      getBookmarks(backendDirectories(), bookmarkType),
+    );
     ipcMain.handle('available-configurations', (_event, options) =>
       getAvailableConfigurationSummaries(backendDirectories(), options),
     );
@@ -95,14 +103,18 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('file-contents', fileContentsHandler(this));
     ipcMain.handle('set-value', setValueHandler(this));
-    ipcMain.handle('new-project', newProjectHandler(this));
+    ipcMain.handle('new-project', (_event, directory, project) =>
+      createProject(directory, JSON.parse(project)),
+    );
     ipcMain.handle('transform-json', transformJsonHandler(this));
     ipcMain.handle('pandoc-feature', pandocFeaturesHandler(this));
     ipcMain.handle('query', queryHandler(this));
     ipcMain.handle('get-source-file', getSourceFileHandler(this));
     ipcMain.handle('show-rendered-again', showAgainHandler(this));
     ipcMain.handle('render-again', renderAgainHandler(this));
-    ipcMain.handle('get-rendering-job', getRenderingJobHandler(this));
+    ipcMain.handle('get-rendering-job', (_event, hash) =>
+      getRenderingJobWithHashAsJsonString(hash),
+    );
     ipcMain.handle('update-config', updateConfigHandler(this));
   }
 
