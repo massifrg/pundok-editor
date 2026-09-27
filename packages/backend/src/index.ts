@@ -6,3 +6,4 @@ export * from './rendererHub';
 export * from './runExternal';
 export * from './pandocFeatures';
 export * from './handlers/pandocFeatures';
+export * from './handlers/configuration';

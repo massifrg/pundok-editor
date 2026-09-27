@@ -30,6 +30,7 @@ import {
 import {
   ensureBackendDirectories,
   getConfigurationInit,
+  getAvailableConfigurationSummaries,
   parseConfigurationFiles,
   getPandocFeature,
   type BackendDirectories,
@@ -144,13 +145,10 @@ export class PundokEditorServer {
     user: string,
     options?: ConfigQueryOptions,
   ): Promise<ConfigurationSummary[]> {
-    const configurations = (
-      await parseConfigurationFiles(this.directoriesForUser(user), options)
-    ).map((config) => ({
-      name: config.name,
-      description: config.description,
-      isLocal: !!config.isLocal,
-    }));
+    const configurations = await getAvailableConfigurationSummaries(
+      this.directoriesForUser(user),
+      options,
+    );
     if (!configurations.some(({ name }) => name === HARDCODED_CONFIG_NAME)) {
       configurations.push({
         name: HARDCODED_CONFIG_NAME,

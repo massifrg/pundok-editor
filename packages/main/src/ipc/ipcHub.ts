@@ -13,9 +13,10 @@ import {
 import type { RendererHub } from '../backend';
 // import FileManager from '../fileManager';
 import {
-  availableConfigurationsHandler,
-  loadConfigurationHandler,
-} from './configurationHandlers';
+  getAvailableConfigurationSummaries,
+  loadConfiguration,
+} from '../backend';
+import { backendDirectories } from '../resourcesManager';
 import { debugInfoHandler } from './debugInfoHandler';
 import { editorReadyHandler } from './editorReadyHandler';
 import { renderAgainHandler } from './renderAgainHandler';
@@ -86,11 +87,12 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('get-project', getProjectHandler(this));
     ipcMain.handle('get-inclusion-tree', getInclusionTreeHandler(this));
     ipcMain.handle('get-bookmarks', getBookmarksHandler(this));
-    ipcMain.handle(
-      'available-configurations',
-      availableConfigurationsHandler(this),
+    ipcMain.handle('available-configurations', (_event, options) =>
+      getAvailableConfigurationSummaries(backendDirectories(), options),
     );
-    ipcMain.handle('load-configuration', loadConfigurationHandler(this));
+    ipcMain.handle('load-configuration', (_event, configurationName) =>
+      loadConfiguration(backendDirectories(), configurationName),
+    );
     ipcMain.handle('file-contents', fileContentsHandler(this));
     ipcMain.handle('set-value', setValueHandler(this));
     ipcMain.handle('new-project', newProjectHandler(this));

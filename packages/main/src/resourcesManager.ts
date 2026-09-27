@@ -121,7 +121,7 @@ export function checkAndCreateAppDataDir() {
   checkAndAddFolder(localConfigsDir());
 }
 
-function backendDirectories() {
+export function backendDirectories() {
   return createBackendDirectories(userAppDataDir(), configsDir());
 }
 
