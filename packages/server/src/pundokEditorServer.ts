@@ -37,6 +37,7 @@ import {
   getFileContents,
   getFolderContents,
   getInclusionTree,
+  getProject,
   parseConfigurationFiles,
   RenderingJobStore,
   getPandocFeature,
@@ -47,6 +48,7 @@ import {
   getSourceLocation,
   showAgain,
   createFolder,
+  createProject,
   editorReady,
   expandCommandArgs,
   openDocument,
@@ -152,18 +154,21 @@ export class PundokEditorServer {
   }
 
   async getProject(
-    _user: string,
+    user: string,
     options: GetProjectOptions,
   ): Promise<PundokEditorProject | undefined> {
-    throw new Error('Method not implemented.');
+    return getProject(this.directoriesForUser(user), {
+      ...options,
+      path: this.userPath(user, options.path),
+    });
   }
 
   async createProject(
-    _user: string,
+    user: string,
     path: string,
     project: Partial<PundokEditorProject>,
   ): Promise<void> {
-    throw new Error('Method not implemented.');
+    return createProject(this.userPath(user, path), project);
   }
 
   async getInclusionTree(
