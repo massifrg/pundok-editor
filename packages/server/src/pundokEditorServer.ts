@@ -41,6 +41,7 @@ import {
   getPandocFeature,
   dispatchQuery,
   updateConfiguration,
+  transformWithPandoc,
   createFolder,
   editorReady,
   type BackendDirectories,
@@ -226,11 +227,15 @@ export class PundokEditorServer {
   }
 
   async transformPandocJson(
-    _user: string,
+    user: string,
     doc: Partial<CxDocument>,
     transform: PandocFilterTransform,
   ): Promise<string> {
-    throw new Error('Method not implemented.');
+    return transformWithPandoc(
+      this.directoriesForUser(user),
+      this.documentForUser(user, doc),
+      this.transformForUser(user, transform),
+    );
   }
 
   async gotoSource(
@@ -295,21 +300,64 @@ export class PundokEditorServer {
         : project;
     if (!parsedProject.path) return query;
 
-    const path = this.userPath(username, parsedProject.path);
-    const rootDocument = parsedProject.rootDocument
-      ? this.userPath(username, resolve(path, parsedProject.rootDocument))
-      : undefined;
+    const projectForUser = this.projectForUser(username, parsedProject);
     return {
       ...query,
       options: {
         ...query.options,
-        project: {
-          ...parsedProject,
-          path,
-          ...(rootDocument && { rootDocument }),
-        },
+        project: projectForUser,
       },
     };
+  }
+
+  private documentForUser(
+    username: string,
+    document: Partial<CxDocument>,
+  ): Partial<CxDocument> {
+    return document.project
+      ? {
+          ...document,
+          project: this.projectForUser(username, document.project),
+        }
+      : document;
+  }
+
+  private projectForUser(
+    username: string,
+    project: PundokEditorProject,
+  ): PundokEditorProject {
+    const path = this.userPath(username, project.path);
+    const rootDocument = project.rootDocument
+      ? this.userPath(username, resolve(path, project.rootDocument))
+      : undefined;
+    return {
+      ...project,
+      path,
+      ...(rootDocument && { rootDocument }),
+    };
+  }
+
+  private transformForUser(
+    username: string,
+    transform: PandocFilterTransform,
+  ): PandocFilterTransform {
+    return {
+      ...transform,
+      filters: transform.filters.map((filter) =>
+        this.resourcePathForUser(username, filter),
+      ),
+      sources: transform.sources?.map((source) =>
+        this.resourcePathForUser(username, source),
+      ),
+    };
+  }
+
+  private resourcePathForUser(username: string, resource: string): string {
+    const path = resource.replace(/^file:\/\//, '');
+    if (isAbsolute(path)) return this.userPath(username, path);
+    if (path.split(/[\\/]/).includes('..'))
+      throw new Error('Resource path must not leave the authenticated user directory');
+    return resource;
   }
 
   private userPath(username: string, path: string): string {

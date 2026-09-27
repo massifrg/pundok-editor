@@ -4,4 +4,3 @@ export * from './openDocumentHandler';
 export * from './pandocFeaturesHandler';
 export * from './saveDocumentHandler';
 export * from './setValueHandler';
-export * from './transformJsonHandler';

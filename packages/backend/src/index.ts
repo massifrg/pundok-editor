@@ -17,3 +17,4 @@ export * from './handlers/fileContents';
 export * from './handlers/folderContents';
 export * from './handlers/inclusionTree';
 export * from './handlers/query';
+export * from './handlers/transformJson';

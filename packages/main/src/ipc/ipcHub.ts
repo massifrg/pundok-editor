@@ -26,6 +26,7 @@ import {
   getInclusionTree,
   queryHandler,
   updateConfiguration,
+  transformJsonHandler,
 } from '../backend';
 import { backendDirectories } from '../resourcesManager';
 import { renderAgainHandler } from './renderAgainHandler';
@@ -36,7 +37,6 @@ import { pandocFeaturesHandler } from './pandocFeaturesHandler';
 import { saveDocumentHandler } from './saveDocumentHandler';
 import { setValueHandler } from './setValueHandler';
 import { showAgainHandler } from './showAgainHandler';
-import { transformJsonHandler } from './transformJsonHandler';
 
 /** An object describing a document's opening */
 export interface DocumentOpening {
@@ -110,7 +110,9 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('new-project', (_event, directory, project) =>
       createProject(directory, JSON.parse(project)),
     );
-    ipcMain.handle('transform-json', transformJsonHandler(this));
+    ipcMain.handle('transform-json', (_event, document, transform) =>
+      transformJsonHandler(backendDirectories(), document, transform),
+    );
     ipcMain.handle('pandoc-feature', pandocFeaturesHandler(this));
     ipcMain.handle('query', (_event, query) =>
       queryHandler(backendDirectories(), query),
