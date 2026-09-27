@@ -1,5 +1,4 @@
 export * from './feedback';
-export * from './getInclusionTreeHandler';
 export * from './ipcHub';
 export * from './openDocumentHandler';
 export * from './pandocFeaturesHandler';

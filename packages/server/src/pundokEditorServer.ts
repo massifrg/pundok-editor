@@ -35,6 +35,7 @@ import {
   getBookmarks,
   getFileContents,
   getFolderContents,
+  getInclusionTree,
   parseConfigurationFiles,
   RenderingJobStore,
   getPandocFeature,
@@ -146,10 +147,14 @@ export class PundokEditorServer {
   }
 
   async getInclusionTree(
-    _user: string,
+    user: string,
     project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined> {
-    throw new Error('Method not implemented.');
+    const result = await getInclusionTree(this.directoriesForUser(user), {
+      ...project,
+      path: this.userPath(user, project.path),
+    });
+    return result ? JSON.parse(result) : undefined;
   }
 
   async createFolder(user: string, path: string): Promise<string> {

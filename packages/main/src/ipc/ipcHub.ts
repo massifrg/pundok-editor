@@ -23,11 +23,11 @@ import {
   getFileContents,
   editorReady,
   getProject,
+  getInclusionTree,
 } from '../backend';
 import { backendDirectories } from '../resourcesManager';
 import { renderAgainHandler } from './renderAgainHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
-import { getInclusionTreeHandler } from './getInclusionTreeHandler';
 import { getSourceFileHandler } from './getSourceFileHandler';
 import { openDocumentHandler } from './openDocumentHandler';
 import { pandocFeaturesHandler } from './pandocFeaturesHandler';
@@ -91,7 +91,9 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('get-project', (_event, options) =>
       getProject(backendDirectories(), options),
     );
-    ipcMain.handle('get-inclusion-tree', getInclusionTreeHandler(this));
+    ipcMain.handle('get-inclusion-tree', (_event, project) =>
+      getInclusionTree(backendDirectories(), JSON.parse(project)),
+    );
     ipcMain.handle('get-bookmarks', (_event, bookmarkType) =>
       getBookmarks(backendDirectories(), bookmarkType),
     );
