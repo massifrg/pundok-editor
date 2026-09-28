@@ -6,7 +6,7 @@ setupQuasarIcons()
 <script lang="ts">
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
-import { QTable, QTableColumn, useDialogPluginComponent, useQuasar } from 'quasar';
+import { QTable, QTableColumn, QTh, useDialogPluginComponent, useQuasar } from 'quasar';
 import {
   DocumentBookmark,
   DocumentFormat,
@@ -46,10 +46,46 @@ interface FileContentRow {
   icon?: string,
   isDocument: boolean,
   isFolder: boolean,
+  size?: number,
+  lastModified?: number,
+}
+
+interface ColumnResizeState {
+  startX: number,
+  leftName: string,
+  rightName: string,
+  leftWidth: number,
+  rightWidth: number,
+  pointerId: number,
 }
 
 function isNotHidden(filename: string, platform?: string) {
   return filename === '..' || !filename.startsWith('.')
+}
+
+function minimumColumnWidth(columnName: string): number {
+  switch (columnName) {
+    case 'name': return 120
+    case 'size': return 70
+    default: return 150
+  }
+}
+
+function formatFileSize(size?: number): string {
+  if (size === undefined) return ''
+  if (size < 1024) return `${size} B`
+  const units = ['KB', 'MB', 'GB', 'TB']
+  let value = size / 1024
+  let unit = 0
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024
+    unit++
+  }
+  return `${value.toFixed(1)} ${units[unit]}`
+}
+
+function formatLastModified(timestamp?: number): string {
+  return timestamp === undefined ? '' : new Date(timestamp).toLocaleString()
 }
 
 const placeIcons: Record<string, string> = {
@@ -66,10 +102,26 @@ const placeIcons: Record<string, string> = {
 const cols: QTableColumn[] = [{
   name: 'name',
   required: true,
-  label: 'name',
+  label: '',
   align: "left",
   field: (content: Folder | Document) => content.name,
   // format: val => `${val}`,
+  sortable: true
+}, {
+  name: 'size',
+  label: '',
+  align: 'right',
+  headerStyle: 'text-align: left',
+  field: (content: FileContentRow) => content.size,
+  format: formatFileSize,
+  sortable: true
+}, {
+  name: 'lastModified',
+  label: '',
+  align: 'left',
+  headerStyle: 'text-align: left',
+  field: (content: FileContentRow) => content.lastModified,
+  format: formatLastModified,
   sortable: true
 }]
 
@@ -126,6 +178,9 @@ export default {
       splitterValue: 25,
       /** The document(s) that are selected in the QTable */
       selected: [] as FileContentRow[],
+      /** Resized column widths in pixels */
+      columnWidths: {} as Record<string, number>,
+      columnResize: undefined as ColumnResizeState | undefined,
       /** The available Pandoc formats and input/output converters */
       pandocFormats: [] as PandocFormatDescription[],
       /** The current, selected format/converter to use to read/save the document */
@@ -153,7 +208,18 @@ export default {
   computed: {
     ...mapState(useBackend, ['backend']),
     columns() {
-      return cols
+      return cols.map(col => {
+        const label = this.$t(`fileDialog.columns.${col.name}`)
+        const width = this.columnWidths[col.name]
+        if (width === undefined) return { ...col, label }
+        const widthStyle = `width: ${width}px; min-width: ${minimumColumnWidth(col.name)}px`
+        return {
+          ...col,
+          label,
+          style: widthStyle,
+          headerStyle: [col.headerStyle, widthStyle].filter(Boolean).join('; '),
+        }
+      })
     },
     rows(): FileContentRow[] {
       const notHiddenFilter = this.showHidden
@@ -173,6 +239,8 @@ export default {
           icon: 'document_file',
           isFolder: false,
           isDocument: true,
+          size: doc.size,
+          lastModified: doc.lastModified,
         })).filter(f => notHiddenFilter(f.name))
       // adjust extensions according to the current format
       if (this.format)
@@ -205,20 +273,20 @@ export default {
       if (!prompt) {
         switch (this.mode as DocumentDialogMode) {
           case 'save':
-            prompt = 'Save document as:'
+            prompt = this.$t('fileDialog.prompt.save')
             break
           case 'save-copy':
-            prompt = 'Save a copy as:'
+            prompt = this.$t('fileDialog.prompt.saveCopy')
             break
           case 'import':
-            prompt = 'Import document:'
+            prompt = this.$t('fileDialog.prompt.import')
             break
           case 'include':
-            prompt = 'Include document:'
+            prompt = this.$t('fileDialog.prompt.include')
             break
           case 'open':
           default:
-            prompt = 'Open document:'
+            prompt = this.$t('fileDialog.prompt.open')
         }
       }
       return prompt
@@ -315,6 +383,69 @@ export default {
     }
   },
   methods: {
+    startColumnResize(event: PointerEvent, leftName: string) {
+      const leftHeader = (event.currentTarget as HTMLElement).closest('th')
+      const rightHeader = leftHeader?.nextElementSibling as HTMLElement | null
+      const leftIndex = cols.findIndex(col => col.name === leftName)
+      if (!leftHeader || !rightHeader || leftIndex < 0 || leftIndex + 1 >= cols.length) return
+      this.columnResize = {
+        startX: event.clientX,
+        leftName,
+        rightName: cols[leftIndex + 1].name,
+        leftWidth: leftHeader.getBoundingClientRect().width,
+        rightWidth: rightHeader.getBoundingClientRect().width,
+        pointerId: event.pointerId,
+      }
+      const handle = event.currentTarget as HTMLElement
+      handle.setPointerCapture(event.pointerId)
+    },
+    resizeColumn(event: PointerEvent) {
+      const resize = this.columnResize
+      if (!resize || resize.pointerId !== event.pointerId) return
+      this.updateColumnWidths(
+        resize.leftName,
+        resize.rightName,
+        resize.leftWidth,
+        resize.rightWidth,
+        event.clientX - resize.startX,
+      )
+    },
+    finishColumnResize(event: PointerEvent) {
+      if (this.columnResize?.pointerId === event.pointerId)
+        this.columnResize = undefined
+    },
+    resizeColumnByKeyboard(event: KeyboardEvent, leftName: string) {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+      event.preventDefault()
+      const leftHeader = (event.currentTarget as HTMLElement).closest('th')
+      const rightHeader = leftHeader?.nextElementSibling as HTMLElement | null
+      if (!leftHeader || !rightHeader) return
+      const leftIndex = cols.findIndex(col => col.name === leftName)
+      if (leftIndex < 0 || leftIndex + 1 >= cols.length) return
+      this.updateColumnWidths(
+        leftName,
+        cols[leftIndex + 1].name,
+        leftHeader.getBoundingClientRect().width,
+        rightHeader.getBoundingClientRect().width,
+        event.key === 'ArrowRight' ? 12 : -12,
+      )
+    },
+    updateColumnWidths(
+      leftName: string,
+      rightName: string,
+      leftWidth: number,
+      rightWidth: number,
+      delta: number,
+    ) {
+      const minDelta = minimumColumnWidth(leftName) - leftWidth
+      const maxDelta = rightWidth - minimumColumnWidth(rightName)
+      const adjustedDelta = Math.min(maxDelta, Math.max(minDelta, delta))
+      this.columnWidths = {
+        ...this.columnWidths,
+        [leftName]: leftWidth + adjustedDelta,
+        [rightName]: rightWidth - adjustedDelta,
+      }
+    },
     async getContents() {
       const path = this.currentFolder && `${this.protocol}//${this.currentFolder}` || undefined
       console.log(`getContents, path="${path}"`)
@@ -339,8 +470,11 @@ export default {
         }
       } catch (err) {
         this.$q.notify({
-          message: 'Error',
-          caption: `Can't retrieve folder contents of ${path}: \n${err}`,
+          message: this.$t('fileDialog.error.title'),
+          caption: this.$t('fileDialog.error.readFolder', {
+            path,
+            error: String(err),
+          }),
           icon: 'folder_alert',
           position: 'top',
           color: 'negative',
@@ -364,15 +498,18 @@ export default {
         console.log(err)
         this.$q.dialog({
           color: "negative",
-          title: 'Error',
-          message: `Can't create a "${folder}" folder in "${this.currentFolder}"`
+          title: this.$t('fileDialog.error.title'),
+          message: this.$t('fileDialog.error.createFolder', {
+            folder,
+            path: this.currentFolder,
+          })
         })
       }
     },
     askForFolderToCreate() {
       this.$q.dialog({
-        title: 'Create new folder',
-        message: 'Folder name:',
+        title: this.$t('fileDialog.createFolder.title'),
+        message: this.$t('fileDialog.createFolder.name'),
         prompt: {
           model: '',
           type: 'text',
@@ -446,8 +583,11 @@ export default {
         // console.log(`format should be ${gf?.format?.name}`)
         if (gf?.format) {
           this.$q.notify({
-            message: 'Warning',
-            caption: `Format set to ${gf.format.name} to match "${path}" extension.`,
+            message: this.$t('fileDialog.warning.title'),
+            caption: this.$t('fileDialog.warning.formatChanged', {
+              format: gf.format.name,
+              path,
+            }),
             icon: 'message_warning',
             position: 'top',
             color: 'warning',
@@ -464,7 +604,7 @@ export default {
           if (image_format)
             return {
               format: { ...image_format, ftype: 'image' },
-              why: 'from the extension of the file'
+              why: this.$t('fileDialog.format.reason.extension')
             }
         }
       } else {
@@ -472,7 +612,7 @@ export default {
           const json_format = this.pandocFormats.find(f => f.name === 'json')
           return {
             format: { ...json_format, ftype: 'format' },
-            why: 'default Pandoc format for the editor'
+            why: this.$t('fileDialog.format.reason.defaultPandoc')
           }
         }
         if (this.isInputDialog) {
@@ -482,14 +622,14 @@ export default {
               && c.extensions.find(e => path.endsWith(`.${e}`)))
             if (ic) return {
               format: { ...toRaw(ic), ftype: 'input-converter' },
-              why: 'from the configuration used to open the bookmarked file last time'
+              why: this.$t('fileDialog.format.reason.bookmarkConfiguration')
             }
           }
           // otherwise try the current configuration
           const ic = this.inputConverters.find(c => c.extensions.find(e => path.endsWith(`.${e}`)))
           if (ic) return {
             format: { ...toRaw(ic), ftype: 'input-converter' },
-            why: 'from the current configuration of the editor'
+            why: this.$t('fileDialog.format.reason.currentConfiguration')
           }
         }
         const formats = documentFormatsFromFilename(
@@ -505,12 +645,12 @@ export default {
           if (pf)
             return {
               format: { ...pf, ftype: 'format' },
-              why: 'from the extension of the file',
+              why: this.$t('fileDialog.format.reason.extension'),
             }
         }
       }
       return {
-        why: 'no suitable format found'
+        why: this.$t('fileDialog.format.reason.noSuitable')
       }
     },
     documentFormatFromPath(path: string): DocumentFormat | undefined {
@@ -578,12 +718,12 @@ export default {
       if (doc) {
         const { format: format_guess } = this.guessedFormat
         const source = format?.source || format_guess?.source
-        const label = (format?.name || 'guess') + (source ? `@${source}` : '')
+        const label = (format?.name || this.$t('fileDialog.format.guess')) + (source ? `@${source}` : '')
         return format_guess
           ? `${label} (${format_guess.name})`
-          : `${label} (unrecognized)`
+          : `${label} (${this.$t('fileDialog.format.unrecognized')})`
       }
-      return format?.name || 'guess'
+      return format?.name || this.$t('fileDialog.format.guess')
     },
     formatTitle(format?: DocumentFormat) {
       if (format?.ftype !== 'guess')
@@ -597,7 +737,7 @@ export default {
             `(${format_guess.name}, ${why})`
           ].join(' ')
       }
-      return 'the editor tries to guess the format'
+      return this.$t('fileDialog.format.guessTooltip')
     },
     adjustDocumentExtension(addIfMissing?: boolean) {
       this.filename = changeFileExtensionToFormat(this.filename, this.format, addIfMissing)
@@ -640,15 +780,16 @@ export default {
     <q-card class="q-dialog-plugin">
       <q-card-section horizontal class="q-pa-sm q-pb-none q-mb-none">
         <span class="bg-info text-body1 q-pa-md">{{ dialogPrompt }}</span>
-        <q-input v-if="!isInputDialog" v-model="filename" outlined label="document name"
+        <q-input v-if="!isInputDialog" v-model="filename" outlined :label="$t('fileDialog.labels.documentName')"
           @blur="adjustDocumentExtension()" @keyup.enter="selectDocument()" />
         <q-space />
-        <q-btn v-if="!isInputDialog" icon="folder_new" size="sm" color="primary" title="create new folder"
+        <q-btn v-if="!isInputDialog" icon="folder_new" size="sm" color="primary"
+          :title="$t('fileDialog.createFolder.title')"
           @click="askForFolderToCreate" />
         <q-space />
-        <span class="q-pa-md">Go to a recent:</span>
+        <span class="q-pa-md">{{ $t('fileDialog.labels.recent') }}</span>
         <q-space style="max-width: .1rem;" />
-        <q-btn-dropdown label="project" no-caps auto-close dense class="q-my-xs">
+        <q-btn-dropdown :label="$t('fileDialog.labels.project')" no-caps auto-close dense class="q-my-xs">
           <q-list>
             <q-item v-for="pb in projectBookmarks" clickable @click="gotoUrl(pb.url)">
               <q-item-section>{{ pb.name }}</q-item-section>
@@ -656,7 +797,7 @@ export default {
           </q-list>
         </q-btn-dropdown>
         &nbsp;
-        <q-btn-dropdown label="document" no-caps auto-close dense class="q-my-xs">
+        <q-btn-dropdown :label="$t('fileDialog.labels.document')" no-caps auto-close dense class="q-my-xs">
           <q-list>
             <q-item v-for="db in docBookmarks" clickable @click="gotoUrl(db.url, db.configurationName)">
               <q-item-section>
@@ -674,18 +815,34 @@ export default {
               <div class="text-body2 self-end">{{ currentFolder }} </div>
               <q-space />
               <q-toggle v-model="showEveryDoc" size="sm"
-                title="show every document or just the ones with the matching extensions" label="show all docs:"
+                :title="$t('fileDialog.toggles.showEveryDocument')"
+                :label="$t('fileDialog.labels.showEveryDocument')"
                 left-label />
               <q-space />
-              <q-toggle v-model="showHidden" size="sm" title="hide/show hidden folders/documents" label="show hidden:"
+              <q-toggle v-model="showHidden" size="sm" :title="$t('fileDialog.toggles.showHidden')"
+                :label="$t('fileDialog.labels.showHidden')"
                 left-label />
               <q-space v-if="mode !== 'folder'" />
-              <q-toggle v-if="mode !== 'folder'" v-model="hideFolders" size="sm" title="hide/show folders"
-                label="hide folders:" left-label />
+              <q-toggle v-if="mode !== 'folder'" v-model="hideFolders" size="sm"
+                :title="$t('fileDialog.toggles.hideFolders')" :label="$t('fileDialog.labels.hideFolders')"
+                left-label />
             </div>
             <q-table ref="docsTable" class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns"
               row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
-              v-model:pagination="pagination" :rows-per-page-options="[0]">
+              v-model:pagination="pagination" :rows-per-page-options="[0]"
+              table-style="table-layout: fixed; width: 100%">
+              <template v-slot:header-cell="props">
+                <q-th :props="props">
+                  {{ props.col.label }}
+                  <span v-if="props.col.name !== 'lastModified'" class="column-resizer" role="separator"
+                    aria-orientation="vertical"
+                    :aria-label="$t('fileDialog.resizeColumn', { column: props.col.label })" tabindex="0"
+                    @pointerdown.stop.prevent="startColumnResize($event, props.col.name)"
+                    @pointermove.stop.prevent="resizeColumn" @pointerup.stop.prevent="finishColumnResize"
+                    @pointercancel.stop.prevent="finishColumnResize"
+                    @click.stop @keydown.stop="resizeColumnByKeyboard($event, props.col.name)" @keyup.stop />
+                </q-th>
+              </template>
               <template v-slot:body-selection="scope">
                 <q-icon v-if="selected.find(s => s.name === scope.row.name)" name="check" />
               </template>
@@ -716,7 +873,9 @@ export default {
         </q-splitter>
       </q-card-section>
       <q-card-section v-if="mode !== 'folder'" horizontal>
-        <div class="q-pa-md">Format/Custom {{ isInputDialog ? 'reader' : 'writer' }}:</div>
+        <div class="q-pa-md">
+          {{ $t(isInputDialog ? 'fileDialog.labels.formatReader' : 'fileDialog.labels.formatWriter') }}
+        </div>
         <q-btn-dropdown :label="formatDropdownLabel" :icon="formatDropdownIcon" :title="formatDropdownTitle" auto-close
           no-caps class="q-my-sm">
           <q-list>
@@ -740,14 +899,16 @@ export default {
           </q-list>
         </q-btn-dropdown>
         &nbsp;
-        <q-toggle v-model="showAllFormats" title="show all formats" label="show all formats" />
+        <q-toggle v-model="showAllFormats" :title="$t('fileDialog.toggles.showAllFormats')"
+          :label="$t('fileDialog.labels.showAllFormats')" />
         <q-space />
       </q-card-section>
       <q-card-actions>
-        <q-btn color="primary" label="Reload" @click="getContents()" />
+        <q-btn color="primary" :label="$t('fileDialog.buttons.reload')" @click="getContents()" />
         <q-space />
-        <q-btn ref="okRef" color="primary" label="OK" :disabled="!targetPath" @click="selectDocument" />
-        <q-btn ref="cancelRef" color="primary" label="Cancel" @click="closeDialog" />
+        <q-btn ref="okRef" color="primary" :label="$t('fileDialog.buttons.ok')" :disabled="!targetPath"
+          @click="selectDocument" />
+        <q-btn ref="cancelRef" color="primary" :label="$t('fileDialog.buttons.cancel')" @click="closeDialog" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -757,6 +918,22 @@ export default {
 .folder-contents-table
   /* height or max-height is important */
   height: 310px
+  th
+    position: relative
+
+  .column-resizer
+    position: absolute
+    top: 0
+    right: 0
+    bottom: 0
+    width: 8px
+    cursor: col-resize
+    touch-action: none
+    border-right: 2px solid rgba(255, 255, 255, 0.85)
+
+    &:hover, &:focus-visible
+      background-color: rgba(0, 0, 0, 0.12)
+      border-right-color: var(--q-primary)
 
   .q-table__top,
   .q-table__bottom,

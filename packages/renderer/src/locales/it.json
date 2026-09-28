@@ -30,7 +30,6 @@
     "uppercase": "converti in maiuscolo",
     "uppercaseFirst": "converti in maiuscolo la prima lettera di ogni parola"
   },
-  "allow": "permetti",
   "appendMeta": {
     "label": {
       "MetaBlocks": "aggiungi MetaBlocks",
@@ -272,10 +271,74 @@
     "open": "apri documento",
     "reloadWithConfiguration": "ricarica il documento con un'altra configurazione"
   },
-  "emphasis": "enfasi",
   "enabled": "attivo",
   "expand": "espandi",
-  "failed": "Operazione fallita",
+  "fileDialog": {
+    "buttons": {
+      "cancel": "Annulla",
+      "ok": "OK",
+      "reload": "Ricarica"
+    },
+    "columns": {
+      "lastModified": "ultima modifica",
+      "name": "nome",
+      "size": "dimensione"
+    },
+    "createFolder": {
+      "name": "Nome della cartella:",
+      "title": "Crea una nuova cartella"
+    },
+    "error": {
+      "createFolder": "Impossibile creare la cartella \"{folder}\" in \"{path}\"",
+      "readFolder": "Impossibile recuperare il contenuto della cartella {path}: \n{error}",
+      "title": "Errore"
+    },
+    "format": {
+      "guess": "rilevazione automatica",
+      "guessTooltip": "l'editor prova a indovinare il formato",
+      "reason": {
+        "bookmarkConfiguration": "dalla configurazione usata l'ultima volta per aprire il file aggiunto ai segnalibri",
+        "currentConfiguration": "dalla configurazione corrente dell'editor",
+        "defaultPandoc": "formato Pandoc predefinito per l'editor",
+        "extension": "dall'estensione del file",
+        "noSuitable": "nessun formato adatto trovato"
+      },
+      "unrecognized": "non riconosciuto"
+    },
+    "labels": {
+      "document": "documento",
+      "documentName": "nome del documento",
+      "formatReader": "Formato/lettore personalizzato:",
+      "formatWriter": "Formato/scrittore personalizzato:",
+      "hideFolders": "nascondi cartelle:",
+      "project": "progetto",
+      "recent": "Vai a un elemento recente:",
+      "showAllFormats": "mostra tutti i formati",
+      "showEveryDocument": "mostra tutti i documenti:",
+      "showHidden": "mostra gli elementi nascosti:"
+    },
+    "prompt": {
+      "include": "Includi documento:",
+      "import": "Importa documento:",
+      "open": "Apri documento:",
+      "openDocument": "Apri documento",
+      "save": "Salva documento come:",
+      "saveCopy": "Salva una copia come:",
+      "saveCopyTo": "Salva una copia in:",
+      "saveCurrent": "Salva documento:"
+    },
+    "resizeColumn": "Ridimensiona la colonna {column}",
+    "toggles": {
+      "hideFolders": "mostra/nascondi le cartelle",
+      "showAllFormats": "mostra tutti i formati",
+      "showEveryDocument": "mostra tutti i documenti o solo quelli con estensioni corrispondenti",
+      "showHidden": "mostra/nascondi cartelle e documenti nascosti"
+    },
+    "warning": {
+      "formatChanged": "Il formato è stato impostato su {format} per corrispondere all'estensione di \"{path}\".",
+      "title": "Attenzione"
+    }
+  },
   "insert": {
     "HorizontalRule": "inserisci una barra di separazione"
   },
@@ -309,7 +372,6 @@
     }
   },
   "present": "presente",
-  "prevent": "impedisci",
   "projectStructureDialog": {
     "loading": "caricamento della struttura del progetto...",
     "maximize": "ingrandisci",

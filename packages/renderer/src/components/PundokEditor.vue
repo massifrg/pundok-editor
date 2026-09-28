@@ -196,6 +196,7 @@ import {
   ACTION_DOCUMENT_SAVE_COPY,
 } from '../actions';
 import { useQuasar } from 'quasar';
+import { t } from '../i18n';
 import {
   PendingOperation,
   PendingOperationExtraValue,
@@ -868,7 +869,7 @@ export default {
             editor: this.editor,
             mode: 'open',
             options: {
-              prompt: 'Open document',
+              prompt: t('fileDialog.prompt.openDocument'),
               startFolder: workingFolder,
               startFormat: asInputFormat(workingFormat, configuration),
             },
@@ -994,7 +995,7 @@ export default {
           showSaveCopyDialog({
             editor: this.editor,
             options: {
-              prompt: 'Save a copy to:',
+              prompt: t('fileDialog.prompt.saveCopyTo'),
               startFolder: copyFolder || workingFolder,
               startFormat: copyFormat || defaultCopyFormat
                 || asOutputFormat(workingFormat, configuration)
@@ -1024,7 +1025,9 @@ export default {
           showSaveDocumentDialog({
             editor: this.editor,
             options: {
-              prompt: isSaveAs ? 'Save document as:' : 'Save document:',
+              prompt: t(isSaveAs
+                ? 'fileDialog.prompt.save'
+                : 'fileDialog.prompt.saveCurrent'),
               startFolder: isSaveAs ? workingFolder : workingFolder,
               startFormat,
               startFilename,

@@ -30,7 +30,6 @@
     "uppercase": "convert to upper case",
     "uppercaseFirst": "convert to upper case the first letter of every word"
   },
-  "allow": "allow",
   "append": "append",
   "appendMeta": {
     "label": {
@@ -273,10 +272,74 @@
     "open": "open document",
     "reloadWithConfiguration": "reload document with a different configuration"
   },
-  "emphasis": "emphasis",
   "enabled": "enabled",
   "expand": "expand",
-  "failed": "Action failed",
+  "fileDialog": {
+    "buttons": {
+      "cancel": "Cancel",
+      "ok": "OK",
+      "reload": "Reload"
+    },
+    "columns": {
+      "lastModified": "last modified",
+      "name": "name",
+      "size": "size"
+    },
+    "createFolder": {
+      "name": "Folder name:",
+      "title": "Create new folder"
+    },
+    "error": {
+      "createFolder": "Can't create a \"{folder}\" folder in \"{path}\"",
+      "readFolder": "Can't retrieve folder contents of {path}: \n{error}",
+      "title": "Error"
+    },
+    "format": {
+      "guess": "guess",
+      "guessTooltip": "the editor tries to guess the format",
+      "reason": {
+        "bookmarkConfiguration": "from the configuration used to open the bookmarked file last time",
+        "currentConfiguration": "from the current configuration of the editor",
+        "defaultPandoc": "default Pandoc format for the editor",
+        "extension": "from the extension of the file",
+        "noSuitable": "no suitable format found"
+      },
+      "unrecognized": "unrecognized"
+    },
+    "labels": {
+      "document": "document",
+      "documentName": "document name",
+      "formatReader": "Format/Custom reader:",
+      "formatWriter": "Format/Custom writer:",
+      "hideFolders": "hide folders:",
+      "project": "project",
+      "recent": "Go to a recent:",
+      "showAllFormats": "show all formats",
+      "showEveryDocument": "show all docs:",
+      "showHidden": "show hidden:"
+    },
+    "prompt": {
+      "include": "Include document:",
+      "import": "Import document:",
+      "open": "Open document:",
+      "openDocument": "Open document",
+      "save": "Save document as:",
+      "saveCopy": "Save a copy as:",
+      "saveCopyTo": "Save a copy to:",
+      "saveCurrent": "Save document:"
+    },
+    "resizeColumn": "Resize {column} column",
+    "toggles": {
+      "hideFolders": "hide/show folders",
+      "showAllFormats": "show all formats",
+      "showEveryDocument": "show every document or just the ones with the matching extensions",
+      "showHidden": "hide/show hidden folders/documents"
+    },
+    "warning": {
+      "formatChanged": "Format set to {format} to match \"{path}\" extension.",
+      "title": "Warning"
+    }
+  },
   "insert": {
     "HorizontalRule": "insert horizontal rule"
   },
@@ -310,7 +373,6 @@
     }
   },
   "present": "present",
-  "prevent": "prevent",
   "projectStructureDialog": {
     "loading": "Loading project structure...",
     "maximize": "maximize",
@@ -321,8 +383,7 @@
   },
   "recent": {
     "documents": "recent documents",
-    "projects": "recent projects",
-    "projectsLong": "newdocumentb"
+    "projects": "recent projects"
   },
   "redo": "redo",
   "repeatLastCommand": "repeat last command",
