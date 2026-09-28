@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { PundokBookmark, PundokBookmarkType } from '../../common/src';
 import type { BackendDirectories } from './resourceManager';
 
@@ -40,15 +41,20 @@ async function readBookmarks(
     const bookmarks = JSON.parse(
       await readFile(bookmarkFilename(directories), 'utf8'),
     ) as (PundokBookmark & { path?: string })[];
-    return bookmarks.map((bookmark) =>
-      bookmark.path && !bookmark.url
-        ? {
-            ...bookmark,
-            url: `file://${encodeURIComponent(bookmark.path)}`,
-            path: undefined,
-          }
-        : bookmark,
-    );
+    const normalizedBookmarks = bookmarks.map((bookmark) => {
+      const url =
+        bookmark.path && !bookmark.url
+          ? normalizeBookmarkUrl(bookmark.path)
+          : normalizeBookmarkUrl(bookmark.url);
+      return { ...bookmark, url, path: undefined };
+    });
+    const seen = new Set<string>();
+    return normalizedBookmarks.filter((bookmark) => {
+      const key = `${bookmark.type}:${bookmark.url}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   } catch {
     return [];
   }
@@ -62,22 +68,51 @@ function addBookmark(
   bookmarks: PundokBookmark[],
   bookmark: PundokBookmark,
 ): PundokBookmark[] {
-  const existingIndex = bookmarks.findIndex(
-    (current) =>
-      current.type === bookmark.type &&
-      (!current.url ||
-        !bookmark.url ||
-        decodeURIComponent(current.url) === decodeURIComponent(bookmark.url)),
-  );
-  let documents = MAX_RECENT_DOCS - (bookmark.type === 'document' ? 1 : 0);
-  let projects = MAX_RECENT_PROJECTS - (bookmark.type === 'project' ? 1 : 0);
+  const normalizedBookmark = {
+    ...bookmark,
+    url: normalizeBookmarkUrl(bookmark.url),
+  };
+  let documents =
+    MAX_RECENT_DOCS - (normalizedBookmark.type === 'document' ? 1 : 0);
+  let projects =
+    MAX_RECENT_PROJECTS - (normalizedBookmark.type === 'project' ? 1 : 0);
   return [
-    bookmark,
-    ...bookmarks.filter((current, index) => {
-      if (index === existingIndex) return false;
+    normalizedBookmark,
+    ...bookmarks.filter((current) => {
+      if (
+        current.type === normalizedBookmark.type &&
+        current.url === normalizedBookmark.url
+      )
+        return false;
       if (current.type === 'document') return documents-- > 0;
       if (current.type === 'project') return projects-- > 0;
       return true;
     }),
   ];
+}
+
+function normalizeBookmarkUrl(url: string): string {
+  if (isAbsolute(url)) return pathToFileURL(url).href;
+
+  if (url.startsWith('file://')) {
+    try {
+      return pathToFileURL(fileURLToPath(url)).href;
+    } catch {
+      try {
+        return pathToFileURL(decodeURIComponent(url.slice('file://'.length)))
+          .href;
+      } catch {
+        return url;
+      }
+    }
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === 'file:'
+      ? pathToFileURL(fileURLToPath(parsedUrl)).href
+      : url;
+  } catch {
+    return pathToFileURL(resolve(url)).href;
+  }
 }
