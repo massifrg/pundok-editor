@@ -85,7 +85,7 @@ export class NetBackend implements Backend {
         undefined,
       );
       this.setToken(response.token);
-      await this.openEventStream();
+      void this.openEventStream();
       return true;
     } catch (error) {
       if (error instanceof BackendHttpError && error.status === 401)
