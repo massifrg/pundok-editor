@@ -7,7 +7,7 @@ import { EditorEventHub } from './editorEventHub';
 import { PundokEditorServer } from './pundokEditorServer';
 import { createBackendRouter } from './routes';
 
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 3001;
 const rendererDist = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../../renderer/dist',
@@ -20,8 +20,8 @@ const dataDir = resolve(process.env.PUNDOK_DATA_DIR || 'data');
 const testConfigurationsDir = process.env.PUNDOK_TEST_CONFIGS_DIR;
 const sharedConfigurationsDir = resolve(
   testConfigurationsDir ||
-    process.env.PUNDOK_CONFIGS_DIR ||
-    resolve(dataDir, 'configs'),
+  process.env.PUNDOK_CONFIGS_DIR ||
+  resolve(dataDir, 'configs'),
 );
 const testUsername = process.env.PUNDOK_TEST_USERNAME;
 const testUserDataDir = process.env.PUNDOK_TEST_USER_DATA_DIR;

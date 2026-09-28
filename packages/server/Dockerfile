@@ -8,7 +8,7 @@
 # Build (from the repository root):
 #   docker build -f packages/server/Dockerfile -t pundok-editor-server .
 # Run:
-#   docker run -p 3000:3000 pundok-editor-server
+#   docker run -p 3001:3001 pundok-editor-server
 
 FROM node:22-trixie-slim AS build
 WORKDIR /app
@@ -28,7 +28,7 @@ RUN npm ci --omit=dev
 FROM debian:trixie-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=3001
 ENV PUNDOK_DATA_DIR=/data
 ARG PANDOC_VERSION=3.11
 
@@ -47,6 +47,6 @@ COPY --from=build /app/packages/server/dist ./packages/server/dist
 COPY --from=build /app/packages/renderer/dist ./packages/renderer/dist
 COPY --from=build /app/staticResources ./staticResources
 
-EXPOSE 3000
+EXPOSE 3001
 VOLUME ["/data"]
 CMD ["node", "packages/server/dist/index.mjs"]
