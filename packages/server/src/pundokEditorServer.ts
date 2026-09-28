@@ -221,11 +221,17 @@ export class PundokEditorServer {
     filename: string,
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
+    const directories = this.directoriesForUser(user);
     const path = filename.replace(/^file:\/\//, '');
     return getFileContents(
-      this.directoriesForUser(user),
+      directories,
       isAbsolute(path) ? this.userPath(user, path) : filename,
       options,
+      [
+        directories.userDataDir,
+        directories.configurationsDir,
+        directories.localConfigurationsDir,
+      ],
     );
   }
 
