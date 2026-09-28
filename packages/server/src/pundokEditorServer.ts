@@ -245,9 +245,11 @@ export class PundokEditorServer {
     );
   }
 
-  async setValue(_user: string, key: string, value?: any): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
+  async setValue(
+    _user: string,
+    _key: string,
+    _value?: any,
+  ): Promise<void> {}
 
   async pandocFeature(
     _user: string,
