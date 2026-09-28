@@ -99,7 +99,6 @@ import {
 // the next one is not imported from '../schema' to avoid a circular ref
 import { Pandoc } from '../schema/nodes/Pandoc'
 import {
-  IPC_VALUE_WINDOW_TITLE,
   type FeedbackMessage,
   type InputConverter,
   type OutputConverter,
@@ -148,6 +147,7 @@ import {
   getDefaultWorkingFormat,
   getDefaultCopyFormat,
 } from '../common';
+import { setWindowTitle as setRendererWindowTitle } from '../backend/windowTitle'
 import { useActions, useBackend, useProjectCache } from '../stores';
 import ContextMenu from './ContextMenu.vue'
 import InputTextDialog from './InputTextDialog.vue'
@@ -955,7 +955,7 @@ export default {
         }
       }
 
-      this.setWindowTitleFromDoc(doc);
+      await this.setWindowTitleFromDoc(doc);
       this.setContent(doc.content, false);
       this.detectDocumentIndices();
       this.setDocumentAsNativelySaved();
@@ -1103,7 +1103,7 @@ export default {
               icon: 'content_save_check'
             });
             if (!isCopy)
-              this.setWindowTitleFromDoc(response.doc);
+              await this.setWindowTitleFromDoc(response.doc);
           }
           if (response.doc && (response.doc.path || response.doc.id)) {
             return response;
@@ -1153,7 +1153,7 @@ export default {
               this.setOperationInProgress(false)
             }, 3000)
             // console.log(response.doc)
-            this.setWindowTitleFromDoc(response.doc);
+            await this.setWindowTitleFromDoc(response.doc);
             if (response.error) {
               const errmsg = `ERROR, ${response.message}: ${response.error}`;
               console.log(errmsg);
@@ -1309,17 +1309,14 @@ export default {
     },
     async setWindowTitle(title: string) {
       if (this.isMainEditor) {
-        const backend = this.backend;
-        if (backend) {
-          backend.setValue(IPC_VALUE_WINDOW_TITLE, title);
-        }
+        await setRendererWindowTitle(title, this.backend);
       }
     },
-    setWindowTitleFromDoc(
+    async setWindowTitleFromDoc(
       doc: CxDocument,
-    ) {
+    ): Promise<void> {
       const title = doc.path || doc.id || 'new document'
-      this.setWindowTitle(title);
+      await this.setWindowTitle(title);
     },
     async setProject(project: PundokEditorProject) {
       if (project) {
