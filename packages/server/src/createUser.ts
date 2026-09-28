@@ -1,6 +1,7 @@
 import { readFile, rename, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { hashPassword } from './auth';
+import { isDocRepositories } from './common';
+import { hashPassword, type UserRecord } from './auth';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]{1,64}$/;
 
@@ -14,16 +15,39 @@ async function main() {
 
   const password = await readHiddenPassword();
   const usersFile = resolve(usersFileArgument);
-  let users: Array<{ username: string; passwordHash: string }> = [];
+  let users: UserRecord[] = [];
   try {
-    users = JSON.parse(await readFile(usersFile, 'utf8'));
-    if (!Array.isArray(users))
+    const configuredUsers: unknown = JSON.parse(
+      await readFile(usersFile, 'utf8'),
+    );
+    if (!Array.isArray(configuredUsers))
       throw new Error('The users file must contain a JSON array');
+    users = configuredUsers.map((user): UserRecord => {
+      if (
+        !isRecord(user) ||
+        typeof user.username !== 'string' ||
+        typeof user.passwordHash !== 'string' ||
+        (user.docRepositories !== undefined &&
+          !isDocRepositories(user.docRepositories))
+      ) {
+        throw new Error('The users file contains an invalid user record');
+      }
+      return {
+        username: user.username,
+        passwordHash: user.passwordHash,
+        docRepositories: user.docRepositories ?? [],
+      };
+    });
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
 
-  const record = { username, passwordHash: await hashPassword(password) };
+  const existing = users.find((user) => user.username === username);
+  const record: UserRecord = {
+    username,
+    passwordHash: await hashPassword(password),
+    docRepositories: existing?.docRepositories ?? [],
+  };
   const existingIndex = users.findIndex((user) => user.username === username);
   if (existingIndex >= 0) users[existingIndex] = record;
   else users.push(record);
@@ -35,6 +59,10 @@ async function main() {
   });
   await rename(temporaryFile, usersFile);
   console.log(`Saved credentials for ${username} in ${usersFile}`);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function readHiddenPassword(): Promise<string> {

@@ -20,6 +20,8 @@ import type {
   PandocFeatureOptions,
   ConfigQueryOptions,
   ConfigurationUpdateOptions,
+  BackendValueKey,
+  DocRepository,
 } from './common';
 import {
   getHardcodedEditorConfig,
@@ -86,6 +88,10 @@ export class PundokEditorServer {
       username: string,
     ) => BackendDirectories,
     readonly events: EditorEventHub,
+    private readonly getValueForUser: (
+      username: string,
+      key: BackendValueKey,
+    ) => DocRepository[],
   ) {}
 
   prepareUser(username: string): void {
@@ -250,6 +256,10 @@ export class PundokEditorServer {
     _key: string,
     _value?: any,
   ): Promise<void> {}
+
+  async getValue(user: string, key: BackendValueKey): Promise<DocRepository[]> {
+    return this.getValueForUser(user, key);
+  }
 
   async pandocFeature(
     _user: string,

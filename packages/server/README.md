@@ -158,9 +158,46 @@ node packages/server/dist/create-user.mjs /path/to/users.json alice
 ```
 
 The users file must be readable by the server and should be protected as a
-credential file. It is a JSON array of
-`{ "username": "...", "passwordHash": "scrypt$..." }` records. The server loads
-it at startup; restart the server after creating or replacing an account.
+credential file. It is a JSON array of user records. Each record has a
+`username` and `passwordHash`, and may have a `docRepositories` array.
+Repositories have a `name`, `description`, `url`, `type` (`"git"`), and
+`projects` array; each project has a `name`, `description`, and `role`
+(`"admin"` or `"user"`):
+
+```json
+{
+  "username": "alice",
+  "passwordHash": "scrypt$...",
+  "docRepositories": [
+    {
+      "name": "Documents",
+      "description": "Alice's project documents",
+      "url": "https://example.org/documents.git",
+      "type": "git",
+      "projects": [
+        {
+          "name": "Book",
+          "description": "The book manuscript",
+          "role": "admin"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The account utility writes an empty array on new records and preserves existing
+repositories when replacing credentials. Records without `docRepositories`
+remain valid. The server loads the users file at startup; restart it after
+creating or replacing an account.
+
+The shared `getValue('doc-repositories')` backend operation always returns an
+array. In server mode it reads the authenticated user's `docRepositories`
+account field; in Electron mode it reads the optional `docrepos.json` file
+from the app data directory. That file contains a bare JSON array using the
+same repository shape shown above. A missing field or file returns an empty
+array.
+
 `JWT_SECRET` is required and must contain at least 32 bytes. Set it to a strong
 secret and keep it private. `JWT_TTL_SECONDS` optionally sets token lifetime
 (default: 28800 seconds; the minimum is 60 seconds).

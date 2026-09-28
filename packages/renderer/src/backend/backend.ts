@@ -22,6 +22,8 @@ import type {
   PandocFeatureOptions,
   ConfigQueryOptions,
   ConfigurationUpdateOptions,
+  BackendValueKey,
+  DocRepository,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -79,7 +81,7 @@ export interface Backend {
    */
   editorReady(editorKey?: EditorKeyType): Promise<void>;
 
-  /** 
+  /**
    * Get the contents of a folder (a collection of documents and/or sub-folders).
    * @param path The folders path (an array of the names of the path's folders).
    */
@@ -87,7 +89,7 @@ export interface Backend {
 
   /**
    * Get the bookmarks (projects and documents).
-   * @param bookmarkType 
+   * @param bookmarkType
    */
   getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]>;
 
@@ -112,7 +114,7 @@ export interface Backend {
   /**
    * Create a new project in a directory.
    * @param path
-   * @param project 
+   * @param project
    */
   createProject(path: string, project: Partial<PundokEditorProject>): Promise<void>;
 
@@ -151,6 +153,12 @@ export interface Backend {
     filename: string,
     options?: Partial<FindResourceOptions>,
   ): Promise<string>;
+
+  /**
+   * Retrieves a stored backend value.
+   * @param key The value to retrieve.
+   */
+  getValue(key: BackendValueKey): Promise<DocRepository[]>;
 
   /**
    * Query the backend for accessory data, e.g. an index database.

@@ -7,14 +7,21 @@ import {
 } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
+import {
+  BACKEND_VALUE_DOC_REPOSITORIES,
+  type BackendValueKey,
+  type DocRepository,
+  isDocRepositories,
+} from './common';
 
 const scrypt = promisify(scryptCallback);
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]{1,64}$/;
 
-type UserRecord = {
+export interface UserRecord {
   username: string;
   passwordHash: string;
-};
+  docRepositories?: DocRepository[];
+}
 
 type JwtPayload = {
   sub: string;
@@ -44,7 +51,7 @@ export class JwtAuthentication {
   private readonly revokedTokens = new Map<string, number>();
 
   private constructor(
-    private readonly users: Map<string, string>,
+    private readonly users: Map<string, UserRecord>,
     private readonly secret: string,
     private readonly lifetimeSeconds: number,
   ) {}
@@ -65,21 +72,29 @@ export class JwtAuthentication {
       throw new Error('USERS_FILE must contain a JSON array of user records');
     }
 
-    const users = new Map<string, string>();
-    for (const record of configuredUsers as UserRecord[]) {
+    const users = new Map<string, UserRecord>();
+    for (const record of configuredUsers) {
+      if (!isRecord(record)) {
+        throw new Error(
+          'USERS_FILE contains an invalid or duplicate user record',
+        );
+      }
+      const { username, passwordHash } = record;
+      const docRepositories =
+        record.docRepositories === undefined ? [] : record.docRepositories;
       if (
-        !record ||
-        typeof record.username !== 'string' ||
-        !USERNAME_PATTERN.test(record.username) ||
-        typeof record.passwordHash !== 'string' ||
-        !parsePasswordHash(record.passwordHash) ||
-        users.has(record.username)
+        typeof username !== 'string' ||
+        !USERNAME_PATTERN.test(username) ||
+        typeof passwordHash !== 'string' ||
+        !parsePasswordHash(passwordHash) ||
+        !isDocRepositories(docRepositories) ||
+        users.has(username)
       ) {
         throw new Error(
           'USERS_FILE contains an invalid or duplicate user record',
         );
       }
-      users.set(record.username, record.passwordHash);
+      users.set(username, { username, passwordHash, docRepositories });
     }
 
     if (users.size === 0)
@@ -106,8 +121,8 @@ export class JwtAuthentication {
       throw new AuthenticationError('Invalid username or password');
     }
 
-    const passwordHash = this.users.get(username);
-    if (!passwordHash || !(await verifyPassword(password, passwordHash))) {
+    const user = this.users.get(username);
+    if (!user || !(await verifyPassword(password, user.passwordHash))) {
       throw new AuthenticationError('Invalid username or password');
     }
     return { token: this.issueToken(username), user: username };
@@ -171,6 +186,13 @@ export class JwtAuthentication {
     this.revokedTokens.set(token.tokenId, token.expiresAt);
   }
 
+  getValue(username: string, key: BackendValueKey): DocRepository[] {
+    if (key !== BACKEND_VALUE_DOC_REPOSITORIES) {
+      throw new Error(`Unsupported backend value: ${key}`);
+    }
+    return this.users.get(username)?.docRepositories ?? [];
+  }
+
   private issueToken(username: string): string {
     const now = Math.floor(Date.now() / 1000);
     const header = encode({ alg: 'HS256', typ: 'JWT' });
@@ -195,6 +217,10 @@ export class JwtAuthentication {
       if (expiry <= now) this.revokedTokens.delete(tokenId);
     }
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export async function hashPassword(password: string): Promise<string> {

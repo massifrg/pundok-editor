@@ -52,6 +52,7 @@ async function startServer() {
         staticResourcesDir,
       ),
     new EditorEventHub(),
+    (username, key) => authentication.getValue(username, key),
   );
 
   const app = express();

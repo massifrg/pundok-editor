@@ -38,6 +38,7 @@ export type IpcRendererToMainChannel =
   | 'open-document'
   | 'save-document'
   | 'get-bookmarks'
+  | 'get-value'
   | 'available-configurations'
   | 'editor-ready'
   | 'load-configuration'
@@ -95,6 +96,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'get-bookmarks': {
     dir: 'r2m',
     description: 'the renderer asks main the list of bookmarks (projects and documents)'
+  },
+  'get-value': {
+    dir: 'r2m',
+    description: 'the renderer asks main for a stored backend value',
   },
   content: {
     dir: 'm2r',
@@ -275,4 +280,3 @@ export type IpcRendererListener = (
   e: Electron.IpcRendererEvent,
   ...args: any[]
 ) => void;
-

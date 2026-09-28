@@ -22,6 +22,8 @@ import type {
   PandocFeatureOptions,
   ConfigQueryOptions,
   ConfigurationUpdateOptions,
+  BackendValueKey,
+  DocRepository,
   IpcMainToRendererChannel,
   ServerMessage,
 } from '../common';
@@ -173,6 +175,10 @@ export class NetBackend implements Backend {
 
   setValue(key: string, value?: unknown): Promise<void> {
     return this.request('set-value', { key, value });
+  }
+
+  getValue(key: BackendValueKey): Promise<DocRepository[]> {
+    return this.request('get-value', { key });
   }
 
   pandocFeature(

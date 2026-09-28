@@ -16,6 +16,7 @@ export * from './handlers/project';
 export * from './handlers/editorReady';
 export * from './handlers/folder';
 export * from './handlers/fileContents';
+export * from './handlers/value';
 export * from './handlers/folderContents';
 export * from './handlers/inclusionTree';
 export * from './handlers/query';

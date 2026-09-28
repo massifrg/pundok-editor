@@ -8,6 +8,8 @@ import {
   ConfigQueryOptions,
   ConfigurationSummary,
   CxDocument,
+  BackendValueKey,
+  DocRepository,
   EditorKeyType,
   FindResourceOptions,
   FolderContents,
@@ -47,6 +49,8 @@ export interface Ipc {
   saveDocument: (doc: string) => Promise<SaveResponse>
 
   getBookmarks: (bookmarkType?: PundokBookmarkType) => Promise<PundokBookmark[]>
+
+  getValue: (key: BackendValueKey) => Promise<DocRepository[]>;
 
   availableConfigurations: (options?: ConfigQueryOptions) => Promise<ConfigurationSummary[]>
 
@@ -88,7 +92,6 @@ export interface Ipc {
     isProject: boolean,
     configNameOrProjectPath: string
   ) => Promise<void>
-
 }
 
 contextBridge.exposeInMainWorld('ipc', {
@@ -117,6 +120,7 @@ contextBridge.exposeInMainWorld('ipc', {
   saveDocument: (doc: string) => ipcRenderer.invoke('save-document', doc),
   getBookmarks: (bookmarkType?: PundokBookmarkType) =>
     ipcRenderer.invoke('get-bookmarks', bookmarkType),
+  getValue: (key: BackendValueKey) => ipcRenderer.invoke('get-value', key),
   availableConfigurations: (options?: ConfigQueryOptions) =>
     ipcRenderer.invoke('available-configurations', options),
   editorReady: (editorKey?: EditorKeyType) => ipcRenderer.invoke('editor-ready', editorKey),

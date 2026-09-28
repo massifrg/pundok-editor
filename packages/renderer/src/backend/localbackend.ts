@@ -46,6 +46,7 @@ import {
   PandocFeatureOptions,
   ConfigQueryOptions,
   ConfigurationUpdateOptions,
+  BackendValueKey,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -368,6 +369,10 @@ export class LocalBackend implements Backend {
 
   async setValue(key: string, value?: any): Promise<void> {
     window.ipc.setValue(key, JSON.stringify(value));
+  }
+
+  getValue(key: BackendValueKey) {
+    return window.ipc.getValue(key);
   }
 
   pandocFeature(

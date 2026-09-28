@@ -19,6 +19,7 @@ import {
   getAvailableConfigurationSummaries,
   getBackendDebugInfo,
   getBookmarks,
+  getValue,
   getPandocFeature,
   getRenderingJobWithHash,
   getRenderingJobWithHashAsJsonString,
@@ -134,6 +135,9 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('get-bookmarks', (_event, bookmarkType) =>
       getBookmarks(backendDirectories(), bookmarkType),
+    );
+    ipcMain.handle('get-value', (_event, key) =>
+      getValue(backendDirectories(), key),
     );
     ipcMain.handle('available-configurations', (_event, options) =>
       getAvailableConfigurationSummaries(backendDirectories(), options),

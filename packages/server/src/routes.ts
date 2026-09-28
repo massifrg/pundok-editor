@@ -101,6 +101,10 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/get-value',
+    asyncHandler((req) => backend.getValue(username(req), req.body?.key)),
+  );
+  router.post(
     '/open-document',
     asyncHandler((req) => backend.open(username(req), req.body?.context)),
   );
