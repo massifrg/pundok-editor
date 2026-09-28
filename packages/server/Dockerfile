@@ -45,6 +45,7 @@ COPY --from=build /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY --from=build /app/packages/server/dist ./packages/server/dist
 COPY --from=build /app/packages/renderer/dist ./packages/renderer/dist
+COPY --from=build /app/staticResources ./staticResources
 
 EXPOSE 3000
 VOLUME ["/data"]

@@ -174,7 +174,9 @@ minimum is 60 seconds).
 uses a separate `users/<username>` directory beneath it for each authenticated
 user. Shared configurations are read from `PUNDOK_CONFIGS_DIR` (default:
 `<PUNDOK_DATA_DIR>/configs`); per-user configurations are kept under each
-user's `localconfigs` subdirectory. The username used for these paths is taken
+user's `localconfigs` subdirectory. Bundled files under `staticResources` are
+available to every user and configuration as a final resource lookup fallback.
+The username used for these paths is taken
 from the verified JWT. User-supplied document, project, resource, and output
 paths are resolved under that user's directory; paths that escape it are
 rejected.

@@ -12,6 +12,10 @@ const rendererDist = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../../renderer/dist',
 );
+const staticResourcesDir = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../staticResources',
+);
 const dataDir = resolve(process.env.PUNDOK_DATA_DIR || 'data');
 const testConfigurationsDir = process.env.PUNDOK_TEST_CONFIGS_DIR;
 const sharedConfigurationsDir = resolve(
@@ -45,6 +49,7 @@ async function startServer() {
           ? resolve(testUserDataDir)
           : resolve(dataDir, 'users', username),
         sharedConfigurationsDir,
+        staticResourcesDir,
       ),
     new EditorEventHub(),
   );

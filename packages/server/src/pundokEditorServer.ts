@@ -231,6 +231,9 @@ export class PundokEditorServer {
         directories.userDataDir,
         directories.configurationsDir,
         directories.localConfigurationsDir,
+        ...(directories.staticResourcesDir
+          ? [directories.staticResourcesDir]
+          : []),
       ],
     );
   }

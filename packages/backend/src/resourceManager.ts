@@ -16,6 +16,7 @@ export interface BackendDirectories {
   userDataDir: string;
   configurationsDir: string;
   localConfigurationsDir: string;
+  staticResourcesDir?: string;
 }
 
 export interface ConfigurationFile {
@@ -28,11 +29,13 @@ export interface ConfigurationFile {
 export function createBackendDirectories(
   userDataDir: string,
   sharedConfigurationsDir = resolve(userDataDir, 'configs'),
+  staticResourcesDir?: string,
 ): BackendDirectories {
   return {
     userDataDir,
     configurationsDir: sharedConfigurationsDir,
     localConfigurationsDir: resolve(userDataDir, 'localconfigs'),
+    ...(staticResourcesDir && { staticResourcesDir }),
   };
 }
 
@@ -160,11 +163,29 @@ export function validResourcePaths(
     const inherited = [...project.configurations].reverse();
     for (const configName of inherited) {
       paths = paths.concat(
+        findValidPaths(
+          resolve(directories.localConfigurationsDir, configName),
+        ),
         findValidPaths(resolve(directories.configurationsDir, configName)),
       );
     }
   }
-  return paths.concat(findValidPaths(directories.userDataDir));
+  paths = paths.concat(findValidPaths(directories.userDataDir));
+  if (directories.staticResourcesDir) {
+    const staticConfigNames = [
+      ...(configurationName ? [configurationName] : []),
+      ...(project?.configurations || []).slice().reverse(),
+    ];
+    for (const configName of [...new Set(staticConfigNames)]) {
+      paths = paths.concat(
+        findValidPaths(
+          resolve(directories.staticResourcesDir, 'configs', configName),
+        ),
+      );
+    }
+    paths = paths.concat(findValidPaths(directories.staticResourcesDir));
+  }
+  return paths;
 }
 
 export interface FindResourceFileOptions extends FindResourceOptions {
