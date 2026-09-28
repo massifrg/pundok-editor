@@ -334,6 +334,10 @@
       "showEveryDocument": "mostra tutti i documenti o solo quelli con estensioni corrispondenti",
       "showHidden": "mostra/nascondi cartelle e documenti nascosti"
     },
+    "typeahead": {
+      "clear": "Cancella i tasti digitati",
+      "label": "Digita per selezionare un file:"
+    },
     "warning": {
       "formatChanged": "Il formato è stato impostato su {format} per corrispondere all'estensione di \"{path}\".",
       "title": "Attenzione"

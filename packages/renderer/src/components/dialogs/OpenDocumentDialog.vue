@@ -40,6 +40,8 @@ import { uniq } from 'lodash-es';
 
 export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'include' | 'folder' | 'image'
 
+const FILE_TABLE_TYPEAHEAD_RESET_DELAY_MS = 2000
+
 interface FileContentRow {
   name: string,
   label: string,
@@ -178,6 +180,9 @@ export default {
       splitterValue: 25,
       /** The document(s) that are selected in the QTable */
       selected: [] as FileContentRow[],
+      /** The characters typed to select a file in the table */
+      typedKeys: '',
+      typeaheadTimer: undefined as ReturnType<typeof setTimeout> | undefined,
       /** Resized column widths in pixels */
       columnWidths: {} as Record<string, number>,
       columnResize: undefined as ColumnResizeState | undefined,
@@ -359,6 +364,10 @@ export default {
     }
     getFormatsAndBookmarks()
   },
+  beforeUnmount() {
+    if (this.typeaheadTimer !== undefined)
+      clearTimeout(this.typeaheadTimer)
+  },
   watch: {
     rows(rr: FileContentRow[]) {
       const cf = this.currentFolder + '/'
@@ -383,6 +392,50 @@ export default {
     }
   },
   methods: {
+    handleFileTableKeydown(event: KeyboardEvent) {
+      if (
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.isComposing ||
+        event.key.length !== 1
+      )
+        return
+      event.preventDefault()
+      event.stopPropagation()
+      this.typedKeys += event.key
+      this.selectFileByTypedKeys()
+      if (this.typeaheadTimer !== undefined)
+        clearTimeout(this.typeaheadTimer)
+      this.typeaheadTimer = setTimeout(
+        () => this.clearTypeahead(),
+        FILE_TABLE_TYPEAHEAD_RESET_DELAY_MS,
+      )
+    },
+    selectFileByTypedKeys() {
+      const filter = this.typedKeys.toLocaleLowerCase()
+      const selectableRows = this.rows.filter(row =>
+        row.isDocument || (this.mode === 'folder' && row.isFolder),
+      )
+      const row = selectableRows.find(entry =>
+        entry.name.toLocaleLowerCase().startsWith(filter),
+      ) || selectableRows.find(entry =>
+        entry.name.toLocaleLowerCase().includes(filter),
+      )
+      if (!row) return
+      const index = this.rows.indexOf(row)
+      this.click(row)
+      this.$nextTick(() => {
+        (this.$refs.docsTable as QTable).scrollTo(index)
+      })
+    },
+    clearTypeahead() {
+      if (this.typeaheadTimer !== undefined) {
+        clearTimeout(this.typeaheadTimer)
+        this.typeaheadTimer = undefined
+      }
+      this.typedKeys = ''
+    },
     startColumnResize(event: PointerEvent, leftName: string) {
       const leftHeader = (event.currentTarget as HTMLElement).closest('th')
       const rightHeader = leftHeader?.nextElementSibling as HTMLElement | null
@@ -830,7 +883,7 @@ export default {
             <q-table ref="docsTable" class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns"
               row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
               v-model:pagination="pagination" :rows-per-page-options="[0]"
-              table-style="table-layout: fixed; width: 100%">
+              table-style="table-layout: fixed; width: 100%" tabindex="0" @keydown="handleFileTableKeydown">
               <template v-slot:header-cell="props">
                 <q-th :props="props">
                   {{ props.col.label }}
@@ -854,6 +907,16 @@ export default {
                     <span class="text-body1 q-pl-sm">{{ props.row.name }}</span>
                   </div>
                 </q-td>
+              </template>
+              <template v-slot:bottom>
+                <div class="row items-center full-width q-px-sm">
+                  <span>{{ $t('fileDialog.typeahead.label') }}</span>
+                  <span class="file-typeahead-keys q-ml-sm" aria-live="polite">{{ typedKeys }}</span>
+                  <q-space />
+                  <q-btn v-if="typedKeys" round dense flat size="sm" icon="close"
+                    :title="$t('fileDialog.typeahead.clear')" :aria-label="$t('fileDialog.typeahead.clear')"
+                    @click="clearTypeahead" />
+                </div>
               </template>
             </q-table>
           </template>
@@ -934,6 +997,9 @@ export default {
     &:hover, &:focus-visible
       background-color: rgba(0, 0, 0, 0.12)
       border-right-color: var(--q-primary)
+
+  .file-typeahead-keys
+    font-weight: bold
 
   .q-table__top,
   .q-table__bottom,

@@ -335,6 +335,10 @@
       "showEveryDocument": "show every document or just the ones with the matching extensions",
       "showHidden": "hide/show hidden folders/documents"
     },
+    "typeahead": {
+      "clear": "Clear typed keys",
+      "label": "Type to select a file:"
+    },
     "warning": {
       "formatChanged": "Format set to {format} to match \"{path}\" extension.",
       "title": "Warning"
