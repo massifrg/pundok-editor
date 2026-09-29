@@ -33,7 +33,9 @@ ENV PUNDOK_DATA_DIR=/data
 ARG PANDOC_VERSION=3.11
 
 RUN apt-get update \
-  && apt-get install --yes --no-install-recommends ca-certificates curl \
+  && apt-get install --yes --no-install-recommends ca-certificates curl ghostscript imagemagick \
+  && find /etc -path '*/ImageMagick-*/policy.xml' -exec sed -i \
+    's/\(domain="coder" rights="\)none\(" pattern="PDF"\)/\1read|write\2/' {} + \
   && curl --fail --location --output /tmp/pandoc.deb \
     "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb" \
   && apt-get install --yes /tmp/pandoc.deb \

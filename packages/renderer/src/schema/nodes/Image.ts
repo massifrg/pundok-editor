@@ -1,8 +1,8 @@
 // slightly modified from https://github.com/ueberdosis/tiptap/blob/main/packages/extension-image/src/image.ts
 import { mergeAttributes, Node, nodeInputRule } from '@tiptap/core';
-import { Node as ProsemirrorNode } from '@tiptap/pm/model'
+import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { getDocState, getEditorDocState } from '../helpers';
-import { isAbsolute, parse as parsePath, relative } from 'path-browserify'
+import { isAbsolute, parse as parsePath, relative } from 'path-browserify';
 import { Editor } from '@tiptap/vue-3';
 import { Command } from '@tiptap/pm/state';
 
@@ -32,7 +32,7 @@ declare module '@tiptap/core' {
        * Fix the src attribute of all the images in the document
        */
       fixAllImagesSrc: () => ReturnType;
-    }
+    };
   }
 }
 
@@ -81,34 +81,47 @@ export const Image = Node.create<ImageOptions>({
   },
 
   renderHTML({ HTMLAttributes, node }) {
-    const editor = this.editor
-    const attributes: Record<string, any> = { ...node.attrs }
-    let baseUrl: string | undefined = undefined
+    const editor = this.editor;
+    const attributes: Record<string, any> = { ...node.attrs };
+    let baseUrl: string | undefined = undefined;
     if (editor) {
-      const docState = getEditorDocState(editor as Editor)
-      baseUrl = docState?.imagesFolder
-        || docState?.workingFolder
-        || docState?.project?.path
-      baseUrl = baseUrl?.replaceAll('\\', '/')
+      const docState = getEditorDocState(editor as Editor);
+      baseUrl =
+        docState?.imagesFolder ||
+        docState?.workingFolder ||
+        docState?.project?.path;
+      baseUrl = baseUrl?.replaceAll('\\', '/');
     }
-    const ext = parsePath(attributes.src).ext.toLowerCase()
-    const { page, ['preview-width']: width, ['preview-height']: height } = attributes.kv || {}
-    const query = ext === '.pdf' && page && parseInt(page) > 1 && `?page=${page}` || ''
+    const ext = parsePath(attributes.src).ext.toLowerCase();
+    const {
+      page,
+      ['preview-width']: width,
+      ['preview-height']: height,
+    } = attributes.kv || {};
+    const query =
+      (ext === '.pdf' && page && parseInt(page) > 1 && `?page=${page}`) || '';
     if (!attributes.src || attributes.src.length === 0) {
-      console.log("IMG NO SRC!")
-      attributes.src = '?' // no_image_base64
+      console.log('IMG NO SRC!');
+      attributes.src = '?'; // no_image_base64
     } else if (isAbsolute(attributes.src) && baseUrl) {
-      attributes.src = `img://${baseUrl}/${relative(baseUrl, attributes.src)}`
+      attributes.src = imageUrl(
+        `${baseUrl}/${relative(baseUrl, attributes.src)}`,
+        query,
+      );
     } else {
-      attributes.src = baseUrl
-        ? `img://${baseUrl}/${attributes.src}${query}`
-        : `img://${attributes.src}${query}`
+      attributes.src = imageUrl(
+        baseUrl ? `${baseUrl}/${attributes.src}` : attributes.src,
+        query,
+      );
     }
-    console.log(`Image src="${attributes.src}"`)
-    const style = (width || height)
-      && Object.entries({ width, height }).map(([p, v]) => `${p}: ${v}`).join('; ') || ''
-    if (style)
-      attributes.style = style
+    console.log(`Image src="${attributes.src}"`);
+    const style =
+      ((width || height) &&
+        Object.entries({ width, height })
+          .map(([p, v]) => `${p}: ${v}`)
+          .join('; ')) ||
+      '';
+    if (style) attributes.style = style;
     return [
       'img',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, attributes),
@@ -139,52 +152,62 @@ export const Image = Node.create<ImageOptions>({
 
   addKeyboardShortcuts() {
     return {
-      [SK.INSERT_IMAGE]: () => this.editor.commands.setImage()
-    }
-  }
+      [SK.INSERT_IMAGE]: () => this.editor.commands.setImage(),
+    };
+  },
 });
 
-const setImageCommand = (options: { src: string; title?: string } | undefined): Command =>
+function imageUrl(path: string, query: string): string {
+  if (window.ipc) return `img://${path}${query}`;
+  return `/backend/image?path=${encodeURIComponent(path)}${query.replace('?', '&')}`;
+}
+
+const setImageCommand =
+  (options: { src: string; title?: string } | undefined): Command =>
   (state, dispatch) => {
     const imageType = state.schema.nodes[NODE_NAME_IMAGE];
     if (!imageType) return false;
-    if (dispatch) dispatch(state.tr.replaceSelectionWith(imageType.create(options || { src: '' })));
+    if (dispatch)
+      dispatch(
+        state.tr.replaceSelectionWith(imageType.create(options || { src: '' })),
+      );
     return true;
   };
 
 function isImageWithAbsoluteSrc(node: ProsemirrorNode): boolean {
-  return node.type.name === NODE_NAME_IMAGE
-    && node.attrs.src && node.attrs.src.startsWith('/')
+  return (
+    node.type.name === NODE_NAME_IMAGE &&
+    node.attrs.src &&
+    node.attrs.src.startsWith('/')
+  );
 }
 
 function fixImageSrc(all: boolean): Command {
   return (state, dispatch) => {
-    const docState = getDocState(state)
-    if (!docState)
-      return false
-    const basePath = docState?.imagesFolder || docState?.workingFolder
-    if (!basePath)
-      return false
-    const { doc, selection, tr } = state
-    const positions: number[] = []
+    const docState = getDocState(state);
+    if (!docState) return false;
+    const basePath = docState?.imagesFolder || docState?.workingFolder;
+    if (!basePath) return false;
+    const { doc, selection, tr } = state;
+    const positions: number[] = [];
     if (all) {
       doc.descendants((node, pos) => {
-        if (isImageWithAbsoluteSrc(node)) positions.push(pos)
-      })
+        if (isImageWithAbsoluteSrc(node)) positions.push(pos);
+      });
     } else {
-      const { from, to } = selection
+      const { from, to } = selection;
       doc.nodesBetween(from, to, (node, pos) => {
-        if (isImageWithAbsoluteSrc(node)) positions.push(pos)
-      })
+        if (isImageWithAbsoluteSrc(node)) positions.push(pos);
+      });
     }
-    if (positions.length === 0) return false
+    if (positions.length === 0) return false;
     if (dispatch) {
-      positions.forEach(pos => {
-        const node = doc.nodeAt(pos)
+      positions.forEach((pos) => {
+        const node = doc.nodeAt(pos);
         if (node)
-          tr.setNodeAttribute(pos, 'src', relative(basePath, node.attrs.src))
-      })
+          tr.setNodeAttribute(pos, 'src', relative(basePath, node.attrs.src));
+      });
     }
-    return true
-  }
+    return true;
+  };
 }

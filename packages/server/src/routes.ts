@@ -28,17 +28,39 @@ export function createBackendRouter(
 ): Router {
   const router = Router();
 
-  router.post(
-    '/login',
-    asyncHandler(async (req) => {
+  router.post('/login', async (req, res, next) => {
+    try {
       const session = await authentication.login(
         req.body?.user,
         req.body?.password,
       );
       backend.prepareUser(session.user);
-      return session;
-    }),
-  );
+      setImageToken(res, session.token, req.secure);
+      res.json(session);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get('/image', async (req, res, next) => {
+    try {
+      const token = cookie(req.header('cookie'), 'pundok-editor-image-token');
+      const authenticatedUser = authentication.authenticate(
+        token ? `Bearer ${token}` : undefined,
+      );
+      const path = req.query.path;
+      const page = req.query.page;
+      if (
+        typeof path !== 'string' ||
+        (page !== undefined && typeof page !== 'string')
+      )
+        throw new Error('An image path and optional page are required');
+      const image = await backend.image(authenticatedUser.username, path, page);
+      res.type(image.contentType).send(image.body);
+    } catch (error) {
+      next(error);
+    }
+  });
 
   router.get('/events', (req, res, next) => {
     try {
@@ -52,13 +74,15 @@ export function createBackendRouter(
     }
   });
 
-  router.use((req, _res, next) => {
+  router.use((req, res, next) => {
     try {
       const authenticatedUser = authentication.authenticate(
         req.header('authorization'),
       );
       backend.prepareUser(authenticatedUser.username);
       (req as AuthenticatedRequest).username = authenticatedUser.username;
+      const token = req.header('authorization')?.replace(/^Bearer /, '');
+      if (token) setImageToken(res, token, req.secure);
       next();
     } catch (error) {
       next(error);
@@ -216,6 +240,22 @@ export function createBackendRouter(
   );
 
   return router;
+}
+
+function cookie(header: string | undefined, name: string): string | undefined {
+  return header
+    ?.split(';')
+    .map((value) => value.trim().split('=', 2))
+    .find(([key]) => key === name)?.[1];
+}
+
+function setImageToken(res: Response, token: string, secure: boolean): void {
+  res.cookie('pundok-editor-image-token', token, {
+    httpOnly: true,
+    sameSite: 'strict',
+    path: '/backend/image',
+    secure,
+  });
 }
 
 function username(req: Request): string {

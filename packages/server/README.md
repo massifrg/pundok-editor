@@ -70,10 +70,13 @@ The server serves the renderer SPA and exposes its backend API under `/backend`.
 The renderer's `NetBackend` sends JSON requests to this API instead of using
 Electron's Main-Renderer IPC. Backend calls use `POST`; API responses are JSON.
 The route names mirror the renderer-to-main IPC channel names where applicable.
+Authenticated image previews are served from `/backend/image`; PDF previews are
+rasterized to JPEG by ImageMagick.
 
 The production image is based on `debian:trixie-slim` and installs the upstream
 Pandoc GitHub release pinned by the Dockerfile's `PANDOC_VERSION` build argument
-(currently `3.11`). Update that argument when a newer release is required.
+(currently `3.12`), plus ImageMagick and Ghostscript to rasterize PDF images in
+the editor. Update that argument when a newer release is required.
 
 ## Authentication and request flow
 
@@ -193,10 +196,9 @@ creating or replacing an account.
 
 The shared `getValue('doc-repositories')` backend operation always returns an
 array. In server mode it reads the authenticated user's `docRepositories`
-account field; in Electron mode it reads the optional `docrepos.json` file
-from the app data directory. That file contains a bare JSON array using the
-same repository shape shown above. A missing field or file returns an empty
-array.
+account field; in Electron mode it reads the optional `docrepos.json` file from
+the app data directory. That file contains a bare JSON array using the same
+repository shape shown above. A missing field or file returns an empty array.
 
 `JWT_SECRET` is required and must contain at least 32 bytes. Set it to a strong
 secret and keep it private. `JWT_TTL_SECONDS` optionally sets token lifetime

@@ -58,8 +58,10 @@ import {
   type BackendDirectories,
   type RendererHub,
 } from '../../backend/src';
+import { realpath } from 'node:fs/promises';
 import { isAbsolute, parse as parsePath, relative, resolve } from 'node:path';
 import { EditorEventHub } from './editorEventHub';
+import { loadImage } from './image';
 
 /**
  * A stub implementation of {@link Backend}, meant to run on a server
@@ -92,7 +94,7 @@ export class PundokEditorServer {
       username: string,
       key: BackendValueKey,
     ) => DocRepository[],
-  ) {}
+  ) { }
 
   prepareUser(username: string): void {
     ensureBackendDirectories(this.directoriesForUser(username));
@@ -244,6 +246,22 @@ export class PundokEditorServer {
     );
   }
 
+  async image(
+    user: string,
+    path: string,
+    page?: string,
+  ): Promise<{ body: Buffer; contentType: string }> {
+    return loadImage(
+      await this.existingUserPath(user, path),
+      page,
+      resolve(
+        this.directoriesForUser(user).userDataDir,
+        '.pundok-editor',
+        'image-cache',
+      ),
+    );
+  }
+
   async queryDatabase(user: string, query: Query): Promise<QueryResult[]> {
     return dispatchQuery(
       this.directoriesForUser(user),
@@ -251,11 +269,7 @@ export class PundokEditorServer {
     );
   }
 
-  async setValue(
-    _user: string,
-    _key: string,
-    _value?: any,
-  ): Promise<void> {}
+  async setValue(_user: string, _key: string, _value?: any): Promise<void> { }
 
   async getValue(user: string, key: BackendValueKey): Promise<DocRepository[]> {
     return this.getValueForUser(user, key);
@@ -334,8 +348,7 @@ export class PundokEditorServer {
     user: string,
     options: ConfigurationUpdateOptions,
   ): Promise<void> {
-    if (!options.projectPath)
-      return updateConfiguration(options);
+    if (!options.projectPath) return updateConfiguration(options);
     return updateConfiguration({
       ...options,
       projectPath: this.userPath(user, options.projectPath),
@@ -424,7 +437,9 @@ export class PundokEditorServer {
     const path = resource.replace(/^file:\/\//, '');
     if (isAbsolute(path)) return this.userPath(username, path);
     if (path.split(/[\\/]/).includes('..'))
-      throw new Error('Resource path must not leave the authenticated user directory');
+      throw new Error(
+        'Resource path must not leave the authenticated user directory',
+      );
     return resource;
   }
 
@@ -443,19 +458,19 @@ export class PundokEditorServer {
       username,
       isAbsolute(outputPath)
         ? outputPath
-        : resolve(document.project?.path || parsePath(document.path || '').dir, outputPath),
+        : resolve(
+          document.project?.path || parsePath(document.path || '').dir,
+          outputPath,
+        ),
     );
   }
 
-  private synctexInfoForUser(
-    username: string,
-    info: SynctexInfo,
-  ): SynctexInfo {
+  private synctexInfoForUser(username: string, info: SynctexInfo): SynctexInfo {
     const project = info.projectAsJson
       ? this.projectForUser(
-          username,
-          JSON.parse(info.projectAsJson) as PundokEditorProject,
-        )
+        username,
+        JSON.parse(info.projectAsJson) as PundokEditorProject,
+      )
       : undefined;
     return {
       ...info,
@@ -472,7 +487,22 @@ export class PundokEditorServer {
       relativePath === '..' ||
       relativePath.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)
     )
-      throw new Error('Path must be within the authenticated user directory');
+      throw new Error(`Path must be within the authenticated user directory: ${relativePath}`);
+    return candidate;
+  }
+
+  private async existingUserPath(
+    username: string,
+    path: string,
+  ): Promise<string> {
+    const root = await realpath(this.directoriesForUser(username).userDataDir);
+    const candidate = await realpath(this.userPath(username, path));
+    const relativePath = relative(root, candidate);
+    if (
+      relativePath === '..' ||
+      relativePath.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)
+    )
+      throw new Error(`Path must be within the authenticated user directory: ${relativePath}`);
     return candidate;
   }
 }
