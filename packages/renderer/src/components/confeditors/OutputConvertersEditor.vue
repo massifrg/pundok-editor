@@ -51,7 +51,7 @@
           outlined dense :loading="loadingFormats" @update:model-value="onFormatChanged" />
         <q-btn-dropdown v-if="draft.type === 'pandoc'" outline no-caps
           :label="$t('configEditor.outputConverters.formatExtensions')" :disable="!draft.format"
-          :loading="loadingExtensions">
+          :loading="loadingExtensions" menu-anchor="bottom left" menu-self="top left">
           <q-list dense class="output-converters-editor__extensions">
             <q-item v-if="formatExtensions.length === 0">
               <q-item-section class="text-grey">
@@ -59,13 +59,20 @@
               </q-item-section>
             </q-item>
             <q-item v-for="extension in formatExtensions" :key="extension.name" clickable
+              class="output-converters-editor__extension"
               @click="toggleFormatExtension(extension)">
               <q-item-section avatar class="output-converters-editor__extension-sign"
                 :class="formatExtensionClass(extension)">
                 {{ formatExtensionSign(extension) }}
               </q-item-section>
               <q-item-section :class="formatExtensionClass(extension)">
-                {{ extension.name }}
+                <q-item-label class="output-converters-editor__extension-name">
+                  {{ extension.name }}
+                </q-item-label>
+                <q-item-label v-if="extensionDescription(extension.name)"
+                  class="output-converters-editor__extension-description">
+                  {{ extensionDescription(extension.name) }}
+                </q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -87,6 +94,7 @@ import type {
   OutputConverterType,
   PandocFormatExtension,
 } from '../../common'
+import { PANDOC_EXTENSION_DESCRIPTIONS } from '../../common'
 import { useBackend } from '../../stores'
 
 type OutputConverterDraft = Omit<
@@ -341,6 +349,10 @@ function formatExtensionClass(extension: PandocFormatExtension) {
   }
 }
 
+function extensionDescription(extension: string) {
+  return PANDOC_EXTENSION_DESCRIPTIONS[extension]
+}
+
 function toggleFormatExtension(extension: PandocFormatExtension) {
   if (!draft.value) return
   const extensions = draft.value.formatExtensions || []
@@ -356,12 +368,31 @@ function toggleFormatExtension(extension: PandocFormatExtension) {
 
 <style scoped>
 .output-converters-editor__extensions {
-  min-width: 16rem;
+  width: 28rem;
   max-height: 20rem;
   overflow-y: auto;
 }
 
 .output-converters-editor__extension-sign {
   min-width: 1.5rem;
+}
+
+.output-converters-editor__extension-description {
+  display: none;
+  font-weight: normal;
+  white-space: normal;
+}
+
+.output-converters-editor__extension:hover .output-converters-editor__extension-sign,
+.output-converters-editor__extension:hover .output-converters-editor__extension-name {
+  font-weight: bold;
+}
+
+.output-converters-editor__extension:hover .text-grey {
+  color: #000 !important;
+}
+
+.output-converters-editor__extension:hover .output-converters-editor__extension-description {
+  display: block;
 }
 </style>

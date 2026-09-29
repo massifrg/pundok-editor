@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PANDOC_OPTIONS } from '../src/pandocOptions';
+import { PANDOC_EXTENSION_DESCRIPTIONS } from '../src/pandocExtensions';
 
 const optionByLongName = (name: string) =>
   PANDOC_OPTIONS.find((option) => option.name.includes(name));
@@ -21,6 +22,16 @@ describe('PANDOC_OPTIONS', () => {
     ]) {
       expect(optionByLongName(name)).toBeDefined();
     }
+  });
+
+  describe('PANDOC_EXTENSION_DESCRIPTIONS', () => {
+    it('describes extensions returned by Pandoc', () => {
+      expect(PANDOC_EXTENSION_DESCRIPTIONS).toMatchObject({
+        footnotes: expect.any(String),
+        smart: expect.any(String),
+        yaml_metadata_block: expect.any(String),
+      });
+    });
   });
 
   it('uses canonical option names and value types', () => {

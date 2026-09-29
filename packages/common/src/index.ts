@@ -16,6 +16,7 @@ export * from './icons';
 export * from './imageFormats';
 export * from './ipc';
 export * from './pandocFeatures';
+export * from './pandocExtensions';
 export * from './pandocFormat';
 export * from './pandocHelpers';
 export * from './pandocOptions';
@@ -29,5 +30,4 @@ export * from './shortcuts';
 export * from './synctex';
 export * from './version';
 export * from './viewer';
-
 
