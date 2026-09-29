@@ -16,11 +16,16 @@ export type PandocOptionValueType =
   | 'PROGRAM'
   | 'SCRIPT'
   | 'KEY_VAL'
+  | 'KEY_JSON'
+  | 'bash|zsh|fish'
+  | 'plain|mathjax[:URL]|mathml|webtex[:URL]|katex[:URL]|gladtex'
   | 'accept|reject|all'
   | 'FILE|URL'
+  | 'DIRECTORY|FILE'
   | 'NAME_VAL'
   | 'crlf|lf|native'
   | 'auto|none|preserve'
+  | 'default|none|idiomatic'
   | 'STYLE|FILE'
   | 'SEARCHPATH'
   | 'block|section|document'
@@ -88,7 +93,7 @@ const ALL_XML = [...ALL_DOCBOOK, ...ALL_JATS, 'tei', 'bits'];
 /** Every flavour of EPUB output. */
 const ALL_EPUB = ['epub', 'epub2', 'epub3'];
 
-const PANDOC_OPTIONS: PandocOption[] = [
+export const PANDOC_OPTIONS: PandocOption[] = [
   {
     type: 'general',
     name: ['f', 'from', 'r', 'read'],
@@ -121,6 +126,13 @@ const PANDOC_OPTIONS: PandocOption[] = [
     valueType: 'FILE',
     description:
       'Specify a set of default option settings. FILE is a YAML file whose fields correspond to command-line option settings. All options for document conversion, including input and output files, can be set using a defaults file. The file will be searched for first in the working directory, and then in the defaults subdirectory of the user data directory (see --data-dir). The .yaml extension may be omitted. See the section Defaults files for more information on the file format. Settings from the defaults file may be overridden or extended by subsequent options on the command line.',
+    multiple: true,
+  },
+  {
+    type: 'general',
+    name: ['completion'],
+    valueType: 'bash|zsh|fish',
+    description: 'Generate a shell completion script for bash, zsh, or fish.',
   },
   {
     type: 'general',
@@ -171,7 +183,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
   {
     type: 'general',
     name: ['list-extensions'],
-    valueType: 'FORMAT',
+    valueType: ['flag', 'FORMAT'],
     description:
       'List supported extensions for FORMAT, one per line, preceded by a + or - indicating whether it is enabled by default in FORMAT. If FORMAT is not specified, defaults for pandoc’s Markdown are given.',
     notForConversion: true,
@@ -207,11 +219,25 @@ const PANDOC_OPTIONS: PandocOption[] = [
     notForConversion: true,
   },
   {
+    type: 'general',
+    name: ['sandbox'],
+    valueType: 'boolean',
+    description:
+      'Run pandoc in a sandbox, limiting reader and writer I/O operations to files specified on the command line.',
+  },
+  {
     type: 'reader',
     name: ['shift-heading-level-by'],
     valueType: 'number',
     description:
       'Shift heading levels by a positive or negative integer. For example, with --shift-heading-level-by=-1, level 2 headings become level 1 headings, and level 3 headings become level 2 headings. Headings cannot have a level less than 1, so a heading that would be shifted below level 1 becomes a regular paragraph. Exception: with a shift of -N, a level-N heading at the beginning of the document replaces the metadata title. --shift-heading-level-by=-1 is a good choice when converting HTML or Markdown documents that use an initial level-1 heading for the document title and level-2+ headings for sections. --shift-heading-level-by=1 may be a good choice for converting Markdown documents that use level-1 headings for sections to HTML, since pandoc uses a level-1 heading to render the document title.',
+  },
+  {
+    type: 'reader',
+    name: ['base-header-level'],
+    valueType: 'number',
+    description:
+      'Deprecated. Specify the base level for headings; use --shift-heading-level-by instead.',
   },
   {
     type: 'reader',
@@ -286,6 +312,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
     valueType: 'FILE',
     description:
       'Read metadata from the supplied YAML (or JSON) file. This option can be used with every input format, but string scalars in the metadata file will always be parsed as Markdown. (If the input format is Markdown or a Markdown variant, then the same variant will be used to parse the metadata file; if it is a non - Markdown format, pandoc’s default Markdown extensions will be used.) This option can be used repeatedly to include multiple metadata files; values in files specified later on the command line will be preferred over those specified in earlier files.Metadata values specified inside the document, or by using - M, overwrite values specified with this option.The file will be searched for first in the working directory, and then in the metadata subdirectory of the user data directory (see --data-dir).',
+    multiple: true,
   },
   {
     type: 'reader',
@@ -317,7 +344,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
   {
     type: 'reader',
     name: ['extract-media'],
-    valueType: 'DIRECTORY',
+    valueType: 'DIRECTORY|FILE',
     description:
       'Extract images and other media contained in or linked from the source document to the path DIR, creating it if necessary, and adjust the images references in the document so they point to the extracted files.Media are downloaded, read from the file system, or extracted from a binary container(e.g.docx), as needed.The original file paths are used if they are relative paths not containing... Otherwise filenames are constructed from the SHA1 hash of the contents.',
   },
@@ -327,6 +354,15 @@ const PANDOC_OPTIONS: PandocOption[] = [
     valueType: 'FILE',
     description:
       'Specifies a custom abbreviations file, with abbreviations one to a line. If this option is not specified, pandoc will read the data file abbreviations from the user data directory or fall back on a system default. To see the system default, use pandoc--print -default -data - file=abbreviations.The only use pandoc makes of this list is in the Markdown reader. Strings found in this list will be followed by a nonbreaking space, and the period will not produce sentence-ending space in formats like LaTeX. The strings may not contain spaces.',
+  },
+  {
+    type: 'reader',
+    name: ['typst-input'],
+    valueType: 'KEY_VAL',
+    description:
+      'Set a parameter value made available to the Typst parser in sys.inputs.',
+    multiple: true,
+    formats: ['typst'],
   },
   {
     type: 'reader',
@@ -355,15 +391,15 @@ const PANDOC_OPTIONS: PandocOption[] = [
     valueType: 'KEY_VAL',
     description:
       'Set the template variable KEY to the value VAL when rendering the document in standalone mode. If no VAL is specified, the key will be given the value true.',
+    multiple: true,
   },
   {
     type: 'writer',
-    name: ['sandbox'],
-    valueType: 'boolean',
-    description: [
-      'Run pandoc in a sandbox, limiting IO operations in readers and writers to reading the files specified on the command line. Note that this option does not limit IO operations by filters or in the production of PDF documents. But it does offer security against, for example, disclosure of files through the use of include directives. Anyone using pandoc on untrusted user input should use this option.',
-      'Note: some readers and writers (e.g., docx) need access to data files. If these are stored on the file system, then pandoc will not be able to find them when run in --sandbox mode and will raise an error. For these applications, we recommend using a pandoc binary compiled with the embed_data_files option, which causes the data files to be baked into the binary instead of being stored on the file system.',
-    ],
+    name: ['variable-json'],
+    valueType: 'KEY_JSON',
+    description:
+      'Set a template variable to the value specified by a JSON string.',
+    multiple: true,
   },
   {
     type: 'writer',
@@ -468,6 +504,13 @@ const PANDOC_OPTIONS: PandocOption[] = [
   },
   {
     type: 'writer',
+    name: ['syntax-highlighting'],
+    valueType: ['STYLE|FILE', 'default|none|idiomatic'],
+    description:
+      'Specify the method or style to use for code syntax highlighting.',
+  },
+  {
+    type: 'writer',
     name: ['print-highlight-style'],
     valueType: 'STYLE|FILE',
     description:
@@ -480,6 +523,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
     valueType: 'FILE',
     description:
       'Instructs pandoc to load a KDE XML syntax definition file, which will be used for syntax highlighting of appropriately marked code blocks. This can be used to add support for new languages or to use altered syntax definitions for existing languages. This option may be repeated to add multiple syntax definitions.',
+    multiple: true,
   },
   {
     type: 'writer',
@@ -487,6 +531,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
     valueType: 'FILE|URL',
     description:
       'Include contents of FILE, verbatim, at the end of the header. This can be used, for example, to include special CSS or JavaScript in HTML documents. This option can be used repeatedly to include multiple files in the header. They will be included in the order specified. Implies --standalone.',
+    multiple: true,
   },
   {
     type: 'writer',
@@ -529,6 +574,14 @@ const PANDOC_OPTIONS: PandocOption[] = [
   },
   {
     type: 'writer',
+    name: ['self-contained'],
+    valueType: 'boolean',
+    description:
+      'Deprecated synonym for --embed-resources --standalone.',
+    formats: [...ALL_HTML],
+  },
+  {
+    type: 'writer',
     name: ['embed-resources'],
     valueType: 'boolean',
     descriptionUrl: 'option--embed-resources[',
@@ -557,7 +610,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
   },
   {
     type: 'writer',
-    name: ['reference-links['],
+    name: ['reference-links'],
     valueType: 'boolean',
     descriptionUrl: 'option--reference-links[',
     formats: [...ALL_MARKDOWN, 'rst'],
@@ -585,7 +638,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
   },
   {
     type: 'writer',
-    name: ['markdown-headings='],
+    name: ['markdown-headings'],
     valueType: 'setext|atx',
     descriptionUrl: 'option--markdown-headings',
     formats: [...ALL_MARKDOWN, 'ipynb'],
@@ -672,6 +725,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
     name: ['c', 'css'],
     valueType: 'URL',
     descriptionUrl: 'option--css',
+    multiple: true,
     formats: [...ALL_HTML, ...ALL_EPUB],
   },
   {
@@ -694,6 +748,13 @@ const PANDOC_OPTIONS: PandocOption[] = [
     valueType: 'PATHTEMPLATE',
     descriptionUrl: 'option--chunk-template',
     formats: [...ALL_HTML],
+  },
+  {
+    type: 'writer',
+    name: ['epub-chapter-level'],
+    valueType: 'number',
+    description: 'Deprecated synonym for --split-level.',
+    formats: [...ALL_EPUB],
   },
   {
     type: 'writer',
@@ -721,6 +782,7 @@ const PANDOC_OPTIONS: PandocOption[] = [
     name: ['epub-embed-font'],
     valueType: 'FILE',
     descriptionUrl: 'option--epub-embed-font',
+    multiple: true,
     formats: [...ALL_EPUB],
   },
   {
@@ -747,8 +809,108 @@ const PANDOC_OPTIONS: PandocOption[] = [
   {
     type: 'writer',
     name: ['pdf-engine-opt'],
-    valueType: 'PROGRAM',
+    valueType: 'STRING',
     descriptionUrl: 'option--pdf-engine-opt',
+    multiple: true,
     formats: ['pdf', 'latex', 'context', ...ALL_HTML, 'ms', 'typst'],
+  },
+  {
+    type: 'writer',
+    name: ['C', 'citeproc'],
+    valueType: 'flag',
+    description:
+      'Process citations, replacing them with rendered citations and adding a bibliography.',
+  },
+  {
+    type: 'writer',
+    name: ['bibliography'],
+    valueType: 'FILE|URL',
+    description:
+      'Set the bibliography metadata field to a file or URL.',
+    multiple: true,
+  },
+  {
+    type: 'writer',
+    name: ['csl'],
+    valueType: 'FILE|URL',
+    description:
+      'Set the CSL style metadata field to a file or URL.',
+  },
+  {
+    type: 'writer',
+    name: ['citation-abbreviations'],
+    valueType: 'FILE|URL',
+    description:
+      'Set the citation abbreviations metadata field to a file or URL.',
+  },
+  {
+    type: 'writer',
+    name: ['natbib'],
+    valueType: 'flag',
+    description: 'Use natbib for citations in LaTeX output.',
+    formats: ['latex'],
+  },
+  {
+    type: 'writer',
+    name: ['biblatex'],
+    valueType: 'flag',
+    description: 'Use biblatex for citations in LaTeX output.',
+    formats: ['latex'],
+  },
+  {
+    type: 'writer',
+    name: ['math-method'],
+    valueType: 'plain|mathjax[:URL]|mathml|webtex[:URL]|katex[:URL]|gladtex',
+    description:
+      'Specify the method used to display TeX math.',
+  },
+  {
+    type: 'writer',
+    name: ['mathjax'],
+    valueType: ['flag', 'URL'],
+    description:
+      'Deprecated. Use --math-method=mathjax[:URL] instead.',
+  },
+  {
+    type: 'writer',
+    name: ['mathml'],
+    valueType: 'flag',
+    description: 'Deprecated. Use --math-method=mathml instead.',
+  },
+  {
+    type: 'writer',
+    name: ['webtex'],
+    valueType: ['flag', 'URL'],
+    description:
+      'Deprecated. Use --math-method=webtex[:URL] instead.',
+  },
+  {
+    type: 'writer',
+    name: ['katex'],
+    valueType: ['flag', 'URL'],
+    description:
+      'Deprecated. Use --math-method=katex[:URL] instead.',
+  },
+  {
+    type: 'writer',
+    name: ['gladtex'],
+    valueType: 'flag',
+    description: 'Deprecated. Use --math-method=gladtex instead.',
+  },
+  {
+    type: 'general',
+    name: ['dump-args'],
+    valueType: 'boolean',
+    description:
+      'Print command-line argument information for use in wrapper scripts, then exit.',
+    notForConversion: true,
+  },
+  {
+    type: 'general',
+    name: ['ignore-args'],
+    valueType: 'boolean',
+    description:
+      'Ignore non-option command-line arguments for use in wrapper scripts.',
+    notForConversion: true,
   },
 ];
