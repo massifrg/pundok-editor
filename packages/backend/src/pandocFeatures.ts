@@ -68,7 +68,7 @@ export class PandocFeatures {
     if (!format) return [];
     if (!format.formatExtensions) {
       format.formatExtensions = (
-        await runPandocForFeatureList(['--list-extensions', formatName])
+        await runPandocForFeatureList([`--list-extensions=${formatName}`])
       ).map((extension) => ({
         name: extension.slice(1),
         default: extension.startsWith('+'),
