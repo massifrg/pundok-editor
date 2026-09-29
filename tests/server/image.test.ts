@@ -85,7 +85,7 @@ describe('loadImage', () => {
     await expect(stat(expiredCache)).rejects.toThrow();
   });
 
-  it('does not follow image symlinks outside the user directory', async () => {
+  it('follows image symlinks within the user directory', async () => {
     const outside = join(directory, 'outside.png');
     const link = join(userDirectory, 'linked.png');
     await writeFile(outside, 'outside image');
@@ -100,8 +100,9 @@ describe('loadImage', () => {
       () => [],
     );
 
-    await expect(server.image('alice', link)).rejects.toThrow(
-      'Path must be within the authenticated user directory',
-    );
+    await expect(server.image('alice', link)).resolves.toEqual({
+      body: Buffer.from('outside image'),
+      contentType: 'image/png',
+    });
   });
 });

@@ -94,7 +94,7 @@ export class PundokEditorServer {
       username: string,
       key: BackendValueKey,
     ) => DocRepository[],
-  ) { }
+  ) {}
 
   prepareUser(username: string): void {
     ensureBackendDirectories(this.directoriesForUser(username));
@@ -269,7 +269,7 @@ export class PundokEditorServer {
     );
   }
 
-  async setValue(_user: string, _key: string, _value?: any): Promise<void> { }
+  async setValue(_user: string, _key: string, _value?: any): Promise<void> {}
 
   async getValue(user: string, key: BackendValueKey): Promise<DocRepository[]> {
     return this.getValueForUser(user, key);
@@ -459,18 +459,18 @@ export class PundokEditorServer {
       isAbsolute(outputPath)
         ? outputPath
         : resolve(
-          document.project?.path || parsePath(document.path || '').dir,
-          outputPath,
-        ),
+            document.project?.path || parsePath(document.path || '').dir,
+            outputPath,
+          ),
     );
   }
 
   private synctexInfoForUser(username: string, info: SynctexInfo): SynctexInfo {
     const project = info.projectAsJson
       ? this.projectForUser(
-        username,
-        JSON.parse(info.projectAsJson) as PundokEditorProject,
-      )
+          username,
+          JSON.parse(info.projectAsJson) as PundokEditorProject,
+        )
       : undefined;
     return {
       ...info,
@@ -487,7 +487,9 @@ export class PundokEditorServer {
       relativePath === '..' ||
       relativePath.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)
     )
-      throw new Error(`Path must be within the authenticated user directory: ${relativePath}`);
+      throw new Error(
+        `Path must be within the authenticated user directory: ${relativePath}`,
+      );
     return candidate;
   }
 
@@ -495,14 +497,6 @@ export class PundokEditorServer {
     username: string,
     path: string,
   ): Promise<string> {
-    const root = await realpath(this.directoriesForUser(username).userDataDir);
-    const candidate = await realpath(this.userPath(username, path));
-    const relativePath = relative(root, candidate);
-    if (
-      relativePath === '..' ||
-      relativePath.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)
-    )
-      throw new Error(`Path must be within the authenticated user directory: ${relativePath}`);
-    return candidate;
+    return realpath(this.userPath(username, path));
   }
 }
