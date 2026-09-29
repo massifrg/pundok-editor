@@ -48,6 +48,8 @@ export interface BaseOutputConverter extends NamedAndDescribed {
 
 export interface PandocOutputConverter extends BaseOutputConverter {
   type: 'pandoc';
+  /** The extensions of the format to be used */
+  formatExtensions?: string[];
   /** optional filter (pandoc's `--filter` option) */
   filters?: string[];
   /** reference file for DOCX and ODT (pandoc's `--reference-doc` option) */

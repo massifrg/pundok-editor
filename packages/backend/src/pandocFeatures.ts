@@ -19,6 +19,7 @@ async function runPandocForFeatureList(args: string[]): Promise<string[]> {
       `Command "pandoc ${args.join(' ')}" exited with code ${exitCode}: ${error}`,
     );
   }
+  console.log(output)
   return output.split(/\s*[\r\n]+\s*/m).filter((feature) => feature.length > 0);
 }
 
@@ -67,7 +68,7 @@ export class PandocFeatures {
     if (!format) return [];
     if (!format.formatExtensions) {
       format.formatExtensions = (
-        await runPandocForFeatureList([`--list-extensions=${formatName}`])
+        await runPandocForFeatureList(['--list-extensions', formatName])
       ).map((extension) => ({
         name: extension.slice(1),
         default: extension.startsWith('+'),

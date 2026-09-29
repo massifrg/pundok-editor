@@ -17,6 +17,7 @@
           <q-tab-panel v-for="tab in tabs" :key="tab.name" :name="tab.name">
             <ProjectConfigurationsEditor v-if="tab.name === 'project-configurations'" v-model="chosenConfigurations" />
             <CustomStylesEditor v-else-if="tab.name === 'customStyles'" v-model="values.customStyles" />
+            <OutputConvertersEditor v-else-if="tab.name === 'outputConverters'" v-model="values.outputConverters" />
             <div v-for="field in tab.fields" v-else :key="field.name" class="q-mb-md">
               <q-input v-if="field.kind === 'text'" v-model="values[field.name]" :label="$t(field.label)" outlined
                 :type="field.name === 'description' ? 'textarea' : 'text'" :hint="$t(field.description)" clearable />
@@ -48,12 +49,13 @@ setupQuasarIcons()
 import { PundokEditorConfigInit } from '../common'
 import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEditor.vue'
 import CustomStylesEditor from './confeditors/CustomStylesEditor.vue'
+import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue'
 
 type EditorConfigField = {
   name: keyof PundokEditorConfigInit
   label: string
   description: string
-  kind: 'text' | 'boolean' | 'json' | 'customStyles'
+  kind: 'text' | 'boolean' | 'json' | 'customStyles' | 'outputConverters'
 }
 
 type EditorConfigTab = {
@@ -84,7 +86,7 @@ const fields: EditorConfigField[] = [
   { name: 'rawInlines', label: 'configEditor.rawElements.rawInlines', description: 'configEditor.rawElements.rawInlinesDescription', kind: 'json' },
   { name: 'rawBlocks', label: 'configEditor.rawElements.rawBlocks', description: 'configEditor.rawElements.rawBlocksDescription', kind: 'json' },
   { name: 'inputConverters', label: 'configEditor.inputConverters.label', description: 'configEditor.inputConverters.description', kind: 'json' },
-  { name: 'outputConverters', label: 'configEditor.outputConverters.label', description: 'configEditor.outputConverters.description', kind: 'json' },
+  { name: 'outputConverters', label: 'configEditor.outputConverters.label', description: 'configEditor.outputConverters.description', kind: 'outputConverters' },
   { name: 'automations', label: 'configEditor.automations.label', description: 'configEditor.automations.description', kind: 'json' },
 ]
 
@@ -139,6 +141,7 @@ export default {
   components: {
     ProjectConfigurationsEditor,
     CustomStylesEditor,
+    OutputConvertersEditor,
   },
   data() {
     return {
@@ -169,7 +172,7 @@ export default {
         const value = source[field.name]
         if (field.kind === 'json') {
           jsonValues[field.name] = JSON.stringify(value === undefined ? null : value, null, 2)
-        } else if (field.name === 'customStyles') {
+        } else if (field.name === 'customStyles' || field.name === 'outputConverters') {
           values[field.name] = value || []
         } else {
           values[field.name] = value
