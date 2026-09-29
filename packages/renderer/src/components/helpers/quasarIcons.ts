@@ -2,6 +2,8 @@ import { useQuasar } from 'quasar';
 import {
   mdiAlertCircle,
   mdiArrowDown,
+  mdiArrowExpandLeft,
+  mdiArrowExpandRight,
   mdiArrowUp,
   mdiBookCog,
   mdiChevronLeft,
@@ -255,6 +257,7 @@ import {
   mdiOctagramEdit,
   mdiInvoiceTextEdit,
   mdiInvoiceTextPlus,
+  mdiArrowProjectile,
 } from '@mdi/js';
 
 import {
@@ -421,6 +424,8 @@ export const icons: Record<string, string> = {
   keyboard_arrow_down: mdiArrowCollapseDown,
   index: mdiCursorPointer,
   index_auto_id: mdiDatabaseSearch,
+  index_range_start: mdiArrowExpandRight,
+  index_range_stop: mdiArrowExpandLeft,
   index_ref: mdiCursorPointer,
   index_propagate_name: mdiBookArrowDown,
   indices: mdiCursorPointer,

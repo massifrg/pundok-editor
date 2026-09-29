@@ -1,5 +1,6 @@
 export * from './addableMark'
 export * from './chooseDocumentDialogs'
+export * from './color'
 export * from './pending'
 export * from './quasarIcons'
 export * from './showDocStateDialog'
