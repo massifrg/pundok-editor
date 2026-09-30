@@ -8,13 +8,14 @@ import {
   documentFormatToOutputConverter,
   type DocumentContext,
   type ExternalProgramResult,
-  type OutputConverter,
   type PandocInputConverter,
   type PandocOutputConverter,
   type PandocMetadata,
   type PandocVariables,
   type PundokEditorProject,
   type ScriptOutputConverter,
+  pandocFilterName,
+  pandocFilterToCliOptions,
 } from '../../common/src';
 import { expandCommandArgs } from './expandCommandArgs';
 import { localizePath } from './filesystem';
@@ -132,13 +133,28 @@ async function exportWithExternalProgram(
   }
 }
 
+/**
+ * Call pandoc to convert a JSON source to a file.
+ * @param directories 
+ * @param doc 
+ * @param exportOptions 
+ * @returns 
+ */
 export function exportWithPandoc(
   directories: BackendDirectories,
   doc: CxDocument,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
-  const { configurationName, content, documentFormat, project } = doc;
-  const { resourcesPaths, resultFile: unlocalizedResultFile } = exportOptions;
+  const {
+    configurationName,
+    content,
+    documentFormat,
+    project
+  } = doc;
+  const {
+    resourcesPaths,
+    resultFile: unlocalizedResultFile
+  } = exportOptions;
   const resultFile = unlocalizedResultFile
     ? localizePath(unlocalizedResultFile)
     : undefined;
@@ -147,39 +163,53 @@ export function exportWithPandoc(
     | undefined;
   if (!converter) return Promise.reject('No Pandoc output converter specified');
 
-  const { format, pandocOptions, pandocTemplate, referenceFile, standalone } =
-    converter;
+  const {
+    format,
+    pandocOptions,
+    pandocTemplate,
+    referenceFile,
+    standalone
+  } = converter;
   const findOptions: Partial<FindResourceFileOptions> = {
     baseResourcePaths: resourcesPaths || [],
     kind: 'writer',
     project,
     configurationName,
   };
-  const pandocOpts: string[] = [];
+  let pandocOpts: string[] = [];
   const dataDir =
     resourcesPaths?.[0] ||
     validResourcePaths(directories, undefined, project, configurationName)[0];
   if (dataDir) pandocOpts.push(`--data-dir=${encloseInDblQuotes(dataDir)}`);
 
+  // if not defined, the output format is JSON
   let outputFormat = format || 'json';
-  if (outputFormat.endsWith('.lua'))
-    outputFormat =
-      findResourceFile(directories, outputFormat, {
-        ...findOptions,
-        kind: 'writer',
-      }) || outputFormat;
-  if (resultFile) pandocOpts.push(`--output=${encloseInDblQuotes(resultFile)}`);
 
+  // when the output format ends with ".lua", it's a custom writer and not a format
+  // so look for the custom writer lua file in resource files
+  if (outputFormat.endsWith('.lua'))
+    outputFormat = findResourceFile(directories, outputFormat, {
+      ...findOptions,
+      kind: 'writer',
+    }) || outputFormat;
+
+  // enclose resultFile in quotes (to protect against spaces)
+  if (resultFile)
+    pandocOpts.push(`--output=${encloseInDblQuotes(resultFile)}`);
+
+  // find filters in resource files
   for (const filter of converter.filters || []) {
+    const filterName = pandocFilterName(filter)
     const filterFile =
-      findResourceFile(directories, filter, {
+      findResourceFile(directories, filterName, {
         ...findOptions,
         kind: 'filter',
-      }) || filter;
-    pandocOpts.push(
-      `${filter.endsWith('.lua') ? '--lua-filter' : '--filter'}=${encloseInDblQuotes(filterFile)}`,
+      });
+    pandocOpts = pandocOpts.concat(
+      pandocFilterToCliOptions(filter, filterFile)
     );
   }
+
   if (resourcesPaths?.length)
     pandocOpts.push(
       `--resource-path=${resourcesPaths

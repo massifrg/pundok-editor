@@ -15,7 +15,7 @@ export * from './folders';
 export * from './icons';
 export * from './imageFormats';
 export * from './ipc';
-export * from './pandocFeatures';
+export * from './pandoc';
 export * from './pandocExtensions';
 export * from './pandocFormat';
 export * from './pandocHelpers';

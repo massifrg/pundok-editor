@@ -2,7 +2,7 @@ import { Mark, Node } from '@tiptap/pm/model';
 import { CustomStyleInstance, activeCustomStyles } from './customStyles';
 import { CustomClass, activeCustomClasses } from './customClasses';
 import { appliesTo } from './appliesTo';
-import { NamedAndDescribed } from './types';
+import { NamedAndDescribed } from '../types';
 
 /**
  * A custom attribute for Pandoc's `Block`s and `Inline`s with an `Attr`

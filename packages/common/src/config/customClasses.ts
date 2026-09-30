@@ -3,7 +3,7 @@ import { CustomAttribute } from './customAttributes';
 import { CustomStyleInstance, activeCustomStyles } from './customStyles';
 import { appliesTo } from './appliesTo';
 import { isString } from 'lodash-es';
-import { NamedAndDescribed } from './types';
+import { NamedAndDescribed } from '../types';
 
 /**
  * A custom class for Pandoc's `Block`s and `Inline`s with an `Attr`

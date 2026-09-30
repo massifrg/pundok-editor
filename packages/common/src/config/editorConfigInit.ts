@@ -9,7 +9,7 @@ import { InputConverter } from './inputConverters';
 import { NoteStyle } from './notes';
 import { OutputConverter } from './outputConverters';
 import { InsertableRaw } from './rawElements';
-import { NamedAndDescribed } from './types';
+import { NamedAndDescribed } from '../types';
 
 /**
  * A configuration (customization) of PundokEditor.

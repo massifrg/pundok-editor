@@ -4,7 +4,7 @@ import {
   getPrunedConfigInit,
   PundokEditorConfig
 } from "./editorConfiguration";
-import { NamedAndDescribed } from "./types";
+import { NamedAndDescribed } from "../types";
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 

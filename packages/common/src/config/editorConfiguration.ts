@@ -15,7 +15,7 @@ import { InsertableRaw } from './rawElements';
 import { InputConverter } from './inputConverters';
 import { OutputConverter } from './outputConverters';
 import { Automation, SearchAndReplace } from './automations';
-import { NamedAndDescribed } from './types';
+import { NamedAndDescribed } from '../types';
 
 export class PundokEditorConfig implements PundokEditorConfigInit {
   /** The name of this configuration of the editor. */

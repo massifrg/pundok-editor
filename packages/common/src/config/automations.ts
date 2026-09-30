@@ -2,7 +2,7 @@ import { PundokEditorConfig } from './editorConfiguration';
 import { Capitalize } from '../capitalize';
 import { ActionNameWithProps } from '../actions';
 import { CustomSpan } from './customSpan';
-import { NamedAndDescribed } from './types';
+import { NamedAndDescribed } from '../types';
 
 /**
  * Types of automations available:

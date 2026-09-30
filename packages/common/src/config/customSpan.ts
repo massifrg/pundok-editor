@@ -1,4 +1,4 @@
-import { NamedAndDescribed } from "./types";
+import { NamedAndDescribed } from "../types";
 
 /**
  * A `Span`, with eventual `Attr`'s classes and attributes that can be added as a result

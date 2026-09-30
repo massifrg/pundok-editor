@@ -12,7 +12,7 @@ import {
   NODE_NAME_TABLE_CELL,
   NODE_NAME_TABLE_HEADER
 } from '../prosemirrorNames';
-import { NamedAndDescribed } from './types';
+import { NamedAndDescribed } from '../types';
 
 /**
  * The Nodes and Marks that are customizable with the `customStyle` attribute.

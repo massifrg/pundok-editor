@@ -41,7 +41,7 @@ export type PandocOptionValueType =
 /**
  * An command line option of pandoc.
  */
-export interface PandocOption {
+export interface PandocOptionSpec {
   /** The type of this option */
   type: PandocOptionType;
   /** The option name(s) without the initial `-` or `--`. */
@@ -93,7 +93,7 @@ const ALL_XML = [...ALL_DOCBOOK, ...ALL_JATS, 'tei', 'bits'];
 /** Every flavour of EPUB output. */
 const ALL_EPUB = ['epub', 'epub2', 'epub3'];
 
-export const PANDOC_OPTIONS: PandocOption[] = [
+export const PANDOC_OPTIONS_SPECS: PandocOptionSpec[] = [
   {
     type: 'general',
     name: ['f', 'from', 'r', 'read'],

@@ -1,5 +1,6 @@
 import { FeedbackMessageType } from "../feedback";
-import { NamedAndDescribed } from "./types";
+import { PandocFilter } from "../pandoc";
+import { NamedAndDescribed } from "../types";
 
 /**
  * Output conversion can be done:
@@ -51,7 +52,7 @@ export interface PandocOutputConverter extends BaseOutputConverter {
   /** The extensions of the format to be used */
   formatExtensions?: string[];
   /** optional filter (pandoc's `--filter` option) */
-  filters?: string[];
+  filters?: (string | PandocFilter)[];
   /** reference file for DOCX and ODT (pandoc's `--reference-doc` option) */
   referenceFile?: string;
   /** standalone output file (pandoc's `-s` option) */

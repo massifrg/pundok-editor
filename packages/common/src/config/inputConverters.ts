@@ -1,4 +1,4 @@
-import { NamedAndDescribed } from "./types";
+import { NamedAndDescribed } from "../types";
 
 export type InputConverterType = 'pandoc' | 'script' | 'custom';
 
