@@ -3,12 +3,14 @@ import type {
   CxDocument,
   PandocFilterTransform,
 } from '../../../common/src';
+import { pandocOptionsToCliOptions } from '../../../common/src';
 import {
   findResourceFile,
   isReadableFile,
   type BackendDirectories,
 } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
+import { isEmpty } from 'lodash';
 
 export async function transformJsonHandler(
   directories: BackendDirectories,
@@ -32,7 +34,8 @@ export async function transformWithPandoc(
   transform: PandocFilterTransform,
 ): Promise<string> {
   const { configurationName, project, content } = document;
-  if (!content) throw new Error('transformWithPandoc: no content provided');
+  const { sources } = transform
+  if (!content && isEmpty(sources)) throw new Error('transformWithPandoc: no content or sources provided');
 
   const fromFormat = transform.fromFormat || 'json';
   const toFormat = transform.toFormat || 'json';
@@ -41,8 +44,9 @@ export async function transformWithPandoc(
     fromFormat,
     '-t',
     toFormat,
-    ...(transform.pandocOptions || []),
+    ...pandocOptionsToCliOptions(transform.pandocOptions || []),
   ];
+  console.log(args)
   if (!transform.filters?.length && fromFormat === toFormat)
     throw new Error(
       'You must provide Pandoc filters to transform a document without changing its format',
@@ -87,6 +91,7 @@ export async function transformWithPandoc(
       );
     args.push(sourceFile);
   }
+  console.log(args)
 
   const { result } = runExternalProgram(
     'pandoc',

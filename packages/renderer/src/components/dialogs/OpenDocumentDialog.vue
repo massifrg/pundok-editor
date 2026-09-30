@@ -692,7 +692,6 @@ export default {
           this.tempConfiguration || this.configuration
         )
         if (formats.length > 0) {
-          console.log(formats)
           const pf = formats.find(f => f.extensions?.includes(f.name!))
             || formats[0]
           if (pf)
@@ -837,8 +836,7 @@ export default {
           @blur="adjustDocumentExtension()" @keyup.enter="selectDocument()" />
         <q-space />
         <q-btn v-if="!isInputDialog" icon="folder_new" size="sm" color="primary"
-          :title="$t('fileDialog.createFolder.title')"
-          @click="askForFolderToCreate" />
+          :title="$t('fileDialog.createFolder.title')" @click="askForFolderToCreate" />
         <q-space />
         <span class="q-pa-md">{{ $t('fileDialog.labels.recent') }}</span>
         <q-space style="max-width: .1rem;" />
@@ -855,7 +853,7 @@ export default {
             <q-item v-for="db in docBookmarks" clickable @click="gotoUrl(db.url, db.configurationName)">
               <q-item-section>
                 <q-item-label :title="db.url">{{ splitFolderAndDoc(decodeURIComponent(db.url)).document
-                }}</q-item-label>
+                  }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -867,18 +865,14 @@ export default {
             <div class="row q-ma-none q-pa-none">
               <div class="text-body2 self-end">{{ currentFolder }} </div>
               <q-space />
-              <q-toggle v-model="showEveryDoc" size="sm"
-                :title="$t('fileDialog.toggles.showEveryDocument')"
-                :label="$t('fileDialog.labels.showEveryDocument')"
-                left-label />
+              <q-toggle v-model="showEveryDoc" size="sm" :title="$t('fileDialog.toggles.showEveryDocument')"
+                :label="$t('fileDialog.labels.showEveryDocument')" left-label />
               <q-space />
               <q-toggle v-model="showHidden" size="sm" :title="$t('fileDialog.toggles.showHidden')"
-                :label="$t('fileDialog.labels.showHidden')"
-                left-label />
+                :label="$t('fileDialog.labels.showHidden')" left-label />
               <q-space v-if="mode !== 'folder'" />
               <q-toggle v-if="mode !== 'folder'" v-model="hideFolders" size="sm"
-                :title="$t('fileDialog.toggles.hideFolders')" :label="$t('fileDialog.labels.hideFolders')"
-                left-label />
+                :title="$t('fileDialog.toggles.hideFolders')" :label="$t('fileDialog.labels.hideFolders')" left-label />
             </div>
             <q-table ref="docsTable" class="folder-contents-table" dense flat bordered :rows="rows" :columns="columns"
               row-key="name" selection="single" v-model:selected="selected" style="height: 400px" virtual-scroll
@@ -888,12 +882,11 @@ export default {
                 <q-th :props="props">
                   {{ props.col.label }}
                   <span v-if="props.col.name !== 'lastModified'" class="column-resizer" role="separator"
-                    aria-orientation="vertical"
-                    :aria-label="$t('fileDialog.resizeColumn', { column: props.col.label })" tabindex="0"
-                    @pointerdown.stop.prevent="startColumnResize($event, props.col.name)"
+                    aria-orientation="vertical" :aria-label="$t('fileDialog.resizeColumn', { column: props.col.label })"
+                    tabindex="0" @pointerdown.stop.prevent="startColumnResize($event, props.col.name)"
                     @pointermove.stop.prevent="resizeColumn" @pointerup.stop.prevent="finishColumnResize"
-                    @pointercancel.stop.prevent="finishColumnResize"
-                    @click.stop @keydown.stop="resizeColumnByKeyboard($event, props.col.name)" @keyup.stop />
+                    @pointercancel.stop.prevent="finishColumnResize" @click.stop
+                    @keydown.stop="resizeColumnByKeyboard($event, props.col.name)" @keyup.stop />
                 </q-th>
               </template>
               <template v-slot:body-selection="scope">

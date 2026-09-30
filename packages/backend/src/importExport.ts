@@ -1,5 +1,11 @@
 import { existsSync } from 'node:fs';
-import { delimiter as pathDelimiter, format as formatPath, isAbsolute, parse as parsePath, resolve } from 'node:path';
+import {
+  delimiter as pathDelimiter,
+  format as formatPath,
+  isAbsolute,
+  parse as parsePath,
+  resolve,
+} from 'node:path';
 import { isArray, isObject, isString } from 'lodash-es';
 import {
   type CxDocument,
@@ -16,6 +22,7 @@ import {
   type ScriptOutputConverter,
   pandocFilterName,
   pandocFilterToCliOptions,
+  pandocOptionsToCliOptions,
 } from '../../common/src';
 import { expandCommandArgs } from './expandCommandArgs';
 import { localizePath } from './filesystem';
@@ -135,41 +142,27 @@ async function exportWithExternalProgram(
 
 /**
  * Call pandoc to convert a JSON source to a file.
- * @param directories 
- * @param doc 
- * @param exportOptions 
- * @returns 
+ * @param directories
+ * @param doc
+ * @param exportOptions
+ * @returns
  */
 export function exportWithPandoc(
   directories: BackendDirectories,
   doc: CxDocument,
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
-  const {
-    configurationName,
-    content,
-    documentFormat,
-    project
-  } = doc;
-  const {
-    resourcesPaths,
-    resultFile: unlocalizedResultFile
-  } = exportOptions;
+  const { configurationName, content, documentFormat, project } = doc;
+  const { resourcesPaths, resultFile: unlocalizedResultFile } = exportOptions;
   const resultFile = unlocalizedResultFile
     ? localizePath(unlocalizedResultFile)
     : undefined;
   const converter = documentFormatToOutputConverter(documentFormat) as
-    | PandocOutputConverter
-    | undefined;
+    PandocOutputConverter | undefined;
   if (!converter) return Promise.reject('No Pandoc output converter specified');
 
-  const {
-    format,
-    pandocOptions,
-    pandocTemplate,
-    referenceFile,
-    standalone
-  } = converter;
+  const { format, pandocOptions, pandocTemplate, referenceFile, standalone } =
+    converter;
   const findOptions: Partial<FindResourceFileOptions> = {
     baseResourcePaths: resourcesPaths || [],
     kind: 'writer',
@@ -188,25 +181,24 @@ export function exportWithPandoc(
   // when the output format ends with ".lua", it's a custom writer and not a format
   // so look for the custom writer lua file in resource files
   if (outputFormat.endsWith('.lua'))
-    outputFormat = findResourceFile(directories, outputFormat, {
-      ...findOptions,
-      kind: 'writer',
-    }) || outputFormat;
+    outputFormat =
+      findResourceFile(directories, outputFormat, {
+        ...findOptions,
+        kind: 'writer',
+      }) || outputFormat;
 
   // enclose resultFile in quotes (to protect against spaces)
-  if (resultFile)
-    pandocOpts.push(`--output=${encloseInDblQuotes(resultFile)}`);
+  if (resultFile) pandocOpts.push(`--output=${encloseInDblQuotes(resultFile)}`);
 
   // find filters in resource files
   for (const filter of converter.filters || []) {
-    const filterName = pandocFilterName(filter)
-    const filterFile =
-      findResourceFile(directories, filterName, {
-        ...findOptions,
-        kind: 'filter',
-      });
+    const filterName = pandocFilterName(filter);
+    const filterFile = findResourceFile(directories, filterName, {
+      ...findOptions,
+      kind: 'filter',
+    });
     pandocOpts = pandocOpts.concat(
-      pandocFilterToCliOptions(filter, filterFile)
+      pandocFilterToCliOptions(filter, filterFile),
     );
   }
 
@@ -235,7 +227,8 @@ export function exportWithPandoc(
       }) || referenceFile;
     pandocOpts.push(`--reference-doc=${encloseInDblQuotes(reference)}`);
   }
-  if (isArray(pandocOptions)) pandocOpts.push(...pandocOptions);
+  if (isArray(pandocOptions))
+    pandocOpts.push(...pandocOptionsToCliOptions(pandocOptions));
 
   return exportWithExternalProgram(
     'pandoc',
@@ -250,8 +243,7 @@ export async function exportWithScript(
   exportOptions: Partial<ExportOptions>,
 ): Promise<ExternalProgramResult> {
   const converter = documentFormatToOutputConverter(doc.documentFormat) as
-    | ScriptOutputConverter
-    | undefined;
+    ScriptOutputConverter | undefined;
   if (!converter) throw new Error('no output converter specified');
   let { command, commandArgs } = converter;
   if (!existsSync(command))
@@ -271,10 +263,9 @@ export async function runWriterOnMasterFile(
   writerFilename: string,
   options?: { metadata?: PandocMetadata; variables?: PandocVariables },
 ): Promise<string | undefined> {
-  const project =
-    isString(editorProject)
-      ? (JSON.parse(editorProject) as PundokEditorProject)
-      : editorProject;
+  const project = isString(editorProject)
+    ? (JSON.parse(editorProject) as PundokEditorProject)
+    : editorProject;
   if (!project?.path || !project.rootDocument) return undefined;
   const path = localizePath(project.path);
   const source = resolve(path, localizePath(project.rootDocument));

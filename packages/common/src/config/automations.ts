@@ -3,6 +3,7 @@ import { Capitalize } from '../capitalize';
 import { ActionNameWithProps } from '../actions';
 import { CustomSpan } from './customSpan';
 import { NamedAndDescribed } from '../types';
+import { PandocOption } from '../pandocOptions';
 
 /**
  * Types of automations available:
@@ -153,8 +154,8 @@ export interface PandocFilterTransform extends Automation {
   fromFormat?: string;
   /** Output format (default: json) */
   toFormat?: 'json' | 'markdown';
-  /** Extra pandoc options */
-  pandocOptions?: string[];
+  /** Extra Pandoc options, each as [name, value?]. */
+  pandocOptions?: PandocOption[];
 }
 
 /**

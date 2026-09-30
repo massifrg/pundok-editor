@@ -1,6 +1,7 @@
-import { FeedbackMessageType } from "../feedback";
-import { PandocFilter } from "../pandoc";
-import { NamedAndDescribed } from "../types";
+import { FeedbackMessageType } from '../feedback';
+import { PandocFilter } from '../pandoc';
+import { PandocOption } from '../pandocOptions';
+import { NamedAndDescribed } from '../types';
 
 /**
  * Output conversion can be done:
@@ -59,8 +60,8 @@ export interface PandocOutputConverter extends BaseOutputConverter {
   standalone?: boolean;
   /** pandoc template for standalone output (pandoc's `--template` option) */
   pandocTemplate?: string;
-  /** extra command-line options for pandoc */
-  pandocOptions?: string[];
+  /** Extra Pandoc options, each as [name, value?]. */
+  pandocOptions?: PandocOption[];
 }
 
 export interface PandocLuaOutputConverter extends BaseOutputConverter {

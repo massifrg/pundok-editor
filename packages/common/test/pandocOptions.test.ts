@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { PANDOC_OPTIONS_SPECS } from '../src/pandocOptions';
+import {
+  PANDOC_OPTIONS_SPECS,
+  pandocOptionsToCliOptions,
+} from '../src/pandocOptions';
 import { PANDOC_EXTENSION_DESCRIPTIONS } from '../src/pandocExtensions';
 
 const optionByLongName = (name: string) =>
@@ -65,5 +68,47 @@ describe('PANDOC_OPTIONS_SPECS', () => {
     ]) {
       expect(optionByLongName(name)).toMatchObject({ multiple: true });
     }
+  });
+
+  it('marks options documented as deprecated', () => {
+    for (const name of [
+      'base-header-level',
+      'self-contained',
+      'epub-chapter-level',
+      'mathjax',
+      'mathml',
+      'webtex',
+      'katex',
+      'gladtex',
+    ]) {
+      expect(optionByLongName(name)).toMatchObject({ deprecated: true });
+    }
+  });
+
+  it('serializes flags, booleans, numbers, and string values', () => {
+    expect(
+      pandocOptionsToCliOptions([
+        ['standalone'],
+        ['fail-if-warnings', true],
+        ['toc-depth', 2],
+        ['metadata', 'title=A title'],
+      ]),
+    ).toEqual([
+      '--standalone',
+      '--fail-if-warnings',
+      '--toc-depth=2',
+      '--metadata="title=A title"',
+    ]);
+  });
+
+  it('rejects values that do not match the option specification', () => {
+    expect(() =>
+      pandocOptionsToCliOptions([
+        ['standalone', false],
+      ]),
+    ).toThrow('does not accept a boolean value');
+    expect(() =>
+      pandocOptionsToCliOptions([['toc-depth']]),
+    ).toThrow('requires a value');
   });
 });

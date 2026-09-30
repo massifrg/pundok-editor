@@ -107,7 +107,10 @@ export default defineComponent({
               type: 'pandoc-filter',
               fromFormat: 'json',
               toFormat: 'markdown',
-              pandocOptions: ['--wrap=none', '-s'],
+              pandocOptions: [
+                ['wrap', 'none'],
+                ['s'],
+              ],
             },
           );
           if (transformed)
@@ -141,7 +144,7 @@ export default defineComponent({
             type: 'pandoc-filter',
             fromFormat: 'markdown',
             toFormat: 'json',
-            pandocOptions: ['-s'],
+            pandocOptions: [['s']],
           },
         );
         // console.log(content);

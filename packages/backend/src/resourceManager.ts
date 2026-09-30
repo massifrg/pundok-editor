@@ -4,11 +4,14 @@ import { resolve } from 'node:path';
 import {
   type ConfigQueryOptions,
   type FindResourceOptions,
+  type PandocFilterTransform,
+  type PandocOption,
   type PundokEditorConfigInit,
   type PundokEditorProject,
   type ResourceType,
   RESOURCE_SUBPATHS,
 } from '../../common/src';
+import { migrateLegacyPandocOptions } from './legacyPandocOptions';
 
 const CONFIG_FILE_EXT = '.config.json';
 
@@ -94,8 +97,7 @@ export async function parseConfigurationFiles(
     .map(({ content, isLocal }) => {
       try {
         const config = JSON.parse(content);
-        config.isLocal = isLocal;
-        return config;
+        return migrateConfigurationPandocOptions({ ...config, isLocal });
       } catch {
         return null;
       }
@@ -114,13 +116,92 @@ export async function getConfigurationInit(
     );
     if (coordinates) {
       const config = JSON.parse(readFileSync(coordinates.path).toString());
-      config.isLocal = coordinates.isLocal;
-      return config;
+      return migrateConfigurationPandocOptions({
+        ...config,
+        isLocal: coordinates.isLocal,
+      });
     }
   } catch (error) {
     console.log(error);
   }
   return undefined;
+}
+
+function isPandocOptionValue(
+  value: unknown,
+): value is PandocOption[1] {
+  return (
+    value === undefined ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  );
+}
+
+function isPandocOptionTuple(option: unknown): option is PandocOption {
+  return (
+    Array.isArray(option) &&
+    option.length <= 2 &&
+    typeof option[0] === 'string' &&
+    isPandocOptionValue(option[1])
+  );
+}
+
+interface ObjectPandocOption {
+  name: string;
+  value?: PandocOption[1];
+}
+
+function isObjectPandocOption(option: unknown): option is ObjectPandocOption {
+  return (
+    typeof option === 'object' &&
+    option !== null &&
+    typeof (option as { name?: unknown }).name === 'string' &&
+    isPandocOptionValue((option as { value?: unknown }).value)
+  );
+}
+
+function migratePandocOptions(options: unknown): PandocOption[] | undefined {
+  if (options === undefined) return undefined;
+  if (!Array.isArray(options))
+    throw new Error('Pandoc options must be an array');
+  if (options.every((option) => typeof option === 'string'))
+    return migrateLegacyPandocOptions(options);
+  if (options.every(isPandocOptionTuple))
+    return options as PandocOption[];
+  if (options.every(isObjectPandocOption))
+    return options.map(({ name, value }) =>
+      value === undefined
+        ? [name]
+        : [name, value],
+    );
+  throw new Error('Pandoc options must be option tuples or legacy strings');
+}
+
+function migrateConfigurationPandocOptions(
+  config: PundokEditorConfigInit,
+): PundokEditorConfigInit {
+  return {
+    ...config,
+    outputConverters: config.outputConverters?.map((converter) =>
+      converter.type === 'pandoc'
+        ? {
+            ...converter,
+            pandocOptions: migratePandocOptions(converter.pandocOptions),
+          }
+        : converter,
+    ),
+    automations: config.automations?.map((automation) =>
+      automation.type === 'pandoc-filter'
+        ? {
+            ...automation,
+            pandocOptions: migratePandocOptions(
+              (automation as PandocFilterTransform).pandocOptions,
+            ),
+          }
+        : automation,
+    ),
+  };
 }
 
 export function isReadableFile(filename: string): boolean {

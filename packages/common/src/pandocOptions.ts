@@ -54,11 +54,23 @@ export interface PandocOptionSpec {
   descriptionUrl?: string;
   /** This option is not used in conversions, but for general information about pandoc's version. */
   notForConversion?: boolean;
+  /** This option is deprecated by Pandoc. */
+  deprecated?: boolean;
   /** This option can be specified more than once. */
   multiple?: boolean;
   /** This option is used or pertinent only with the specified formats. */
   formats?: string[];
 }
+
+export type PandocOptionName = string;
+
+export type PandocOptionValue = string | number | boolean;
+
+/** A configured Pandoc command-line option and its optional value. */
+export type PandocOption = [
+  name: PandocOptionName,
+  value?: PandocOptionValue,
+];
 
 /** Every flavour of HTML output. */
 const ALL_HTML = ['chunkedhtml', 'html', 'html4', 'html5'];
@@ -238,6 +250,7 @@ export const PANDOC_OPTIONS_SPECS: PandocOptionSpec[] = [
     valueType: 'number',
     description:
       'Deprecated. Specify the base level for headings; use --shift-heading-level-by instead.',
+    deprecated: true,
   },
   {
     type: 'reader',
@@ -576,8 +589,8 @@ export const PANDOC_OPTIONS_SPECS: PandocOptionSpec[] = [
     type: 'writer',
     name: ['self-contained'],
     valueType: 'boolean',
-    description:
-      'Deprecated synonym for --embed-resources --standalone.',
+    description: 'Deprecated synonym for --embed-resources --standalone.',
+    deprecated: true,
     formats: [...ALL_HTML],
   },
   {
@@ -754,6 +767,7 @@ export const PANDOC_OPTIONS_SPECS: PandocOptionSpec[] = [
     name: ['epub-chapter-level'],
     valueType: 'number',
     description: 'Deprecated synonym for --split-level.',
+    deprecated: true,
     formats: [...ALL_EPUB],
   },
   {
@@ -825,16 +839,14 @@ export const PANDOC_OPTIONS_SPECS: PandocOptionSpec[] = [
     type: 'writer',
     name: ['bibliography'],
     valueType: 'FILE|URL',
-    description:
-      'Set the bibliography metadata field to a file or URL.',
+    description: 'Set the bibliography metadata field to a file or URL.',
     multiple: true,
   },
   {
     type: 'writer',
     name: ['csl'],
     valueType: 'FILE|URL',
-    description:
-      'Set the CSL style metadata field to a file or URL.',
+    description: 'Set the CSL style metadata field to a file or URL.',
   },
   {
     type: 'writer',
@@ -861,41 +873,42 @@ export const PANDOC_OPTIONS_SPECS: PandocOptionSpec[] = [
     type: 'writer',
     name: ['math-method'],
     valueType: 'plain|mathjax[:URL]|mathml|webtex[:URL]|katex[:URL]|gladtex',
-    description:
-      'Specify the method used to display TeX math.',
+    description: 'Specify the method used to display TeX math.',
   },
   {
     type: 'writer',
     name: ['mathjax'],
     valueType: ['flag', 'URL'],
-    description:
-      'Deprecated. Use --math-method=mathjax[:URL] instead.',
+    description: 'Deprecated. Use --math-method=mathjax[:URL] instead.',
+    deprecated: true,
   },
   {
     type: 'writer',
     name: ['mathml'],
     valueType: 'flag',
     description: 'Deprecated. Use --math-method=mathml instead.',
+    deprecated: true,
   },
   {
     type: 'writer',
     name: ['webtex'],
     valueType: ['flag', 'URL'],
-    description:
-      'Deprecated. Use --math-method=webtex[:URL] instead.',
+    description: 'Deprecated. Use --math-method=webtex[:URL] instead.',
+    deprecated: true,
   },
   {
     type: 'writer',
     name: ['katex'],
     valueType: ['flag', 'URL'],
-    description:
-      'Deprecated. Use --math-method=katex[:URL] instead.',
+    description: 'Deprecated. Use --math-method=katex[:URL] instead.',
+    deprecated: true,
   },
   {
     type: 'writer',
     name: ['gladtex'],
     valueType: 'flag',
     description: 'Deprecated. Use --math-method=gladtex instead.',
+    deprecated: true,
   },
   {
     type: 'general',
@@ -914,3 +927,68 @@ export const PANDOC_OPTIONS_SPECS: PandocOptionSpec[] = [
     notForConversion: true,
   },
 ];
+
+function optionValueTypes(
+  valueType: PandocOptionSpec['valueType'],
+): readonly PandocOptionValueType[] {
+  return typeof valueType === 'string' ? [valueType] : valueType;
+}
+
+function optionFlag(name: PandocOptionName): string {
+  return `${name.length === 1 ? '-' : '--'}${name}`;
+}
+
+/**
+ * Convert configured Pandoc options to command-line arguments.
+ *
+ * String values are JSON-quoted because Pandoc commands are run through a
+ * shell, while boolean `true` uses Pandoc's value-less enabled form.
+ */
+export function pandocOptionsToCliOptions(
+  options: readonly PandocOption[],
+): string[] {
+  return options.map(([name, value]) => {
+    const spec = PANDOC_OPTIONS_SPECS.find((candidate) =>
+      candidate.name.includes(name),
+    );
+    if (!spec) throw new Error(`Unknown Pandoc option "${name}"`);
+
+    const valueTypes = optionValueTypes(spec.valueType);
+    const option = optionFlag(name);
+    if (value === undefined) {
+      if (!valueTypes.includes('flag'))
+        throw new Error(`Pandoc option "${name}" requires a value`);
+      return option;
+    }
+
+    if (typeof value === 'boolean') {
+      if (
+        !valueTypes.includes('boolean') &&
+        !(value && valueTypes.includes('flag'))
+      )
+        throw new Error(
+          `Pandoc option "${name}" does not accept a boolean value`,
+        );
+      return value ? option : `${option}=false`;
+    }
+
+    if (typeof value === 'number') {
+      if (!valueTypes.includes('number'))
+        throw new Error(
+          `Pandoc option "${name}" does not accept a numeric value`,
+        );
+      return `${option}=${value}`;
+    }
+
+    if (
+      valueTypes.every(
+        (valueType) =>
+          valueType === 'flag' ||
+          valueType === 'boolean' ||
+          valueType === 'number',
+      )
+    )
+      throw new Error(`Pandoc option "${name}" does not accept a string value`);
+    return `${option}=${JSON.stringify(value)}`;
+  });
+}
