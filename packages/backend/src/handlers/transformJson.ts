@@ -39,6 +39,7 @@ export async function transformWithPandoc(
 
   const fromFormat = transform.fromFormat || 'json';
   const toFormat = transform.toFormat || 'json';
+  console.log(JSON.stringify(transform, undefined, 2))
   const args = [
     '-f',
     fromFormat,

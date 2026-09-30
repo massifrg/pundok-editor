@@ -13,6 +13,7 @@ import { localizePath } from '../filesystem';
 import {
   getConfigurationInit,
   isReadableDir,
+  migrateConfigurationPandocOptions,
   type BackendDirectories,
 } from '../resourceManager';
 
@@ -56,6 +57,9 @@ export async function loadProjectFromFile(
     await readFile(filename, 'utf8'),
   ) as PundokEditorProject;
   project.path = parse(filename).dir;
+  project.editorConfig = migrateConfigurationPandocOptions(
+    project.editorConfig,
+  );
   return project;
 }
 

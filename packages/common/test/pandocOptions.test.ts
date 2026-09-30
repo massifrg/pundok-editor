@@ -92,12 +92,17 @@ describe('PANDOC_OPTIONS_SPECS', () => {
         ['fail-if-warnings', true],
         ['toc-depth', 2],
         ['metadata', 'title=A title'],
+        ['V', 'include_sub_meta'],
+        ['variable', 'include_sub_meta'],
       ]),
     ).toEqual([
       '--standalone',
       '--fail-if-warnings',
       '--toc-depth=2',
-      '--metadata="title=A title"',
+      '--metadata=title=A title',
+      '-V',
+      'include_sub_meta',
+      '--variable=include_sub_meta',
     ]);
   });
 

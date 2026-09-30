@@ -564,7 +564,6 @@ export default {
             break
           case ACTION_DOCUMENT_TRANSFORM.name:
             const { transform } = props as TransformDocumentActionProps
-            console.log(transform);
             this.transformDocument(transform);
             break;
           case ACTION_BACKEND_FEEDBACK.name:

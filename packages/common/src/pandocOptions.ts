@@ -938,16 +938,26 @@ function optionFlag(name: PandocOptionName): string {
   return `${name.length === 1 ? '-' : '--'}${name}`;
 }
 
+function optionWithValue(
+  name: PandocOptionName,
+  option: string,
+  value: PandocOptionValue,
+): string[] {
+  return name.length === 1
+    ? [option, String(value)]
+    : [`${option}=${value}`];
+}
+
 /**
  * Convert configured Pandoc options to command-line arguments.
  *
- * String values are JSON-quoted because Pandoc commands are run through a
- * shell, while boolean `true` uses Pandoc's value-less enabled form.
+ * Short options with values are separate arguments (`-V value`), while long
+ * options use Pandoc's equals form (`--variable=value`).
  */
 export function pandocOptionsToCliOptions(
   options: readonly PandocOption[],
 ): string[] {
-  return options.map(([name, value]) => {
+  return options.flatMap(([name, value]) => {
     const spec = PANDOC_OPTIONS_SPECS.find((candidate) =>
       candidate.name.includes(name),
     );
@@ -977,7 +987,7 @@ export function pandocOptionsToCliOptions(
         throw new Error(
           `Pandoc option "${name}" does not accept a numeric value`,
         );
-      return `${option}=${value}`;
+      return optionWithValue(name, option, value);
     }
 
     if (
@@ -989,6 +999,6 @@ export function pandocOptionsToCliOptions(
       )
     )
       throw new Error(`Pandoc option "${name}" does not accept a string value`);
-    return `${option}=${JSON.stringify(value)}`;
+    return optionWithValue(name, option, value);
   });
 }

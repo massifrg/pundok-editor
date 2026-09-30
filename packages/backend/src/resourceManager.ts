@@ -178,9 +178,9 @@ function migratePandocOptions(options: unknown): PandocOption[] | undefined {
   throw new Error('Pandoc options must be option tuples or legacy strings');
 }
 
-function migrateConfigurationPandocOptions(
-  config: PundokEditorConfigInit,
-): PundokEditorConfigInit {
+export function migrateConfigurationPandocOptions<
+  T extends Partial<PundokEditorConfigInit>,
+>(config: T): T {
   return {
     ...config,
     outputConverters: config.outputConverters?.map((converter) =>
@@ -201,7 +201,7 @@ function migrateConfigurationPandocOptions(
           }
         : automation,
     ),
-  };
+  } as T;
 }
 
 export function isReadableFile(filename: string): boolean {
