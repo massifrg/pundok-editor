@@ -11,6 +11,7 @@ import {
 } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
 import { isEmpty } from 'lodash';
+import { expandCommandArgs } from '../expandCommandArgs';
 
 export async function transformJsonHandler(
   directories: BackendDirectories,
@@ -40,12 +41,19 @@ export async function transformWithPandoc(
   const fromFormat = transform.fromFormat || 'json';
   const toFormat = transform.toFormat || 'json';
   console.log(JSON.stringify(transform, undefined, 2))
+  const otherArgs = expandCommandArgs(
+    pandocOptionsToCliOptions(transform.pandocOptions || []),
+    {
+      path: sources && sources.length > 0 ? sources[0] : undefined,
+      project
+    }
+  )
   const args = [
     '-f',
     fromFormat,
     '-t',
     toFormat,
-    ...pandocOptionsToCliOptions(transform.pandocOptions || []),
+    ...otherArgs,
   ];
   console.log(args)
   if (!transform.filters?.length && fromFormat === toFormat)
@@ -78,7 +86,8 @@ export async function transformWithPandoc(
     );
   }
 
-  for (const source of transform.sources || ['-']) {
+  const sourceArgs = expandCommandArgs(transform.sources || ['-'], { project })
+  for (const source of sourceArgs) {
     if (source === '-') {
       args.push(source);
       continue;

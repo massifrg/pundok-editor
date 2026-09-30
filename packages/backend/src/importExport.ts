@@ -251,7 +251,10 @@ export async function exportWithScript(
   if (!command) throw new Error('this converter has no command to run');
   return exportWithExternalProgram(
     command,
-    expandCommandArgs(commandArgs || [], exportOptions.sourceFile),
+    expandCommandArgs(commandArgs || [], {
+      path: exportOptions.sourceFile,
+      project: doc.project,
+    }),
     doc.content,
     exportOptions,
   );

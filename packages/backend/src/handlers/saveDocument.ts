@@ -79,7 +79,7 @@ export async function exportDocument(
   const sourceFile = localizePath(doc.path);
   const cwd = localizePath(doc.project?.path || parse(sourceFile).dir);
   let resultFile = converter?.resultFile
-    ? expandCommandArgs([converter.resultFile], sourceFile)[0]
+    ? expandCommandArgs([converter.resultFile], { path: sourceFile })[0]
     : undefined;
   if (resultFile && !isAbsolute(resultFile)) resultFile = resolve(cwd, resultFile);
   const resourcesPaths = validResourcePaths(
