@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { PANDOC_OPTIONS } from '../src/pandocOptions';
+import { PANDOC_OPTIONS_SPECS } from '../src/pandocOptions';
 import { PANDOC_EXTENSION_DESCRIPTIONS } from '../src/pandocExtensions';
 
 const optionByLongName = (name: string) =>
-  PANDOC_OPTIONS.find((option) => option.name.includes(name));
+  PANDOC_OPTIONS_SPECS.find((option) => option.name.includes(name));
 
-describe('PANDOC_OPTIONS', () => {
+describe('PANDOC_OPTIONS_SPECS', () => {
   it('includes the documented Pandoc 3 option families', () => {
     for (const name of [
       'completion',
