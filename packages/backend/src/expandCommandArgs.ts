@@ -61,5 +61,8 @@ export function expandCommandArgs(
   }
   const regex = new RegExp('%(' + Object.keys(part).join('|') + ')%', 'g')
   console.log(regex)
-  return args.map(arg => arg.replaceAll(regex, (_, key: string) => part[key] || key))
+  return args.map(arg => arg.replaceAll(regex, (_, key: string) => {
+    const value = part[key]
+    return value === undefined || value === null ? key : value
+  }))
 }

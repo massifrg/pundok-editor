@@ -94,7 +94,7 @@ export class PundokEditorServer {
       username: string,
       key: BackendValueKey,
     ) => DocRepository[],
-  ) {}
+  ) { }
 
   prepareUser(username: string): void {
     ensureBackendDirectories(this.directoriesForUser(username));
@@ -269,7 +269,7 @@ export class PundokEditorServer {
     );
   }
 
-  async setValue(_user: string, _key: string, _value?: any): Promise<void> {}
+  async setValue(_user: string, _key: string, _value?: any): Promise<void> { }
 
   async getValue(user: string, key: BackendValueKey): Promise<DocRepository[]> {
     return this.getValueForUser(user, key);
@@ -452,25 +452,28 @@ export class PundokEditorServer {
     )?.resultFile;
     if (!outputTemplate) return;
     const outputPath = document.path
-      ? expandCommandArgs([outputTemplate], document.path)[0]
+      ? expandCommandArgs([outputTemplate], {
+        path: document.path,
+        project: document?.project
+      })[0]
       : outputTemplate;
     this.userPath(
       username,
       isAbsolute(outputPath)
         ? outputPath
         : resolve(
-            document.project?.path || parsePath(document.path || '').dir,
-            outputPath,
-          ),
+          document.project?.path || parsePath(document.path || '').dir,
+          outputPath,
+        ),
     );
   }
 
   private synctexInfoForUser(username: string, info: SynctexInfo): SynctexInfo {
     const project = info.projectAsJson
       ? this.projectForUser(
-          username,
-          JSON.parse(info.projectAsJson) as PundokEditorProject,
-        )
+        username,
+        JSON.parse(info.projectAsJson) as PundokEditorProject,
+      )
       : undefined;
     return {
       ...info,
