@@ -306,7 +306,47 @@ export function findResourceFiles(
         return filenameRegex.test(filename);
       })
       .map((filename) => resolve(dir, filename))
-      .filter(isReadableFile),
+      .filter(isReadableFile)
+      .filter(
+        (path) =>
+          options?.searchMode !== 'strict' ||
+          isStrictResourceFile(kind, path, options?.filterSearchTerms),
+      ),
+  );
+}
+
+function isStrictResourceFile(
+  kind: ResourceType | undefined,
+  path: string,
+  filterSearchTerms?: string[],
+) {
+  if (kind === 'writer') return isCustomWriter(path);
+  if (kind === 'filter') return isPandocFilter(path, filterSearchTerms);
+  return true;
+}
+
+function isCustomWriter(path: string): boolean {
+  return /function\s+(?:Writer|ByteStringWriter)\b|Writer\s*=\s*pandoc[.]scaffolding[.]Writer/.test(
+    readFileSync(path, 'utf8'),
+  );
+}
+
+function isPandocFilter(path: string, filterSearchTerms = ['filter']): boolean {
+  const contents = readFileSync(path, 'utf8');
+  const initialComments =
+    contents.match(/^(?:[ \t\r\n]*(?:--\[\[[\s\S]*?\]\]|--[^\n]*))*/)?.[0] ||
+    '';
+  return (
+    (filterSearchTerms.some((term) =>
+      new RegExp(
+        `\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`,
+        'i',
+      ).test(initialComments),
+    ) ||
+      /---@type\s+Filter\b/i.test(contents)) &&
+    /\bpandoc\b/i.test(contents) &&
+    /return\s*\{[\s\S]*\}\s*$/.test(contents) &&
+    !isCustomWriter(path)
   );
 }
 

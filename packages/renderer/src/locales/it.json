@@ -281,7 +281,9 @@
       "duplicateName": "Esiste già un convertitore in uscita con questo nome.",
       "pandocResources": {
         "filter": "filtro",
+        "filterSearchTerm": "filtro",
         "writer": "custom writer",
+        "strictSearch": "Ricerca rigorosa",
         "select": "Seleziona",
         "addDialogTitle": "Seleziona {resource} Pandoc",
         "noneAvailable": "Non sono stati trovati {resource} Lua.",

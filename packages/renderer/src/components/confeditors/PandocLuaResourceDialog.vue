@@ -20,6 +20,20 @@
             separator
             class="pandoc-lua-resource-dialog__available"
           >
+            <q-item>
+              <q-item-section>
+                <q-toggle
+                  v-model="searchMode"
+                  true-value="strict"
+                  false-value="loose"
+                  :label="
+                    $t(
+                      'configEditor.outputConverters.pandocResources.strictSearch',
+                    )
+                  "
+                />
+              </q-item-section>
+            </q-item>
             <q-item v-if="availableResources.length === 0">
               <q-item-section class="text-grey">
                 {{
@@ -162,6 +176,7 @@ import { useI18n } from 'vue-i18n';
 import type {
   FindResourceOptions,
   ResourceFile,
+  ResourceSearchMode,
   ResourceType,
 } from '../../common';
 import { useBackend } from '../../stores';
@@ -199,6 +214,7 @@ const backend = useBackend();
 const { t } = useI18n();
 const availableResources = ref<ResourceFile[]>([]);
 const selectedResource = ref<string>();
+const searchMode = ref<ResourceSearchMode>('strict');
 const preview = ref('');
 const loadingPreview = ref(false);
 const previewError = ref('');
@@ -215,13 +231,33 @@ const canSelect = computed(
     parameters.value.every((parameter) => parameter.name.trim()),
 );
 
-onMounted(async () => {
+onMounted(loadResources);
+
+watch(searchMode, async () => {
+  selectedResource.value = undefined;
+  preview.value = '';
+  previewError.value = '';
+  parameters.value = [];
+  await loadResources();
+});
+
+async function loadResources(): Promise<void> {
   if (!backend.backend) return;
   availableResources.value = await backend.backend.findResourceFiles(
     /[.]lua$/,
-    { kind: props.resourceType, ...props.resourceOptions },
+    {
+      ...props.resourceOptions,
+      kind: props.resourceType,
+      searchMode: searchMode.value,
+      filterSearchTerms: [
+        'filter',
+        String(
+          t('configEditor.outputConverters.pandocResources.filterSearchTerm'),
+        ),
+      ],
+    },
   );
-});
+}
 
 watch(
   () => props.modelValue,

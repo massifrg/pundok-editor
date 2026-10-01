@@ -34,11 +34,17 @@ export const RESOURCE_SUBPATHS: Record<ResourceType, string[]> = {
   other: ['other'],
 };
 
+export type ResourceSearchMode = 'loose' | 'strict';
+
 /** structure used to find a resource for a document */
 export interface FindResourceOptions {
   kind: ResourceType;
   project: PundokEditorProject | string;
   configurationName: string;
+  /** Whether to match files only by name or also verify their contents. */
+  searchMode: ResourceSearchMode;
+  /** Localized terms that identify a Pandoc filter in its initial comments. */
+  filterSearchTerms: string[];
   base64?: boolean;
 }
 

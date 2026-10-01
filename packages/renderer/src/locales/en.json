@@ -282,7 +282,9 @@
       "duplicateName": "An output converter with this name already exists.",
       "pandocResources": {
         "filter": "filter",
+        "filterSearchTerm": "filter",
         "writer": "custom writer",
+        "strictSearch": "Strict search",
         "select": "Select",
         "addDialogTitle": "Select Pandoc {resource}",
         "noneAvailable": "No Lua {resource}s found.",
