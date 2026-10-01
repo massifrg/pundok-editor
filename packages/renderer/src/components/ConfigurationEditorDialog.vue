@@ -44,6 +44,14 @@
                 project ? { kind: 'filter', project } : undefined
               "
             />
+            <AutomationsEditor
+              v-else-if="tab.name === 'automations'"
+              v-model="values.automations"
+              :editor="editor"
+              :resource-options="
+                project ? { kind: 'filter', project } : undefined
+              "
+            />
             <div
               v-for="field in tab.fields"
               v-else
@@ -101,16 +109,24 @@ setupQuasarIcons();
 </script>
 
 <script lang="ts">
-import { PundokEditorConfigInit } from '../common';
+import type { PropType } from 'vue';
+import { PundokEditorConfigInit, PundokEditorProject } from '../common';
 import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEditor.vue';
 import CustomStylesEditor from './confeditors/CustomStylesEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
+import AutomationsEditor from './confeditors/AutomationsEditor.vue';
 
 type EditorConfigField = {
   name: keyof PundokEditorConfigInit;
   label: string;
   description: string;
-  kind: 'text' | 'boolean' | 'json' | 'customStyles' | 'outputConverters';
+  kind:
+    | 'text'
+    | 'boolean'
+    | 'json'
+    | 'customStyles'
+    | 'outputConverters'
+    | 'automations';
 };
 
 type EditorConfigTab = {
@@ -251,7 +267,7 @@ const fields: EditorConfigField[] = [
     name: 'automations',
     label: 'configEditor.automations.label',
     description: 'configEditor.automations.description',
-    kind: 'json',
+    kind: 'automations',
   },
 ];
 
@@ -313,13 +329,18 @@ export default {
     visible: { type: Boolean, default: false },
     configuration: { type: Object, default: () => ({}) },
     projectConfigurations: { type: Array, default: () => [] },
-    project: { type: Object, default: undefined },
+    project: {
+      type: Object as PropType<PundokEditorProject | undefined>,
+      default: undefined,
+    },
+    editor: { type: Object, default: undefined },
   },
   emits: ['save', 'close'],
   components: {
     ProjectConfigurationsEditor,
     CustomStylesEditor,
     OutputConvertersEditor,
+    AutomationsEditor,
   },
   data() {
     return {
@@ -356,7 +377,8 @@ export default {
           );
         } else if (
           field.name === 'customStyles' ||
-          field.name === 'outputConverters'
+          field.name === 'outputConverters' ||
+          field.name === 'automations'
         ) {
           values[field.name] = value || [];
         } else {

@@ -4,6 +4,7 @@ import { ActionNameWithProps } from '../actions';
 import { CustomSpan } from './customSpan';
 import { NamedAndDescribed } from '../types';
 import { PandocOption } from '../pandocOptions';
+import { PandocFilter } from '../pandoc';
 
 /**
  * Types of automations available:
@@ -49,7 +50,7 @@ export type SearchAndReplaceMark =
   | 'doubleQuoted';
 
 /** Type of Mark specs: base (`emph`, `strong`, ...), custom style, custom span. */
-export type MarkSpecType = 'base' | 'style' | 'span'
+export type MarkSpecType = 'base' | 'style' | 'span';
 
 export interface SearchMarkSpec {
   /** The type of MarkSpec */
@@ -79,7 +80,7 @@ export interface SearchAndReplace extends Automation {
   /** The exact text or regular expression to search. */
   search: string;
   /** A specification of the Marks that must be present or must be absent in the found texts. */
-  filterOnMarks?: SearchFilterOnMarks,
+  filterOnMarks?: SearchFilterOnMarks;
   /** The replacement text (exact or strings with `$1`, `$2`, etc. for regular expressions). */
   replace?: string;
   /** Just search, don't replace. */
@@ -117,13 +118,15 @@ export interface ElementsSelection extends Automation {
   /** The text to replace the selected element with (use "$&" to replace the selected text). */
   replace?: string;
   /** Just search, don't replace with text. */
-  optionSearchOnly?: boolean,
-  /** Keep adjacent selected text nodes together. Example: "`<i>italic <b>bold</b></i>`" 
+  optionSearchOnly?: boolean;
+  /** Keep adjacent selected text nodes together. Example: "`<i>italic <b>bold</b></i>`"
    * are two text Nodes, the first with just the `Emph` Mark and the second with
    * both the `Emph` and `Strong` Marks; when the option is `true` they are kept
    * together as a single found text span.
    */
-  optionMergeSameAdjacentMarks?: boolean,
+  optionMergeSameAdjacentMarks?: boolean;
+  /** Actions to perform on selected elements or their replacements. */
+  actions?: ActionNameWithProps[];
 }
 
 /** What to do with the result of a document transformation. */
@@ -141,15 +144,11 @@ export type PandocMetadata = Record<string, boolean | number | string>;
 export interface PandocFilterTransform extends Automation {
   type: 'pandoc-filter';
   /** The pandoc filters to be applied (in the order of the array) */
-  filters: string[];
+  filters: (string | PandocFilter)[];
   /** Which source to use as input. The current document if not specified. */
   sources?: string[];
   /** What to do with the output of the transformation. */
   withResult?: WhatToDoWithResult;
-  /** Variables to be passed to the filter via --variable */
-  variables?: PandocVariables;
-  /** Metadata to be passed to the filter via --metadata */
-  metadata?: PandocMetadata;
   /** Input format (default: json) */
   fromFormat?: string;
   /** Output format (default: json) */

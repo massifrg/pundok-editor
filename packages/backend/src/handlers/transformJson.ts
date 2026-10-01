@@ -1,9 +1,10 @@
 import { extname, isAbsolute } from 'node:path';
-import type {
-  CxDocument,
-  PandocFilterTransform,
+import type { CxDocument, PandocFilterTransform } from '../../../common/src';
+import {
+  pandocFilterName,
+  pandocFilterToCliOptions,
+  pandocOptionsToCliOptions,
 } from '../../../common/src';
-import { pandocOptionsToCliOptions } from '../../../common/src';
 import {
   findResourceFile,
   isReadableFile,
@@ -35,27 +36,22 @@ export async function transformWithPandoc(
   transform: PandocFilterTransform,
 ): Promise<string> {
   const { configurationName, project, content } = document;
-  const { sources } = transform
-  if (!content && isEmpty(sources)) throw new Error('transformWithPandoc: no content or sources provided');
+  const { sources } = transform;
+  if (!content && isEmpty(sources))
+    throw new Error('transformWithPandoc: no content or sources provided');
 
   const fromFormat = transform.fromFormat || 'json';
   const toFormat = transform.toFormat || 'json';
-  console.log(JSON.stringify(transform, undefined, 2))
+  console.log(JSON.stringify(transform, undefined, 2));
   const otherArgs = expandCommandArgs(
     pandocOptionsToCliOptions(transform.pandocOptions || []),
     {
       path: sources && sources.length > 0 ? sources[0] : undefined,
-      project
-    }
-  )
-  const args = [
-    '-f',
-    fromFormat,
-    '-t',
-    toFormat,
-    ...otherArgs,
-  ];
-  console.log(args)
+      project,
+    },
+  );
+  const args = ['-f', fromFormat, '-t', toFormat, ...otherArgs];
+  console.log(args);
   if (!transform.filters?.length && fromFormat === toFormat)
     throw new Error(
       'You must provide Pandoc filters to transform a document without changing its format',
@@ -74,19 +70,19 @@ export async function transformWithPandoc(
   }
 
   for (const filter of transform.filters || []) {
-    const extension = extname(filter).toLowerCase();
-    const filename = extension ? filter : `${filter}.lua`;
+    const filterName = pandocFilterName(filter);
+    const extension = extname(filterName).toLowerCase();
+    const filename = extension ? filterName : `${filterName}.lua`;
     const filterFile = findResourceFile(directories, filename, {
       ...context,
       kind: 'filter',
     });
-    if (!filterFile) throw new Error(`Transformation filter "${filter}" not found`);
-    args.push(
-      `${extension === '' || extension === '.lua' ? '--lua-filter' : '--filter'}=${filterFile}`,
-    );
+    if (!filterFile)
+      throw new Error(`Transformation filter "${filterName}" not found`);
+    args.push(...pandocFilterToCliOptions(filter, filterFile));
   }
 
-  const sourceArgs = expandCommandArgs(transform.sources || ['-'], { project })
+  const sourceArgs = expandCommandArgs(transform.sources || ['-'], { project });
   for (const source of sourceArgs) {
     if (source === '-') {
       args.push(source);
@@ -101,7 +97,7 @@ export async function transformWithPandoc(
       );
     args.push(sourceFile);
   }
-  console.log(args)
+  console.log(args);
 
   const { result } = runExternalProgram(
     'pandoc',

@@ -8,8 +8,10 @@ import {
 import { readdir } from 'node:fs/promises';
 import { dirname, relative, resolve } from 'node:path';
 import {
+  type Automation,
   type ConfigQueryOptions,
   type FindResourceOptions,
+  type PandocFilter,
   type PandocFilterTransform,
   type PandocOption,
   type PundokEditorConfigInit,
@@ -197,7 +199,7 @@ export function migrateConfigurationPandocOptions<
     automations: config.automations?.map((automation) =>
       automation.type === 'pandoc-filter'
         ? {
-            ...automation,
+            ...migratePandocFilterParameters(automation),
             pandocOptions: migratePandocOptions(
               (automation as PandocFilterTransform).pandocOptions,
             ),
@@ -205,6 +207,44 @@ export function migrateConfigurationPandocOptions<
         : automation,
     ),
   } as T;
+}
+
+function migratePandocFilterParameters(
+  automation: Automation,
+): PandocFilterTransform {
+  const transform = automation as PandocFilterTransform & {
+    variables?: PandocFilter['variables'];
+    metadata?: PandocFilter['metadata'];
+  };
+  const { variables, metadata, filters = [] } = transform;
+  if ((!variables && !metadata) || filters.length === 0) return transform;
+
+  const [firstFilter, ...remainingFilters] = filters;
+  const firstFilterWithParameters =
+    typeof firstFilter === 'string'
+      ? {
+          name: firstFilter,
+          ...(variables && { variables }),
+          ...(metadata && { metadata }),
+        }
+      : {
+          ...firstFilter,
+          ...(variables && {
+            variables: { ...variables, ...firstFilter.variables },
+          }),
+          ...(metadata && {
+            metadata: { ...metadata, ...firstFilter.metadata },
+          }),
+        };
+  const {
+    variables: _variables,
+    metadata: _metadata,
+    ...migratedTransform
+  } = transform;
+  return {
+    ...migratedTransform,
+    filters: [firstFilterWithParameters, ...remainingFilters],
+  };
 }
 
 export function isReadableFile(filename: string): boolean {

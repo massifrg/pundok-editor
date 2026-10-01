@@ -94,10 +94,47 @@ describe('migrateLegacyPandocOptions', () => {
         name: 'Legacy filter',
         type: 'pandoc-filter',
         filters: ['filter.lua'],
-        pandocOptions: [
-          ['wrap', 'none'],
-          ['s'],
+        pandocOptions: [['wrap', 'none'], ['s']],
+      },
+    ]);
+  });
+
+  it('moves legacy Pandoc filter parameters to the first filter', async () => {
+    await writeFile(
+      join(directories.configurationsDir, 'legacy-parameters.config.json'),
+      JSON.stringify({
+        name: 'legacy-parameters',
+        version: [1],
+        automations: [
+          {
+            name: 'Legacy filter parameters',
+            type: 'pandoc-filter',
+            filters: ['filter.lua', 'other.lua'],
+            variables: { language: 'en' },
+            metadata: { title: 'Document' },
+          },
         ],
+      }),
+    );
+
+    const configuration = await getConfigurationInit(
+      directories,
+      'legacy-parameters',
+    );
+
+    expect(configuration?.automations).toEqual([
+      {
+        name: 'Legacy filter parameters',
+        type: 'pandoc-filter',
+        filters: [
+          {
+            name: 'filter.lua',
+            variables: { language: 'en' },
+            metadata: { title: 'Document' },
+          },
+          'other.lua',
+        ],
+        pandocOptions: undefined,
       },
     ]);
   });
@@ -130,10 +167,7 @@ describe('migrateLegacyPandocOptions', () => {
         name: 'Legacy filter',
         type: 'pandoc-filter',
         filters: ['filter.lua'],
-        pandocOptions: [
-          ['wrap', 'none'],
-          ['s'],
-        ],
+        pandocOptions: [['wrap', 'none'], ['s']],
       },
     ]);
   });

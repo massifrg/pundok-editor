@@ -158,6 +158,7 @@
         />
         <ConfigurationEditorDialog
           :visible="visibleConfigurationEditor"
+          :editor="editor"
           :configuration="docState()?.project?.editorConfig || {}"
           :project="docState()?.project"
           :project-configurations="docState()?.project?.configurations || []"

@@ -323,7 +323,23 @@
     },
     "automations": {
       "label": "Automazioni",
-      "description": "Automazioni predefinite dell'editor, come array JSON."
+      "description": "Automazioni predefinite dell'editor.",
+      "title": "Automazioni",
+      "newAutomation": "Nuova automazione",
+      "none": "Nessuna automazione configurata.",
+      "name": "Nome",
+      "descriptionLabel": "Descrizione",
+      "withResult": "Usa il risultato del filtro",
+      "withResultOptions": {
+        "replace": "Sostituisci il documento",
+        "append": "Aggiungi al documento",
+        "prepend": "Anteponi al documento"
+      },
+      "types": {
+        "searchReplace": "Cerca e sostituisci",
+        "elementsSelection": "Selezione di elementi",
+        "pandocFilter": "Filtro Pandoc"
+      }
     },
     "projectConfigurations": {
       "title": "Configurazioni del progetto (trascina per riordinare)",

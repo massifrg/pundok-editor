@@ -324,7 +324,23 @@
     },
     "automations": {
       "label": "Automations",
-      "description": "Predefined editor automations, as a JSON array."
+      "description": "Predefined editor automations.",
+      "title": "Automations",
+      "newAutomation": "New automation",
+      "none": "No automations configured.",
+      "name": "Name",
+      "descriptionLabel": "Description",
+      "withResult": "Use filter result",
+      "withResultOptions": {
+        "replace": "Replace document",
+        "append": "Append to document",
+        "prepend": "Prepend to document"
+      },
+      "types": {
+        "searchReplace": "Search and replace",
+        "elementsSelection": "Elements selection",
+        "pandocFilter": "Pandoc filter"
+      }
     },
     "projectConfigurations": {
       "title": "Project configurations (drag to reorder)",

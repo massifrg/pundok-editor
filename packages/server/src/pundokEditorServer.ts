@@ -455,7 +455,12 @@ export class PundokEditorServer {
     return {
       ...transform,
       filters: transform.filters.map((filter) =>
-        this.resourcePathForUser(username, filter),
+        typeof filter === 'string'
+          ? this.resourcePathForUser(username, filter)
+          : {
+              ...filter,
+              name: this.resourcePathForUser(username, filter.name),
+            },
       ),
       sources: transform.sources?.map((source) =>
         this.resourcePathForUser(username, source),
