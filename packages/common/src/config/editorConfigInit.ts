@@ -1,4 +1,3 @@
-import { Config } from 'electron';
 import { Automation } from './automations';
 import { CustomAttribute } from './customAttributes';
 import { CustomClass } from './customClasses';

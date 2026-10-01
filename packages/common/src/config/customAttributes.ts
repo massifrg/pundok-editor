@@ -3,6 +3,7 @@ import { CustomStyleInstance, activeCustomStyles } from './customStyles';
 import { CustomClass, activeCustomClasses } from './customClasses';
 import { appliesTo } from './appliesTo';
 import { NamedAndDescribed } from '../types';
+import { HasPandocAttr } from './hasPandocAttr';
 
 /**
  * A custom attribute for Pandoc's `Block`s and `Inline`s with an `Attr`
@@ -11,7 +12,7 @@ import { NamedAndDescribed } from '../types';
  */
 export interface CustomAttribute extends NamedAndDescribed {
   /** the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`) */
-  appliesTo?: string[];
+  appliesTo?: (keyof typeof HasPandocAttr)[];
   /** optional default value */
   default?: string;
   /** possible, but not compulsory, values */
