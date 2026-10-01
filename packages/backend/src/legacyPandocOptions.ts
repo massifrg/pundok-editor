@@ -81,14 +81,17 @@ export function migrateLegacyPandocOptions(
     const types = valueTypes(spec);
     let value =
       equalsIndex === -1 ? undefined : withoutPrefix.slice(equalsIndex + 1);
+    const nextArgument = arguments_[index + 1];
+    const nextArgumentIsValue =
+      nextArgument !== undefined &&
+      (!nextArgument.startsWith('-') || /^-\d/.test(nextArgument));
 
     if (
       value === undefined &&
       !types.includes('flag') &&
-      arguments_[index + 1] !== undefined &&
-      !arguments_[index + 1].startsWith('-')
+      nextArgumentIsValue
     ) {
-      value = arguments_[index + 1];
+      value = nextArgument;
       index += 1;
     } else if (value === undefined && !types.includes('flag')) {
       throw new Error(`Pandoc option "${name}" requires a value`);

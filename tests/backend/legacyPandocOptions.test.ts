@@ -37,6 +37,8 @@ describe('migrateLegacyPandocOptions', () => {
         'include_sub_meta=1',
         '--template templates/myhtml.html',
         '--variable=cssfile:mycss.css',
+        '--shift-heading-level-by',
+        '-1',
       ]),
     ).toEqual([
       ['wrap', 'none'],
@@ -44,6 +46,7 @@ describe('migrateLegacyPandocOptions', () => {
       ['variable', 'include_sub_meta=1'],
       ['template', 'templates/myhtml.html'],
       ['variable', 'cssfile:mycss.css'],
+      ['shift-heading-level-by', -1],
     ]);
   });
 
