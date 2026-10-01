@@ -232,7 +232,19 @@
     },
     "customClasses": {
       "label": "Custom classes",
-      "description": "Custom class definitions, as a JSON array."
+      "description": "Custom class definitions.",
+      "title": "Custom classes",
+      "newClass": "New class",
+      "editClass": "Edit class",
+      "deleteClass": "Delete class",
+      "none": "No custom classes defined.",
+      "newTitle": "New custom class",
+      "editTitle": "Edit custom class",
+      "name": "Name",
+      "descriptionLabel": "Description",
+      "appliesTo": "Applies to",
+      "nameRequired": "A class name is required.",
+      "duplicateName": "A custom class with this name already exists."
     },
     "customAttributes": {
       "label": "Custom attributes",

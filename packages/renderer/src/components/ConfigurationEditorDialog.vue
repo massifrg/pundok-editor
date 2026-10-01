@@ -37,6 +37,10 @@
               v-else-if="tab.name === 'customStyles'"
               v-model="values.customStyles"
             />
+            <CustomClassesEditor
+              v-else-if="tab.name === 'customClasses'"
+              v-model="values.customClasses"
+            />
             <CustomAttributesEditor
               v-else-if="tab.name === 'customAttributes'"
               v-model="values.customAttributes"
@@ -117,6 +121,7 @@ import type { PropType } from 'vue';
 import { PundokEditorConfigInit, PundokEditorProject } from '../common';
 import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEditor.vue';
 import CustomStylesEditor from './confeditors/CustomStylesEditor.vue';
+import CustomClassesEditor from './confeditors/CustomClassesEditor.vue';
 import CustomAttributesEditor from './confeditors/CustomAttributesEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
 import AutomationsEditor from './confeditors/AutomationsEditor.vue';
@@ -130,6 +135,7 @@ type EditorConfigField = {
     | 'boolean'
     | 'json'
     | 'customStyles'
+    | 'customClasses'
     | 'customAttributes'
     | 'outputConverters'
     | 'automations';
@@ -207,7 +213,7 @@ const fields: EditorConfigField[] = [
     name: 'customClasses',
     label: 'configEditor.customClasses.label',
     description: 'configEditor.customClasses.description',
-    kind: 'json',
+    kind: 'customClasses',
   },
   {
     name: 'customAttributes',
@@ -345,6 +351,7 @@ export default {
   components: {
     ProjectConfigurationsEditor,
     CustomStylesEditor,
+    CustomClassesEditor,
     CustomAttributesEditor,
     OutputConvertersEditor,
     AutomationsEditor,
@@ -384,6 +391,7 @@ export default {
           );
         } else if (
           field.name === 'customStyles' ||
+          field.name === 'customClasses' ||
           field.name === 'customAttributes' ||
           field.name === 'outputConverters' ||
           field.name === 'automations'

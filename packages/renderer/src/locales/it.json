@@ -231,7 +231,19 @@
     },
     "customClasses": {
       "label": "Classi personalizzate",
-      "description": "Definizioni delle classi personalizzate, come array JSON."
+      "description": "Definizioni delle classi personalizzate.",
+      "title": "Classi personalizzate",
+      "newClass": "Nuova classe",
+      "editClass": "Modifica classe",
+      "deleteClass": "Elimina classe",
+      "none": "Nessuna classe personalizzata definita.",
+      "newTitle": "Nuova classe personalizzata",
+      "editTitle": "Modifica classe personalizzata",
+      "name": "Nome",
+      "descriptionLabel": "Descrizione",
+      "appliesTo": "Si applica a",
+      "nameRequired": "Il nome della classe è obbligatorio.",
+      "duplicateName": "Esiste già una classe personalizzata con questo nome."
     },
     "customAttributes": {
       "label": "Attributi personalizzati",
