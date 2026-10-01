@@ -11,6 +11,7 @@ import {
   allConfigurations as listBackendConfigurations,
   createBackendDirectories,
   findResourceFile as findBackendResourceFile,
+  findResourceFiles as findBackendResourceFiles,
   getConfigurationInit as readBackendConfigurationInit,
   isReadableDir,
   isReadableFile,
@@ -181,6 +182,19 @@ export function findResourceFile(
   options?: Partial<FindResourceFileOptions>,
 ): string | undefined {
   return findBackendResourceFile(backendDirectories(), filename, options);
+}
+
+/**
+ * Look for resource files with filenames matching a regular expression.
+ * @param filenameRegex The regular expression to match against filenames.
+ * @param options Kind of file, base paths, project, configuration name.
+ * @returns Paths found in resource-directory traversal order.
+ */
+export function findResourceFiles(
+  filenameRegex: RegExp,
+  options?: Partial<FindResourceFileOptions>,
+): string[] {
+  return findBackendResourceFiles(backendDirectories(), filenameRegex, options);
 }
 
 function startupFilename(): string {

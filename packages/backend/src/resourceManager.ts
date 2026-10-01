@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+} from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
@@ -273,34 +279,55 @@ export interface FindResourceFileOptions extends FindResourceOptions {
   baseResourcePaths: string[];
 }
 
+export function findResourceFiles(
+  directories: BackendDirectories,
+  filenameRegex: RegExp,
+  options?: Partial<FindResourceFileOptions>,
+): string[] {
+  const { kind, baseResourcePaths, project, configurationName } = options || {};
+  const projectInstance = (
+    typeof project === 'string' ? JSON.parse(project) : project
+  ) as PundokEditorProject | undefined;
+  const resourceDirectories = [
+    ...(baseResourcePaths && kind
+      ? [
+          ...validResourceSubpaths(baseResourcePaths, kind),
+          ...baseResourcePaths,
+        ]
+      : []),
+    ...validResourcePaths(
+      directories,
+      kind,
+      projectInstance,
+      configurationName,
+    ),
+  ];
+  const uniqueResourceDirectories = [...new Set(resourceDirectories)];
+
+  return uniqueResourceDirectories.flatMap((dir) =>
+    readdirSync(dir)
+      .filter((filename) => {
+        filenameRegex.lastIndex = 0;
+        return filenameRegex.test(filename);
+      })
+      .map((filename) => resolve(dir, filename))
+      .filter(isReadableFile),
+  );
+}
+
 export function findResourceFile(
   directories: BackendDirectories,
   filename: string,
   options?: Partial<FindResourceFileOptions>,
 ): string | undefined {
-  const { kind, baseResourcePaths, project, configurationName } = options || {};
-  const findFilename = (base?: string) =>
-    base && isReadableFile(resolve(base, filename));
-  let resourcePath: string | undefined;
-
-  if (baseResourcePaths && kind) {
-    resourcePath = validResourceSubpaths(baseResourcePaths, kind).find((dir) =>
-      isReadableFile(resolve(dir, filename)),
-    );
-    resourcePath ||= baseResourcePaths.find((dir) =>
-      isReadableFile(resolve(dir, filename)),
-    );
-  }
-  const projectInstance = (
-    typeof project === 'string' ? JSON.parse(project) : project
-  ) as PundokEditorProject | undefined;
-  resourcePath ||= validResourcePaths(
+  const filenameRegex = new RegExp(
+    `^${filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
+  );
+  return findResourceFiles(
     directories,
-    kind,
-    projectInstance,
-    configurationName,
-  ).find(findFilename);
-  return resourcePath && resolve(resourcePath, filename);
+    filenameRegex,
+    options,
+  )[0];
 }
 
 export function validResourceSubpaths(
