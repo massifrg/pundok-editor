@@ -203,8 +203,14 @@
       "rawBlocks": "Raw block",
       "rawBlocksDescription": "Esempi raw block inseribili, come array JSON."
     },
-    "documentTemplate": { "label": "Modello del documento", "description": "Modello serializzato come JSON per i nuovi documenti." },
-    "autoDelimiters": { "label": "Delimitatori automatici", "description": "Coppie di delimitatori, come oggetto JSON." },
+    "documentTemplate": {
+      "label": "Modello del documento",
+      "description": "Modello serializzato come JSON per i nuovi documenti."
+    },
+    "autoDelimiters": {
+      "label": "Delimitatori automatici",
+      "description": "Coppie di delimitatori, come oggetto JSON."
+    },
     "customStyles": {
       "label": "Stili personalizzati",
       "description": "Definizioni degli stili personalizzati.",
@@ -222,13 +228,34 @@
       "nameRequired": "Il nome è obbligatorio.",
       "duplicateName": "Esiste già uno stile con questo nome."
     },
-    "customClasses": { "label": "Classi personalizzate", "description": "Definizioni delle classi personalizzate, come array JSON." },
-    "customAttributes": { "label": "Attributi personalizzati", "description": "Definizioni degli attributi personalizzati, come array JSON." },
-    "customMetadata": { "label": "Metadati personalizzati", "description": "Definizioni dei metadati personalizzati, come array JSON." },
-    "noteStyles": { "label": "Stili delle note", "description": "Definizioni degli stili delle note, come array JSON." },
-    "customCss": { "label": "CSS personalizzato", "description": "Percorsi dei file CSS, come array JSON di stringhe." },
-    "indices": { "label": "Indici", "description": "Definizioni degli indici, come array JSON." },
-    "inputConverters": { "label": "Convertitori in ingresso", "description": "Convertitori per l'ingresso dei documenti, come array JSON." },
+    "customClasses": {
+      "label": "Classi personalizzate",
+      "description": "Definizioni delle classi personalizzate, come array JSON."
+    },
+    "customAttributes": {
+      "label": "Attributi personalizzati",
+      "description": "Definizioni degli attributi personalizzati, come array JSON."
+    },
+    "customMetadata": {
+      "label": "Metadati personalizzati",
+      "description": "Definizioni dei metadati personalizzati, come array JSON."
+    },
+    "noteStyles": {
+      "label": "Stili delle note",
+      "description": "Definizioni degli stili delle note, come array JSON."
+    },
+    "customCss": {
+      "label": "CSS personalizzato",
+      "description": "Percorsi dei file CSS, come array JSON di stringhe."
+    },
+    "indices": {
+      "label": "Indici",
+      "description": "Definizioni degli indici, come array JSON."
+    },
+    "inputConverters": {
+      "label": "Convertitori in ingresso",
+      "description": "Convertitori per l'ingresso dei documenti, come array JSON."
+    },
     "outputConverters": {
       "label": "Convertitori in uscita",
       "description": "Convertitori per l'uscita dei documenti.",
@@ -246,9 +273,32 @@
       "formatExtensions": "Estensioni del formato",
       "noFormatExtensions": "Non ci sono estensioni disponibili per questo formato.",
       "nameRequired": "Il nome è obbligatorio.",
-      "duplicateName": "Esiste già un convertitore in uscita con questo nome."
+      "duplicateName": "Esiste già un convertitore in uscita con questo nome.",
+      "filters": {
+        "title": "Filtri Pandoc",
+        "add": "Aggiungi filtro",
+        "noneAvailable": "Non sono stati trovati filtri Lua.",
+        "noneSelected": "Nessun filtro selezionato.",
+        "remove": "Rimuovi filtro",
+        "addDialogTitle": "Aggiungi filtro Pandoc",
+        "preview": "Anteprima del filtro",
+        "addParameter": "Aggiungi variabile o metadato",
+        "removeParameter": "Rimuovi variabile o metadato",
+        "variable": "Variabile",
+        "metadata": "Metadato",
+        "parameterName": "Nome",
+        "parameterValue": "Valore",
+        "provenance": {
+          "project": "Risorsa del progetto",
+          "configuration": "Configurazione ereditata",
+          "common": "Risorsa comune dell'editor"
+        }
+      }
     },
-    "automations": { "label": "Automazioni", "description": "Automazioni predefinite dell'editor, come array JSON." },
+    "automations": {
+      "label": "Automazioni",
+      "description": "Automazioni predefinite dell'editor, come array JSON."
+    },
     "projectConfigurations": {
       "title": "Configurazioni del progetto (trascina per riordinare)",
       "noneSelected": "Nessuna configurazione del progetto selezionata.",

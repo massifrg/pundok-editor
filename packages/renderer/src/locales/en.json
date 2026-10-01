@@ -204,8 +204,14 @@
       "rawBlocks": "Raw blocks",
       "rawBlocksDescription": "Insertable raw block samples, as a JSON array."
     },
-    "documentTemplate": { "label": "Document template", "description": "JSON-stringified template for new documents." },
-    "autoDelimiters": { "label": "Automatic delimiters", "description": "Delimiter pairs, as a JSON object." },
+    "documentTemplate": {
+      "label": "Document template",
+      "description": "JSON-stringified template for new documents."
+    },
+    "autoDelimiters": {
+      "label": "Automatic delimiters",
+      "description": "Delimiter pairs, as a JSON object."
+    },
     "customStyles": {
       "label": "Custom styles",
       "description": "Custom style definitions.",
@@ -223,13 +229,34 @@
       "nameRequired": "A name is required.",
       "duplicateName": "A style with this name already exists."
     },
-    "customClasses": { "label": "Custom classes", "description": "Custom class definitions, as a JSON array." },
-    "customAttributes": { "label": "Custom attributes", "description": "Custom attribute definitions, as a JSON array." },
-    "customMetadata": { "label": "Custom metadata", "description": "Custom metadata definitions, as a JSON array." },
-    "noteStyles": { "label": "Note styles", "description": "Note style definitions, as a JSON array." },
-    "customCss": { "label": "Custom CSS", "description": "CSS file paths, as a JSON array of strings." },
-    "indices": { "label": "Indices", "description": "Index definitions, as a JSON array." },
-    "inputConverters": { "label": "Input converters", "description": "Document input converters, as a JSON array." },
+    "customClasses": {
+      "label": "Custom classes",
+      "description": "Custom class definitions, as a JSON array."
+    },
+    "customAttributes": {
+      "label": "Custom attributes",
+      "description": "Custom attribute definitions, as a JSON array."
+    },
+    "customMetadata": {
+      "label": "Custom metadata",
+      "description": "Custom metadata definitions, as a JSON array."
+    },
+    "noteStyles": {
+      "label": "Note styles",
+      "description": "Note style definitions, as a JSON array."
+    },
+    "customCss": {
+      "label": "Custom CSS",
+      "description": "CSS file paths, as a JSON array of strings."
+    },
+    "indices": {
+      "label": "Indices",
+      "description": "Index definitions, as a JSON array."
+    },
+    "inputConverters": {
+      "label": "Input converters",
+      "description": "Document input converters, as a JSON array."
+    },
     "outputConverters": {
       "label": "Output converters",
       "description": "Document output converters.",
@@ -247,9 +274,32 @@
       "formatExtensions": "Format extensions",
       "noFormatExtensions": "No extensions available for this format.",
       "nameRequired": "A name is required.",
-      "duplicateName": "An output converter with this name already exists."
+      "duplicateName": "An output converter with this name already exists.",
+      "filters": {
+        "title": "Pandoc filters",
+        "add": "Add filter",
+        "noneAvailable": "No Lua filters found.",
+        "noneSelected": "No filters selected.",
+        "remove": "Remove filter",
+        "addDialogTitle": "Add Pandoc filter",
+        "preview": "Filter preview",
+        "addParameter": "Add variable or metadata",
+        "removeParameter": "Remove variable or metadata",
+        "variable": "Variable",
+        "metadata": "Metadata",
+        "parameterName": "Name",
+        "parameterValue": "Value",
+        "provenance": {
+          "project": "Project resource",
+          "configuration": "Inherited configuration",
+          "common": "Editor common resource"
+        }
+      }
     },
-    "automations": { "label": "Automations", "description": "Predefined editor automations, as a JSON array." },
+    "automations": {
+      "label": "Automations",
+      "description": "Predefined editor automations, as a JSON array."
+    },
     "projectConfigurations": {
       "title": "Project configurations (drag to reorder)",
       "noneSelected": "No project configurations selected.",

@@ -11,6 +11,7 @@ import {
   PreviewOptions,
   Query,
   QueryResult,
+  ResourceFile,
   PundokEditorProject,
   EditorKeyType,
   ServerMessageSetConfiguration,
@@ -365,6 +366,17 @@ export class LocalBackend implements Backend {
       return getHardcodedCustomCss();
     }
     return window.ipc.fileContents(filename, options);
+  }
+
+  async findResourceFiles(
+    filenameRegex: RegExp,
+    options?: Partial<FindResourceOptions>,
+  ): Promise<ResourceFile[]> {
+    return window.ipc.findResourceFiles(
+      filenameRegex.source,
+      filenameRegex.flags,
+      options,
+    );
   }
 
   async setValue(key: string, value?: any): Promise<void> {

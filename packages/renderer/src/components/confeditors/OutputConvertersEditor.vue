@@ -145,6 +145,12 @@
             </q-item>
           </q-list>
         </q-btn-dropdown>
+        <PandocFiltersEditor
+          v-if="draft.type === 'pandoc'"
+          :model-value="draft.filters || []"
+          :resource-options="resourceOptions"
+          @update:model-value="draft.filters = $event"
+        />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn
@@ -167,6 +173,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import type {
   BaseOutputConverter,
+  FindResourceOptions,
   OutputConverter,
   OutputConverterType,
   PandocFilter,
@@ -175,6 +182,7 @@ import type {
 } from '../../common';
 import { PANDOC_EXTENSION_DESCRIPTIONS } from '../../common';
 import { useBackend } from '../../stores';
+import PandocFiltersEditor from './PandocFiltersEditor.vue';
 
 type OutputConverterDraft = Omit<
   BaseOutputConverter,
@@ -195,6 +203,7 @@ type OutputConverterDraft = Omit<
 
 const props = defineProps<{
   modelValue: OutputConverter[];
+  resourceOptions?: Partial<FindResourceOptions>;
 }>();
 
 const emit = defineEmits<{

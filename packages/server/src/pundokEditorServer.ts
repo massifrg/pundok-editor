@@ -4,6 +4,7 @@ import type {
   CxDocument,
   Query,
   QueryResult,
+  ResourceFile,
   PundokEditorProject,
   EditorKeyType,
   FindResourceOptions,
@@ -37,6 +38,7 @@ import {
   getBackendDebugInfo,
   getBookmarks,
   getFileContents,
+  findResourceFilesWithProvenance,
   getFolderContents,
   getInclusionTree,
   getProject,
@@ -94,7 +96,7 @@ export class PundokEditorServer {
       username: string,
       key: BackendValueKey,
     ) => DocRepository[],
-  ) { }
+  ) {}
 
   prepareUser(username: string): void {
     ensureBackendDirectories(this.directoriesForUser(username));
@@ -233,7 +235,7 @@ export class PundokEditorServer {
     const path = filename.replace(/^file:\/\//, '');
     return getFileContents(
       directories,
-      isAbsolute(path) ? this.userPath(user, path) : filename,
+      isAbsolute(path) ? path : filename,
       options,
       [
         directories.userDataDir,
@@ -243,6 +245,19 @@ export class PundokEditorServer {
           ? [directories.staticResourcesDir]
           : []),
       ],
+    );
+  }
+
+  async findResourceFiles(
+    user: string,
+    filenameRegex: string,
+    regexFlags?: string,
+    options?: Partial<FindResourceOptions>,
+  ): Promise<ResourceFile[]> {
+    return findResourceFilesWithProvenance(
+      this.directoriesForUser(user),
+      new RegExp(filenameRegex, regexFlags),
+      this.findResourceOptionsForUser(user, options),
     );
   }
 
@@ -269,7 +284,7 @@ export class PundokEditorServer {
     );
   }
 
-  async setValue(_user: string, _key: string, _value?: any): Promise<void> { }
+  async setValue(_user: string, _key: string, _value?: any): Promise<void> {}
 
   async getValue(user: string, key: BackendValueKey): Promise<DocRepository[]> {
     return this.getValueForUser(user, key);
@@ -384,6 +399,21 @@ export class PundokEditorServer {
     };
   }
 
+  private findResourceOptionsForUser(
+    username: string,
+    options?: Partial<FindResourceOptions>,
+  ): Partial<FindResourceOptions> | undefined {
+    if (!options?.project) return options;
+    const project =
+      typeof options.project === 'string'
+        ? (JSON.parse(options.project) as PundokEditorProject)
+        : options.project;
+    return {
+      ...options,
+      project: this.projectForUser(username, project),
+    };
+  }
+
   private documentForUser(
     username: string,
     document: Partial<CxDocument>,
@@ -435,7 +465,34 @@ export class PundokEditorServer {
 
   private resourcePathForUser(username: string, resource: string): string {
     const path = resource.replace(/^file:\/\//, '');
-    if (isAbsolute(path)) return this.userPath(username, path);
+    if (isAbsolute(path)) {
+      const directories = this.directoriesForUser(username);
+      const candidate = resolve(path);
+      const allowedDirectories = [
+        directories.userDataDir,
+        directories.configurationsDir,
+        directories.localConfigurationsDir,
+        ...(directories.staticResourcesDir
+          ? [directories.staticResourcesDir]
+          : []),
+      ];
+      if (
+        allowedDirectories.some((directory) => {
+          const relativePath = relative(resolve(directory), candidate);
+          return (
+            relativePath === '' ||
+            (relativePath !== '..' &&
+              !relativePath.startsWith(
+                `..${process.platform === 'win32' ? '\\' : '/'}`,
+              ))
+          );
+        })
+      )
+        return candidate;
+      throw new Error(
+        'Resource path must be within an allowed resource directory',
+      );
+    }
     if (path.split(/[\\/]/).includes('..'))
       throw new Error(
         'Resource path must not leave the authenticated user directory',
@@ -453,27 +510,27 @@ export class PundokEditorServer {
     if (!outputTemplate) return;
     const outputPath = document.path
       ? expandCommandArgs([outputTemplate], {
-        path: document.path,
-        project: document?.project
-      })[0]
+          path: document.path,
+          project: document?.project,
+        })[0]
       : outputTemplate;
     this.userPath(
       username,
       isAbsolute(outputPath)
         ? outputPath
         : resolve(
-          document.project?.path || parsePath(document.path || '').dir,
-          outputPath,
-        ),
+            document.project?.path || parsePath(document.path || '').dir,
+            outputPath,
+          ),
     );
   }
 
   private synctexInfoForUser(username: string, info: SynctexInfo): SynctexInfo {
     const project = info.projectAsJson
       ? this.projectForUser(
-        username,
-        JSON.parse(info.projectAsJson) as PundokEditorProject,
-      )
+          username,
+          JSON.parse(info.projectAsJson) as PundokEditorProject,
+        )
       : undefined;
     return {
       ...info,

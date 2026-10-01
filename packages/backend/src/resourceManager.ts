@@ -6,7 +6,7 @@ import {
   statSync,
 } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import {
   type ConfigQueryOptions,
   type FindResourceOptions,
@@ -14,6 +14,8 @@ import {
   type PandocOption,
   type PundokEditorConfigInit,
   type PundokEditorProject,
+  type ResourceFile,
+  type ResourceFileProvenance,
   type ResourceType,
   RESOURCE_SUBPATHS,
 } from '../../common/src';
@@ -133,9 +135,7 @@ export async function getConfigurationInit(
   return undefined;
 }
 
-function isPandocOptionValue(
-  value: unknown,
-): value is PandocOption[1] {
+function isPandocOptionValue(value: unknown): value is PandocOption[1] {
   return (
     value === undefined ||
     typeof value === 'string' ||
@@ -173,13 +173,10 @@ function migratePandocOptions(options: unknown): PandocOption[] | undefined {
     throw new Error('Pandoc options must be an array');
   if (options.every((option) => typeof option === 'string'))
     return migrateLegacyPandocOptions(options);
-  if (options.every(isPandocOptionTuple))
-    return options as PandocOption[];
+  if (options.every(isPandocOptionTuple)) return options as PandocOption[];
   if (options.every(isObjectPandocOption))
     return options.map(({ name, value }) =>
-      value === undefined
-        ? [name]
-        : [name, value],
+      value === undefined ? [name] : [name, value],
     );
   throw new Error('Pandoc options must be option tuples or legacy strings');
 }
@@ -250,9 +247,7 @@ export function validResourcePaths(
     const inherited = [...project.configurations].reverse();
     for (const configName of inherited) {
       paths = paths.concat(
-        findValidPaths(
-          resolve(directories.localConfigurationsDir, configName),
-        ),
+        findValidPaths(resolve(directories.localConfigurationsDir, configName)),
         findValidPaths(resolve(directories.configurationsDir, configName)),
       );
     }
@@ -315,6 +310,71 @@ export function findResourceFiles(
   );
 }
 
+export function findResourceFilesWithProvenance(
+  directories: BackendDirectories,
+  filenameRegex: RegExp,
+  options?: Partial<FindResourceFileOptions>,
+): ResourceFile[] {
+  return findResourceFiles(directories, filenameRegex, options).map((path) => {
+    const { provenance, configurationName } = resourceFileProvenance(
+      directories,
+      path,
+      options,
+    );
+    return {
+      path,
+      sourcePath: dirname(path),
+      provenance,
+      ...(configurationName && { configurationName }),
+    };
+  });
+}
+
+function resourceFileProvenance(
+  directories: BackendDirectories,
+  path: string,
+  options?: Partial<FindResourceFileOptions>,
+): {
+  provenance: ResourceFileProvenance;
+  configurationName?: string;
+} {
+  const project = (
+    typeof options?.project === 'string'
+      ? JSON.parse(options.project)
+      : options?.project
+  ) as PundokEditorProject | undefined;
+  if (project?.path && isWithinDirectory(project.path, path))
+    return { provenance: 'project' };
+
+  const configurationNames = [
+    ...(options?.configurationName ? [options.configurationName] : []),
+    ...(project?.configurations || []),
+  ];
+  const configurationName = configurationNames.find((name) =>
+    [
+      resolve(directories.localConfigurationsDir, name),
+      resolve(directories.configurationsDir, name),
+      ...(directories.staticResourcesDir
+        ? [resolve(directories.staticResourcesDir, 'configs', name)]
+        : []),
+    ].some((directory) => isWithinDirectory(directory, path)),
+  );
+  return configurationName
+    ? { provenance: 'configuration', configurationName }
+    : { provenance: 'common' };
+}
+
+function isWithinDirectory(directory: string, path: string): boolean {
+  const pathRelativeToDirectory = relative(resolve(directory), resolve(path));
+  return (
+    pathRelativeToDirectory === '' ||
+    (pathRelativeToDirectory !== '..' &&
+      !pathRelativeToDirectory.startsWith(
+        `..${process.platform === 'win32' ? '\\' : '/'}`,
+      ))
+  );
+}
+
 export function findResourceFile(
   directories: BackendDirectories,
   filename: string,
@@ -323,11 +383,7 @@ export function findResourceFile(
   const filenameRegex = new RegExp(
     `^${filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
   );
-  return findResourceFiles(
-    directories,
-    filenameRegex,
-    options,
-  )[0];
+  return findResourceFiles(directories, filenameRegex, options)[0];
 }
 
 export function validResourceSubpaths(

@@ -177,6 +177,17 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/find-resource-files',
+    asyncHandler((req) =>
+      backend.findResourceFiles(
+        username(req),
+        req.body?.filenameRegex,
+        req.body?.regexFlags,
+        req.body?.options,
+      ),
+    ),
+  );
+  router.post(
     '/query',
     asyncHandler((req) =>
       backend.queryDatabase(username(req), req.body?.query),

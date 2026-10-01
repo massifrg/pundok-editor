@@ -43,6 +43,7 @@ export type IpcRendererToMainChannel =
   | 'editor-ready'
   | 'load-configuration'
   | 'file-contents'
+  | 'find-resource-files'
   | 'new-project'
   | 'get-project'
   | 'get-inclusion-tree'
@@ -54,7 +55,7 @@ export type IpcRendererToMainChannel =
   | 'show-rendered-again'
   | 'render-again'
   | 'get-rendering-job'
-  | 'update-config'
+  | 'update-config';
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
@@ -95,7 +96,8 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   },
   'get-bookmarks': {
     dir: 'r2m',
-    description: 'the renderer asks main the list of bookmarks (projects and documents)'
+    description:
+      'the renderer asks main the list of bookmarks (projects and documents)',
   },
   'get-value': {
     dir: 'r2m',
@@ -129,6 +131,11 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     description:
       'the renderer asks main to send the contents of a file (i.e. a CSS file)',
   },
+  'find-resource-files': {
+    dir: 'r2m',
+    description:
+      'the renderer asks main for resource files with names matching a regular expression',
+  },
   'new-project': {
     dir: 'r2m',
     description: 'same as menu File|New Project in main window',
@@ -147,7 +154,8 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   },
   'pandoc-feature': {
     dir: 'r2m',
-    description: 'the renderer asks main to run pandoc for features like --list-input-formats, --list-output-formats, --list-extensions=...',
+    description:
+      'the renderer asks main to run pandoc for features like --list-input-formats, --list-output-formats, --list-extensions=...',
   },
   'transform-json': {
     dir: 'r2m',
@@ -178,30 +186,34 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   },
   'show-rendered-again': {
     dir: 'r2m',
-    description: 'show a rendered job (a PDF) again in the viewer, without recompiling it'
+    description:
+      'show a rendered job (a PDF) again in the viewer, without recompiling it',
   },
   'render-again': {
     dir: 'r2m',
-    description: 'render the document again (recompile PDF)'
+    description: 'render the document again (recompile PDF)',
   },
   'get-rendering-job': {
     dir: 'r2m',
-    description: 'retrieve information about a rendering job (e.g. a PDF instance of a document)'
+    description:
+      'retrieve information about a rendering job (e.g. a PDF instance of a document)',
   },
   'get-source-file': {
     dir: 'r2m',
-    description: 'open the source file corresponding to a point in a page of a result (PDF) file',
+    description:
+      'open the source file corresponding to a point in a page of a result (PDF) file',
   },
   'update-config': {
     dir: 'r2m',
-    description: 'update a configuration or project JSON file adding/updating an object (e.g. automation, custom style)'
-  }
+    description:
+      'update a configuration or project JSON file adding/updating an object (e.g. automation, custom style)',
+  },
 };
 
 export function isMainToRendererChannel(channel: IpcChannel) {
-  const cdesc: IpcChannelDescription = IPC_CHANNELS[channel as IpcChannel]
-  const dir = cdesc?.dir
-  return dir === 'm2r' || dir === 'both'
+  const cdesc: IpcChannelDescription = IPC_CHANNELS[channel as IpcChannel];
+  const dir = cdesc?.dir;
+  return dir === 'm2r' || dir === 'both';
 }
 
 // export function isRendererToMainChannel(channel: IpcChannel) {
@@ -216,12 +228,7 @@ export const IPC_MAIN_EDITOR_KEY = 'main-editor-key';
 
 /** Types of messages from Main to Renderer. */
 export type ServerMessageType =
-  | 'command'
-  | 'configuration'
-  | 'content'
-  | 'feedback'
-  | 'project'
-  | 'viewer';
+  'command' | 'configuration' | 'content' | 'feedback' | 'project' | 'viewer';
 
 /** A message from Main to Renderer. */
 export interface ServerMessage extends Record<string, any> {
@@ -257,12 +264,7 @@ export interface ServerMessageSetProject extends ServerMessage {
 
 /** Kind of command to be executed in the Renderer. */
 export type CommandToRenderer =
-  | 'open'
-  | 'save'
-  | 'save-as'
-  | 'import'
-  | 'export'
-  | 'new-project';
+  'open' | 'save' | 'save-as' | 'import' | 'export' | 'new-project';
 
 /** A message from Main to Renderer to issue a command inside the editor. */
 export interface ServerMessageCommand extends ServerMessage {

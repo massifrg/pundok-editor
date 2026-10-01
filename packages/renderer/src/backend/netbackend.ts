@@ -6,6 +6,7 @@ import type {
   CxDocument,
   Query,
   QueryResult,
+  ResourceFile,
   PundokEditorProject,
   EditorKeyType,
   FindResourceOptions,
@@ -167,6 +168,17 @@ export class NetBackend implements Backend {
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
     return this.request('file-contents', { filename, options });
+  }
+
+  findResourceFiles(
+    filenameRegex: RegExp,
+    options?: Partial<FindResourceOptions>,
+  ): Promise<ResourceFile[]> {
+    return this.request('find-resource-files', {
+      filenameRegex: filenameRegex.source,
+      regexFlags: filenameRegex.flags,
+      options,
+    });
   }
 
   queryDatabase(query: Query): Promise<QueryResult[]> {

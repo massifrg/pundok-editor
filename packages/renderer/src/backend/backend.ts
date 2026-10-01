@@ -8,6 +8,7 @@ import type {
   ProjectComponent,
   Query,
   QueryResult,
+  ResourceFile,
   SaveResponse,
   CxDocument,
   PandocFilterTransform,
@@ -35,10 +36,10 @@ export type IpcRendererListener = (
 ) => void;
 
 export type WhyAskingForIdOrPath =
-  | 'edit'      // document to open and edit
+  | 'edit' // document to open and edit
   | 'inclusion' // inclusion of a (sub-)document
-  | 'image'     // image file path
-  | 'project'   // directory for a new project
+  | 'image' // image file path
+  | 'project'; // directory for a new project
 
 /**
  * An interface to connect to the backend, to get the documents' data.
@@ -109,14 +110,19 @@ export interface Backend {
    * Retrieves the project of a document from the backend.
    * @param context
    */
-  getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined>;
+  getProject(
+    options: GetProjectOptions,
+  ): Promise<PundokEditorProject | undefined>;
 
   /**
    * Create a new project in a directory.
    * @param path
    * @param project
    */
-  createProject(path: string, project: Partial<PundokEditorProject>): Promise<void>;
+  createProject(
+    path: string,
+    project: Partial<PundokEditorProject>,
+  ): Promise<void>;
 
   /**
    * Retrieves a tree-structure of a document made of multiple documents.
@@ -136,7 +142,9 @@ export interface Backend {
    * Retrieves all the available configurations for the editor.
    * @param options Options to select only a subset of the configurations.
    */
-  availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]>;
+  availableConfigurations(
+    options?: ConfigQueryOptions,
+  ): Promise<ConfigurationSummary[]>;
 
   /**
    * Retrieves the configuration with a particular name.
@@ -153,6 +161,16 @@ export interface Backend {
     filename: string,
     options?: Partial<FindResourceOptions>,
   ): Promise<string>;
+
+  /**
+   * Retrieves resource filenames matching a regular expression.
+   * @param filenameRegex The regular expression to match against filenames.
+   * @param options Options that identify the resource directories to search.
+   */
+  findResourceFiles(
+    filenameRegex: RegExp,
+    options?: Partial<FindResourceOptions>,
+  ): Promise<ResourceFile[]>;
 
   /**
    * Retrieves a stored backend value.
@@ -178,7 +196,7 @@ export interface Backend {
    */
   pandocFeature(
     featureName: PandocFeatureName,
-    options?: PandocFeatureOptions
+    options?: PandocFeatureOptions,
   ): Promise<any[]>;
 
   /**
@@ -197,19 +215,16 @@ export interface Backend {
    */
   transformPandocJson(
     doc: Partial<CxDocument>,
-    transform: PandocFilterTransform
+    transform: PandocFilterTransform,
   ): Promise<string>;
 
-  gotoSource(
-    editorKey: EditorKeyType,
-    info: SynctexInfo,
-  ): Promise<void>
+  gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void>;
 
   renderAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 
   getRenderingJob(hash: string): Promise<RenderingJob | undefined>;
 
-  showAgain(hash: string, editorKey: EditorKeyType): Promise<void>
+  showAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 
   /**
    * Update a configuration or project JSON file adding/updating an object

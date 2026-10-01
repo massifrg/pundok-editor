@@ -27,6 +27,7 @@ import {
   createProject,
   createFolder,
   getFileContents,
+  findResourceFilesWithProvenance,
   editorReady,
   getProject,
   getInclusionTree,
@@ -111,7 +112,9 @@ export class IpcHub implements RendererHub {
         desktopRenderingJobStore(),
         document,
       );
-      const converter = documentFormatToOutputConverter(document.documentFormat);
+      const converter = documentFormatToOutputConverter(
+        document.documentFormat,
+      );
       if (
         !response.error &&
         response.resultFile &&
@@ -147,6 +150,15 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('file-contents', (_event, filename, options) =>
       getFileContents(backendDirectories(), filename, options),
+    );
+    ipcMain.handle(
+      'find-resource-files',
+      (_event, filenameRegex, regexFlags, options) =>
+        findResourceFilesWithProvenance(
+          backendDirectories(),
+          new RegExp(filenameRegex, regexFlags),
+          options,
+        ),
     );
     ipcMain.handle('set-value', setValueHandler(this));
     ipcMain.handle('new-project', (_event, directory, project) =>

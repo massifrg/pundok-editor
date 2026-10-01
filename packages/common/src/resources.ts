@@ -42,10 +42,19 @@ export interface FindResourceOptions {
   base64?: boolean;
 }
 
+export type ResourceFileProvenance = 'project' | 'configuration' | 'common';
+
+export interface ResourceFile {
+  path: string;
+  sourcePath: string;
+  provenance: ResourceFileProvenance;
+  configurationName?: string;
+}
+
 /**
  * Provide an array of possible resource types from the extension of a filename.
  * @param ext The extension of the filename.
- * @returns 
+ * @returns
  */
 export function resourceTypesFromExtension(ext: string): ResourceType[] {
   switch (ext) {
@@ -57,7 +66,7 @@ export function resourceTypesFromExtension(ext: string): ResourceType[] {
     case 'odt':
       return ['referenceDoc'];
     case 'txt':
-      return ['other']
+      return ['other'];
     default:
       return [];
   }

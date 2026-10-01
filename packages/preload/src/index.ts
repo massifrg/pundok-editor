@@ -26,8 +26,9 @@ import {
   PundokEditorConfigInit,
   PundokEditorProject,
   QueryResult,
+  ResourceFile,
   SaveResponse,
-  SynctexInfo
+  SynctexInfo,
 } from './common';
 
 export interface Ipc {
@@ -38,60 +39,77 @@ export interface Ipc {
     listener: IpcRendererListener,
   ) => (() => void) | undefined;
 
-  debugInfo: () => Promise<object>
+  debugInfo: () => Promise<object>;
 
-  getFolderContents: (context: string) => Promise<FolderContents>
+  getFolderContents: (context: string) => Promise<FolderContents>;
 
-  createFolder: (path: string) => Promise<string>
+  createFolder: (path: string) => Promise<string>;
 
-  openDocument: (context: string) => Promise<CxDocument>
+  openDocument: (context: string) => Promise<CxDocument>;
 
-  saveDocument: (doc: string) => Promise<SaveResponse>
+  saveDocument: (doc: string) => Promise<SaveResponse>;
 
-  getBookmarks: (bookmarkType?: PundokBookmarkType) => Promise<PundokBookmark[]>
+  getBookmarks: (
+    bookmarkType?: PundokBookmarkType,
+  ) => Promise<PundokBookmark[]>;
 
   getValue: (key: BackendValueKey) => Promise<DocRepository[]>;
 
-  availableConfigurations: (options?: ConfigQueryOptions) => Promise<ConfigurationSummary[]>
+  availableConfigurations: (
+    options?: ConfigQueryOptions,
+  ) => Promise<ConfigurationSummary[]>;
 
-  editorReady: (editorKey?: EditorKeyType) => Promise<void>
+  editorReady: (editorKey?: EditorKeyType) => Promise<void>;
 
-  loadConfiguration: (name?: string) => Promise<PundokEditorConfigInit | undefined>
+  loadConfiguration: (
+    name?: string,
+  ) => Promise<PundokEditorConfigInit | undefined>;
 
-  fileContents: (filename: string, options?: Partial<FindResourceOptions>) => Promise<string>
+  fileContents: (
+    filename: string,
+    options?: Partial<FindResourceOptions>,
+  ) => Promise<string>;
 
-  newProject: (path: string, project: string) => Promise<void>
+  findResourceFiles: (
+    filenameRegex: string,
+    regexFlags?: string,
+    options?: Partial<FindResourceOptions>,
+  ) => Promise<ResourceFile[]>;
 
-  getProject: (options: GetProjectOptions) => Promise<PundokEditorProject | undefined>
+  newProject: (path: string, project: string) => Promise<void>;
 
-  getInclusionTree: (project: string) => Promise<string | undefined>
+  getProject: (
+    options: GetProjectOptions,
+  ) => Promise<PundokEditorProject | undefined>;
 
-  transformJson: (doc: string, transform: string) => Promise<string>
+  getInclusionTree: (project: string) => Promise<string | undefined>;
+
+  transformJson: (doc: string, transform: string) => Promise<string>;
 
   pandocFeature: (
     featureName: PandocFeatureName,
-    options?: PandocFeatureOptions
-  ) => Promise<string[] | PandocFormatExtension[]>
+    options?: PandocFeatureOptions,
+  ) => Promise<string[] | PandocFormatExtension[]>;
 
-  setValue: (key: string, value?: any) => Promise<void>
+  setValue: (key: string, value?: any) => Promise<void>;
 
-  query: (query: string) => Promise<QueryResult[]>
+  query: (query: string) => Promise<QueryResult[]>;
 
-  getSourceFile: (editorKey: EditorKeyType, info: SynctexInfo) => Promise<void>
+  getSourceFile: (editorKey: EditorKeyType, info: SynctexInfo) => Promise<void>;
 
-  showRenderedAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>
+  showRenderedAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>;
 
-  renderAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>
+  renderAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>;
 
-  getRenderingJob: (hash: string) => Promise<string | undefined>
+  getRenderingJob: (hash: string) => Promise<string | undefined>;
 
   updateConfig: (
     where: ConfigInitField,
     obj: string,
     isDeletion: boolean,
     isProject: boolean,
-    configNameOrProjectPath: string
-  ) => Promise<void>
+    configNameOrProjectPath: string,
+  ) => Promise<void>;
 }
 
 contextBridge.exposeInMainWorld('ipc', {
@@ -116,26 +134,45 @@ contextBridge.exposeInMainWorld('ipc', {
   getFolderContents: (context: string) =>
     ipcRenderer.invoke('get-folder-contents', context),
   createFolder: (path: string) => ipcRenderer.invoke('create-folder', path),
-  openDocument: (context: string) => ipcRenderer.invoke('open-document', context),
+  openDocument: (context: string) =>
+    ipcRenderer.invoke('open-document', context),
   saveDocument: (doc: string) => ipcRenderer.invoke('save-document', doc),
   getBookmarks: (bookmarkType?: PundokBookmarkType) =>
     ipcRenderer.invoke('get-bookmarks', bookmarkType),
   getValue: (key: BackendValueKey) => ipcRenderer.invoke('get-value', key),
   availableConfigurations: (options?: ConfigQueryOptions) =>
     ipcRenderer.invoke('available-configurations', options),
-  editorReady: (editorKey?: EditorKeyType) => ipcRenderer.invoke('editor-ready', editorKey),
-  loadConfiguration: (name?: string) => ipcRenderer.invoke('load-configuration', name),
+  editorReady: (editorKey?: EditorKeyType) =>
+    ipcRenderer.invoke('editor-ready', editorKey),
+  loadConfiguration: (name?: string) =>
+    ipcRenderer.invoke('load-configuration', name),
   fileContents: (filename: string, options?: Partial<FindResourceOptions>) =>
     ipcRenderer.invoke('file-contents', filename, options),
+  findResourceFiles: (
+    filenameRegex: string,
+    regexFlags?: string,
+    options?: Partial<FindResourceOptions>,
+  ) =>
+    ipcRenderer.invoke(
+      'find-resource-files',
+      filenameRegex,
+      regexFlags,
+      options,
+    ),
   newProject: (path: string, project: string) =>
     ipcRenderer.invoke('new-project', path, project),
-  getProject: (options: GetProjectOptions) => ipcRenderer.invoke('get-project', options),
-  getInclusionTree: (project: string) => ipcRenderer.invoke('get-inclusion-tree', project),
+  getProject: (options: GetProjectOptions) =>
+    ipcRenderer.invoke('get-project', options),
+  getInclusionTree: (project: string) =>
+    ipcRenderer.invoke('get-inclusion-tree', project),
   transformJson: (doc: string, transform: string) =>
     ipcRenderer.invoke('transform-json', doc, transform),
-  pandocFeature: (featureName: PandocFeatureName, options?: PandocFeatureOptions) =>
-    ipcRenderer.invoke('pandoc-feature', featureName, options),
-  setValue: (key: string, value?: any) => ipcRenderer.invoke('set-value', key, value),
+  pandocFeature: (
+    featureName: PandocFeatureName,
+    options?: PandocFeatureOptions,
+  ) => ipcRenderer.invoke('pandoc-feature', featureName, options),
+  setValue: (key: string, value?: any) =>
+    ipcRenderer.invoke('set-value', key, value),
   query: (query: string) => ipcRenderer.invoke('query', query),
   getSourceFile: (editorKey: EditorKeyType, info: SynctexInfo) =>
     ipcRenderer.invoke('get-source-file', editorKey, info),
@@ -143,9 +180,23 @@ contextBridge.exposeInMainWorld('ipc', {
     ipcRenderer.invoke('show-rendered-again', hash, editorKey),
   renderAgain: (hash: string, editorKey: EditorKeyType) =>
     ipcRenderer.invoke('render-again', hash, editorKey),
-  getRenderingJob: (hash: string) => ipcRenderer.invoke('get-rendering-job', hash),
-  updateConfig: (where: ConfigInitField, obj: string, isDeletion: boolean, isProject: boolean, configNameOrProjectPath: string) =>
-    ipcRenderer.invoke('update-config', where, obj, isDeletion, isProject, configNameOrProjectPath),
+  getRenderingJob: (hash: string) =>
+    ipcRenderer.invoke('get-rendering-job', hash),
+  updateConfig: (
+    where: ConfigInitField,
+    obj: string,
+    isDeletion: boolean,
+    isProject: boolean,
+    configNameOrProjectPath: string,
+  ) =>
+    ipcRenderer.invoke(
+      'update-config',
+      where,
+      obj,
+      isDeletion,
+      isProject,
+      configNameOrProjectPath,
+    ),
 } as Ipc);
 
 window.addEventListener('DOMContentLoaded', () => {
