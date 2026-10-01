@@ -9,6 +9,7 @@ import {
   mdiChevronLeft,
   mdiChevronRight,
   mdiFileDocumentPlus,
+  mdiFileOutline,
   mdiFilePdfBox,
   mdiFileStarFourPoints,
   mdiImageCheck,
@@ -21,6 +22,8 @@ import {
   mdiPageFirst,
   mdiPageLast,
   mdiPlay,
+  mdiSortAlphabeticalAscending,
+  mdiSortAlphabeticalDescending,
   mdiContentSavePlus,
   mdiUndo,
   mdiRedo,
@@ -294,7 +297,7 @@ import {
   NODE_NAME_PLAIN,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
-  NODE_NAME_SHORT_CAPTION
+  NODE_NAME_SHORT_CAPTION,
 } from '../../common';
 
 export const icons: Record<string, string> = {
@@ -412,6 +415,7 @@ export const icons: Record<string, string> = {
   format_html: mdiLanguageHtml5,
   format_pdf: mdiFilePdfBox,
   format_png: mdiFilePngBox,
+  format_other: mdiFileOutline,
   format_xlsx: mdiFileExcel,
   format_xml: mdiXml,
   harddisk: mdiHarddisk,
@@ -524,6 +528,8 @@ export const icons: Record<string, string> = {
   search_prev: mdiChevronLeft,
   search_next_all: mdiChevronDoubleRight,
   search_only: mdiPencilLock,
+  sort_alphabetical_ascending: mdiSortAlphabeticalAscending,
+  sort_alphabetical_descending: mdiSortAlphabeticalDescending,
   select: mdiSelect,
   selection: mdiSelection,
   source_document: mdiFileDocumentOutline,
