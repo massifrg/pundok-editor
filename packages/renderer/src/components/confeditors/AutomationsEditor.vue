@@ -5,20 +5,11 @@
         {{ $t('configEditor.automations.title') }}
       </div>
       <q-space />
-      <q-btn
-        dense
-        icon="add"
-        :label="$t('configEditor.automations.newAutomation')"
-      >
+      <q-btn dense icon="add" :label="$t('configEditor.automations.newAutomation')">
         <q-menu>
           <q-list dense>
-            <q-item
-              v-for="type in automationTypes"
-              :key="type.value"
-              v-close-popup
-              clickable
-              @click="newAutomation(type.value)"
-            >
+            <q-item v-for="type in automationTypes" :key="type.value" v-close-popup clickable
+              @click="newAutomation(type.value)">
               <q-item-section avatar>
                 <q-icon :name="type.icon" :color="type.color" />
               </q-item-section>
@@ -30,17 +21,11 @@
     </div>
 
     <q-list v-if="automations.length" bordered separator>
-      <q-item
-        v-for="{ automation, index } in sortedAutomations"
-        :key="`${automation.type}-${automation.name}`"
-        clickable
-        @click="editAutomation(index)"
-      >
+      <q-item v-for="{ automation, index } in sortedAutomations" :key="`${automation.type}-${automation.name}`"
+        clickable @click="editAutomation(index)">
         <q-item-section avatar>
-          <q-icon
-            :name="automationPresentation(automation.type).icon"
-            :color="automationPresentation(automation.type).color"
-          />
+          <q-icon :name="automationPresentation(automation.type).icon"
+            :color="automationPresentation(automation.type).color" />
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ automation.name }}</q-item-label>
@@ -59,161 +44,96 @@
       <q-card v-if="draft" class="automations-editor__dialog">
         <q-card-section class="q-gutter-md">
           <div class="row items-center">
-            <q-icon
-              class="q-mr-sm"
-              size="sm"
-              :name="automationPresentation(draft.type).icon"
-              :color="automationPresentation(draft.type).color"
-            />
+            <q-icon class="q-mr-sm" size="sm" :name="automationPresentation(draft.type).icon"
+              :color="automationPresentation(draft.type).color" />
             <div class="text-subtitle2">
               {{ $t(automationPresentation(draft.type).label) }}
             </div>
           </div>
-          <q-input
-            v-model="draft.name"
-            outlined
-            dense
-            :label="$t('configEditor.automations.name')"
-          />
-          <q-input
-            v-model="draft.description"
-            outlined
-            dense
-            type="textarea"
-            autogrow
-            :label="$t('configEditor.automations.descriptionLabel')"
-          />
-
+          <q-input v-model="draft.name" outlined dense :label="$t('configEditor.automations.name')" />
+          <q-input v-model="draft.description" outlined dense type="textarea" autogrow
+            :label="$t('configEditor.automations.descriptionLabel')" />
+          <q-space />
           <template v-if="draft.type === 'search-replace'">
-            <div class="row q-col-gutter-md items-center">
-              <q-input
-                v-model="draft.search"
-                outlined
-                dense
-                class="col"
-                :label="$t('search.label.searchText')"
-              />
-              <q-toggle
-                v-model="draft.optionSearchOnly"
-                class="col-auto"
-                :label="$t('search.searchNotReplace')"
-              />
-              <ActionsOnReplaceDropdown
-                v-if="draft.optionSearchOnly"
-                class="col-auto"
-                :editor="editor"
-                :actions="draft.actions || []"
-                search-only
-                @update-actions="draft.actions = $event"
-              />
-            </div>
-            <div class="row q-col-gutter-md items-center">
-              <q-input
-                v-if="!draft.optionSearchOnly"
-                v-model="draft.replace"
-                outlined
-                dense
-                class="col"
-                :label="$t('search.label.replaceWith')"
-              />
-              <ActionsOnReplaceDropdown
-                v-if="!draft.optionSearchOnly"
-                class="col-auto"
-                :editor="editor"
-                :actions="draft.actions || []"
-                :search-only="false"
-                @update-actions="draft.actions = $event"
-              />
-            </div>
-            <div class="row q-col-gutter-md">
-              <q-toggle
-                v-model="draft.optionCaseInsensitive"
-                class="col-auto"
-                :label="$t('search.caseInsensitive')"
-              />
-              <q-toggle
-                v-model="draft.optionRegex"
-                class="col-auto"
-                :label="$t('search.regex')"
-              />
-              <q-toggle
-                v-model="draft.optionWholeWord"
-                class="col-auto"
-                :label="$t('search.wholeWords')"
-              />
-              <q-toggle
-                v-model="draft.optionCycle"
-                class="col-auto"
-                :label="$t('search.cycleFoundItems')"
-              />
-            </div>
+            <q-card bordered class="automations-editor__search-replace q-pa-sm">
+              <q-card-section horizontal>
+                <q-input v-model="draft.search" outlined dense class="col" :label="$t('search.label.searchText')" />
+                <q-space class="items-spacer" />
+                <q-btn round class="q-pa-sm" size="sm" icon="search_only" color="primary"
+                  :outline="!draft.optionSearchOnly" :title="$t('search.searchNotReplace')"
+                  @click="draft.optionSearchOnly = !draft.optionSearchOnly" />
+              </q-card-section>
+              <q-card-section horizontal class="q-mt-xs">
+                <ActionsOnReplaceDropdown v-if="draft.optionSearchOnly" class="col-auto" :editor="editor"
+                  :actions="draft.actions || []" :search-only="true" @update-actions="draft.actions = $event"
+                  :title="$t('search.actions.onFoundItems', 2)" />
+              </q-card-section>
+              <q-card-section horizontal class="q-mt-xs">
+                <q-input v-if="!draft.optionSearchOnly" v-model="draft.replace" outlined dense class="col"
+                  :label="$t('search.label.replaceWith')" />
+                <q-space class="items-spacer" />
+                <ActionsOnReplaceDropdown v-if="!draft.optionSearchOnly" class="col-auto" :editor="editor"
+                  :actions="draft.actions || []" :search-only="false" @update-actions="draft.actions = $event"
+                  :title="$t('search.actions.onReplacedItems', 2)" />
+              </q-card-section>
+              <q-card-section horizontal class="q-mt-sm">
+                <q-btn round class="q-pa-sm" size="sm" icon="search_case_insensitive" color="primary"
+                  :outline="!draft.optionCaseInsensitive" :title="$t('search.caseInsensitive')" @click="
+                    draft.optionCaseInsensitive = !draft.optionCaseInsensitive
+                    " />
+                <q-space class="items-spacer" />
+                <q-btn round class="q-pa-sm" size="sm" icon="regex" color="primary" :outline="!draft.optionRegex"
+                  :title="$t('search.regex')" @click="draft.optionRegex = !draft.optionRegex" />
+                <q-space class="items-spacer" />
+                <q-btn round class="q-pa-sm" size="sm" icon="whole_word" color="primary"
+                  :outline="!draft.optionWholeWord" :title="$t('search.wholeWords')"
+                  @click="draft.optionWholeWord = !draft.optionWholeWord" />
+                <q-space class="items-spacer" />
+                <q-btn round class="q-pa-sm" size="sm" icon="search_cycle" color="primary" :outline="!draft.optionCycle"
+                  :title="$t('search.cycleFoundItems')" @click="draft.optionCycle = !draft.optionCycle" />
+                <q-space class="items-spacer" />
+                <MarksPaletteDropdown :editor="editor" icon="search_filter" :addable-marks="availableMarks"
+                  :positive-marks="filterMarkPresence" :negative-marks="filterMarkAbsence"
+                  @selected-marks="setMarksFilters" />
+              </q-card-section>
+            </q-card>
           </template>
 
           <template v-else-if="draft.type === 'elements-selection'">
-            <div class="row q-col-gutter-md items-center">
-              <q-input
-                v-model="draft.cssSelector"
-                outlined
-                dense
-                class="col"
-                :label="$t('search.label.cssSelector')"
-              />
-              <q-toggle
-                v-model="draft.optionSearchOnly"
-                class="col-auto"
-                :label="$t('search.searchNotReplace')"
-              />
-              <ActionsOnReplaceDropdown
-                v-if="draft.optionSearchOnly"
-                class="col-auto"
-                :editor="editor"
-                :actions="draft.actions || []"
-                search-only
-                @update-actions="draft.actions = $event"
-              />
-            </div>
-            <div class="row q-col-gutter-md items-center">
-              <q-input
-                v-if="!draft.optionSearchOnly"
-                v-model="draft.replace"
-                outlined
-                dense
-                class="col"
-                :label="$t('search.label.replaceWith')"
-              />
-              <ActionsOnReplaceDropdown
-                v-if="!draft.optionSearchOnly"
-                class="col-auto"
-                :editor="editor"
-                :actions="draft.actions || []"
-                :search-only="false"
-                @update-actions="draft.actions = $event"
-              />
-            </div>
-            <q-toggle
-              v-model="draft.optionMergeSameAdjacentMarks"
-              :label="$t('search.mergeAdjacentMarks')"
-            />
+            <q-card bordered class="automations-editor__elements-selection q-pa-sm">
+              <q-card-section horizontal>
+                <q-input v-model="draft.cssSelector" outlined dense class="col"
+                  :label="$t('search.label.cssSelector')" />
+                <q-space class="items-spacer" />
+                <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!draft.optionMergeSameAdjacentMarks"
+                  icon="marks_merge" :title="$t('search.mergeAdjacentMarks')"
+                  @click="draft.optionMergeSameAdjacentMarks = !draft.optionMergeSameAdjacentMarks" />
+                <q-space class="items-spacer" />
+                <q-btn round class="q-ma-xs" size="sm" icon="search_only" color="primary"
+                  :outline="!draft.optionSearchOnly" :title="$t('search.searchNotReplace')"
+                  @click="draft.optionSearchOnly = !draft.optionSearchOnly" />
+                <ActionsOnReplaceDropdown v-if="draft.optionSearchOnly" class="col-auto" :editor="editor"
+                  :actions="draft.actions || []" :search-only="true" @update-actions="draft.actions = $event"
+                  :title="$t('search.actions.onFoundItems', 2)" />
+              </q-card-section>
+              <q-card-section horizontal class="q-mt-sm">
+                <q-input v-if="!draft.optionSearchOnly" v-model="draft.replace" outlined dense class="col"
+                  :label="$t('search.label.replaceWith')" />
+                <q-space class="items-spacer" />
+                <ActionsOnReplaceDropdown v-if="!draft.optionSearchOnly" class="col-auto" :editor="editor"
+                  :actions="draft.actions || []" :search-only="false" @update-actions="draft.actions = $event"
+                  :title="$t('search.actions.onReplacedItems', 2)" />
+              </q-card-section>
+            </q-card>
           </template>
 
           <template v-else>
-            <PandocFiltersEditor
-              v-model="draft.filters"
-              :resource-options="resourceOptions"
-            />
-            <q-select
-              v-model="draft.withResult"
-              outlined
-              dense
-              emit-value
-              map-options
-              option-label="label"
-              :label="$t('configEditor.automations.withResult')"
-              :options="withResultOptions"
-            >
+            <PandocFiltersEditor v-model="draft.filters" :resource-options="resourceOptions" />
+            <q-select v-model="draft.withResult" outlined dense emit-value map-options option-label="label"
+              :label="$t('configEditor.automations.withResult')" :options="withResultOptions">
               <template #selected-item="scope">{{
                 $t(scope.opt.label)
-              }}</template>
+                }}</template>
               <template #option="scope">
                 <q-item v-bind="scope.itemProps">
                   <q-item-section>{{ $t(scope.opt.label) }}</q-item-section>
@@ -223,24 +143,11 @@
           </template>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn
-            flat
-            :label="$t('configEditor.buttons.cancel')"
-            @click="cancelEdit"
-          />
-          <q-btn
-            color="negative"
-            flat
-            icon="delete"
-            :label="$t('configEditor.buttons.delete')"
-            @click="deleteAutomation"
-          />
-          <q-btn
-            color="primary"
-            :disable="!draft.name.trim()"
-            :label="$t('configEditor.buttons.apply')"
-            @click="applyEdit"
-          />
+          <q-btn flat :label="$t('configEditor.buttons.cancel')" @click="cancelEdit" />
+          <q-btn color="negative" flat icon="delete" :label="$t('configEditor.buttons.delete')"
+            @click="deleteAutomation" />
+          <q-btn color="primary" :disable="!draft.name.trim()" :label="$t('configEditor.buttons.apply')"
+            @click="applyEdit" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -249,6 +156,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import type { Editor } from '@tiptap/vue-3';
 import type {
   Automation,
   AutomationType,
@@ -259,6 +167,14 @@ import type {
   SearchAndReplace,
   WhatToDoWithResult,
 } from '../../common';
+import { getEditorConfiguration } from '../../schema';
+import {
+  type AddableMark,
+  baseAddableMarks,
+  customStylesToAddableMarks,
+  searchMarkSpecToAddableMarks,
+} from '../helpers/addableMark';
+import MarksPaletteDropdown from '../MarksPaletteDropdown.vue';
 import PandocFiltersEditor from './PandocFiltersEditor.vue';
 import ActionsOnReplaceDropdown from '../ActionsOnReplaceDropdown.vue';
 
@@ -323,13 +239,31 @@ const withResultOptions: { label: string; value: WhatToDoWithResult }[] = [
 const automations = ref<Automation[]>([]);
 const draft = ref<AutomationDraft>();
 const editingIndex = ref<number>();
+const configuration = computed(() =>
+  props.editor ? getEditorConfiguration(props.editor as Editor) : undefined,
+);
+const availableMarks = computed<AddableMark[]>(() => {
+  const marks = baseAddableMarks();
+  customStylesToAddableMarks(
+    configuration.value?.customStylesInstances || [],
+    undefined,
+    marks,
+  );
+  return marks;
+});
+const filterMarkPresence = computed<AddableMark[]>(() =>
+  searchFilterMarks('present'),
+);
+const filterMarkAbsence = computed<AddableMark[]>(() =>
+  searchFilterMarks('absent'),
+);
 const sortedAutomations = computed(() =>
   automations.value
     .map((automation, index) => ({ automation, index }))
     .sort(
       ({ automation: first }, { automation: second }) =>
         automationTypes.findIndex((type) => type.value === first.type) -
-          automationTypes.findIndex((type) => type.value === second.type) ||
+        automationTypes.findIndex((type) => type.value === second.type) ||
         first.name.localeCompare(second.name),
     ),
 );
@@ -439,10 +373,32 @@ function copyFilter(filter: string | PandocFilter): string | PandocFilter {
   return typeof filter === 'string'
     ? filter
     : {
-        ...filter,
-        ...(filter.metadata && { metadata: { ...filter.metadata } }),
-        ...(filter.variables && { variables: { ...filter.variables } }),
-      };
+      ...filter,
+      ...(filter.metadata && { metadata: { ...filter.metadata } }),
+      ...(filter.variables && { variables: { ...filter.variables } }),
+    };
+}
+
+function searchFilterMarks(kind: 'present' | 'absent'): AddableMark[] {
+  if (draft.value?.type !== 'search-replace' || !props.editor) return [];
+  return searchMarkSpecToAddableMarks(
+    draft.value.filterOnMarks?.[kind] || [],
+    (props.editor as Editor).state.schema,
+    configuration.value,
+  );
+}
+
+function setMarksFilters(present: AddableMark[], absent: AddableMark[]): void {
+  if (draft.value?.type !== 'search-replace') return;
+  const positive = present.map((mark) => mark.markspec);
+  const negative = absent.map((mark) => mark.markspec);
+  draft.value.filterOnMarks =
+    positive.length || negative.length
+      ? {
+        present: positive,
+        absent: negative,
+      }
+      : undefined;
 }
 
 function normalizeAutomation(draft: AutomationDraft): Automation {
@@ -465,6 +421,7 @@ function normalizeAutomation(draft: AutomationDraft): Automation {
         ...(draft.optionRegex ? { optionRegex: true } : {}),
         ...(draft.optionCycle ? { optionCycle: true } : {}),
         ...(draft.optionWholeWord ? { optionWholeWord: true } : {}),
+        ...(draft.filterOnMarks && { filterOnMarks: draft.filterOnMarks }),
         ...(draft.actions?.length ? { actions: [...draft.actions] } : {}),
       } as SearchAndReplace;
     case 'elements-selection':
@@ -496,5 +453,15 @@ function normalizeAutomation(draft: AutomationDraft): Automation {
 .automations-editor__dialog {
   width: min(48rem, 95vw);
   max-width: 95vw;
+}
+
+.automations-editor__search-replace,
+.automations-editor__elements-selection {
+  border-color: var(--q-primary);
+}
+
+.items-spacer {
+  min-width: 1rem;
+  max-width: 1.5rem;
 }
 </style>
