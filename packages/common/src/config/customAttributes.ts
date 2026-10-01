@@ -22,7 +22,7 @@ export interface CustomAttribute extends NamedAndDescribed {
    * attributes are usually edited in a text field, but you can customize
    * the editor for a different type (e.g. a date, an integer)
    */
-  editAs?: string;
+  editAs?: 'string' | 'number' | 'date' | 'time';
 }
 
 /**
