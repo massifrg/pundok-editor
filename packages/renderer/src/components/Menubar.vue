@@ -99,8 +99,7 @@
 
       <ToolbarButton v-if="gui.projectStructure && project" icon="project_structure"
         :title="$t('show.projectStructure')" @click="showProjectStructure()" />
-      <ToolbarButton v-if="project" icon="edit" title="Edit project configuration"
-        @click="showConfigurationEditor()" />
+      <ToolbarButton v-if="project" icon="menu" title="Edit project configuration" @click="showConfigurationEditor()" />
 
       <q-space />
       <ToolbarButton v-if="gui.isDevelopmentMode" icon="debug" title="debug" @click="debug" />
