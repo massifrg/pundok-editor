@@ -7,14 +7,19 @@
       <q-card-section>
         <div class="text-h6">
           {{
-            $t('configEditor.outputConverters.pandocResources.addDialogTitle', {
-              resource: resourceLabel,
-            })
+            parametersOnly
+              ? `${$t(
+                  'configEditor.outputConverters.filters.edit',
+                )}: ${resourceName(initialSelection?.path || '')}`
+              : $t(
+                  'configEditor.outputConverters.pandocResources.addDialogTitle',
+                  { resource: resourceLabel },
+                )
           }}
         </div>
       </q-card-section>
       <q-card-section class="q-pt-none">
-        <div class="pandoc-lua-resource-dialog__body">
+        <div v-if="!parametersOnly" class="pandoc-lua-resource-dialog__body">
           <q-list
             bordered
             separator
@@ -84,6 +89,25 @@
         >
           {{ previewError }}
         </q-banner>
+        <q-input
+          v-if="parametersOnly"
+          :model-value="initialSelection?.path || ''"
+          dense
+          outlined
+          readonly
+          class="q-mb-md"
+          :label="$t('configEditor.outputConverters.filters.filterLabel')"
+        />
+        <q-input
+          v-if="parametersOnly"
+          :model-value="preview"
+          type="textarea"
+          outlined
+          readonly
+          :loading="loadingPreview"
+          :label="$t('configEditor.outputConverters.filters.preview')"
+          input-class="pandoc-lua-resource-dialog__parameters-preview"
+        />
         <div v-if="allowParameters">
           <div
             v-for="(parameter, index) in parameters"
@@ -161,7 +185,13 @@
         />
         <q-btn
           color="primary"
-          :label="$t('configEditor.outputConverters.pandocResources.select')"
+          :label="
+            $t(
+              parametersOnly
+                ? 'configEditor.buttons.apply'
+                : 'configEditor.outputConverters.pandocResources.select',
+            )
+          "
           :disable="!canSelect"
           @click="select"
         />
@@ -201,8 +231,10 @@ const props = withDefaults(
     resourceType: LuaResourceType;
     resourceOptions?: Partial<FindResourceOptions>;
     allowParameters?: boolean;
+    initialSelection?: PandocLuaResourceSelection;
+    parametersOnly?: boolean;
   }>(),
-  { allowParameters: false },
+  { allowParameters: false, parametersOnly: false },
 );
 
 const emit = defineEmits<{
@@ -261,12 +293,30 @@ async function loadResources(): Promise<void> {
 
 watch(
   () => props.modelValue,
-  (open) => {
+  async (open) => {
     if (!open) return;
-    selectedResource.value = undefined;
+    selectedResource.value = props.initialSelection?.path;
     preview.value = '';
     previewError.value = '';
-    parameters.value = [];
+    parameters.value = [
+      ...Object.entries(props.initialSelection?.metadata || {}).map(
+        ([name, value]) => ({
+          type: 'metadata' as const,
+          name,
+          value,
+        }),
+      ),
+      ...Object.entries(props.initialSelection?.variables || {}).map(
+        ([name, value]) => ({
+          type: 'variable' as const,
+          name,
+          value,
+        }),
+      ),
+    ];
+    if (props.parametersOnly && selectedResource.value) {
+      await loadPreview(selectedResource.value);
+    }
   },
 );
 
@@ -313,12 +363,17 @@ function provenanceLabel(resource: ResourceFile): string {
 
 async function selectResource(resource: ResourceFile): Promise<void> {
   selectedResource.value = resource.path;
+  await loadPreview(resource.path);
+}
+
+async function loadPreview(path: string): Promise<void> {
   preview.value = '';
   previewError.value = '';
   if (!backend.backend) return;
   loadingPreview.value = true;
   try {
-    preview.value = await backend.backend.getFileContents(resource.path, {
+    preview.value = await backend.backend.getFileContents(path, {
+      ...props.resourceOptions,
       kind: props.resourceType,
     });
   } catch (error) {
@@ -369,6 +424,13 @@ function select(): void {
 :deep(.pandoc-lua-resource-dialog__preview) {
   height: 70vh;
   max-height: 70vh;
+  overflow-y: auto;
+  font-family: monospace;
+}
+
+:deep(.pandoc-lua-resource-dialog__parameters-preview) {
+  height: calc(60vh - 3rem);
+  max-height: calc(60vh - 3rem);
   overflow-y: auto;
   font-family: monospace;
 }

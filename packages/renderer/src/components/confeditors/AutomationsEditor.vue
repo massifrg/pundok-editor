@@ -299,7 +299,7 @@ const automationTypes: AutomationPresentation[] = [
   },
   {
     value: 'pandoc-filter',
-    icon: 'filter_alt',
+    icon: 'document_transform',
     color: 'deep-purple',
     label: 'configEditor.automations.types.pandocFilter',
   },

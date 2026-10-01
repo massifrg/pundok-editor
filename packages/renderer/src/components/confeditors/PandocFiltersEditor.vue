@@ -36,6 +36,15 @@
           flat
           round
           size="sm"
+          icon="edit"
+          :title="$t('configEditor.outputConverters.filters.edit')"
+          @click="editFilter(index)"
+        />
+        <q-btn
+          dense
+          flat
+          round
+          size="sm"
           icon="remove"
           :title="$t('configEditor.outputConverters.filters.remove')"
           @click="removeFilter(index)"
@@ -50,7 +59,13 @@
       v-model="addDialogOpen"
       resource-type="filter"
       :resource-options="resourceOptions"
+      :initial-selection="
+        editingFilterIndex === undefined
+          ? undefined
+          : filterSelection(modelValue[editingFilterIndex])
+      "
       allow-parameters
+      :parameters-only="editingFilterIndex !== undefined"
       @select="addSelectedFilter"
     />
   </div>
@@ -78,6 +93,7 @@ const emit = defineEmits<{
 
 const draggedFilterIndex = ref<number>();
 const addDialogOpen = ref(false);
+const editingFilterIndex = ref<number>();
 
 function filterName(filter: string): string {
   return filter.replace(/^.*[\\/]/, '').replace(/[.]lua$/, '');
@@ -88,24 +104,62 @@ function filterKey(filter: string | PandocFilter, index: number): string {
 }
 
 function openAddDialog(): void {
+  editingFilterIndex.value = undefined;
   addDialogOpen.value = true;
 }
 
 function addSelectedFilter(selection: PandocLuaResourceSelection): void {
-  const filter: string | PandocFilter =
-    Object.keys(selection.metadata).length === 0 &&
+  const filter = filterFromSelection(selection);
+  const filters = [...props.modelValue];
+  if (editingFilterIndex.value === undefined) filters.push(filter);
+  else filters.splice(editingFilterIndex.value, 1, filter);
+  emit('update:modelValue', filters);
+  editingFilterIndex.value = undefined;
+}
+
+function editFilter(index: number): void {
+  editingFilterIndex.value = index;
+  addDialogOpen.value = true;
+}
+
+function filterSelection(
+  filter: string | PandocFilter,
+): PandocLuaResourceSelection {
+  if (typeof filter === 'string') {
+    return { path: filter, metadata: {}, variables: {} };
+  }
+  return {
+    path: filter.name,
+    metadata: Object.fromEntries(
+      Object.entries(filter.metadata || {}).map(([name, value]) => [
+        name,
+        String(value),
+      ]),
+    ),
+    variables: Object.fromEntries(
+      Object.entries(filter.variables || {}).map(([name, value]) => [
+        name,
+        String(value),
+      ]),
+    ),
+  };
+}
+
+function filterFromSelection(
+  selection: PandocLuaResourceSelection,
+): string | PandocFilter {
+  return Object.keys(selection.metadata).length === 0 &&
     Object.keys(selection.variables).length === 0
-      ? selection.path
-      : {
-          name: selection.path,
-          ...(Object.keys(selection.metadata).length > 0 && {
-            metadata: selection.metadata,
-          }),
-          ...(Object.keys(selection.variables).length > 0 && {
-            variables: selection.variables,
-          }),
-        };
-  emit('update:modelValue', [...props.modelValue, filter]);
+    ? selection.path
+    : {
+        name: selection.path,
+        ...(Object.keys(selection.metadata).length > 0 && {
+          metadata: selection.metadata,
+        }),
+        ...(Object.keys(selection.variables).length > 0 && {
+          variables: selection.variables,
+        }),
+      };
 }
 
 function removeFilter(index: number): void {

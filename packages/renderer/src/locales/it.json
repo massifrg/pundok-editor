@@ -154,6 +154,7 @@
     "title": "Modifica configurazione dell'editor",
     "buttons": {
       "cancel": "Annulla",
+      "delete": "Elimina",
       "save": "Salva",
       "apply": "Applica"
     },
@@ -303,8 +304,10 @@
       "filters": {
         "title": "Filtri Pandoc",
         "add": "Aggiungi filtro",
+        "filterLabel": "Filtro",
         "noneAvailable": "Non sono stati trovati filtri Lua.",
         "noneSelected": "Nessun filtro selezionato.",
+        "edit": "Modifica filtro",
         "remove": "Rimuovi filtro",
         "addDialogTitle": "Aggiungi filtro Pandoc",
         "preview": "Anteprima del filtro",
@@ -338,7 +341,7 @@
       "types": {
         "searchReplace": "Cerca e sostituisci",
         "elementsSelection": "Selezione di elementi",
-        "pandocFilter": "Filtro Pandoc"
+        "pandocFilter": "Trasformazione documento con un filtro di Pandoc"
       }
     },
     "projectConfigurations": {
