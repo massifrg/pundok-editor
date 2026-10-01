@@ -235,7 +235,24 @@
     },
     "customAttributes": {
       "label": "Attributi personalizzati",
-      "description": "Definizioni degli attributi personalizzati, come array JSON."
+      "description": "Definizioni degli attributi personalizzati.",
+      "title": "Attributi personalizzati",
+      "newAttribute": "Nuovo attributo",
+      "editAttribute": "Modifica attributo",
+      "deleteAttribute": "Elimina attributo",
+      "none": "Nessun attributo personalizzato definito.",
+      "newTitle": "Nuovo attributo personalizzato",
+      "editTitle": "Modifica attributo personalizzato",
+      "name": "Nome",
+      "descriptionLabel": "Descrizione",
+      "appliesTo": "Si applica a",
+      "suggestions": "Valori suggeriti",
+      "values": "Valori fissi",
+      "addListItem": "Aggiungi valore",
+      "default": "Valore predefinito",
+      "defaultMustBeValue": "Il valore predefinito deve essere uno dei valori fissi.",
+      "nameRequired": "Il nome dell'attributo è obbligatorio.",
+      "duplicateName": "Esiste già un attributo personalizzato con questo nome."
     },
     "customMetadata": {
       "label": "Metadati personalizzati",

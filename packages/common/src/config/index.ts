@@ -9,6 +9,7 @@ export * from './customStyles';
 export * from './editorConfigInit';
 export * from './editorConfiguration';
 export * from './hardcodedConfigs';
+export * from './hasPandocAttr';
 export * from './indices';
 export * from './inputConverters';
 export * from './jsonStringify';

@@ -236,7 +236,24 @@
     },
     "customAttributes": {
       "label": "Custom attributes",
-      "description": "Custom attribute definitions, as a JSON array."
+      "description": "Custom attribute definitions.",
+      "title": "Custom attributes",
+      "newAttribute": "New attribute",
+      "editAttribute": "Edit attribute",
+      "deleteAttribute": "Delete attribute",
+      "none": "No custom attributes defined.",
+      "newTitle": "New custom attribute",
+      "editTitle": "Edit custom attribute",
+      "name": "Name",
+      "descriptionLabel": "Description",
+      "appliesTo": "Applies to",
+      "suggestions": "Suggested values",
+      "values": "Fixed values",
+      "addListItem": "Add value",
+      "default": "Default value",
+      "defaultMustBeValue": "The default value must be one of the fixed values.",
+      "nameRequired": "An attribute name is required.",
+      "duplicateName": "A custom attribute with this name already exists."
     },
     "customMetadata": {
       "label": "Custom metadata",
