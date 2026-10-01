@@ -92,64 +92,67 @@
           v-model="draft.default"
           :label="$t('configEditor.outputConverters.default')"
         />
-        <q-select
+        <div v-if="draft.type === 'pandoc'" class="row q-col-gutter-md">
+          <div class="col">
+            <PandocFormatEditor
+              :model-value="selectedPandocFormat"
+              :format-extensions="selectedFormatExtensions"
+              :selected="selectedOutputChoice === 'format'"
+              @update:model-value="selectPandocFormat"
+              @update:format-extensions="selectedFormatExtensions = $event"
+              @select="selectedOutputChoice = 'format'"
+            />
+          </div>
+          <div class="col">
+            <q-card
+              flat
+              bordered
+              class="output-converters-editor__writer cursor-pointer"
+              :class="{
+                'output-converters-editor__writer--selected':
+                  selectedOutputChoice === 'writer',
+              }"
+              @click="selectWriterCard"
+            >
+              <q-card-section>
+                <div class="text-subtitle2">
+                  {{ $t('configEditor.outputConverters.customWriter') }}
+                </div>
+                <div class="text-body2 q-mt-sm">
+                  {{
+                    selectedWriter
+                      ? selectedWriter
+                      : $t('configEditor.outputConverters.chooseCustomWriter')
+                  }}
+                </div>
+                <div class="text-caption text-grey">
+                  {{
+                    $t('configEditor.outputConverters.customWriterDescription')
+                  }}
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+        <q-input
+          v-else
           v-model="draft.format"
-          :options="outputFormats"
           :label="$t('configEditor.outputConverters.format')"
           outlined
           dense
-          :loading="loadingFormats"
-          @update:model-value="onFormatChanged"
         />
-        <q-btn-dropdown
-          v-if="draft.type === 'pandoc'"
-          outline
-          no-caps
-          :label="$t('configEditor.outputConverters.formatExtensions')"
-          :disable="!draft.format"
-          :loading="loadingExtensions"
-          menu-anchor="bottom left"
-          menu-self="top left"
-        >
-          <q-list dense class="output-converters-editor__extensions">
-            <q-item v-if="formatExtensions.length === 0">
-              <q-item-section class="text-grey">
-                {{ $t('configEditor.outputConverters.noFormatExtensions') }}
-              </q-item-section>
-            </q-item>
-            <q-item
-              v-for="extension in formatExtensions"
-              :key="extension.name"
-              clickable
-              class="output-converters-editor__extension"
-              @click="toggleFormatExtension(extension)"
-            >
-              <q-item-section
-                avatar
-                class="output-converters-editor__extension-sign"
-                :class="formatExtensionClass(extension)"
-              >
-                {{ formatExtensionSign(extension) }}
-              </q-item-section>
-              <q-item-section :class="formatExtensionClass(extension)">
-                <q-item-label class="output-converters-editor__extension-name">
-                  {{ extension.name }}
-                </q-item-label>
-                <q-item-label
-                  v-if="extensionDescription(extension.name)"
-                  class="output-converters-editor__extension-description"
-                >
-                  {{ extensionDescription(extension.name) }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown>
         <PandocFiltersEditor
           v-if="draft.type === 'pandoc'"
           :model-value="draft.filters || []"
           :resource-options="resourceOptions"
           @update:model-value="draft.filters = $event"
+        />
+        <PandocLuaResourceDialog
+          v-if="draft.type === 'pandoc'"
+          v-model="writerDialogOpen"
+          resource-type="writer"
+          :resource-options="resourceOptions"
+          @select="selectWriter"
         />
       </q-card-section>
       <q-card-actions align="right">
@@ -170,19 +173,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type {
   BaseOutputConverter,
   FindResourceOptions,
   OutputConverter,
   OutputConverterType,
   PandocFilter,
-  PandocFormatExtension,
   PandocOption,
 } from '../../common';
-import { PANDOC_EXTENSION_DESCRIPTIONS } from '../../common';
-import { useBackend } from '../../stores';
+import PandocFormatEditor from './PandocFormatEditor.vue';
 import PandocFiltersEditor from './PandocFiltersEditor.vue';
+import PandocLuaResourceDialog, {
+  type PandocLuaResourceSelection,
+} from './PandocLuaResourceDialog.vue';
 
 type OutputConverterDraft = Omit<
   BaseOutputConverter,
@@ -210,15 +214,15 @@ const emit = defineEmits<{
   'update:modelValue': [value: OutputConverter[]];
 }>();
 
-const backend = useBackend();
 const converters = ref<OutputConverter[]>([]);
 const draft = ref<OutputConverterDraft>();
 const editingIndex = ref<number>();
 const nameError = ref('');
-const outputFormats = ref<string[]>([]);
-const loadingFormats = ref(false);
-const formatExtensions = ref<PandocFormatExtension[]>([]);
-const loadingExtensions = ref(false);
+const writerDialogOpen = ref(false);
+const selectedOutputChoice = ref<'format' | 'writer'>('format');
+const selectedPandocFormat = ref('');
+const selectedFormatExtensions = ref<string[]>([]);
+const selectedWriter = ref('');
 const converterTypeOptions: { label: string; value: OutputConverterType }[] = [
   { label: 'Pandoc', value: 'pandoc' },
   { label: 'Lua', value: 'lua' },
@@ -227,7 +231,13 @@ const converterTypeOptions: { label: string; value: OutputConverterType }[] = [
 ];
 
 const canApply = computed(
-  () => !!draft.value?.name.trim() && !!draft.value?.format,
+  () =>
+    !!draft.value?.name.trim() &&
+    !!(draft.value?.type === 'pandoc'
+      ? selectedOutputChoice.value === 'format'
+        ? selectedPandocFormat.value
+        : selectedWriter.value
+      : draft.value?.format),
 );
 
 watch(
@@ -238,15 +248,14 @@ watch(
   { immediate: true },
 );
 
-onMounted(async () => {
-  loadingFormats.value = true;
-  try {
-    outputFormats.value =
-      (await backend.backend?.pandocFeature('output-formats')) || [];
-  } finally {
-    loadingFormats.value = false;
-  }
-});
+watch(
+  () => draft.value?.type,
+  (type, previousType) => {
+    if (type === 'pandoc' && previousType !== 'pandoc' && draft.value) {
+      initializePandocChoice(draft.value);
+    }
+  },
+);
 
 function copyConverter(converter: OutputConverter): OutputConverter {
   switch (converter.type) {
@@ -309,7 +318,10 @@ function newConverter() {
     default: false,
     format: '',
   };
-  formatExtensions.value = [];
+  selectedOutputChoice.value = 'format';
+  selectedPandocFormat.value = '';
+  selectedFormatExtensions.value = [];
+  selectedWriter.value = '';
 }
 
 function editConverter(name: string) {
@@ -320,7 +332,7 @@ function editConverter(name: string) {
   editingIndex.value = index;
   nameError.value = '';
   draft.value = converterDraft(converters.value[index]);
-  loadFormatExtensions(draft.value.format);
+  initializePandocChoice(draft.value);
 }
 
 function cancelEdit() {
@@ -346,7 +358,21 @@ function applyEdit() {
     return;
   }
 
-  const converter = normalizeConverter({ ...draft.value, name });
+  const converterDraft = {
+    ...draft.value,
+    name,
+    ...(draft.value.type === 'pandoc' && {
+      format:
+        selectedOutputChoice.value === 'format'
+          ? selectedPandocFormat.value
+          : selectedWriter.value,
+      formatExtensions:
+        selectedOutputChoice.value === 'format'
+          ? selectedFormatExtensions.value
+          : undefined,
+    }),
+  };
+  const converter = normalizeConverter(converterDraft);
   const updated = converters.value.map(copyConverter);
   if (editingIndex.value === undefined) updated.push(converter);
   else updated.splice(editingIndex.value, 1, converter);
@@ -413,105 +439,53 @@ function normalizeConverter(draft: OutputConverterDraft): OutputConverter {
   }
 }
 
-function onFormatChanged(format: string) {
-  if (!draft.value) return;
-  draft.value.formatExtensions = [];
-  loadFormatExtensions(format);
-}
-
-async function loadFormatExtensions(format: string) {
-  if (!format || !backend.backend) {
-    formatExtensions.value = [];
-    return;
-  }
-  loadingExtensions.value = true;
-  try {
-    const extensions = (await backend.backend.pandocFeature('extensions', {
-      format,
-    })) as PandocFormatExtension[];
-    if (draft.value?.format !== format) return;
-    formatExtensions.value = extensions;
-  } finally {
-    loadingExtensions.value = false;
-  }
-}
-
-function formatExtensionState(extension: PandocFormatExtension) {
-  const override = draft.value?.formatExtensions?.find(
-    (value) => value.slice(1) === extension.name,
-  );
-  if (!override) return 'default';
-  return override.startsWith('+') ? 'enabled' : 'disabled';
-}
-
-function formatExtensionSign(extension: PandocFormatExtension) {
-  const state = formatExtensionState(extension);
-  if (state === 'default') return extension.default ? '+' : '-';
-  return state === 'enabled' ? '+' : '-';
-}
-
-function formatExtensionClass(extension: PandocFormatExtension) {
-  switch (formatExtensionState(extension)) {
-    case 'enabled':
-      return 'text-positive';
-    case 'disabled':
-      return 'text-negative';
-    default:
-      return 'text-grey';
-  }
-}
-
-function extensionDescription(extension: string) {
-  return PANDOC_EXTENSION_DESCRIPTIONS[extension];
-}
-
-function toggleFormatExtension(extension: PandocFormatExtension) {
-  if (!draft.value) return;
-  const extensions = draft.value.formatExtensions || [];
-  const index = extensions.findIndex(
-    (value) => value.slice(1) === extension.name,
-  );
-  if (index >= 0) {
-    draft.value.formatExtensions = extensions.filter(
-      (_, valueIndex) => valueIndex !== index,
-    );
+function initializePandocChoice(converter: OutputConverterDraft): void {
+  if (converter.type !== 'pandoc') return;
+  if (isCustomWriter(converter.format)) {
+    selectedOutputChoice.value = 'writer';
+    selectedWriter.value = converter.format;
+    selectedPandocFormat.value = '';
+    selectedFormatExtensions.value = [];
   } else {
-    const sign = extension.default ? '-' : '+';
-    draft.value.formatExtensions = [...extensions, `${sign}${extension.name}`];
+    selectedOutputChoice.value = 'format';
+    selectedPandocFormat.value = converter.format;
+    selectedFormatExtensions.value = [...(converter.formatExtensions || [])];
+    selectedWriter.value = '';
+  }
+}
+
+function isCustomWriter(format: string): boolean {
+  return format.toLowerCase().endsWith('.lua');
+}
+
+function selectPandocFormat(format: string): void {
+  selectedPandocFormat.value = format;
+  selectedOutputChoice.value = 'format';
+}
+
+function selectWriter(selection: PandocLuaResourceSelection): void {
+  if (!draft.value) return;
+  selectedWriter.value = selection.path.replace(/^.*[\\/]/, '');
+  selectedOutputChoice.value = 'writer';
+}
+
+function selectWriterCard(): void {
+  if (selectedOutputChoice.value === 'writer' || !selectedWriter.value) {
+    writerDialogOpen.value = true;
+  } else {
+    selectedOutputChoice.value = 'writer';
   }
 }
 </script>
 
 <style scoped>
-.output-converters-editor__extensions {
-  width: 28rem;
-  max-height: 20rem;
-  overflow-y: auto;
+.output-converters-editor__writer {
+  min-width: 18rem;
+  height: 100%;
 }
 
-.output-converters-editor__extension-sign {
-  min-width: 1.5rem;
-}
-
-.output-converters-editor__extension-description {
-  display: none;
-  font-weight: normal;
-  white-space: normal;
-}
-
-.output-converters-editor__extension:hover
-  .output-converters-editor__extension-sign,
-.output-converters-editor__extension:hover
-  .output-converters-editor__extension-name {
-  font-weight: bold;
-}
-
-.output-converters-editor__extension:hover .text-grey {
-  color: #000 !important;
-}
-
-.output-converters-editor__extension:hover
-  .output-converters-editor__extension-description {
-  display: block;
+.output-converters-editor__writer--selected {
+  border: 2px solid var(--q-primary);
+  background-color: color-mix(in srgb, var(--q-primary) 10%, transparent);
 }
 </style>
