@@ -268,23 +268,6 @@ export default {
         "
       />
       <q-item
-        v-if="project && previousProjectComponent?.src"
-        key="previous-project-component"
-        :title="$t('document.openPreviousProjectDocument')"
-        clickable
-        v-close-popup
-        @click="openProjectComponent(previousProjectComponent)"
-      >
-        <q-item-section>
-          <q-item-label>
-            {{ projectComponentFilename(previousProjectComponent) }}
-          </q-item-label>
-        </q-item-section>
-        <q-item-section side>
-          <q-icon name="skip_previous" />
-        </q-item-section>
-      </q-item>
-      <q-item
         v-if="project && nextProjectComponent?.src"
         key="next-project-component"
         :title="$t('document.openNextProjectDocument')"
@@ -299,6 +282,23 @@ export default {
         </q-item-section>
         <q-item-section side>
           <q-icon name="skip_next" />
+        </q-item-section>
+      </q-item>
+      <q-item
+        v-if="project && previousProjectComponent?.src"
+        key="previous-project-component"
+        :title="$t('document.openPreviousProjectDocument')"
+        clickable
+        v-close-popup
+        @click="openProjectComponent(previousProjectComponent)"
+      >
+        <q-item-section>
+          <q-item-label>
+            {{ projectComponentFilename(previousProjectComponent) }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="skip_previous" />
         </q-item-section>
       </q-item>
       <q-item
