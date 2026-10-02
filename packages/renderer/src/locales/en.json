@@ -200,10 +200,26 @@
     "rawElements": {
       "defaultRawFormat": "Default raw format",
       "defaultRawFormatDescription": "Default format for raw inline and block elements.",
+      "unset": "Unset",
+      "allFormats": "All formats",
+      "show": "Show:",
+      "showFormats": "Show raw elements",
       "rawInlines": "Raw inlines",
+      "rawInlinesTab": "Raw Inlines",
       "rawInlinesDescription": "Insertable raw inline samples, as a JSON array.",
+      "sort": "Sort",
+      "sortDescription": "Sort ascending by format, first content, then second content; click again to reverse.",
+      "addRawInline": "Add raw inline",
       "rawBlocks": "Raw blocks",
-      "rawBlocksDescription": "Insertable raw block samples, as a JSON array."
+      "rawBlocksTab": "Raw Blocks",
+      "rawBlocksDescription": "Insertable raw block samples, as a JSON array.",
+      "addRawBlock": "Add raw block",
+      "none": "No raw elements defined.",
+      "noneInSelectedFormat": "No raw elements in the selected format.",
+      "format": "Format",
+      "contentFirst": "First content",
+      "contentSecond": "Second content",
+      "title": "Title"
     },
     "documentTemplate": {
       "label": "Document template",

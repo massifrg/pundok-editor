@@ -45,6 +45,10 @@
               v-else-if="tab.name === 'customAttributes'"
               v-model="values.customAttributes"
             />
+            <RawElementsEditor
+              v-else-if="tab.name === 'raw-elements'"
+              v-model="values"
+            />
             <OutputConvertersEditor
               v-else-if="tab.name === 'outputConverters'"
               v-model="values.outputConverters"
@@ -123,6 +127,7 @@ import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEdit
 import CustomStylesEditor from './confeditors/CustomStylesEditor.vue';
 import CustomClassesEditor from './confeditors/CustomClassesEditor.vue';
 import CustomAttributesEditor from './confeditors/CustomAttributesEditor.vue';
+import RawElementsEditor from './confeditors/RawElementsEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
 import AutomationsEditor from './confeditors/AutomationsEditor.vue';
 
@@ -138,7 +143,8 @@ type EditorConfigField = {
     | 'customClasses'
     | 'customAttributes'
     | 'outputConverters'
-    | 'automations';
+    | 'automations'
+    | 'rawElements';
 };
 
 type EditorConfigTab = {
@@ -255,13 +261,13 @@ const fields: EditorConfigField[] = [
     name: 'rawInlines',
     label: 'configEditor.rawElements.rawInlines',
     description: 'configEditor.rawElements.rawInlinesDescription',
-    kind: 'json',
+    kind: 'rawElements',
   },
   {
     name: 'rawBlocks',
     label: 'configEditor.rawElements.rawBlocks',
     description: 'configEditor.rawElements.rawBlocksDescription',
-    kind: 'json',
+    kind: 'rawElements',
   },
   {
     name: 'inputConverters',
@@ -353,6 +359,7 @@ export default {
     CustomStylesEditor,
     CustomClassesEditor,
     CustomAttributesEditor,
+    RawElementsEditor,
     OutputConvertersEditor,
     AutomationsEditor,
   },
@@ -394,7 +401,9 @@ export default {
           field.name === 'customClasses' ||
           field.name === 'customAttributes' ||
           field.name === 'outputConverters' ||
-          field.name === 'automations'
+          field.name === 'automations' ||
+          field.name === 'rawInlines' ||
+          field.name === 'rawBlocks'
         ) {
           values[field.name] = value || [];
         } else {
