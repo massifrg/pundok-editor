@@ -6,6 +6,7 @@ export * from './resourceManager';
 export * from './rendererHub';
 export * from './feedback';
 export * from './runExternal';
+export * from './gitRepositories';
 export * from './importExport';
 export * from './pandocFeatures';
 export * from './handlers/pandocFeatures';

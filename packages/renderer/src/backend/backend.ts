@@ -25,6 +25,8 @@ import type {
   ConfigurationUpdateOptions,
   BackendValueKey,
   DocRepository,
+  CloneGitProjectOptions,
+  ClonedGitProject,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -231,6 +233,16 @@ export interface Backend {
    * like `CustomStyle`, `Automation`, etc.
    */
   storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void>;
+
+  listGitProjects(): Promise<ClonedGitProject[]>;
+
+  cloneGitProject(options: CloneGitProjectOptions): Promise<ClonedGitProject>;
+
+  mergeGitProjectMain(name: string): Promise<void>;
+
+  pullGitProject(name: string): Promise<void>;
+
+  pushGitProject(name: string): Promise<void>;
 }
 
 export function createBackend(): Backend {

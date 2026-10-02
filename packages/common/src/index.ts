@@ -8,6 +8,7 @@ export * from './config';
 export * from './document';
 export * from './documentFormat';
 export * from './docRepositories';
+export * from './gitRepositories';
 export * from './editorKey';
 export * from './externalProgramResult';
 export * from './feedback';
@@ -30,4 +31,3 @@ export * from './shortcuts';
 export * from './synctex';
 export * from './version';
 export * from './viewer';
-

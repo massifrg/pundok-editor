@@ -1,4 +1,5 @@
 import type { Backend, IpcRendererListener } from './backend';
+import type { CloneGitProjectOptions } from '../common';
 import {
   type ConfigurationSummary,
   PundokEditorConfig,
@@ -465,6 +466,26 @@ export class LocalBackend implements Backend {
   ): Promise<void> {
     console.log(`calling backend to update configuration`);
     return window.ipc.updateConfig(options);
+  }
+
+  listGitProjects() {
+    return window.ipc.listGitProjects();
+  }
+
+  cloneGitProject(options: CloneGitProjectOptions) {
+    return window.ipc.cloneGitProject(options);
+  }
+
+  mergeGitProjectMain(name: string) {
+    return window.ipc.mergeGitProjectMain(name);
+  }
+
+  pullGitProject(name: string) {
+    return window.ipc.pullGitProject(name);
+  }
+
+  pushGitProject(name: string) {
+    return window.ipc.pushGitProject(name);
   }
 }
 

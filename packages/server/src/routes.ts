@@ -249,6 +249,34 @@ export function createBackendRouter(
       backend.storeInConfiguration(username(req), req.body?.options),
     ),
   );
+  router.post(
+    '/list-git-projects',
+    asyncHandler((req) => backend.listGitProjects(username(req))),
+  );
+  router.post(
+    '/clone-git-project',
+    asyncHandler((req) =>
+      backend.cloneGitProject(username(req), req.body?.options),
+    ),
+  );
+  router.post(
+    '/merge-git-project-main',
+    asyncHandler((req) =>
+      backend.mergeGitProjectMain(username(req), req.body?.name),
+    ),
+  );
+  router.post(
+    '/pull-git-project',
+    asyncHandler((req) =>
+      backend.pullGitProject(username(req), req.body?.name),
+    ),
+  );
+  router.post(
+    '/push-git-project',
+    asyncHandler((req) =>
+      backend.pushGitProject(username(req), req.body?.name),
+    ),
+  );
 
   return router;
 }

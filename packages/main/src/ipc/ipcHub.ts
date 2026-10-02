@@ -41,6 +41,7 @@ import {
   openDocument,
   saveDocument,
   errorFeedback,
+  GitRepositoryManager,
 } from '../backend';
 import { backendDirectories } from '../resourcesManager';
 import { renderAgainHandler } from './renderAgainHandler';
@@ -64,6 +65,10 @@ export interface DocumentOpening {
  * A class to handle the communication between `main` and `renderer` processes.
  */
 export class IpcHub implements RendererHub {
+  private readonly gitRepositories = new GitRepositoryManager(
+    backendDirectories(),
+  );
+
   // readonly fileManager: FileManager = new FileManager();
   mainEditorKey: EditorKeyType | undefined = undefined;
   pendingDocumentOpen: DocumentOpening | undefined = undefined;
@@ -195,6 +200,19 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('update-config', (_event, options) =>
       updateConfiguration(options),
+    );
+    ipcMain.handle('list-git-projects', () => this.gitRepositories.list());
+    ipcMain.handle('clone-git-project', (_event, options) =>
+      this.gitRepositories.clone(options),
+    );
+    ipcMain.handle('merge-git-project-main', (_event, name) =>
+      this.gitRepositories.mergeMain(name),
+    );
+    ipcMain.handle('pull-git-project', (_event, name) =>
+      this.gitRepositories.pull(name),
+    );
+    ipcMain.handle('push-git-project', (_event, name) =>
+      this.gitRepositories.push(name),
     );
   }
 

@@ -23,6 +23,8 @@ import type {
   ConfigurationUpdateOptions,
   BackendValueKey,
   DocRepository,
+  CloneGitProjectOptions,
+  ClonedGitProject,
 } from './common';
 import {
   getHardcodedEditorConfig,
@@ -57,6 +59,7 @@ import {
   expandCommandArgs,
   openDocument,
   saveDocument,
+  GitRepositoryManager,
   type BackendDirectories,
   type RendererHub,
 } from '../../backend/src';
@@ -86,6 +89,10 @@ import { loadImage } from './image';
  */
 export class PundokEditorServer {
   private readonly renderingJobsByUser = new Map<string, RenderingJobStore>();
+  private readonly gitRepositoriesByUser = new Map<
+    string,
+    GitRepositoryManager
+  >();
 
   constructor(
     private readonly directoriesForUser: (
@@ -116,6 +123,29 @@ export class PundokEditorServer {
 
   async logout(_user: string): Promise<boolean> {
     return true;
+  }
+
+  async listGitProjects(user: string): Promise<ClonedGitProject[]> {
+    return this.gitRepositoriesForUser(user).list();
+  }
+
+  async cloneGitProject(
+    user: string,
+    options: CloneGitProjectOptions,
+  ): Promise<ClonedGitProject> {
+    return this.gitRepositoriesForUser(user).clone(options);
+  }
+
+  async mergeGitProjectMain(user: string, name: string): Promise<void> {
+    return this.gitRepositoriesForUser(user).mergeMain(name);
+  }
+
+  async pullGitProject(user: string, name: string): Promise<void> {
+    return this.gitRepositoriesForUser(user).pull(name);
+  }
+
+  async pushGitProject(user: string, name: string): Promise<void> {
+    return this.gitRepositoriesForUser(user).push(name);
   }
 
   async debugInfo(user: string): Promise<object> {
@@ -377,6 +407,17 @@ export class PundokEditorServer {
       this.renderingJobsByUser.set(username, renderingJobs);
     }
     return renderingJobs;
+  }
+
+  private gitRepositoriesForUser(username: string): GitRepositoryManager {
+    let repositories = this.gitRepositoriesByUser.get(username);
+    if (!repositories) {
+      repositories = new GitRepositoryManager(
+        this.directoriesForUser(username),
+      );
+      this.gitRepositoriesByUser.set(username, repositories);
+    }
+    return repositories;
   }
 
   private queryForUser(username: string, query: Query): Query {

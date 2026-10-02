@@ -10,6 +10,8 @@ import {
   CxDocument,
   BackendValueKey,
   DocRepository,
+  CloneGitProjectOptions,
+  ClonedGitProject,
   EditorKeyType,
   FindResourceOptions,
   FolderContents,
@@ -110,6 +112,18 @@ export interface Ipc {
     isProject: boolean,
     configNameOrProjectPath: string,
   ) => Promise<void>;
+
+  listGitProjects: () => Promise<ClonedGitProject[]>;
+
+  cloneGitProject: (
+    options: CloneGitProjectOptions,
+  ) => Promise<ClonedGitProject>;
+
+  mergeGitProjectMain: (name: string) => Promise<void>;
+
+  pullGitProject: (name: string) => Promise<void>;
+
+  pushGitProject: (name: string) => Promise<void>;
 }
 
 contextBridge.exposeInMainWorld('ipc', {
@@ -197,6 +211,15 @@ contextBridge.exposeInMainWorld('ipc', {
       isProject,
       configNameOrProjectPath,
     ),
+  listGitProjects: () => ipcRenderer.invoke('list-git-projects'),
+  cloneGitProject: (options: CloneGitProjectOptions) =>
+    ipcRenderer.invoke('clone-git-project', options),
+  mergeGitProjectMain: (name: string) =>
+    ipcRenderer.invoke('merge-git-project-main', name),
+  pullGitProject: (name: string) =>
+    ipcRenderer.invoke('pull-git-project', name),
+  pushGitProject: (name: string) =>
+    ipcRenderer.invoke('push-git-project', name),
 } as Ipc);
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -55,7 +55,12 @@ export type IpcRendererToMainChannel =
   | 'show-rendered-again'
   | 'render-again'
   | 'get-rendering-job'
-  | 'update-config';
+  | 'update-config'
+  | 'list-git-projects'
+  | 'clone-git-project'
+  | 'merge-git-project-main'
+  | 'pull-git-project'
+  | 'push-git-project';
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
@@ -207,6 +212,26 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'r2m',
     description:
       'update a configuration or project JSON file adding/updating an object (e.g. automation, custom style)',
+  },
+  'list-git-projects': {
+    dir: 'r2m',
+    description: 'list locally cloned Git projects',
+  },
+  'clone-git-project': {
+    dir: 'r2m',
+    description: 'clone a Git project and create the user branch',
+  },
+  'merge-git-project-main': {
+    dir: 'r2m',
+    description: 'merge the remote main branch into the user branch',
+  },
+  'pull-git-project': {
+    dir: 'r2m',
+    description: 'pull the remote user branch into the local user branch',
+  },
+  'push-git-project': {
+    dir: 'r2m',
+    description: 'push the local user branch to the remote user branch',
   },
 };
 

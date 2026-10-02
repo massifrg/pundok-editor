@@ -25,6 +25,8 @@ import type {
   ConfigurationUpdateOptions,
   BackendValueKey,
   DocRepository,
+  CloneGitProjectOptions,
+  ClonedGitProject,
   IpcMainToRendererChannel,
   ServerMessage,
 } from '../common';
@@ -225,6 +227,26 @@ export class NetBackend implements Backend {
 
   storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void> {
     return this.request('update-config', { options });
+  }
+
+  listGitProjects(): Promise<ClonedGitProject[]> {
+    return this.request<ClonedGitProject[]>('list-git-projects');
+  }
+
+  cloneGitProject(options: CloneGitProjectOptions): Promise<ClonedGitProject> {
+    return this.request<ClonedGitProject>('clone-git-project', { options });
+  }
+
+  mergeGitProjectMain(name: string): Promise<void> {
+    return this.request<void>('merge-git-project-main', { name });
+  }
+
+  pullGitProject(name: string): Promise<void> {
+    return this.request<void>('pull-git-project', { name });
+  }
+
+  pushGitProject(name: string): Promise<void> {
+    return this.request<void>('push-git-project', { name });
   }
 
   private async request<T>(

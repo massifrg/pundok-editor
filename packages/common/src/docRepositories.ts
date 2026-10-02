@@ -7,6 +7,10 @@ export interface DocRepositoryProject {
   name: string;
   description: string;
   role: DocRepositoryProjectRole;
+  user?: string;
+  typeOptions?: {
+    branch: string;
+  };
 }
 
 export interface DocRepository {
@@ -28,14 +32,23 @@ export function isDocRepositories(value: unknown): value is DocRepository[] {
         typeof repository.url === 'string' &&
         repository.type === 'git' &&
         Array.isArray(repository.projects) &&
-        repository.projects.every(
-          (project) =>
-            isRecord(project) &&
-            typeof project.name === 'string' &&
-            typeof project.description === 'string' &&
-            (project.role === 'admin' || project.role === 'user'),
-        ),
+        repository.projects.every(isDocRepositoryProject),
     )
+  );
+}
+
+function isDocRepositoryProject(
+  project: unknown,
+): project is DocRepositoryProject {
+  return (
+    isRecord(project) &&
+    typeof project.name === 'string' &&
+    typeof project.description === 'string' &&
+    (project.role === 'admin' || project.role === 'user') &&
+    (project.user === undefined || typeof project.user === 'string') &&
+    (project.typeOptions === undefined ||
+      (isRecord(project.typeOptions) &&
+        typeof project.typeOptions.branch === 'string'))
   );
 }
 
