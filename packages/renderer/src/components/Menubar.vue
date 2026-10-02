@@ -99,7 +99,18 @@
 
       <ToolbarButton v-if="gui.projectStructure && project" icon="project_structure"
         :title="$t('show.projectStructure')" @click="showProjectStructure()" />
-      <ToolbarButton v-if="project" icon="menu" title="Edit project configuration" @click="showConfigurationEditor()" />
+      <q-btn-dropdown v-if="project" :title="$t('projectMenu.title')" icon="menu"
+        color="grey-5" dense size="sm" dropdown-icon="menu_down">
+        <q-list>
+          <q-item clickable v-close-popup @click="showConfigurationEditor()"><q-item-section>{{ $t('projectMenu.editConfiguration') }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('manageGitProject')"><q-item-section>{{ $t('projectMenu.manageChanges') }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('shareGitProject')"><q-item-section>{{ $t('projectMenu.share') }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('connectGitProject')"><q-item-section>{{ $t('projectMenu.connect') }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('cloneGitProject')"><q-item-section>{{ $t('projectMenu.clone') }}</q-item-section></q-item>
+        </q-list>
+      </q-btn-dropdown>
+      <ToolbarButton v-else icon="cloud_download" :title="$t('projectMenu.clone')"
+        @click="$emit('cloneGitProject')" />
 
       <q-space />
       <ToolbarButton v-if="gui.isDevelopmentMode" icon="debug" title="debug" @click="debug" />
@@ -397,6 +408,10 @@ export default {
     // 'exportAgain',
     'showConfigurationsDialog',
     'showConfigurationEditor',
+    'manageGitProject',
+    'shareGitProject',
+    'connectGitProject',
+    'cloneGitProject',
     'toggleSearchAndReplaceDialog',
     'editNodeOrMarkAttributes',
     'reloadWithConfiguration',

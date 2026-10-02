@@ -20,6 +20,10 @@
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
             @show-configuration-editor="visibleConfigurationEditor = true"
+            @manage-git-project="visibleGitChanges = true"
+            @share-git-project="showGitRepository('publish')"
+            @connect-git-project="showGitRepository('connect')"
+            @clone-git-project="showGitRepository('clone')"
             @reload-with-configuration="reloadWithConfiguration"
           />
         </q-toolbar-title>
@@ -169,6 +173,19 @@
           :editor="editor"
           :visible="visibleNewProjectDialog"
           @close="visibleNewProjectDialog = false"
+        />
+        <GitChangesDialog
+          :visible="visibleGitChanges"
+          :project-path="docState()?.project?.path || ''"
+          @close="visibleGitChanges = false"
+        />
+        <GitRepositoryDialog
+          :visible="!!gitRepositoryMode"
+          :mode="gitRepositoryMode || 'clone'"
+          :editor="editor as Editor"
+          :project-path="docState()?.project?.path || ''"
+          @close="gitRepositoryMode = undefined"
+          @done="gitRepositoryDone"
         />
         <ContextMenu :editor="editor" />
         <editor-content class="pundok-editor" :editor="editor as Editor" />
@@ -368,6 +385,8 @@ export default {
     ConfigurationEditorDialog: defineAsyncComponent(
       () => import('./ConfigurationEditorDialog.vue'),
     ),
+    GitChangesDialog: defineAsyncComponent(() => import('./GitChangesDialog.vue')),
+    GitRepositoryDialog: defineAsyncComponent(() => import('./GitRepositoryDialog.vue')),
     PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
   },
 
@@ -424,6 +443,8 @@ export default {
       visibleConfigurationEditor: false,
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
       visibleNewProjectDialog: false,
+      visibleGitChanges: false,
+      gitRepositoryMode: undefined as 'clone' | 'publish' | 'connect' | undefined,
       swapBlocksWasActive: this.guiProps.swapBlocksActive,
       inputTextDialogLabel: DEFAULT_INPUT_TEXT_DIALOG_LABEL,
       inputTextDialogStartValue: DEFAULT_INPUT_TEXT_DIALOG_START_VALUE,
@@ -769,6 +790,12 @@ export default {
   },
 
   methods: {
+    showGitRepository(mode: 'clone' | 'publish' | 'connect') {
+      this.gitRepositoryMode = mode;
+    },
+    gitRepositoryDone(result: { path?: string }) {
+      if (result.path) this.$q.notify({ message: `Project ready at ${result.path}`, color: 'positive' });
+    },
     editorState(): EditorState | undefined {
       if (this.editor) return this.editor.view.state as EditorState;
     },

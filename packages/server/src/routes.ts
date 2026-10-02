@@ -250,8 +250,8 @@ export function createBackendRouter(
     ),
   );
   router.post(
-    '/list-git-projects',
-    asyncHandler((req) => backend.listGitProjects(username(req))),
+    '/list-git-repositories',
+    asyncHandler((req) => backend.listGitRepositories(username(req))),
   );
   router.post(
     '/clone-git-project',
@@ -260,21 +260,50 @@ export function createBackendRouter(
     ),
   );
   router.post(
-    '/merge-git-project-main',
+    '/publish-git-project',
     asyncHandler((req) =>
-      backend.mergeGitProjectMain(username(req), req.body?.name),
+      backend.publishGitProject(username(req), req.body?.options),
     ),
   );
   router.post(
-    '/pull-git-project',
+    '/connect-git-project',
     asyncHandler((req) =>
-      backend.pullGitProject(username(req), req.body?.name),
+      backend.connectGitProject(username(req), req.body?.options),
     ),
   );
   router.post(
-    '/push-git-project',
+    '/git-project-status',
     asyncHandler((req) =>
-      backend.pushGitProject(username(req), req.body?.name),
+      backend.gitProjectStatus(username(req), req.body?.path),
+    ),
+  );
+  router.post(
+    '/init-git-project',
+    asyncHandler((req) =>
+      backend.initGitProject(username(req), req.body?.path),
+    ),
+  );
+  router.post(
+    '/stage-git-project',
+    asyncHandler((req) =>
+      backend.stageGitProject(username(req), req.body?.path, req.body?.paths),
+    ),
+  );
+  router.post(
+    '/commit-git-project',
+    asyncHandler((req) =>
+      backend.commitGitProject(username(req), req.body?.options),
+    ),
+  );
+  router.post(
+    '/scan-git-projects',
+    asyncHandler((req) =>
+      backend.scanGitProjects(
+        username(req),
+        req.body?.url,
+        req.body?.user,
+        req.body?.password,
+      ),
     ),
   );
 

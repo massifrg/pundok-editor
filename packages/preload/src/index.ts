@@ -12,6 +12,9 @@ import {
   DocRepository,
   CloneGitProjectOptions,
   ClonedGitProject,
+  LocalGitProjectOptions,
+  GitProjectStatus,
+  GitCommitOptions,
   EditorKeyType,
   FindResourceOptions,
   FolderContents,
@@ -113,17 +116,29 @@ export interface Ipc {
     configNameOrProjectPath: string,
   ) => Promise<void>;
 
-  listGitProjects: () => Promise<ClonedGitProject[]>;
+  listGitRepositories: () => Promise<DocRepository[]>;
 
   cloneGitProject: (
     options: CloneGitProjectOptions,
   ) => Promise<ClonedGitProject>;
 
-  mergeGitProjectMain: (name: string) => Promise<void>;
+  publishGitProject: (
+    options: LocalGitProjectOptions,
+  ) => Promise<ClonedGitProject>;
 
-  pullGitProject: (name: string) => Promise<void>;
+  connectGitProject: (
+    options: LocalGitProjectOptions,
+  ) => Promise<ClonedGitProject>;
 
-  pushGitProject: (name: string) => Promise<void>;
+  gitProjectStatus: (path: string) => Promise<GitProjectStatus>;
+  initGitProject: (path: string) => Promise<void>;
+  stageGitProject: (path: string, paths: string[]) => Promise<void>;
+  commitGitProject: (options: GitCommitOptions) => Promise<void>;
+  scanGitProjects: (
+    url: string,
+    user: string,
+    password: string,
+  ) => Promise<Array<{ name: string; description: string; url: string }>>;
 }
 
 contextBridge.exposeInMainWorld('ipc', {
@@ -211,15 +226,23 @@ contextBridge.exposeInMainWorld('ipc', {
       isProject,
       configNameOrProjectPath,
     ),
-  listGitProjects: () => ipcRenderer.invoke('list-git-projects'),
+  listGitRepositories: () => ipcRenderer.invoke('list-git-repositories'),
   cloneGitProject: (options: CloneGitProjectOptions) =>
     ipcRenderer.invoke('clone-git-project', options),
-  mergeGitProjectMain: (name: string) =>
-    ipcRenderer.invoke('merge-git-project-main', name),
-  pullGitProject: (name: string) =>
-    ipcRenderer.invoke('pull-git-project', name),
-  pushGitProject: (name: string) =>
-    ipcRenderer.invoke('push-git-project', name),
+  publishGitProject: (options: LocalGitProjectOptions) =>
+    ipcRenderer.invoke('publish-git-project', options),
+  connectGitProject: (options: LocalGitProjectOptions) =>
+    ipcRenderer.invoke('connect-git-project', options),
+  gitProjectStatus: (path: string) =>
+    ipcRenderer.invoke('git-project-status', path),
+  initGitProject: (path: string) =>
+    ipcRenderer.invoke('init-git-project', path),
+  stageGitProject: (path: string, paths: string[]) =>
+    ipcRenderer.invoke('stage-git-project', path, paths),
+  commitGitProject: (options: GitCommitOptions) =>
+    ipcRenderer.invoke('commit-git-project', options),
+  scanGitProjects: (url: string, user: string, password: string) =>
+    ipcRenderer.invoke('scan-git-projects', url, user, password),
 } as Ipc);
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -8,6 +8,7 @@ import {
   mdiBookCog,
   mdiChevronLeft,
   mdiChevronRight,
+  mdiCloudDownload as mdiCloudDowload,
   mdiFileDocumentPlus,
   mdiFilePdfBox,
   mdiFileStarFourPoints,
@@ -298,6 +299,7 @@ import {
 } from '../../common';
 
 export const icons: Record<string, string> = {
+  cloud_download: mdiCloudDowload,
   ...commonIcons,
   add: mdiPlus,
   add_attribute: mdiInvoiceTextPlus,

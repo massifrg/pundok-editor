@@ -578,6 +578,40 @@
     "wholeWords": "whole words",
     "withCssSelectors": "search with CSS selectors"
   },
+  "projectMenu": {
+    "title": "Manage project",
+    "editConfiguration": "Edit project configuration",
+    "manageChanges": "Manage changes and commits",
+    "share": "Share project",
+    "connect": "Connect project",
+    "clone": "Clone remote project"
+  },
+  "gitChangesDialog": {
+    "title": "Manage changes and commits",
+    "notManaged": "This project is not managed by Git.",
+    "noChanges": "No changes.",
+    "commitMessage": "Commit message",
+    "initialize": "Initialize Git",
+    "stageSelected": "Stage selected",
+    "commit": "Commit",
+    "close": "Close"
+  },
+  "gitRepositoryDialog": {
+    "cloneTitle": "Clone remote project",
+    "shareTitle": "Share project",
+    "connectTitle": "Connect project",
+    "repositoryUrl": "Repository URL",
+    "username": "Username",
+    "password": "Password or token",
+    "destination": "Clone destination folder",
+    "project": "Project",
+    "scan": "Scan",
+    "clone": "Clone",
+    "share": "Share",
+    "connect": "Connect",
+    "cancel": "Cancel",
+    "selectDestination": "Select the clone destination folder:"
+  },
   "show": {
     "indicesButtons": "show buttons for indices' references",
     "lessOrMore": "show {what}",

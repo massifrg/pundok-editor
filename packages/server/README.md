@@ -163,9 +163,8 @@ node packages/server/dist/create-user.mjs /path/to/users.json alice
 The users file must be readable by the server and should be protected as a
 credential file. It is a JSON array of user records. Each record has a
 `username` and `passwordHash`, and may have a `docRepositories` array.
-Repositories have a `name`, `description`, `url`, `type` (`"git"`), and
-`projects` array; each project has a `name`, `description`, and `role`
-(`"admin"` or `"user"`):
+Repositories contain the remote `url`, the repository login `user`, the
+repository `type` (`"git"`), and the remote branch options:
 
 ```json
 {
@@ -173,17 +172,12 @@ Repositories have a `name`, `description`, `url`, `type` (`"git"`), and
   "passwordHash": "scrypt$...",
   "docRepositories": [
     {
-      "name": "Documents",
-      "description": "Alice's project documents",
       "url": "https://example.org/documents.git",
+      "user": "alice",
       "type": "git",
-      "projects": [
-        {
-          "name": "Book",
-          "description": "The book manuscript",
-          "role": "admin"
-        }
-      ]
+      "typeOptions": {
+        "branch": "alice"
+      }
     }
   ]
 }
@@ -197,8 +191,9 @@ creating or replacing an account.
 The shared `getValue('doc-repositories')` backend operation always returns an
 array. In server mode it reads the authenticated user's `docRepositories`
 account field; in Electron mode it reads the optional `docrepos.json` file from
-the app data directory. That file contains a bare JSON array using the same
-repository shape shown above. A missing field or file returns an empty array.
+the app data directory. That file contains a bare JSON array of remote
+repositories using the same shape shown above. A missing field or file returns
+an empty array.
 
 `JWT_SECRET` is required and must contain at least 32 bytes. Set it to a strong
 secret and keep it private. `JWT_TTL_SECONDS` optionally sets token lifetime

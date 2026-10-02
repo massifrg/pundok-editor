@@ -27,6 +27,9 @@ import type {
   DocRepository,
   CloneGitProjectOptions,
   ClonedGitProject,
+  LocalGitProjectOptions,
+  GitProjectStatus,
+  GitCommitOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -234,15 +237,27 @@ export interface Backend {
    */
   storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void>;
 
-  listGitProjects(): Promise<ClonedGitProject[]>;
+  listGitRepositories(): Promise<DocRepository[]>;
 
   cloneGitProject(options: CloneGitProjectOptions): Promise<ClonedGitProject>;
 
-  mergeGitProjectMain(name: string): Promise<void>;
+  publishGitProject(options: LocalGitProjectOptions): Promise<ClonedGitProject>;
 
-  pullGitProject(name: string): Promise<void>;
+  connectGitProject(options: LocalGitProjectOptions): Promise<ClonedGitProject>;
 
-  pushGitProject(name: string): Promise<void>;
+  gitProjectStatus(path: string): Promise<GitProjectStatus>;
+
+  initGitProject(path: string): Promise<void>;
+
+  stageGitProject(path: string, paths: string[]): Promise<void>;
+
+  commitGitProject(options: GitCommitOptions): Promise<void>;
+
+  scanGitProjects(
+    url: string,
+    user: string,
+    password: string,
+  ): Promise<Array<{ name: string; description: string; url: string }>>;
 }
 
 export function createBackend(): Backend {

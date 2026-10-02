@@ -577,6 +577,40 @@
     "wholeWords": "parole intere",
     "withCssSelectors": "cerca con i selettori CSS"
   },
+  "projectMenu": {
+    "title": "Gestisci progetto",
+    "editConfiguration": "Modifica configurazione del progetto",
+    "manageChanges": "Gestisci modifiche e commit",
+    "share": "Condividi progetto",
+    "connect": "Collega progetto",
+    "clone": "Clona progetto remoto"
+  },
+  "gitChangesDialog": {
+    "title": "Gestisci modifiche e commit",
+    "notManaged": "Questo progetto non è gestito da Git.",
+    "noChanges": "Nessuna modifica.",
+    "commitMessage": "Messaggio del commit",
+    "initialize": "Inizializza Git",
+    "stageSelected": "Metti in stage la selezione",
+    "commit": "Commit",
+    "close": "Chiudi"
+  },
+  "gitRepositoryDialog": {
+    "cloneTitle": "Clona progetto remoto",
+    "shareTitle": "Condividi progetto",
+    "connectTitle": "Collega progetto",
+    "repositoryUrl": "URL del repository",
+    "username": "Nome utente",
+    "password": "Password o token",
+    "destination": "Cartella di destinazione della clonazione",
+    "project": "Progetto",
+    "scan": "Cerca",
+    "clone": "Clona",
+    "share": "Condividi",
+    "connect": "Collega",
+    "cancel": "Annulla",
+    "selectDestination": "Seleziona la cartella di destinazione della clonazione:"
+  },
   "show": {
     "indicesButtons": "mostra i bottoni per i riferimenti ad indice",
     "lessOrMore": "mostra {what}",

@@ -40,11 +40,10 @@ describe('JwtAuthentication user records', () => {
   it('returns repository values for the requested user', async () => {
     const repositories = [
       {
-        name: 'Documents',
-        description: 'Project documents',
         url: 'https://example.org/documents.git',
+        user: 'alice',
         type: 'git',
-        projects: [],
+        typeOptions: { branch: 'alice' },
       },
     ];
     await writeUsers([
@@ -68,14 +67,10 @@ describe('JwtAuthentication user records', () => {
         passwordHash,
         docRepositories: [
           {
-            name: 'Documents',
-            description: 'Project documents',
             url: 'https://example.org/documents.git',
+            user: 'alice',
             type: 'git',
-            projects: [
-              { name: 'Book', description: 'Manuscript', role: 'admin' },
-              { name: 'Notes', description: 'Research notes', role: 'user' },
-            ],
+            typeOptions: { branch: 'alice' },
           },
         ],
       },
@@ -93,13 +88,10 @@ describe('JwtAuthentication user records', () => {
         passwordHash,
         docRepositories: [
           {
-            name: 'Documents',
-            description: 'Project documents',
             url: 'https://example.org/documents.git',
+            user: 'alice',
             type: 'svn',
-            projects: [
-              { name: 'Book', description: 'Manuscript', role: 'owner' },
-            ],
+            typeOptions: { branch: 'alice' },
           },
         ],
       },

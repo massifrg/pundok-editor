@@ -201,18 +201,30 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('update-config', (_event, options) =>
       updateConfiguration(options),
     );
-    ipcMain.handle('list-git-projects', () => this.gitRepositories.list());
+    ipcMain.handle('list-git-repositories', () => this.gitRepositories.list());
     ipcMain.handle('clone-git-project', (_event, options) =>
       this.gitRepositories.clone(options),
     );
-    ipcMain.handle('merge-git-project-main', (_event, name) =>
-      this.gitRepositories.mergeMain(name),
+    ipcMain.handle('publish-git-project', (_event, options) =>
+      this.gitRepositories.publish(options),
     );
-    ipcMain.handle('pull-git-project', (_event, name) =>
-      this.gitRepositories.pull(name),
+    ipcMain.handle('connect-git-project', (_event, options) =>
+      this.gitRepositories.connect(options),
     );
-    ipcMain.handle('push-git-project', (_event, name) =>
-      this.gitRepositories.push(name),
+    ipcMain.handle('git-project-status', (_event, path) =>
+      this.gitRepositories.status(path),
+    );
+    ipcMain.handle('init-git-project', (_event, path) =>
+      this.gitRepositories.init(path),
+    );
+    ipcMain.handle('stage-git-project', (_event, path, paths) =>
+      this.gitRepositories.stage(path, paths),
+    );
+    ipcMain.handle('commit-git-project', (_event, options) =>
+      this.gitRepositories.commit(options),
+    );
+    ipcMain.handle('scan-git-projects', (_event, url, user, password) =>
+      this.gitRepositories.scanRemoteProjects(url, user, password),
     );
   }
 

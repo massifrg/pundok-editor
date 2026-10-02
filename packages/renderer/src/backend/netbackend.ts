@@ -27,6 +27,9 @@ import type {
   DocRepository,
   CloneGitProjectOptions,
   ClonedGitProject,
+  LocalGitProjectOptions,
+  GitProjectStatus,
+  GitCommitOptions,
   IpcMainToRendererChannel,
   ServerMessage,
 } from '../common';
@@ -229,24 +232,48 @@ export class NetBackend implements Backend {
     return this.request('update-config', { options });
   }
 
-  listGitProjects(): Promise<ClonedGitProject[]> {
-    return this.request<ClonedGitProject[]>('list-git-projects');
+  listGitRepositories(): Promise<DocRepository[]> {
+    return this.request<DocRepository[]>('list-git-repositories');
   }
 
   cloneGitProject(options: CloneGitProjectOptions): Promise<ClonedGitProject> {
     return this.request<ClonedGitProject>('clone-git-project', { options });
   }
 
-  mergeGitProjectMain(name: string): Promise<void> {
-    return this.request<void>('merge-git-project-main', { name });
+  publishGitProject(
+    options: LocalGitProjectOptions,
+  ): Promise<ClonedGitProject> {
+    return this.request<ClonedGitProject>('publish-git-project', { options });
   }
 
-  pullGitProject(name: string): Promise<void> {
-    return this.request<void>('pull-git-project', { name });
+  connectGitProject(
+    options: LocalGitProjectOptions,
+  ): Promise<ClonedGitProject> {
+    return this.request<ClonedGitProject>('connect-git-project', { options });
   }
 
-  pushGitProject(name: string): Promise<void> {
-    return this.request<void>('push-git-project', { name });
+  gitProjectStatus(path: string): Promise<GitProjectStatus> {
+    return this.request<GitProjectStatus>('git-project-status', { path });
+  }
+
+  initGitProject(path: string): Promise<void> {
+    return this.request<void>('init-git-project', { path });
+  }
+
+  stageGitProject(path: string, paths: string[]): Promise<void> {
+    return this.request<void>('stage-git-project', { path, paths });
+  }
+
+  commitGitProject(options: GitCommitOptions): Promise<void> {
+    return this.request<void>('commit-git-project', { options });
+  }
+
+  scanGitProjects(
+    url: string,
+    user: string,
+    password: string,
+  ): Promise<Array<{ name: string; description: string; url: string }>> {
+    return this.request('scan-git-projects', { url, user, password });
   }
 
   private async request<T>(

@@ -56,11 +56,15 @@ export type IpcRendererToMainChannel =
   | 'render-again'
   | 'get-rendering-job'
   | 'update-config'
-  | 'list-git-projects'
+  | 'list-git-repositories'
   | 'clone-git-project'
-  | 'merge-git-project-main'
-  | 'pull-git-project'
-  | 'push-git-project';
+  | 'publish-git-project'
+  | 'connect-git-project'
+  | 'git-project-status'
+  | 'init-git-project'
+  | 'stage-git-project'
+  | 'commit-git-project'
+  | 'scan-git-projects';
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
@@ -213,25 +217,41 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     description:
       'update a configuration or project JSON file adding/updating an object (e.g. automation, custom style)',
   },
-  'list-git-projects': {
-    dir: 'r2m',
-    description: 'list locally cloned Git projects',
-  },
   'clone-git-project': {
     dir: 'r2m',
     description: 'clone a Git project and create the user branch',
   },
-  'merge-git-project-main': {
+  'list-git-repositories': {
     dir: 'r2m',
-    description: 'merge the remote main branch into the user branch',
+    description: 'list configured remote Git repositories',
   },
-  'pull-git-project': {
+  'publish-git-project': {
     dir: 'r2m',
-    description: 'pull the remote user branch into the local user branch',
+    description: 'create a remote repository and publish a local project',
   },
-  'push-git-project': {
+  'connect-git-project': {
     dir: 'r2m',
-    description: 'push the local user branch to the remote user branch',
+    description: 'add an existing remote to a local project',
+  },
+  'git-project-status': {
+    dir: 'r2m',
+    description: 'read the Git status of a project',
+  },
+  'init-git-project': {
+    dir: 'r2m',
+    description: 'initialize Git in a project directory',
+  },
+  'stage-git-project': {
+    dir: 'r2m',
+    description: 'stage project files in Git',
+  },
+  'commit-git-project': {
+    dir: 'r2m',
+    description: 'commit staged project files',
+  },
+  'scan-git-projects': {
+    dir: 'r2m',
+    description: 'find remote repositories containing a project file',
   },
 };
 

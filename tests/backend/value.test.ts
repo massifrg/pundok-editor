@@ -32,11 +32,10 @@ describe('getValue', () => {
   it('reads repositories from docrepos.json', async () => {
     const repositories = [
       {
-        name: 'Documents',
-        description: 'Project documents',
         url: 'https://example.org/documents.git',
+        user: 'alice',
         type: 'git',
-        projects: [{ name: 'Book', description: 'Manuscript', role: 'admin' }],
+        typeOptions: { branch: 'alice' },
       },
     ];
     await writeFile(join(root, 'docrepos.json'), JSON.stringify(repositories));

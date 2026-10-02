@@ -1,5 +1,9 @@
 import type { Backend, IpcRendererListener } from './backend';
-import type { CloneGitProjectOptions } from '../common';
+import type {
+  CloneGitProjectOptions,
+  LocalGitProjectOptions,
+  GitCommitOptions,
+} from '../common';
 import {
   type ConfigurationSummary,
   PundokEditorConfig,
@@ -468,25 +472,42 @@ export class LocalBackend implements Backend {
     return window.ipc.updateConfig(options);
   }
 
-  listGitProjects() {
-    return window.ipc.listGitProjects();
+  listGitRepositories() {
+    return window.ipc.listGitRepositories();
   }
 
   cloneGitProject(options: CloneGitProjectOptions) {
     return window.ipc.cloneGitProject(options);
   }
 
-  mergeGitProjectMain(name: string) {
-    return window.ipc.mergeGitProjectMain(name);
+  publishGitProject(options: LocalGitProjectOptions) {
+    return window.ipc.publishGitProject(options);
   }
 
-  pullGitProject(name: string) {
-    return window.ipc.pullGitProject(name);
+  connectGitProject(options: LocalGitProjectOptions) {
+    return window.ipc.connectGitProject(options);
   }
 
-  pushGitProject(name: string) {
-    return window.ipc.pushGitProject(name);
+  gitProjectStatus(path: string) {
+    return window.ipc.gitProjectStatus(path);
   }
+
+  initGitProject(path: string) {
+    return window.ipc.initGitProject(path);
+  }
+
+  stageGitProject(path: string, paths: string[]) {
+    return window.ipc.stageGitProject(path, paths);
+  }
+
+  commitGitProject(options: GitCommitOptions) {
+    return window.ipc.commitGitProject(options);
+  }
+
+  scanGitProjects(url: string, user: string, password: string) {
+    return window.ipc.scanGitProjects(url, user, password);
+  }
+
 }
 
 function getConfigurationFunction(ipc: any) {

@@ -25,6 +25,9 @@ import type {
   DocRepository,
   CloneGitProjectOptions,
   ClonedGitProject,
+  LocalGitProjectOptions,
+  GitCommitOptions,
+  GitProjectStatus,
 } from './common';
 import {
   getHardcodedEditorConfig,
@@ -125,7 +128,7 @@ export class PundokEditorServer {
     return true;
   }
 
-  async listGitProjects(user: string): Promise<ClonedGitProject[]> {
+  async listGitRepositories(user: string): Promise<DocRepository[]> {
     return this.gitRepositoriesForUser(user).list();
   }
 
@@ -133,19 +136,71 @@ export class PundokEditorServer {
     user: string,
     options: CloneGitProjectOptions,
   ): Promise<ClonedGitProject> {
-    return this.gitRepositoriesForUser(user).clone(options);
+    return this.gitRepositoriesForUser(user).clone({
+      ...options,
+      destination: options.destination
+        ? this.userPath(user, options.destination)
+        : undefined,
+    });
   }
 
-  async mergeGitProjectMain(user: string, name: string): Promise<void> {
-    return this.gitRepositoriesForUser(user).mergeMain(name);
+  async publishGitProject(
+    user: string,
+    options: LocalGitProjectOptions,
+  ): Promise<ClonedGitProject> {
+    return this.gitRepositoriesForUser(user).publish({
+      ...options,
+      projectPath: this.userPath(user, options.projectPath),
+    });
   }
 
-  async pullGitProject(user: string, name: string): Promise<void> {
-    return this.gitRepositoriesForUser(user).pull(name);
+  async connectGitProject(
+    user: string,
+    options: LocalGitProjectOptions,
+  ): Promise<ClonedGitProject> {
+    return this.gitRepositoriesForUser(user).connect({
+      ...options,
+      projectPath: this.userPath(user, options.projectPath),
+    });
   }
 
-  async pushGitProject(user: string, name: string): Promise<void> {
-    return this.gitRepositoriesForUser(user).push(name);
+  async gitProjectStatus(user: string, path: string): Promise<GitProjectStatus> {
+    return this.gitRepositoriesForUser(user).status(this.userPath(user, path));
+  }
+
+  async initGitProject(user: string, path: string): Promise<void> {
+    return this.gitRepositoriesForUser(user).init(this.userPath(user, path));
+  }
+
+  async stageGitProject(
+    user: string,
+    path: string,
+    paths: string[],
+  ): Promise<void> {
+    return this.gitRepositoriesForUser(user).stage(this.userPath(user, path), paths);
+  }
+
+  async commitGitProject(
+    user: string,
+    options: GitCommitOptions,
+  ): Promise<void> {
+    return this.gitRepositoriesForUser(user).commit({
+      ...options,
+      projectPath: this.userPath(user, options.projectPath),
+    });
+  }
+
+  async scanGitProjects(
+    user: string,
+    url: string,
+    remoteUser: string,
+    password: string,
+  ) {
+    return this.gitRepositoriesForUser(user).scanRemoteProjects(
+      url,
+      remoteUser,
+      password,
+    );
   }
 
   async debugInfo(user: string): Promise<object> {

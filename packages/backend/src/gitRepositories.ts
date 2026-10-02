@@ -6,23 +6,25 @@ import {
   rm,
   writeFile,
 } from 'node:fs/promises';
-import { relative, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
+import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import {
   DEFAULT_PROJECT_FILENAME,
   type CloneGitProjectOptions,
   type ClonedGitProject,
   type DocRepository,
   type ExternalProgramResult,
+  type LocalGitProjectOptions,
+  type GitCommitOptions,
+  type GitProjectStatus,
+  type GitStatusEntry,
   isDocRepositories,
+  type PundokEditorProject,
 } from '../../common/src';
 import { DOC_REPOSITORIES_FILENAME } from './handlers/value';
 import { runExternalProgram } from './runExternal';
 import type { BackendDirectories } from './resourceManager';
-
-interface RepositoryMetadata {
-  name: string;
-  description: string;
-}
 
 export class GitRepositoryManager {
   private readonly credentials = new Map<
@@ -32,25 +34,77 @@ export class GitRepositoryManager {
 
   constructor(private readonly directories: BackendDirectories) {}
 
-  async list(): Promise<ClonedGitProject[]> {
-    const repositories = await this.repositories();
-    return repositories.flatMap((repository) =>
-      repository.projects
-        .filter((project) => project.user !== undefined && project.typeOptions)
-        .map((project) => ({
-          name: project.name,
-          description: project.description,
-          url: repository.url,
-          user: project.user!,
-          type: 'git' as const,
-          typeOptions: project.typeOptions!,
-        })),
+  async status(path: string): Promise<GitProjectStatus> {
+    try {
+      const branch = await this.currentBranch(path, { user: '', password: '' });
+      const result = await this.runGit(
+        ['status', '--porcelain'],
+        '',
+        '',
+        path,
+      );
+      return { managed: true, branch, files: parseStatus(result.output) };
+    } catch {
+      return { managed: false, files: [] };
+    }
+  }
+
+  async init(path: string): Promise<void> {
+    await this.runGit(['init'], '', '', path);
+  }
+
+  async stage(path: string, paths: string[]): Promise<void> {
+    if (!paths.length) return;
+    await this.runGit(['add', '--', ...paths], '', '', path);
+  }
+
+  async commit(options: GitCommitOptions): Promise<void> {
+    if (!options.message.trim()) throw new Error('A commit message is required');
+    await this.runGit(
+      ['commit', '-m', options.message],
+      '',
+      '',
+      options.projectPath,
     );
   }
 
+  async scanRemoteProjects(
+    url: string,
+    user: string,
+    password: string,
+  ): Promise<Array<{ name: string; description: string; url: string }>> {
+    validateCredentials({ url, user, password });
+    const repositories = await remoteRepositories(url, user, password);
+    const found: Array<{ name: string; description: string; url: string }> = [];
+    for (const repository of repositories) {
+      const directory = await mkdtemp(join(tmpdir(), 'pundok-scan-'));
+      try {
+        await this.runGit(
+          ['clone', '--depth', '1', repository.url, directory],
+          user,
+          password,
+        );
+        const project = await readProject(directory);
+        found.push({
+          name: project.name,
+          description: project.description || '',
+          url: repository.url,
+        });
+      } catch {
+        // Repositories without a valid root project file are not candidates.
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    }
+    return found;
+  }
+
+  list(): Promise<DocRepository[]> {
+    return this.repositories();
+  }
+
   async clone(options: CloneGitProjectOptions): Promise<ClonedGitProject> {
-    validateCloneOptions(options);
-    await mkdir(this.directories.userDataDir, { recursive: true });
+    validateCredentials(options);
     const metadata = await repositoryMetadata(
       options.url,
       options.user,
@@ -58,20 +112,24 @@ export class GitRepositoryManager {
     );
     const branch = options.branch || options.user;
     validateBranch(branch);
-    const projects = await this.list();
-    if (projects.some((project) => project.name === metadata.name))
-      throw new Error(`A project named "${metadata.name}" is already cloned`);
-
-    const projectPath = resolve(this.directories.userDataDir, metadata.name);
-    if (!isDirectChild(this.directories.userDataDir, projectPath))
+    const projectPath = resolve(
+      options.destination || this.directories.userDataDir,
+      metadata.name,
+    );
+    const destination = resolve(
+      options.destination || this.directories.userDataDir,
+    );
+    if (!isDirectChild(destination, projectPath))
       throw new Error(`Invalid repository name: "${metadata.name}"`);
+
     try {
+      await mkdir(destination, { recursive: true });
       await this.runGit(
         ['clone', '--origin', 'origin', options.url, projectPath],
         options.user,
         options.password,
       );
-      await readProjectFile(projectPath);
+      const project = await readProject(projectPath);
       const mainBranch = await this.defaultBranch(projectPath, options);
       if (branch === mainBranch)
         throw new Error(
@@ -89,119 +147,209 @@ export class GitRepositoryManager {
         options.password,
         projectPath,
       );
-      if (branch !== mainBranch) {
-        await this.runGit(
-          ['merge', '--no-edit', `origin/${mainBranch}`],
-          options.user,
-          options.password,
-          projectPath,
-        );
-      }
+      await this.runGit(
+        ['merge', '--no-edit', `origin/${mainBranch}`],
+        options.user,
+        options.password,
+        projectPath,
+      );
+      return {
+        ...project,
+        description: project.description || '',
+        path: projectPath,
+        url: options.url,
+        user: options.user,
+        type: 'git',
+        typeOptions: { branch },
+      };
     } catch (error) {
       await rm(projectPath, { recursive: true, force: true });
       throw error;
     }
+  }
 
-    const project: ClonedGitProject = {
-      name: metadata.name,
-      description: metadata.description,
+  async publish(options: LocalGitProjectOptions): Promise<ClonedGitProject> {
+    validateCredentials(options);
+    const project = await readProject(options.projectPath);
+    const credentials = { user: options.user, password: options.password };
+    const branch = await this.currentBranch(options.projectPath, credentials);
+    const remoteName = options.remoteName || 'origin';
+    const created = await this.createRemoteRepository(options, project);
+    await this.addOrValidateRemote(
+      options.projectPath,
+      remoteName,
+      options.url,
+      credentials,
+    );
+    if (created)
+      await this.runGit(
+        ['push', '--set-upstream', remoteName, `${branch}:${branch}`],
+        options.user,
+        options.password,
+        options.projectPath,
+      );
+    await this.saveRepository({
+      url: options.url,
+      user: options.user,
+      type: 'git',
+      typeOptions: { branch },
+    });
+    this.credentials.set(options.url, credentials);
+    return {
+      ...project,
+      description: project.description || '',
+      path: options.projectPath,
       url: options.url,
       user: options.user,
       type: 'git',
       typeOptions: { branch },
     };
-    await this.writeProjects([...projects, project]);
-    this.credentials.set(project.name, {
+  }
+
+  async connect(options: LocalGitProjectOptions): Promise<ClonedGitProject> {
+    validateCredentials(options);
+    const project = await readProject(options.projectPath);
+    const credentials = { user: options.user, password: options.password };
+    const branch = await this.currentBranch(options.projectPath, credentials);
+    await this.addOrValidateRemote(
+      options.projectPath,
+      options.remoteName || 'origin',
+      options.url,
+      credentials,
+    );
+    await this.saveRepository({
+      url: options.url,
       user: options.user,
-      password: options.password,
+      type: 'git',
+      typeOptions: { branch },
     });
-    return project;
+    this.credentials.set(options.url, credentials);
+    return {
+      ...project,
+      description: project.description || '',
+      path: options.projectPath,
+      url: options.url,
+      user: options.user,
+      type: 'git',
+      typeOptions: { branch },
+    };
   }
 
-  async mergeMain(name: string): Promise<void> {
-    const project = await this.project(name);
-    const credentials = this.credentialsFor(project);
-    const path = this.projectPath(project);
-    const mainBranch = await this.defaultBranch(path, credentials);
-    await this.runGit(
-      ['fetch', 'origin', mainBranch],
-      credentials.user,
-      credentials.password,
-      path,
+  private async saveRepository(repository: DocRepository): Promise<void> {
+    const repositories = await this.repositories();
+    const index = repositories.findIndex(
+      (candidate) => candidate.url === repository.url,
     );
-    await this.checkoutBranch(project, credentials);
-    await this.runGit(
-      ['merge', '--no-edit', `origin/${mainBranch}`],
-      credentials.user,
-      credentials.password,
-      path,
+    if (index === -1) repositories.push(repository);
+    else repositories[index] = repository;
+    const filename = resolve(
+      this.directories.userDataDir,
+      DOC_REPOSITORIES_FILENAME,
     );
-  }
-
-  async pull(name: string): Promise<void> {
-    const project = await this.project(name);
-    const credentials = this.credentialsFor(project);
-    const path = this.projectPath(project);
-    await this.checkoutBranch(project, credentials);
-    await this.runGit(
-      ['pull', '--ff-only', 'origin', project.typeOptions.branch],
-      credentials.user,
-      credentials.password,
-      path,
+    const temporary = `${filename}.tmp-${process.pid}`;
+    await writeFile(
+      temporary,
+      `${JSON.stringify(repositories, undefined, 2)}\n`,
     );
+    await rename(temporary, filename);
   }
 
-  async push(name: string): Promise<void> {
-    const project = await this.project(name);
-    const credentials = this.credentialsFor(project);
-    const path = this.projectPath(project);
-    await this.checkoutBranch(project, credentials);
-    await this.runGit(
-      [
-        'push',
-        'origin',
-        `${project.typeOptions.branch}:${project.typeOptions.branch}`,
-      ],
-      credentials.user,
-      credentials.password,
-      path,
-    );
-  }
-
-  private async project(name: string): Promise<ClonedGitProject> {
-    const project = (await this.list()).find(
-      (candidate) => candidate.name === name,
-    );
-    if (!project) throw new Error(`No cloned project named "${name}"`);
-    return project;
-  }
-
-  private projectPath(project: ClonedGitProject): string {
-    const path = resolve(this.directories.userDataDir, project.name);
-    if (!isDirectChild(this.directories.userDataDir, path))
-      throw new Error(`Invalid cloned project name: "${project.name}"`);
-    return path;
-  }
-
-  private credentialsFor(project: ClonedGitProject) {
-    const credentials = this.credentials.get(project.name);
-    if (!credentials)
-      throw new Error(
-        `No credentials are available for "${project.name}"; clone it again in this session`,
+  private async repositories(): Promise<DocRepository[]> {
+    try {
+      const value: unknown = JSON.parse(
+        await readFile(
+          resolve(this.directories.userDataDir, DOC_REPOSITORIES_FILENAME),
+          'utf8',
+        ),
       );
-    return credentials;
+      if (!isDocRepositories(value))
+        throw new Error(
+          `${DOC_REPOSITORIES_FILENAME} must contain an array of remote repositories`,
+        );
+      return value;
+    } catch (error) {
+      if (isNodeError(error, 'ENOENT')) return [];
+      throw error;
+    }
   }
 
-  private async checkoutBranch(
-    project: ClonedGitProject,
+  private async addOrValidateRemote(
+    path: string,
+    name: string,
+    url: string,
     credentials: { user: string; password: string },
   ): Promise<void> {
-    await this.runGit(
-      ['switch', project.typeOptions.branch],
+    try {
+      const current = await this.runGit(
+        ['remote', 'get-url', name],
+        credentials.user,
+        credentials.password,
+        path,
+      );
+      if (current.output.trim() !== url)
+        throw new Error(`Git remote "${name}" already points to another URL`);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('already points'))
+        throw error;
+      await this.runGit(
+        ['remote', 'add', name, url],
+        credentials.user,
+        credentials.password,
+        path,
+      );
+    }
+  }
+
+  private async createRemoteRepository(
+    options: LocalGitProjectOptions,
+    project: PundokEditorProject,
+  ): Promise<boolean> {
+    const remote = parseRepositoryUrl(options.url);
+    if (!remote)
+      throw new Error(`Unsupported Git repository URL: "${options.url}"`);
+    if (remote.name !== project.name)
+      throw new Error(
+        `Remote repository "${remote.name}" must have the same name as project "${project.name}"`,
+      );
+    const endpoint =
+      remote.host === 'github.com'
+        ? 'https://api.github.com/user/repos'
+        : `${remote.origin}/api/v1/user/repos`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'pundok-editor',
+        Authorization: basicAuth(options.user, options.password),
+      },
+      body: JSON.stringify({
+        name: remote.name,
+        description: project.description,
+        private: true,
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok && response.status !== 409)
+      throw new Error(
+        `Could not create remote repository "${remote.name}" (${response.status})`,
+      );
+    return response.status !== 409;
+  }
+
+  private async currentBranch(
+    path: string,
+    credentials: { user: string; password: string },
+  ): Promise<string> {
+    const result = await this.runGit(
+      ['branch', '--show-current'],
       credentials.user,
       credentials.password,
-      this.projectPath(project),
+      path,
     );
+    const branch = result.output.trim();
+    validateBranch(branch);
+    return branch;
   }
 
   private async defaultBranch(
@@ -252,100 +400,53 @@ export class GitRepositoryManager {
       );
     return result;
   }
+}
 
-  private async writeProjects(projects: ClonedGitProject[]): Promise<void> {
-    const repositories = await this.repositories();
-    for (const project of projects) {
-      let repository = repositories.find(
-        (candidate) => candidate.url === project.url,
-      );
-      if (!repository) {
-        repository = {
-          name: project.name,
-          description: project.description,
-          url: project.url,
-          type: 'git',
-          projects: [],
-        };
-        repositories.push(repository);
-      }
-      const existingProject = repository.projects.find(
-        (candidate) => candidate.name === project.name,
-      );
-      const projectData = {
-        name: project.name,
-        description: project.description,
-        role: existingProject?.role || ('user' as const),
-        user: project.user,
-        typeOptions: project.typeOptions,
-      };
-      if (existingProject) Object.assign(existingProject, projectData);
-      else repository.projects.push(projectData);
-    }
-    const filename = resolve(
-      this.directories.userDataDir,
-      DOC_REPOSITORIES_FILENAME,
-    );
-    const temporary = `${filename}.tmp-${process.pid}`;
-    await writeFile(
-      temporary,
-      `${JSON.stringify(repositories, undefined, 2)}\n`,
-      'utf8',
-    );
-    await rename(temporary, filename);
-  }
-
-  private async repositories(): Promise<DocRepository[]> {
-    try {
-      const content = await readFile(
-        resolve(this.directories.userDataDir, DOC_REPOSITORIES_FILENAME),
-        'utf8',
-      );
-      const value: unknown = JSON.parse(content);
-      if (!isDocRepositories(value))
-        throw new Error(
-          `${DOC_REPOSITORIES_FILENAME} must contain an array of document repositories`,
-        );
-      return value;
-    } catch (error) {
-      if (isNodeError(error, 'ENOENT')) return [];
-      throw error;
-    }
-  }
+async function readProject(path: string): Promise<PundokEditorProject> {
+  const filename = resolve(path, DEFAULT_PROJECT_FILENAME);
+  await access(filename);
+  const project = JSON.parse(
+    await readFile(filename, 'utf8'),
+  ) as PundokEditorProject;
+  if (typeof project.name !== 'string')
+    throw new Error(`${DEFAULT_PROJECT_FILENAME} must contain a project name`);
+  return project;
 }
 
 async function repositoryMetadata(
   url: string,
   user: string,
   password: string,
-): Promise<RepositoryMetadata> {
+): Promise<{ name: string; description: string }> {
   const parsed = parseRepositoryUrl(url);
   if (!parsed) throw new Error(`Unsupported Git repository URL: "${url}"`);
-  const fallback = { name: parsed.name, description: '' };
-  const apiUrl =
-    parsed.host === 'github.com'
-      ? `https://api.github.com/repos/${parsed.owner}/${parsed.name}`
-      : `${parsed.origin}/api/v1/repos/${parsed.owner}/${parsed.name}`;
   try {
-    const response = await fetch(apiUrl, {
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'pundok-editor',
-        Authorization: `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`,
+    const response = await fetch(
+      parsed.host === 'github.com'
+        ? `https://api.github.com/repos/${parsed.owner}/${parsed.name}`
+        : `${parsed.origin}/api/v1/repos/${parsed.owner}/${parsed.name}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'pundok-editor',
+          Authorization: basicAuth(user, password),
+        },
+        signal: AbortSignal.timeout(10_000),
       },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) return fallback;
-    const value: unknown = await response.json();
-    if (!isRecord(value) || typeof value.name !== 'string') return fallback;
-    return {
-      name: safeProjectName(value.name),
-      description:
-        typeof value.description === 'string' ? value.description : '',
-    };
+    );
+    if (response.ok) {
+      const value: unknown = await response.json();
+      if (isRecord(value) && typeof value.name === 'string')
+        return {
+          name: safeProjectName(value.name),
+          description:
+            typeof value.description === 'string' ? value.description : '',
+        };
+    }
   } catch {
-    return fallback;
+    // Git remains the source of truth if repository metadata is unavailable.
   }
+  return { name: parsed.name, description: '' };
 }
 
 function parseRepositoryUrl(
@@ -360,19 +461,18 @@ function parseRepositoryUrl(
   if (!['http:', 'https:'].includes(parsed.protocol)) return undefined;
   const parts = parsed.pathname.split('/').filter(Boolean);
   if (parts.length < 2) return undefined;
-  const name = safeProjectName(parts.at(-1)!.replace(/\.git$/, ''));
-  const owner = parts.at(-2)!;
-  return { host: parsed.host, origin: parsed.origin, owner, name };
+  return {
+    host: parsed.host,
+    origin: parsed.origin,
+    owner: parts.at(-2)!,
+    name: safeProjectName(parts.at(-1)!.replace(/\.git$/, '')),
+  };
 }
 
-function safeProjectName(name: string): string {
-  if (!name || name === '.' || name === '..' || /[\\/]/.test(name))
-    throw new Error(`Invalid repository name: "${name}"`);
-  return name;
-}
-
-function validateCloneOptions(options: CloneGitProjectOptions): void {
-  if (!options.url || !options.user || !options.password)
+function validateCredentials(
+  options: CloneGitProjectOptions | LocalGitProjectOptions,
+): void {
+  if (!options.user || !options.password || !options.url)
     throw new Error('A repository URL, username, and password are required');
 }
 
@@ -386,12 +486,14 @@ function validateBranch(branch: string): void {
     throw new Error(`Invalid Git branch: "${branch}"`);
 }
 
-async function readProjectFile(path: string): Promise<void> {
-  const filename = resolve(path, DEFAULT_PROJECT_FILENAME);
-  await access(filename);
-  const value: unknown = JSON.parse(await readFile(filename, 'utf8'));
-  if (!isRecord(value))
-    throw new Error(`${DEFAULT_PROJECT_FILENAME} must contain an object`);
+function safeProjectName(name: string): string {
+  if (!name || name === '.' || name === '..' || /[\\/]/.test(name))
+    throw new Error(`Invalid repository name: "${name}"`);
+  return name;
+}
+
+function basicAuth(user: string, password: string): string {
+  return `Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`;
 }
 
 function gitEnvironment(user: string, password: string): NodeJS.ProcessEnv {
@@ -400,7 +502,7 @@ function gitEnvironment(user: string, password: string): NodeJS.ProcessEnv {
     GIT_TERMINAL_PROMPT: '0',
     GIT_CONFIG_COUNT: '1',
     GIT_CONFIG_KEY_0: 'http.extraHeader',
-    GIT_CONFIG_VALUE_0: `Authorization: Basic ${Buffer.from(`${user}:${password}`).toString('base64')}`,
+    GIT_CONFIG_VALUE_0: `Authorization: ${basicAuth(user, password)}`,
   };
 }
 
@@ -427,4 +529,54 @@ function isNodeError(error: unknown, code: string): boolean {
     'code' in error &&
     error.code === code
   );
+}
+
+function parseStatus(output: string): GitStatusEntry[] {
+  return output
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => ({
+      indexStatus: line[0] || ' ',
+      worktreeStatus: line[1] || ' ',
+      path: line.slice(3),
+    }));
+}
+
+async function remoteRepositories(
+  url: string,
+  user: string,
+  password: string,
+): Promise<Array<{ url: string }>> {
+  const parsed = parseServerUrl(url);
+  if (!parsed) throw new Error(`Unsupported Git server URL: "${url}"`);
+  const endpoint =
+    parsed.hostname === 'github.com'
+      ? 'https://api.github.com/user/repos?per_page=100'
+      : `${parsed.origin}/api/v1/user/repos?limit=50`;
+  const response = await fetch(endpoint, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'pundok-editor',
+      Authorization: basicAuth(user, password),
+    },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok)
+    throw new Error(`Could not list remote repositories (${response.status})`);
+  const value: unknown = await response.json();
+  if (!Array.isArray(value)) throw new Error('Remote repository list is invalid');
+  return value.flatMap((entry) => {
+    if (!isRecord(entry) || typeof entry.clone_url !== 'string') return [];
+    return [{ url: entry.clone_url }];
+  });
+}
+
+function parseServerUrl(value: string): { origin: string; hostname: string } | undefined {
+  try {
+    const parsed = new URL(value);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return undefined;
+    return { origin: parsed.origin, hostname: parsed.hostname };
+  } catch {
+    return undefined;
+  }
 }
