@@ -145,7 +145,8 @@ export function updateDocState(
       }
       if (key !== 'savedDoc')
         console.log(
-          `updateDocState: updated ${key} to ${JSON.stringify(value)}`,
+          // `updateDocState: updated ${key} to ${JSON.stringify(value)}`,
+          `updateDocState: updated ${key} field`,
         );
       if (key === 'guiProps') {
         const guiProps =
