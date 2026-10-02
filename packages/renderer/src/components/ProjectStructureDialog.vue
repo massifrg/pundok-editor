@@ -75,15 +75,17 @@
                   leave-active-class="animated fadeOut"
                 >
                   <q-tree
+                    ref="tree"
                     v-show="!isLoadingStructure"
                     :nodes="docTree"
                     node-key="label"
                     dense
                     v-model:expanded="expanded"
-                    v-model:selected="selected"
+                    :selected="selected"
                     :selected-color="selectedColor"
                     default-expand-all
                     @update:selected="updateSelected"
+                    @dblclick.stop="openInMainEditor"
                   />
                 </transition>
               </q-card-section>
@@ -147,6 +149,7 @@ import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/vue-3';
 import { isString } from 'lodash-es';
 import { PendingOperation } from './helpers/pending';
+import { isAbsolute, relative, resolve } from 'path-browserify';
 
 interface LoadedDocument {
   id?: string;
@@ -189,6 +192,13 @@ function docToTreeNode(
   return treeNode;
 }
 
+function normalizedSource(src: string): string {
+  return src
+    .replace(/^file:\/\//, '')
+    .replaceAll('\\', '/')
+    .replace(/^\.\/+/, '');
+}
+
 type ShowMode = 'normal' | 'maximized' | 'minimized';
 
 const ProjectStructureDialog: Component = {
@@ -204,8 +214,9 @@ const ProjectStructureDialog: Component = {
       splitterModel: 25,
       isLoadingStructure: false,
       docTree: [] as QTreeNode[],
-      expanded: [] as boolean[],
+      expanded: [] as string[],
       selected: null as string | null,
+      selectionTimer: undefined as ReturnType<typeof setTimeout> | undefined,
       loaded: undefined as LoadedDocument | undefined,
       subEditor: undefined as Editor | undefined,
       dontReloadStructure: false,
@@ -256,9 +267,15 @@ const ProjectStructureDialog: Component = {
     project() {
       this.reloadStructure();
     },
+    visible(visible: boolean) {
+      if (visible) this.$nextTick(this.syncTreeToCurrentDocument);
+    },
     expanded(e) {
       console.log(e.join());
     },
+  },
+  beforeUnmount() {
+    if (this.selectionTimer) clearTimeout(this.selectionTimer);
   },
   methods: {
     forwardEditorKey(editorKey: EditorKeyType, editor?: Editor) {
@@ -283,6 +300,7 @@ const ProjectStructureDialog: Component = {
         if (structure) {
           const root = docToTreeNode(structure, this.loaded);
           this.docTree = [root];
+          this.$nextTick(this.syncTreeToCurrentDocument);
           return;
         }
       } catch (err: Error | string | unknown) {
@@ -316,6 +334,61 @@ const ProjectStructureDialog: Component = {
         ? this.findTreeNode(matcher, nextNodes)
         : undefined;
     },
+    findTreePath(
+      matcher: NodeMatcher,
+      nodes?: QTreeNode[],
+      path: QTreeNode[] = [],
+    ): QTreeNode[] | undefined {
+      for (const node of nodes || this.docTree) {
+        const currentPath = [...path, node];
+        if (matcher(node)) return currentPath;
+        const result = node.children
+          ? this.findTreePath(matcher, node.children, currentPath)
+          : undefined;
+        if (result) return result;
+      }
+      return undefined;
+    },
+    syncTreeToCurrentDocument() {
+      const docState = getDocState(this.mainEditor?.state);
+      const project = docState?.project;
+      if (!docState?.workingFolder || !docState.documentName || !project?.path)
+        return;
+
+      const absoluteSource = resolve(
+        docState.workingFolder,
+        docState.documentName,
+      );
+      const candidates = [
+        absoluteSource,
+        relative(project.path, absoluteSource),
+        docState.documentName,
+        resolve(project.path, docState.documentName),
+      ].map(normalizedSource);
+      const path = this.findTreePath((node: QTreeNode) => {
+        if (!node.src) return false;
+        const source = normalizedSource(node.src);
+        return (
+          candidates.includes(source) ||
+          (!isAbsolute(node.src) &&
+            candidates.includes(
+              normalizedSource(resolve(project.path, node.src)),
+            ))
+        );
+      });
+      if (!path) return;
+
+      this.selected = path[path.length - 1].label;
+      this.expanded = path.slice(0, -1).map((node: QTreeNode) => node.label);
+      this.$nextTick(this.scrollSelectedTreeNode);
+    },
+    scrollSelectedTreeNode() {
+      const tree = this.$refs.tree as { $el?: HTMLElement } | undefined;
+      const selectedNode = tree?.$el?.querySelector(
+        '[aria-selected="true"]',
+      ) as HTMLElement | null;
+      selectedNode?.scrollIntoView({ block: 'nearest' });
+    },
     // getInclusionLine(matcher: NodeMatcher, _nodes?: QTreeNode[], acc: string[] = []): string[] {
     //   const nodes: QTreeNode[] = _nodes === undefined ? this.docTree : _nodes
     //   const found: QTreeNode | undefined = nodes.find(matcher)
@@ -335,13 +408,15 @@ const ProjectStructureDialog: Component = {
       }
     },
     updateSelected(selected?: string) {
+      if (!selected || selected === this.selected) return;
       this.selected = selected;
-      const context = this.getOpenDocContextFromSelected();
-      // console.log(this.getInclusionLine(context))
-      console.log(context);
-      const state = this.subEditor?.state;
-      console.log(state);
-      if (state && context) setActionOpenDocument(state, context);
+      if (this.selectionTimer) clearTimeout(this.selectionTimer);
+      this.selectionTimer = setTimeout(() => {
+        this.selectionTimer = undefined;
+        const context = this.getOpenDocContextFromSelected();
+        const state = this.subEditor?.state;
+        if (state && context) setActionOpenDocument(state, context);
+      }, 250);
     },
     documentLoaded(doc: CxDocument, editor: Editor) {
       this.loaded = {
@@ -368,6 +443,10 @@ const ProjectStructureDialog: Component = {
       }
     },
     openInMainEditor() {
+      if (this.selectionTimer) {
+        clearTimeout(this.selectionTimer);
+        this.selectionTimer = undefined;
+      }
       const context = this.getOpenDocContextFromSelected();
       const state: EditorState = this.mainEditor.state;
       if (context && state) {
