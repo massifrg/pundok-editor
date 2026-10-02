@@ -428,6 +428,9 @@
     "newEmpty": "new empty document",
     "newEmptyWithConfig": "new empty document with configuration",
     "open": "open document",
+    "openNextProjectDocument": "open next document in project structure",
+    "openParentProjectDocument": "open the container document (book, part, chapter, section...)",
+    "openPreviousProjectDocument": "open previous document in project structure",
     "reloadWithConfiguration": "reload document with a different configuration"
   },
   "enabled": "enabled",

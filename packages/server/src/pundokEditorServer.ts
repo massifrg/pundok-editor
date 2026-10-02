@@ -96,6 +96,10 @@ export class PundokEditorServer {
     string,
     GitRepositoryManager
   >();
+  private readonly inclusionTreesByUser = new Map<
+    string,
+    Map<string, Promise<ProjectComponent | undefined>>
+  >();
 
   constructor(
     private readonly directoriesForUser: (
@@ -164,7 +168,10 @@ export class PundokEditorServer {
     });
   }
 
-  async gitProjectStatus(user: string, path: string): Promise<GitProjectStatus> {
+  async gitProjectStatus(
+    user: string,
+    path: string,
+  ): Promise<GitProjectStatus> {
     return this.gitRepositoriesForUser(user).status(this.userPath(user, path));
   }
 
@@ -177,7 +184,10 @@ export class PundokEditorServer {
     path: string,
     paths: string[],
   ): Promise<void> {
-    return this.gitRepositoriesForUser(user).stage(this.userPath(user, path), paths);
+    return this.gitRepositoriesForUser(user).stage(
+      this.userPath(user, path),
+      paths,
+    );
   }
 
   async commitGitProject(
@@ -270,11 +280,25 @@ export class PundokEditorServer {
     user: string,
     project: PundokEditorProject,
   ): Promise<ProjectComponent | undefined> {
-    const result = await getInclusionTree(this.directoriesForUser(user), {
+    let userCache = this.inclusionTreesByUser.get(user);
+    if (!userCache) {
+      userCache = new Map();
+      this.inclusionTreesByUser.set(user, userCache);
+    }
+
+    const key = JSON.stringify(project);
+    const cached = userCache.get(key);
+    if (cached) return cached;
+
+    const pending = getInclusionTree(this.directoriesForUser(user), {
       ...project,
       path: this.userPath(user, project.path),
+    }).then((result) => (result ? JSON.parse(result) : undefined));
+    userCache.set(key, pending);
+    void pending.catch(() => {
+      if (userCache?.get(key) === pending) userCache.delete(key);
     });
-    return result ? JSON.parse(result) : undefined;
+    return pending;
   }
 
   async createFolder(user: string, path: string): Promise<string> {

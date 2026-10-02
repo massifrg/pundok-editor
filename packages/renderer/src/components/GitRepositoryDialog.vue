@@ -31,7 +31,7 @@ export default {
   props: {
     visible: Boolean,
     mode: { type: String, required: true },
-    editor: { type: Object as PropType<Editor>, required: true },
+    editor: { type: Object as PropType<Editor>, default: undefined },
     projectPath: { type: String, default: '' },
   },
   emits: ['close', 'done'],
@@ -54,6 +54,7 @@ export default {
   },
   methods: {
     chooseDestination() {
+      if (!this.editor) return;
       showSelectFolderDialog({
         editor: this.editor,
         options: { prompt: this.$t('gitRepositoryDialog.selectDestination') },

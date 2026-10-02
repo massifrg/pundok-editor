@@ -1,17 +1,21 @@
-import { Editor } from "@tiptap/vue-3";
-import { Node as PmNode } from '@tiptap/pm/model'
-import { EditorState } from "@tiptap/pm/state";
-import { isAbsolute, relative as relativePath } from 'path-browserify'
+import { Editor } from '@tiptap/vue-3';
+import { Node as PmNode } from '@tiptap/pm/model';
+import { EditorState } from '@tiptap/pm/state';
+import { isAbsolute, relative as relativePath } from 'path-browserify';
 import {
   DocumentFormat,
   EditorKeyType,
   PundokEditorConfig,
   PundokEditorProject,
-} from "../../common";
-import { getIndexingState, pundokEditorUtilsPluginKey } from "../extensions";
-import { EditorGUIProps, EditorGUIPropsClass } from "./EditorGUIProps";
-import { mergeIndices } from "./indices";
-import { nodeToPandocJsonString, PandocJsonExporterOptions } from "./PandocJsonExporter";
+  ProjectComponent,
+} from '../../common';
+import { getIndexingState, pundokEditorUtilsPluginKey } from '../extensions';
+import { EditorGUIProps, EditorGUIPropsClass } from './EditorGUIProps';
+import { mergeIndices } from './indices';
+import {
+  nodeToPandocJsonString,
+  PandocJsonExporterOptions,
+} from './PandocJsonExporter';
 
 export interface DocState {
   /** The unique key of the editor. */
@@ -42,6 +46,8 @@ export interface DocState {
   readonly configuration?: PundokEditorConfig;
   /** Current project of the document being edited. */
   readonly project?: PundokEditorProject;
+  /** Inclusion structure loaded for the current project document. */
+  readonly projectStructure?: ProjectComponent;
   /** `true` when the doc has changed and the changes are not saved in the original document or in another format with "save as" */
   readonly unsavedChanges?: boolean;
   /** `true` when the doc has changed and the changes have not been saved as a copy in another format. */
@@ -65,6 +71,7 @@ export interface DocStateUpdate {
   includeFormat?: DocumentFormat | null;
   configuration: PundokEditorConfig | null;
   project: PundokEditorProject | null;
+  projectStructure?: ProjectComponent | null;
   unsavedChanges: boolean;
   unsavedChangesAsCopy: boolean;
   savedDoc: PmNode;
@@ -81,7 +88,7 @@ export function getEditorDocState(editor?: Editor): DocState | undefined {
 }
 
 export function getEditorGuiProps(editor?: Editor): EditorGUIProps | undefined {
-  return getEditorDocState(editor)?.guiProps
+  return getEditorDocState(editor)?.guiProps;
 }
 
 export function getEditorConfiguration(
@@ -128,21 +135,24 @@ export function updateDocState(
 ): DocState {
   if (updates) {
     let newDocState: DocState = { ...currentDocState };
-    let modified = false
+    let modified = false;
     Object.entries(updates).forEach(([key, value]) => {
       // set a property to null if you want to reset it
       if (!modified) {
-        let currentValue: any = currentDocState[key as keyof DocState]
-        currentValue = currentValue === undefined ? null : currentValue
-        modified = currentValue !== value
+        let currentValue: any = currentDocState[key as keyof DocState];
+        currentValue = currentValue === undefined ? null : currentValue;
+        modified = currentValue !== value;
       }
       if (key !== 'savedDoc')
-        console.log(`updateDocState: updated ${key} to ${JSON.stringify(value)}`)
+        console.log(
+          `updateDocState: updated ${key} to ${JSON.stringify(value)}`,
+        );
       if (key === 'guiProps') {
-        const guiProps = value !== null
-          ? { ...newDocState.guiProps, ...(value as Partial<EditorGUIProps>) }
-          : new EditorGUIPropsClass()
-        newDocState = { ...newDocState, guiProps }
+        const guiProps =
+          value !== null
+            ? { ...newDocState.guiProps, ...(value as Partial<EditorGUIProps>) }
+            : new EditorGUIPropsClass();
+        newDocState = { ...newDocState, guiProps };
       } else {
         newDocState =
           value === null
@@ -150,34 +160,36 @@ export function updateDocState(
             : { ...newDocState, [key]: value };
       }
     });
-    if (modified) return {
-      ...newDocState,
-      editorKey: currentDocState.editorKey,
-    };
+    if (modified)
+      return {
+        ...newDocState,
+        editorKey: currentDocState.editorKey,
+      };
   }
   return currentDocState;
 }
 
-export function makePathRelativeToDoc(docState: DocState, path: string): string {
-  const basePath = docState?.workingFolder
-  return basePath && isAbsolute(path)
-    ? relativePath(basePath, path)
-    : path
+export function makePathRelativeToDoc(
+  docState: DocState,
+  path: string,
+): string {
+  const basePath = docState?.workingFolder;
+  return basePath && isAbsolute(path) ? relativePath(basePath, path) : path;
 }
 
 export function getDocAsJsonString(
   state: EditorState,
-  options?: PandocJsonExporterOptions
+  options?: PandocJsonExporterOptions,
 ): string {
   if (state) {
-    const docState = getDocState(state)
+    const docState = getDocState(state);
     const document = state.doc;
-    const indexingState = getIndexingState(state)
+    const indexingState = getIndexingState(state);
     const indices = mergeIndices(
       indexingState?.indices || docState?.configuration?.indices,
-      indexingState?.docIndices
-    )
+      indexingState?.docIndices,
+    );
     return nodeToPandocJsonString(document, { indices, ...options });
   }
-  return '{}'
+  return '{}';
 }

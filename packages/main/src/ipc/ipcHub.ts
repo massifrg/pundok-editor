@@ -7,7 +7,7 @@ import {
   documentFormatToOutputConverter,
   EditorKeyType,
   IPC_CHANNELS,
-  PundokEditorProject,
+  type PundokEditorProject,
   ServerMessage,
   ServerMessageCommand,
   IpcMainToRendererChannel,
@@ -68,6 +68,10 @@ export class IpcHub implements RendererHub {
   private readonly gitRepositories = new GitRepositoryManager(
     backendDirectories(),
   );
+  private readonly inclusionTrees = new Map<
+    string,
+    Promise<string | undefined>
+  >();
 
   // readonly fileManager: FileManager = new FileManager();
   mainEditorKey: EditorKeyType | undefined = undefined;
@@ -90,6 +94,22 @@ export class IpcHub implements RendererHub {
 
   setMainEditorKey(editorKey: EditorKeyType) {
     this.mainEditorKey = editorKey;
+  }
+
+  private inclusionTree(
+    project: PundokEditorProject,
+  ): Promise<string | undefined> {
+    const key = JSON.stringify(project);
+    const cached = this.inclusionTrees.get(key);
+    if (cached) return cached;
+
+    const pending = getInclusionTree(backendDirectories(), project);
+    this.inclusionTrees.set(key, pending);
+    void pending.catch(() => {
+      if (this.inclusionTrees.get(key) === pending)
+        this.inclusionTrees.delete(key);
+    });
+    return pending;
   }
 
   handleIpcMainEvents() {
@@ -139,7 +159,7 @@ export class IpcHub implements RendererHub {
       getProject(backendDirectories(), options),
     );
     ipcMain.handle('get-inclusion-tree', (_event, project) =>
-      getInclusionTree(backendDirectories(), JSON.parse(project)),
+      this.inclusionTree(JSON.parse(project) as PundokEditorProject),
     );
     ipcMain.handle('get-bookmarks', (_event, bookmarkType) =>
       getBookmarks(backendDirectories(), bookmarkType),

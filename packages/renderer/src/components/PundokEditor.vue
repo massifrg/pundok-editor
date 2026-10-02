@@ -385,8 +385,12 @@ export default {
     ConfigurationEditorDialog: defineAsyncComponent(
       () => import('./ConfigurationEditorDialog.vue'),
     ),
-    GitChangesDialog: defineAsyncComponent(() => import('./GitChangesDialog.vue')),
-    GitRepositoryDialog: defineAsyncComponent(() => import('./GitRepositoryDialog.vue')),
+    GitChangesDialog: defineAsyncComponent(
+      () => import('./GitChangesDialog.vue'),
+    ),
+    GitRepositoryDialog: defineAsyncComponent(
+      () => import('./GitRepositoryDialog.vue'),
+    ),
     PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
   },
 
@@ -444,7 +448,8 @@ export default {
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
       visibleNewProjectDialog: false,
       visibleGitChanges: false,
-      gitRepositoryMode: undefined as 'clone' | 'publish' | 'connect' | undefined,
+      gitRepositoryMode: undefined as
+        'clone' | 'publish' | 'connect' | undefined,
       swapBlocksWasActive: this.guiProps.swapBlocksActive,
       inputTextDialogLabel: DEFAULT_INPUT_TEXT_DIALOG_LABEL,
       inputTextDialogStartValue: DEFAULT_INPUT_TEXT_DIALOG_START_VALUE,
@@ -794,7 +799,11 @@ export default {
       this.gitRepositoryMode = mode;
     },
     gitRepositoryDone(result: { path?: string }) {
-      if (result.path) this.$q.notify({ message: `Project ready at ${result.path}`, color: 'positive' });
+      if (result.path)
+        this.$q.notify({
+          message: `Project ready at ${result.path}`,
+          color: 'positive',
+        });
     },
     editorState(): EditorState | undefined {
       if (this.editor) return this.editor.view.state as EditorState;
@@ -1116,8 +1125,13 @@ export default {
       });
 
       // set project or configuration
-      if (doc.project) await this.setProject(doc.project);
-      else if (doc.configurationName) {
+      if (doc.project) {
+        await this.setProject(doc.project);
+        void this.loadProjectStructure(doc.project);
+      } else {
+        this.updateEditorDocState({ projectStructure: null });
+      }
+      if (!doc.project && doc.configurationName) {
         try {
           await this.setConfiguration(doc.configurationName);
         } catch (err) {
@@ -1520,7 +1534,23 @@ export default {
         this.updateEditorDocState({ project });
         await this.setConfiguration(project.computedConfig);
         useProjectCache().setIndices();
+        this.updateEditorDocState({ projectStructure: null });
         // this.updateEditorDocState({ configuration: project.computedConfig })
+      }
+    },
+    async loadProjectStructure(project: PundokEditorProject): Promise<void> {
+      const backend = this.backend;
+      if (!backend) return;
+
+      try {
+        const structure = await backend.getInclusionTree(project);
+        console.log(`STRUCTURE: ${JSON.stringify(structure)}`);
+        if (
+          JSON.stringify(this.docState()?.project) === JSON.stringify(project)
+        )
+          this.updateEditorDocState({ projectStructure: structure || null });
+      } catch (error) {
+        console.error('Unable to load project structure', error);
       }
     },
     async reloadProject(options: GetProjectOptions) {

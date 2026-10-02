@@ -427,6 +427,9 @@
     "newEmpty": "nuovo documento vuoto",
     "newEmptyWithConfig": "nuovo documento con la configurazione",
     "open": "apri documento",
+    "openNextProjectDocument": "apri il documento successivo nella struttura del progetto",
+    "openParentProjectDocument": "apri il documento contenitore (libro, parte, capitolo, sezione...)",
+    "openPreviousProjectDocument": "apri il documento precedente nella struttura del progetto",
     "reloadWithConfiguration": "ricarica il documento con un'altra configurazione"
   },
   "enabled": "attivo",
