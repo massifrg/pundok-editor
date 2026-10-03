@@ -161,6 +161,20 @@
       "edit": "Modifica",
       "copy": "Crea una copia"
     },
+    "pandocOptions": {
+      "title": "Opzioni Pandoc",
+      "add": "Aggiungi opzione",
+      "editTitle": "Modifica opzione Pandoc",
+      "option": "Opzione",
+      "value": "Valore",
+      "key": "Chiave",
+      "addPair": "Aggiungi coppia",
+      "removePair": "Rimuovi coppia",
+      "enabled": "Abilitata",
+      "choose": "Scegli percorso",
+      "none": "Nessuna opzione Pandoc definita.",
+      "invalidNumber": "Inserisci un numero valido."
+    },
     "tabs": {
       "general": "Generale",
       "fileFormats": "Formati di file",

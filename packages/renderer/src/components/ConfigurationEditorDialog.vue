@@ -57,6 +57,7 @@
               v-else-if="tab.name === 'inputConverters'"
               v-model="values.inputConverters"
               :inherited="inheritedInputConverters"
+              :editor="editor"
             />
             <RawElementsEditor
               v-else-if="tab.name === 'raw-elements'"
@@ -69,6 +70,7 @@
               :resource-options="
                 project ? { kind: 'filter', project } : undefined
               "
+              :editor="editor"
             />
             <AutomationsEditor
               v-else-if="tab.name === 'automations'"
@@ -140,6 +142,7 @@ setupQuasarIcons();
 
 <script lang="ts">
 import type { PropType } from 'vue';
+import type { Editor } from '@tiptap/vue-3';
 import type {
   CustomAttribute,
   CustomClass,
@@ -393,7 +396,7 @@ export default {
       type: Object as PropType<PundokEditorProject | undefined>,
       default: undefined,
     },
-    editor: { type: Object, default: undefined },
+    editor: { type: Object as PropType<Editor>, default: undefined },
   },
   emits: ['save', 'close'],
   components: {

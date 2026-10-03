@@ -175,16 +175,12 @@
             :resource-options="resourceOptions"
             @update:model-value="draft.filters = $event"
           />
-          <q-input
+          <PandocOptionsEditor
             v-if="draft.type === 'pandoc'"
-            v-model="draft.pandocOptionsText"
-            :label="$t('configEditor.inputConverters.pandocOptions')"
-            outlined
-            type="textarea"
-            autogrow
-            hint='JSON array, e.g. [["wrap","none"]]'
-            :error="!!optionsError"
-            :error-message="optionsError ? $t(optionsError) : undefined"
+            :model-value="draft.pandocOptions || []"
+            option-type="reader"
+            :editor="editor"
+            @update:model-value="draft.pandocOptions = $event"
           />
           <PandocLuaResourceDialog
             v-if="draft.type === 'pandoc'"
@@ -227,6 +223,8 @@ import PandocFormatEditor from './PandocFormatEditor.vue';
 import PandocLuaResourceDialog, {
   type PandocLuaResourceSelection,
 } from './PandocLuaResourceDialog.vue';
+import PandocOptionsEditor from './PandocOptionsEditor.vue';
+import type { Editor } from '@tiptap/vue-3';
 
 type InputConverterDraft = Omit<
   BaseInputConverter,
@@ -239,7 +237,6 @@ type InputConverterDraft = Omit<
   formatExtensions?: string[];
   filters?: (string | PandocFilter)[];
   pandocOptions?: PandocOption[];
-  pandocOptionsText: string;
   command?: string;
   commandArgs?: string[];
   options?: Record<string, any>;
@@ -251,6 +248,7 @@ const props = withDefaults(
     modelValue: InputConverter[];
     inherited?: InputConverter[];
     resourceOptions?: Partial<FindResourceOptions>;
+    editor?: Editor;
   }>(),
   { inherited: () => [] },
 );
@@ -263,12 +261,12 @@ const converters = ref<InputConverter[]>([]);
 const draft = ref<InputConverterDraft>();
 const editingIndex = ref<number>();
 const nameError = ref('');
-const optionsError = ref('');
 const readerDialogOpen = ref(false);
 const selectedInputChoice = ref<'format' | 'reader'>('format');
 const selectedPandocFormat = ref('');
 const selectedFormatExtensions = ref<string[]>([]);
 const selectedReader = ref('');
+const editor = props.editor;
 const converterTypeOptions: { label: string; value: InputConverterType }[] = [
   { label: 'Pandoc', value: 'pandoc' },
   { label: 'Script', value: 'script' },
@@ -339,10 +337,6 @@ function converterDraft(converter: InputConverter): InputConverterDraft {
     description: converter.description || '',
     default: converter.default === true,
     extensionsText: converter.extensions.join(', '),
-    pandocOptionsText:
-      converter.type === 'pandoc'
-        ? JSON.stringify(converter.pandocOptions || [], null, 2)
-        : '[]',
   };
   switch (converter.type) {
     case 'pandoc':
@@ -363,7 +357,6 @@ function converterDraft(converter: InputConverter): InputConverterDraft {
 function newConverter(): void {
   editingIndex.value = undefined;
   nameError.value = '';
-  optionsError.value = '';
   draft.value = {
     type: 'pandoc',
     name: '',
@@ -372,7 +365,7 @@ function newConverter(): void {
     extensions: [],
     extensionsText: '',
     format: '',
-    pandocOptionsText: '[]',
+    pandocOptions: [],
   };
   selectedInputChoice.value = 'format';
   selectedPandocFormat.value = '';
@@ -387,7 +380,6 @@ function editConverter(name: string): void {
   if (index < 0) return;
   editingIndex.value = index;
   nameError.value = '';
-  optionsError.value = '';
   draft.value = converterDraft(converters.value[index]);
   initializePandocChoice(draft.value);
 }
@@ -408,12 +400,10 @@ function cancelEdit(): void {
   draft.value = undefined;
   editingIndex.value = undefined;
   nameError.value = '';
-  optionsError.value = '';
 }
 
 function applyEdit(): void {
   if (!draft.value) return;
-  optionsError.value = '';
   const name = draft.value.name.trim();
   if (!name) {
     nameError.value = 'configEditor.inputConverters.nameRequired';
@@ -428,27 +418,6 @@ function applyEdit(): void {
     nameError.value = 'configEditor.inputConverters.duplicateName';
     return;
   }
-  if (draft.value.type === 'pandoc') {
-    try {
-      const options: unknown = JSON.parse(draft.value.pandocOptionsText);
-      if (
-        !Array.isArray(options) ||
-        options.some(
-          (option: unknown) =>
-            !Array.isArray(option) ||
-            typeof option[0] !== 'string' ||
-            option.length > 2,
-        )
-      ) {
-        throw new Error('Invalid Pandoc options');
-      }
-      draft.value.pandocOptions = options as PandocOption[];
-    } catch {
-      optionsError.value = 'configEditor.inputConverters.invalidPandocOptions';
-      return;
-    }
-  }
-
   const converter = normalizeConverter({
     ...draft.value,
     name,

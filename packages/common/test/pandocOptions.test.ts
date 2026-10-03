@@ -97,7 +97,7 @@ describe('PANDOC_OPTIONS_SPECS', () => {
       ]),
     ).toEqual([
       '--standalone',
-      '--fail-if-warnings',
+      '--fail-if-warnings=true',
       '--toc-depth=2',
       '--metadata=title=A title',
       '-V',
@@ -107,13 +107,11 @@ describe('PANDOC_OPTIONS_SPECS', () => {
   });
 
   it('rejects values that do not match the option specification', () => {
-    expect(() =>
-      pandocOptionsToCliOptions([
-        ['standalone', false],
-      ]),
-    ).toThrow('does not accept a boolean value');
-    expect(() =>
-      pandocOptionsToCliOptions([['toc-depth']]),
-    ).toThrow('requires a value');
+    expect(() => pandocOptionsToCliOptions([['toc-depth', false]])).toThrow(
+      'does not accept a boolean value',
+    );
+    expect(() => pandocOptionsToCliOptions([['toc-depth']])).toThrow(
+      'requires a value',
+    );
   });
 });

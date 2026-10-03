@@ -162,6 +162,20 @@
       "edit": "Edit",
       "copy": "Create a copy"
     },
+    "pandocOptions": {
+      "title": "Pandoc options",
+      "add": "Add option",
+      "editTitle": "Edit Pandoc option",
+      "option": "Option",
+      "value": "Value",
+      "key": "Key",
+      "addPair": "Add pair",
+      "removePair": "Remove pair",
+      "enabled": "Enabled",
+      "choose": "Choose path",
+      "none": "No Pandoc options defined.",
+      "invalidNumber": "Enter a valid number."
+    },
     "tabs": {
       "general": "General",
       "fileFormats": "File formats",

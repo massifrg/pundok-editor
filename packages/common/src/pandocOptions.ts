@@ -67,10 +67,7 @@ export type PandocOptionName = string;
 export type PandocOptionValue = string | number | boolean;
 
 /** A configured Pandoc command-line option and its optional value. */
-export type PandocOption = [
-  name: PandocOptionName,
-  value?: PandocOptionValue,
-];
+export type PandocOption = [name: PandocOptionName, value?: PandocOptionValue];
 
 /** Every flavour of HTML output. */
 const ALL_HTML = ['chunkedhtml', 'html', 'html4', 'html5'];
@@ -943,9 +940,7 @@ function optionWithValue(
   option: string,
   value: PandocOptionValue,
 ): string[] {
-  return name.length === 1
-    ? [option, String(value)]
-    : [`${option}=${value}`];
+  return name.length === 1 ? [option, String(value)] : [`${option}=${value}`];
 }
 
 /**
@@ -972,14 +967,11 @@ export function pandocOptionsToCliOptions(
     }
 
     if (typeof value === 'boolean') {
-      if (
-        !valueTypes.includes('boolean') &&
-        !(value && valueTypes.includes('flag'))
-      )
+      if (!valueTypes.includes('boolean') && !valueTypes.includes('flag'))
         throw new Error(
           `Pandoc option "${name}" does not accept a boolean value`,
         );
-      return value ? option : `${option}=false`;
+      return optionWithValue(name, option, value);
     }
 
     if (typeof value === 'number') {

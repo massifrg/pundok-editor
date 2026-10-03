@@ -175,6 +175,13 @@
             :resource-options="resourceOptions"
             @update:model-value="draft.filters = $event"
           />
+          <PandocOptionsEditor
+            v-if="draft.type === 'pandoc'"
+            :model-value="draft.pandocOptions || []"
+            option-type="writer"
+            :editor="editor"
+            @update:model-value="draft.pandocOptions = $event"
+          />
           <PandocLuaResourceDialog
             v-if="draft.type === 'pandoc'"
             v-model="writerDialogOpen"
@@ -216,6 +223,8 @@ import PandocFiltersEditor from './PandocFiltersEditor.vue';
 import PandocLuaResourceDialog, {
   type PandocLuaResourceSelection,
 } from './PandocLuaResourceDialog.vue';
+import PandocOptionsEditor from './PandocOptionsEditor.vue';
+import type { Editor } from '@tiptap/vue-3';
 
 type OutputConverterDraft = Omit<
   BaseOutputConverter,
@@ -238,7 +247,9 @@ const props = defineProps<{
   modelValue: OutputConverter[];
   inherited?: OutputConverter[];
   resourceOptions?: Partial<FindResourceOptions>;
+  editor?: Editor;
 }>();
+const editor = props.editor;
 
 const emit = defineEmits<{
   'update:modelValue': [value: OutputConverter[]];
