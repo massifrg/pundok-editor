@@ -36,14 +36,27 @@
             <CustomStylesEditor
               v-else-if="tab.name === 'customStyles'"
               v-model="values.customStyles"
+              :inherited="inheritedCustomStyles"
             />
             <CustomClassesEditor
               v-else-if="tab.name === 'customClasses'"
               v-model="values.customClasses"
+              :inherited="inheritedCustomClasses"
             />
             <CustomAttributesEditor
               v-else-if="tab.name === 'customAttributes'"
               v-model="values.customAttributes"
+              :inherited="inheritedCustomAttributes"
+            />
+            <CustomMetadataEditor
+              v-else-if="tab.name === 'customMetadata'"
+              v-model="values.customMetadata"
+              :inherited="inheritedCustomMetadata"
+            />
+            <InputConvertersEditor
+              v-else-if="tab.name === 'inputConverters'"
+              v-model="values.inputConverters"
+              :inherited="inheritedInputConverters"
             />
             <RawElementsEditor
               v-else-if="tab.name === 'raw-elements'"
@@ -52,6 +65,7 @@
             <OutputConvertersEditor
               v-else-if="tab.name === 'outputConverters'"
               v-model="values.outputConverters"
+              :inherited="inheritedOutputConverters"
               :resource-options="
                 project ? { kind: 'filter', project } : undefined
               "
@@ -126,11 +140,22 @@ setupQuasarIcons();
 
 <script lang="ts">
 import type { PropType } from 'vue';
-import { PundokEditorConfigInit, PundokEditorProject } from '../common';
+import type {
+  CustomAttribute,
+  CustomClass,
+  CustomMetadata,
+  CustomStyleDef,
+  InputConverter,
+  OutputConverter,
+  PundokEditorConfigInit,
+  PundokEditorProject,
+} from '../common';
 import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEditor.vue';
 import CustomStylesEditor from './confeditors/CustomStylesEditor.vue';
 import CustomClassesEditor from './confeditors/CustomClassesEditor.vue';
 import CustomAttributesEditor from './confeditors/CustomAttributesEditor.vue';
+import CustomMetadataEditor from './confeditors/CustomMetadataEditor.vue';
+import InputConvertersEditor from './confeditors/InputConvertersEditor.vue';
 import RawElementsEditor from './confeditors/RawElementsEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
 import AutomationsEditor from './confeditors/AutomationsEditor.vue';
@@ -147,6 +172,8 @@ type EditorConfigField = {
     | 'customStyles'
     | 'customClasses'
     | 'customAttributes'
+    | 'customMetadata'
+    | 'inputConverters'
     | 'outputConverters'
     | 'automations'
     | 'rawElements'
@@ -157,6 +184,15 @@ type EditorConfigTab = {
   name: string;
   label: string;
   fields: EditorConfigField[];
+};
+
+type InheritedItems = {
+  customStyles: CustomStyleDef[];
+  customClasses: CustomClass[];
+  customAttributes: CustomAttribute[];
+  customMetadata: CustomMetadata[];
+  outputConverters: OutputConverter[];
+  inputConverters: InputConverter[];
 };
 
 const fields: EditorConfigField[] = [
@@ -237,7 +273,7 @@ const fields: EditorConfigField[] = [
     name: 'customMetadata',
     label: 'configEditor.customMetadata.label',
     description: 'configEditor.customMetadata.description',
-    kind: 'json',
+    kind: 'customMetadata',
   },
   {
     name: 'noteStyles',
@@ -279,7 +315,7 @@ const fields: EditorConfigField[] = [
     name: 'inputConverters',
     label: 'configEditor.inputConverters.label',
     description: 'configEditor.inputConverters.description',
-    kind: 'json',
+    kind: 'inputConverters',
   },
   {
     name: 'outputConverters',
@@ -365,6 +401,8 @@ export default {
     CustomStylesEditor,
     CustomClassesEditor,
     CustomAttributesEditor,
+    CustomMetadataEditor,
+    InputConvertersEditor,
     RawElementsEditor,
     OutputConvertersEditor,
     AutomationsEditor,
@@ -381,6 +419,38 @@ export default {
       jsonErrors: {} as Record<string, string>,
     };
   },
+  computed: {
+    inheritedCustomStyles(): NonNullable<
+      PundokEditorProject['computedConfig']
+    >['customStyles'] {
+      return this.inheritedItems('customStyles');
+    },
+    inheritedCustomClasses(): NonNullable<
+      PundokEditorProject['computedConfig']
+    >['customClasses'] {
+      return this.inheritedItems('customClasses');
+    },
+    inheritedCustomAttributes(): NonNullable<
+      PundokEditorProject['computedConfig']
+    >['customAttributes'] {
+      return this.inheritedItems('customAttributes');
+    },
+    inheritedCustomMetadata(): NonNullable<
+      PundokEditorProject['computedConfig']
+    >['customMetadata'] {
+      return this.inheritedItems('customMetadata');
+    },
+    inheritedOutputConverters(): NonNullable<
+      PundokEditorProject['computedConfig']
+    >['outputConverters'] {
+      return this.inheritedItems('outputConverters');
+    },
+    inheritedInputConverters(): NonNullable<
+      PundokEditorProject['computedConfig']
+    >['inputConverters'] {
+      return this.inheritedItems('inputConverters');
+    },
+  },
   watch: {
     visible(value: boolean) {
       if (value) this.loadConfiguration();
@@ -390,6 +460,17 @@ export default {
     if (this.visible) this.loadConfiguration();
   },
   methods: {
+    inheritedItems<K extends keyof InheritedItems>(
+      field: K,
+    ): InheritedItems[K] {
+      const computed = (this.project?.computedConfig?.[field] ||
+        []) as InheritedItems[K];
+      const local = ((this.configuration as Partial<InheritedItems>)[field] ||
+        []) as InheritedItems[K];
+      return computed.filter(
+        (item) => !local.some(({ name }) => name === item.name),
+      ) as InheritedItems[K];
+    },
     loadConfiguration() {
       const source = this.configuration as Partial<PundokEditorConfigInit>;
       this.chosenConfigurations = [...(this.projectConfigurations as string[])];
@@ -407,6 +488,8 @@ export default {
           field.name === 'customStyles' ||
           field.name === 'customClasses' ||
           field.name === 'customAttributes' ||
+          field.name === 'customMetadata' ||
+          field.name === 'inputConverters' ||
           field.name === 'outputConverters' ||
           field.name === 'automations' ||
           field.name === 'rawInlines' ||
@@ -492,7 +575,7 @@ export default {
 }
 
 .configuration-editor-dialog__tabs {
-  flex: 0 0 12rem;
+  flex: 0 0 16rem;
   overflow-y: auto;
 }
 

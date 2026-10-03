@@ -1,3 +1,5 @@
+import { PandocOption } from "../pandocOptions";
+import { PandocFilter } from "../pandoc";
 import { NamedAndDescribed } from "../types";
 
 export type InputConverterType = 'pandoc' | 'script' | 'custom';
@@ -23,10 +25,14 @@ export type BaseInputConverter = NamedAndDescribed & {
  */
 export type PandocInputConverter = BaseInputConverter & {
   type: 'pandoc';
-  /** a pandoc's input format or a lua script */
+  /** a pandoc's input format or a custom reader */
   format: string;
-  /** extra command-line options for pandoc */
-  pandocOptions?: string[];
+  /** The extensions of the format to be used */
+  formatExtensions?: string[];
+  /** optional filter (pandoc's `--filter` option) */
+  filters?: (string | PandocFilter)[];
+  /** Extra Pandoc options, each as [name, value?]. */
+  pandocOptions?: PandocOption[];
 };
 
 export type CustomInputConverter = BaseInputConverter & {

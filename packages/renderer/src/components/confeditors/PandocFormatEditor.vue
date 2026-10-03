@@ -100,6 +100,7 @@ const props = defineProps<{
   modelValue: string;
   formatExtensions: string[];
   selected: boolean;
+  direction?: 'input' | 'output';
 }>();
 
 const emit = defineEmits<{
@@ -136,7 +137,9 @@ onMounted(async () => {
   loadingFormats.value = true;
   try {
     outputFormats.value =
-      (await backend.backend?.pandocFeature('output-formats')) || [];
+      (await backend.backend?.pandocFeature(
+        props.direction === 'input' ? 'input-formats' : 'output-formats',
+      )) || [];
   } finally {
     loadingFormats.value = false;
   }

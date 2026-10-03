@@ -222,7 +222,7 @@ import type {
 } from '../../common';
 import { useBackend } from '../../stores';
 
-type LuaResourceType = Extract<ResourceType, 'filter' | 'writer'>;
+type LuaResourceType = Extract<ResourceType, 'filter' | 'reader' | 'writer'>;
 
 export type PandocLuaResourceSelection = {
   path: string;

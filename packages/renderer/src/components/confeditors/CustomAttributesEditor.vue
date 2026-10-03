@@ -13,10 +13,24 @@
       />
     </div>
 
-    <q-list v-if="attributes.length" bordered separator>
-      <q-item v-for="attribute in attributes" :key="attribute.name" dense>
+    <q-list v-if="allAttributes.length" bordered separator>
+      <q-item
+        v-for="attribute in allAttributes"
+        :key="attribute.name"
+        dense
+        :class="{
+          'bg-grey-2': isInherited(attribute),
+          'text-grey-7': isInherited(attribute),
+        }"
+      >
         <q-item-section>
-          <q-item-label>{{ attribute.name }}</q-item-label>
+          <q-item-label class="row items-center no-wrap">
+            <span>{{ attribute.name }}</span>
+            <q-space />
+            <span class="text-caption text-grey-7">{{
+              appliesToLabel(attribute.appliesTo)
+            }}</span>
+          </q-item-label>
           <q-item-label v-if="attribute.description" caption>
             {{ attribute.description }}
           </q-item-label>
@@ -24,21 +38,32 @@
         <q-item-section side>
           <div class="row no-wrap q-gutter-xs">
             <q-btn
+              v-if="isInherited(attribute)"
               dense
               flat
               round
-              icon="edit"
-              :title="$t('configEditor.customAttributes.editAttribute')"
-              @click="editAttribute(attribute.name)"
+              icon="content_copy"
+              :title="$t('configEditor.customAttributes.copyAttribute')"
+              @click="copyInheritedAttribute(attribute)"
             />
-            <q-btn
-              dense
-              flat
-              round
-              icon="remove"
-              :title="$t('configEditor.customAttributes.deleteAttribute')"
-              @click="deleteAttribute(attribute.name)"
-            />
+            <template v-else>
+              <q-btn
+                dense
+                flat
+                round
+                icon="edit"
+                :title="$t('configEditor.customAttributes.editAttribute')"
+                @click="editAttribute(attribute.name)"
+              />
+              <q-btn
+                dense
+                flat
+                round
+                icon="remove"
+                :title="$t('configEditor.customAttributes.deleteAttribute')"
+                @click="deleteAttribute(attribute.name)"
+              />
+            </template>
           </div>
         </q-item-section>
       </q-item>
@@ -47,114 +72,122 @@
       {{ $t('configEditor.customAttributes.none') }}
     </div>
 
-    <q-card v-if="draft" flat bordered class="q-mt-md">
-      <q-card-section class="q-gutter-md">
-        <div class="text-subtitle2">
-          {{
-            $t(
-              editingIndex === undefined
-                ? 'configEditor.customAttributes.newTitle'
-                : 'configEditor.customAttributes.editTitle',
-            )
-          }}
-        </div>
-        <q-input
-          v-model="draft.name"
-          outlined
-          dense
-          :label="$t('configEditor.customAttributes.name')"
-          :error="!!nameError"
-          :error-message="$t(nameError)"
-        />
-        <q-input
-          v-model="draft.description"
-          outlined
-          dense
-          type="textarea"
-          autogrow
-          :label="$t('configEditor.customAttributes.descriptionLabel')"
-        />
-        <q-select
-          v-model="draft.appliesTo"
-          :options="appliesToOptions"
-          multiple
-          emit-value
-          map-options
-          outlined
-          dense
-          :label="$t('configEditor.customAttributes.appliesTo')"
-        >
-          <template #selected-item="scope">
-            <q-chip
-              dense
-              removable
-              icon-remove="remove_item"
-              @remove="scope.removeAtIndex(scope.index)"
-            >
-              {{ scope.opt.label }}
-            </q-chip>
-          </template>
-        </q-select>
-        <q-toggle
-          v-model="listKind"
-          true-value="values"
-          false-value="suggestions"
-          :label="$t(`configEditor.customAttributes.${listKind}`)"
-        />
-        <div class="row q-col-gutter-sm items-start">
+    <q-dialog :model-value="!!draft" @hide="cancelEdit">
+      <q-card
+        v-if="draft"
+        flat
+        bordered
+        class="q-mt-md"
+        style="width: 80vw; max-width: 80vw"
+      >
+        <q-card-section class="q-gutter-md">
+          <div class="text-subtitle2">
+            {{
+              $t(
+                editingIndex === undefined
+                  ? 'configEditor.customAttributes.newTitle'
+                  : 'configEditor.customAttributes.editTitle',
+              )
+            }}
+          </div>
           <q-input
-            v-model="newListItem"
-            class="col"
+            v-model="draft.name"
             outlined
             dense
-            :label="$t('configEditor.customAttributes.addListItem')"
-            @keyup.enter="addListItem"
+            :label="$t('configEditor.customAttributes.name')"
+            :error="!!nameError"
+            :error-message="$t(nameError)"
           />
-          <div class="col-auto">
-            <q-btn
-              dense
-              icon="add"
-              :disable="!newListItem.trim()"
-              :title="$t('configEditor.customAttributes.addListItem')"
-              @click="addListItem"
-            />
-          </div>
-        </div>
-        <div class="custom-attributes-editor__list">
-          <q-chip
-            v-for="item in listItems"
-            :key="item"
-            removable
-            @remove="removeListItem(item)"
+          <q-input
+            v-model="draft.description"
+            outlined
+            dense
+            type="textarea"
+            autogrow
+            :label="$t('configEditor.customAttributes.descriptionLabel')"
+          />
+          <q-select
+            v-model="draft.appliesTo"
+            :options="appliesToOptions"
+            multiple
+            emit-value
+            map-options
+            outlined
+            dense
+            :label="$t('configEditor.customAttributes.appliesTo')"
           >
-            {{ item }}
-          </q-chip>
-        </div>
-        <q-input
-          v-model="draft.default"
-          outlined
-          dense
-          :label="$t('configEditor.customAttributes.default')"
-          :error="defaultInvalid"
-          :error-message="
-            $t('configEditor.customAttributes.defaultMustBeValue')
-          "
-        />
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn
-          flat
-          :label="$t('configEditor.buttons.cancel')"
-          @click="cancelEdit"
-        />
-        <q-btn
-          color="primary"
-          :disable="!canApply"
-          :label="$t('configEditor.buttons.apply')"
-          @click="applyEdit"
-        />
-      </q-card-actions>
-    </q-card>
+            <template #selected-item="scope">
+              <q-chip
+                dense
+                removable
+                icon-remove="remove_item"
+                @remove="scope.removeAtIndex(scope.index)"
+              >
+                {{ scope.opt.label }}
+              </q-chip>
+            </template>
+          </q-select>
+          <q-toggle
+            v-model="listKind"
+            true-value="values"
+            false-value="suggestions"
+            :label="$t(`configEditor.customAttributes.${listKind}`)"
+          />
+          <div class="row q-col-gutter-sm items-start">
+            <q-input
+              v-model="newListItem"
+              class="col"
+              outlined
+              dense
+              :label="$t('configEditor.customAttributes.addListItem')"
+              @keyup.enter="addListItem"
+            />
+            <div class="col-auto">
+              <q-btn
+                dense
+                icon="add"
+                :disable="!newListItem.trim()"
+                :title="$t('configEditor.customAttributes.addListItem')"
+                @click="addListItem"
+              />
+            </div>
+          </div>
+          <div class="custom-attributes-editor__list">
+            <q-chip
+              v-for="item in listItems"
+              :key="item"
+              removable
+              @remove="removeListItem(item)"
+            >
+              {{ item }}
+            </q-chip>
+          </div>
+          <q-input
+            v-model="draft.default"
+            outlined
+            dense
+            :label="$t('configEditor.customAttributes.default')"
+            :error="defaultInvalid"
+            :error-message="
+              $t('configEditor.customAttributes.defaultMustBeValue')
+            "
+          />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn
+            flat
+            :label="$t('configEditor.buttons.cancel')"
+            @click="cancelEdit"
+          />
+          <q-btn
+            color="primary"
+            :disable="!canApply"
+            :label="$t('configEditor.buttons.apply')"
+            @click="applyEdit"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -170,7 +203,10 @@ type AttributeDraft = Omit<CustomAttribute, 'description' | 'appliesTo'> & {
 
 type ListKind = 'suggestions' | 'values';
 
-const props = defineProps<{ modelValue: CustomAttribute[] }>();
+const props = defineProps<{
+  modelValue: CustomAttribute[];
+  inherited?: CustomAttribute[];
+}>();
 const emit = defineEmits<{
   'update:modelValue': [value: CustomAttribute[]];
 }>();
@@ -182,6 +218,29 @@ const nameError = ref('');
 const listKind = ref<ListKind>('suggestions');
 const listItems = ref<string[]>([]);
 const newListItem = ref('');
+
+const allAttributes = computed(() => [
+  ...attributes.value,
+  ...(props.inherited || []).filter(
+    (item) => !attributes.value.some((local) => local.name === item.name),
+  ),
+]);
+
+function isInherited(attribute: CustomAttribute): boolean {
+  return (
+    !attributes.value.some(({ name }) => name === attribute.name) &&
+    (props.inherited || []).some(({ name }) => name === attribute.name)
+  );
+}
+
+function appliesToLabel(appliesTo: CustomAttribute['appliesTo']): string {
+  return appliesTo?.length ? appliesTo.join(', ') : '*';
+}
+
+function copyInheritedAttribute(attribute: CustomAttribute): void {
+  attributes.value = [...attributes.value, copyAttribute(attribute)];
+  emitAttributes();
+}
 
 const appliesToOptions = Object.entries(HasPandocAttr).map(
   ([value, label]) => ({

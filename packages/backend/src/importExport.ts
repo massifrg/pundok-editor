@@ -62,7 +62,9 @@ export async function importWithPandoc(
   let format = (inputConverter as PandocInputConverter | undefined)?.format;
   if (!format) throw new Error('No Pandoc input format was provided');
   if (inputConverter?.type === 'pandoc')
-    pandocOpts = pandocOpts.concat(inputConverter.pandocOptions || []);
+    pandocOpts = pandocOpts.concat(
+      pandocOptionsToCliOptions(inputConverter.pandocOptions || []),
+    );
 
   if (configurationName) {
     const resourceDirs: string[] = [];

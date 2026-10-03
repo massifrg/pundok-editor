@@ -88,9 +88,9 @@ export async function allConfigurations(
     : [];
   const localConfigs = !options?.onlyGlobal
     ? await configurationFilesInDirectory(
-        directories.localConfigurationsDir,
-        true,
-      )
+      directories.localConfigurationsDir,
+      true,
+    )
     : [];
   return [...localConfigs, ...globalConfigs];
 }
@@ -191,19 +191,19 @@ export function migrateConfigurationPandocOptions<
     outputConverters: config.outputConverters?.map((converter) =>
       converter.type === 'pandoc'
         ? {
-            ...converter,
-            pandocOptions: migratePandocOptions(converter.pandocOptions),
-          }
+          ...converter,
+          pandocOptions: migratePandocOptions(converter.pandocOptions),
+        }
         : converter,
     ),
     automations: config.automations?.map((automation) =>
       automation.type === 'pandoc-filter'
         ? {
-            ...migratePandocFilterParameters(automation),
-            pandocOptions: migratePandocOptions(
-              (automation as PandocFilterTransform).pandocOptions,
-            ),
-          }
+          ...migratePandocFilterParameters(automation),
+          pandocOptions: migratePandocOptions(
+            (automation as PandocFilterTransform).pandocOptions,
+          ),
+        }
         : automation,
     ),
   } as T;
@@ -223,19 +223,19 @@ function migratePandocFilterParameters(
   const firstFilterWithParameters =
     typeof firstFilter === 'string'
       ? {
-          name: firstFilter,
-          ...(variables && { variables }),
-          ...(metadata && { metadata }),
-        }
+        name: firstFilter,
+        ...(variables && { variables }),
+        ...(metadata && { metadata }),
+      }
       : {
-          ...firstFilter,
-          ...(variables && {
-            variables: { ...variables, ...firstFilter.variables },
-          }),
-          ...(metadata && {
-            metadata: { ...metadata, ...firstFilter.metadata },
-          }),
-        };
+        ...firstFilter,
+        ...(variables && {
+          variables: { ...variables, ...firstFilter.variables },
+        }),
+        ...(metadata && {
+          metadata: { ...metadata, ...firstFilter.metadata },
+        }),
+      };
   const {
     variables: _variables,
     metadata: _metadata,
@@ -326,9 +326,9 @@ export function findResourceFiles(
   const resourceDirectories = [
     ...(baseResourcePaths && kind
       ? [
-          ...validResourceSubpaths(baseResourcePaths, kind),
-          ...baseResourcePaths,
-        ]
+        ...validResourceSubpaths(baseResourcePaths, kind),
+        ...baseResourcePaths,
+      ]
       : []),
     ...validResourcePaths(
       directories,
@@ -360,6 +360,7 @@ function isStrictResourceFile(
   path: string,
   filterSearchTerms?: string[],
 ) {
+  if (kind === 'reader') return isCustomReader(path);
   if (kind === 'writer') return isCustomWriter(path);
   if (kind === 'filter') return isPandocFilter(path, filterSearchTerms);
   return true;
@@ -369,6 +370,10 @@ function isCustomWriter(path: string): boolean {
   return /function\s+(?:Writer|ByteStringWriter)\b|Writer\s*=\s*pandoc[.]scaffolding[.]Writer/.test(
     readFileSync(path, 'utf8'),
   );
+}
+
+function isCustomReader(path: string): boolean {
+  return /(?:Reader|ByteStringReader)/.test(readFileSync(path, 'utf8'));
 }
 
 function isPandocFilter(path: string, filterSearchTerms = ['filter']): boolean {

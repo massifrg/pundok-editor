@@ -365,6 +365,7 @@ export const icons: Record<string, string> = {
   clipboard_paste: mdiContentPaste,
   close: mdiClose,
   code: mdiLanguageC,
+  content_copy: mdiContentCopy,
   collapse: mdiCollapseAll,
   collapse_vertical: mdiArrowCollapseVertical,
   comment: mdiComment,
