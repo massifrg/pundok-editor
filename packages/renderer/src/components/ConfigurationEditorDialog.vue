@@ -66,6 +66,11 @@
               :project="project"
               :configuration-name="configuration.name"
             />
+            <IndicesEditor
+              v-else-if="tab.name === 'indices'"
+              v-model="values.indices"
+              :inherited="inheritedIndices"
+            />
             <InputConvertersEditor
               v-else-if="tab.name === 'inputConverters'"
               v-model="values.inputConverters"
@@ -162,6 +167,7 @@ import type {
   CustomMetadata,
   CustomStyleDef,
   InputConverter,
+  Index,
   NoteStyle,
   OutputConverter,
   PundokEditorConfigInit,
@@ -174,6 +180,7 @@ import CustomAttributesEditor from './confeditors/CustomAttributesEditor.vue';
 import CustomMetadataEditor from './confeditors/CustomMetadataEditor.vue';
 import NoteStylesEditor from './confeditors/NoteStylesEditor.vue';
 import CustomCssEditor from './confeditors/CustomCssEditor.vue';
+import IndicesEditor from './confeditors/IndicesEditor.vue';
 import InputConvertersEditor from './confeditors/InputConvertersEditor.vue';
 import RawElementsEditor from './confeditors/RawElementsEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
@@ -194,6 +201,7 @@ type EditorConfigField = {
     | 'customMetadata'
     | 'noteStyles'
     | 'customCss'
+    | 'indices'
     | 'inputConverters'
     | 'outputConverters'
     | 'automations'
@@ -214,6 +222,7 @@ type InheritedItems = {
   customMetadata: CustomMetadata[];
   noteStyles: NoteStyle[];
   customCss: string[];
+  indices: Index[];
   outputConverters: OutputConverter[];
   inputConverters: InputConverter[];
 };
@@ -314,7 +323,7 @@ const fields: EditorConfigField[] = [
     name: 'indices',
     label: 'configEditor.indices.label',
     description: 'configEditor.indices.description',
-    kind: 'json',
+    kind: 'indices',
   },
   {
     name: 'defaultRawFormat',
@@ -427,6 +436,7 @@ export default {
     CustomMetadataEditor,
     NoteStylesEditor,
     CustomCssEditor,
+    IndicesEditor,
     InputConvertersEditor,
     RawElementsEditor,
     OutputConvertersEditor,
@@ -475,6 +485,11 @@ export default {
       const local = this.configuration.customCss || [];
       return computed.filter((filename) => !local.includes(filename));
     },
+    inheritedIndices(): NonNullable<
+      PundokEditorProject['computedConfig']
+    >['indices'] {
+      return this.inheritedItems('indices');
+    },
     inheritedOutputConverters(): NonNullable<
       PundokEditorProject['computedConfig']
     >['outputConverters'] {
@@ -508,11 +523,15 @@ export default {
             const localKey =
               field === 'noteStyles'
                 ? (localItem as NoteStyle).noteType
-                : (localItem as { name: string }).name;
+                : field === 'indices'
+                  ? (localItem as Index).indexName
+                  : (localItem as { name: string }).name;
             const itemKey =
               field === 'noteStyles'
                 ? (item as NoteStyle).noteType
-                : (item as { name: string }).name;
+                : field === 'indices'
+                  ? (item as Index).indexName
+                  : (item as { name: string }).name;
             return localKey === itemKey;
           }),
       ) as InheritedItems[K];
@@ -537,6 +556,7 @@ export default {
           field.name === 'customMetadata' ||
           field.name === 'noteStyles' ||
           field.name === 'customCss' ||
+          field.name === 'indices' ||
           field.name === 'inputConverters' ||
           field.name === 'outputConverters' ||
           field.name === 'automations' ||
