@@ -68,19 +68,21 @@
               </q-item-section>
             </q-item>
           </q-list>
-          <q-input
-            :model-value="preview"
-            type="textarea"
-            outlined
-            readonly
-            :loading="loadingPreview"
-            :label="
-              $t('configEditor.outputConverters.pandocResources.preview', {
-                resource: resourceLabel,
-              })
-            "
-            input-class="pandoc-lua-resource-dialog__preview"
-          />
+          <div class="pandoc-lua-resource-dialog__preview-container">
+            <div class="text-caption q-mb-xs">
+              {{
+                $t('configEditor.outputConverters.pandocResources.preview', {
+                  resource: resourceLabel,
+                })
+              }}
+            </div>
+            <Codemirror
+              :model-value="preview"
+              :extensions="previewExtensions"
+              class="pandoc-lua-resource-dialog__preview"
+            />
+            <q-inner-loading :showing="loadingPreview" />
+          </div>
         </div>
         <q-banner
           v-if="previewError"
@@ -98,16 +100,20 @@
           class="q-mb-md"
           :label="$t('configEditor.outputConverters.filters.filterLabel')"
         />
-        <q-input
+        <div
           v-if="parametersOnly"
-          :model-value="preview"
-          type="textarea"
-          outlined
-          readonly
-          :loading="loadingPreview"
-          :label="$t('configEditor.outputConverters.filters.preview')"
-          input-class="pandoc-lua-resource-dialog__parameters-preview"
-        />
+          class="pandoc-lua-resource-dialog__preview-container"
+        >
+          <div class="text-caption q-mb-xs">
+            {{ $t('configEditor.outputConverters.filters.preview') }}
+          </div>
+          <Codemirror
+            :model-value="preview"
+            :extensions="previewExtensions"
+            class="pandoc-lua-resource-dialog__parameters-preview"
+          />
+          <q-inner-loading :showing="loadingPreview" />
+        </div>
         <div v-if="allowParameters">
           <div
             v-for="(parameter, index) in parameters"
@@ -201,7 +207,12 @@
 </template>
 
 <script setup lang="ts">
+import { StreamLanguage } from '@codemirror/language';
+import { lua } from '@codemirror/legacy-modes/mode/lua';
+import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { computed, onMounted, ref, watch } from 'vue';
+import { Codemirror } from 'vue-codemirror';
 import { useI18n } from 'vue-i18n';
 import type {
   FindResourceOptions,
@@ -251,6 +262,12 @@ const preview = ref('');
 const loadingPreview = ref(false);
 const previewError = ref('');
 const parameters = ref<Parameter[]>([]);
+const previewExtensions = [
+  StreamLanguage.define(lua),
+  EditorState.readOnly.of(true),
+  EditorView.editable.of(false),
+  EditorView.lineWrapping,
+];
 
 const resourceLabel = computed(() =>
   String(
@@ -421,17 +438,21 @@ function select(): void {
   overflow-y: auto;
 }
 
-:deep(.pandoc-lua-resource-dialog__preview) {
-  height: 70vh;
-  max-height: 70vh;
-  overflow-y: auto;
-  font-family: monospace;
+.pandoc-lua-resource-dialog__preview-container {
+  position: relative;
 }
 
-:deep(.pandoc-lua-resource-dialog__parameters-preview) {
+:deep(.pandoc-lua-resource-dialog__preview .cm-editor) {
+  height: 70vh;
+  max-height: 70vh;
+  border: 1px solid var(--q-separator-color);
+  border-radius: 4px;
+}
+
+:deep(.pandoc-lua-resource-dialog__parameters-preview .cm-editor) {
   height: calc(60vh - 3rem);
   max-height: calc(60vh - 3rem);
-  overflow-y: auto;
-  font-family: monospace;
+  border: 1px solid var(--q-separator-color);
+  border-radius: 4px;
 }
 </style>
