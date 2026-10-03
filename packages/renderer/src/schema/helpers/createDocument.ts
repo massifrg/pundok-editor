@@ -30,17 +30,7 @@ export function createDocumentNodeFromJson(
   const document = pandocParser.parse(json);
   if (!document)
     return null;
-  // const pandocParser2 = new PandocJsonParser(
-  //   schema,
-  //   PANDOC_JSON_PARSER_RULES
-  // );
-  // const document2 = pandocParser2.parse(json);
-  // console.log(document);
-  // console.log(document2);
-  // console.log(`JSON.stringify(document1): ${JSON.stringify(document)}`);
-  // console.log(`JSON.stringify(document2): ${JSON.stringify(document2)}`);
-  const reparsedDocument = JSON.parse(JSON.stringify(document));
-  return Node.fromJSON(schema, reparsedDocument);
+  return document;
 }
 
 export const createDocumentCommand =

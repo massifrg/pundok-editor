@@ -2,14 +2,17 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   PandocJsonParser,
+  PandocJsonParserError,
   PANDOC_JSON_PARSER_RULES,
+  isPandocJsonDocument,
   pandocJsonToPMNode,
   parseJsonFragmentToPMJson,
 } from '../src/schema/helpers/PandocJsonParser';
 import { nodeToPandocJsonString } from '../src/schema/helpers/PandocJsonExporter';
+import { createDocumentNodeFromJson } from '../src/schema/helpers/createDocument';
 import { schema } from '../src/schema/helpers/PandocSchema';
 
 const testsuite = JSON.parse(
@@ -40,6 +43,52 @@ describe('PandocJsonParser', () => {
       'metaList',
     );
     expect(doc.textContent).toContain('This is a set of tests for pandoc.');
+  });
+
+  it('does not mutate the source Pandoc JSON', () => {
+    const source = {
+      'pandoc-api-version': [1, 23],
+      meta: {},
+      blocks: [
+        {
+          t: 'Para',
+          c: [
+            {
+              t: 'Emph',
+              c: [{ t: 'Str', c: 'unchanged' }],
+            },
+          ],
+        },
+      ],
+    };
+    const before = JSON.parse(JSON.stringify(source));
+
+    pandocJsonToPMNode(source);
+
+    expect(source).toEqual(before);
+  });
+
+  it('creates a document node without converting a ProseMirror node as JSON', () => {
+    const document = createDocumentNodeFromJson(
+      {
+        'pandoc-api-version': [1, 23],
+        meta: {},
+        blocks: [{ t: 'Para', c: [{ t: 'Str', c: 'content' }] }],
+      },
+      schema,
+    );
+
+    expect(document?.toJSON()).toEqual({
+      type: 'doc',
+      content: [
+        { type: 'metadata' },
+        {
+          type: 'paragraph',
+          attrs: { customStyle: null },
+          content: [{ type: 'text', text: 'content' }],
+        },
+      ],
+    });
   });
 
   it('roundtrips the parsed ProseMirror document for the Pandoc fixture', () => {
@@ -456,18 +505,63 @@ describe('PandocJsonParser', () => {
     });
   });
 
-  it('returns null for unsupported Pandoc item types', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
-    expect(
+  it('throws for unsupported Pandoc item types', () => {
+    try {
       new PandocJsonParser(schema, PANDOC_JSON_PARSER_RULES).parse({
         'pandoc-api-version': [1, 23],
         meta: {},
         blocks: [{ t: 'UnsupportedBlock', c: [] }],
-      }),
-    ).toBeNull();
+      });
+      throw new Error('Expected parsing to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(PandocJsonParserError);
+      expect((error as PandocJsonParserError).pandocType).toBe(
+        'UnsupportedBlock',
+      );
+    }
+  });
 
-    expect(log).toHaveBeenCalled();
-    log.mockRestore();
+  it('rejects malformed Pandoc document envelopes', () => {
+    const parser = new PandocJsonParser(schema, PANDOC_JSON_PARSER_RULES);
+
+    expect(() =>
+      parser.parse({
+        'pandoc-api-version': [1, 23],
+        meta: {},
+      } as never),
+    ).toThrow('blocks must be an array');
+
+    expect(() =>
+      parser.parse({
+        'pandoc-api-version': [1, 23],
+        meta: {},
+        blocks: [{}],
+      } as never),
+    ).toThrow('string t field');
+  });
+
+  it('rejects malformed Pandoc JSON strings', () => {
+    expect(() => new PandocJsonParser(
+      schema,
+      PANDOC_JSON_PARSER_RULES,
+    ).parse('{not valid json')).toThrow(SyntaxError);
+  });
+
+  it('checks Pandoc document JSON without parsing a ProseMirror document', () => {
+    const validDocument = {
+      'pandoc-api-version': [1, 23],
+      meta: {},
+      blocks: [{ t: 'UnsupportedButStructurallyValid', c: [] }],
+    };
+
+    expect(isPandocJsonDocument(validDocument)).toBe(true);
+    expect(isPandocJsonDocument(JSON.stringify(validDocument))).toBe(true);
+    expect(isPandocJsonDocument('{not valid json')).toBe(false);
+    expect(
+      isPandocJsonDocument({
+        'pandoc-api-version': [1, 23],
+        meta: {},
+      }),
+    ).toBe(false);
   });
 });

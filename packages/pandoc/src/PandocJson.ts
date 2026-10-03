@@ -1,7 +1,6 @@
 export interface PandocJson {
   t: string;
   c?: any;
-  p?: PandocJson;
 }
 
 export function isPandocJsonBlock(json: PandocJson): boolean {
