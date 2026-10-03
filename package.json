@@ -12,9 +12,6 @@
   "type": "module",
   "main": "packages/main/dist/index.mjs",
   "desktopName": "pundok-editor",
-  "config": {
-    "forge": "./forge.config.cjs"
-  },
   "build": {
     "linux": {
       "syncDesktopName": true
@@ -34,6 +31,7 @@
     "dist": "npm run pre-dist; cross-env MODE=production npm run build && electron-builder build --config electron-builder.mjs -wl --x64",
     "dist:linux": "npm run pre-dist; cross-env MODE=production npm run build && electron-builder build --config electron-builder.mjs -l --x64",
     "dist:deb": "npm run pre-dist; cross-env MODE=production npm run build && electron-builder build --config electron-builder.mjs --linux deb --x64",
+    "pre-dist:win": "npm install --no-save --package-lock=false --ignore-scripts --force @napi-rs/canvas-win32-x64-msvc@1.0.8",
     "dist:win": "npm run pre-dist; cross-env MODE=production npm run build && electron-builder build --config electron-builder.mjs -w --x64",
     "dist:win32": "npm run pre-dist; cross-env MODE=production npm run build && electron-builder build --config electron-builder.mjs -w --ia32",
     "docs": "npx typedoc",
@@ -55,10 +53,6 @@
     "typecheck:renderer": "vue-tsc --noEmit -p packages/renderer/tsconfig.json",
     "typecheck:server": "tsc --noEmit -p packages/server/tsconfig.json",
     "typecheck": "npm run typecheck:main && npm run typecheck:backend && npm run typecheck:preload && npm run typecheck:renderer && npm run typecheck:server",
-    "forge:start": "electron-forge start",
-    "forge:package": "electron-forge package",
-    "forge:make": "electron-forge make",
-    "forge:make:all": "electron-forge make --arch=x64 --targets=@electron-forge/maker-deb,@electron-forge/maker-zip",
     "schema:configuration": "cd schemas; ts-json-schema-generator -p ../packages/common/src/config/editorConfigInit.ts > pundok-configuration.schema.json",
     "schema:project": "cd schemas; ts-json-schema-generator -p ../packages/common/src/config/project.ts -t PundokEditorProject > pundok-project.schema.json",
     "schema": "npm run schema:configuration && npm run schema:project",
@@ -66,9 +60,6 @@
   },
   "devDependencies": {
     "@app/electron-versions": "file:packages/electron-versions",
-    "@electron-forge/cli": "^8.0.1",
-    "@electron-forge/maker-deb": "^8.0.1",
-    "@electron-forge/maker-dmg": "^8.0.1",
     "@intlify/unplugin-vue-i18n": "^11.2.5",
     "@npmcli/map-workspaces": "^6.0.0",
     "@quasar/app-vite": "^3.10.1",

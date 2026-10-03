@@ -91,7 +91,6 @@ export default [
   {
     files: [
       'electron-builder.mjs',
-      'forge.config.js',
       'scripts/**/*.js',
       'packages/main/**/*.ts',
       'packages/preload/**/*.ts',
