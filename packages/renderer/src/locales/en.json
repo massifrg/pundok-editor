@@ -337,11 +337,35 @@
     },
     "noteStyles": {
       "label": "Note styles",
-      "description": "Note style definitions, as a JSON array."
+      "description": "Note style definitions.",
+      "title": "Note styles",
+      "newStyle": "New note style",
+      "editStyle": "Edit note style",
+      "copyStyle": "Create a copy",
+      "deleteStyle": "Delete note style",
+      "none": "No note styles defined.",
+      "newTitle": "New note style",
+      "editTitle": "Edit note style",
+      "noteType": "Note type",
+      "default": "Default",
+      "markerConversion": "Marker conversion",
+      "predefinedConversion": "Predefined conversion",
+      "customMarkers": "Custom markers",
+      "markers": "Custom markers (space separated)",
+      "markerBefore": "Marker before",
+      "markerAfter": "Marker after",
+      "backgroundColor": "Background color",
+      "textColor": "Text color"
     },
     "customCss": {
       "label": "Custom CSS",
-      "description": "CSS file paths, as a JSON array of strings."
+      "description": "CSS file paths in display order.",
+      "title": "Custom CSS",
+      "add": "Add CSS file",
+      "remove": "Remove CSS file",
+      "inherited": "Inherited",
+      "preview": "CSS preview",
+      "none": "No custom CSS files defined."
     },
     "indices": {
       "label": "Indices",

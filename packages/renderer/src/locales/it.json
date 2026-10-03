@@ -336,11 +336,35 @@
     },
     "noteStyles": {
       "label": "Stili delle note",
-      "description": "Definizioni degli stili delle note, come array JSON."
+      "description": "Definizioni degli stili delle note.",
+      "title": "Stili delle note",
+      "newStyle": "Nuovo stile della nota",
+      "editStyle": "Modifica stile della nota",
+      "copyStyle": "Crea una copia",
+      "deleteStyle": "Elimina stile della nota",
+      "none": "Nessuno stile di nota definito.",
+      "newTitle": "Nuovo stile della nota",
+      "editTitle": "Modifica stile della nota",
+      "noteType": "Tipo di nota",
+      "default": "Predefinito",
+      "markerConversion": "Conversione del marcatore",
+      "predefinedConversion": "Conversione predefinita",
+      "customMarkers": "Marcatori personalizzati",
+      "markers": "Marcatori personalizzati (separati da spazi)",
+      "markerBefore": "Prima del marcatore",
+      "markerAfter": "Dopo il marcatore",
+      "backgroundColor": "Colore di sfondo",
+      "textColor": "Colore del testo"
     },
     "customCss": {
       "label": "CSS personalizzato",
-      "description": "Percorsi dei file CSS, come array JSON di stringhe."
+      "description": "Percorsi dei file CSS nell'ordine di visualizzazione.",
+      "title": "CSS personalizzato",
+      "add": "Aggiungi file CSS",
+      "remove": "Rimuovi file CSS",
+      "inherited": "Ereditato",
+      "preview": "Anteprima CSS",
+      "none": "Nessun file CSS personalizzato definito."
     },
     "indices": {
       "label": "Indici",

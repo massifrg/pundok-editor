@@ -53,6 +53,19 @@
               v-model="values.customMetadata"
               :inherited="inheritedCustomMetadata"
             />
+            <NoteStylesEditor
+              v-else-if="tab.name === 'noteStyles'"
+              v-model="values.noteStyles"
+              :inherited="inheritedNoteStyles"
+            />
+            <CustomCssEditor
+              v-else-if="tab.name === 'customCss'"
+              v-model="values.customCss"
+              :inherited="inheritedCustomCss"
+              :editor="editor"
+              :project="project"
+              :configuration-name="configuration.name"
+            />
             <InputConvertersEditor
               v-else-if="tab.name === 'inputConverters'"
               v-model="values.inputConverters"
@@ -149,6 +162,7 @@ import type {
   CustomMetadata,
   CustomStyleDef,
   InputConverter,
+  NoteStyle,
   OutputConverter,
   PundokEditorConfigInit,
   PundokEditorProject,
@@ -158,6 +172,8 @@ import CustomStylesEditor from './confeditors/CustomStylesEditor.vue';
 import CustomClassesEditor from './confeditors/CustomClassesEditor.vue';
 import CustomAttributesEditor from './confeditors/CustomAttributesEditor.vue';
 import CustomMetadataEditor from './confeditors/CustomMetadataEditor.vue';
+import NoteStylesEditor from './confeditors/NoteStylesEditor.vue';
+import CustomCssEditor from './confeditors/CustomCssEditor.vue';
 import InputConvertersEditor from './confeditors/InputConvertersEditor.vue';
 import RawElementsEditor from './confeditors/RawElementsEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
@@ -176,6 +192,8 @@ type EditorConfigField = {
     | 'customClasses'
     | 'customAttributes'
     | 'customMetadata'
+    | 'noteStyles'
+    | 'customCss'
     | 'inputConverters'
     | 'outputConverters'
     | 'automations'
@@ -194,6 +212,8 @@ type InheritedItems = {
   customClasses: CustomClass[];
   customAttributes: CustomAttribute[];
   customMetadata: CustomMetadata[];
+  noteStyles: NoteStyle[];
+  customCss: string[];
   outputConverters: OutputConverter[];
   inputConverters: InputConverter[];
 };
@@ -282,7 +302,7 @@ const fields: EditorConfigField[] = [
     name: 'noteStyles',
     label: 'configEditor.noteStyles.label',
     description: 'configEditor.noteStyles.description',
-    kind: 'json',
+    kind: 'noteStyles',
   },
   {
     name: 'customCss',
@@ -405,6 +425,8 @@ export default {
     CustomClassesEditor,
     CustomAttributesEditor,
     CustomMetadataEditor,
+    NoteStylesEditor,
+    CustomCssEditor,
     InputConvertersEditor,
     RawElementsEditor,
     OutputConvertersEditor,
@@ -443,6 +465,16 @@ export default {
     >['customMetadata'] {
       return this.inheritedItems('customMetadata');
     },
+    inheritedNoteStyles(): NonNullable<
+      PundokEditorProject['computedConfig']
+    >['noteStyles'] {
+      return this.inheritedItems('noteStyles');
+    },
+    inheritedCustomCss(): string[] {
+      const computed = this.project?.computedConfig?.customCss || [];
+      const local = this.configuration.customCss || [];
+      return computed.filter((filename) => !local.includes(filename));
+    },
     inheritedOutputConverters(): NonNullable<
       PundokEditorProject['computedConfig']
     >['outputConverters'] {
@@ -471,7 +503,18 @@ export default {
       const local = ((this.configuration as Partial<InheritedItems>)[field] ||
         []) as InheritedItems[K];
       return computed.filter(
-        (item) => !local.some(({ name }) => name === item.name),
+        (item) =>
+          !local.some((localItem) => {
+            const localKey =
+              field === 'noteStyles'
+                ? (localItem as NoteStyle).noteType
+                : (localItem as { name: string }).name;
+            const itemKey =
+              field === 'noteStyles'
+                ? (item as NoteStyle).noteType
+                : (item as { name: string }).name;
+            return localKey === itemKey;
+          }),
       ) as InheritedItems[K];
     },
     loadConfiguration() {
@@ -492,6 +535,8 @@ export default {
           field.name === 'customClasses' ||
           field.name === 'customAttributes' ||
           field.name === 'customMetadata' ||
+          field.name === 'noteStyles' ||
+          field.name === 'customCss' ||
           field.name === 'inputConverters' ||
           field.name === 'outputConverters' ||
           field.name === 'automations' ||
