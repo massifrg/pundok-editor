@@ -64,6 +64,10 @@
                 project ? { kind: 'filter', project } : undefined
               "
             />
+            <AutoDelimitersEditor
+              v-else-if="tab.name === 'autoDelimiters'"
+              v-model="values.autoDelimiters"
+            />
             <div
               v-for="field in tab.fields"
               v-else
@@ -130,6 +134,7 @@ import CustomAttributesEditor from './confeditors/CustomAttributesEditor.vue';
 import RawElementsEditor from './confeditors/RawElementsEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
 import AutomationsEditor from './confeditors/AutomationsEditor.vue';
+import AutoDelimitersEditor from './confeditors/AutoDelimitersEditor.vue';
 
 type EditorConfigField = {
   name: keyof PundokEditorConfigInit;
@@ -144,7 +149,8 @@ type EditorConfigField = {
     | 'customAttributes'
     | 'outputConverters'
     | 'automations'
-    | 'rawElements';
+    | 'rawElements'
+    | 'autoDelimiters';
 };
 
 type EditorConfigTab = {
@@ -207,7 +213,7 @@ const fields: EditorConfigField[] = [
     name: 'autoDelimiters',
     label: 'configEditor.autoDelimiters.label',
     description: 'configEditor.autoDelimiters.description',
-    kind: 'json',
+    kind: 'autoDelimiters',
   },
   {
     name: 'customStyles',
@@ -362,6 +368,7 @@ export default {
     RawElementsEditor,
     OutputConvertersEditor,
     AutomationsEditor,
+    AutoDelimitersEditor,
   },
   data() {
     return {
@@ -406,6 +413,8 @@ export default {
           field.name === 'rawBlocks'
         ) {
           values[field.name] = value || [];
+        } else if (field.name === 'autoDelimiters') {
+          values[field.name] = value;
         } else {
           values[field.name] = value;
         }

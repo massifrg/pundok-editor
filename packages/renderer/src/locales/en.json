@@ -227,7 +227,23 @@
     },
     "autoDelimiters": {
       "label": "Automatic delimiters",
-      "description": "Delimiter pairs, as a JSON object."
+      "description": "Delimiter pairs used for automatic quotations.",
+      "title": "Automatic delimiters",
+      "presets": "Language presets",
+      "opening": "Opening delimiter",
+      "closing": "Closing delimiter",
+      "names": {
+        "DoubleQuote": "Double quote",
+        "SingleQuote": "Single quote"
+      },
+      "languages": {
+        "english": "English",
+        "italian": "Italian",
+        "german": "German",
+        "french": "French",
+        "spanish": "Spanish",
+        "portuguese": "Portuguese"
+      }
     },
     "customStyles": {
       "label": "Custom styles",

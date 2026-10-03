@@ -8,6 +8,7 @@ export * from './customSpan';
 export * from './customStyles';
 export * from './editorConfigInit';
 export * from './editorConfiguration';
+export * from './autoDelimiters';
 export * from './hardcodedConfigs';
 export * from './hasPandocAttr';
 export * from './indices';

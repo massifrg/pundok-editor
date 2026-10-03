@@ -16,6 +16,7 @@ import { InputConverter } from './inputConverters';
 import { OutputConverter } from './outputConverters';
 import { Automation, SearchAndReplace } from './automations';
 import { NamedAndDescribed } from '../types';
+import { AutoDelimitersDef } from './autoDelimiters';
 
 export class PundokEditorConfig implements PundokEditorConfigInit {
   /** The name of this configuration of the editor. */
@@ -38,7 +39,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
   documentTemplate?: string | undefined;
   /** Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote)
    * in the editor. */
-  autoDelimiters?: Record<string, string[]>;
+  autoDelimiters?: AutoDelimitersDef;
   /** Definitions of custom styles available with this configuration.
    * These definitions can encompass multiple elements (e.g. `span`, `paragraph`).
    * See [Pandoc custom styles](https://pandoc.org/MANUAL.html#custom-styles) */
@@ -319,7 +320,9 @@ export function enrichConfiguration(
       copyFormat: enriching.copyFormat || base.copyFormat,
       mainFormats: enriching.mainFormats || base.mainFormats,
       documentTemplate: enriching.documentTemplate || base.documentTemplate,
-      autoDelimiters: { ...base.autoDelimiters, ...enriching.autoDelimiters },
+      autoDelimiters: base.autoDelimiters
+        ? { ...base.autoDelimiters, ...enriching.autoDelimiters }
+        : enriching.autoDelimiters,
       customStyles: mergeNamedObjects(
         enriching.customStyles,
         base.customStyles,

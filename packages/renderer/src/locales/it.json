@@ -226,7 +226,23 @@
     },
     "autoDelimiters": {
       "label": "Delimitatori automatici",
-      "description": "Coppie di delimitatori, come oggetto JSON."
+      "description": "Coppie di delimitatori usate per le citazioni automatiche.",
+      "title": "Delimitatori automatici",
+      "presets": "Preimpostazioni lingua",
+      "opening": "Delimitatore di apertura",
+      "closing": "Delimitatore di chiusura",
+      "names": {
+        "DoubleQuote": "Virgolette doppie",
+        "SingleQuote": "Virgolette singole"
+      },
+      "languages": {
+        "english": "Inglese",
+        "italian": "Italiano",
+        "german": "Tedesco",
+        "french": "Francese",
+        "spanish": "Spagnolo",
+        "portuguese": "Portoghese"
+      }
     },
     "customStyles": {
       "label": "Stili personalizzati",

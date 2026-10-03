@@ -9,6 +9,7 @@ import { NoteStyle } from './notes';
 import { OutputConverter } from './outputConverters';
 import { InsertableRaw } from './rawElements';
 import { NamedAndDescribed } from '../types';
+import { AutoDelimitersDef } from './autoDelimiters';
 
 /**
  * A configuration (customization) of PundokEditor.
@@ -34,7 +35,7 @@ export interface PundokEditorConfigInit extends NamedAndDescribed {
   documentTemplate?: string;
   /** automatic delimiters for Marks like singleQuoted or doubleQuoted,
    * e.g. { doubleQuoted: [ "“", "”" ], singleQuoted: [ "‘", "’" ] } */
-  autoDelimiters?: Record<string, string[]>;
+  autoDelimiters?: AutoDelimitersDef;
   /** custom styles for paragraphs, spans, headings, divs, etc. */
   customStyles?: CustomStyleDef[];
   /** custom classes for Pandoc's elements with an `Attr` data stucture */
