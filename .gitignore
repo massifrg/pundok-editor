@@ -97,6 +97,8 @@ yarn-error.log*
 *.njsproj
 *.sln
 
+.github/
+
 out/
 staticResources/other/UnicodeData.txt
 packages/renderer/stats.html
