@@ -830,14 +830,21 @@ export class PandocJsonExporter {
     content: PmJsonNode[],
     acc?: Inline[],
   ): Inline[] {
+    // ProseMirror keeps marks as flat annotations on each inline node, whereas
+    // Pandoc nests marked content inside inline containers. Collect chunks and
+    // ranges first so the flat annotations can be rebuilt as a tree.
     let inlines: Inline[] = [];
     let chunks: Inline[] = [];
+    // A range is [known mark index, first chunk, exclusive last chunk]. It is
+    // the span of flat ProseMirror nodes that will become one Pandoc parent.
     let marksRanges: number[][] = [];
     const knownMarks = this.knownMarks;
     const compareMarks = this.compareMarks;
     const comparator = markRangesComparator(knownMarks, compareMarks);
 
     const addMarkRange = (markIndex: number, start: number, stop: number) => {
+      // Adjacent flat mark annotations are one logical range. Keeping them
+      // together produces one Pandoc container instead of repeated nesting.
       let markRangeIndex = marksRanges.findIndex(
         ([index, mstart, mstop]) => index === markIndex && mstop == start,
       );
@@ -850,6 +857,9 @@ export class PandocJsonExporter {
     };
 
     const untangleRanges = () => {
+      // Flat ProseMirror mark ranges can cross, but Pandoc's inline tree can
+      // only express properly nested parents. Split crossing ranges until
+      // their ordering can be represented by a stack of containers.
       marksRanges.sort(comparator);
       // logMarkRanges(knownMarks, marksRanges, "BEFORE UNTANGLE")
       const rangesCount = marksRanges.length;
@@ -879,6 +889,9 @@ export class PandocJsonExporter {
 
     const processAccumulatedChunks = () => {
       if (chunks.length > 0) {
+        // Convert flat chunks and mark ranges into Pandoc's nested inline
+        // tree. `stops` records where each open parent closes; the stack
+        // mirrors the tree path for the currently active marks.
         // console.log('CHUNKS:')
         // console.log(chunks)
         const stack: InlineContainer[] = [Plain.empty()];
@@ -906,6 +919,8 @@ export class PandocJsonExporter {
             rangeIndex < marksRanges.length &&
             i === marksRanges[rangeIndex][RANGE_START]
           ) {
+            // Each flat mark range beginning here becomes a nested Pandoc
+            // parent. Sorting determines the order of those parent nodes.
             [mi, mstart, mstop] = marksRanges[rangeIndex];
             const container = this.createMarkAtIndex(mi);
             if (container) {
@@ -922,6 +937,8 @@ export class PandocJsonExporter {
           inlineContainer.appendInline(chunks[i]);
           // console.log(`APPENDED ${chunks[i].name} to stack @ ${stackIndex}`)
         }
+        // The temporary root is not part of the Pandoc document; its children
+        // are the reconstructed inline tree for this batch.
         stack[0].content.forEach((inline) => {
           inlines.push(inline);
         });
@@ -942,6 +959,8 @@ export class PandocJsonExporter {
         const mathMark = child.marks?.find((m) => m.type === 'math');
         const codeMark = child.marks?.find((m) => m.type === 'code');
 
+        // Code and math already have dedicated Pandoc inline nodes, so they
+        // bypass the generic flat-mark-to-nested-container conversion.
         if (codeMark) {
           text = (child as PmJsonTextNode).text;
           // const { classes, language } = codeMark.attrs!
@@ -955,6 +974,8 @@ export class PandocJsonExporter {
           markIndices = this.markIndices(child.marks);
           switch (child.type) {
             case 'text':
+              // A flat ProseMirror text node may produce multiple Pandoc
+              // inlines (Space/Str), so ranges use generated chunks.
               addedChunks = textToInlines((child as PmJsonTextNode).text);
               break;
             case 'hardBreak':
@@ -991,6 +1012,9 @@ export class PandocJsonExporter {
               extendCurrentRanges = true;
               break;
             case NODE_NAME_AUTO_DELIMITER:
+              // Auto-delimiter nodes have no Pandoc output of their own. They
+              // preserve a flat mark's continuity so one quoted Pandoc parent
+              // can span the marker.
               addedChunks = [];
               extendCurrentRanges = true;
               break;
@@ -1006,6 +1030,9 @@ export class PandocJsonExporter {
         const stop = start + addedChunks.length;
         chunks = chunks.concat(addedChunks);
         if (extendCurrentRanges) {
+          // Structural/zero-width nodes stay inside any flat mark ending at
+          // this boundary, allowing its Pandoc parent to span breaks, notes,
+          // and markers.
           markIndices = markIndices.concat(
             marksRanges
               .filter(([mi, _, mstop]) => mstop === start)
@@ -1017,6 +1044,8 @@ export class PandocJsonExporter {
           markIndices.length ===
           0 /* || intersection(markIndices, currentMarkIndices).length === 0*/
         ) {
+          // No flat mark continues into the next node, so finish rebuilding
+          // this Pandoc subtree before starting an unrelated batch.
           processAccumulatedChunks();
           chunks = [];
           marksRanges = [];
@@ -1026,6 +1055,8 @@ export class PandocJsonExporter {
         });
         // console.log(marksRanges)
         if (extendCurrentRanges) {
+          // Extend flat ranges across structural nodes, even when they emit
+          // no inline, so the resulting Pandoc parent remains continuous.
           marksRanges = marksRanges.map(([mi, mstart, mstop]) =>
             mstop === start ? [mi, mstart, stop] : [mi, mstart, mstop],
           );
@@ -1036,6 +1067,7 @@ export class PandocJsonExporter {
       // logMarkRanges(knownMarks, marksRanges, 'STEP')
       // console.log(addedChunks)
     }
+    // Finish converting the final flat-mark batch into the Pandoc inline tree.
     processAccumulatedChunks();
 
     // console.log(`Inlines: ${inlines.map(i => (i as Record<string, any>).name).join()}`)
