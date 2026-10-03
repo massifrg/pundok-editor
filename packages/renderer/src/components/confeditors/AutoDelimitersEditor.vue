@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import type { AutoDelimitersDef } from '../../../common';
+import type { AutoDelimitersDef } from '../../common';
 
 type Preset = {
   language:
@@ -129,10 +129,12 @@ watch(
 
 function copyValues(values: AutoDelimitersDef): AutoDelimitersDef {
   return Object.fromEntries(
-    Object.entries(values).map(([name, delimiters]) => [
+    (Object.entries(values) as [string, [string, string]][]).map(
+      ([name, delimiters]) => [
       name,
       [...delimiters] as [string, string],
-    ]),
+      ],
+    ),
   ) as AutoDelimitersDef;
 }
 
