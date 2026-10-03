@@ -67,6 +67,7 @@ export default defineConfig({
   server: {
     fs: {
       strict: true,
+      allow: [resolve(PACKAGE_ROOT, '../../')],
     },
   },
   define: {

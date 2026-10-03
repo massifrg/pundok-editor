@@ -39,13 +39,20 @@ export const schema = new Schema({
     },
 
     metadata: {
-      content: 'metaMap*',
+      content: 'metaMapEntry*',
       group: 'meta',
     },
 
     metaInlines: {
       content: 'inline*',
       group: 'meta',
+    },
+
+    metaString: {
+      content: 'text*',
+      group: 'meta',
+      isolating: true,
+      marks: '',
     },
 
     metaBlocks: {
@@ -70,6 +77,13 @@ export const schema = new Schema({
       content: 'meta',
       attrs: { text: { default: null } },
       group: 'meta',
+    },
+
+    metaMapEntry: {
+      content: 'meta',
+      attrs: { text: { default: null } },
+      group: 'meta',
+      isolating: true,
     },
 
     paragraph: {
