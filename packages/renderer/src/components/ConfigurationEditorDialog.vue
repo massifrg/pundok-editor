@@ -6,135 +6,58 @@
       </q-card-section>
 
       <q-card-section class="configuration-editor-dialog__body">
-        <q-tabs
-          v-model="activeTab"
-          vertical
-          class="configuration-editor-dialog__tabs text-primary"
-          outside-arrows
-          mobile-arrows
-        >
-          <q-tab
-            v-for="tab in tabs"
-            :key="tab.name"
-            :name="tab.name"
-            :label="$t(tab.label)"
-          />
+        <q-tabs v-model="activeTab" vertical class="configuration-editor-dialog__tabs text-primary" outside-arrows
+          mobile-arrows>
+          <q-tab v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="$t(tab.label)" />
         </q-tabs>
 
         <q-separator vertical />
 
-        <q-tab-panels
-          v-model="activeTab"
-          animated
-          class="configuration-editor-dialog__panels"
-        >
+        <q-tab-panels v-model="activeTab" animated class="configuration-editor-dialog__panels">
           <q-tab-panel v-for="tab in tabs" :key="tab.name" :name="tab.name">
-            <ProjectConfigurationsEditor
-              v-if="tab.name === 'project-configurations'"
-              v-model="chosenConfigurations"
-            />
-            <CustomStylesEditor
-              v-else-if="tab.name === 'customStyles'"
-              v-model="values.customStyles"
-              :inherited="inheritedCustomStyles"
-            />
-            <CustomClassesEditor
-              v-else-if="tab.name === 'customClasses'"
-              v-model="values.customClasses"
-              :inherited="inheritedCustomClasses"
-            />
-            <CustomAttributesEditor
-              v-else-if="tab.name === 'customAttributes'"
-              v-model="values.customAttributes"
-              :inherited="inheritedCustomAttributes"
-            />
-            <CustomMetadataEditor
-              v-else-if="tab.name === 'customMetadata'"
-              v-model="values.customMetadata"
-              :inherited="inheritedCustomMetadata"
-            />
-            <NoteStylesEditor
-              v-else-if="tab.name === 'noteStyles'"
-              v-model="values.noteStyles"
-              :inherited="inheritedNoteStyles"
-            />
-            <CustomCssEditor
-              v-else-if="tab.name === 'customCss'"
-              v-model="values.customCss"
-              :inherited="inheritedCustomCss"
-              :editor="editor"
-              :project="project"
-              :configuration-name="configuration.name"
-            />
-            <IndicesEditor
-              v-else-if="tab.name === 'indices'"
-              v-model="values.indices"
-              :inherited="inheritedIndices"
-            />
-            <InputConvertersEditor
-              v-else-if="tab.name === 'inputConverters'"
-              v-model="values.inputConverters"
-              :inherited="inheritedInputConverters"
-              :editor="editor"
-            />
-            <RawElementsEditor
-              v-else-if="tab.name === 'raw-elements'"
-              v-model="values"
-            />
-            <OutputConvertersEditor
-              v-else-if="tab.name === 'outputConverters'"
-              v-model="values.outputConverters"
-              :inherited="inheritedOutputConverters"
-              :resource-options="
-                project ? { kind: 'filter', project } : undefined
-              "
-              :editor="editor"
-            />
-            <AutomationsEditor
-              v-else-if="tab.name === 'automations'"
-              v-model="values.automations"
-              :editor="editor"
-              :resource-options="
-                project ? { kind: 'filter', project } : undefined
-              "
-            />
-            <AutoDelimitersEditor
-              v-else-if="tab.name === 'autoDelimiters'"
-              v-model="values.autoDelimiters"
-            />
-            <div
-              v-for="field in tab.fields"
-              v-else
-              :key="field.name"
-              class="q-mb-md"
-            >
-              <q-input
-                v-if="field.kind === 'text'"
-                v-model="values[field.name]"
-                :label="$t(field.label)"
-                outlined
-                :type="field.name === 'description' ? 'textarea' : 'text'"
-                :hint="$t(field.description)"
-                clearable
-              />
-              <q-toggle
-                v-else-if="field.kind === 'boolean'"
-                v-model="values[field.name]"
-                :label="$t(field.label)"
-                :hint="$t(field.description)"
-              />
-              <q-input
-                v-else
-                v-model="jsonValues[field.name]"
-                :label="$t(field.label)"
-                type="textarea"
-                outlined
-                autogrow
-                :hint="$t(field.description)"
-                :error="!!jsonErrors[field.name]"
-                :error-message="jsonErrors[field.name]"
-                @update:model-value="clearJsonError(field.name)"
-              />
+            <ProjectConfigurationsEditor v-if="tab.name === 'project-configurations'" v-model="chosenConfigurations" />
+            <CustomStylesEditor v-else-if="tab.name === 'customStyles'" v-model="values.customStyles"
+              :inherited="inheritedCustomStyles" />
+            <CustomClassesEditor v-else-if="tab.name === 'customClasses'" v-model="values.customClasses"
+              :inherited="inheritedCustomClasses" />
+            <CustomAttributesEditor v-else-if="tab.name === 'customAttributes'" v-model="values.customAttributes"
+              :inherited="inheritedCustomAttributes" />
+            <CustomMetadataEditor v-else-if="tab.name === 'customMetadata'" v-model="values.customMetadata"
+              :inherited="inheritedCustomMetadata" />
+            <NoteStylesEditor v-else-if="tab.name === 'noteStyles'" v-model="values.noteStyles"
+              :inherited="inheritedNoteStyles" />
+            <CustomCssEditor v-else-if="tab.name === 'customCss'" v-model="values.customCss"
+              :inherited="inheritedCustomCss" :editor="editor" :project="project"
+              :configuration-name="configuration.name" />
+            <IndicesEditor v-else-if="tab.name === 'indices'" v-model="values.indices" :inherited="inheritedIndices"
+              :editor="editor" />
+            <InputConvertersEditor v-else-if="tab.name === 'inputConverters'" v-model="values.inputConverters"
+              :inherited="inheritedInputConverters" :editor="editor" />
+            <RawElementsEditor v-else-if="tab.name === 'raw-elements'" v-model="values" />
+            <OutputConvertersEditor v-else-if="tab.name === 'outputConverters'" v-model="values.outputConverters"
+              :inherited="inheritedOutputConverters" :resource-options="project ? { kind: 'filter', project } : undefined
+                " :editor="editor" />
+            <AutomationsEditor v-else-if="tab.name === 'automations'" v-model="values.automations" :editor="editor"
+              :resource-options="project ? { kind: 'filter', project } : undefined
+                " />
+            <AutoDelimitersEditor v-else-if="tab.name === 'autoDelimiters'" v-model="values.autoDelimiters" />
+            <div v-for="field in tab.fields" v-else :key="field.name" class="q-mb-md">
+              <q-input v-if="field.kind === 'text'" v-model="values[field.name]" :label="$t(field.label)" outlined
+                :type="field.name === 'description' ? 'textarea' : 'text'" :hint="$t(field.description)" clearable />
+              <q-toggle v-else-if="field.kind === 'boolean'" v-model="values[field.name]" :label="$t(field.label)"
+                :hint="$t(field.description)" />
+              <q-input v-else v-model="jsonValues[field.name]" :label="$t(field.label)" type="textarea" outlined
+                autogrow :hint="$t(field.description)" :error="!!jsonErrors[field.name]"
+                :error-message="jsonErrors[field.name]" @update:model-value="clearJsonError(field.name)" />
+            </div>
+            <div v-if="tab.name === 'general'" class="q-mb-md">
+              <q-input :model-value="rootDocument" :label="$t('configEditor.general.rootDocument')"
+                :hint="$t('configEditor.general.rootDocumentDescription')" outlined readonly>
+                <template #append>
+                  <q-btn flat round dense icon="document_open" :title="$t('configEditor.general.chooseRootDocument')"
+                    :disable="!project" @click="selectRootDocument" />
+                </template>
+              </q-input>
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -142,11 +65,7 @@
 
       <q-card-actions align="right">
         <q-btn :label="$t('configEditor.buttons.cancel')" @click="onCancel" />
-        <q-btn
-          :label="$t('configEditor.buttons.save')"
-          color="primary"
-          @click="onSave"
-        />
+        <q-btn :label="$t('configEditor.buttons.save')" color="primary" @click="onSave" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -161,6 +80,7 @@ setupQuasarIcons();
 <script lang="ts">
 import type { PropType } from 'vue';
 import type { Editor } from '@tiptap/vue-3';
+import { parse as parsePath } from 'path-browserify';
 import type {
   CustomAttribute,
   CustomClass,
@@ -186,27 +106,28 @@ import RawElementsEditor from './confeditors/RawElementsEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
 import AutomationsEditor from './confeditors/AutomationsEditor.vue';
 import AutoDelimitersEditor from './confeditors/AutoDelimitersEditor.vue';
+import { showOpenDocumentDialog } from './helpers';
 
 type EditorConfigField = {
   name: keyof PundokEditorConfigInit;
   label: string;
   description: string;
   kind:
-    | 'text'
-    | 'boolean'
-    | 'json'
-    | 'customStyles'
-    | 'customClasses'
-    | 'customAttributes'
-    | 'customMetadata'
-    | 'noteStyles'
-    | 'customCss'
-    | 'indices'
-    | 'inputConverters'
-    | 'outputConverters'
-    | 'automations'
-    | 'rawElements'
-    | 'autoDelimiters';
+  | 'text'
+  | 'boolean'
+  | 'json'
+  | 'customStyles'
+  | 'customClasses'
+  | 'customAttributes'
+  | 'customMetadata'
+  | 'noteStyles'
+  | 'customCss'
+  | 'indices'
+  | 'inputConverters'
+  | 'outputConverters'
+  | 'automations'
+  | 'rawElements'
+  | 'autoDelimiters';
 };
 
 type EditorConfigTab = {
@@ -239,18 +160,6 @@ const fields: EditorConfigField[] = [
     label: 'configEditor.general.description',
     description: 'configEditor.general.descriptionDescription',
     kind: 'text',
-  },
-  {
-    name: 'version',
-    label: 'configEditor.general.version',
-    description: 'configEditor.general.versionDescription',
-    kind: 'json',
-  },
-  {
-    name: 'isLocal',
-    label: 'configEditor.general.local',
-    description: 'configEditor.general.localDescription',
-    kind: 'boolean',
   },
   // { name: 'tiptap', label: 'configEditor.general.tiptap', description: 'configEditor.general.tiptapDescription', kind: 'json' },
   {
@@ -373,19 +282,23 @@ const tabs: EditorConfigTab[] = [
     fields: groupedFields([
       'name',
       'description',
-      'version',
-      'isLocal' /*, 'tiptap' */,
+      /* 'tiptap', */
     ]),
-  },
-  {
-    name: 'file-formats',
-    label: 'configEditor.tabs.fileFormats',
-    fields: groupedFields(['workingFormat', 'copyFormat', 'mainFormats']),
   },
   {
     name: 'project-configurations',
     label: 'configEditor.tabs.projectConfigurations',
     fields: [],
+  },
+  {
+    name: 'file-formats',
+    label: 'configEditor.tabs.documentTypes',
+    fields: groupedFields([
+      'workingFormat',
+      'copyFormat',
+      'mainFormats',
+      'documentTemplate',
+    ]),
   },
   ...fields
     .filter(
@@ -393,12 +306,11 @@ const tabs: EditorConfigTab[] = [
         ![
           'name',
           'description',
-          'version',
-          'isLocal',
           // 'tiptap',
           'workingFormat',
           'copyFormat',
           'mainFormats',
+          'documentTemplate',
           'defaultRawFormat',
           'rawInlines',
           'rawBlocks',
@@ -449,6 +361,7 @@ export default {
       tabs,
       activeTab: tabs[0].name,
       chosenConfigurations: [] as string[],
+      rootDocument: '',
       values: {} as Record<string, any>,
       jsonValues: {} as Record<string, string>,
       jsonErrors: {} as Record<string, string>,
@@ -539,10 +452,14 @@ export default {
     loadConfiguration() {
       const source = this.configuration as Partial<PundokEditorConfigInit>;
       this.chosenConfigurations = [...(this.projectConfigurations as string[])];
+      this.rootDocument = this.project?.rootDocument || '';
       const values: Record<string, any> = {};
       const jsonValues: Record<string, string> = {};
       fields.forEach((field) => {
-        const value = source[field.name];
+        const value =
+          field.name === 'name' || field.name === 'description'
+            ? this.project?.[field.name]
+            : source[field.name];
         if (field.kind === 'json') {
           jsonValues[field.name] = JSON.stringify(
             value === undefined ? null : value,
@@ -582,15 +499,42 @@ export default {
         this.jsonErrors = errors;
       }
     },
+    selectRootDocument() {
+      if (!this.editor || !this.project) return;
+      const rootPath = this.project.rootDocument
+        ? parsePath(`${this.project.path}/${this.project.rootDocument}`)
+        : undefined;
+      showOpenDocumentDialog({
+        editor: this.editor,
+        options: {
+          prompt: this.$t('configEditor.general.chooseRootDocument'),
+          startFolder: rootPath?.dir || this.project.path,
+          startFilename: rootPath?.base,
+        },
+        callback: ({ path }) => {
+          if (!path) return;
+          const { dir, base } = parsePath(path);
+          if (dir === this.project?.path) {
+            this.rootDocument = base;
+          } else {
+            this.$q.notify({
+              type: 'negative',
+              message: this.$t(
+                'configEditor.general.rootDocumentProjectFolder',
+              ),
+            });
+          }
+        },
+      });
+    },
     onCancel() {
       this.$emit('close');
     },
     onSave() {
-      const result: Record<string, any> = {
-        name: '',
-        version: [],
+      const { name, description, ...editorConfigValues } = this.values;
+      const editorConfig: Record<string, any> = {
         ...(this.configuration as Record<string, any>),
-        ...this.values,
+        ...editorConfigValues,
       };
       const errors: Record<string, string> = {};
       fields
@@ -599,9 +543,9 @@ export default {
           try {
             const parsed = JSON.parse(this.jsonValues[field.name]);
             if (parsed === null) {
-              delete result[field.name];
+              delete editorConfig[field.name];
             } else {
-              result[field.name] = parsed;
+              editorConfig[field.name] = parsed;
             }
           } catch {
             errors[field.name] = 'Enter valid JSON.';
@@ -616,12 +560,18 @@ export default {
           )?.name || tabs[0].name;
         return;
       }
-      Object.keys(result).forEach((key) => {
-        if (result[key] === undefined || result[key] === '') delete result[key];
+      Object.keys(editorConfig).forEach((key) => {
+        if (editorConfig[key] === undefined || editorConfig[key] === '')
+          delete editorConfig[key];
       });
-      this.$emit('save', result as PundokEditorConfigInit, [
-        ...this.chosenConfigurations,
-      ]);
+      this.$emit('save', {
+        ...(this.project as PundokEditorProject),
+        name,
+        description,
+        editorConfig,
+        configurations: [...this.chosenConfigurations],
+        rootDocument: this.rootDocument,
+      });
       this.$emit('close');
     },
   },

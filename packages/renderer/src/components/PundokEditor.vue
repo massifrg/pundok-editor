@@ -166,7 +166,7 @@
           :configuration="docState()?.project?.editorConfig || {}"
           :project="docState()?.project"
           :project-configurations="docState()?.project?.configurations || []"
-          @save="saveProjectEditorConfig"
+          @save="saveProject"
           @close="visibleConfigurationEditor = false"
         />
         <NewProjectDialog
@@ -1660,20 +1660,8 @@ export default {
     closeProjectStructureDialog() {
       this.visibleProjectStructureDialog = false;
     },
-    saveProjectEditorConfig(
-      editorConfig: PundokEditorConfigInit,
-      configurations: string[],
-    ) {
-      const project = this.docState()?.project;
-      if (project) {
-        this.updateEditorDocState({
-          project: {
-            ...project,
-            editorConfig,
-            configurations,
-          },
-        });
-      }
+    saveProject(project: PundokEditorProject) {
+      this.updateEditorDocState({ project });
       this.visibleConfigurationEditor = false;
     },
     onClose(event: Event) {

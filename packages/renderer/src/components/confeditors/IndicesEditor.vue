@@ -3,21 +3,12 @@
     <div class="row items-center q-mb-sm">
       <div class="text-subtitle1">{{ $t('configEditor.indices.title') }}</div>
       <q-space />
-      <q-btn
-        dense
-        icon="add"
-        :label="$t('configEditor.indices.newIndex')"
-        @click="newIndex"
-      />
+      <q-btn dense icon="add" :label="$t('configEditor.indices.newIndex')" @click="newIndex" />
     </div>
 
     <q-list v-if="allIndices.length" bordered separator>
-      <q-item
-        v-for="index in allIndices"
-        :key="index.indexName"
-        dense
-        :class="{ 'bg-grey-2 text-grey-7': isInherited(index) }"
-      >
+      <q-item v-for="index in allIndices" :key="index.indexName" dense
+        :class="{ 'bg-grey-2 text-grey-7': isInherited(index) }">
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
             <span>{{ index.indexName }}</span>
@@ -26,32 +17,13 @@
           </q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-btn
-            v-if="isInherited(index)"
-            dense
-            flat
-            round
-            icon="content_copy"
-            :title="$t('configEditor.indices.copyIndex')"
-            @click="copyInheritedIndex(index)"
-          />
+          <q-btn v-if="isInherited(index)" dense flat round icon="content_copy"
+            :title="$t('configEditor.indices.copyIndex')" @click="copyInheritedIndex(index)" />
           <div v-else class="row no-wrap">
-            <q-btn
-              dense
-              flat
-              round
-              icon="edit"
-              :title="$t('configEditor.indices.editIndex')"
-              @click="editIndex(index.indexName)"
-            />
-            <q-btn
-              dense
-              flat
-              round
-              icon="remove"
-              :title="$t('configEditor.indices.deleteIndex')"
-              @click="deleteIndex(index.indexName)"
-            />
+            <q-btn dense flat round icon="edit" :title="$t('configEditor.indices.editIndex')"
+              @click="editIndex(index.indexName)" />
+            <q-btn dense flat round icon="remove" :title="$t('configEditor.indices.deleteIndex')"
+              @click="deleteIndex(index.indexName)" />
           </div>
         </q-item-section>
       </q-item>
@@ -61,13 +33,7 @@
     </div>
 
     <q-dialog :model-value="!!draft" @hide="cancelEdit">
-      <q-card
-        v-if="draft"
-        flat
-        bordered
-        class="q-pa-md"
-        style="width: 80vw; max-width: 80vw"
-      >
+      <q-card v-if="draft" flat bordered class="q-pa-md" style="width: 80vw; max-width: 80vw">
         <q-card-section>
           <div class="text-subtitle2">
             {{
@@ -81,97 +47,60 @@
         </q-card-section>
         <q-card-section class="q-gutter-md">
           <div class="row q-gutter-md">
-            <q-input
-              v-model="draft.indexName"
-              class="col"
-              :label="$t('configEditor.indices.indexName')"
-              outlined
-              dense
-              :error="!!nameError"
-              :error-message="nameError"
-            />
-            <q-input
-              v-model="draft.refClass"
-              class="col"
-              :label="$t('configEditor.indices.refClass')"
-              outlined
-              dense
-            />
+            <q-input v-model="draft.indexName" class="col" :label="$t('configEditor.indices.indexName')" outlined dense
+              :error="!!nameError" :error-message="nameError" />
+            <q-input v-model="draft.refClass" class="col" :label="$t('configEditor.indices.refClass')" outlined dense />
           </div>
-          <q-option-group
-            v-model="draft.putIndexRef"
-            :options="putIndexRefOptions"
-            type="radio"
-            inline
-            dense
-            :label="$t('configEditor.indices.putIndexRef')"
-          />
-          <div class="row q-gutter-md">
-            <q-input
-              v-model="draft.iconSvg"
-              class="col"
-              :label="$t('configEditor.indices.iconSvg')"
-              outlined
-              dense
-            />
-            <q-input
-              v-model="draft.iconChar"
-              class="col"
-              :label="$t('configEditor.indices.iconChar')"
-              outlined
-              dense
-            />
+          <div class="row items-center q-gutter-md">
+            <q-option-group v-model="draft.putIndexRef" :options="putIndexRefOptions" type="radio" inline dense
+              :label="$t('configEditor.indices.putIndexRef')" />
+            <q-space />
+            <q-card class="text-h5 bordered q-pa-sm" style="border-color: var(--q-primary)">
+              <span>{{ $t('configEditor.indices.previewIntro') }}</span>
+              <template v-if="draft.putIndexRef === 'before'">
+                <svg v-if="draft.iconSvg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
+                  <path :d="draft.iconSvg" :fill="draft.color" />
+                </svg>
+                <span v-else :style="{ color: draft.color }">{{ draft.iconChar }}</span>
+              </template>
+              <span>{{ $t('configEditor.indices.previewTerm') }}</span>
+              <template v-if="draft.putIndexRef === 'after'">
+                <svg v-if="draft.iconSvg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
+                  <path :d="draft.iconSvg" :fill="draft.color" />
+                </svg>
+                <span v-else :style="{ color: draft.color }">{{ draft.iconChar }}</span>
+              </template>
+              <span>{{ $t('configEditor.indices.previewOutro') }}</span>
+            </q-card>
+            <q-space />
+            <q-input v-model="draft.color" :label="$t('configEditor.indices.color')" outlined dense>
+              <template #append>
+                <q-btn round flat dense icon="custom_style" :style="{ backgroundColor: draft.color }">
+                  <q-popup-proxy cover>
+                    <q-color v-model="draft.color" />
+                  </q-popup-proxy>
+                </q-btn>
+              </template>
+            </q-input>
           </div>
-          <q-input
-            v-model="draft.color"
-            :label="$t('configEditor.indices.color')"
-            outlined
-            dense
-          >
-            <template #append>
-              <q-btn
-                round
-                flat
-                dense
-                icon="custom_style"
-                :style="{ backgroundColor: draft.color }"
-              >
-                <q-popup-proxy cover>
-                  <q-color v-model="draft.color" />
-                </q-popup-proxy>
-              </q-btn>
-            </template>
-          </q-input>
           <div class="row q-gutter-md">
-            <q-checkbox
-              v-model="draft.allowRanges"
-              class="col"
-              :label="$t('configEditor.indices.allowRanges')"
-            />
-            <q-checkbox
-              v-model="draft.allowEmpty"
-              class="col"
-              :label="$t('configEditor.indices.allowEmpty')"
-            />
-            <q-checkbox
-              v-model="draft.onlyEmpty"
-              class="col"
-              :label="$t('configEditor.indices.onlyEmpty')"
-            />
+            <q-input v-model="draft.iconSvg" class="col" :label="$t('configEditor.indices.iconSvg')" outlined dense>
+              <template #append>
+                <q-btn flat round dense icon="image" :title="$t('configEditor.indices.chooseIconFile')"
+                  @click="chooseIconFile" />
+              </template>
+            </q-input>
+            <q-input v-model="draft.iconChar" class="col" :label="$t('configEditor.indices.iconChar')" outlined dense />
+          </div>
+          <div class="row q-gutter-md">
+            <q-checkbox v-model="draft.allowRanges" class="col" :label="$t('configEditor.indices.allowRanges')" />
+            <q-checkbox v-model="draft.allowEmpty" class="col" :label="$t('configEditor.indices.allowEmpty')" />
+            <q-checkbox v-model="draft.onlyEmpty" class="col" :label="$t('configEditor.indices.onlyEmpty')" />
           </div>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn
-            flat
-            :label="$t('configEditor.buttons.cancel')"
-            @click="cancelEdit"
-          />
-          <q-btn
-            color="primary"
-            :label="$t('configEditor.buttons.apply')"
-            :disable="!canApply"
-            @click="applyEdit"
-          />
+          <q-btn flat :label="$t('configEditor.buttons.cancel')" @click="cancelEdit" />
+          <q-btn color="primary" :label="$t('configEditor.buttons.apply')" :disable="!canApply" @click="applyEdit" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -181,8 +110,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { Index, IndexRefPlacement } from '../../common';
+import { useQuasar } from 'quasar';
+import type { Editor } from '@tiptap/vue-3';
+import type { DocumentFormat, Index, IndexRefPlacement } from '../../common';
+import { showSelectImageDialog } from '../helpers';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
+import { useBackend } from '../../stores';
 
 setupQuasarIcons();
 
@@ -197,11 +130,13 @@ type IndexDraft = Index & {
 };
 
 const props = withDefaults(
-  defineProps<{ modelValue?: Index[]; inherited?: Index[] }>(),
+  defineProps<{ modelValue?: Index[]; inherited?: Index[]; editor?: Editor }>(),
   { modelValue: () => [], inherited: () => [] },
 );
 const emit = defineEmits<{ 'update:modelValue': [value: Index[]] }>();
 const { t } = useI18n();
+const $q = useQuasar();
+const backend = useBackend();
 const indices = ref<Index[]>([]);
 const draft = ref<IndexDraft>();
 const editingIndex = ref<number | null>(null);
@@ -261,6 +196,50 @@ function newIndex(): void {
     allowEmpty: false,
     onlyEmpty: false,
   };
+}
+
+function chooseIconFile(): void {
+  if (!props.editor) return;
+  const svgFormat: DocumentFormat = {
+    ftype: 'image',
+    name: 'svg',
+    extensions: ['svg'],
+    isVectorial: true,
+  };
+  showSelectImageDialog({
+    editor: props.editor,
+    options: {
+      prompt: t('configEditor.indices.chooseIconFile'),
+      startFormat: svgFormat,
+    },
+    callback: (context) => {
+      if (!context.path || !backend.backend) return;
+      void loadIconFile(context.path);
+    },
+  });
+}
+
+async function loadIconFile(path: string): Promise<void> {
+  try {
+    const document = new DOMParser().parseFromString(
+      await backend.backend!.getFileContents(path),
+      'image/svg+xml',
+    );
+    const pathData = Array.from(document.querySelectorAll('path[d]'))
+      .map((pathElement) => pathElement.getAttribute('d')?.trim())
+      .filter((value): value is string => !!value)
+      .join(' ');
+    if (document.querySelector('parsererror') || !pathData) {
+      throw new Error('The SVG does not contain a path with a d attribute.');
+    }
+    if (draft.value) draft.value.iconSvg = pathData;
+  } catch (error) {
+    console.error('Could not load SVG icon file.', error);
+    $q.notify({
+      type: 'negative',
+      message: t('configEditor.indices.invalidIconFile'),
+    });
+  }
 }
 
 function editIndex(indexName: string): void {

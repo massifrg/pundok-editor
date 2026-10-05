@@ -4,7 +4,7 @@ setupQuasarIcons()
 </script>
 
 <script lang="ts">
-import { toRaw } from 'vue';
+import { nextTick, toRaw } from 'vue';
 import { mapState } from 'pinia';
 import { QTable, QTableColumn, QTh, useDialogPluginComponent, useQuasar } from 'quasar';
 import {
@@ -536,6 +536,12 @@ export default {
         console.log(err)
       }
       this.selectedDocument = undefined
+      await nextTick()
+      const startFilename = this.options.startFilename
+      if (startFilename && this.documents.some((doc) => doc.name === startFilename)) {
+        this.selectedDocument = startFilename
+        this.scrollToSelectedDocument(startFilename)
+      }
     },
     splitFolderAndDoc(path: string) {
       return splitFolderAndDoc(path)

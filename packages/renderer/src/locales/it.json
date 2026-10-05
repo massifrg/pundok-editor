@@ -178,6 +178,7 @@
     "tabs": {
       "general": "Generale",
       "fileFormats": "Formati di file",
+      "documentTypes": "Tipi di documento",
       "projectConfigurations": "Configurazioni del progetto",
       "documentTemplate": "Modello del documento",
       "autoDelimiters": "Delimitatori automatici",
@@ -202,6 +203,10 @@
       "versionDescription": "Versione minima dell'editor compatibile, come array JSON di numeri.",
       "local": "Locale",
       "localDescription": "Indica se questa è una configurazione locale.",
+      "rootDocument": "Documento radice",
+      "rootDocumentDescription": "Il documento radice del progetto.",
+      "chooseRootDocument": "Scegli documento radice",
+      "rootDocumentProjectFolder": "Il documento radice deve trovarsi nella cartella del progetto.",
       "tiptap": "TipTap",
       "tiptapDescription": "Opzioni TipTap/ProseMirror, come oggetto JSON."
     },
@@ -383,13 +388,18 @@
       "before": "Prima",
       "after": "Dopo",
       "iconSvg": "Icona SVG",
+      "chooseIconFile": "Scegli file icona SVG",
       "iconChar": "Carattere dell'icona",
       "color": "Colore",
+      "previewIntro": "...un ",
+      "previewTerm": "termine",
+      "previewOutro": " da indicizzare...",
       "allowRanges": "Consenti intervalli",
       "allowEmpty": "Consenti riferimenti vuoti",
       "onlyEmpty": "Solo riferimenti vuoti",
       "required": "Nome dell'indice e classe dei riferimenti sono obbligatori.",
-      "duplicateName": "Esiste già un indice con questo nome."
+      "duplicateName": "Esiste già un indice con questo nome.",
+      "invalidIconFile": "Il file SVG non contiene un percorso con un attributo d."
     },
     "inputConverters": {
       "label": "Convertitori in ingresso",

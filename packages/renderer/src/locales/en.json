@@ -179,6 +179,7 @@
     "tabs": {
       "general": "General",
       "fileFormats": "File formats",
+      "documentTypes": "Document types",
       "projectConfigurations": "Project configurations",
       "documentTemplate": "Document template",
       "autoDelimiters": "Automatic delimiters",
@@ -203,6 +204,10 @@
       "versionDescription": "Minimal suitable editor version, as a JSON array of numbers.",
       "local": "Local",
       "localDescription": "Whether this is a local configuration.",
+      "rootDocument": "Root document",
+      "rootDocumentDescription": "The root document of the project.",
+      "chooseRootDocument": "Choose root document",
+      "rootDocumentProjectFolder": "The root document must be in the project folder.",
       "tiptap": "TipTap",
       "tiptapDescription": "TipTap/ProseMirror options, as a JSON object."
     },
@@ -384,13 +389,18 @@
       "before": "Before",
       "after": "After",
       "iconSvg": "SVG icon",
+      "chooseIconFile": "Choose SVG icon file",
       "iconChar": "Icon character",
       "color": "Color",
+      "previewIntro": "...a ",
+      "previewTerm": "term",
+      "previewOutro": " to be indexed...",
       "allowRanges": "Allow ranges",
       "allowEmpty": "Allow empty references",
       "onlyEmpty": "Only empty references",
       "required": "Index name and reference class are required.",
-      "duplicateName": "An index with this name already exists."
+      "duplicateName": "An index with this name already exists.",
+      "invalidIconFile": "The SVG file does not contain a path with a d attribute."
     },
     "inputConverters": {
       "label": "Input converters",
