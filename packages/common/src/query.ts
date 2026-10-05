@@ -36,6 +36,8 @@ export interface IndexTermQuery extends Query, IndexQueryCommon {
   type: 'index-term';
   /** The text(s) to be searched. */
   searchText: string | string[];
+  /** The JSON index filename to search, when selecting one JSON source. */
+  source?: string;
 }
 
 /**
@@ -86,13 +88,11 @@ export interface IndexSourceJsonFile extends AbstractIndexSource {
 
 /** An index source from the metadata of a document. */
 export interface IndexSourceDocumentMetadata extends AbstractIndexSource {
-  type: 'document'
+  type: 'document';
 }
 
 export type IndexSource =
-  | IndexSourceProject
-  | IndexSourceJsonFile
-  | IndexSourceDocumentMetadata;
+  IndexSourceProject | IndexSourceJsonFile | IndexSourceDocumentMetadata;
 
 /**
  * A function to search one or more texts inside an array of records.
@@ -108,7 +108,7 @@ export function searchQueryResults(data: any[], searchText: string | string[]) {
     );
     data.forEach((record) => {
       if (isObject(record)) {
-        const { id, text, html } = record as Record<string, any>;
+        const { id, text, html, source } = record as Record<string, any>;
         if (!emptyIdentifier(id) && text) {
           const lowtext = text.toLocaleLowerCase();
           const found = st.map((t) => lowtext.indexOf(t)).filter((i) => i >= 0);
@@ -117,24 +117,23 @@ export function searchQueryResults(data: any[], searchText: string | string[]) {
               (min, i) => (min < i ? min : i),
               100000,
             );
-            results.push({ id, text, html, minIndex });
+            results.push({ id, text, html, source, minIndex });
           }
         }
       }
     });
     results.sort((r1, r2) => r1.minIndex - r2.minIndex);
   }
-  return removeDuplicates(results)
+  return removeDuplicates(results);
 }
 
 /** A function to remove duplicates from an array of query results. */
 export function removeDuplicates(results: QueryResult[]): QueryResult[] {
-  const id_text: Record<string, boolean> = {}
-  return results
-    .filter(({ id, text, html }) => {
-      const it = `${id} ${text || ''} ${html || ''}`
-      if (id_text[it]) return false
-      id_text[it] = true
-      return true
-    })
+  const id_text: Record<string, boolean> = {};
+  return results.filter(({ id, text, html, source }) => {
+    const it = `${id} ${text || ''} ${html || ''} ${source || ''}`;
+    if (id_text[it]) return false;
+    id_text[it] = true;
+    return true;
+  });
 }

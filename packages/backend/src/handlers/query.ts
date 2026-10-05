@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { isAbsolute, resolve, parse } from 'node:path';
+import { isAbsolute, parse, resolve } from 'node:path';
 import {
   DEFAULT_INDEX_NAME,
   type IndexTermQuery,
@@ -58,28 +58,35 @@ async function indexTermQueryHandler(
   if (!searchText || searchText.length === 0)
     throw new Error('No searchText field in query');
 
+  const indexFilename = query.source;
+  const indexPattern = indexFilename
+    ? `^${indexFilename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`
+    : `^${(indexName || DEFAULT_INDEX_NAME).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*\\.json$`;
   const dbFilenames = findResourceFiles(
     directories,
-    new RegExp(`${indexName || DEFAULT_INDEX_NAME}([^A-Za-z].*?)?.json`),
+    new RegExp(indexPattern),
     options,
-  ).filter(dbfn => existsSync(dbfn))
+  ).filter((dbfn) => existsSync(dbfn));
   if (dbFilenames.length === 0)
-    throw new Error(`No index database file starting with "${indexName}" found`);
+    throw new Error(
+      `No index database file matching "${indexFilename || indexName}" found`,
+    );
 
-  let results: object[] = []
+  let results: object[] = [];
   try {
-    dbFilenames.forEach(dbfn => {
+    dbFilenames.forEach((dbfn) => {
       const db = JSON.parse(readFileSync(dbfn, 'utf8'));
-      const source = parse(dbfn).base
+      const source = parse(dbfn).base;
       if (Array.isArray(db))
-        results = results.concat(db.filter(r => isObject(r)).map(r => ({ ...r, source })))
-    })
+        results = results.concat(
+          db.filter((r) => isObject(r)).map((r) => ({ ...r, source })),
+        );
+    });
   } catch (error) {
-    console.log(
+    throw new Error(
       `Index database file "${dbFilenames}" does not contain valid JSON: ${error}`,
     );
   }
-  console.log(results)
   return searchQueryResults(results, searchText);
 }
 
@@ -91,7 +98,11 @@ async function projectIndexQueryHandler(
   if (!project)
     throw new Error("Project not specified, you can't get a project index");
 
-  const result = await runWriterOnMasterFile(directories, project, INDICES_WRITER);
+  const result = await runWriterOnMasterFile(
+    directories,
+    project,
+    INDICES_WRITER,
+  );
   if (!result) return [];
 
   let data: { terms?: Record<string, QueryResult[]> };
@@ -102,7 +113,12 @@ async function projectIndexQueryHandler(
   }
   const indexTerms = data.terms?.[query.indexName];
   return indexTerms
-    ? indexTerms.map(({ id, text, html }) => ({ id, text, html, source: 'project' }))
+    ? indexTerms.map(({ id, text, html }) => ({
+        id,
+        text,
+        html,
+        source: 'project',
+      }))
     : [];
 }
 
