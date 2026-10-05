@@ -1,14 +1,10 @@
 # A customizable editor for Pandoc types
 
 This software is a visual editor for [Pandoc's internal document
-model](https://hackage.haskell.org/package/pandoc-types-1.23.1/docs/Text-Pandoc-Definition.html),
+model](https://hackage.haskell.org/package/pandoc-types-1.23.1.2/docs/Text-Pandoc-Definition.html),
 that can be adapted to different document production workflows.
 
 ## Running the editor
-
-I compile [two binaries](https://github.com/massifrg/pundok-editor/releases), a
-Debian GNU/Linux `.deb` package and a Windows executable (no installation
-required), both for the amd64 architecture.
 
 The editor is coded in Typescript, so you need `npm` to download all the
 packages it depends on, then compile it, and finally run it.
@@ -26,14 +22,37 @@ After cloning this repository and entering its main directory, type:
 npm install
 ```
 
-Then type:
+### Running the editor locally
+
+I compile [two binaries](https://github.com/massifrg/pundok-editor/releases), a
+Debian GNU/Linux `.deb` package and a Windows executable (no installation
+required), both for the amd64 architecture.
+
+If you want to run it as a standalone,
+[Electron](https://www.electronjs.org/)-based app, type:
 
 ```sh
 npm run watch
 ```
 
-to compile and run it as a standalone,
-[Electron](https://www.electronjs.org/)-based, app.
+When you want to compile it as a Debian package, type
+
+```sh
+npm run dist:deb
+```
+
+When you want to compile it as a Windows standalone app, type
+
+```sh
+npm run dist:win
+```
+
+If you compile it under GNU/Linux, you need the Wine emulator installed.
+
+Those are the only two packages I was able to produce. The build of the Windows
+executable works even under my Debian, with the help from the `wine` software.
+If you know how to compile packages for other systems, e.g. for Macs, you are
+welcome.
 
 You may also use it as a web app with:
 
@@ -41,27 +60,12 @@ You may also use it as a web app with:
 npm run dev
 ```
 
-but it would be limited, since it would lack a proper backend on a server
-(developing one is on the roadmap, though).
+but it would be limited, since it would lack a proper backend on a server.
 
-You can also package it:
+### Running the editor on a server
 
-```sh
-npm run dist:deb
-```
-
-to have a Debian/Ubuntu installable package, or
-
-```sh
-npm run dist:win
-```
-
-to get a Windows executable file that does not need installation.
-
-Those are the only two packages I was able to produce. The build of the Windows
-executable works even under my Debian, with the help from the `wine` software.
-If you know how to compile packages for other systems, e.g. for Macs, you are
-welcome.
+The editor can run on a web server, please read the `packages/server/README.md`
+file.
 
 ## A couple of screenshots
 
@@ -100,11 +104,11 @@ These are some of the reasons you might find it useful:
 
 - support for more than one kind of notes;
 
-- a GUI to search and replace text, and CSS-like selection of elements of the
-  Pandoc AST;
+- a GUI to search and replace text, with user defined operations (actions) to be
+  done on replaced text;
 
-- storage and later retrieval of recurrent search-and-replace operations or CSS
-  selections;
+- CSS-like selection of elements of the Pandoc AST, with replacement with text,
+  or user-defined actions;
 
 - automation of recurrent filters or format conversions involving Pandoc
   [readers and
@@ -123,7 +127,7 @@ These are some of the reasons you might find it useful:
 
 - document styling customizability through CSS files;
 
-- custom automatic delimiters, like «...», “...”, ‘...’ for Pandoc quotations,
+- custom automatic delimiters, like «...», "...", '...' for Pandoc quotations,
   `Quoted(DoubleQuote)` and `Quoted(SingleQuote)`;
 
 - custom recurrent `RawInline` and `RawBlock` elements to be injected in your
@@ -138,8 +142,8 @@ These are some of the reasons you might find it useful:
   configurations or project files, so that you can reconfigure the editor with
   all the tools you need for a particular workflow or project.
 
-- while documentation, and a proper GUI to edit configurations files, are still
-  lacking, you can take a look under these directories:
+- while documentation is still lacking, you can take a look under these
+  directories:
 
   - `packages/common/src/config/`
 
@@ -151,8 +155,8 @@ These are some of the reasons you might find it useful:
 
 ### Decluttering documents
 
-I found it useful also to declutter documents, especially when you copy and
-paste material from a browser.
+I found this editor useful also to declutter documents, especially when you copy
+and paste material from a browser.
 
 It's more a merit of Pandoc than of this software; anyways you can:
 
@@ -162,7 +166,7 @@ It's more a merit of Pandoc than of this software; anyways you can:
 
 - then continue editing them with your favourite editor and tools.
 
-### How it works
+### The conceptual framework
 
 A Pandoc document is made of Blocks and Inlines.
 
@@ -196,14 +200,16 @@ It's written in [Typescript](https://www.typescriptlang.org/) and it uses
 [Vue](https://vuejs.org/), [Electron](https://www.electronjs.org/) and
 [Quasar](https://quasar.dev/) for its GUI.
 
+Since late October 2026, it has been developed with the help of Github Copilot.
+
 It's structured to work as a standalone, Electron-based app, but also as an
 online editor. Another possible incarnation would be a VS
 [Code](https://code.visualstudio.com/)/[Codium](https://vscodium.com/)
 extension, but it's not in my roadmap yet (if you are interested and have the
 skills, you're welcome).
 
-The code base has no tests, and it evolved as a series of experiments I made to
-see whether, and how I could implement some of the features listed above. It
+The code base has a few tests, and it evolved as a series of experiments I made
+to see whether, and how I could implement some of the features listed above. It
 also reflects my learning process of the softwares it relies on.
 
 Euphemistically, let's say there's a lot of room for improvement in the quality
@@ -216,14 +222,15 @@ The following are some of the tasks I plan to work on:
 - support for citations, ~~that is almost absent now;~~ (basic support since v.
   0.11.9)
 
-- tools to edit and save configurations and project files;
+- ~~tools to edit and save configurations and project files;~~ DONE
 
-- a server backend package for the browser version of the editor;
+- ~~a server backend package for the browser version of the editor;~~ DONE
 
 - a monorepo with sub-projects;
 
-- the spin-off of a common package with base types and functions, to be imported
-  by the main, renderer and server packages;
+- ~~the spin-off of a common package with base types and functions, to be imported
+    by the main, renderer and server packages;~~
+  DONE with `common` and `backend` packages
 
 - a PDF preview.
 
