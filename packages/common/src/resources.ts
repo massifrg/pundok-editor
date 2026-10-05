@@ -30,7 +30,7 @@ export const RESOURCE_SUBPATHS: Record<ResourceType, string[]> = {
   template: ['templates'],
   referenceDoc: ['templates'],
   script: ['scripts'],
-  index: ['indices'],
+  index: ['indices', 'indexes'],
   other: ['other'],
 };
 

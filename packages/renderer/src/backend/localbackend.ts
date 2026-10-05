@@ -71,7 +71,6 @@ import {
   setActionSetupViewer,
 } from '../actions';
 import { useActions } from '../stores';
-import { isString } from 'lodash-es';
 import { handleEditorEvent } from './editorEventHandlers';
 
 type Listener = () => void;
@@ -164,25 +163,25 @@ export class LocalBackend implements Backend {
 
           const project_with_conf: PundokEditorProject | undefined = project
             ? await computeProjectConfiguration(
-                project,
-                getConfigurationFunction(window.ipc),
-              )
+              project,
+              getConfigurationFunction(window.ipc),
+            )
             : undefined;
           const action: EditorAction = project_with_conf
             ? {
-                ...ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
-                editorKey: editorKey!,
-                props: {
-                  project: project_with_conf,
-                  configuration: project_with_conf.computedConfig,
-                  content,
-                } as BackendSetContentWithProjectActionProps,
-              }
+              ...ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
+              editorKey: editorKey!,
+              props: {
+                project: project_with_conf,
+                configuration: project_with_conf.computedConfig,
+                content,
+              } as BackendSetContentWithProjectActionProps,
+            }
             : {
-                ...ACTION_BACKEND_SET_CONTENT,
-                editorKey: editorKey!,
-                props: { content } as BackendSetContentActionProps,
-              };
+              ...ACTION_BACKEND_SET_CONTENT,
+              editorKey: editorKey!,
+              props: { content } as BackendSetContentActionProps,
+            };
           actions.setAction(action);
         },
       );

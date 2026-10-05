@@ -48,6 +48,8 @@ export interface QueryResult extends Record<string, any> {
   text?: string;
   /** The HTML-formatted version of the text of the index term. */
   html?: string;
+  /** The source file of the record. */
+  source?: string;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { isAbsolute, resolve } from 'node:path';
+import { isAbsolute, resolve, parse } from 'node:path';
 import {
   DEFAULT_INDEX_NAME,
   type IndexTermQuery,
@@ -12,10 +12,12 @@ import {
 import { localizePath } from '../filesystem';
 import {
   findResourceFile,
+  findResourceFiles,
   isReadableFile,
   type BackendDirectories,
 } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
+import { isObject } from 'lodash';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';
 const INDICES_WRITER = 'indices2json.lua';
@@ -56,27 +58,29 @@ async function indexTermQueryHandler(
   if (!searchText || searchText.length === 0)
     throw new Error('No searchText field in query');
 
-  const dbFilename = findResourceFile(
+  const dbFilenames = findResourceFiles(
     directories,
-    `${indexName || DEFAULT_INDEX_NAME}.json`,
+    new RegExp(`${indexName || DEFAULT_INDEX_NAME}([^A-Za-z].*?)?.json`),
     options,
-  );
-  if (!dbFilename || !existsSync(dbFilename))
-    throw new Error(`Index database file "${dbFilename}" does not exist`);
+  ).filter(dbfn => existsSync(dbfn))
+  if (dbFilenames.length === 0)
+    throw new Error(`No index database file starting with "${indexName}" found`);
 
-  let db: unknown;
+  let results: object[] = []
   try {
-    db = JSON.parse(readFileSync(dbFilename, 'utf8'));
+    dbFilenames.forEach(dbfn => {
+      const db = JSON.parse(readFileSync(dbfn, 'utf8'));
+      const source = parse(dbfn).base
+      if (Array.isArray(db))
+        results = results.concat(db.filter(r => isObject(r)).map(r => ({ ...r, source })))
+    })
   } catch (error) {
-    throw new Error(
-      `Index database file "${dbFilename}" does not contain valid JSON: ${error}`,
+    console.log(
+      `Index database file "${dbFilenames}" does not contain valid JSON: ${error}`,
     );
   }
-  if (!Array.isArray(db))
-    throw new Error(
-      `Index database file "${dbFilename}" must be an array of index terms`,
-    );
-  return searchQueryResults(db, searchText);
+  console.log(results)
+  return searchQueryResults(results, searchText);
 }
 
 async function projectIndexQueryHandler(
@@ -98,7 +102,7 @@ async function projectIndexQueryHandler(
   }
   const indexTerms = data.terms?.[query.indexName];
   return indexTerms
-    ? indexTerms.map(({ id, text, html }) => ({ id, text, html }))
+    ? indexTerms.map(({ id, text, html }) => ({ id, text, html, source: 'project' }))
     : [];
 }
 

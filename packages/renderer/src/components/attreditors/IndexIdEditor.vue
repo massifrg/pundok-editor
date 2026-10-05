@@ -244,7 +244,8 @@ export default {
       const nodes = termsOfDocumentIndex(this.editor?.state.doc, this.indexName)
       const index_terms: QueryResult[] = nodes.map(n => ({
         id: n.attrs.id,
-        text: n.textContent
+        text: n.textContent,
+        source: 'document'
       }))
       if (index_terms)
         useProjectCache().setIndex(this.indexName, index_terms)
