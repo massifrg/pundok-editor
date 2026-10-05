@@ -42,8 +42,67 @@
                 " />
             <AutoDelimitersEditor v-else-if="tab.name === 'autoDelimiters'" v-model="values.autoDelimiters" />
             <div v-for="field in tab.fields" v-else :key="field.name" class="q-mb-md">
-              <q-input v-if="field.kind === 'text'" v-model="values[field.name]" :label="$t(field.label)" outlined
-                :type="field.name === 'description' ? 'textarea' : 'text'" :hint="$t(field.description)" clearable />
+              <q-input               v-if="
+                field.kind === 'text' &&
+                field.name !== 'documentTemplate' &&
+                field.name !== 'workingFormat' &&
+                field.name !== 'copyFormat'
+              " v-model="values[field.name]"
+                :label="$t(field.label)" outlined :type="field.name === 'description' ? 'textarea' : 'text'"
+                :hint="$t(field.description)" clearable                 />
+                <div
+                  v-else-if="
+                    field.name === 'workingFormat' || field.name === 'copyFormat'
+                  "
+                  class="row q-col-gutter-md"
+                >
+                  <q-select
+                    class="col"
+                    :model-value="formatSelections[field.name]?.format"
+                    :options="formatOptions"
+                    emit-value
+                    map-options
+                    :label="$t(field.label)"
+                    outlined
+                    dense
+                    @update:model-value="
+                      updateFormatSelection(field.name, $event)
+                    "
+                  />
+                  <PandocFormatExtensionsEditor
+                    class="col"
+                    :format="
+                      pandocFormatForSelection(
+                        formatSelections[field.name]?.format || '',
+                      )
+                    "
+                    :model-value="formatSelections[field.name]?.extensions || []"
+                    @update:model-value="updateFormatExtensions(field.name, $event)"
+                  />
+                </div>
+                <q-select v-else-if="field.name === 'documentTemplate'" v-model="values.documentTemplate"
+                :options="documentTemplateOptions" option-value="path" option-label="path" :label="$t(field.label)"
+                :hint="$t(field.description)" outlined clearable>
+                <template #option="scope">
+                  <q-item v-bind="scope.itemProps">
+                    <q-item-section>
+                      <q-item-label>{{ resourceName(scope.opt.path) }}</q-item-label>
+                      <q-item-label caption>
+                        {{ templateSourceLabel(scope.opt) }}
+                      </q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </template>
+                <template #append>
+                  <q-btn flat round dense icon="document_open" :title="$t('configEditor.documentTemplate.choose')"
+                    :loading="loadingDocumentTemplates" @click.stop="chooseDocumentTemplate" />
+                </template>
+              </q-select>
+              <MainFormatsEditor
+                v-else-if="field.name === 'mainFormats'"
+                v-model="values.mainFormats"
+                :options="mainFormatOptions"
+              />
               <q-toggle v-else-if="field.kind === 'boolean'" v-model="values[field.name]" :label="$t(field.label)"
                 :hint="$t(field.description)" />
               <q-input v-else v-model="jsonValues[field.name]" :label="$t(field.label)" type="textarea" outlined
@@ -79,6 +138,7 @@ setupQuasarIcons();
 
 <script lang="ts">
 import type { PropType } from 'vue';
+import { mapState } from 'pinia';
 import type { Editor } from '@tiptap/vue-3';
 import { parse as parsePath } from 'path-browserify';
 import type {
@@ -92,7 +152,9 @@ import type {
   OutputConverter,
   PundokEditorConfigInit,
   PundokEditorProject,
+  ResourceFile,
 } from '../common';
+import { DEFAULT_MAIN_FORMATS, pandocFormatsDefs } from '../common';
 import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEditor.vue';
 import CustomStylesEditor from './confeditors/CustomStylesEditor.vue';
 import CustomClassesEditor from './confeditors/CustomClassesEditor.vue';
@@ -106,7 +168,10 @@ import RawElementsEditor from './confeditors/RawElementsEditor.vue';
 import OutputConvertersEditor from './confeditors/OutputConvertersEditor.vue';
 import AutomationsEditor from './confeditors/AutomationsEditor.vue';
 import AutoDelimitersEditor from './confeditors/AutoDelimitersEditor.vue';
+import PandocFormatExtensionsEditor from './confeditors/PandocFormatExtensionsEditor.vue';
+import MainFormatsEditor from './confeditors/MainFormatsEditor.vue';
 import { showOpenDocumentDialog } from './helpers';
+import { useBackend } from '../stores';
 
 type EditorConfigField = {
   name: keyof PundokEditorConfigInit;
@@ -354,6 +419,8 @@ export default {
     OutputConvertersEditor,
     AutomationsEditor,
     AutoDelimitersEditor,
+    PandocFormatExtensionsEditor,
+    MainFormatsEditor,
   },
   data() {
     return {
@@ -362,12 +429,26 @@ export default {
       activeTab: tabs[0].name,
       chosenConfigurations: [] as string[],
       rootDocument: '',
+      documentTemplateOptions: [] as ResourceFile[],
+      loadingDocumentTemplates: false,
+      formatSelections: {} as Record<
+        string,
+        { format: string; extensions: string[] }
+      >,
+      mainFormatOptions: [] as Array<{
+        label: string;
+        value: string;
+        pandocFormat: string;
+        source: string;
+        color: string;
+      }>,
       values: {} as Record<string, any>,
       jsonValues: {} as Record<string, string>,
       jsonErrors: {} as Record<string, string>,
     };
   },
   computed: {
+    ...mapState(useBackend, ['backend']),
     inheritedCustomStyles(): NonNullable<
       PundokEditorProject['computedConfig']
     >['customStyles'] {
@@ -412,6 +493,36 @@ export default {
       PundokEditorProject['computedConfig']
     >['inputConverters'] {
       return this.inheritedItems('inputConverters');
+    },
+    formatOptions() {
+      const options = Object.entries(pandocFormatsDefs)
+        .filter(
+          ([, format]) => format.input === true && format.output === true,
+        )
+        .map(([name, format]) => ({
+          label: format.description ? `${name} - ${format.description}` : name,
+          value: name,
+        }));
+      const inputNames = new Set(
+        this.project?.computedConfig?.inputConverters?.map(
+          (converter) => converter.name,
+        ),
+      );
+      const converterOptions = (
+        this.project?.computedConfig?.outputConverters || []
+      )
+        .filter((converter) => inputNames.has(converter.name))
+        .map((converter) => ({
+          label: `${converter.name} - ${
+            converter.description || converter.format
+          }`,
+          value: converter.name,
+        }));
+      return [...options, ...converterOptions].filter(
+        (option, index, all) =>
+          all.findIndex((candidate) => candidate.value === option.value) ===
+          index,
+      );
     },
   },
   watch: {
@@ -466,6 +577,14 @@ export default {
             null,
             2,
           );
+          if (field.name === 'mainFormats') {
+            values[field.name] =
+              field.name === 'mainFormats' && Array.isArray(value) && value.length
+                ? [...value]
+                : field.name === 'mainFormats'
+                  ? [...DEFAULT_MAIN_FORMATS]
+                  : [];
+          }
         } else if (
           field.name === 'customStyles' ||
           field.name === 'customClasses' ||
@@ -488,9 +607,35 @@ export default {
         }
       });
       this.values = values;
+      this.formatSelections = {};
+      for (const fieldName of ['workingFormat', 'copyFormat']) {
+        const value = String(values[fieldName] || '');
+        const [format, ...extensionParts] = value.split(/(?=[+-])/);
+        const extensions = extensionParts.filter(Boolean);
+        this.formatSelections[fieldName] = { format, extensions };
+      }
       this.jsonValues = jsonValues;
       this.jsonErrors = {};
       this.activeTab = tabs[0].name;
+      void this.loadDocumentTemplates();
+      void this.loadMainFormatOptions();
+    },
+    updateFormatSelection(fieldName: string, format: string) {
+      this.formatSelections[fieldName] = { format, extensions: [] };
+      this.values[fieldName] = format;
+    },
+    pandocFormatForSelection(format: string): string {
+      return (
+        this.project?.computedConfig?.outputConverters?.find(
+          (converter) => converter.name === format,
+        )?.format || format
+      );
+    },
+    updateFormatExtensions(fieldName: string, extensions?: string[]) {
+      const selection = this.formatSelections[fieldName];
+      if (!selection) return;
+      selection.extensions = extensions || [];
+      this.values[fieldName] = `${selection.format}${selection.extensions.join('')}`;
     },
     clearJsonError(fieldName: string) {
       if (this.jsonErrors[fieldName]) {
@@ -527,11 +672,151 @@ export default {
         },
       });
     },
+    async loadDocumentTemplates() {
+      this.documentTemplateOptions = [];
+      if (!this.project || !this.backend) return;
+      this.loadingDocumentTemplates = true;
+      try {
+        const resources = (
+          await Promise.all(
+            (this.project.configurations || []).map((configurationName) =>
+              this.backend!.findResourceFiles(/.+/, {
+                kind: 'template',
+                project: this.project!,
+                configurationName,
+                searchMode: 'loose',
+                filterSearchTerms: [],
+              }),
+            ),
+          )
+        ).flat();
+        const options = resources.filter(
+          (resource: ResourceFile) =>
+            resource.provenance === 'configuration' &&
+            !!resource.configurationName &&
+            resource.path
+              .replaceAll('\\', '/')
+              .split('/')
+              .includes('templates'),
+        );
+        this.documentTemplateOptions = options.filter(
+          (resource, index) =>
+            options.findIndex(
+              (candidate) =>
+                candidate.path === resource.path &&
+                candidate.configurationName === resource.configurationName,
+            ) === index,
+        );
+      } finally {
+        this.loadingDocumentTemplates = false;
+      }
+    },
+    async loadMainFormatOptions() {
+      const sourceOptions = new Map<string, { source: string; color: string }>();
+      const options = Object.entries(pandocFormatsDefs)
+        .filter(([, format]) => format.input === true || format.output === true)
+        .map(([name, format]) => ({
+          label: format.description ? `${name} - ${format.description}` : name,
+          value: name,
+          pandocFormat: name,
+          source: 'Editor',
+          color: '#eeeeee',
+        }));
+      if (this.backend && this.project) {
+        for (const configurationName of this.project.configurations || []) {
+          const configuration = await this.backend.configuration(configurationName);
+          for (const converter of [
+            ...(configuration.inputConverters || []),
+            ...(configuration.outputConverters || []),
+          ]) {
+            sourceOptions.set(converter.name, {
+              source: configurationName,
+              color: '#e8f5e9',
+            });
+          }
+        }
+      }
+      for (const converter of [
+        ...(this.configuration.inputConverters || []),
+        ...(this.configuration.outputConverters || []),
+      ]) {
+        sourceOptions.set(converter.name, {
+          source: 'Project',
+          color: '#e3f2fd',
+        });
+      }
+      const converterOptions = [
+        ...(this.project?.computedConfig?.inputConverters || []),
+        ...(this.project?.computedConfig?.outputConverters || []),
+      ].map((converter) => {
+        const source = sourceOptions.get(converter.name) || {
+          source: 'Editor',
+          color: '#eeeeee',
+        };
+        return {
+          label: `${converter.name} - ${
+            converter.description ||
+            ('format' in converter ? converter.format : converter.name)
+          }`,
+          value: converter.name,
+          pandocFormat:
+            'format' in converter
+              ? converter.format || converter.name
+              : converter.name,
+          ...source,
+        };
+      });
+      this.mainFormatOptions = [...options, ...converterOptions].filter(
+        (option, index, all) =>
+          all.findIndex((candidate) => candidate.value === option.value) ===
+          index,
+      );
+    },
+    async chooseDocumentTemplate() {
+      if (!this.editor || !this.project) return;
+      let startFolder = this.values.documentTemplate
+        ? parsePath(this.values.documentTemplate).dir
+        : this.project.path;
+      if (!this.values.documentTemplate && this.backend) {
+        const templatesFolder = `${this.project.path}/templates`;
+        try {
+          await this.backend.getFolderContents({
+            path: `file://${templatesFolder}`,
+          });
+          startFolder = templatesFolder;
+        } catch {
+          // Fall back to the project directory when no templates directory exists.
+        }
+      }
+      showOpenDocumentDialog({
+        editor: this.editor,
+        options: {
+          prompt: this.$t('configEditor.documentTemplate.choose'),
+          startFolder,
+        },
+        callback: ({ path }) => {
+          if (path) {
+            this.values.documentTemplate = path;
+          }
+        },
+      });
+    },
+    resourceName(path: string): string {
+      return path.replace(/^.*[\\/]/, '');
+    },
+    templateSourceLabel(resource: ResourceFile): string {
+      return `${this.$t(
+        'configEditor.outputConverters.pandocResources.provenance.configuration',
+      )}: ${resource.configurationName}`;
+    },
     onCancel() {
       this.$emit('close');
     },
     onSave() {
       const { name, description, ...editorConfigValues } = this.values;
+      if (Array.isArray(this.values.mainFormats)) {
+        this.jsonValues.mainFormats = JSON.stringify(this.values.mainFormats);
+      }
       const editorConfig: Record<string, any> = {
         ...(this.configuration as Record<string, any>),
         ...editorConfigValues,

@@ -217,6 +217,10 @@
       "copyFormatDescription": "Formato usato per Salva una copia.",
       "mainFormats": "Formati principali",
       "mainFormatsDescription": "Formati mostrati in evidenza, come array JSON di stringhe."
+      ,"extensions": "Estensioni del formato",
+      "addFormat": "Aggiungi formato",
+      "loadingExtensions": "Caricamento delle estensioni...",
+      "noExtensions": "Nessuna estensione disponibile."
     },
     "rawElements": {
       "defaultRawFormat": "Formato raw predefinito",
@@ -244,7 +248,8 @@
     },
     "documentTemplate": {
       "label": "Modello del documento",
-      "description": "Modello serializzato come JSON per i nuovi documenti."
+      "description": "Modello usato per i nuovi documenti.",
+      "choose": "Scegli modello del documento"
     },
     "autoDelimiters": {
       "label": "Delimitatori automatici",

@@ -40,38 +40,11 @@
           :loading="loadingFormats"
           @update:model-value="onFormatChanged"
         />
-        <q-list
+        <PandocFormatExtensionsEditor
           v-if="selectedFormat"
-          bordered
-          separator
-          class="pandoc-format-editor__extensions"
-        >
-          <q-item v-if="availableExtensions.length === 0">
-            <q-item-section class="text-grey">
-              {{ $t('configEditor.outputConverters.noFormatExtensions') }}
-            </q-item-section>
-          </q-item>
-          <q-item
-            v-for="extension in availableExtensions"
-            :key="extension.name"
-            clickable
-            @click="toggleExtension(extension)"
-          >
-            <q-item-section
-              avatar
-              class="pandoc-format-editor__extension-sign"
-              :class="extensionClass(extension)"
-            >
-              {{ extensionSign(extension) }}
-            </q-item-section>
-            <q-item-section :class="extensionClass(extension)">
-              <q-item-label>{{ extension.name }}</q-item-label>
-              <q-item-label v-if="extensionDescription(extension.name)" caption>
-                {{ extensionDescription(extension.name) }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
+          v-model="selectedExtensions"
+          :format="selectedFormat"
+        />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn
@@ -92,9 +65,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
-import type { PandocFormatExtension } from '../../common';
-import { PANDOC_EXTENSION_DESCRIPTIONS } from '../../common';
 import { useBackend } from '../../stores';
+import PandocFormatExtensionsEditor from './PandocFormatExtensionsEditor.vue';
 
 const props = defineProps<{
   modelValue: string;
@@ -102,6 +74,7 @@ const props = defineProps<{
   selected: boolean;
   direction?: 'input' | 'output';
 }>();
+defineOptions({ components: { PandocFormatExtensionsEditor } });
 
 const emit = defineEmits<{
   'update:modelValue': [value: string];
@@ -115,14 +88,11 @@ const outputFormats = ref<string[]>([]);
 const loadingFormats = ref(false);
 const selectedFormat = ref('');
 const selectedExtensions = ref<string[]>([]);
-const availableExtensions = ref<PandocFormatExtension[]>([]);
-const loadingExtensions = ref(false);
 
 watch(dialogOpen, (open) => {
   if (!open) return;
   selectedFormat.value = props.modelValue;
   selectedExtensions.value = [...props.formatExtensions];
-  loadExtensions(selectedFormat.value);
 });
 
 function onCardClick(): void {
@@ -147,69 +117,6 @@ onMounted(async () => {
 
 async function onFormatChanged(format: string): Promise<void> {
   selectedExtensions.value = [];
-  await loadExtensions(format);
-}
-
-async function loadExtensions(format: string): Promise<void> {
-  if (!format || !backend.backend) {
-    availableExtensions.value = [];
-    return;
-  }
-  loadingExtensions.value = true;
-  try {
-    const extensions = (await backend.backend.pandocFeature('extensions', {
-      format,
-    })) as PandocFormatExtension[];
-    if (selectedFormat.value === format) availableExtensions.value = extensions;
-  } finally {
-    loadingExtensions.value = false;
-  }
-}
-
-function extensionState(extension: PandocFormatExtension) {
-  const override = selectedExtensions.value.find(
-    (value) => value.slice(1) === extension.name,
-  );
-  if (!override) return 'default';
-  return override.startsWith('+') ? 'enabled' : 'disabled';
-}
-
-function extensionSign(extension: PandocFormatExtension) {
-  const state = extensionState(extension);
-  if (state === 'default') return extension.default ? '+' : '-';
-  return state === 'enabled' ? '+' : '-';
-}
-
-function extensionClass(extension: PandocFormatExtension) {
-  switch (extensionState(extension)) {
-    case 'enabled':
-      return 'text-positive';
-    case 'disabled':
-      return 'text-negative';
-    default:
-      return 'text-grey';
-  }
-}
-
-function extensionDescription(extension: string) {
-  return PANDOC_EXTENSION_DESCRIPTIONS[extension];
-}
-
-function toggleExtension(extension: PandocFormatExtension): void {
-  const index = selectedExtensions.value.findIndex(
-    (value) => value.slice(1) === extension.name,
-  );
-  if (index >= 0) {
-    selectedExtensions.value = selectedExtensions.value.filter(
-      (_, valueIndex) => valueIndex !== index,
-    );
-  } else {
-    const sign = extension.default ? '-' : '+';
-    selectedExtensions.value = [
-      ...selectedExtensions.value,
-      `${sign}${extension.name}`,
-    ];
-  }
 }
 
 function apply(): void {

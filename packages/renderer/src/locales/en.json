@@ -218,6 +218,10 @@
       "copyFormatDescription": "Format used by Save a copy.",
       "mainFormats": "Main formats",
       "mainFormatsDescription": "Formats shown prominently, as a JSON array of strings."
+      ,"extensions": "Format extensions",
+      "addFormat": "Add format",
+      "loadingExtensions": "Loading extensions...",
+      "noExtensions": "No extensions available."
     },
     "rawElements": {
       "defaultRawFormat": "Default raw format",
@@ -245,7 +249,8 @@
     },
     "documentTemplate": {
       "label": "Document template",
-      "description": "JSON-stringified template for new documents."
+      "description": "Template used for new documents.",
+      "choose": "Choose document template"
     },
     "autoDelimiters": {
       "label": "Automatic delimiters",
