@@ -68,7 +68,7 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
-  <ConfigurationEditorDialog
+  <ProjectConfigEditorDialog
     :visible="configurationDialogVisible"
     :editor="editor"
     :configuration="editorConfig"
@@ -96,8 +96,8 @@ import {
 import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers';
 import { getEditorDocState } from '../schema';
 import { defineAsyncComponent } from 'vue';
-const ConfigurationEditorDialog = defineAsyncComponent(
-  () => import('./ConfigurationEditorDialog.vue'),
+const ProjectConfigEditorDialog = defineAsyncComponent(
+  () => import('./ProjectConfigEditorDialog.vue'),
 );
 
 export default {
@@ -105,7 +105,7 @@ export default {
   emits: ['close'],
   components: {
     NameDescriptionEditor,
-    ConfigurationEditorDialog,
+    ProjectConfigEditorDialog,
   },
   data() {
     return {

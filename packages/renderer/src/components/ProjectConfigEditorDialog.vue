@@ -37,7 +37,9 @@
             <OutputConvertersEditor v-else-if="tab.name === 'outputConverters'" v-model="values.outputConverters"
               :inherited="inheritedOutputConverters" :resource-options="project ? { kind: 'filter', project } : undefined
                 " :editor="editor" />
-            <AutomationsEditor v-else-if="tab.name === 'automations'" v-model="values.automations" :editor="editor"
+            <AutomationsEditor v-else-if="tab.name === 'automations'" v-model="values.automations"
+              :inherited="inheritedAutomations" :removed="removedAutomations"
+              @update:removed="removedAutomations = $event" :editor="editor"
               :resource-options="project ? { kind: 'filter', project } : undefined
                 " />
             <AutoDelimitersEditor v-else-if="tab.name === 'autoDelimiters'" v-model="values.autoDelimiters" />
@@ -128,6 +130,19 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="showEditorConfigPreview">
+    <q-card class="configuration-editor-dialog__preview">
+      <q-card-section>
+        <div class="text-h6">{{ $t('configEditor.preview.title') }}</div>
+      </q-card-section>
+      <q-card-section>
+        <pre class="configuration-editor-dialog__preview-content">{{ editorConfigPreview }}</pre>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn :label="$t('configEditor.buttons.close')" @click="showEditorConfigPreview = false" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
@@ -150,6 +165,7 @@ import type {
   Index,
   NoteStyle,
   OutputConverter,
+  Automation,
   PundokEditorConfigInit,
   PundokEditorProject,
   ResourceFile,
@@ -428,6 +444,8 @@ export default {
       tabs,
       activeTab: tabs[0].name,
       chosenConfigurations: [] as string[],
+      inheritedAutomations: [] as Automation[],
+      removedAutomations: [] as string[],
       rootDocument: '',
       documentTemplateOptions: [] as ResourceFile[],
       loadingDocumentTemplates: false,
@@ -445,6 +463,8 @@ export default {
       values: {} as Record<string, any>,
       jsonValues: {} as Record<string, string>,
       jsonErrors: {} as Record<string, string>,
+      editorConfigPreview: '',
+      showEditorConfigPreview: false,
     };
   },
   computed: {
@@ -564,6 +584,8 @@ export default {
       const source = this.configuration as Partial<PundokEditorConfigInit>;
       this.chosenConfigurations = [...(this.projectConfigurations as string[])];
       this.rootDocument = this.project?.rootDocument || '';
+      const pruning = (source as PundokEditorProject['editorConfig']).remove;
+      this.removedAutomations = [...(pruning?.automations || [])];
       const values: Record<string, any> = {};
       const jsonValues: Record<string, string> = {};
       fields.forEach((field) => {
@@ -619,6 +641,35 @@ export default {
       this.activeTab = tabs[0].name;
       void this.loadDocumentTemplates();
       void this.loadMainFormatOptions();
+      void this.loadInheritedAutomations();
+    },
+    async loadInheritedAutomations() {
+      if (!this.backend) {
+        this.inheritedAutomations = [];
+        return;
+      }
+      const inherited: Automation[] = [];
+      try {
+        for (const configurationName of this.projectConfigurations as string[]) {
+          const configuration = await this.backend.configuration(configurationName);
+          inherited.push(...(configuration.automations || []));
+        }
+      } catch (error) {
+        console.error('Unable to load inherited automations', error);
+        this.inheritedAutomations = [];
+        return;
+      }
+      const localNames = new Set(
+        ((this.configuration as Partial<PundokEditorConfigInit>).automations ||
+          []).map((automation) => automation.name),
+      );
+      this.inheritedAutomations = inherited.filter(
+        (automation, index) =>
+          !localNames.has(automation.name) &&
+          inherited.findIndex(
+            (candidate) => candidate.name === automation.name,
+          ) === index,
+      );
     },
     updateFormatSelection(fieldName: string, format: string) {
       this.formatSelections[fieldName] = { format, extensions: [] };
@@ -821,6 +872,19 @@ export default {
         ...(this.configuration as Record<string, any>),
         ...editorConfigValues,
       };
+      const remove: Record<string, unknown> = {
+        ...((editorConfig.remove as Record<string, unknown> | undefined) || {}),
+      };
+      const automationsToRemove = [...this.removedAutomations];
+      if (automationsToRemove.length) {
+        remove.automations = automationsToRemove;
+        editorConfig.remove = remove;
+      }
+      else {
+        delete remove.automations;
+        if (Object.keys(remove).length) editorConfig.remove = remove;
+        else delete editorConfig.remove;
+      }
       const errors: Record<string, string> = {};
       fields
         .filter((field) => field.kind === 'json')
@@ -849,15 +913,17 @@ export default {
         if (editorConfig[key] === undefined || editorConfig[key] === '')
           delete editorConfig[key];
       });
-      this.$emit('save', {
-        ...(this.project as PundokEditorProject),
-        name,
-        description,
-        editorConfig,
-        configurations: [...this.chosenConfigurations],
-        rootDocument: this.rootDocument,
-      });
-      this.$emit('close');
+      this.editorConfigPreview = JSON.stringify(editorConfig, null, 2);
+      this.showEditorConfigPreview = true;
+      // this.$emit('save', {
+      //   ...(this.project as PundokEditorProject),
+      //   name,
+      //   description,
+      //   editorConfig,
+      //   configurations: [...this.chosenConfigurations],
+      //   rootDocument: this.rootDocument,
+      // });
+      // this.$emit('close');
     },
   },
 };
@@ -885,5 +951,17 @@ export default {
 .configuration-editor-dialog__panels {
   flex: 1;
   overflow: auto;
+}
+
+.configuration-editor-dialog__preview {
+  max-width: min(90vw, 60rem);
+}
+
+.configuration-editor-dialog__preview-content {
+  max-height: 70vh;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 </style>

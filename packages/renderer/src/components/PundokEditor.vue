@@ -160,7 +160,7 @@
           @close-project-structure-dialog="closeProjectStructureDialog"
           @new-editor="newSubEditor"
         />
-        <ConfigurationEditorDialog
+        <ProjectConfigEditorDialog
           :visible="visibleConfigurationEditor"
           :editor="editor"
           :configuration="docState()?.project?.editorConfig || {}"
@@ -382,8 +382,8 @@ export default {
     ProjectStructureDialog: defineAsyncComponent(
       () => import('./ProjectStructureDialog.vue'),
     ),
-    ConfigurationEditorDialog: defineAsyncComponent(
-      () => import('./ConfigurationEditorDialog.vue'),
+    ProjectConfigEditorDialog: defineAsyncComponent(
+      () => import('./ProjectConfigEditorDialog.vue'),
     ),
     GitChangesDialog: defineAsyncComponent(
       () => import('./GitChangesDialog.vue'),

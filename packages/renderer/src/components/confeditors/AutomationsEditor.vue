@@ -20,7 +20,7 @@
       </q-btn>
     </div>
 
-    <q-list v-if="automations.length" bordered separator>
+    <q-list v-if="inherited.length || automations.length" bordered separator>
       <q-item v-for="{ automation, index } in sortedAutomations" :key="`${automation.type}-${automation.name}`"
         clickable @click="editAutomation(index)">
         <q-item-section avatar>
@@ -33,6 +33,28 @@
         </q-item-section>
         <q-item-section side>
           <q-icon name="edit" />
+        </q-item-section>
+      </q-item>
+      <q-item v-for="automation in inherited" :key="`inherited-${automation.name}`" clickable
+        @click="editInheritedAutomation(automation)">
+        <q-item-section avatar>
+          <q-icon :name="automationPresentation(automation.type).icon"
+            :color="automationPresentation(automation.type).color" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label :class="{ 'text-strike': removed.includes(automation.name) }">
+            {{ automation.name }}
+          </q-item-label>
+          <q-item-label caption>{{ automation.description }}</q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <div class="row items-center no-wrap q-gutter-xs">
+            <q-btn flat round dense icon="edit" :title="$t('configEditor.automations.editInherited')"
+              @click.stop="editInheritedAutomation(automation)" />
+            <q-toggle :model-value="removed.includes(automation.name)" color="primary" :icon="mdiEyeOff"
+              :title="$t('configEditor.automations.removeInherited', { name: automation.name })"
+              @click.stop @update:model-value="setRemoved(automation.name, $event)" />
+          </div>
         </q-item-section>
       </q-item>
     </q-list>
@@ -156,6 +178,9 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { mdiEyeOff } from '@mdi/js';
+import { useI18n } from 'vue-i18n';
+import { useQuasar } from 'quasar';
 import type { Editor } from '@tiptap/vue-3';
 import type {
   Automation,
@@ -192,12 +217,15 @@ type AutomationPresentation = {
 
 const props = defineProps<{
   modelValue: Automation[];
+  inherited?: Automation[];
+  removed?: string[];
   editor?: object;
   resourceOptions?: Partial<FindResourceOptions>;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: Automation[]];
+  'update:removed': [value: string[]];
 }>();
 
 const automationTypes: AutomationPresentation[] = [
@@ -237,8 +265,13 @@ const withResultOptions: { label: string; value: WhatToDoWithResult }[] = [
 ];
 
 const automations = ref<Automation[]>([]);
+const inherited = computed(() => props.inherited || []);
+const removed = computed(() => props.removed || []);
 const draft = ref<AutomationDraft>();
 const editingIndex = ref<number>();
+const editingInheritedName = ref<string>();
+const { t } = useI18n();
+const $q = useQuasar();
 const configuration = computed(() =>
   props.editor ? getEditorConfiguration(props.editor as Editor) : undefined,
 );
@@ -282,6 +315,7 @@ function automationPresentation(type: AutomationType): AutomationPresentation {
 
 function newAutomation(type: AutomationType): void {
   editingIndex.value = undefined;
+  editingInheritedName.value = undefined;
   switch (type) {
     case 'search-replace':
       draft.value = {
@@ -319,25 +353,44 @@ function newAutomation(type: AutomationType): void {
 
 function editAutomation(index: number): void {
   editingIndex.value = index;
+  editingInheritedName.value = undefined;
   draft.value = automationDraft(automations.value[index]);
 }
 
 function cancelEdit(): void {
   draft.value = undefined;
   editingIndex.value = undefined;
+  editingInheritedName.value = undefined;
 }
 
 function deleteAutomation(): void {
+  if (editingInheritedName.value) {
+    setRemoved(editingInheritedName.value, true);
+    cancelEdit();
+    return;
+  }
   if (editingIndex.value === undefined) {
     cancelEdit();
     return;
   }
-  const updated = automations.value.filter(
-    (_, index) => index !== editingIndex.value,
-  );
-  automations.value = updated;
-  emit('update:modelValue', updated.map(copyAutomation));
-  cancelEdit();
+  const automationName = automations.value[editingIndex.value].name;
+  $q.dialog({
+    title: t('configEditor.automations.deleteConfirmation.title'),
+    message: t('configEditor.automations.deleteConfirmation.message', {
+      name: automationName,
+    }),
+    ok: t('configEditor.buttons.delete'),
+    cancel: t('configEditor.buttons.cancel'),
+    persistent: true,
+  }).onOk(() => {
+    if (editingIndex.value === undefined) return;
+    const updated = automations.value.filter(
+      (_, index) => index !== editingIndex.value,
+    );
+    automations.value = updated;
+    emit('update:modelValue', updated.map(copyAutomation));
+    cancelEdit();
+  });
 }
 
 function applyEdit(): void {
@@ -349,6 +402,19 @@ function applyEdit(): void {
   automations.value = updated;
   emit('update:modelValue', updated.map(copyAutomation));
   cancelEdit();
+}
+
+function setRemoved(name: string, value: boolean | null): void {
+  const names = new Set(removed.value);
+  if (value) names.add(name);
+  else names.delete(name);
+  emit('update:removed', [...names]);
+}
+
+function editInheritedAutomation(automation: Automation): void {
+  editingIndex.value = undefined;
+  editingInheritedName.value = automation.name;
+  draft.value = automationDraft(automation);
 }
 
 function automationDraft(automation: Automation): AutomationDraft {

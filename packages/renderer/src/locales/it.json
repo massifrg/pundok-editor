@@ -154,12 +154,16 @@
     "title": "Modifica configurazione dell'editor",
     "buttons": {
       "cancel": "Annulla",
+      "close": "Chiudi",
       "delete": "Elimina",
       "save": "Salva",
       "apply": "Applica",
       "add": "Aggiungi",
       "edit": "Modifica",
       "copy": "Crea una copia"
+    },
+    "preview": {
+      "title": "Anteprima della configurazione dell'editor del progetto"
     },
     "pandocOptions": {
       "title": "Opzioni Pandoc",
@@ -508,6 +512,13 @@
       "title": "Automazioni",
       "newAutomation": "Nuova automazione",
       "none": "Nessuna automazione configurata.",
+      "ignoreInherited": "Ignora automazione ereditata",
+      "editInherited": "Modifica automazione ereditata",
+      "deleteConfirmation": {
+        "title": "Elimina automazione",
+        "message": "Eliminare l'automazione \"{name}\"?"
+      },
+      "removeInherited": "Rimuovi {name}",
       "name": "Nome",
       "descriptionLabel": "Descrizione",
       "withResult": "Usa il risultato del filtro",

@@ -155,12 +155,16 @@
     "title": "Edit editor configuration",
     "buttons": {
       "cancel": "Cancel",
+      "close": "Close",
       "delete": "Delete",
       "save": "Save",
       "apply": "Apply",
       "add": "Add",
       "edit": "Edit",
       "copy": "Create a copy"
+    },
+    "preview": {
+      "title": "Project editor configuration preview"
     },
     "pandocOptions": {
       "title": "Pandoc options",
@@ -509,6 +513,13 @@
       "title": "Automations",
       "newAutomation": "New automation",
       "none": "No automations configured.",
+      "ignoreInherited": "Ignore inherited automation",
+      "editInherited": "Edit inherited automation",
+      "deleteConfirmation": {
+        "title": "Delete automation",
+        "message": "Delete automation \"{name}\"?"
+      },
+      "removeInherited": "Remove {name}",
       "name": "Name",
       "descriptionLabel": "Description",
       "withResult": "Use filter result",
