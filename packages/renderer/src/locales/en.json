@@ -153,6 +153,8 @@
   "convert": "convert",
   "configEditor": {
     "title": "Edit editor configuration",
+    "removeInherited": "Remove {name}",
+    "inheritedFrom": "Inherited from {name}",
     "buttons": {
       "cancel": "Cancel",
       "close": "Close",

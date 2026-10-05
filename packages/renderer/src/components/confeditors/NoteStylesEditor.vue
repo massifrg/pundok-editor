@@ -18,11 +18,14 @@
         v-for="style in allStyles"
         :key="style.noteType"
         dense
-        :class="{ 'bg-grey-2 text-grey-7': isInherited(style) }"
+        class="text-grey-7"
+        :style="{ backgroundColor: inheritedBackground(style.noteType) }"
       >
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
-            <span>{{ style.noteType }}</span>
+            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(style.noteType) }">
+              {{ style.noteType }}
+            </span>
             <q-badge v-if="style.default" class="q-ml-sm" color="primary">
               {{ $t('configEditor.noteStyles.default') }}
             </q-badge>
@@ -31,17 +34,28 @@
               {{ markerSummary(style) }}
             </span>
           </q-item-label>
+          <q-item-label v-if="isInherited(style)" caption>
+            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(style.noteType) }) }}
+          </q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-btn
-            v-if="isInherited(style)"
-            dense
-            flat
-            round
-            icon="content_copy"
-            :title="$t('configEditor.noteStyles.copyStyle')"
-            @click="copyInheritedStyle(style)"
-          />
+          <div v-if="isInherited(style)" class="row no-wrap items-center q-gutter-xs">
+            <q-btn
+              dense
+              flat
+              round
+              icon="content_copy"
+              :title="$t('configEditor.noteStyles.copyStyle')"
+              @click="copyInheritedStyle(style)"
+            />
+            <q-toggle
+              :model-value="isRemoved(style.noteType)"
+              color="primary"
+              :icon="mdiEyeOff"
+              :title="$t('configEditor.removeInherited', { name: style.noteType })"
+              @update:model-value="setRemoved(style.noteType, $event)"
+            />
+          </div>
           <div v-else class="row no-wrap">
             <q-btn
               dense
@@ -208,6 +222,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { mdiEyeOff } from '@mdi/js';
 import { useI18n } from 'vue-i18n';
 import type { MarkerConversion, NoteStyle } from '../../common';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
@@ -224,11 +239,14 @@ const props = withDefaults(
   defineProps<{
     modelValue: NoteStyle[];
     inherited?: NoteStyle[];
+    removed?: string[];
+    provenance?: Record<string, string>;
   }>(),
   { inherited: () => [] },
 );
 const emit = defineEmits<{
   'update:modelValue': [value: NoteStyle[]];
+  'update:removed': [value: string[]];
 }>();
 
 const styles = ref<NoteStyle[]>([]);
@@ -254,12 +272,16 @@ const markerConversionOptions = [
   'upper-greek',
 ].map((value) => ({ label: value, value }));
 
-const allStyles = computed(() => [
-  ...styles.value,
-  ...props.inherited.filter(
-    (style) => !styles.value.some((local) => local.noteType === style.noteType),
-  ),
-]);
+const allStyles = computed(() => {
+  const inherited = props.inherited
+    .filter(
+      (style) => !styles.value.some((local) => local.noteType === style.noteType),
+    )
+    .sort((first, second) =>
+      inheritedSource(first.noteType).localeCompare(inheritedSource(second.noteType)),
+    );
+  return [...styles.value, ...inherited];
+});
 const canApply = computed(() => !!draft.value?.noteType.trim());
 
 watch(
@@ -331,6 +353,29 @@ function isInherited(style: NoteStyle): boolean {
     !styles.value.some((item) => item.noteType === style.noteType) &&
     props.inherited.some((item) => item.noteType === style.noteType)
   );
+}
+
+function isRemoved(noteType: string): boolean {
+  return (props.removed || []).includes(noteType);
+}
+
+function setRemoved(noteType: string, value: boolean | null): void {
+  const names = new Set(props.removed || []);
+  if (value) names.add(noteType);
+  else names.delete(noteType);
+  emit('update:removed', [...names]);
+}
+
+function inheritedSource(noteType: string): string {
+  return props.provenance?.[noteType] || '';
+}
+
+function inheritedBackground(noteType: string): string | undefined {
+  const source = inheritedSource(noteType);
+  if (!source) return undefined;
+  const sources = [...new Set(Object.values(props.provenance || {}))];
+  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
+  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
 }
 
 function markerSummary(style: NoteStyle): string {

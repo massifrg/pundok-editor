@@ -19,13 +19,15 @@
         :key="converter.name"
         dense
         :class="{
-          'bg-grey-2': isInherited(converter),
           'text-grey-7': isInherited(converter),
         }"
+        :style="{ backgroundColor: inheritedBackground(converter.name) }"
       >
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
-            <span>{{ converter.name }}</span>
+            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(converter.name) }">
+              {{ converter.name }}
+            </span>
             <q-badge v-if="converter.default" class="q-ml-sm" color="primary">
               {{ $t('configEditor.inputConverters.default') }}
             </q-badge>
@@ -37,17 +39,19 @@
           <q-item-label v-if="converter.description" caption>{{
             converter.description
           }}</q-item-label>
+          <q-item-label v-if="isInherited(converter)" caption>
+            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(converter.name) }) }}
+          </q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-btn
-            v-if="isInherited(converter)"
-            dense
-            flat
-            round
-            icon="content_copy"
-            :title="$t('configEditor.inputConverters.copyConverter')"
-            @click="copyInheritedConverter(converter)"
-          />
+          <div v-if="isInherited(converter)" class="row no-wrap items-center q-gutter-xs">
+            <q-btn dense flat round icon="content_copy"
+              :title="$t('configEditor.inputConverters.copyConverter')"
+              @click="copyInheritedConverter(converter)" />
+            <q-toggle :model-value="isRemoved(converter.name)" color="primary" :icon="mdiEyeOff"
+              :title="$t('configEditor.removeInherited', { name: converter.name })"
+              @update:model-value="setRemoved(converter.name, $event)" />
+          </div>
           <q-btn
             v-else
             dense
@@ -210,6 +214,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { mdiEyeOff } from '@mdi/js';
 import type {
   BaseInputConverter,
   FindResourceOptions,
@@ -249,12 +254,15 @@ const props = withDefaults(
     inherited?: InputConverter[];
     resourceOptions?: Partial<FindResourceOptions>;
     editor?: Editor;
+    removed?: string[];
+    provenance?: Record<string, string>;
   }>(),
   { inherited: () => [] },
 );
 
 const emit = defineEmits<{
   'update:modelValue': [value: InputConverter[]];
+  'update:removed': [value: string[]];
 }>();
 
 const converters = ref<InputConverter[]>([]);
@@ -273,12 +281,14 @@ const converterTypeOptions: { label: string; value: InputConverterType }[] = [
   { label: 'Custom', value: 'custom' },
 ];
 
-const allConverters = computed(() => [
-  ...converters.value,
-  ...props.inherited.filter(
-    (item) => !converters.value.some((local) => local.name === item.name),
-  ),
-]);
+const allConverters = computed(() => {
+  const inherited = props.inherited
+    .filter((item) => !converters.value.some((local) => local.name === item.name))
+    .sort((first, second) =>
+      inheritedSource(first.name).localeCompare(inheritedSource(second.name)),
+    );
+  return [...converters.value, ...inherited];
+});
 
 const canApply = computed(
   () =>
@@ -308,6 +318,29 @@ watch(
     }
   },
 );
+
+function isRemoved(name: string): boolean {
+  return (props.removed || []).includes(name);
+}
+
+function setRemoved(name: string, value: boolean | null): void {
+  const names = new Set(props.removed || []);
+  if (value) names.add(name);
+  else names.delete(name);
+  emit('update:removed', [...names]);
+}
+
+function inheritedSource(name: string): string {
+  return props.provenance?.[name] || '';
+}
+
+function inheritedBackground(name: string): string | undefined {
+  const source = inheritedSource(name);
+  if (!source) return undefined;
+  const sources = [...new Set(Object.values(props.provenance || {}))];
+  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
+  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
+}
 
 function copyConverter(converter: InputConverter): InputConverter {
   switch (converter.type) {

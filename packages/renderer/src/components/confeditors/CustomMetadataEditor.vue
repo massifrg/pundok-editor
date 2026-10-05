@@ -19,16 +19,19 @@
         :key="metadata.name"
         dense
         :class="{
-          'bg-grey-2': isInherited(metadata),
           'text-grey-7': isInherited(metadata),
         }"
+        :style="{ backgroundColor: inheritedBackground(metadata.name) }"
       >
         <q-item-section>
-          <q-item-label>{{ metadata.name }}</q-item-label>
+          <q-item-label class="text-weight-bold" :class="{ 'text-strike': isRemoved(metadata.name) }">{{ metadata.name }}</q-item-label>
           <q-item-label caption>{{ metadata.type }}</q-item-label>
           <q-item-label v-if="metadata.description" caption>{{
             metadata.description
           }}</q-item-label>
+          <q-item-label v-if="isInherited(metadata)" caption>
+            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(metadata.name) }) }}
+          </q-item-label>
         </q-item-section>
         <q-item-section side>
           <q-btn
@@ -58,6 +61,14 @@
               @click="deleteMetadata(metadata.name)"
             />
           </template>
+          <q-toggle
+            v-if="isInherited(metadata)"
+            :model-value="isRemoved(metadata.name)"
+            color="primary"
+            :icon="mdiEyeOff"
+            :title="$t('configEditor.removeInherited', { name: metadata.name })"
+            @update:model-value="setRemoved(metadata.name, $event)"
+          />
         </q-item-section>
       </q-item>
     </q-list>
@@ -140,6 +151,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { mdiEyeOff } from '@mdi/js';
 import type { CustomMetadata, MetaValueName } from '../../common';
 
 type MetadataDraft = {
@@ -152,8 +164,13 @@ type MetadataDraft = {
 const props = defineProps<{
   modelValue: CustomMetadata[];
   inherited?: CustomMetadata[];
+  removed?: string[];
+  provenance?: Record<string, string>;
 }>();
-const emit = defineEmits<{ 'update:modelValue': [value: CustomMetadata[]] }>();
+const emit = defineEmits<{
+  'update:modelValue': [value: CustomMetadata[]];
+  'update:removed': [value: string[]];
+}>();
 
 const metadata = ref<CustomMetadata[]>([]);
 const draft = ref<MetadataDraft>();
@@ -169,12 +186,14 @@ const typeOptions = [
   'MetaMap',
 ].map((value) => ({ label: value, value: value as MetaValueName }));
 
-const allMetadata = computed(() => [
-  ...metadata.value,
-  ...(props.inherited || []).filter(
-    (item) => !metadata.value.some((local) => local.name === item.name),
-  ),
-]);
+const allMetadata = computed(() => {
+  const inherited = (props.inherited || [])
+    .filter((item) => !metadata.value.some((local) => local.name === item.name))
+    .sort((first, second) =>
+      inheritedSource(first.name).localeCompare(inheritedSource(second.name)),
+    );
+  return [...metadata.value, ...inherited];
+});
 
 watch(
   () => props.modelValue,
@@ -221,6 +240,29 @@ function isInherited(item: CustomMetadata): boolean {
     !metadata.value.some((value) => value.name === item.name) &&
     (props.inherited || []).some((value) => value.name === item.name)
   );
+}
+
+function isRemoved(name: string): boolean {
+  return (props.removed || []).includes(name);
+}
+
+function inheritedSource(name: string): string {
+  return props.provenance?.[name] || '';
+}
+
+function inheritedBackground(name: string): string | undefined {
+  const source = inheritedSource(name);
+  if (!source) return undefined;
+  const sources = [...new Set(Object.values(props.provenance || {}))];
+  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
+  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
+}
+
+function setRemoved(name: string, value: boolean | null): void {
+  const names = new Set(props.removed || []);
+  if (value) names.add(name);
+  else names.delete(name);
+  emit('update:removed', [...names]);
 }
 
 function deleteMetadata(name: string): void {

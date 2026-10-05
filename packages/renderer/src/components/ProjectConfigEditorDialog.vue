@@ -17,26 +17,43 @@
           <q-tab-panel v-for="tab in tabs" :key="tab.name" :name="tab.name">
             <ProjectConfigurationsEditor v-if="tab.name === 'project-configurations'" v-model="chosenConfigurations" />
             <CustomStylesEditor v-else-if="tab.name === 'customStyles'" v-model="values.customStyles"
-              :inherited="inheritedCustomStyles" />
+              :inherited="inheritedCustomStyles" :removed="removedCustomStyles"
+              :provenance="inheritedProvenance.customStyles"
+              @update:removed="removedCustomStyles = $event" />
             <CustomClassesEditor v-else-if="tab.name === 'customClasses'" v-model="values.customClasses"
-              :inherited="inheritedCustomClasses" />
+              :inherited="inheritedCustomClasses" :removed="removedCustomClasses"
+              :provenance="inheritedProvenance.customClasses"
+              @update:removed="removedCustomClasses = $event" />
             <CustomAttributesEditor v-else-if="tab.name === 'customAttributes'" v-model="values.customAttributes"
-              :inherited="inheritedCustomAttributes" />
+              :inherited="inheritedCustomAttributes" :removed="removedCustomAttributes"
+              :provenance="inheritedProvenance.customAttributes"
+              @update:removed="removedCustomAttributes = $event" />
             <CustomMetadataEditor v-else-if="tab.name === 'customMetadata'" v-model="values.customMetadata"
-              :inherited="inheritedCustomMetadata" />
+              :inherited="inheritedCustomMetadata" :removed="removedCustomMetadata"
+              :provenance="inheritedProvenance.customMetadata"
+              @update:removed="removedCustomMetadata = $event" />
             <NoteStylesEditor v-else-if="tab.name === 'noteStyles'" v-model="values.noteStyles"
-              :inherited="inheritedNoteStyles" />
+              :inherited="inheritedNoteStyles" :removed="removedNoteStyles"
+              :provenance="inheritedProvenance.noteStyles"
+              @update:removed="removedNoteStyles = $event" />
             <CustomCssEditor v-else-if="tab.name === 'customCss'" v-model="values.customCss"
               :inherited="inheritedCustomCss" :editor="editor" :project="project"
-              :configuration-name="configuration.name" />
+              :configuration-name="configuration.name" :removed="removedCustomCss"
+              :provenance="inheritedProvenance.customCss"
+              @update:removed="removedCustomCss = $event" />
             <IndicesEditor v-else-if="tab.name === 'indices'" v-model="values.indices" :inherited="inheritedIndices"
-              :editor="editor" />
+              :editor="editor" :removed="removedIndices" :provenance="inheritedProvenance.indices"
+              @update:removed="removedIndices = $event" />
             <InputConvertersEditor v-else-if="tab.name === 'inputConverters'" v-model="values.inputConverters"
-              :inherited="inheritedInputConverters" :editor="editor" />
+              :inherited="inheritedInputConverters" :editor="editor" :removed="removedInputConverters"
+              :provenance="inheritedProvenance.inputConverters"
+              @update:removed="removedInputConverters = $event" />
             <RawElementsEditor v-else-if="tab.name === 'raw-elements'" v-model="values" />
             <OutputConvertersEditor v-else-if="tab.name === 'outputConverters'" v-model="values.outputConverters"
               :inherited="inheritedOutputConverters" :resource-options="project ? { kind: 'filter', project } : undefined
-                " :editor="editor" />
+                " :editor="editor" :removed="removedOutputConverters"
+              :provenance="inheritedProvenance.outputConverters"
+              @update:removed="removedOutputConverters = $event" />
             <AutomationsEditor v-else-if="tab.name === 'automations'" v-model="values.automations"
               :inherited="inheritedAutomations" :removed="removedAutomations"
               @update:removed="removedAutomations = $event" :editor="editor"
@@ -171,6 +188,7 @@ import type {
   ResourceFile,
 } from '../common';
 import { DEFAULT_MAIN_FORMATS, pandocFormatsDefs } from '../common';
+import { computeProjectConfiguration } from '../common';
 import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEditor.vue';
 import CustomStylesEditor from './confeditors/CustomStylesEditor.vue';
 import CustomClassesEditor from './confeditors/CustomClassesEditor.vue';
@@ -446,6 +464,26 @@ export default {
       chosenConfigurations: [] as string[],
       inheritedAutomations: [] as Automation[],
       removedAutomations: [] as string[],
+      removedCustomStyles: [] as string[],
+      removedCustomClasses: [] as string[],
+      removedCustomAttributes: [] as string[],
+      removedCustomMetadata: [] as string[],
+      removedNoteStyles: [] as string[],
+      removedCustomCss: [] as string[],
+      removedIndices: [] as string[],
+      removedInputConverters: [] as string[],
+      removedOutputConverters: [] as string[],
+      inheritedProvenance: {
+        customStyles: {} as Record<string, string>,
+        customClasses: {} as Record<string, string>,
+        customAttributes: {} as Record<string, string>,
+        customMetadata: {} as Record<string, string>,
+        noteStyles: {} as Record<string, string>,
+        customCss: {} as Record<string, string>,
+        indices: {} as Record<string, string>,
+        inputConverters: {} as Record<string, string>,
+        outputConverters: {} as Record<string, string>,
+      },
       rootDocument: '',
       documentTemplateOptions: [] as ResourceFile[],
       loadingDocumentTemplates: false,
@@ -461,6 +499,7 @@ export default {
         color: string;
       }>,
       values: {} as Record<string, any>,
+      displayConfiguration: undefined as PundokEditorProject['computedConfig'],
       jsonValues: {} as Record<string, string>,
       jsonErrors: {} as Record<string, string>,
       editorConfigPreview: '',
@@ -495,7 +534,7 @@ export default {
       return this.inheritedItems('noteStyles');
     },
     inheritedCustomCss(): string[] {
-      const computed = this.project?.computedConfig?.customCss || [];
+      const computed = this.displayConfiguration?.customCss || [];
       const local = this.configuration.customCss || [];
       return computed.filter((filename) => !local.includes(filename));
     },
@@ -524,12 +563,12 @@ export default {
           value: name,
         }));
       const inputNames = new Set(
-        this.project?.computedConfig?.inputConverters?.map(
+        this.displayConfiguration?.inputConverters?.map(
           (converter) => converter.name,
         ),
       );
       const converterOptions = (
-        this.project?.computedConfig?.outputConverters || []
+        this.displayConfiguration?.outputConverters || []
       )
         .filter((converter) => inputNames.has(converter.name))
         .map((converter) => ({
@@ -557,7 +596,7 @@ export default {
     inheritedItems<K extends keyof InheritedItems>(
       field: K,
     ): InheritedItems[K] {
-      const computed = (this.project?.computedConfig?.[field] ||
+      const computed = (this.displayConfiguration?.[field] ||
         []) as InheritedItems[K];
       const local = ((this.configuration as Partial<InheritedItems>)[field] ||
         []) as InheritedItems[K];
@@ -580,12 +619,22 @@ export default {
           }),
       ) as InheritedItems[K];
     },
-    loadConfiguration() {
+    async loadConfiguration() {
+      await this.loadDisplayConfiguration();
       const source = this.configuration as Partial<PundokEditorConfigInit>;
       this.chosenConfigurations = [...(this.projectConfigurations as string[])];
       this.rootDocument = this.project?.rootDocument || '';
       const pruning = (source as PundokEditorProject['editorConfig']).remove;
       this.removedAutomations = [...(pruning?.automations || [])];
+      this.removedCustomStyles = [...(pruning?.customStyles || [])];
+      this.removedCustomClasses = [...(pruning?.customClasses || [])];
+      this.removedCustomAttributes = [...(pruning?.customAttributes || [])];
+      this.removedCustomMetadata = [...(pruning?.customMetadata || [])];
+      this.removedNoteStyles = [...(pruning?.noteStyles || [])];
+      this.removedCustomCss = [...(pruning?.customCss || [])];
+      this.removedIndices = [...(pruning?.indices || [])];
+      this.removedInputConverters = [...(pruning?.inputConverters || [])];
+      this.removedOutputConverters = [...(pruning?.outputConverters || [])];
       const values: Record<string, any> = {};
       const jsonValues: Record<string, string> = {};
       fields.forEach((field) => {
@@ -642,6 +691,30 @@ export default {
       void this.loadDocumentTemplates();
       void this.loadMainFormatOptions();
       void this.loadInheritedAutomations();
+      void this.loadInheritedProvenance();
+    },
+    async loadDisplayConfiguration() {
+      this.displayConfiguration = undefined;
+      if (!this.project || !this.backend) return;
+      const editorConfig = { ...this.project.editorConfig };
+      delete editorConfig.remove;
+      try {
+        const projectWithoutPruning: PundokEditorProject = {
+          ...this.project,
+          editorConfig,
+        };
+        const project = await computeProjectConfiguration(
+          projectWithoutPruning,
+          (configurationName) =>
+            this.backend!.configuration(configurationName),
+        );
+        this.displayConfiguration = project.computedConfig;
+      } catch (error) {
+        console.error(
+          'Unable to compute unpruned project configuration',
+          error,
+        );
+      }
     },
     async loadInheritedAutomations() {
       if (!this.backend) {
@@ -671,13 +744,72 @@ export default {
           ) === index,
       );
     },
+    async loadInheritedProvenance() {
+      if (!this.backend) return;
+      const fields = [
+        'customStyles',
+        'customClasses',
+        'customAttributes',
+        'customMetadata',
+        'noteStyles',
+        'customCss',
+        'indices',
+        'inputConverters',
+        'outputConverters',
+      ] as const;
+      const provenance = {
+        customStyles: {} as Record<string, string>,
+        customClasses: {} as Record<string, string>,
+        customAttributes: {} as Record<string, string>,
+        customMetadata: {} as Record<string, string>,
+        noteStyles: {} as Record<string, string>,
+        customCss: {} as Record<string, string>,
+        indices: {} as Record<string, string>,
+        inputConverters: {} as Record<string, string>,
+        outputConverters: {} as Record<string, string>,
+      };
+      try {
+        for (const configurationName of this.projectConfigurations as string[]) {
+          const configuration: PundokEditorConfigInit =
+            await this.backend.configuration(configurationName);
+          for (const field of fields) {
+            const items = configuration[field] || [];
+            for (const item of items) {
+              const itemName =
+                field === 'noteStyles'
+                  ? (item as NoteStyle).noteType
+                  : field === 'indices'
+                    ? (item as Index).indexName
+                    : (item as { name: string }).name;
+              if (!provenance[field][itemName]) {
+                provenance[field][itemName] = configurationName;
+              }
+            }
+          }
+        }
+        this.inheritedProvenance = provenance;
+      } catch (error) {
+        console.error('Unable to load inherited item provenance', error);
+        this.inheritedProvenance = {
+          customStyles: {},
+          customClasses: {},
+          customAttributes: {},
+          customMetadata: {},
+          noteStyles: {},
+          customCss: {},
+          indices: {},
+          inputConverters: {},
+          outputConverters: {},
+        };
+      }
+    },
     updateFormatSelection(fieldName: string, format: string) {
       this.formatSelections[fieldName] = { format, extensions: [] };
       this.values[fieldName] = format;
     },
     pandocFormatForSelection(format: string): string {
       return (
-        this.project?.computedConfig?.outputConverters?.find(
+        this.displayConfiguration?.outputConverters?.find(
           (converter) => converter.name === format,
         )?.format || format
       );
@@ -797,8 +929,8 @@ export default {
         });
       }
       const converterOptions = [
-        ...(this.project?.computedConfig?.inputConverters || []),
-        ...(this.project?.computedConfig?.outputConverters || []),
+        ...(this.displayConfiguration?.inputConverters || []),
+        ...(this.displayConfiguration?.outputConverters || []),
       ].map((converter) => {
         const source = sourceOptions.get(converter.name) || {
           source: 'Editor',
@@ -885,6 +1017,23 @@ export default {
         if (Object.keys(remove).length) editorConfig.remove = remove;
         else delete editorConfig.remove;
       }
+      const removedInheritedItems: Record<string, string[]> = {
+        customStyles: [...this.removedCustomStyles],
+        customClasses: [...this.removedCustomClasses],
+        customAttributes: [...this.removedCustomAttributes],
+        customMetadata: [...this.removedCustomMetadata],
+        noteStyles: [...this.removedNoteStyles],
+        customCss: [...this.removedCustomCss],
+        indices: [...this.removedIndices],
+        inputConverters: [...this.removedInputConverters],
+        outputConverters: [...this.removedOutputConverters],
+      };
+      Object.entries(removedInheritedItems).forEach(([field, names]) => {
+        if (names.length) remove[field] = names;
+        else delete remove[field];
+      });
+      if (Object.keys(remove).length) editorConfig.remove = remove;
+      else delete editorConfig.remove;
       const errors: Record<string, string> = {};
       fields
         .filter((field) => field.kind === 'json')

@@ -49,6 +49,7 @@
           v-for="(filename, index) in displayedInheritedCss"
           :key="`inherited-${filename}-${index}`"
           class="custom-css-editor__item custom-css-editor__item--inherited"
+          :style="{ backgroundColor: inheritedBackground(filename) }"
           @click="selectCss(filename)"
         >
           <q-item-section avatar class="custom-css-editor__drag-handle">
@@ -56,11 +57,23 @@
           </q-item-section>
           <q-item-section>
             <q-item-label class="ellipsis" :title="filename">
-              {{ filename }}
+              <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(filename) }">
+                {{ filename }}
+              </span>
             </q-item-label>
             <q-item-label caption>
-              {{ $t('configEditor.customCss.inherited') }}
+              {{ $t('configEditor.inheritedFrom', { name: inheritedSource(filename) }) }}
             </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-toggle
+              :model-value="isRemoved(filename)"
+              color="primary"
+              :icon="mdiEyeOff"
+              :title="$t('configEditor.removeInherited', { name: filename })"
+              @click.stop
+              @update:model-value="setRemoved(filename, $event)"
+            />
           </q-item-section>
         </q-item>
         <q-item
@@ -97,6 +110,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { Editor } from '@tiptap/vue-3';
 import { computed, ref } from 'vue';
+import { mdiEyeOff } from '@mdi/js';
 import { Codemirror } from 'vue-codemirror';
 import type { PundokEditorProject } from '../../common';
 import { useBackend } from '../../stores';
@@ -109,18 +123,27 @@ const props = withDefaults(
     editor?: Editor;
     project?: PundokEditorProject;
     configurationName?: string;
+    removed?: string[];
+    provenance?: Record<string, string>;
   }>(),
   { inherited: () => [] },
 );
 
 const emit = defineEmits<{
   'update:modelValue': [value: string[]];
+  'update:removed': [value: string[]];
 }>();
 
 const backend = useBackend();
 const cssFiles = computed(() => props.modelValue || []);
 const displayedLocalCss = computed(() => [...cssFiles.value].reverse());
-const displayedInheritedCss = computed(() => [...props.inherited].reverse());
+const displayedInheritedCss = computed(() =>
+  [...props.inherited]
+    .sort((first, second) =>
+      inheritedSource(first).localeCompare(inheritedSource(second)),
+    )
+    .reverse(),
+);
 const selectedCss = ref('');
 const preview = ref('');
 const loadingPreview = ref(false);
@@ -166,6 +189,29 @@ function removeCss(index: number): void {
     'update:modelValue',
     cssFiles.value.filter((_, cssIndex) => cssIndex !== sourceIndex),
   );
+}
+
+function isRemoved(filename: string): boolean {
+  return (props.removed || []).includes(filename);
+}
+
+function setRemoved(filename: string, value: boolean | null): void {
+  const names = new Set(props.removed || []);
+  if (value) names.add(filename);
+  else names.delete(filename);
+  emit('update:removed', [...names]);
+}
+
+function inheritedSource(filename: string): string {
+  return props.provenance?.[filename] || '';
+}
+
+function inheritedBackground(filename: string): string | undefined {
+  const source = inheritedSource(filename);
+  if (!source) return undefined;
+  const sources = [...new Set(Object.values(props.provenance || {}))];
+  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
+  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
 }
 
 async function selectCss(filename: string): Promise<void> {

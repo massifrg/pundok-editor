@@ -19,13 +19,15 @@
         :key="style.name"
         dense
         :class="{
-          'bg-grey-2': isInherited(style),
           'text-grey-7': isInherited(style),
+        }"
+        :style="{
+          backgroundColor: inheritedBackground(style.name),
         }"
       >
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
-            <span>{{ style.name }}</span>
+            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(style.name) }">{{ style.name }}</span>
             <q-space />
             <span class="text-caption text-grey-7">{{
               appliesToLabel(style.appliesTo)
@@ -34,6 +36,9 @@
           <q-item-label v-if="style.description" caption>{{
             style.description
           }}</q-item-label>
+          <q-item-label v-if="isInherited(style)" caption>
+            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(style.name) }) }}
+          </q-item-label>
         </q-item-section>
         <q-item-section side>
           <div class="row no-wrap q-gutter-xs">
@@ -64,6 +69,14 @@
                 @click="deleteStyle(style.name)"
               />
             </template>
+            <q-toggle
+              v-if="isInherited(style)"
+              :model-value="isRemoved(style.name)"
+              color="primary"
+              :icon="mdiEyeOff"
+              :title="$t('configEditor.removeInherited', { name: style.name })"
+              @update:model-value="setRemoved(style.name, $event)"
+            />
           </div>
         </q-item-section>
       </q-item>
@@ -195,6 +208,7 @@ import {
   CustomizableElement,
   NODE_NAME_HEADING,
 } from '../../common';
+import { mdiEyeOff } from '@mdi/js';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
 import CssPropertiesEditor from './CssPropertiesEditor.vue';
 
@@ -210,10 +224,19 @@ export default {
       type: Array,
       default: () => [],
     },
+    removed: {
+      type: Array,
+      default: () => [],
+    },
+    provenance: {
+      type: Object,
+      default: () => ({}),
+    },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'update:removed'],
   data() {
     return {
+      mdiEyeOff,
       styles: [] as CustomStyleDef[],
       draft: undefined as CustomStyleDraft | undefined,
       editingIndex: null as number | null,
@@ -225,11 +248,14 @@ export default {
   },
   computed: {
     allStyles(): CustomStyleDef[] {
+      const inherited = (this.inherited as CustomStyleDef[])
+        .filter((style) => !this.styles.some((local) => local.name === style.name))
+        .sort((first, second) =>
+          this.inheritedSource(first.name).localeCompare(this.inheritedSource(second.name)),
+        );
       return [
         ...this.styles,
-        ...(this.inherited as CustomStyleDef[]).filter(
-          (style) => !this.styles.some((local) => local.name === style.name),
-        ),
+        ...inherited,
       ];
     },
     customizableElementOptions(): {
@@ -279,6 +305,24 @@ export default {
     setupQuasarIcons();
   },
   methods: {
+    isRemoved(name: string): boolean {
+      return (this.removed as string[]).includes(name);
+    },
+    inheritedSource(name: string): string {
+      return (this.provenance as Record<string, string>)[name] || '';
+    },
+    inheritedBackground(name: string): string | undefined {
+      if (!this.inheritedSource(name)) return undefined;
+      const sources = [...new Set(Object.values(this.provenance as Record<string, string>))];
+      const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
+      return colors[Math.max(0, sources.indexOf(this.inheritedSource(name)) % colors.length)];
+    },
+    setRemoved(name: string, value: boolean | null) {
+      const names = new Set(this.removed as string[]);
+      if (value) names.add(name);
+      else names.delete(name);
+      this.$emit('update:removed', [...names]);
+    },
     copyStyle(style: CustomStyleDef): CustomStyleDef {
       const appliesTo = Array.isArray(style.appliesTo)
         ? style.appliesTo

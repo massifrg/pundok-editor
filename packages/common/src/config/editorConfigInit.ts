@@ -68,7 +68,7 @@ export interface PundokEditorConfigInit extends NamedAndDescribed {
 export type ConfigInitField = keyof PundokEditorConfigInit
 
 export type PrunableConfigInitField = keyof Pick<PundokEditorConfigInit,
-  // | 'autoDelimiters'
+  | 'autoDelimiters'
   | 'automations'
   | 'customAttributes'
   | 'customClasses'

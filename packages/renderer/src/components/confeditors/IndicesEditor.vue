@@ -8,17 +8,28 @@
 
     <q-list v-if="allIndices.length" bordered separator>
       <q-item v-for="index in allIndices" :key="index.indexName" dense
-        :class="{ 'bg-grey-2 text-grey-7': isInherited(index) }">
+      class="text-grey-7"
+      :style="{ backgroundColor: inheritedBackground(index.indexName) }">
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
-            <span>{{ index.indexName }}</span>
+            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(index.indexName) }">
+              {{ index.indexName }}
+            </span>
             <q-space />
             <span class="text-caption text-grey-7">{{ index.refClass }}</span>
           </q-item-label>
+          <q-item-label v-if="isInherited(index)" caption>
+            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(index.indexName) }) }}
+          </q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-btn v-if="isInherited(index)" dense flat round icon="content_copy"
-            :title="$t('configEditor.indices.copyIndex')" @click="copyInheritedIndex(index)" />
+          <div v-if="isInherited(index)" class="row no-wrap items-center q-gutter-xs">
+            <q-btn dense flat round icon="content_copy"
+              :title="$t('configEditor.indices.copyIndex')" @click="copyInheritedIndex(index)" />
+            <q-toggle :model-value="isRemoved(index.indexName)" color="primary" :icon="mdiEyeOff"
+              :title="$t('configEditor.removeInherited', { name: index.indexName })"
+              @update:model-value="setRemoved(index.indexName, $event)" />
+          </div>
           <div v-else class="row no-wrap">
             <q-btn dense flat round icon="edit" :title="$t('configEditor.indices.editIndex')"
               @click="editIndex(index.indexName)" />
@@ -110,6 +121,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { mdiEyeOff } from '@mdi/js';
 import { useQuasar } from 'quasar';
 import type { Editor } from '@tiptap/vue-3';
 import type { DocumentFormat, Index, IndexRefPlacement } from '../../common';
@@ -130,10 +142,19 @@ type IndexDraft = Index & {
 };
 
 const props = withDefaults(
-  defineProps<{ modelValue?: Index[]; inherited?: Index[]; editor?: Editor }>(),
+  defineProps<{
+    modelValue?: Index[];
+    inherited?: Index[];
+    editor?: Editor;
+    removed?: string[];
+    provenance?: Record<string, string>;
+  }>(),
   { modelValue: () => [], inherited: () => [] },
 );
-const emit = defineEmits<{ 'update:modelValue': [value: Index[]] }>();
+const emit = defineEmits<{
+  'update:modelValue': [value: Index[]];
+  'update:removed': [value: string[]];
+}>();
 const { t } = useI18n();
 const $q = useQuasar();
 const backend = useBackend();
@@ -146,13 +167,17 @@ const putIndexRefOptions = [
   { label: t('configEditor.indices.before'), value: 'before' },
   { label: t('configEditor.indices.after'), value: 'after' },
 ];
-const allIndices = computed(() => [
-  ...indices.value,
-  ...props.inherited.filter(
-    (index) =>
-      !indices.value.some((local) => local.indexName === index.indexName),
-  ),
-]);
+const allIndices = computed(() => {
+  const inherited = props.inherited
+    .filter(
+      (index) =>
+        !indices.value.some((local) => local.indexName === index.indexName),
+    )
+    .sort((first, second) =>
+      inheritedSource(first.indexName).localeCompare(inheritedSource(second.indexName)),
+    );
+  return [...indices.value, ...inherited];
+});
 const canApply = computed(
   () => !!draft.value?.indexName.trim() && !!draft.value?.refClass.trim(),
 );
@@ -167,6 +192,29 @@ watch(
 
 function copyIndex(index: Index): Index {
   return { ...index };
+}
+
+function isRemoved(indexName: string): boolean {
+  return (props.removed || []).includes(indexName);
+}
+
+function setRemoved(indexName: string, value: boolean | null): void {
+  const names = new Set(props.removed || []);
+  if (value) names.add(indexName);
+  else names.delete(indexName);
+  emit('update:removed', [...names]);
+}
+
+function inheritedSource(indexName: string): string {
+  return props.provenance?.[indexName] || '';
+}
+
+function inheritedBackground(indexName: string): string | undefined {
+  const source = inheritedSource(indexName);
+  if (!source) return undefined;
+  const sources = [...new Set(Object.values(props.provenance || {}))];
+  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
+  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
 }
 
 function toDraft(index: Index): IndexDraft {

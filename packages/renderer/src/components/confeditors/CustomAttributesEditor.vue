@@ -19,13 +19,13 @@
         :key="attribute.name"
         dense
         :class="{
-          'bg-grey-2': isInherited(attribute),
           'text-grey-7': isInherited(attribute),
         }"
+        :style="{ backgroundColor: inheritedBackground(attribute.name) }"
       >
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
-            <span>{{ attribute.name }}</span>
+            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(attribute.name) }">{{ attribute.name }}</span>
             <q-space />
             <span class="text-caption text-grey-7">{{
               appliesToLabel(attribute.appliesTo)
@@ -33,6 +33,9 @@
           </q-item-label>
           <q-item-label v-if="attribute.description" caption>
             {{ attribute.description }}
+          </q-item-label>
+          <q-item-label v-if="isInherited(attribute)" caption>
+            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(attribute.name) }) }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
@@ -64,6 +67,14 @@
                 @click="deleteAttribute(attribute.name)"
               />
             </template>
+            <q-toggle
+              v-if="isInherited(attribute)"
+              :model-value="isRemoved(attribute.name)"
+              color="primary"
+              :icon="mdiEyeOff"
+              :title="$t('configEditor.removeInherited', { name: attribute.name })"
+              @update:model-value="setRemoved(attribute.name, $event)"
+            />
           </div>
         </q-item-section>
       </q-item>
@@ -193,6 +204,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { mdiEyeOff } from '@mdi/js';
 import type { CustomAttribute } from '../../common';
 import { HasPandocAttr } from '../../common';
 
@@ -206,9 +218,12 @@ type ListKind = 'suggestions' | 'values';
 const props = defineProps<{
   modelValue: CustomAttribute[];
   inherited?: CustomAttribute[];
+  removed?: string[];
+  provenance?: Record<string, string>;
 }>();
 const emit = defineEmits<{
   'update:modelValue': [value: CustomAttribute[]];
+  'update:removed': [value: string[]];
 }>();
 
 const attributes = ref<CustomAttribute[]>([]);
@@ -219,18 +234,43 @@ const listKind = ref<ListKind>('suggestions');
 const listItems = ref<string[]>([]);
 const newListItem = ref('');
 
-const allAttributes = computed(() => [
-  ...attributes.value,
-  ...(props.inherited || []).filter(
-    (item) => !attributes.value.some((local) => local.name === item.name),
-  ),
-]);
+const allAttributes = computed(() => {
+  const inherited = (props.inherited || [])
+    .filter((item) => !attributes.value.some((local) => local.name === item.name))
+    .sort((first, second) =>
+      inheritedSource(first.name).localeCompare(inheritedSource(second.name)),
+    );
+  return [...attributes.value, ...inherited];
+});
 
 function isInherited(attribute: CustomAttribute): boolean {
   return (
     !attributes.value.some(({ name }) => name === attribute.name) &&
     (props.inherited || []).some(({ name }) => name === attribute.name)
   );
+}
+
+function isRemoved(name: string): boolean {
+  return (props.removed || []).includes(name);
+}
+
+function inheritedSource(name: string): string {
+  return props.provenance?.[name] || '';
+}
+
+function inheritedBackground(name: string): string | undefined {
+  const source = inheritedSource(name);
+  if (!source) return undefined;
+  const sources = [...new Set(Object.values(props.provenance || {}))];
+  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
+  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
+}
+
+function setRemoved(name: string, value: boolean | null): void {
+  const names = new Set(props.removed || []);
+  if (value) names.add(name);
+  else names.delete(name);
+  emit('update:removed', [...names]);
 }
 
 function appliesToLabel(appliesTo: CustomAttribute['appliesTo']): string {

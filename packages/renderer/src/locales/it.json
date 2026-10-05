@@ -152,6 +152,8 @@
   "convert": "converti",
   "configEditor": {
     "title": "Modifica configurazione dell'editor",
+    "removeInherited": "Rimuovi {name}",
+    "inheritedFrom": "Ereditato da {name}",
     "buttons": {
       "cancel": "Annulla",
       "close": "Chiudi",
