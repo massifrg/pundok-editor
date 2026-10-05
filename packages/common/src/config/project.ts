@@ -1,9 +1,8 @@
-import { PundokEditorConfigInit } from './editorConfigInit';
 import {
-  ConfigurationPruning,
-  getPrunedConfigInit,
-  PundokEditorConfig,
-} from './editorConfiguration';
+  PundokEditorConfigInit,
+  PundokEditorProjectConfig,
+} from './editorConfigInit';
+import { getPrunedConfigInit, PundokEditorConfig } from './editorConfiguration';
 import { NamedAndDescribed } from '../types';
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
@@ -15,9 +14,7 @@ export interface PundokEditorProject extends NamedAndDescribed {
   /** The names of configurations to inherit */
   configurations?: string[];
   /** A complement to the inherited configurations */
-  editorConfig: Partial<
-    PundokEditorConfigInit & { remove: ConfigurationPruning }
-  >;
+  editorConfig: Partial<PundokEditorProjectConfig>;
   /** The actual configuration computed from the inherited configurations and complemented with editorConfig  */
   computedConfig?: PundokEditorConfig;
 }

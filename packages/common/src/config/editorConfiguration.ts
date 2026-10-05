@@ -6,8 +6,16 @@ import {
   CustomStyleDef,
   customStylesFromDef,
 } from './customStyles';
-import { PrunableConfigInitField, PundokEditorConfigInit } from './editorConfigInit';
-import { DEFAULT_COPY_FORMAT, DEFAULT_FORMAT, DEFAULT_MAIN_FORMATS } from '../pandocFormat';
+import {
+  ConfigurationPruning,
+  PrunableConfigInitField,
+  PundokEditorConfigInit,
+} from './editorConfigInit';
+import {
+  DEFAULT_COPY_FORMAT,
+  DEFAULT_FORMAT,
+  DEFAULT_MAIN_FORMATS,
+} from '../pandocFormat';
 import { CustomMetadata } from './customMetadata';
 import { NoteStyle } from './notes';
 import { Index, indexRefDecorationCss } from './indices';
@@ -247,19 +255,18 @@ function mergeNamedObjects(
     .concat(nobj2.filter((nobj) => !nobj1.find((n) => nobj[name] == n[name])));
   return default1 && default2
     ? merged.map((m) =>
-      m[name] === default1[name] ? { ...m, default: false } : m,
-    )
+        m[name] === default1[name] ? { ...m, default: false } : m,
+      )
     : merged;
 }
 
-type HasDefault = InputConverter | OutputConverter
+type HasDefault = InputConverter | OutputConverter;
 function onlyLastDefault(list: HasDefault[]): HasDefault[] {
-  let index: number
+  let index: number;
   for (index = list.length - 1; index >= 0; index--) {
-    if (list[index].default)
-      break
+    if (list[index].default) break;
   }
-  return list.map((item, i) => ({ ...item, default: i === index }))
+  return list.map((item, i) => ({ ...item, default: i === index }));
 }
 
 function mergeInsertableRaws(
@@ -353,14 +360,18 @@ export function enrichConfiguration(
       defaultRawFormat: enriching.defaultRawFormat || base.defaultRawFormat,
       rawInlines: mergeInsertableRaws(enriching.rawInlines, base.rawInlines),
       rawBlocks: mergeInsertableRaws(enriching.rawBlocks, base.rawBlocks),
-      inputConverters: onlyLastDefault(mergeNamedObjects(
-        enriching.inputConverters,
-        base.inputConverters,
-      ) as InputConverter[]) as InputConverter[],
-      outputConverters: onlyLastDefault(mergeNamedObjects(
-        enriching.outputConverters,
-        base.outputConverters,
-      ) as OutputConverter[]) as OutputConverter[],
+      inputConverters: onlyLastDefault(
+        mergeNamedObjects(
+          enriching.inputConverters,
+          base.inputConverters,
+        ) as InputConverter[],
+      ) as InputConverter[],
+      outputConverters: onlyLastDefault(
+        mergeNamedObjects(
+          enriching.outputConverters,
+          base.outputConverters,
+        ) as OutputConverter[],
+      ) as OutputConverter[],
       automations: mergeNamedObjects(
         enriching.automations,
         base.automations,
@@ -375,27 +386,22 @@ export function enrichConfiguration(
   }
 }
 
-/**
- * A description of the elements to prune from an inherited configuration.
- */
-export type ConfigurationPruning = Record<PrunableConfigInitField, string[]>
-
 function prunedFieldsFromConfig(
   pruning: ConfigurationPruning,
   c: PundokEditorConfigInit | PundokEditorConfig,
-  init: Partial<Record<PrunableConfigInitField, any>> = {}
+  init: Partial<Record<PrunableConfigInitField, any>> = {},
 ): Partial<Record<PrunableConfigInitField, any>> {
-  const pruned = { ...init } as Partial<Record<PrunableConfigInitField, any>>
-  Object.entries(pruning).forEach(entry => {
-    const k = entry[0] as PrunableConfigInitField
-    const ids: string[] = entry[1] || []
-    const oldValue = (c as PundokEditorConfigInit)[k]
+  const pruned = { ...init } as Partial<Record<PrunableConfigInitField, any>>;
+  Object.entries(pruning).forEach((entry) => {
+    const k = entry[0] as PrunableConfigInitField;
+    const ids: string[] = entry[1] || [];
+    const oldValue = (c as PundokEditorConfigInit)[k];
     if (oldValue) {
-      let newValue = undefined
+      let newValue = undefined;
       switch (k as PrunableConfigInitField) {
         case 'autoDelimiters':
-          newValue = omit(oldValue as object, ids) as Record<string, string[]>
-          break
+          newValue = omit(oldValue as object, ids) as Record<string, string[]>;
+          break;
         case 'automations':
         case 'customAttributes':
         case 'customClasses':
@@ -403,26 +409,32 @@ function prunedFieldsFromConfig(
         case 'customStyles':
         case 'inputConverters':
         case 'outputConverters':
-          newValue = (oldValue as NamedAndDescribed[]).filter(o => !ids.includes(o.name))
-          break
+          newValue = (oldValue as NamedAndDescribed[]).filter(
+            (o) => !ids.includes(o.name),
+          );
+          break;
         case 'indices':
-          newValue = (oldValue as Index[]).filter(o => !ids.includes(o.indexName))
-          break
+          newValue = (oldValue as Index[]).filter(
+            (o) => !ids.includes(o.indexName),
+          );
+          break;
         case 'noteStyles':
-          newValue = (oldValue as NoteStyle[]).filter(o => !ids.includes(o.noteType))
-          break
+          newValue = (oldValue as NoteStyle[]).filter(
+            (o) => !ids.includes(o.noteType),
+          );
+          break;
         case 'customCss':
         case 'mainFormats':
-          newValue = (oldValue as string[]).filter(o => !ids.includes(o))
-          break
+          newValue = (oldValue as string[]).filter((o) => !ids.includes(o));
+          break;
       }
       if (newValue !== undefined) {
-        pruned[k] = newValue
+        pruned[k] = newValue;
         // console.log(`prune Config ${c.name}: ${JSON.stringify(oldValue)} => ${JSON.stringify(newValue)} `)
       }
     }
-  })
-  return pruned
+  });
+  return pruned;
 }
 
 /**
@@ -437,14 +449,19 @@ export function getPrunedConfigInit(
   c: PundokEditorConfigInit | PundokEditorConfig,
   prune: ConfigurationPruning,
 ): PundokEditorConfig {
-  let modified_fields: Partial<Record<PrunableConfigInitField, any>> = prunedFieldsFromConfig(prune, c)
-  return new PundokEditorConfig({ ...c, ...modified_fields })
+  let modified_fields: Partial<Record<PrunableConfigInitField, any>> =
+    prunedFieldsFromConfig(prune, c);
+  return new PundokEditorConfig({ ...c, ...modified_fields });
 }
 
-export function getRawInlineFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
+export function getRawInlineFormats(
+  config: PundokEditorConfig | PundokEditorConfigInit,
+): string[] {
   return uniq(config?.rawInlines?.map((r) => r.format)) || [];
 }
 
-export function getRawBlockFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
+export function getRawBlockFormats(
+  config: PundokEditorConfig | PundokEditorConfigInit,
+): string[] {
   return uniq(config?.rawBlocks?.map((r) => r.format)) || [];
 }

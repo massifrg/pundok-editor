@@ -7,10 +7,7 @@ import {
   serializeProject,
 } from '../../../common/src';
 import { localizePath } from '../filesystem';
-import {
-  loadProjectInDirectory,
-  projectFileNameInDirectory,
-} from './project';
+import { loadProjectInDirectory, projectFileNameInDirectory } from './project';
 
 export async function updateConfiguration(
   options: ConfigurationUpdateOptions,
@@ -21,11 +18,22 @@ export async function updateConfiguration(
       throw new Error('Official configurations are read-only');
     throw new Error('A project path is required to update a configuration');
   }
+  const projectDirectory = localizePath(projectPath);
+  const projectFilename = projectFileNameInDirectory(projectDirectory);
+  if (!field) {
+    if (operation !== 'update')
+      throw new Error(
+        'Updating a whole project requires the "update" operation',
+      );
+    const updatedProject = parseProject(value);
+    await copyFile(projectFilename, backupFilename(projectFilename));
+    await writeFile(projectFilename, serializeProject(updatedProject));
+    return;
+  }
   if (field !== 'automations')
     throw new Error(`Updating "${field}" is not supported`);
 
   const automation = parseAutomation(value);
-  const projectDirectory = localizePath(projectPath);
   const project = await loadProjectInDirectory(projectDirectory);
   const currentAutomations = project.editorConfig?.automations || [];
   const updatedAutomations = currentAutomations.filter(
@@ -33,7 +41,6 @@ export async function updateConfiguration(
   );
   if (operation !== 'delete') updatedAutomations.push(automation);
 
-  const projectFilename = projectFileNameInDirectory(projectDirectory);
   await copyFile(projectFilename, backupFilename(projectFilename));
   const updatedProject: PundokEditorProject = {
     ...project,
@@ -43,6 +50,29 @@ export async function updateConfiguration(
     },
   };
   await writeFile(projectFilename, serializeProject(updatedProject));
+}
+
+function parseProject(value: string): PundokEditorProject {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch (error) {
+    throw new Error(`Project must be valid JSON: ${error}`);
+  }
+  if (
+    !parsed ||
+    typeof parsed !== 'object' ||
+    typeof (parsed as Record<string, unknown>).name !== 'string' ||
+    typeof (parsed as Record<string, unknown>).rootDocument !== 'string' ||
+    !(
+      (parsed as Record<string, unknown>).editorConfig &&
+      typeof (parsed as Record<string, unknown>).editorConfig === 'object'
+    )
+  )
+    throw new Error(
+      'Project must include string "name" and "rootDocument" fields and an "editorConfig" object',
+    );
+  return parsed as PundokEditorProject;
 }
 
 function parseAutomation(value: string): Automation {

@@ -12,25 +12,25 @@ import { NamedAndDescribed } from '../types';
 import { AutoDelimitersDef } from './autoDelimiters';
 
 /**
- * A configuration (customization) of PundokEditor.
+ * Fields for configuration typing and versioning
  */
-export interface PundokEditorConfigInit extends NamedAndDescribed {
+export interface PundokEditorConfigType {
   /** the minimal suitable version of the editor */
   version: number[];
   /** the configuration is local (this is set by the editor, it's overridden if set by the user) */
   isLocal?: boolean;
-  // /** the names of other configurations to derive this from */
-  // inherits?: string[];
-  /** options for TipTap/Prosemirror `Node`s and `Mark`s */
-  // tiptap?: {
-  //   options?: Record<string, any>;
-  // };
+}
+
+/**
+ * Fields that are common to project and configuration.
+ */
+export interface BasePundokEditorProjectConfig {
   /** the name of a pandoc format or an InputConverter used as default to open documents. */
   workingFormat?: string;
   /** the name of the format (pandoc or custom) used with "Save a copy" */
-  copyFormat?: string,
+  copyFormat?: string;
   /** the names of the formats that are more visible in the GUI with this configuration */
-  mainFormats?: string[],
+  mainFormats?: string[];
   /** a template for new documents */
   documentTemplate?: string;
   /** automatic delimiters for Marks like singleQuoted or doubleQuoted,
@@ -64,10 +64,24 @@ export interface PundokEditorConfigInit extends NamedAndDescribed {
   automations?: Automation[];
 }
 
-/** The fields allowed in a configuration init object. */
-export type ConfigInitField = keyof PundokEditorConfigInit
+/**
+ * All the fields to instantiate a Configuration.
+ */
+export interface PundokEditorConfigInit
+  extends
+    NamedAndDescribed,
+    PundokEditorConfigType,
+    BasePundokEditorProjectConfig {}
 
-export type PrunableConfigInitField = keyof Pick<PundokEditorConfigInit,
+/** The fields allowed in a configuration init object. */
+export type ConfigInitField = keyof PundokEditorConfigInit;
+
+/**
+ * All the fields that can be inherited from configurations,
+ * but also pruned in a project.
+ */
+export type PrunableConfigInitField = keyof Pick<
+  PundokEditorConfigInit,
   | 'autoDelimiters'
   | 'automations'
   | 'customAttributes'
@@ -80,18 +94,32 @@ export type PrunableConfigInitField = keyof Pick<PundokEditorConfigInit,
   | 'mainFormats'
   | 'noteStyles'
   | 'outputConverters'
->
+>;
+
+/**
+ * A description of the elements to prune from an inherited configuration.
+ */
+export type ConfigurationPruning = Record<PrunableConfigInitField, string[]>;
+
+/**
+ * The configuration of a project is the result of:
+ * - inheriting configurations
+ * - pruning some of the inherited items
+ * - adding some other project-specific items
+ */
+export interface PundokEditorProjectConfig extends BasePundokEditorProjectConfig {
+  remove: ConfigurationPruning;
+}
 
 export type ConfigurationUpdateOptions = {
   /** The name of the configuration to be updated. */
-  configurationName?: string
+  configurationName?: string;
   /** The path of the project to be updated. */
-  projectPath?: string
+  projectPath?: string;
   /** The added/updated object (or the whole configuration), as a JSON-stringified object. */
-  value: string,
-  /** When updating a single section of the configuration, the name of the section ("automations", "customStyles", etc.). */
-  field?: ConfigInitField
+  value: string;
+  /** When updating a single section of the configuration, the name of the section ("automations", "customStyles", etc.); omit it to replace a whole project. */
+  field?: ConfigInitField;
   /** When where is defined, what kind of operation to perform */
-  operation: "append" | "update" | "delete"
-}
-
+  operation: 'append' | 'update' | 'delete';
+};

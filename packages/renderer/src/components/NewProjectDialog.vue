@@ -147,12 +147,12 @@ export default {
     removeConfig(configName: string) {
       this.configurations = this.configurations.filter((c) => c !== configName);
     },
-    setEditorConfig(
-      configuration: PundokEditorConfigInit,
-      configurations: string[],
-    ) {
-      this.editorConfig = configuration;
-      this.configurations = configurations;
+    setEditorConfig(project: PundokEditorProject) {
+      this.name = project.name;
+      this.description = project.description || '';
+      this.rootDocument = project.rootDocument;
+      this.editorConfig = project.editorConfig;
+      this.configurations = project.configurations || [];
     },
     async selectFolder() {
       const docState = getEditorDocState(this.editor);

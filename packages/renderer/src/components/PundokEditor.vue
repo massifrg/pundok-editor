@@ -1660,9 +1660,27 @@ export default {
     closeProjectStructureDialog() {
       this.visibleProjectStructureDialog = false;
     },
-    saveProject(project: PundokEditorProject) {
-      this.updateEditorDocState({ project });
-      this.visibleConfigurationEditor = false;
+    async saveProject(project: PundokEditorProject) {
+      const { computedConfig: _computedConfig, ...projectToSave } = project;
+      try {
+        await this.backend?.storeInConfiguration({
+          projectPath: project.path,
+          value: JSON.stringify(projectToSave),
+          operation: 'update',
+        });
+        const savedProject = await this.backend?.getProject({
+          path: project.path,
+          computeConfig: true,
+        });
+        if (savedProject) await this.setProject(savedProject);
+        this.visibleConfigurationEditor = false;
+      } catch (error) {
+        console.error('Unable to save project configuration', error);
+        this.$q.notify({
+          type: 'negative',
+          message: 'Unable to save project configuration',
+        });
+      }
     },
     onClose(event: Event) {
       if (this.askToSaveChanges) {

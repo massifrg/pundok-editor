@@ -160,6 +160,7 @@
       "close": "Close",
       "delete": "Delete",
       "save": "Save",
+      "check": "Check",
       "apply": "Apply",
       "add": "Add",
       "edit": "Edit",
@@ -223,8 +224,8 @@
       "copyFormat": "Copy format",
       "copyFormatDescription": "Format used by Save a copy.",
       "mainFormats": "Main formats",
-      "mainFormatsDescription": "Formats shown prominently, as a JSON array of strings."
-      ,"extensions": "Format extensions",
+      "mainFormatsDescription": "Formats shown prominently, as a JSON array of strings.",
+      "extensions": "Format extensions",
       "addFormat": "Add format",
       "loadingExtensions": "Loading extensions...",
       "noExtensions": "No extensions available."

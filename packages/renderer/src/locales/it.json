@@ -159,6 +159,7 @@
       "close": "Chiudi",
       "delete": "Elimina",
       "save": "Salva",
+      "check": "Controlla",
       "apply": "Applica",
       "add": "Aggiungi",
       "edit": "Modifica",
@@ -222,8 +223,8 @@
       "copyFormat": "Formato della copia",
       "copyFormatDescription": "Formato usato per Salva una copia.",
       "mainFormats": "Formati principali",
-      "mainFormatsDescription": "Formati mostrati in evidenza, come array JSON di stringhe."
-      ,"extensions": "Estensioni del formato",
+      "mainFormatsDescription": "Formati mostrati in evidenza, come array JSON di stringhe.",
+      "extensions": "Estensioni del formato",
       "addFormat": "Aggiungi formato",
       "loadingExtensions": "Caricamento delle estensioni...",
       "noExtensions": "Nessuna estensione disponibile."
