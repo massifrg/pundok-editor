@@ -412,10 +412,31 @@ function nomMatchesPseudoClass(
   switch (ast.name) {
     case 'not':
       return !!ast.subtree && !nomMatchesAST(nom, ast.subtree);
-    case 'contains':
+    case 'contains': {
       const n = nom instanceof Node ? nom as Node : parent
       const text = n?.textContent || n?.attrs.text
       return !!argument && text && text.indexOf(argument) >= 0
+    }
+    case 'text-starts-with': {
+      const n = nom instanceof Node ? nom as Node : parent
+      const text = n?.textContent || n?.attrs.text
+      return !!argument && text && text.startsWith(argument)
+    }
+    case 'text-ends-with': {
+      const n = nom instanceof Node ? nom as Node : parent
+      const text = n?.textContent || n?.attrs.text
+      return !!argument && text && text.endsWith(argument)
+    }
+    case 'text-matches-regex': {
+      const n = nom instanceof Node ? nom as Node : parent
+      const text = n?.textContent || n?.attrs.text
+      try {
+        return !!argument && text && text.match(new RegExp(argument))
+      } catch (err) {
+        console.log(err)
+        return false
+      }
+    }
     case 'first-child':
       return index === 0
     case 'last-child':
