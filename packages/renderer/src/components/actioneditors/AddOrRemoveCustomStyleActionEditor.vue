@@ -1,7 +1,7 @@
 <template>
   <q-btn-dropdown :label="selectedStyleName" no-caps>
     <q-list>
-      <q-item v-for="s in styles" dense clickable v-close-popup :title="s.styleDef.description"
+      <q-item v-for="s in styles" :key="s.styleDef.name" dense clickable v-close-popup :title="s.styleDef.description"
         @click="setStyleName(s.styleDef.name)">
         <q-item-section><q-item-label>{{ s.styleDef.name }}</q-item-label></q-item-section>
       </q-item>
@@ -12,9 +12,7 @@
 <script lang="ts">
 import {
   AddRemoveCustomStyleActionProps,
-  appliesTo,
   CustomStyleInstance,
-  MARK_NAME_SPAN
 } from '../../common';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { getEditorConfiguration } from '../../schema';
@@ -27,8 +25,11 @@ export default {
       return getEditorConfiguration(this.editor)
     },
     styles(): CustomStyleInstance[] {
-      return (this.configuration?.customStylesInstances || [])
-        .filter(cs => appliesTo(cs, MARK_NAME_SPAN))
+      const styles = new Map<string, CustomStyleInstance>();
+      for (const style of this.configuration?.customStylesInstances || []) {
+        if (!styles.has(style.styleDef.name)) styles.set(style.styleDef.name, style);
+      }
+      return [...styles.values()];
     },
     selectedStyleName() {
       return (this.action?.props as AddRemoveCustomStyleActionProps)?.styleName || ""
