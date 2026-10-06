@@ -9,48 +9,9 @@ import {
   upperCaseFirstTransaction,
   upperCaseTransaction,
 } from '../../commands';
-import { getMark, SelectedNodeOrMark } from '../helpers';
+import { getMark } from '../helpers';
 import { asTiptapCommand } from '../helpers';
-import {
-  ActionNameWithProps,
-  AddRemoveRenameClassActionProps,
-  AddRemoveCustomClassActionProps,
-  AddRemoveCustomStyleActionProps,
-  AddRemoveMarkActionProps,
-  InsertRawInlineActionProps,
-  MARK_NAME_SPAN,
-  SetIndexRefActionProps,
-  SetSpanActionProps,
-  SK,
-  AddRemoveRenameAttributeActionProps
-} from '../../common';
-import {
-  ACTION_ADD_ATTRIBUTE,
-  ACTION_ADD_CLASS,
-  ACTION_ADD_CUSTOM_CLASS,
-  ACTION_ADD_CUSTOM_STYLE,
-  ACTION_ADD_MARK,
-  ACTION_DELETE_CSS_SELECTED,
-  ACTION_INSERT_RAW_INLINE,
-  ACTION_LOWERCASE,
-  ACTION_REMOVE_ATTRIBUTE,
-  ACTION_REMOVE_CLASS,
-  ACTION_REMOVE_CUSTOM_CLASS,
-  ACTION_REMOVE_CUSTOM_STYLE,
-  ACTION_REMOVE_MARK,
-  ACTION_RENAME_ATTRIBUTE,
-  ACTION_RENAME_CLASS,
-  ACTION_SET_INDEX_REF,
-  ACTION_SET_SPAN,
-  ACTION_UNWRAP_CSS_SELECTED,
-  ACTION_UPPERCASE,
-  ACTION_UPPERCASE_FIRST,
-} from '../../actions';
-import { setIndexRefCommand } from './IndexingExtension';
-import { insertRawInlineCommand } from '../nodes/RawInline';
-import { isString } from 'lodash-es';
-import { deleteCssSelectedCommand, unwrapCssSelectedCommand } from './CssSelectionExtension';
-import { addPandocAttrClassCommand, addPandocAttributeCommand, removePandocAttrClassCommand, removePandocAttributeCommand, renamePandocAttrClassCommand, renamePandocAttributeCommand } from './HelperCommandsExtension';
+import { SK } from '../../common';
 
 export type TextTransformType =
   | 'add-mark'
@@ -81,10 +42,6 @@ declare module '@tiptap/core' {
       toUppercase: (locales?: string | string[]) => ReturnType;
       toUppercaseFirst: (locales?: string | string[]) => ReturnType;
       applyTextTransforms: (transforms: TextTransform[]) => ReturnType;
-      applyActions: (
-        actions: ActionNameWithProps[],
-        selectedNodeOrMark?: SelectedNodeOrMark
-      ) => ReturnType;
     };
   }
 }
@@ -105,10 +62,6 @@ export const TextTransformExtension = Extension.create({
           asTiptapCommand(upperCaseFirstCommand(locales)),
       applyTextTransforms: (transforms) =>
         asTiptapCommand(applyTextTransformsCommand(transforms)),
-      // TODO: the next one should go in a file of its own
-      applyActions:
-        (actions: ActionNameWithProps[], selectedNodeOrMark) =>
-          ({ state, dispatch, view }) => applyActions(actions, selectedNodeOrMark)(state, dispatch, view),
     };
   },
   addKeyboardShortcuts() {
@@ -120,7 +73,7 @@ export const TextTransformExtension = Extension.create({
   }
 });
 
-function applyTextTransformsCommand(transforms: TextTransform[]): Command {
+export function applyTextTransformsCommand(transforms: TextTransform[]): Command {
   return (state, dispatch, view) => {
     const { empty, from, to } = state.selection;
     if (empty) return false;
@@ -175,116 +128,3 @@ function applyTextTransformsCommand(transforms: TextTransform[]): Command {
     return true;
   }
 }
-
-function actionNameWithPropsToCommand(
-  action: ActionNameWithProps,
-  selectedNodeOrMark?: SelectedNodeOrMark,
-): Command {
-  const { name, props } = action
-  const typeName = (selectedNodeOrMark?.node || selectedNodeOrMark?.mark)?.type.name
-  switch (name) {
-    case ACTION_ADD_MARK.name:
-    case ACTION_REMOVE_MARK.name:
-      {
-        const { markType, attrs } = (props || {}) as AddRemoveMarkActionProps
-        return applyTextTransformsCommand([{
-          type: ACTION_ADD_MARK.name === name ? 'add-mark' : 'remove-mark',
-          mark: markType,
-          attrs: attrs
-        } as MarkTransform])
-      }
-      break
-    case ACTION_ADD_CUSTOM_STYLE.name:
-    case ACTION_REMOVE_CUSTOM_STYLE.name:
-      {
-        const { styleName } = (props || {}) as AddRemoveCustomStyleActionProps
-        const attrs = {
-          customStyle: styleName,
-          kv: {
-            'custom-style': styleName,
-          }
-        }
-        return applyTextTransformsCommand([{
-          type: ACTION_ADD_CUSTOM_STYLE.name === name ? 'add-mark' : 'remove-mark',
-          mark: MARK_NAME_SPAN,
-          attrs
-        } as MarkTransform])
-      }
-      break
-    case ACTION_LOWERCASE.name:
-      return applyTextTransformsCommand([{ type: 'lowercase' } as CapitalizeTransform])
-    case ACTION_UPPERCASE.name:
-      return applyTextTransformsCommand([{ type: 'uppercase' } as CapitalizeTransform])
-    case ACTION_UPPERCASE_FIRST.name:
-      return applyTextTransformsCommand([{ type: 'uppercase-first' } as CapitalizeTransform])
-    case ACTION_SET_SPAN.name:
-      {
-        const { classes, attrs } = (props || {}) as SetSpanActionProps
-        return applyTextTransformsCommand([{
-          type: 'add-mark',
-          mark: MARK_NAME_SPAN,
-          attrs: { classes, kv: attrs }
-        } as MarkTransform])
-      }
-      break
-    case ACTION_SET_INDEX_REF.name:
-      {
-        const { indexName } = (props || {}) as SetIndexRefActionProps
-        return setIndexRefCommand(indexName)
-      }
-      break
-    case ACTION_INSERT_RAW_INLINE.name:
-      {
-        const { format, where, content } = (props || {}) as InsertRawInlineActionProps
-        const isSingleAfter = where === 'after' && isString(content)
-        return insertRawInlineCommand(format, isSingleAfter ? ['', content] : content)
-      }
-      break
-    case ACTION_DELETE_CSS_SELECTED.name:
-      return deleteCssSelectedCommand;
-    case ACTION_UNWRAP_CSS_SELECTED.name:
-      return unwrapCssSelectedCommand;
-    case ACTION_ADD_CUSTOM_CLASS.name:
-      return addPandocAttrClassCommand((props as AddRemoveCustomClassActionProps).className, typeName)
-    case ACTION_REMOVE_CUSTOM_CLASS.name:
-      return removePandocAttrClassCommand((props as AddRemoveCustomClassActionProps).className, typeName)
-    case ACTION_ADD_CLASS.name:
-      return addPandocAttrClassCommand((props as AddRemoveRenameClassActionProps).className, typeName)
-    case ACTION_REMOVE_CLASS.name:
-      return removePandocAttrClassCommand((props as AddRemoveRenameClassActionProps).className, typeName)
-    case ACTION_RENAME_CLASS.name:
-      return renamePandocAttrClassCommand(
-        (props as AddRemoveRenameClassActionProps).className,
-        (props as AddRemoveRenameClassActionProps).newName,
-        typeName
-      )
-    case ACTION_ADD_ATTRIBUTE.name:
-      return addPandocAttributeCommand(
-        (props as AddRemoveRenameAttributeActionProps).attrName,
-        (props as AddRemoveRenameAttributeActionProps).attrValue,
-        typeName
-      )
-    case ACTION_REMOVE_ATTRIBUTE.name:
-      return removePandocAttributeCommand((props as AddRemoveRenameAttributeActionProps).attrName, typeName)
-    case ACTION_RENAME_ATTRIBUTE.name:
-      return renamePandocAttributeCommand(
-        (props as AddRemoveRenameAttributeActionProps).attrName,
-        (props as AddRemoveRenameAttributeActionProps).newName,
-        typeName
-      )
-    default:
-      // pass-through command
-      return () => true
-  }
-}
-
-const applyActions: (
-  actions: ActionNameWithProps[],
-  selectedNodeOrMark?: SelectedNodeOrMark,
-) => Command =
-  (actions: ActionNameWithProps[], selectedNodeOrMark) => {
-    const commands = actions.map(a => actionNameWithPropsToCommand(a, selectedNodeOrMark))
-    return (state, dispatch, view) => {
-      return commands.every(cmd => cmd(state, dispatch, view))
-    }
-  }
