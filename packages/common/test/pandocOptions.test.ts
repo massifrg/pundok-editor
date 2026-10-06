@@ -4,6 +4,7 @@ import {
   pandocOptionsToCliOptions,
 } from '../src/pandocOptions';
 import { PANDOC_EXTENSION_DESCRIPTIONS } from '../src/pandocExtensions';
+import { pandocFilterToCliOptions } from '../src/pandoc';
 
 const optionByLongName = (name: string) =>
   PANDOC_OPTIONS_SPECS.find((option) => option.name.includes(name));
@@ -25,6 +26,14 @@ describe('PANDOC_OPTIONS_SPECS', () => {
     ]) {
       expect(optionByLongName(name)).toBeDefined();
     }
+  });
+
+  describe('pandocFilterToCliOptions', () => {
+    it('can produce an argv-safe filter path without shell quotes', () => {
+      expect(
+        pandocFilterToCliOptions('filter', '/tmp/filter with spaces.lua', false),
+      ).toEqual(['--lua-filter=/tmp/filter with spaces.lua']);
+    });
   });
 
   describe('PANDOC_EXTENSION_DESCRIPTIONS', () => {

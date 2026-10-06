@@ -56,12 +56,14 @@ export const pandocParametersToCliOptions: (params: PandocParameters) => string[
 export function pandocFilterToCliOptions(
   filter: string | PandocFilter,
   filterPath?: string,
+  quotePath = true,
 ): string[] {
   const opts: string[] = isString(filter)
     ? []
     : pandocParametersToCliOptions(filter)
   const filepath = filterPath || pandocFilterName(filter)
-  opts.push(`${filepath.endsWith('.lua') ? '--lua-filter' : '--filter'}=${JSON.stringify(filepath)}`)
+  const cliPath = quotePath ? JSON.stringify(filepath) : filepath
+  opts.push(`${filepath.endsWith('.lua') ? '--lua-filter' : '--filter'}=${cliPath}`)
   return opts
 }
 

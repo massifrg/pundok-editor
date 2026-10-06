@@ -79,7 +79,7 @@ export async function transformWithPandoc(
     });
     if (!filterFile)
       throw new Error(`Transformation filter "${filterName}" not found`);
-    args.push(...pandocFilterToCliOptions(filter, filterFile));
+    args.push(...pandocFilterToCliOptions(filter, filterFile, false));
   }
 
   const sourceArgs = expandCommandArgs(transform.sources || ['-'], { project });
