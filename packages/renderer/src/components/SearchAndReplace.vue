@@ -648,6 +648,7 @@ export default {
         ? sel.optionSearchOnly
         : sel.replace !== undefined
       this.optionMergeSameAdjacentMarks = !!sel.optionMergeSameAdjacentMarks
+      this.actionsOnReplace = [...(sel.actions || [])]
       this.startSearch()
     },
     loadSearchAndReplace(sar: SearchAndReplace) {
@@ -737,6 +738,7 @@ export default {
           optionSearchOnly,
           replace: optionSearchOnly ? undefined : toRaw(this.textToReplace),
           optionMergeSameAdjacentMarks: toRaw(this.optionMergeSameAdjacentMarks),
+          actions: toRaw(this.actionsOnReplace),
           // tab,
         } as ElementsSelection
       } else {
