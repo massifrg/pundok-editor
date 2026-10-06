@@ -418,10 +418,12 @@ export class LocalBackend implements Backend {
 
   async getInclusionTree(
     project: PundokEditorProject,
+    refresh?: boolean,
   ): Promise<ProjectComponent | undefined> {
     try {
       const structure = await window.ipc.getInclusionTree(
         JSON.stringify(project),
+        refresh,
       );
       if (structure) {
         return JSON.parse(structure) as ProjectComponent;

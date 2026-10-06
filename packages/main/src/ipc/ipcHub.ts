@@ -98,10 +98,13 @@ export class IpcHub implements RendererHub {
 
   private inclusionTree(
     project: PundokEditorProject,
+    refresh?: boolean,
   ): Promise<string | undefined> {
     const key = JSON.stringify(project);
-    const cached = this.inclusionTrees.get(key);
-    if (cached) return cached;
+    if (!refresh) {
+      const cached = this.inclusionTrees.get(key);
+      if (cached) return cached;
+    }
 
     const pending = getInclusionTree(backendDirectories(), project);
     this.inclusionTrees.set(key, pending);
@@ -158,8 +161,11 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('get-project', (_event, options) =>
       getProject(backendDirectories(), options),
     );
-    ipcMain.handle('get-inclusion-tree', (_event, project) =>
-      this.inclusionTree(JSON.parse(project) as PundokEditorProject),
+    ipcMain.handle('get-inclusion-tree', (_event, project, refresh) =>
+      this.inclusionTree(
+        JSON.parse(project) as PundokEditorProject,
+        refresh,
+      ),
     );
     ipcMain.handle('get-bookmarks', (_event, bookmarkType) =>
       getBookmarks(backendDirectories(), bookmarkType),

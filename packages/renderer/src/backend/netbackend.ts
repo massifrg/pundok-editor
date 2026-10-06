@@ -150,8 +150,9 @@ export class NetBackend implements Backend {
 
   getInclusionTree(
     project: PundokEditorProject,
+    refresh?: boolean,
   ): Promise<ProjectComponent | undefined> {
-    return this.request('get-inclusion-tree', { project });
+    return this.request('get-inclusion-tree', { project, refresh });
   }
 
   createFolder(path: string): Promise<string> {

@@ -149,7 +149,11 @@ export function createBackendRouter(
   router.post(
     '/get-inclusion-tree',
     asyncHandler((req) =>
-      backend.getInclusionTree(username(req), req.body?.project),
+      backend.getInclusionTree(
+        username(req),
+        req.body?.project,
+        req.body?.refresh,
+      ),
     ),
   );
   router.post(

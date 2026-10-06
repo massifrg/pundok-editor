@@ -279,6 +279,7 @@ export class PundokEditorServer {
   async getInclusionTree(
     user: string,
     project: PundokEditorProject,
+    refresh?: boolean,
   ): Promise<ProjectComponent | undefined> {
     let userCache = this.inclusionTreesByUser.get(user);
     if (!userCache) {
@@ -287,8 +288,10 @@ export class PundokEditorServer {
     }
 
     const key = JSON.stringify(project);
-    const cached = userCache.get(key);
-    if (cached) return cached;
+    if (!refresh) {
+      const cached = userCache.get(key);
+      if (cached) return cached;
+    }
 
     const pending = getInclusionTree(this.directoriesForUser(user), {
       ...project,

@@ -135,6 +135,7 @@ export interface Backend {
    */
   getInclusionTree(
     project: PundokEditorProject,
+    refresh?: boolean,
   ): Promise<ProjectComponent | undefined>;
 
   /**

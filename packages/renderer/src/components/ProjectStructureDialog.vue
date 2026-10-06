@@ -293,7 +293,7 @@ const ProjectStructureDialog: Component = {
           this.isLoadingStructure = true;
           structure =
             this.project &&
-            (await this.backend?.getInclusionTree(this.project));
+            (await this.backend?.getInclusionTree(this.project, refresh));
           this.isLoadingStructure = false;
           if (!structure) this.dontReloadStructure = true;
         }

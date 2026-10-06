@@ -87,7 +87,10 @@ export interface Ipc {
     options: GetProjectOptions,
   ) => Promise<PundokEditorProject | undefined>;
 
-  getInclusionTree: (project: string) => Promise<string | undefined>;
+  getInclusionTree: (
+    project: string,
+    refresh?: boolean,
+  ) => Promise<string | undefined>;
 
   transformJson: (doc: string, transform: string) => Promise<string>;
 
@@ -192,8 +195,8 @@ contextBridge.exposeInMainWorld('ipc', {
     ipcRenderer.invoke('new-project', path, project),
   getProject: (options: GetProjectOptions) =>
     ipcRenderer.invoke('get-project', options),
-  getInclusionTree: (project: string) =>
-    ipcRenderer.invoke('get-inclusion-tree', project),
+  getInclusionTree: (project: string, refresh?: boolean) =>
+    ipcRenderer.invoke('get-inclusion-tree', project, refresh),
   transformJson: (doc: string, transform: string) =>
     ipcRenderer.invoke('transform-json', doc, transform),
   pandocFeature: (
