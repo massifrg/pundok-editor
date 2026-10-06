@@ -111,6 +111,7 @@ import { EditorView } from '@codemirror/view';
 import type { Editor } from '@tiptap/vue-3';
 import { computed, ref } from 'vue';
 import { mdiEyeOff } from '@mdi/js';
+import { relative } from 'path-browserify';
 import { Codemirror } from 'vue-codemirror';
 import type { PundokEditorProject } from '../../common';
 import { useBackend } from '../../stores';
@@ -175,8 +176,11 @@ function addCss(): void {
     },
     callback: (document) => {
       if ('path' in document && document.path) {
-        if (!cssFiles.value.includes(document.path)) {
-          emit('update:modelValue', [...cssFiles.value, document.path]);
+        const path = props.project?.path
+          ? relative(props.project.path, document.path)
+          : document.path;
+        if (!cssFiles.value.includes(path)) {
+          emit('update:modelValue', [...cssFiles.value, path]);
         }
       }
     },

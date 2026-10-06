@@ -319,7 +319,7 @@ setupQuasarIcons();
 import type { PropType } from 'vue';
 import { mapState } from 'pinia';
 import type { Editor } from '@tiptap/vue-3';
-import { parse as parsePath } from 'path-browserify';
+import { isAbsolute, parse as parsePath, relative } from 'path-browserify';
 import type {
   CustomAttribute,
   CustomClass,
@@ -473,7 +473,7 @@ const fields: EditorConfigField[] = [
     name: 'customCss',
     label: 'configEditor.customCss.label',
     description: 'configEditor.customCss.description',
-    kind: 'json',
+    kind: 'customCss',
   },
   {
     name: 'indices',
@@ -1184,6 +1184,11 @@ export default {
         ...(this.configuration as Record<string, any>),
         ...editorConfigValues,
       };
+      if (this.project?.path && Array.isArray(editorConfig.customCss)) {
+        editorConfig.customCss = editorConfig.customCss.map((path: string) =>
+          isAbsolute(path) ? relative(this.project!.path, path) : path,
+        );
+      }
       const remove: Record<string, unknown> = {
         ...((editorConfig.remove as Record<string, unknown> | undefined) || {}),
       };
