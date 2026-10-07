@@ -24,6 +24,7 @@ export interface LocalGitProjectOptions {
   user: string;
   password: string;
   remoteName?: string;
+  private?: boolean;
 }
 
 export interface GitStatusEntry {

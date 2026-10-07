@@ -37,12 +37,7 @@ export class GitRepositoryManager {
   async status(path: string): Promise<GitProjectStatus> {
     try {
       const branch = await this.currentBranch(path, { user: '', password: '' });
-      const result = await this.runGit(
-        ['status', '--porcelain'],
-        '',
-        '',
-        path,
-      );
+      const result = await this.runGit(['status', '--porcelain'], '', '', path);
       return { managed: true, branch, files: parseStatus(result.output) };
     } catch {
       return { managed: false, files: [] };
@@ -59,7 +54,8 @@ export class GitRepositoryManager {
   }
 
   async commit(options: GitCommitOptions): Promise<void> {
-    if (!options.message.trim()) throw new Error('A commit message is required');
+    if (!options.message.trim())
+      throw new Error('A commit message is required');
     await this.runGit(
       ['commit', '-m', options.message],
       '',
@@ -326,7 +322,7 @@ export class GitRepositoryManager {
       body: JSON.stringify({
         name: remote.name,
         description: project.description,
-        private: true,
+        private: options.private ?? true,
       }),
       signal: AbortSignal.timeout(10_000),
     });
@@ -564,14 +560,17 @@ async function remoteRepositories(
   if (!response.ok)
     throw new Error(`Could not list remote repositories (${response.status})`);
   const value: unknown = await response.json();
-  if (!Array.isArray(value)) throw new Error('Remote repository list is invalid');
+  if (!Array.isArray(value))
+    throw new Error('Remote repository list is invalid');
   return value.flatMap((entry) => {
     if (!isRecord(entry) || typeof entry.clone_url !== 'string') return [];
     return [{ url: entry.clone_url }];
   });
 }
 
-function parseServerUrl(value: string): { origin: string; hostname: string } | undefined {
+function parseServerUrl(
+  value: string,
+): { origin: string; hostname: string } | undefined {
   try {
     const parsed = new URL(value);
     if (!['http:', 'https:'].includes(parsed.protocol)) return undefined;

@@ -771,6 +771,7 @@
     "password": "Password or token",
     "destination": "Clone destination folder",
     "project": "Project",
+    "privateRepository": "Private repository",
     "scan": "Scan",
     "clone": "Clone",
     "share": "Share",

@@ -184,6 +184,7 @@
           :mode="gitRepositoryMode || 'clone'"
           :editor="editor as Editor"
           :project-path="docState()?.project?.path || ''"
+          :project="docState()?.project"
           @close="gitRepositoryMode = undefined"
           @done="gitRepositoryDone"
         />

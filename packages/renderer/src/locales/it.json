@@ -770,6 +770,7 @@
     "password": "Password o token",
     "destination": "Cartella di destinazione della clonazione",
     "project": "Progetto",
+    "privateRepository": "Repository privato",
     "scan": "Cerca",
     "clone": "Clona",
     "share": "Condividi",
