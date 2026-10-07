@@ -7,12 +7,14 @@
           v-model="url"
           :label="$t('gitRepositoryDialog.repositoryUrl')"
           outlined
+          :disable="busy"
         />
         <q-input
           v-model="user"
           :label="$t('gitRepositoryDialog.username')"
           outlined
           class="q-mt-sm"
+          :disable="busy"
         />
         <q-input
           v-model="password"
@@ -20,6 +22,7 @@
           type="password"
           outlined
           class="q-mt-sm"
+          :disable="busy"
         />
         <q-input
           v-if="mode === 'clone'"
@@ -28,6 +31,7 @@
           outlined
           class="q-mt-sm"
           readonly
+          :disable="busy"
         >
           <template #append
             ><q-btn flat icon="folder" @click="chooseDestination"
@@ -41,29 +45,39 @@
           :label="$t('gitRepositoryDialog.project')"
           outlined
           class="q-mt-sm"
+          :disable="busy"
         />
         <q-checkbox
           v-if="mode === 'publish'"
           v-model="privateRepository"
           :label="$t('gitRepositoryDialog.privateRepository')"
           class="q-mt-sm"
+          :disable="busy"
         />
       </q-card-section>
       <q-card-actions align="right">
+        <q-circular-progress
+          v-if="busy"
+          indeterminate
+          rounded
+          size="1.5rem"
+          class="q-mr-sm"
+        />
         <q-btn
           v-if="mode === 'clone'"
           :label="$t('gitRepositoryDialog.scan')"
-          :disable="!url || !user"
+          :disable="busy || !url || !user"
           @click="scan"
         />
         <q-btn
           :label="actionLabel"
           color="primary"
-          :disable="!url || !user || (mode === 'clone' && !destination)"
+          :disable="busy || !url || !user || (mode === 'clone' && !destination)"
           @click="submit"
         />
         <q-btn
           :label="$t('gitRepositoryDialog.cancel')"
+          :disable="busy"
           @click="$emit('close')"
         />
       </q-card-actions>
@@ -97,6 +111,7 @@ export default {
       user: '',
       password: '',
       destination: '',
+      busy: false,
       privateRepository: true,
       projects: [] as Array<{ name: string; description: string; url: string }>,
       selectedProject: undefined as
@@ -132,44 +147,54 @@ export default {
       });
     },
     async scan() {
-      if (!this.backend) return;
-      this.projects = await this.backend.scanGitProjects(
-        this.url,
-        this.user,
-        this.password,
-      );
-      this.selectedProject = this.projects[0];
+      if (!this.backend || this.busy) return;
+      this.busy = true;
+      try {
+        this.projects = await this.backend.scanGitProjects(
+          this.url,
+          this.user,
+          this.password,
+        );
+        this.selectedProject = this.projects[0];
+      } finally {
+        this.busy = false;
+      }
     },
     async submit() {
-      if (!this.backend) return;
-      const remote = this.repositoryUrl(
-        this.selectedProject?.url || this.url,
-        this.selectedProject?.name || this.project?.name,
-      );
-      const result =
-        this.mode === 'clone'
-          ? await this.backend.cloneGitProject({
-              url: remote,
-              user: this.user,
-              password: this.password,
-              destination: this.destination,
-            })
-          : this.mode === 'publish'
-            ? await this.backend.publishGitProject({
-                projectPath: this.projectPath,
+      if (!this.backend || this.busy) return;
+      this.busy = true;
+      try {
+        const remote = this.repositoryUrl(
+          this.selectedProject?.url || this.url,
+          this.selectedProject?.name || this.project?.name,
+        );
+        const result =
+          this.mode === 'clone'
+            ? await this.backend.cloneGitProject({
                 url: remote,
                 user: this.user,
                 password: this.password,
-                private: this.privateRepository,
+                destination: this.destination,
               })
-            : await this.backend.connectGitProject({
-                projectPath: this.projectPath,
-                url: remote,
-                user: this.user,
-                password: this.password,
-              });
-      this.$emit('done', result);
-      this.$emit('close');
+            : this.mode === 'publish'
+              ? await this.backend.publishGitProject({
+                  projectPath: this.projectPath,
+                  url: remote,
+                  user: this.user,
+                  password: this.password,
+                  private: this.privateRepository,
+                })
+              : await this.backend.connectGitProject({
+                  projectPath: this.projectPath,
+                  url: remote,
+                  user: this.user,
+                  password: this.password,
+                });
+        this.$emit('done', result);
+        this.$emit('close');
+      } finally {
+        this.busy = false;
+      }
     },
     repositoryUrl(url: string, projectName?: string): string {
       if (!projectName) return url;
