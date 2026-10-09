@@ -371,31 +371,88 @@ const sortAscending = ref<Record<RawGroup, boolean>>({
 });
 const rawInlines = ref<InsertableRaw[]>([]);
 const rawBlocks = ref<InsertableRaw[]>([]);
+const recentlyAddedFormats = ref<Record<RawGroup, string | undefined>>({
+  rawInlines: undefined,
+  rawBlocks: undefined,
+});
 const rawEditorSelection = ref<{
   group: RawGroup;
   index: number;
   inherited?: boolean;
   raw?: InsertableRaw;
+  pending?: boolean;
+  original?: InsertableRaw;
 }>();
 const { t } = useI18n();
 
-const defaultFormatOptions = computed(() => [
-  {
-    label: t('configEditor.rawElements.unset'),
-    value: null,
-  },
-  ...rawFormats.map((format) => ({ label: format, value: format })),
-]);
+const formatGroups = computed(() => {
+  const definedFormats = new Set(
+    [...rawInlines.value, ...rawBlocks.value]
+      .concat(inheritedList('rawInlines'), inheritedList('rawBlocks'))
+      .map((raw) => raw.format),
+  );
+  const formats = [...new Set([...rawFormats, ...definedFormats])].sort(
+    compareRawText,
+  );
+  return {
+    defined: formats.filter((format) => definedFormats.has(format)),
+    rest: formats.filter((format) => !definedFormats.has(format)),
+  };
+});
+const defaultFormatOptions = computed(() => {
+  const separator = { label: '', value: null, separator: true };
+  return [
+    {
+      label: t('configEditor.rawElements.unset'),
+      value: null,
+    },
+    separator,
+    ...formatGroups.value.defined.map((format) => ({
+      label: format,
+      value: format,
+    })),
+    ...(formatGroups.value.rest.length
+      ? [
+          separator,
+          ...formatGroups.value.rest.map((format) => ({
+            label: format,
+            value: format,
+          })),
+        ]
+      : []),
+  ];
+});
 const rawFormatOptions = computed(() =>
   rawFormats.map((format) => ({ label: format, value: format })),
 );
-const formatFilterOptions = computed(() => [
-  {
-    label: t('configEditor.rawElements.allFormats'),
-    value: null,
-  },
-  ...rawFormats.map((format) => ({ label: format, value: format })),
-]);
+const formatFilterOptions = computed(() => {
+  const separator = { label: '', value: null, separator: true };
+
+  return [
+    {
+      label: t('configEditor.rawElements.allFormats'),
+      value: null,
+    },
+    ...(formatGroups.value.defined.length
+      ? [
+          separator,
+          ...formatGroups.value.defined.map((format) => ({
+            label: format,
+            value: format,
+          })),
+        ]
+      : []),
+    ...(formatGroups.value.rest.length
+      ? [
+          separator,
+          ...formatGroups.value.rest.map((format) => ({
+            label: format,
+            value: format,
+          })),
+        ]
+      : []),
+  ];
+});
 const visibleRawInlines = computed(() =>
   rawEntries('rawInlines').filter(
     ({ raw }) => !selectedFormat.value || raw.format === selectedFormat.value,
@@ -451,11 +508,24 @@ function setDefaultRawFormat(format: string | null) {
 
 function addRaw(group: RawGroup) {
   const list = group === 'rawInlines' ? rawInlines.value : rawBlocks.value;
+  const format =
+    recentlyAddedFormats.value[group] ||
+    defaultRawFormat.value ||
+    rawFormats[0] ||
+    '';
   list.push({
-    format: selectedFormat.value || rawFormats[0] || '',
+    format,
     content: '',
   });
+  recentlyAddedFormats.value[group] = format;
   emitChange();
+  if (group === 'rawInlines') {
+    rawEditorSelection.value = {
+      group,
+      index: list.length - 1,
+      pending: true,
+    };
+  }
 }
 
 function removeRaw(group: RawGroup, index: number) {
@@ -477,27 +547,47 @@ function editRaw(group: RawGroup, index: number) {
 }
 
 function closeRawEditor() {
+  finalizeRawEditor();
   rawEditorSelection.value = undefined;
+}
+
+function finalizeRawEditor() {
+  const selection = rawEditorSelection.value;
+  if (!selection || selection.inherited || !selection.pending) return;
+  const raw = getRaw(selection.group, selection.index);
+  if (
+    !raw ||
+    !isValidNewRaw(raw) ||
+    (selection.original && sameRawFields(raw, selection.original)) ||
+    isDuplicateRaw(selection.group, raw, selection.index)
+  ) {
+    removeRaw(selection.group, selection.index);
+  }
 }
 
 function removeEditedRaw() {
   const selection = rawEditorSelection.value;
   if (!selection || selection.inherited) return;
   removeRaw(selection.group, selection.index);
-  closeRawEditor();
+  rawEditorSelection.value = undefined;
 }
 
 function copyEditedRaw() {
   const selection = rawEditorSelection.value;
-  const raw = selection && getRaw(selection.group, selection.index);
+  const raw = selection?.inherited
+    ? selection.raw
+    : selection && getRaw(selection.group, selection.index);
   if (!selection || !raw) return;
 
   const list = getRawList(selection.group);
   list.push(copyRawList([raw])[0]);
+  recentlyAddedFormats.value[selection.group] = raw.format;
   emitChange();
   rawEditorSelection.value = {
     group: selection.group,
     index: list.length - 1,
+    pending: true,
+    original: copyRawList([raw])[0],
   };
 }
 
@@ -629,6 +719,33 @@ function provenanceFor(group: RawGroup, index: number): string | undefined {
 
 function rawIdentity(raw: InsertableRaw): string {
   return `${raw.format}\u0000${contentPart(raw, 0)}\u0000${contentPart(raw, 1)}`;
+}
+
+function isValidNewRaw(raw: InsertableRaw): boolean {
+  return (
+    !!raw.title?.trim() &&
+    !!(contentPart(raw, 0).trim() || contentPart(raw, 1).trim())
+  );
+}
+
+function isDuplicateRaw(
+  group: RawGroup,
+  raw: InsertableRaw,
+  index: number,
+): boolean {
+  return getRawList(group).some(
+    (candidate, candidateIndex) =>
+      candidateIndex !== index && sameRawFields(candidate, raw),
+  );
+}
+
+function sameRawFields(left: InsertableRaw, right: InsertableRaw): boolean {
+  return (
+    left.format === right.format &&
+    left.title === right.title &&
+    contentPart(left, 0) === contentPart(right, 0) &&
+    contentPart(left, 1) === contentPart(right, 1)
+  );
 }
 
 function rawKey(raw: InsertableRaw, index: number) {

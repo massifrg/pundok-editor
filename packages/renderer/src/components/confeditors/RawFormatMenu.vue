@@ -1,14 +1,32 @@
 <template>
-  <q-btn dense outline :label="buttonLabel" :title="label" icon="arrow_drop_down">
+  <q-btn
+    dense
+    outline
+    :label="buttonLabel"
+    :title="label"
+    icon="arrow_drop_down"
+  >
     <q-menu @show="setMenuOpen(true)" @hide="setMenuOpen(false)">
       <q-list dense>
-        <q-item v-for="(option, index) in options" :key="`${option.value ?? 'unset'}-${index}`" clickable v-close-popup
-          :active="option.value === modelValue" active-class="text-primary" @click="select(option.value)">
-          <q-item-section v-if="iconForOption(option)" avatar>
-            <q-icon :name="iconForOption(option)" />
-          </q-item-section>
-          <q-item-section>{{ option.label }}</q-item-section>
-        </q-item>
+        <template
+          v-for="(option, index) in options"
+          :key="`${option.value ?? 'separator'}-${index}`"
+        >
+          <q-separator v-if="option.separator" />
+          <q-item
+            v-else
+            clickable
+            v-close-popup
+            :active="option.value === modelValue"
+            active-class="text-primary"
+            @click="select(option.value)"
+          >
+            <q-item-section v-if="iconForOption(option)" avatar>
+              <q-icon :name="iconForOption(option)" />
+            </q-item-section>
+            <q-item-section>{{ option.label }}</q-item-section>
+          </q-item>
+        </template>
       </q-list>
     </q-menu>
   </q-btn>
@@ -24,6 +42,7 @@ setupQuasarIcons();
 type Option = {
   label: string;
   value: string | null;
+  separator?: boolean;
 };
 
 const props = defineProps<{
@@ -40,14 +59,17 @@ const menuOpen = ref(false);
 const typedPrefix = ref('');
 let lastTypedAt = 0;
 
-const buttonLabel = computed(() =>
-  props.options.find((option) => option.value === props.modelValue)?.label
-  || props.modelValue
-  || props.label,
+const buttonLabel = computed(
+  () =>
+    props.options.find(
+      (option) => !option.separator && option.value === props.modelValue,
+    )?.label ||
+    props.modelValue ||
+    props.label,
 );
 
 function iconForOption(option: Option): string | undefined {
-  return option.value && iconForFormat(option.value) || 'format_other';
+  return (option.value && iconForFormat(option.value)) || 'format_other';
 }
 
 function select(value: string | null) {
@@ -64,21 +86,21 @@ function setMenuOpen(open: boolean) {
 
 function onKeydown(event: KeyboardEvent) {
   if (
-    !menuOpen.value
-    || event.key.length !== 1
-    || event.ctrlKey
-    || event.metaKey
-    || event.altKey
-  ) return;
+    !menuOpen.value ||
+    event.key.length !== 1 ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey
+  )
+    return;
 
   event.preventDefault();
   event.stopPropagation();
 
   const now = Date.now();
   const key = event.key.toLocaleLowerCase();
-  typedPrefix.value = now - lastTypedAt > 700
-    ? key
-    : `${typedPrefix.value}${key}`;
+  typedPrefix.value =
+    now - lastTypedAt > 700 ? key : `${typedPrefix.value}${key}`;
   lastTypedAt = now;
 
   const match = props.options.find((option) =>
