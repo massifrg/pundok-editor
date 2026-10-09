@@ -48,7 +48,8 @@ const ALL_FORMATS_TAB_NAME = 'all'
 
 const makeRawBlocks: InsertableRaw[] = DEFAULT_RAW_INLINES.map(r => ({
   format: r,
-  title: r
+  title: r,
+  content: ''
 }))
 
 const RAW_BLOCK_USE_SPAN = 100

@@ -5,21 +5,42 @@
         <div class="text-subtitle1">
           {{ $t('configEditor.rawElements.defaultRawFormat') }}
         </div>
-        <RawFormatMenu :model-value="defaultRawFormat ?? null" :options="defaultFormatOptions"
-          class="raw-elements-editor__select" :label="$t('configEditor.rawElements.defaultRawFormat')"
-          @update:model-value="setDefaultRawFormat" />
+        <RawFormatMenu
+          :model-value="defaultRawFormat ?? null"
+          :options="defaultFormatOptions"
+          class="raw-elements-editor__select"
+          :label="$t('configEditor.rawElements.defaultRawFormat')"
+          @update:model-value="setDefaultRawFormat"
+        />
         <q-space />
         <span class="text-subtitle1">{{
           $t('configEditor.rawElements.show')
-          }}</span>
-        <RawFormatMenu :model-value="selectedFormat" :options="formatFilterOptions" class="raw-elements-editor__select"
-          :label="$t('configEditor.rawElements.showFormats')" @update:model-value="selectedFormat = $event" />
+        }}</span>
+        <RawFormatMenu
+          :model-value="selectedFormat"
+          :options="formatFilterOptions"
+          class="raw-elements-editor__select"
+          :label="$t('configEditor.rawElements.showFormats')"
+          @update:model-value="selectedFormat = $event"
+        />
       </q-card-section>
     </q-card>
 
-    <q-tabs v-model="rawElementsTab" dense align="justify" stretch class="text-primary q-mb-sm full-width">
-      <q-tab name="rawInlines" :label="$t('configEditor.rawElements.rawInlinesTab')" />
-      <q-tab name="rawBlocks" :label="$t('configEditor.rawElements.rawBlocksTab')" />
+    <q-tabs
+      v-model="rawElementsTab"
+      dense
+      align="justify"
+      stretch
+      class="text-primary q-mb-sm full-width"
+    >
+      <q-tab
+        name="rawInlines"
+        :label="$t('configEditor.rawElements.rawInlinesTab')"
+      />
+      <q-tab
+        name="rawBlocks"
+        :label="$t('configEditor.rawElements.rawBlocksTab')"
+      />
     </q-tabs>
 
     <q-tab-panels v-model="rawElementsTab" animated>
@@ -30,59 +51,48 @@
               {{ $t('configEditor.rawElements.rawInlines') }}
             </div>
             <q-space />
-            <q-btn dense flat :icon="sortAscending.rawInlines
-                ? 'sort_alphabetical_descending'
-                : 'sort_alphabetical_ascending'
-              " :label="$t('configEditor.rawElements.sort')" :title="$t('configEditor.rawElements.sortDescription')"
-              @click="sortRawElements('rawInlines')" />
+            <q-btn
+              dense
+              flat
+              :icon="
+                sortAscending.rawInlines
+                  ? 'sort_alphabetical_descending'
+                  : 'sort_alphabetical_ascending'
+              "
+              :label="$t('configEditor.rawElements.sort')"
+              :title="$t('configEditor.rawElements.sortDescription')"
+              @click="sortRawElements('rawInlines')"
+            />
             <q-space />
-            <q-btn dense icon="add" :label="$t('configEditor.rawElements.addRawInline')"
-              @click="addRaw('rawInlines')" />
+            <q-btn
+              dense
+              icon="add"
+              :label="$t('configEditor.rawElements.addRawInline')"
+              @click="addRaw('rawInlines')"
+            />
           </q-card-section>
           <q-separator />
           <q-card-section v-if="rawInlines.length === 0" class="text-caption">
             {{ $t('configEditor.rawElements.none') }}
           </q-card-section>
-          <q-card-section v-else-if="visibleRawInlines.length === 0" class="text-caption">
+          <q-card-section
+            v-else-if="visibleRawInlines.length === 0"
+            class="text-caption"
+          >
             {{ $t('configEditor.rawElements.noneInSelectedFormat') }}
           </q-card-section>
           <div v-else class="q-pa-xs q-gutter-xs">
-            <q-card v-for="{ raw, index } in visibleRawInlines" :key="rawKey(raw, index)" bordered flat>
-              <q-card-section class="q-gutter-xs">
-                <div class="row items-start q-gutter-xs">
-                  <RawFormatMenu :model-value="raw.format" :options="rawFormatOptions"
-                    class="raw-elements-editor__format-select" :label="$t('configEditor.rawElements.format')"
-                    @update:model-value="
-                      setRawFormat('rawInlines', index, $event)
-                      " />
-                  <q-input :model-value="raw.title" outlined dense class="col raw-title"
-                    :label="$t('configEditor.rawElements.title')" @update:model-value="
-                      updateTitle('rawInlines', index, $event)
-                      " />
-                  <q-btn dense flat round icon="delete" :title="$t('configEditor.buttons.delete')"
-                    @click="removeRaw('rawInlines', index)" />
-                </div>
-                <div class="row items-start q-gutter-xs">
-                  <q-input :model-value="contentPart(raw, 0)" outlined dense
-                    class="col raw-elements-editor__content-input" input-class="raw-elements-editor__content"
-                    :label="$t('configEditor.rawElements.contentFirst')" @update:model-value="
-                      updateContentPart('rawInlines', index, 0, $event)
-                      " />
-                  <q-input :model-value="contentPart(raw, 1)" outlined dense :class="[
-                    'col',
-                    {
-                      'raw-elements-editor__content-input':
-                        hasSecondContent(raw),
-                    },
-                  ]" :input-class="hasSecondContent(raw)
-                        ? 'raw-elements-editor__content'
-                        : undefined
-                      " :label="$t('configEditor.rawElements.contentSecond')" @update:model-value="
-                      updateContentPart('rawInlines', index, 1, $event)
-                      " />
-                </div>
-              </q-card-section>
-            </q-card>
+            <q-btn
+              v-for="{ raw, index } in visibleRawInlines"
+              :key="rawKey(raw, index)"
+              color="secondary"
+              :title="raw.title"
+              :label="labelFor(raw)"
+              no-caps
+              size="md"
+              class="q-pa-xs q-ma-xs"
+              @click="editRaw('rawInlines', index)"
+            />
           </div>
         </q-card>
       </q-tab-panel>
@@ -94,56 +104,200 @@
               {{ $t('configEditor.rawElements.rawBlocks') }}
             </div>
             <q-space />
-            <q-btn dense flat :icon="sortAscending.rawBlocks
-                ? 'sort_alphabetical_descending'
-                : 'sort_alphabetical_ascending'
-              " :label="$t('configEditor.rawElements.sort')" :title="$t('configEditor.rawElements.sortDescription')"
-              @click="sortRawElements('rawBlocks')" />
+            <q-btn
+              dense
+              flat
+              :icon="
+                sortAscending.rawBlocks
+                  ? 'sort_alphabetical_descending'
+                  : 'sort_alphabetical_ascending'
+              "
+              :label="$t('configEditor.rawElements.sort')"
+              :title="$t('configEditor.rawElements.sortDescription')"
+              @click="sortRawElements('rawBlocks')"
+            />
             <q-space />
-            <q-btn dense icon="add" :label="$t('configEditor.rawElements.addRawBlock')" @click="addRaw('rawBlocks')" />
+            <q-btn
+              dense
+              icon="add"
+              :label="$t('configEditor.rawElements.addRawBlock')"
+              @click="addRaw('rawBlocks')"
+            />
           </q-card-section>
           <q-separator />
           <q-card-section v-if="rawBlocks.length === 0" class="text-caption">
             {{ $t('configEditor.rawElements.none') }}
           </q-card-section>
-          <q-card-section v-else-if="visibleRawBlocks.length === 0" class="text-caption">
+          <q-card-section
+            v-else-if="visibleRawBlocks.length === 0"
+            class="text-caption"
+          >
             {{ $t('configEditor.rawElements.noneInSelectedFormat') }}
           </q-card-section>
           <div v-else class="q-pa-xs q-gutter-xs">
-            <q-card v-for="{ raw, index } in visibleRawBlocks" :key="rawKey(raw, index)" bordered flat>
-              <q-card-section class="q-gutter-xs">
-                <div class="row items-start q-gutter-xs">
-                  <RawFormatMenu :model-value="raw.format" :options="rawFormatOptions"
-                    class="raw-elements-editor__format-select" :label="$t('configEditor.rawElements.format')"
-                    @update:model-value="
-                      setRawFormat('rawBlocks', index, $event)
-                      " />
-                  <q-input class="col raw-title" :model-value="raw.title" outlined dense
-                    :label="$t('configEditor.rawElements.title')" @update:model-value="
-                      updateTitle('rawBlocks', index, $event)
-                      " />
-                  <q-btn dense flat round icon="delete" :title="$t('configEditor.buttons.delete')"
-                    @click="removeRaw('rawBlocks', index)" />
-                </div>
-                <q-input :model-value="contentPart(raw, 0)" outlined dense autogrow type="textarea"
-                  class="raw-elements-editor__content-input" input-class="raw-elements-editor__content"
-                  :label="$t('configEditor.rawElements.contentFirst')" @update:model-value="
-                    updateContentPart('rawBlocks', index, 0, $event)
-                    " />
-                <q-input :model-value="contentPart(raw, 1)" outlined dense autogrow type="textarea" :class="{
-                  'raw-elements-editor__content-input': hasSecondContent(raw),
-                }" :input-class="hasSecondContent(raw)
-                      ? 'raw-elements-editor__content'
-                      : undefined
-                    " :label="$t('configEditor.rawElements.contentSecond')" @update:model-value="
-                    updateContentPart('rawBlocks', index, 1, $event)
-                    " />
-              </q-card-section>
-            </q-card>
+            <q-btn
+              v-for="{ raw, index } in visibleRawBlocks"
+              :key="rawKey(raw, index)"
+              color="secondary"
+              :title="raw.title"
+              :label="labelFor(raw)"
+              no-caps
+              size="md"
+              class="q-pa-xs q-ma-xs"
+              @click="editRaw('rawBlocks', index)"
+            />
           </div>
         </q-card>
       </q-tab-panel>
     </q-tab-panels>
+
+    <q-dialog :model-value="!!rawEditorSelection" @hide="closeRawEditor">
+      <q-card
+        v-if="selectedRaw"
+        flat
+        bordered
+        class="q-mt-md raw-elements-editor__subeditor"
+      >
+        <q-card-section class="q-gutter-xs">
+          <div class="row items-start q-gutter-xs">
+            <RawFormatMenu
+              :model-value="selectedRaw.raw.format"
+              :options="rawFormatOptions"
+              class="raw-elements-editor__format-select"
+              :label="$t('configEditor.rawElements.format')"
+              @update:model-value="
+                setRawFormat(selectedRaw.group, selectedRaw.index, $event)
+              "
+            />
+            <q-input
+              :model-value="selectedRaw.raw.title"
+              outlined
+              dense
+              class="col raw-title"
+              :label="$t('configEditor.rawElements.title')"
+              @update:model-value="
+                updateTitle(selectedRaw.group, selectedRaw.index, $event)
+              "
+            />
+            <q-btn
+              dense
+              flat
+              round
+              icon="content_copy"
+              :title="$t('configEditor.buttons.copy')"
+              @click="copyEditedRaw"
+            />
+            <q-btn
+              dense
+              flat
+              round
+              icon="delete"
+              :title="$t('configEditor.buttons.delete')"
+              @click="removeEditedRaw"
+            />
+          </div>
+          <div
+            v-if="selectedRaw.group === 'rawInlines'"
+            class="row items-start q-gutter-xs"
+          >
+            <q-input
+              :model-value="contentPart(selectedRaw.raw, 0)"
+              outlined
+              dense
+              class="col raw-elements-editor__content-input"
+              input-class="raw-elements-editor__content"
+              :label="$t('configEditor.rawElements.contentFirst')"
+              @update:model-value="
+                updateContentPart(
+                  selectedRaw.group,
+                  selectedRaw.index,
+                  0,
+                  $event,
+                )
+              "
+            />
+            <q-input
+              :model-value="contentPart(selectedRaw.raw, 1)"
+              outlined
+              dense
+              :class="[
+                'col',
+                {
+                  'raw-elements-editor__content-input': hasSecondContent(
+                    selectedRaw.raw,
+                  ),
+                  'raw-elements-editor__content-input--empty':
+                    !hasSecondContent(selectedRaw.raw),
+                },
+              ]"
+              :input-class="
+                hasSecondContent(selectedRaw.raw)
+                  ? 'raw-elements-editor__content'
+                  : undefined
+              "
+              :label="$t('configEditor.rawElements.contentSecond')"
+              @update:model-value="
+                updateContentPart(
+                  selectedRaw.group,
+                  selectedRaw.index,
+                  1,
+                  $event,
+                )
+              "
+            />
+          </div>
+          <template v-else>
+            <q-input
+              :model-value="contentPart(selectedRaw.raw, 0)"
+              outlined
+              dense
+              autogrow
+              type="textarea"
+              class="raw-elements-editor__content-input"
+              input-class="raw-elements-editor__content"
+              :label="$t('configEditor.rawElements.contentFirst')"
+              @update:model-value="
+                updateContentPart(
+                  selectedRaw.group,
+                  selectedRaw.index,
+                  0,
+                  $event,
+                )
+              "
+            />
+            <q-input
+              :model-value="contentPart(selectedRaw.raw, 1)"
+              outlined
+              dense
+              autogrow
+              type="textarea"
+              :class="{
+                'raw-elements-editor__content-input': hasSecondContent(
+                  selectedRaw.raw,
+                ),
+                'raw-elements-editor__content-input--empty': !hasSecondContent(
+                  selectedRaw.raw,
+                ),
+              }"
+              :input-class="
+                hasSecondContent(selectedRaw.raw)
+                  ? 'raw-elements-editor__content'
+                  : undefined
+              "
+              :label="$t('configEditor.rawElements.contentSecond')"
+              @update:model-value="
+                updateContentPart(
+                  selectedRaw.group,
+                  selectedRaw.index,
+                  1,
+                  $event,
+                )
+              "
+            />
+          </template>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -180,6 +334,7 @@ const sortAscending = ref<Record<RawGroup, boolean>>({
 });
 const rawInlines = ref<InsertableRaw[]>([]);
 const rawBlocks = ref<InsertableRaw[]>([]);
+const rawEditorSelection = ref<{ group: RawGroup; index: number }>();
 const { t } = useI18n();
 
 const defaultFormatOptions = computed(() => [
@@ -213,6 +368,12 @@ const visibleRawBlocks = computed(() =>
       ({ raw }) => !selectedFormat.value || raw.format === selectedFormat.value,
     ),
 );
+const selectedRaw = computed(() => {
+  const selection = rawEditorSelection.value;
+  if (!selection) return undefined;
+  const raw = getRaw(selection.group, selection.index);
+  return raw ? { ...selection, raw } : undefined;
+});
 
 watch(
   () => props.modelValue,
@@ -261,6 +422,36 @@ function removeRaw(group: RawGroup, index: number) {
   const list = group === 'rawInlines' ? rawInlines.value : rawBlocks.value;
   list.splice(index, 1);
   emitChange();
+}
+
+function editRaw(group: RawGroup, index: number) {
+  rawEditorSelection.value = { group, index };
+}
+
+function closeRawEditor() {
+  rawEditorSelection.value = undefined;
+}
+
+function removeEditedRaw() {
+  const selection = rawEditorSelection.value;
+  if (!selection) return;
+  removeRaw(selection.group, selection.index);
+  closeRawEditor();
+}
+
+function copyEditedRaw() {
+  const selection = rawEditorSelection.value;
+  const raw = selection && getRaw(selection.group, selection.index);
+  if (!selection || !raw) return;
+
+  const list =
+    selection.group === 'rawInlines' ? rawInlines.value : rawBlocks.value;
+  list.push(copyRawList([raw])[0]);
+  emitChange();
+  rawEditorSelection.value = {
+    group: selection.group,
+    index: list.length - 1,
+  };
 }
 
 function sortRawElements(group: RawGroup) {
@@ -340,7 +531,7 @@ function updateContentPart(
     typeof value === 'string' ? value : value == null ? '' : String(value);
   const first = part === 0 ? text : contentPart(raw, 0);
   const second = part === 1 ? text : contentPart(raw, 1);
-  raw.content = second ? [first, second] : first || undefined;
+  raw.content = second ? [first, second] : first || '';
   emitChange();
 }
 
@@ -351,6 +542,12 @@ function getRaw(group: RawGroup, index: number): InsertableRaw | undefined {
 
 function rawKey(raw: InsertableRaw, index: number) {
   return `${raw.format}-${index}`;
+}
+
+function labelFor(raw: InsertableRaw): string {
+  return Array.isArray(raw.content)
+    ? raw.content.join('...')
+    : raw.content || '';
 }
 </script>
 
@@ -363,11 +560,16 @@ function rawKey(raw: InsertableRaw, index: number) {
   flex: 0 0 10rem;
 }
 
+.raw-elements-editor__subeditor {
+  width: 80vw;
+  max-width: 80vw;
+}
+
 .raw-title {
   font-size: 1rem;
 }
 
-.raw-elements-editor :deep(.raw-elements-editor__content) {
+:deep(.raw-elements-editor__content) {
   color: #00c000;
   caret-color: #00ff00;
   font-family: monospace;
@@ -375,7 +577,11 @@ function rawKey(raw: InsertableRaw, index: number) {
   font-size: 1rem;
 }
 
-.raw-elements-editor :deep(.raw-elements-editor__content-input .q-field__control) {
+:deep(.raw-elements-editor__content-input .q-field__control) {
   background-color: #000;
+}
+
+:deep(.raw-elements-editor__content-input--empty .q-field__control) {
+  background-color: #fff;
 }
 </style>
