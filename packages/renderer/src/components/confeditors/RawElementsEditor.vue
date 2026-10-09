@@ -72,7 +72,13 @@
             />
           </q-card-section>
           <q-separator />
-          <q-card-section v-if="rawInlines.length === 0" class="text-caption">
+          <q-card-section
+            v-if="
+              rawInlines.length === 0 &&
+              inheritedList('rawInlines').length === 0
+            "
+            class="text-caption"
+          >
             {{ $t('configEditor.rawElements.none') }}
           </q-card-section>
           <q-card-section
@@ -87,12 +93,19 @@
               :key="rawKey(raw, index)"
               color="secondary"
               :title="raw.title"
-              :label="labelFor(raw)"
               no-caps
               size="md"
               class="q-pa-xs q-ma-xs"
               @click="editRaw('rawInlines', index)"
-            />
+            >
+              {{ labelFor(raw) }}
+              <q-badge
+                v-if="provenanceFor('rawInlines', index)"
+                class="q-ml-xs"
+              >
+                {{ provenanceFor('rawInlines', index) }}
+              </q-badge>
+            </q-btn>
           </div>
         </q-card>
       </q-tab-panel>
@@ -125,7 +138,12 @@
             />
           </q-card-section>
           <q-separator />
-          <q-card-section v-if="rawBlocks.length === 0" class="text-caption">
+          <q-card-section
+            v-if="
+              rawBlocks.length === 0 && inheritedList('rawBlocks').length === 0
+            "
+            class="text-caption"
+          >
             {{ $t('configEditor.rawElements.none') }}
           </q-card-section>
           <q-card-section
@@ -140,12 +158,16 @@
               :key="rawKey(raw, index)"
               color="secondary"
               :title="raw.title"
-              :label="labelFor(raw)"
               no-caps
               size="md"
               class="q-pa-xs q-ma-xs"
               @click="editRaw('rawBlocks', index)"
-            />
+            >
+              {{ labelFor(raw) }}
+              <q-badge v-if="provenanceFor('rawBlocks', index)" class="q-ml-xs">
+                {{ provenanceFor('rawBlocks', index) }}
+              </q-badge>
+            </q-btn>
           </div>
         </q-card>
       </q-tab-panel>
@@ -163,6 +185,7 @@
             <RawFormatMenu
               :model-value="selectedRaw.raw.format"
               :options="rawFormatOptions"
+              :disable="selectedRaw.inherited"
               class="raw-elements-editor__format-select"
               :label="$t('configEditor.rawElements.format')"
               @update:model-value="
@@ -174,6 +197,7 @@
               outlined
               dense
               class="col raw-title"
+              :readonly="selectedRaw.inherited"
               :label="$t('configEditor.rawElements.title')"
               @update:model-value="
                 updateTitle(selectedRaw.group, selectedRaw.index, $event)
@@ -188,6 +212,7 @@
               @click="copyEditedRaw"
             />
             <q-btn
+              v-if="!selectedRaw.inherited"
               dense
               flat
               round
@@ -205,6 +230,7 @@
               outlined
               dense
               class="col raw-elements-editor__content-input"
+              :readonly="selectedRaw.inherited"
               input-class="raw-elements-editor__content"
               :label="$t('configEditor.rawElements.contentFirst')"
               @update:model-value="
@@ -230,6 +256,7 @@
                     !hasSecondContent(selectedRaw.raw),
                 },
               ]"
+              :readonly="selectedRaw.inherited"
               :input-class="
                 hasSecondContent(selectedRaw.raw)
                   ? 'raw-elements-editor__content'
@@ -254,6 +281,7 @@
               autogrow
               type="textarea"
               class="raw-elements-editor__content-input"
+              :readonly="selectedRaw.inherited"
               input-class="raw-elements-editor__content"
               :label="$t('configEditor.rawElements.contentFirst')"
               @update:model-value="
@@ -279,6 +307,7 @@
                   selectedRaw.raw,
                 ),
               }"
+              :readonly="selectedRaw.inherited"
               :input-class="
                 hasSecondContent(selectedRaw.raw)
                   ? 'raw-elements-editor__content'
@@ -318,6 +347,14 @@ type RawGroup = 'rawInlines' | 'rawBlocks';
 
 const props = defineProps<{
   modelValue: Partial<PundokEditorConfigInit>;
+  inherited?: {
+    rawInlines?: InsertableRaw[];
+    rawBlocks?: InsertableRaw[];
+  };
+  provenance?: {
+    rawInlines?: Record<string, string>;
+    rawBlocks?: Record<string, string>;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -334,7 +371,12 @@ const sortAscending = ref<Record<RawGroup, boolean>>({
 });
 const rawInlines = ref<InsertableRaw[]>([]);
 const rawBlocks = ref<InsertableRaw[]>([]);
-const rawEditorSelection = ref<{ group: RawGroup; index: number }>();
+const rawEditorSelection = ref<{
+  group: RawGroup;
+  index: number;
+  inherited?: boolean;
+  raw?: InsertableRaw;
+}>();
 const { t } = useI18n();
 
 const defaultFormatOptions = computed(() => [
@@ -355,23 +397,21 @@ const formatFilterOptions = computed(() => [
   ...rawFormats.map((format) => ({ label: format, value: format })),
 ]);
 const visibleRawInlines = computed(() =>
-  rawInlines.value
-    .map((raw, index) => ({ raw, index }))
-    .filter(
-      ({ raw }) => !selectedFormat.value || raw.format === selectedFormat.value,
-    ),
+  rawEntries('rawInlines').filter(
+    ({ raw }) => !selectedFormat.value || raw.format === selectedFormat.value,
+  ),
 );
 const visibleRawBlocks = computed(() =>
-  rawBlocks.value
-    .map((raw, index) => ({ raw, index }))
-    .filter(
-      ({ raw }) => !selectedFormat.value || raw.format === selectedFormat.value,
-    ),
+  rawEntries('rawBlocks').filter(
+    ({ raw }) => !selectedFormat.value || raw.format === selectedFormat.value,
+  ),
 );
 const selectedRaw = computed(() => {
   const selection = rawEditorSelection.value;
   if (!selection) return undefined;
-  const raw = getRaw(selection.group, selection.index);
+  const raw = selection.inherited
+    ? selection.raw
+    : getRaw(selection.group, selection.index);
   return raw ? { ...selection, raw } : undefined;
 });
 
@@ -425,7 +465,15 @@ function removeRaw(group: RawGroup, index: number) {
 }
 
 function editRaw(group: RawGroup, index: number) {
-  rawEditorSelection.value = { group, index };
+  const entry = rawEntries(group).find(
+    (candidate) => candidate.index === index,
+  );
+  rawEditorSelection.value = {
+    group,
+    index,
+    inherited: index >= getRawList(group).length,
+    raw: entry?.raw,
+  };
 }
 
 function closeRawEditor() {
@@ -434,7 +482,7 @@ function closeRawEditor() {
 
 function removeEditedRaw() {
   const selection = rawEditorSelection.value;
-  if (!selection) return;
+  if (!selection || selection.inherited) return;
   removeRaw(selection.group, selection.index);
   closeRawEditor();
 }
@@ -444,8 +492,7 @@ function copyEditedRaw() {
   const raw = selection && getRaw(selection.group, selection.index);
   if (!selection || !raw) return;
 
-  const list =
-    selection.group === 'rawInlines' ? rawInlines.value : rawBlocks.value;
+  const list = getRawList(selection.group);
   list.push(copyRawList([raw])[0]);
   emitChange();
   rawEditorSelection.value = {
@@ -536,8 +583,52 @@ function updateContentPart(
 }
 
 function getRaw(group: RawGroup, index: number): InsertableRaw | undefined {
-  const list = group === 'rawInlines' ? rawInlines.value : rawBlocks.value;
-  return list[index];
+  return getRawList(group)[index];
+}
+
+function getRawList(group: RawGroup): InsertableRaw[] {
+  return group === 'rawInlines' ? rawInlines.value : rawBlocks.value;
+}
+
+function inheritedList(group: RawGroup): InsertableRaw[] {
+  return group === 'rawInlines'
+    ? props.inherited?.rawInlines || []
+    : props.inherited?.rawBlocks || [];
+}
+
+function rawEntries(group: RawGroup) {
+  const local = getRawList(group);
+  const inherited = inheritedList(group)
+    .filter((raw) => !local.some((localRaw) => sameRaw(localRaw, raw)))
+    .map((raw, index) => ({ raw, index: local.length + index }));
+  return [...local.map((raw, index) => ({ raw, index })), ...inherited];
+}
+
+function sameRaw(left: InsertableRaw, right: InsertableRaw): boolean {
+  return (
+    left.format === right.format &&
+    contentPart(left, 0) === contentPart(right, 0) &&
+    contentPart(left, 1) === contentPart(right, 1)
+  );
+}
+
+function isInherited(group: RawGroup, index: number): boolean {
+  return index >= getRawList(group).length;
+}
+
+function provenanceFor(group: RawGroup, index: number): string | undefined {
+  const entry = rawEntries(group).find(
+    (candidate) => candidate.index === index,
+  );
+  return entry?.raw
+    ? (group === 'rawInlines'
+        ? props.provenance?.rawInlines
+        : props.provenance?.rawBlocks)?.[rawIdentity(entry.raw)]
+    : undefined;
+}
+
+function rawIdentity(raw: InsertableRaw): string {
+  return `${raw.format}\u0000${contentPart(raw, 0)}\u0000${contentPart(raw, 1)}`;
 }
 
 function rawKey(raw: InsertableRaw, index: number) {

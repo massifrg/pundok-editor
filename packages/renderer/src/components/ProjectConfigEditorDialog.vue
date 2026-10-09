@@ -105,6 +105,14 @@
             <RawElementsEditor
               v-else-if="tab.name === 'raw-elements'"
               v-model="values"
+              :inherited="{
+                rawInlines: inheritedRawInlines,
+                rawBlocks: inheritedRawBlocks,
+              }"
+              :provenance="{
+                rawInlines: inheritedProvenance.rawInlines,
+                rawBlocks: inheritedProvenance.rawBlocks,
+              }"
             />
             <OutputConvertersEditor
               v-else-if="tab.name === 'outputConverters'"
@@ -330,6 +338,7 @@ import type {
   NoteStyle,
   OutputConverter,
   Automation,
+  InsertableRaw,
   PundokEditorConfigInit,
   PundokEditorProject,
   ResourceFile,
@@ -393,6 +402,8 @@ type InheritedItems = {
   indices: Index[];
   outputConverters: OutputConverter[];
   inputConverters: InputConverter[];
+  rawInlines: InsertableRaw[];
+  rawBlocks: InsertableRaw[];
 };
 
 const fields: EditorConfigField[] = [
@@ -522,6 +533,13 @@ const fields: EditorConfigField[] = [
 const groupedFields = (names: (keyof PundokEditorConfigInit)[]) =>
   names.map((name) => fields.find((field) => field.name === name)!);
 
+function rawIdentity(raw: InsertableRaw): string {
+  const content = Array.isArray(raw.content)
+    ? raw.content
+    : [raw.content || '', ''];
+  return `${raw.format}\u0000${content[0]}\u0000${content[1]}`;
+}
+
 const tabs: EditorConfigTab[] = [
   {
     name: 'general',
@@ -631,6 +649,8 @@ export default {
         indices: {} as Record<string, string>,
         inputConverters: {} as Record<string, string>,
         outputConverters: {} as Record<string, string>,
+        rawInlines: {} as Record<string, string>,
+        rawBlocks: {} as Record<string, string>,
       },
       rootDocument: '',
       documentTemplateOptions: [] as ResourceFile[],
@@ -697,6 +717,12 @@ export default {
     >['outputConverters'] {
       return this.inheritedItems('outputConverters');
     },
+    inheritedRawInlines(): InsertableRaw[] {
+      return this.inheritedRawItems('rawInlines');
+    },
+    inheritedRawBlocks(): InsertableRaw[] {
+      return this.inheritedRawItems('rawBlocks');
+    },
     inheritedInputConverters(): NonNullable<
       PundokEditorProject['computedConfig']
     >['inputConverters'] {
@@ -755,16 +781,30 @@ export default {
                 ? (localItem as NoteStyle).noteType
                 : field === 'indices'
                   ? (localItem as Index).indexName
-                  : (localItem as { name: string }).name;
+                  : field === 'rawInlines' || field === 'rawBlocks'
+                    ? rawIdentity(localItem as InsertableRaw)
+                    : (localItem as { name: string }).name;
             const itemKey =
               field === 'noteStyles'
                 ? (item as NoteStyle).noteType
                 : field === 'indices'
                   ? (item as Index).indexName
-                  : (item as { name: string }).name;
+                  : field === 'rawInlines' || field === 'rawBlocks'
+                    ? rawIdentity(item as InsertableRaw)
+                    : (item as { name: string }).name;
             return localKey === itemKey;
           }),
       ) as InheritedItems[K];
+    },
+    inheritedRawItems(field: 'rawInlines' | 'rawBlocks'): InsertableRaw[] {
+      const computed = this.displayConfiguration?.[field] || [];
+      const local = this.configuration[field] || [];
+      return computed.filter((item) =>
+        (local as InsertableRaw[]).every(
+          (localItem: InsertableRaw) =>
+            rawIdentity(localItem) !== rawIdentity(item),
+        ),
+      );
     },
     async loadConfiguration() {
       await this.loadDisplayConfiguration();
@@ -908,6 +948,8 @@ export default {
         'indices',
         'inputConverters',
         'outputConverters',
+        'rawInlines',
+        'rawBlocks',
       ] as const;
       const provenance = {
         customStyles: {} as Record<string, string>,
@@ -919,6 +961,8 @@ export default {
         indices: {} as Record<string, string>,
         inputConverters: {} as Record<string, string>,
         outputConverters: {} as Record<string, string>,
+        rawInlines: {} as Record<string, string>,
+        rawBlocks: {} as Record<string, string>,
       };
       try {
         for (const configurationName of this
@@ -933,7 +977,9 @@ export default {
                   ? (item as NoteStyle).noteType
                   : field === 'indices'
                     ? (item as Index).indexName
-                    : (item as { name: string }).name;
+                    : field === 'rawInlines' || field === 'rawBlocks'
+                      ? rawIdentity(item as InsertableRaw)
+                      : (item as { name: string }).name;
               if (!provenance[field][itemName]) {
                 provenance[field][itemName] = configurationName;
               }
@@ -953,6 +999,8 @@ export default {
           indices: {},
           inputConverters: {},
           outputConverters: {},
+          rawInlines: {},
+          rawBlocks: {},
         };
       }
     },
