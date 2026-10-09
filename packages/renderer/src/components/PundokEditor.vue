@@ -1559,7 +1559,7 @@ export default {
         ...options,
         computeConfig: true,
       });
-      if (project) this.setProject(project);
+      if (project) await this.setProject(project);
     },
     async setConfiguration(
       name_or_config?: string | PundokEditorConfig,
@@ -1669,11 +1669,9 @@ export default {
           value: JSON.stringify(projectToSave),
           operation: 'update',
         });
-        const savedProject = await this.backend?.getProject({
+        await this.reloadProject({
           path: project.path,
-          computeConfig: true,
         });
-        if (savedProject) await this.setProject(savedProject);
         this.visibleConfigurationEditor = false;
       } catch (error) {
         console.error('Unable to save project configuration', error);
