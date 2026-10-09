@@ -112,16 +112,6 @@ export function getEditorProject(
   return getDocState(state)?.project;
 }
 
-// export function getDocStateIfEditorHasKey(
-//   editor?: Editor,
-//   editorKey?: EditorKeyType,
-// ): DocState | undefined {
-//   const docState = editor?.state
-//     ? pundokEditorUtilsPluginKey.getState(editor.state)
-//     : undefined;
-//   return docState && docState.editorKey === editorKey ? docState : undefined;
-// }
-
 export function editorKeyFromState(
   state?: EditorState,
 ): EditorKeyType | undefined {
