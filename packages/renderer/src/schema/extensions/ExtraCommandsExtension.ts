@@ -32,7 +32,8 @@ import {
   SetIndexRefActionProps,
   SetSpanActionProps,
   AddRemoveRenameAttributeActionProps,
-  NODE_NAME_PARAGRAPH
+  NODE_NAME_PARAGRAPH,
+  ConvertNodeActionProps
 } from '../../common';
 import {
   ACTION_ADD_ATTRIBUTE,
@@ -40,6 +41,7 @@ import {
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_ADD_CUSTOM_STYLE,
   ACTION_ADD_MARK,
+  ACTION_CONVERT_NODE,
   ACTION_DELETE_CSS_SELECTED,
   ACTION_INSERT_RAW_INLINE,
   ACTION_LOWERCASE,
@@ -62,6 +64,7 @@ import { deleteCssSelectedCommand, unwrapCssSelectedCommand } from './CssSelecti
 import {
   addPandocAttrClassCommand,
   addPandocAttributeCommand,
+  convertNodeCommand,
   removePandocAttrClassCommand,
   removePandocAttributeCommand,
   renamePandocAttrClassCommand,
@@ -338,6 +341,11 @@ function actionNameWithPropsToCommand(
         (props as AddRemoveRenameAttributeActionProps).attrName,
         (props as AddRemoveRenameAttributeActionProps).newName,
         typeName
+      )
+    case ACTION_CONVERT_NODE.name:
+      return convertNodeCommand(
+        (props as ConvertNodeActionProps).nodeType,
+        { attrs: (props as ConvertNodeActionProps).attrs }
       )
     default:
       // pass-through command

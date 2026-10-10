@@ -27,6 +27,7 @@ export const ACTION_DESCRIPTORS: Readonly<Record<string, ActionDescriptor>> = {
     'rename-attribute': { name: 'rename-attribute', labelKey: 'actions.renameAttribute', icon: 'rename_attribute' },
     'set-index-ref': { name: 'set-index-ref', labelKey: 'actions.setIndexRef', icon: 'index_ref' },
     'insert-raw-inline': { name: 'insert-raw-inline', labelKey: 'actions.insertRawInline', icon: 'raw_inline' },
+    'convert-node': { name: 'convert-node', labelKey: 'actions.convertNode', icon: 'block_convert' },
 }
 
 export default ACTION_DESCRIPTORS

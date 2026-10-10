@@ -46,6 +46,7 @@ import {
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_FOOT,
   NODE_NAME_TABLE_HEAD,
+  PundokEditorConfig,
   SK,
   typeNameOfElement,
 } from '../../common';
@@ -145,7 +146,11 @@ declare module '@tiptap/core' {
       /**
        * Convert node at pos into a compatible node
        */
-      convertNode: (toNodeType: NodeType | string, pos?: number) => ReturnType;
+      convertNode: (
+        toNodeType: NodeType | string,
+        pos?: number,
+        attrs?: Attrs,
+      ) => ReturnType;
 
       /**
        * appendChildToNodeAtPos(pos, node)
@@ -445,35 +450,9 @@ export const HelperCommandsExtension = Extension.create({
           },
 
       convertNode:
-        (toNodeType: NodeType | string, nodePos?: number) =>
-          ({ dispatch, editor, state, tr }) => {
-            let fromNode: ProsemirrorNode | null, pos: number;
-            if (nodePos) {
-              fromNode = state.doc.nodeAt(nodePos);
-              pos = nodePos;
-            } else {
-              const $from = state.selection.$from;
-              fromNode = $from.node();
-              pos = $from.start() - 1;
-            }
-            if (!fromNode || pos < 0) return false;
-            if (dispatch) {
-              const nodeType = isString(toNodeType)
-                ? state.schema.nodes[toNodeType]
-                : toNodeType;
-              const config = getEditorConfiguration(editor as Editor);
-              const attrs = {
-                ...fromNode.attrs,
-                ...attrsForConversionTo(fromNode, toNodeType, config),
-              };
-              try {
-                tr.setNodeMarkup(pos, nodeType, attrs, fromNode.marks);
-              } catch (err) {
-                return false;
-              }
-              dispatch(tr);
-            }
-            return true;
+        (toNodeType: NodeType | string, nodePos?: number, attrs?: Attrs) =>
+          ({ dispatch, state }) => {
+            return convertNodeCommand(toNodeType, { nodePos, attrs })(state, dispatch)
           },
 
       insertChildToNodeAtPos:
@@ -1067,4 +1046,43 @@ export function renamePandocAttributeCommand(attrName: string, newName: string, 
       return { attrs: { ...attrs, kv } };
     });
   return () => false;
+}
+
+export function convertNodeCommand(nodeType: string | NodeType, opts: {
+  attrs?: Attrs,
+  nodePos?: number,
+}): Command {
+  return (state, dispatch) => {
+    const { schema, selection, tr } = state
+    const toNodeType = isString(nodeType) ? schema.nodes[nodeType] : nodeType
+    const { attrs, nodePos } = opts
+    let fromNode: ProsemirrorNode | null, pos: number;
+    if (nodePos) {
+      fromNode = state.doc.nodeAt(nodePos);
+      pos = nodePos;
+    } else if (selection instanceof NodeSelection) {
+      fromNode = selection.node
+      pos = selection.from
+    } else {
+      const $from = state.selection.$from;
+      fromNode = $from.node();
+      pos = $from.start() - 1;
+    }
+    if (!fromNode || pos < 0) return false;
+    if (dispatch) {
+      const config = getEditorConfiguration(state);
+      const newAttrs = {
+        ...fromNode.attrs,
+        ...attrsForConversionTo(fromNode, toNodeType, config),
+        ...attrs
+      };
+      try {
+        tr.setNodeMarkup(pos, toNodeType, newAttrs, fromNode.marks);
+      } catch (err) {
+        return false;
+      }
+      dispatch(tr);
+    }
+    return true;
+  }
 }

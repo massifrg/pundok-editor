@@ -109,6 +109,7 @@ export type ActionName =
   | 'move-after-last-sibling'
   | 'move-inside-prev-sibling'
   | 'move-inside-next-sibling'
+  | 'convert-node'
 
 export type LabelForAction =
   | string
@@ -609,6 +610,12 @@ export const ACTION_UNWRAP_CSS_SELECTED: BaseActionForNodeOrMark = {
   icon: 'unwrap'
 }
 
+export const ACTION_CONVERT_NODE: BaseActionForNodeOrMark = {
+  name: 'convert-node',
+  label: 'convert a Node (paragraph, header, ...)',
+  icon: 'convert_node'
+}
+
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
   name: 'setup-viewer',
   label: 'setup viewer',
@@ -708,6 +715,7 @@ const ACTION_LIST: BaseActionForNodeOrMark[] = [
   ACTION_RENAME_ATTRIBUTE,
   ACTION_SET_INDEX_REF,
   ACTION_INSERT_RAW_INLINE,
+  ACTION_CONVERT_NODE,
 ]
 
 function mergeWithDescriptor(action: BaseActionForNodeOrMark) {

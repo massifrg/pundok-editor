@@ -7,7 +7,7 @@ import {
 } from './config';
 import { DocumentContext, CxDocument } from './document';
 import { FeedbackMessage } from "./feedback"
-import { Node as ProsemirrorNode } from "@tiptap/pm/model"
+import { Attrs, Node as ProsemirrorNode } from "@tiptap/pm/model"
 import { ViewerSetup } from './viewer';
 import { DocumentFormat } from './documentFormat';
 
@@ -175,6 +175,11 @@ export interface InsertRawInlineActionProps extends ActionProps {
   format: string,
   where: 'before' | 'after',
   content: string | string[],
+}
+
+export interface ConvertNodeActionProps extends ActionProps {
+  nodeType: string,
+  attrs?: Attrs,
 }
 
 /**
