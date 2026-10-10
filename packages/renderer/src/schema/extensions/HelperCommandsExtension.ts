@@ -324,7 +324,8 @@ function isWrappingNode(n: ProsemirrorNode | NodeType | string) {
   return name === NODE_NAME_DIV ||
     name === NODE_NAME_FIGURE ||
     name === NODE_NAME_BLOCKQUOTE ||
-    name === NODE_NAME_INDEX_DIV
+    name === NODE_NAME_INDEX_DIV ||
+    name === NODE_NAME_INDEX_TERM
 }
 
 export const HelperCommandsExtension = Extension.create({

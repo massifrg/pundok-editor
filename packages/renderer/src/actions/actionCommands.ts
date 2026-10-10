@@ -10,7 +10,6 @@ import {
   ACTION_DOCUMENT_OPEN,
   ACTION_CLOSE_EDITOR,
   ACTION_SETUP_VIEWER,
-  ACTION_DOCUMENT_TRANSFORM,
   ACTION_SHOW_SEARCH_DIALOG,
   BaseEditorAction,
   ACTION_SHOW_RESULT_MESSAGE,
@@ -27,10 +26,8 @@ import {
   MetaMapTextActionProps,
   NewEmptyDocumentActionProps,
   OutputConverter,
-  PandocFilterTransform,
   ResultMessageActionProps,
   CxDocument,
-  TransformDocumentActionProps,
   ViewerSetup,
 } from '../common';
 import { useActions } from '../stores';
