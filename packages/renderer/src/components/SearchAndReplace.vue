@@ -392,6 +392,15 @@ export default {
     }
   },
   watch: {
+    visible(visible: boolean) {
+      if (!visible || !this.editor) return
+
+      const { from, to } = this.editor.state.selection
+      if (from === to) return
+
+      const selectedText = this.editor.state.doc.textBetween(from, to, '\n')
+      if (selectedText) this.updateSearchInput(selectedText)
+    },
     cssMode(css_mode: boolean, prev_mode: boolean) {
       if (css_mode !== prev_mode) {
         if (css_mode) {
