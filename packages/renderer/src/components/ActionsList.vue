@@ -12,6 +12,7 @@ import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassAction
 import AddOrRemoveCustomClassActionEditor from './actioneditors/AddOrRemoveCustomClassActionEditor.vue'
 import AddOrRemoveCustomStyleActionEditor from './actioneditors/AddOrRemoveCustomStyleActionEditor.vue'
 import AddOrRemoveMarkActionEditor from './actioneditors/AddOrRemoveMarkActionEditor.vue'
+import ConvertNodeActionEditor from './actioneditors/ConvertNodeActionEditor.vue'
 import InsertRawInlineActionEditor from './actioneditors/InsertRawInlineActionEditor.vue'
 import SetIndexRefActionEditor from './actioneditors/SetIndexRefActionEditor.vue';
 import SetSpanActionEditor from './actioneditors/SetSpanActionEditor.vue'
@@ -52,6 +53,7 @@ export default {
     AddOrRemoveCustomClassActionEditor,
     AddOrRemoveCustomStyleActionEditor,
     AddOrRemoveMarkActionEditor,
+    ConvertNodeActionEditor,
     InsertRawInlineActionEditor,
     SetIndexRefActionEditor,
     SetSpanActionEditor,
@@ -88,6 +90,9 @@ export default {
     isAddOrRemoveMarkAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
       return name === 'add-mark' || name === 'remove-mark'
+    },
+    isConvertNodeAction(a: ActionNameWithProps) {
+      return (a.name as ActionName) === 'convert-node'
     },
     isSetSpanAction(a: ActionNameWithProps) {
       return (a.name as ActionName) === 'set-span'
@@ -203,6 +208,8 @@ export default {
             <AddOrRemoveCustomStyleActionEditor v-if="isAddOrRemoveCustomStyleAction(a)" :editor="editor" :index="index"
               :action='a' @set-props="setActionProps" />
             <AddOrRemoveMarkActionEditor v-if="isAddOrRemoveMarkAction(a)" :index="index" :action='a'
+              @set-props="setActionProps" />
+            <ConvertNodeActionEditor v-if="isConvertNodeAction(a)" :editor="editor" :index="index" :action='a'
               @set-props="setActionProps" />
             <AddOrRemoveCustomClassActionEditor v-if="isAddOrRemoveCustomClassAction(a)" :editor="editor" :index="index"
               :action='a' @set-props="setActionProps" />

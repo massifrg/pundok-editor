@@ -13,10 +13,11 @@ import {
   PundokEditorConfig,
   SetIndexRefActionProps,
   SetSpanActionProps,
-  AddRemoveRenameAttributeActionProps
+  AddRemoveRenameAttributeActionProps,
+  ConvertNodeActionProps
 } from '../common';
 import ActionsList from './ActionsList.vue';
-import { getEditorConfiguration } from '../schema';
+import { getEditorConfiguration, nodeOrMarkToPandocName } from '../schema';
 import { t } from '../i18n'
 
 function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConfig) {
@@ -93,6 +94,11 @@ function actionsAsText(actions: ActionNameWithProps[], config?: PundokEditorConf
           const what = isPair ? content.join('...') : content || '??'
           const _where = isPair ? '' : ' ' + where.toUpperCase()
           return `+RawInline(${format}) ${what}${_where}`
+        }
+      case 'convert-node':
+        {
+          const { nodeType, attrs } = toRaw(props) as ConvertNodeActionProps
+          return `~> ${nodeOrMarkToPandocName(nodeType, undefined, undefined, attrs)}`
         }
       default:
         return actionName

@@ -27,6 +27,7 @@ import {
   InsertableRaw,
 } from '../common';
 import { RawInline } from '../schema';
+import { CONVERTIBLE_BLOCKS } from '../schema/helpers/nodeTemplates';
 
 export function defaultPropsFor(actionName: ActionName, config?: PundokEditorConfig): object {
   switch (actionName) {
@@ -86,6 +87,10 @@ export function defaultPropsFor(actionName: ActionName, config?: PundokEditorCon
           content: ' ',
           ...firstRawInline
         } as InsertRawInlineActionProps
+      }
+    case 'convert-node':
+      return {
+        nodeType: CONVERTIBLE_BLOCKS[0],
       }
     default:
       return {}

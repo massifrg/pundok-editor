@@ -1,4 +1,4 @@
-import type { Node, Mark, NodeType, MarkType, Schema } from '@tiptap/pm/model';
+import type { Node, Mark, NodeType, MarkType, Schema, Attrs } from '@tiptap/pm/model';
 import {
   CustomStyleDef,
   DEFAULT_RAW_BLOCK_FORMAT,
@@ -84,8 +84,8 @@ const INLINES_TO_PM: Record<string, string> = {
   Span: MARK_NAME_SPAN,
 }
 
-const BLOCKS = Object.keys(BLOCKS_TO_PM)
-const INLINES = Object.keys(INLINES_TO_PM);
+export const BLOCKS = Object.keys(BLOCKS_TO_PM)
+export const INLINES = Object.keys(INLINES_TO_PM);
 
 function customStyleClasses(
   classes: string[] | null | undefined,
@@ -113,12 +113,14 @@ function firstToUpperWithClasses(
 export function nodeOrMarkToPandocName(
   nom: Node | Mark | NodeType | MarkType | string,
   nameToCustomStyle?: Record<string, CustomStyleDef>,
-  config?: PundokEditorConfig
+  config?: PundokEditorConfig,
+  _attrs?: Attrs,
 ): string {
   const name: string | undefined = isString(nom)
     ? nom
     : (nom as Node | Mark)?.type?.name || (nom as NodeType | MarkType).name;
-  const attrs = isString(nom) ? {} : (nom as Node | Mark)?.attrs || {};
+  let attrs = isString(nom) ? {} : (nom as Node | Mark)?.attrs || {};
+  attrs = { ...attrs, ..._attrs }
   const customStyle: string | undefined =
     (attrs && attrs.customStyle) || (attrs.kv && attrs.kv['custom-style']);
   switch (name) {
@@ -160,6 +162,7 @@ export function nodeOrMarkToPandocName(
         || DEFAULT_RAW_INLINE_FORMAT
         })`;
     case NODE_NAME_RAW_BLOCK:
+      console.log(config)
       return `RawBlock(${attrs.format
         || config?.defaultRawFormat
         || RawBlock.options.defaultFormat

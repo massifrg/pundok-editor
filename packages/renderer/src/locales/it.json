@@ -8,11 +8,17 @@
     "addCustomClass": "assegna una classe (con eventuali attributi)",
     "addCustomStyle": "assegna stile personalizzato",
     "addMark": "aggiungi Mark",
+    "convertNode": "converti Node",
     "deleteCssSelected": "cancella il Node/Mark selezionato con CSS",
     "editors": {
       "attributeName": "nome dell'attributo",
       "attributeValue": "valore dell'attributo",
       "class": "classe",
+      "convertNode": "converti il Node in",
+      "customStyle": "stile personalizzato",
+      "headingLevel": "livello del titolo",
+      "noCustomStyle": "nessuno stile personalizzato",
+      "rawFormat": "formato raw",
       "rename to": "rinomina in"
     },
     "insertRawInline": "inserisci un RawInline prima/dopo/attorno alla selezione",

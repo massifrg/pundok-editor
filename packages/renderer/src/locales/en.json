@@ -8,11 +8,17 @@
     "addCustomClass": "add a custom class (with its attributes)",
     "addCustomStyle": "add custom style",
     "addMark": "add Mark",
+    "convertNode": "convert Node",
     "deleteCssSelected": "delete the current CSS-selected Node or Mark",
     "editors": {
       "attributeName": "attribute name",
       "attributeValue": "attribute value",
       "class": "class",
+      "convertNode": "convert node to",
+      "customStyle": "custom style",
+      "headingLevel": "heading level",
+      "noCustomStyle": "no custom style",
+      "rawFormat": "raw format",
       "rename to": "rename to"
     },
     "insertRawInline": "insert a RawInline before/after/around selection",
