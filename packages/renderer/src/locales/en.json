@@ -781,6 +781,8 @@
     "mergeable": "This branch can be merged.",
     "conflictsTitle": "Merge conflicts",
     "conflictsMessage": "This branch cannot be merged because these files have conflicts:",
+    "localVersion": "Local version",
+    "remoteVersion": "Remote version",
     "resolveConflicts": "Resolve conflicts",
     "manageConflicts": "Close this dialog and manage conflicts manually",
     "useLocalCopies": "Merge using the local copies of conflicting files",

@@ -780,6 +780,8 @@
     "mergeable": "Questo ramo può essere integrato.",
     "conflictsTitle": "Conflitti di integrazione",
     "conflictsMessage": "Questo ramo non può essere integrato perché questi file presentano conflitti:",
+    "localVersion": "Versione locale",
+    "remoteVersion": "Versione remota",
     "resolveConflicts": "Risolvi conflitti",
     "manageConflicts": "Chiudi questa finestra e gestisci manualmente i conflitti",
     "useLocalCopies": "Integra usando le copie locali dei file in conflitto",

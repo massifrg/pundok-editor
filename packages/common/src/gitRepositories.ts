@@ -48,7 +48,13 @@ export interface GitRemoteBranch {
 
 export interface GitMergeCheck {
   mergeable: boolean;
-  conflicts: string[];
+  conflicts: GitMergeConflict[];
+}
+
+export interface GitMergeConflict {
+  path: string;
+  local: string;
+  remote: string;
 }
 
 export type GitMergeStrategy = 'ours' | 'theirs';

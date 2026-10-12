@@ -19,6 +19,7 @@ import {
   type GitCommitOptions,
   type GitProjectStatus,
   type GitMergeCheck,
+  type GitMergeConflict,
   type GitMergeStrategy,
   type GitRemoteBranch,
   type GitStatusEntry,
@@ -103,7 +104,15 @@ export class GitRepositoryManager {
     if (result.exitCode === 1)
       return {
         mergeable: false,
-        conflicts: parseMergeConflicts(`${result.output}\n${result.error}`),
+        conflicts: await Promise.all(
+          parseMergeConflicts(`${result.output}\n${result.error}`).map(
+            async (file): Promise<GitMergeConflict> => ({
+              path: file,
+              local: await this.gitFile(path, 'HEAD', file, credentials),
+              remote: await this.gitFile(path, remoteBranch, file, credentials),
+            }),
+          ),
+        ),
       };
     throw new Error(
       `Git command failed (${result.commandLine}): ${
@@ -526,6 +535,23 @@ export class GitRepositoryManager {
       );
     return result;
   }
+
+  private async gitFile(
+    path: string,
+    revision: string,
+    file: string,
+    credentials: { user: string; password: string },
+  ): Promise<string> {
+    const result = await runExternalProgram(
+      'git',
+      ['show', `${revision}:${file}`],
+      {
+        cwd: path,
+        env: gitEnvironment(credentials.user, credentials.password),
+      },
+    ).result;
+    return result.exitCode === 0 ? result.output : '';
+  }
 }
 
 async function readProject(path: string): Promise<PundokEditorProject> {
@@ -682,13 +708,12 @@ function parseStatus(output: string): GitStatusEntry[] {
 }
 
 function parseMergeConflicts(output: string): string[] {
-  return [
-    ...new Set(
-      [...output.matchAll(/Merge conflict in (.+)$/gm)].map((match) =>
-        match[1].trim(),
-      ),
-    ),
-  ];
+  const conflicts = new Set<string>();
+  for (const match of output.matchAll(/Merge conflict in (.+)$/gm))
+    conflicts.add(match[1].trim());
+  for (const match of output.matchAll(/^\d+\s+[0-9a-f]+\s+[123]\s+(.+)$/gm))
+    conflicts.add(match[1].trim());
+  return [...conflicts];
 }
 
 async function remoteRepositories(
