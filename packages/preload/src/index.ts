@@ -151,6 +151,8 @@ export interface Ipc {
   ) => Promise<void>;
   initGitProject: (path: string) => Promise<void>;
   stageGitProject: (path: string, paths: string[]) => Promise<void>;
+  unstageGitProject: (path: string, paths: string[]) => Promise<void>;
+  updateGitignore: (path: string, paths: string[]) => Promise<void>;
   commitGitProject: (options: GitCommitOptions) => Promise<void>;
   scanGitProjects: (
     url: string,
@@ -268,6 +270,10 @@ contextBridge.exposeInMainWorld('ipc', {
     ipcRenderer.invoke('init-git-project', path),
   stageGitProject: (path: string, paths: string[]) =>
     ipcRenderer.invoke('stage-git-project', path, paths),
+  unstageGitProject: (path: string, paths: string[]) =>
+    ipcRenderer.invoke('unstage-git-project', path, paths),
+  updateGitignore: (path: string, paths: string[]) =>
+    ipcRenderer.invoke('update-gitignore', path, paths),
   commitGitProject: (options: GitCommitOptions) =>
     ipcRenderer.invoke('commit-git-project', options),
   scanGitProjects: (url: string, user: string, password: string) =>

@@ -257,6 +257,12 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('stage-git-project', (_event, path, paths) =>
       this.gitRepositories.stage(path, paths),
     );
+    ipcMain.handle('unstage-git-project', (_event, path, paths) =>
+      this.gitRepositories.unstage(path, paths),
+    );
+    ipcMain.handle('update-gitignore', (_event, path, paths) =>
+      this.gitRepositories.updateGitignore(path, paths),
+    );
     ipcMain.handle('commit-git-project', (_event, options) =>
       this.gitRepositories.commit(options),
     );

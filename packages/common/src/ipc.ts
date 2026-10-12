@@ -63,6 +63,8 @@ export type IpcRendererToMainChannel =
   | 'git-project-status'
   | 'init-git-project'
   | 'stage-git-project'
+  | 'unstage-git-project'
+  | 'update-gitignore'
   | 'commit-git-project'
   | 'git-project-updates'
   | 'check-git-merge'
@@ -248,6 +250,14 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'stage-git-project': {
     dir: 'r2m',
     description: 'stage project files in Git',
+  },
+  'unstage-git-project': {
+    dir: 'r2m',
+    description: 'unstage project files in Git',
+  },
+  'update-gitignore': {
+    dir: 'r2m',
+    description: 'append project paths to .gitignore',
   },
   'commit-git-project': {
     dir: 'r2m',

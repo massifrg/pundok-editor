@@ -237,6 +237,28 @@ export class PundokEditorServer {
     );
   }
 
+  async unstageGitProject(
+    user: string,
+    path: string,
+    paths: string[],
+  ): Promise<void> {
+    return this.gitRepositoriesForUser(user).unstage(
+      this.userPath(user, path),
+      paths,
+    );
+  }
+
+  async updateGitignore(
+    user: string,
+    path: string,
+    paths: string[],
+  ): Promise<void> {
+    return this.gitRepositoriesForUser(user).updateGitignore(
+      this.userPath(user, path),
+      paths,
+    );
+  }
+
   async commitGitProject(
     user: string,
     options: GitCommitOptions,

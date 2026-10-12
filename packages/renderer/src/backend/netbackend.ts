@@ -265,6 +265,14 @@ export class NetBackend implements Backend {
     return this.request<void>('stage-git-project', { path, paths });
   }
 
+  unstageGitProject(path: string, paths: string[]): Promise<void> {
+    return this.request<void>('unstage-git-project', { path, paths });
+  }
+
+  updateGitignore(path: string, paths: string[]): Promise<void> {
+    return this.request<void>('update-gitignore', { path, paths });
+  }
+
   commitGitProject(options: GitCommitOptions): Promise<void> {
     return this.request<void>('commit-git-project', { options });
   }

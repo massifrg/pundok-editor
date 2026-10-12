@@ -8,7 +8,7 @@ import {
 } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { mkdtemp } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { tmpdir, userInfo } from 'node:os';
 import {
   DEFAULT_PROJECT_FILENAME,
   type CloneGitProjectOptions,
@@ -41,7 +41,12 @@ export class GitRepositoryManager {
   async status(path: string): Promise<GitProjectStatus> {
     try {
       const branch = await this.currentBranch(path, { user: '', password: '' });
-      const result = await this.runGit(['status', '--porcelain'], '', '', path);
+      const result = await this.runGit(
+        ['status', '--porcelain=v1', '-z'],
+        '',
+        '',
+        path,
+      );
       const remote = await this.remoteName(path);
       return {
         managed: true,
@@ -172,11 +177,36 @@ export class GitRepositoryManager {
     await this.runGit(['add', '--', ...paths], '', '', path);
   }
 
+  async unstage(path: string, paths: string[]): Promise<void> {
+    if (!paths.length) return;
+    await this.runGit(['restore', '--staged', '--', ...paths], '', '', path);
+  }
+
+  async updateGitignore(path: string, paths: string[]): Promise<void> {
+    if (!paths.length) return;
+    const filename = join(path, '.gitignore');
+    let current = '';
+    try {
+      current = await readFile(filename, 'utf8');
+    } catch (error) {
+      if (!isNodeError(error, 'ENOENT')) throw error;
+    }
+    const prefix =
+      current && !current.endsWith('\n') ? `${current}\n` : current;
+    await writeFile(filename, `${prefix}${paths.join('\n')}\n`, 'utf8');
+  }
+
   async commit(options: GitCommitOptions): Promise<void> {
     if (!options.message.trim())
       throw new Error('A commit message is required');
+    const username = userInfo().username || 'unknown-user';
+    const identityOptions: string[] = [];
+    if (!(await this.gitConfig(options.projectPath, 'user.name')))
+      identityOptions.push('-c', `user.name=${username}`);
+    if (!(await this.gitConfig(options.projectPath, 'user.email')))
+      identityOptions.push('-c', `user.email=${username}@localhost`);
     await this.runGit(
-      ['commit', '-m', options.message],
+      [...identityOptions, 'commit', '-m', options.message],
       '',
       '',
       options.projectPath,
@@ -536,6 +566,14 @@ export class GitRepositoryManager {
     return result;
   }
 
+  private async gitConfig(path: string, key: string): Promise<string> {
+    const result = await runExternalProgram('git', ['config', '--get', key], {
+      cwd: path,
+      env: gitEnvironment('', ''),
+    }).result;
+    return result.exitCode === 0 ? result.output.trim() : '';
+  }
+
   private async gitFile(
     path: string,
     revision: string,
@@ -697,14 +735,23 @@ function isNodeError(error: unknown, code: string): boolean {
 }
 
 function parseStatus(output: string): GitStatusEntry[] {
-  return output
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .map((line) => ({
-      indexStatus: line[0] || ' ',
-      worktreeStatus: line[1] || ' ',
-      path: line.slice(3),
-    }));
+  const records = output.split('\0').filter(Boolean);
+  const entries: GitStatusEntry[] = [];
+  for (let index = 0; index < records.length; index++) {
+    const record = records[index];
+    const entry = {
+      indexStatus: record[0] || ' ',
+      worktreeStatus: record[1] || ' ',
+      path: record.slice(3),
+    };
+    entries.push(entry);
+    if (
+      (entry.indexStatus === 'R' || entry.indexStatus === 'C') &&
+      index + 1 < records.length
+    )
+      index++;
+  }
+  return entries;
 }
 
 function parseMergeConflicts(output: string): string[] {

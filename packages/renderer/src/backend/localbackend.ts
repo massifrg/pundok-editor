@@ -501,6 +501,14 @@ export class LocalBackend implements Backend {
     return window.ipc.stageGitProject(path, paths);
   }
 
+  unstageGitProject(path: string, paths: string[]) {
+    return window.ipc.unstageGitProject(path, paths);
+  }
+
+  updateGitignore(path: string, paths: string[]) {
+    return window.ipc.updateGitignore(path, paths);
+  }
+
   commitGitProject(options: GitCommitOptions) {
     return window.ipc.commitGitProject(options);
   }

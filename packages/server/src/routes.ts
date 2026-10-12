@@ -332,6 +332,18 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/unstage-git-project',
+    asyncHandler((req) =>
+      backend.unstageGitProject(username(req), req.body?.path, req.body?.paths),
+    ),
+  );
+  router.post(
+    '/update-gitignore',
+    asyncHandler((req) =>
+      backend.updateGitignore(username(req), req.body?.path, req.body?.paths),
+    ),
+  );
+  router.post(
     '/commit-git-project',
     asyncHandler((req) =>
       backend.commitGitProject(username(req), req.body?.options),
