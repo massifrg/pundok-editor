@@ -166,8 +166,11 @@ function compareConfigKeys(
  * @param k The key under scrutiny.
  * @returns
  */
-function filterConfigKeys(k: string): boolean {
-  return !CONFIG_FORBIDDEN_KEY[k];
+function filterConfigKeys(k: string, context?: string): boolean {
+  return (
+    !CONFIG_FORBIDDEN_KEY[k] &&
+    !(context === PROJECT_CONTEXT && k === 'path')
+  );
 }
 
 function isObject(obj: any) {
@@ -271,7 +274,7 @@ function sortConfigKeys(value: any, context?: string): any {
   } else if (isObject(value)) {
     const sorted: Record<string, any> = {};
     Object.keys(value)
-      .filter(filterConfigKeys)
+      .filter((key) => filterConfigKeys(key, context))
       .sort(compareConfigKeys(context))
       .forEach((key) => {
         const childContext =

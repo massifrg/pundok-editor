@@ -58,6 +58,7 @@ describe('updateConfiguration', () => {
       },
     });
     expect(saved).not.toHaveProperty('computedConfig');
+    expect(saved).not.toHaveProperty('path');
 
     const backup = JSON.parse(
       await readFile(join(projectDirectory, 'pundok-project.bak'), 'utf8'),
