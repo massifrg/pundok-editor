@@ -733,6 +733,7 @@
       "whichFoundSelected": "(#{index} selected)"
     },
     "loadCssSearchSettings": "load predefined/previously saved CSS selector settings",
+    "loadSearchHistory": "load a recent search",
     "loadSearchSettings": "load predefined or previously saved search and replace settings",
     "marksPalette": {
       "title": "Select marks or custom styles that must be present or absent"

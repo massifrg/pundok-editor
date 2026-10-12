@@ -732,6 +732,7 @@
       "whichFoundSelected": "(selezionata la #{index})"
     },
     "loadCssSearchSettings": "carica impostazioni di ricerca con selettori CSS predefinite o salvate in precedenza",
+    "loadSearchHistory": "carica una ricerca recente",
     "loadSearchSettings": "carica impostazioni di cerca e sostituisci predefinite o salvate in precedenza",
     "marksPalette": {
       "title": "Seleziona stili predefiniti o personalizzati che devono essere presenti/assenti"
