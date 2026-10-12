@@ -163,25 +163,25 @@ export class LocalBackend implements Backend {
 
           const project_with_conf: PundokEditorProject | undefined = project
             ? await computeProjectConfiguration(
-              project,
-              getConfigurationFunction(window.ipc),
-            )
+                project,
+                getConfigurationFunction(window.ipc),
+              )
             : undefined;
           const action: EditorAction = project_with_conf
             ? {
-              ...ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
-              editorKey: editorKey!,
-              props: {
-                project: project_with_conf,
-                configuration: project_with_conf.computedConfig,
-                content,
-              } as BackendSetContentWithProjectActionProps,
-            }
+                ...ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
+                editorKey: editorKey!,
+                props: {
+                  project: project_with_conf,
+                  configuration: project_with_conf.computedConfig,
+                  content,
+                } as BackendSetContentWithProjectActionProps,
+              }
             : {
-              ...ACTION_BACKEND_SET_CONTENT,
-              editorKey: editorKey!,
-              props: { content } as BackendSetContentActionProps,
-            };
+                ...ACTION_BACKEND_SET_CONTENT,
+                editorKey: editorKey!,
+                props: { content } as BackendSetContentActionProps,
+              };
           actions.setAction(action);
         },
       );
@@ -505,10 +505,29 @@ export class LocalBackend implements Backend {
     return window.ipc.commitGitProject(options);
   }
 
+  gitProjectUpdates(path: string) {
+    return window.ipc.gitProjectUpdates(path);
+  }
+
+  checkGitMerge(path: string, remoteBranch: string) {
+    return window.ipc.checkGitMerge(path, remoteBranch);
+  }
+
+  mergeGitProject(
+    path: string,
+    remoteBranch: string,
+    strategy?: 'ours' | 'theirs',
+  ) {
+    return window.ipc.mergeGitProject(path, remoteBranch, strategy);
+  }
+
+  pushGitProject(path: string, user?: string, password?: string) {
+    return window.ipc.pushGitProject(path, user, password);
+  }
+
   scanGitProjects(url: string, user: string, password: string) {
     return window.ipc.scanGitProjects(url, user, password);
   }
-
 }
 
 function getConfigurationFunction(ipc: any) {

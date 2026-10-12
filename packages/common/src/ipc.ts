@@ -64,6 +64,10 @@ export type IpcRendererToMainChannel =
   | 'init-git-project'
   | 'stage-git-project'
   | 'commit-git-project'
+  | 'git-project-updates'
+  | 'check-git-merge'
+  | 'merge-git-project'
+  | 'push-git-project'
   | 'scan-git-projects';
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
@@ -248,6 +252,22 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'commit-git-project': {
     dir: 'r2m',
     description: 'commit staged project files',
+  },
+  'git-project-updates': {
+    dir: 'r2m',
+    description: 'find remote Git branches ahead of the current branch',
+  },
+  'check-git-merge': {
+    dir: 'r2m',
+    description: 'check whether a remote Git branch can be merged',
+  },
+  'merge-git-project': {
+    dir: 'r2m',
+    description: 'merge a remote Git branch into the current branch',
+  },
+  'push-git-project': {
+    dir: 'r2m',
+    description: 'push the active Git branch to its remote',
   },
   'scan-git-projects': {
     dir: 'r2m',

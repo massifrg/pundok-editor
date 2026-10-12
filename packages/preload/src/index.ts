@@ -14,6 +14,9 @@ import {
   ClonedGitProject,
   LocalGitProjectOptions,
   GitProjectStatus,
+  GitRemoteBranch,
+  GitMergeCheck,
+  GitMergeStrategy,
   GitCommitOptions,
   EditorKeyType,
   FindResourceOptions,
@@ -134,6 +137,18 @@ export interface Ipc {
   ) => Promise<ClonedGitProject>;
 
   gitProjectStatus: (path: string) => Promise<GitProjectStatus>;
+  gitProjectUpdates: (path: string) => Promise<GitRemoteBranch[]>;
+  checkGitMerge: (path: string, remoteBranch: string) => Promise<GitMergeCheck>;
+  mergeGitProject: (
+    path: string,
+    remoteBranch: string,
+    strategy?: GitMergeStrategy,
+  ) => Promise<void>;
+  pushGitProject: (
+    path: string,
+    user?: string,
+    password?: string,
+  ) => Promise<void>;
   initGitProject: (path: string) => Promise<void>;
   stageGitProject: (path: string, paths: string[]) => Promise<void>;
   commitGitProject: (options: GitCommitOptions) => Promise<void>;
@@ -238,6 +253,17 @@ contextBridge.exposeInMainWorld('ipc', {
     ipcRenderer.invoke('connect-git-project', options),
   gitProjectStatus: (path: string) =>
     ipcRenderer.invoke('git-project-status', path),
+  gitProjectUpdates: (path: string) =>
+    ipcRenderer.invoke('git-project-updates', path),
+  checkGitMerge: (path: string, remoteBranch: string) =>
+    ipcRenderer.invoke('check-git-merge', path, remoteBranch),
+  mergeGitProject: (
+    path: string,
+    remoteBranch: string,
+    strategy?: GitMergeStrategy,
+  ) => ipcRenderer.invoke('merge-git-project', path, remoteBranch, strategy),
+  pushGitProject: (path: string, user?: string, password?: string) =>
+    ipcRenderer.invoke('push-git-project', path, user, password),
   initGitProject: (path: string) =>
     ipcRenderer.invoke('init-git-project', path),
   stageGitProject: (path: string, paths: string[]) =>

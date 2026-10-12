@@ -282,6 +282,44 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/git-project-updates',
+    asyncHandler((req) =>
+      backend.gitProjectUpdates(username(req), req.body?.path),
+    ),
+  );
+  router.post(
+    '/check-git-merge',
+    asyncHandler((req) =>
+      backend.checkGitMerge(
+        username(req),
+        req.body?.path,
+        req.body?.remoteBranch,
+      ),
+    ),
+  );
+  router.post(
+    '/merge-git-project',
+    asyncHandler((req) =>
+      backend.mergeGitProject(
+        username(req),
+        req.body?.path,
+        req.body?.remoteBranch,
+        req.body?.strategy,
+      ),
+    ),
+  );
+  router.post(
+    '/push-git-project',
+    asyncHandler((req) =>
+      backend.pushGitProject(
+        username(req),
+        req.body?.path,
+        req.body?.user,
+        req.body?.password,
+      ),
+    ),
+  );
+  router.post(
     '/init-git-project',
     asyncHandler((req) =>
       backend.initGitProject(username(req), req.body?.path),

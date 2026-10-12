@@ -18,6 +18,9 @@ import {
   type LocalGitProjectOptions,
   type GitCommitOptions,
   type GitProjectStatus,
+  type GitMergeCheck,
+  type GitMergeStrategy,
+  type GitRemoteBranch,
   type GitStatusEntry,
   isDocRepositories,
   type PundokEditorProject,
@@ -38,10 +41,117 @@ export class GitRepositoryManager {
     try {
       const branch = await this.currentBranch(path, { user: '', password: '' });
       const result = await this.runGit(['status', '--porcelain'], '', '', path);
-      return { managed: true, branch, files: parseStatus(result.output) };
+      const remote = await this.remoteName(path);
+      return {
+        managed: true,
+        branch,
+        remote,
+        files: parseStatus(result.output),
+      };
     } catch {
       return { managed: false, files: [] };
     }
+  }
+
+  async updates(path: string): Promise<GitRemoteBranch[]> {
+    const remote = await this.remoteName(path);
+    if (!remote) return [];
+    const credentials = await this.credentialsForRemote(path, remote);
+    await this.runGit(
+      ['fetch', remote],
+      credentials.user,
+      credentials.password,
+      path,
+    );
+    const branch = await this.currentBranch(path, credentials);
+    const refs = await this.runGit(
+      ['for-each-ref', '--format=%(refname:short)', `refs/remotes/${remote}`],
+      credentials.user,
+      credentials.password,
+      path,
+    );
+    const updates: GitRemoteBranch[] = [];
+    for (const name of refs.output.split(/\r?\n/).filter(Boolean)) {
+      if (name === `${remote}/HEAD`) continue;
+      const counts = await this.runGit(
+        ['rev-list', '--left-right', '--count', `${branch}...${name}`],
+        credentials.user,
+        credentials.password,
+        path,
+      );
+      const [behind, ahead] = counts.output.trim().split(/\s+/).map(Number);
+      if (Number.isFinite(ahead) && Number.isFinite(behind))
+        updates.push({ name, ahead, behind });
+    }
+    return updates;
+  }
+
+  async checkMerge(path: string, remoteBranch: string): Promise<GitMergeCheck> {
+    const remote = await this.remoteName(path);
+    if (!remote) throw new Error('This project has no Git remote');
+    const credentials = await this.credentialsForRemote(path, remote);
+    validateRemoteBranch(remoteBranch, remote);
+    const result = await runExternalProgram(
+      'git',
+      ['merge-tree', '--write-tree', 'HEAD', remoteBranch],
+      {
+        cwd: path,
+        env: gitEnvironment(credentials.user, credentials.password),
+      },
+    ).result;
+    if (result.exitCode === 0) return { mergeable: true, conflicts: [] };
+    if (result.exitCode === 1)
+      return {
+        mergeable: false,
+        conflicts: parseMergeConflicts(`${result.output}\n${result.error}`),
+      };
+    throw new Error(
+      `Git command failed (${result.commandLine}): ${
+        result.error || result.output
+      }`,
+    );
+  }
+
+  async merge(
+    path: string,
+    remoteBranch: string,
+    strategy?: GitMergeStrategy,
+  ): Promise<void> {
+    const remote = await this.remoteName(path);
+    if (!remote) throw new Error('This project has no Git remote');
+    const credentials = await this.credentialsForRemote(path, remote);
+    validateRemoteBranch(remoteBranch, remote);
+    await this.runGit(
+      [
+        'merge',
+        '--no-edit',
+        ...(strategy ? ['-X', strategy] : []),
+        remoteBranch,
+      ],
+      credentials.user,
+      credentials.password,
+      path,
+    );
+  }
+
+  async push(path: string, user = '', password = ''): Promise<void> {
+    const remote = await this.remoteName(path);
+    if (!remote) throw new Error('This project has no Git remote');
+    const url = (
+      await this.runGit(['remote', 'get-url', remote], '', '', path)
+    ).output.trim();
+    const credentials =
+      user && password
+        ? { user, password }
+        : this.credentials.get(url) || { user: '', password: '' };
+    const branch = await this.currentBranch(path, credentials);
+    await this.runGit(
+      ['push', remote, `${branch}:${branch}`],
+      credentials.user,
+      credentials.password,
+      path,
+    );
+    this.credentials.set(url, credentials);
   }
 
   async init(path: string): Promise<void> {
@@ -149,6 +259,10 @@ export class GitRepositoryManager {
         options.password,
         projectPath,
       );
+      this.credentials.set(options.url, {
+        user: options.user,
+        password: options.password,
+      });
       return {
         ...project,
         description: project.description || '',
@@ -348,6 +462,22 @@ export class GitRepositoryManager {
     return branch;
   }
 
+  private async remoteName(path: string): Promise<string | undefined> {
+    const result = await this.runGit(['remote'], '', '', path);
+    const remotes = result.output.split(/\r?\n/).filter(Boolean);
+    return remotes.includes('origin') ? 'origin' : remotes[0];
+  }
+
+  private async credentialsForRemote(
+    path: string,
+    remote: string,
+  ): Promise<{ user: string; password: string }> {
+    const url = (
+      await this.runGit(['remote', 'get-url', remote], '', '', path)
+    ).output.trim();
+    return this.credentials.get(url) || { user: '', password: '' };
+  }
+
   private async defaultBranch(
     path: string,
     credentials: { user: string; password: string },
@@ -482,6 +612,16 @@ function validateBranch(branch: string): void {
     throw new Error(`Invalid Git branch: "${branch}"`);
 }
 
+function validateRemoteBranch(branch: string, remote: string): void {
+  if (
+    !branch.startsWith(`${remote}/`) ||
+    branch.length <= remote.length + 1 ||
+    branch.includes('..') ||
+    /[\s~^:?*[\\]/.test(branch.slice(remote.length + 1))
+  )
+    throw new Error(`Invalid Git remote branch: "${branch}"`);
+}
+
 function safeProjectName(name: string): string {
   if (!name || name === '.' || name === '..' || /[\\/]/.test(name))
     throw new Error(`Invalid repository name: "${name}"`);
@@ -493,13 +633,16 @@ function basicAuth(user: string, password: string): string {
 }
 
 function gitEnvironment(user: string, password: string): NodeJS.ProcessEnv {
-  return {
+  const environment: NodeJS.ProcessEnv = {
     ...process.env,
     GIT_TERMINAL_PROMPT: '0',
-    GIT_CONFIG_COUNT: '1',
-    GIT_CONFIG_KEY_0: 'http.extraHeader',
-    GIT_CONFIG_VALUE_0: `Authorization: ${basicAuth(user, password)}`,
   };
+  if (user && password) {
+    environment.GIT_CONFIG_COUNT = '1';
+    environment.GIT_CONFIG_KEY_0 = 'http.extraHeader';
+    environment.GIT_CONFIG_VALUE_0 = `Authorization: ${basicAuth(user, password)}`;
+  }
+  return environment;
 }
 
 function isDirectChild(parent: string, child: string): boolean {
@@ -536,6 +679,16 @@ function parseStatus(output: string): GitStatusEntry[] {
       worktreeStatus: line[1] || ' ',
       path: line.slice(3),
     }));
+}
+
+function parseMergeConflicts(output: string): string[] {
+  return [
+    ...new Set(
+      [...output.matchAll(/Merge conflict in (.+)$/gm)].map((match) =>
+        match[1].trim(),
+      ),
+    ),
+  ];
 }
 
 async function remoteRepositories(

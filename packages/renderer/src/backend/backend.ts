@@ -29,6 +29,9 @@ import type {
   ClonedGitProject,
   LocalGitProjectOptions,
   GitProjectStatus,
+  GitRemoteBranch,
+  GitMergeCheck,
+  GitMergeStrategy,
   GitCommitOptions,
 } from '../common';
 import type Electron from 'electron';
@@ -247,6 +250,14 @@ export interface Backend {
   connectGitProject(options: LocalGitProjectOptions): Promise<ClonedGitProject>;
 
   gitProjectStatus(path: string): Promise<GitProjectStatus>;
+  gitProjectUpdates(path: string): Promise<GitRemoteBranch[]>;
+  checkGitMerge(path: string, remoteBranch: string): Promise<GitMergeCheck>;
+  mergeGitProject(
+    path: string,
+    remoteBranch: string,
+    strategy?: GitMergeStrategy,
+  ): Promise<void>;
+  pushGitProject(path: string, user?: string, password?: string): Promise<void>;
 
   initGitProject(path: string): Promise<void>;
 

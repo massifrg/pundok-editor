@@ -205,6 +205,11 @@
               $t('projectMenu.manageChanges')
             }}</q-item-section></q-item
           >
+          <q-item clickable v-close-popup @click="$emit('checkGitUpdates')"
+            ><q-item-section>{{
+              $t('projectMenu.checkUpdates')
+            }}</q-item-section></q-item
+          >
           <q-item clickable v-close-popup @click="$emit('shareGitProject')"
             ><q-item-section>{{
               $t('projectMenu.share')
@@ -659,6 +664,7 @@ export default {
     'showConfigurationsDialog',
     'showConfigurationEditor',
     'manageGitProject',
+    'checkGitUpdates',
     'shareGitProject',
     'connectGitProject',
     'cloneGitProject',

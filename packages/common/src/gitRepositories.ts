@@ -36,8 +36,22 @@ export interface GitStatusEntry {
 export interface GitProjectStatus {
   managed: boolean;
   branch?: string;
+  remote?: string;
   files: GitStatusEntry[];
 }
+
+export interface GitRemoteBranch {
+  name: string;
+  ahead: number;
+  behind: number;
+}
+
+export interface GitMergeCheck {
+  mergeable: boolean;
+  conflicts: string[];
+}
+
+export type GitMergeStrategy = 'ours' | 'theirs';
 
 export interface GitCommitOptions {
   projectPath: string;

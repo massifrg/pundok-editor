@@ -28,6 +28,9 @@ import type {
   LocalGitProjectOptions,
   GitCommitOptions,
   GitProjectStatus,
+  GitMergeCheck,
+  GitMergeStrategy,
+  GitRemoteBranch,
 } from './common';
 import {
   getHardcodedEditorConfig,
@@ -173,6 +176,50 @@ export class PundokEditorServer {
     path: string,
   ): Promise<GitProjectStatus> {
     return this.gitRepositoriesForUser(user).status(this.userPath(user, path));
+  }
+
+  async gitProjectUpdates(
+    user: string,
+    path: string,
+  ): Promise<GitRemoteBranch[]> {
+    return this.gitRepositoriesForUser(user).updates(this.userPath(user, path));
+  }
+
+  async checkGitMerge(
+    user: string,
+    path: string,
+    remoteBranch: string,
+  ): Promise<GitMergeCheck> {
+    return this.gitRepositoriesForUser(user).checkMerge(
+      this.userPath(user, path),
+      remoteBranch,
+    );
+  }
+
+  async mergeGitProject(
+    user: string,
+    path: string,
+    remoteBranch: string,
+    strategy?: GitMergeStrategy,
+  ): Promise<void> {
+    return this.gitRepositoriesForUser(user).merge(
+      this.userPath(user, path),
+      remoteBranch,
+      strategy,
+    );
+  }
+
+  async pushGitProject(
+    user: string,
+    path: string,
+    remoteUser = '',
+    password = '',
+  ): Promise<void> {
+    return this.gitRepositoriesForUser(user).push(
+      this.userPath(user, path),
+      remoteUser,
+      password,
+    );
   }
 
   async initGitProject(user: string, path: string): Promise<void> {

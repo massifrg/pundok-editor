@@ -21,6 +21,7 @@
             @show-configurations-dialog="visibleConfigurationDialog = true"
             @show-configuration-editor="visibleConfigurationEditor = true"
             @manage-git-project="visibleGitChanges = true"
+            @check-git-updates="visibleGitUpdates = true"
             @share-git-project="showGitRepository('publish')"
             @connect-git-project="showGitRepository('connect')"
             @clone-git-project="showGitRepository('clone')"
@@ -178,6 +179,11 @@
           :visible="visibleGitChanges"
           :project-path="docState()?.project?.path || ''"
           @close="visibleGitChanges = false"
+        />
+        <GitUpdatesDialog
+          :visible="visibleGitUpdates"
+          :project-path="docState()?.project?.path || ''"
+          @close="visibleGitUpdates = false"
         />
         <GitRepositoryDialog
           :visible="!!gitRepositoryMode"
@@ -389,6 +395,9 @@ export default {
     GitChangesDialog: defineAsyncComponent(
       () => import('./GitChangesDialog.vue'),
     ),
+    GitUpdatesDialog: defineAsyncComponent(
+      () => import('./GitUpdatesDialog.vue'),
+    ),
     GitRepositoryDialog: defineAsyncComponent(
       () => import('./GitRepositoryDialog.vue'),
     ),
@@ -449,6 +458,7 @@ export default {
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
       visibleNewProjectDialog: false,
       visibleGitChanges: false,
+      visibleGitUpdates: false,
       gitRepositoryMode: undefined as
         'clone' | 'publish' | 'connect' | undefined,
       swapBlocksWasActive: this.guiProps.swapBlocksActive,

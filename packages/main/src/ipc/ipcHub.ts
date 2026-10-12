@@ -162,10 +162,7 @@ export class IpcHub implements RendererHub {
       getProject(backendDirectories(), options),
     );
     ipcMain.handle('get-inclusion-tree', (_event, project, refresh) =>
-      this.inclusionTree(
-        JSON.parse(project) as PundokEditorProject,
-        refresh,
-      ),
+      this.inclusionTree(JSON.parse(project) as PundokEditorProject, refresh),
     );
     ipcMain.handle('get-bookmarks', (_event, bookmarkType) =>
       getBookmarks(backendDirectories(), bookmarkType),
@@ -239,6 +236,20 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('git-project-status', (_event, path) =>
       this.gitRepositories.status(path),
+    );
+    ipcMain.handle('git-project-updates', (_event, path) =>
+      this.gitRepositories.updates(path),
+    );
+    ipcMain.handle('check-git-merge', (_event, path, remoteBranch) =>
+      this.gitRepositories.checkMerge(path, remoteBranch),
+    );
+    ipcMain.handle(
+      'merge-git-project',
+      (_event, path, remoteBranch, strategy) =>
+        this.gitRepositories.merge(path, remoteBranch, strategy),
+    );
+    ipcMain.handle('push-git-project', (_event, path, user, password) =>
+      this.gitRepositories.push(path, user, password),
     );
     ipcMain.handle('init-git-project', (_event, path) =>
       this.gitRepositories.init(path),

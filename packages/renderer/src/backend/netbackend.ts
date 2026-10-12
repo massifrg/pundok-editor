@@ -269,6 +269,43 @@ export class NetBackend implements Backend {
     return this.request<void>('commit-git-project', { options });
   }
 
+  gitProjectUpdates(path: string) {
+    return this.request<import('../common').GitRemoteBranch[]>(
+      'git-project-updates',
+      { path },
+    );
+  }
+
+  checkGitMerge(
+    path: string,
+    remoteBranch: string,
+  ): Promise<import('../common').GitMergeCheck> {
+    return this.request<import('../common').GitMergeCheck>('check-git-merge', {
+      path,
+      remoteBranch,
+    });
+  }
+
+  mergeGitProject(
+    path: string,
+    remoteBranch: string,
+    strategy?: 'ours' | 'theirs',
+  ): Promise<void> {
+    return this.request<void>('merge-git-project', {
+      path,
+      remoteBranch,
+      strategy,
+    });
+  }
+
+  pushGitProject(
+    path: string,
+    user?: string,
+    password?: string,
+  ): Promise<void> {
+    return this.request<void>('push-git-project', { path, user, password });
+  }
+
   scanGitProjects(
     url: string,
     user: string,
