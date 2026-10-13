@@ -42,8 +42,6 @@ export interface BaseOutputConverter extends NamedAndDescribed {
    * for that format/extension (Windows: "start", Linux: "xdg-open|exo-open|gnome-open", Mac: "open")
    */
   openResult?: ShowOutputConversion;
-  /** asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion) */
-  feedback?: FeedbackMessageType;
   /** optional icon */
   icon?: string;
 }

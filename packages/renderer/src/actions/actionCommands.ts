@@ -2,8 +2,6 @@ import {
   ACTION_EDIT_ATTRIBUTES,
   ACTION_DOCUMENT_EXPORT,
   ACTION_DOCUMENT_IMPORT,
-  ACTION_SHOW_EXPORT_DIALOG,
-  ACTION_SHOW_IMPORT_DIALOG,
   ActionForNodeOrMark,
   ACTION_NEW_EMPTY_DOCUMENT,
   ACTION_SHOW_PROJECT_STRUCTURE_DIALOG,
@@ -129,22 +127,6 @@ export function setActionShowResultMessage(
       editorKey,
       props,
     });
-}
-
-export function setActionShowImportDialog(
-  stateOrKey: EditorState | EditorKeyType,
-) {
-  const editorKey = editorKeyFrom(stateOrKey);
-  if (editorKey)
-    useActions().setAction({ ...ACTION_SHOW_IMPORT_DIALOG, editorKey });
-}
-
-export function setActionShowExportDialog(
-  stateOrKey: EditorState | EditorKeyType,
-) {
-  const editorKey = editorKeyFrom(stateOrKey);
-  if (editorKey)
-    useActions().setAction({ ...ACTION_SHOW_EXPORT_DIALOG, editorKey });
 }
 
 export function setActionShowSearchDialog(

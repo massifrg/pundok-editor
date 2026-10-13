@@ -120,14 +120,12 @@ export async function exportDocument(
           resultFile: resultFile || doc.path,
         });
     }
-    if (converter?.feedback === 'command-line')
-      commandLineFeedback(feedback, result.commandLine, doc.editorKey);
-    else if (converter?.feedback === 'success')
-      messageFeedback(
-        feedback,
-        `successfully exported in "${resultFile}"`,
-        doc.editorKey,
-      );
+
+    // TODO: see if we can replace the old converter.feedback field
+    // if (converter?.feedback === 'command-line')
+    //   messageFeedback(feedback, 'err', result.commandLine, doc.editorKey);
+    // else if (converter?.feedback === 'success')
+    //   messageFeedback(feedback, 'err', `successfully exported in "${resultFile}"`, doc.editorKey,
 
     if (result.exitCode !== 0) {
       const message = `document ${operationName} failed with exitCode ${result.exitCode}`;

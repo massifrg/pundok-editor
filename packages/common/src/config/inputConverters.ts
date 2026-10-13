@@ -14,8 +14,6 @@ export type BaseInputConverter = NamedAndDescribed & {
   default?: boolean;
   /** input file extensions */
   extensions: string[];
-  /** asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion) */
-  feedback?: string;
   /** optional icon */
   icon?: string;
 };

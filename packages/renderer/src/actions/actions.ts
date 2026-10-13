@@ -319,18 +319,6 @@ export const ACTION_SHOW_RESULT_MESSAGE: BaseEditorAction = {
   icon: 'result_message',
 }
 
-export const ACTION_SHOW_EXPORT_DIALOG: BaseEditorAction = {
-  name: 'show-export-dialog',
-  label: 'open export dialog',
-  icon: 'export',
-};
-
-export const ACTION_SHOW_IMPORT_DIALOG: BaseEditorAction = {
-  name: 'show-import-dialog',
-  label: 'open import dialog',
-  icon: 'import',
-};
-
 export const ACTION_SHOW_SEARCH_DIALOG: BaseEditorAction = {
   name: 'show-search-dialog',
   label: 'open search dialog',

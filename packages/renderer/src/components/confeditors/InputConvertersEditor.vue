@@ -5,24 +5,13 @@
         {{ $t('configEditor.inputConverters.title') }}
       </div>
       <q-space />
-      <q-btn
-        dense
-        icon="add"
-        :label="$t('configEditor.inputConverters.newConverter')"
-        @click="newConverter"
-      />
+      <q-btn dense icon="add" :label="$t('configEditor.inputConverters.newConverter')" @click="newConverter" />
     </div>
 
     <q-list v-if="allConverters.length > 0" bordered separator>
-      <q-item
-        v-for="converter in allConverters"
-        :key="converter.name"
-        dense
-        :class="{
-          'text-grey-7': isInherited(converter),
-        }"
-        :style="{ backgroundColor: inheritedBackground(converter.name) }"
-      >
+      <q-item v-for="converter in allConverters" :key="converter.name" dense :class="{
+        'text-grey-7': isInherited(converter),
+      }" :style="{ backgroundColor: inheritedBackground(converter.name) }">
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
             <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(converter.name) }">
@@ -32,35 +21,25 @@
               {{ $t('configEditor.inputConverters.default') }}
             </q-badge>
             <q-space />
-            <span class="text-caption text-grey-7"
-              >{{ converter.type }} · {{ converterSummary(converter) }}</span
-            >
+            <span class="text-caption text-grey-7">{{ converter.type }} · {{ converterSummary(converter) }}</span>
           </q-item-label>
           <q-item-label v-if="converter.description" caption>{{
             converter.description
-          }}</q-item-label>
+            }}</q-item-label>
           <q-item-label v-if="isInherited(converter)" caption>
             {{ $t('configEditor.inheritedFrom', { name: inheritedSource(converter.name) }) }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
           <div v-if="isInherited(converter)" class="row no-wrap items-center q-gutter-xs">
-            <q-btn dense flat round icon="content_copy"
-              :title="$t('configEditor.inputConverters.copyConverter')"
+            <q-btn dense flat round icon="content_copy" :title="$t('configEditor.inputConverters.copyConverter')"
               @click="copyInheritedConverter(converter)" />
             <q-toggle :model-value="isRemoved(converter.name)" color="primary" :icon="mdiEyeOff"
               :title="$t('configEditor.removeInherited', { name: converter.name })"
               @update:model-value="setRemoved(converter.name, $event)" />
           </div>
-          <q-btn
-            v-else
-            dense
-            flat
-            round
-            icon="edit"
-            :title="$t('configEditor.inputConverters.editConverter')"
-            @click="editConverter(converter.name)"
-          />
+          <q-btn v-else dense flat round icon="edit" :title="$t('configEditor.inputConverters.editConverter')"
+            @click="editConverter(converter.name)" />
         </q-item-section>
       </q-item>
     </q-list>
@@ -69,13 +48,7 @@
     </div>
 
     <q-dialog :model-value="!!draft" @hide="cancelEdit">
-      <q-card
-        v-if="draft"
-        flat
-        bordered
-        class="q-mt-md"
-        style="width: 80vw; max-width: 80vw"
-      >
+      <q-card v-if="draft" flat bordered class="q-mt-md" style="width: 80vw; max-width: 80vw">
         <q-card-section class="q-pb-sm">
           <div class="text-subtitle2">
             {{
@@ -88,64 +61,27 @@
           </div>
         </q-card-section>
         <q-card-section class="q-pt-none q-gutter-md">
-          <q-select
-            v-model="draft.type"
-            :options="converterTypeOptions"
-            :label="$t('configEditor.inputConverters.type')"
-            outlined
-            dense
-            emit-value
-            map-options
-          />
-          <q-input
-            v-model="draft.name"
-            :label="$t('configEditor.inputConverters.name')"
-            outlined
-            dense
-            :error="!!nameError"
-            :error-message="nameError ? $t(nameError) : undefined"
-          />
-          <q-input
-            v-model="draft.description"
-            :label="$t('configEditor.inputConverters.descriptionField')"
-            outlined
-            dense
-            type="textarea"
-            autogrow
-          />
-          <q-checkbox
-            v-model="draft.default"
-            :label="$t('configEditor.inputConverters.default')"
-          />
-          <q-input
-            v-model="draft.extensionsText"
-            :label="$t('configEditor.inputConverters.extensions')"
-            outlined
-            dense
-          />
+          <q-select v-model="draft.type" :options="converterTypeOptions"
+            :label="$t('configEditor.inputConverters.type')" outlined dense emit-value map-options />
+          <q-input v-model="draft.name" :label="$t('configEditor.inputConverters.name')" outlined dense
+            :error="!!nameError" :error-message="nameError ? $t(nameError) : undefined" />
+          <q-input v-model="draft.description" :label="$t('configEditor.inputConverters.descriptionField')" outlined
+            dense type="textarea" autogrow />
+          <q-checkbox v-model="draft.default" :label="$t('configEditor.inputConverters.default')" />
+          <q-input v-model="draft.extensionsText" :label="$t('configEditor.inputConverters.extensions')" outlined
+            dense />
           <div v-if="draft.type === 'pandoc'" class="row q-col-gutter-md">
             <div class="col">
-              <PandocFormatEditor
-                :model-value="selectedPandocFormat"
-                :direction="'input'"
-                :format-extensions="selectedFormatExtensions"
-                :selected="selectedInputChoice === 'format'"
-                @update:model-value="selectPandocFormat"
-                @update:format-extensions="selectedFormatExtensions = $event"
-                @select="selectedInputChoice = 'format'"
-              />
+              <PandocFormatEditor :model-value="selectedPandocFormat" :direction="'input'"
+                :format-extensions="selectedFormatExtensions" :selected="selectedInputChoice === 'format'"
+                @update:model-value="selectPandocFormat" @update:format-extensions="selectedFormatExtensions = $event"
+                @select="selectedInputChoice = 'format'" />
             </div>
             <div class="col">
-              <q-card
-                flat
-                bordered
-                class="input-converters-editor__reader cursor-pointer"
-                :class="{
-                  'input-converters-editor__reader--selected':
-                    selectedInputChoice === 'reader',
-                }"
-                @click="selectReaderCard"
-              >
+              <q-card flat bordered class="input-converters-editor__reader cursor-pointer" :class="{
+                'input-converters-editor__reader--selected':
+                  selectedInputChoice === 'reader',
+              }" @click="selectReaderCard">
                 <q-card-section>
                   <div class="text-subtitle2">
                     {{ $t('configEditor.inputConverters.customReader') }}
@@ -166,46 +102,17 @@
               </q-card>
             </div>
           </div>
-          <q-input
-            v-else
-            v-model="draft.format"
-            :label="$t('configEditor.inputConverters.format')"
-            outlined
-            dense
-          />
-          <PandocFiltersEditor
-            v-if="draft.type === 'pandoc'"
-            :model-value="draft.filters || []"
-            :resource-options="resourceOptions"
-            @update:model-value="draft.filters = $event"
-          />
-          <PandocOptionsEditor
-            v-if="draft.type === 'pandoc'"
-            :model-value="draft.pandocOptions || []"
-            option-type="reader"
-            :editor="editor"
-            @update:model-value="draft.pandocOptions = $event"
-          />
-          <PandocLuaResourceDialog
-            v-if="draft.type === 'pandoc'"
-            v-model="readerDialogOpen"
-            resource-type="reader"
-            :resource-options="resourceOptions"
-            @select="selectReader"
-          />
+          <q-input v-else v-model="draft.format" :label="$t('configEditor.inputConverters.format')" outlined dense />
+          <PandocFiltersEditor v-if="draft.type === 'pandoc'" :model-value="draft.filters || []"
+            :resource-options="resourceOptions" @update:model-value="draft.filters = $event" />
+          <PandocOptionsEditor v-if="draft.type === 'pandoc'" :model-value="draft.pandocOptions || []"
+            option-type="reader" :editor="editor" @update:model-value="draft.pandocOptions = $event" />
+          <PandocLuaResourceDialog v-if="draft.type === 'pandoc'" v-model="readerDialogOpen" resource-type="reader"
+            :resource-options="resourceOptions" @select="selectReader" />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn
-            flat
-            :label="$t('configEditor.buttons.cancel')"
-            @click="cancelEdit"
-          />
-          <q-btn
-            color="primary"
-            :label="$t('configEditor.buttons.apply')"
-            :disable="!canApply"
-            @click="applyEdit"
-          />
+          <q-btn flat :label="$t('configEditor.buttons.cancel')" @click="cancelEdit" />
+          <q-btn color="primary" :label="$t('configEditor.buttons.apply')" :disable="!canApply" @click="applyEdit" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -350,8 +257,8 @@ function copyConverter(converter: InputConverter): InputConverter {
         filters: converter.filters ? [...converter.filters] : undefined,
         pandocOptions: converter.pandocOptions
           ? converter.pandocOptions.map(
-              ([name, value]) => [name, value] as PandocOption,
-            )
+            ([name, value]) => [name, value] as PandocOption,
+          )
           : undefined,
         formatExtensions: converter.formatExtensions
           ? [...converter.formatExtensions]
@@ -489,7 +396,7 @@ function normalizeConverter(draft: InputConverterDraft): InputConverter {
     description: draft.description,
     extensions: draft.extensions,
     ...(draft.default ? { default: true } : {}),
-    ...(draft.feedback ? { feedback: draft.feedback } : {}),
+    // ...(draft.feedback ? { feedback: draft.feedback } : {}),
     ...(draft.icon ? { icon: draft.icon } : {}),
   };
   switch (draft.type) {
@@ -501,10 +408,10 @@ function normalizeConverter(draft: InputConverterDraft): InputConverter {
         ...(draft.filters ? { filters: [...draft.filters] } : {}),
         ...(draft.pandocOptions
           ? {
-              pandocOptions: draft.pandocOptions.map(
-                ([name, value]) => [name, value] as PandocOption,
-              ),
-            }
+            pandocOptions: draft.pandocOptions.map(
+              ([name, value]) => [name, value] as PandocOption,
+            ),
+          }
           : {}),
         ...(draft.formatExtensions
           ? { formatExtensions: [...draft.formatExtensions] }

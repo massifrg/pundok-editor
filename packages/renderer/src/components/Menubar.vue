@@ -10,10 +10,7 @@
 
       <RenderButton :editor="editor" />
 
-      <span
-        v-if="gui.importButton || gui.exportButton"
-        class="button-separator"
-      />
+      <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
 
       <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
 
@@ -23,81 +20,37 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton
-        icon="undo"
-        :disabled="!editor.can().undo()"
-        :title="$t('undo')"
-        :shortcut="SK.UNDO"
-        @click="editor.chain().undo().redecorateIndexRefs().run()"
-      />
-      <ToolbarButton
-        icon="redo"
-        :disabled="!editor.can().redo()"
-        :title="$t('redo')"
-        :shortcut="SK.REDO"
-        @click="editor.commands.redo()"
-      />
+      <ToolbarButton icon="undo" :disabled="!editor.can().undo()" :title="$t('undo')" :shortcut="SK.UNDO"
+        @click="editor.chain().undo().redecorateIndexRefs().run()" />
+      <ToolbarButton icon="redo" :disabled="!editor.can().redo()" :title="$t('redo')" :shortcut="SK.REDO"
+        @click="editor.commands.redo()" />
 
       <span class="button-separator" />
-      <ToolbarButton
-        icon="repeat_command"
-        :disabled="!editor.can().repeatCommand()"
-        :title="repeatCommandTitle()"
-        @click="editor.commands.repeatCommand()"
-      />
+      <ToolbarButton icon="repeat_command" :disabled="!editor.can().repeatCommand()" :title="repeatCommandTitle()"
+        @click="editor.commands.repeatCommand()" />
 
-      <q-toggle
-        v-model="swapBlocksActive"
-        icon="swap_blocks"
-        :title="swapBlocksToggleTooltip()"
-        @click="editor.commands.toggleSwapBlocks()"
-      />
+      <q-toggle v-model="swapBlocksActive" icon="swap_blocks" :title="swapBlocksToggleTooltip()"
+        @click="editor.commands.toggleSwapBlocks()" />
 
-      <ToolbarButton
-        icon="toggle_plain"
-        :disabled="!editor.can().togglePlain()"
-        :shortcut="SK.TOGGLE_PLAIN"
-        @click="
-          editor.commands.runRepeatableCommand(
-            'togglePlain',
-            $t('togglePlainPara'),
-          )
-        "
-        :title="$t('togglePlainPara')"
-      />
+      <ToolbarButton icon="toggle_plain" :disabled="!editor.can().togglePlain()" :shortcut="SK.TOGGLE_PLAIN" @click="
+        editor.commands.runRepeatableCommand(
+          'togglePlain',
+          $t('togglePlainPara'),
+        )
+        " :title="$t('togglePlainPara')" />
 
-      <CustomWrapperMenu
-        :editor="editor"
-        wrapper-type-name="div"
-        pandoc-type="Div"
-        :shortcut="SK.TOGGLE_DIV"
-      />
+      <CustomWrapperMenu :editor="editor" wrapper-type-name="div" pandoc-type="Div" :shortcut="SK.TOGGLE_DIV" />
 
       <span class="button-separator" />
 
-      <CustomWrapperMenu
-        :editor="editor"
-        wrapper-type-name="figure"
-        pandoc-type="Figure"
-        :shortcut="SK.TOGGLE_FIGURE"
-        wrap-icon="figure_wrap"
-        unwrap-icon="figure_unwrap"
-      />
-      <ToolbarButton
-        v-if="inFigure()"
-        icon="caption"
-        :title="$t('wrapIn.Caption')"
-        @click="wrapInFigureCaption()"
-      />
+      <CustomWrapperMenu :editor="editor" wrapper-type-name="figure" pandoc-type="Figure" :shortcut="SK.TOGGLE_FIGURE"
+        wrap-icon="figure_wrap" unwrap-icon="figure_unwrap" />
+      <ToolbarButton v-if="inFigure()" icon="caption" :title="$t('wrapIn.Caption')" @click="wrapInFigureCaption()" />
 
       <span class="button-separator" />
 
-      <ToolbarButton
-        icon="blockquote"
-        :title="toggleLabelForNode('blockquote')"
-        :shortcut="SK.TOGGLE_BLOCKQUOTE"
-        :disabled="!editor.can().toggleBlockquote()"
-        @click="
+      <ToolbarButton icon="blockquote" :title="toggleLabelForNode('blockquote')" :shortcut="SK.TOGGLE_BLOCKQUOTE"
+        :disabled="!editor.can().toggleBlockquote()" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -106,15 +59,10 @@
             )
             .focus()
             .run()
-        "
-      />
+          " />
 
-      <ToolbarButton
-        icon="bulletlist"
-        :title="toggleLabelForNode('bulletList')"
-        :shortcut="SK.TOGGLE_BULLETLIST"
-        :disabled="!editor.can().toggleBulletList()"
-        @click="
+      <ToolbarButton icon="bulletlist" :title="toggleLabelForNode('bulletList')" :shortcut="SK.TOGGLE_BULLETLIST"
+        :disabled="!editor.can().toggleBulletList()" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -123,15 +71,10 @@
             )
             .focus()
             .run()
-        "
-      />
+          " />
 
-      <ToolbarButton
-        icon="orderedlist"
-        :title="toggleLabelForNode('orderedList')"
-        :shortcut="SK.TOGGLE_ORDEREDLIST"
-        :disabled="!editor.can().toggleOrderedList()"
-        @click="
+      <ToolbarButton icon="orderedlist" :title="toggleLabelForNode('orderedList')" :shortcut="SK.TOGGLE_ORDEREDLIST"
+        :disabled="!editor.can().toggleOrderedList()" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -140,8 +83,7 @@
             )
             .focus()
             .run()
-        "
-      />
+          " />
 
       <span class="button-separator" />
 
@@ -149,143 +91,78 @@
 
       <span class="button-separator" />
 
-      <InsertNoteButton
-        :editor="editor"
-        :disabled="!editor.can().insertNote()"
-        :shortcut="SK.INSERT_NOTE"
-        @insert-note="insertNote"
-      />
+      <InsertNoteButton :editor="editor" :disabled="!editor.can().insertNote()" :shortcut="SK.INSERT_NOTE"
+        @insert-note="insertNote" />
 
       <span class="button-separator" />
 
-      <TableTools
-        :editor="editor"
-        :current-nodes-with-pos="currentNodesWithPos"
-      />
+      <TableTools :editor="editor" :current-nodes-with-pos="currentNodesWithPos" />
 
       <span class="button-separator" />
 
-      <ToolbarButton
-        icon="horizontal_rule"
-        :title="$t('insert.HorizontalRule')"
-        :disabled="!editor.can().setHorizontalRule()"
-        @click="
+      <ToolbarButton icon="horizontal_rule" :title="$t('insert.HorizontalRule')"
+        :disabled="!editor.can().setHorizontalRule()" @click="
           editor.commands.runRepeatableCommand(
             'setHorizontalRule',
             $t('insert.HorizontalRule'),
           )
-        "
-      />
+          " />
 
       <span class="button-separator" />
 
-      <ToolbarButton
-        v-if="gui.projectStructure && project"
-        icon="project_structure"
-        :title="$t('show.projectStructure')"
-        @click="showProjectStructure()"
-      />
-      <q-btn-dropdown
-        v-if="project"
-        :title="$t('projectMenu.title')"
-        icon="menu"
-        color="grey-5"
-        dense
-        size="sm"
-        dropdown-icon="menu_down"
-      >
+      <ToolbarButton v-if="gui.projectStructure && project" icon="project_structure"
+        :title="$t('show.projectStructure')" @click="showProjectStructure()" />
+      <q-btn-dropdown v-if="project" :title="$t('projectMenu.title')" icon="menu" color="grey-5" dense size="sm"
+        dropdown-icon="menu_down">
         <q-list>
-          <q-item clickable v-close-popup @click="showConfigurationEditor()"
-            ><q-item-section>{{
-              $t('projectMenu.editConfiguration')
-            }}</q-item-section></q-item
-          >
-          <q-item clickable v-close-popup @click="$emit('manageGitProject')"
-            ><q-item-section>{{
-              $t('projectMenu.manageChanges')
-            }}</q-item-section></q-item
-          >
-          <q-item clickable v-close-popup @click="$emit('checkGitUpdates')"
-            ><q-item-section>{{
-              $t('projectMenu.checkUpdates')
-            }}</q-item-section></q-item
-          >
-          <q-item clickable v-close-popup @click="$emit('shareGitProject')"
-            ><q-item-section>{{
-              $t('projectMenu.share')
-            }}</q-item-section></q-item
-          >
-          <q-item clickable v-close-popup @click="$emit('connectGitProject')"
-            ><q-item-section>{{
-              $t('projectMenu.connect')
-            }}</q-item-section></q-item
-          >
-          <q-item clickable v-close-popup @click="$emit('cloneGitProject')"
-            ><q-item-section>{{
-              $t('projectMenu.clone')
-            }}</q-item-section></q-item
-          >
+          <q-item clickable v-close-popup @click="showConfigurationEditor()"><q-item-section>{{
+            $t('projectMenu.editConfiguration')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('manageGitProject')"><q-item-section>{{
+            $t('projectMenu.manageChanges')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('checkGitUpdates')"><q-item-section>{{
+            $t('projectMenu.checkUpdates')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('shareGitProject')"><q-item-section>{{
+            $t('projectMenu.share')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('connectGitProject')"><q-item-section>{{
+            $t('projectMenu.connect')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('cloneGitProject')"><q-item-section>{{
+            $t('projectMenu.clone')
+              }}</q-item-section></q-item>
         </q-list>
       </q-btn-dropdown>
-      <ToolbarButton
-        v-else
-        icon="cloud_download"
-        :title="$t('projectMenu.clone')"
-        @click="$emit('cloneGitProject')"
-      />
+      <ToolbarButton v-else icon="cloud_download" :title="$t('projectMenu.clone')" @click="$emit('cloneGitProject')" />
 
       <q-space />
-      <ToolbarButton
-        v-if="gui.isDevelopmentMode"
-        icon="debug"
-        title="debug"
-        @click="debug"
-      />
+      <ToolbarButton v-if="gui.isDevelopmentMode" icon="debug" title="debug" @click="debug" />
 
-      <q-badge v-if="gui.showEditorVersion" color="positive"
-        ><i>{{ version }}</i></q-badge
-      >
+      <q-badge v-if="gui.showEditorVersion" color="positive"><i>{{ version }}</i></q-badge>
     </q-bar>
     <q-bar v-if="editor" class="q-py-xs">
-      <ToolbarButton
-        icon="marks_clear"
-        :disabled="!editor.can().removeAllMarks()"
-        :title="$t('clearAllMarks')"
-        :shortcut="SK.REMOVE_MARKS"
-        @click="editor.chain().removeAllMarks().focus().run()"
-      />
-      <ToolbarButton
-        :icon="iconFor('Emph')"
-        :styleactive="isActive('emph')"
-        :title="toggleLabelForMark('emph')"
-        :shortcut="SK.TOGGLE_EMPH"
-        @click="
+      <ToolbarButton icon="marks_clear" :disabled="!editor.can().removeAllMarks()" :title="$t('clearAllMarks')"
+        :shortcut="SK.REMOVE_MARKS" @click="editor.chain().removeAllMarks().focus().run()" />
+      <ToolbarButton :icon="iconFor('Emph')" :styleactive="isActive('emph')" :title="toggleLabelForMark('emph')"
+        :shortcut="SK.TOGGLE_EMPH" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleEmph', toggleLabelForMark('emph'))
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Strong')"
-        :styleactive="isActive('strong')"
-        :title="toggleLabelForMark('strong')"
-        :shortcut="SK.TOGGLE_STRONG"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Strong')" :styleactive="isActive('strong')" :title="toggleLabelForMark('strong')"
+        :shortcut="SK.TOGGLE_STRONG" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleStrong', toggleLabelForMark('strong'))
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Underline')"
-        :styleactive="isActive('underline')"
-        :title="toggleLabelForMark('underline')"
-        :shortcut="SK.TOGGLE_UNDERLINE"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Underline')" :styleactive="isActive('underline')"
+        :title="toggleLabelForMark('underline')" :shortcut="SK.TOGGLE_UNDERLINE" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -294,14 +171,9 @@
             )
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Strikeout')"
-        :styleactive="isActive('strikeout')"
-        :title="toggleLabelForMark('strikeout')"
-        :shortcut="SK.TOGGLE_STRIKEOUT"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Strikeout')" :styleactive="isActive('strikeout')"
+        :title="toggleLabelForMark('strikeout')" :shortcut="SK.TOGGLE_STRIKEOUT" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -310,14 +182,9 @@
             )
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Superscript')"
-        :styleactive="isActive('superscript')"
-        :title="toggleLabelForMark('superscript')"
-        :shortcut="SK.TOGGLE_SUPERSCRIPT"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Superscript')" :styleactive="isActive('superscript')"
+        :title="toggleLabelForMark('superscript')" :shortcut="SK.TOGGLE_SUPERSCRIPT" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -326,14 +193,9 @@
             )
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Subscript')"
-        :styleactive="isActive('subscript')"
-        :title="toggleLabelForMark('subscript')"
-        :shortcut="SK.TOGGLE_SUBSCRIPT"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Subscript')" :styleactive="isActive('subscript')"
+        :title="toggleLabelForMark('subscript')" :shortcut="SK.TOGGLE_SUBSCRIPT" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -342,14 +204,9 @@
             )
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('smallcaps')"
-        :styleactive="isActive('smallcaps')"
-        :title="toggleLabelForMark('smallCaps')"
-        :shortcut="SK.TOGGLE_SMALLCAPS"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('smallcaps')" :styleactive="isActive('smallcaps')"
+        :title="toggleLabelForMark('smallCaps')" :shortcut="SK.TOGGLE_SMALLCAPS" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -358,14 +215,9 @@
             )
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('singleQuoted')"
-        :styleactive="isActive('quoted', { quoteType: 'SingleQuote' })"
-        :title="toggleLabelForMark('singleQuoted')"
-        :shortcut="SK.TOGGLE_SINGLEQUOTE"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('singleQuoted')" :styleactive="isActive('quoted', { quoteType: 'SingleQuote' })"
+        :title="toggleLabelForMark('singleQuoted')" :shortcut="SK.TOGGLE_SINGLEQUOTE" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -374,14 +226,9 @@
             )
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('doubleQuoted')"
-        :styleactive="isActive('quoted', { quoteType: 'DoubleQuote' })"
-        :title="toggleLabelForMark('doubleQuoted')"
-        :shortcut="SK.TOGGLE_DOUBLEQUOTE"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('doubleQuoted')" :styleactive="isActive('quoted', { quoteType: 'DoubleQuote' })"
+        :title="toggleLabelForMark('doubleQuoted')" :shortcut="SK.TOGGLE_DOUBLEQUOTE" @click="
           editor
             .chain()
             .runRepeatableCommand(
@@ -390,93 +237,59 @@
             )
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Code')"
-        :styleactive="isActive('code')"
-        :title="toggleLabelForMark('Code')"
-        :shortcut="SK.TOGGLE_CODE"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Code')" :styleactive="isActive('code')" :title="toggleLabelForMark('Code')"
+        :shortcut="SK.TOGGLE_CODE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleCode', toggleLabelForMark('code'))
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Link')"
-        :styleactive="isActive('link')"
-        :title="toggleLabelForMark('Link')"
-        :shortcut="SK.TOGGLE_LINK"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Link')" :styleactive="isActive('link')" :title="toggleLabelForMark('Link')"
+        :shortcut="SK.TOGGLE_LINK" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleLink', toggleLabelForMark('link'))
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Cite')"
-        :styleactive="isActive('cite')"
-        :title="toggleLabelForMark('Cite')"
-        :shortcut="SK.TOGGLE_CITE"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Cite')" :styleactive="isActive('cite')" :title="toggleLabelForMark('Cite')"
+        :shortcut="SK.TOGGLE_CITE" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleCite', toggleLabelForMark('cite'))
             .focus()
             .run()
-        "
-      />
-      <ToolbarButton
-        :icon="iconFor('Math')"
-        :styleactive="isActive('math')"
-        :title="toggleLabelForMark('Math')"
-        :shortcut="SK.TOGGLE_MATH"
-        @click="
+          " />
+      <ToolbarButton :icon="iconFor('Math')" :styleactive="isActive('math')" :title="toggleLabelForMark('Math')"
+        :shortcut="SK.TOGGLE_MATH" @click="
           editor
             .chain()
             .runRepeatableCommand('toggleMath', toggleLabelForMark('math'))
             .focus()
             .run()
-        "
-      />
+          " />
       <!-- <q-btn v-if="isActive('math')" label="D/I" title="toggle Display/Inline Math" round
         @click="editor.chain().runRepeatableCommand('toggleMathType', 'toggle MathType').focus().run()" /> -->
 
       <span class="button-separator" />
 
-      <ToolbarButton
-        icon="case_to_lower"
-        :title="$t('capitalize.lower')"
-        :shortcut="SK.LOWERCASE"
-        @click="
-          editor
-            .chain()
-            .runRepeatableCommand('toLowercase', $t('capitalize.lower'))
-            .focus()
-            .run()
-        "
-      />
-      <ToolbarButton
-        icon="case_to_upper"
-        :title="$t('capitalize.upper')"
-        :shortcut="SK.UPPERCASE"
-        @click="
-          editor
-            .chain()
-            .runRepeatableCommand('toUppercase', $t('capitalize.upper'))
-            .focus()
-            .run()
-        "
-      />
-      <ToolbarButton
-        icon="case_to_upperfirst"
-        :title="$t('capitalize.upperFirst')"
-        :shortcut="SK.UPPERCASEFIRST"
+      <ToolbarButton icon="case_to_lower" :title="$t('capitalize.lower')" :shortcut="SK.LOWERCASE" @click="
+        editor
+          .chain()
+          .runRepeatableCommand('toLowercase', $t('capitalize.lower'))
+          .focus()
+          .run()
+        " />
+      <ToolbarButton icon="case_to_upper" :title="$t('capitalize.upper')" :shortcut="SK.UPPERCASE" @click="
+        editor
+          .chain()
+          .runRepeatableCommand('toUppercase', $t('capitalize.upper'))
+          .focus()
+          .run()
+        " />
+      <ToolbarButton icon="case_to_upperfirst" :title="$t('capitalize.upperFirst')" :shortcut="SK.UPPERCASEFIRST"
         @click="
           editor
             .chain()
@@ -486,8 +299,7 @@
             )
             .focus()
             .run()
-        "
-      />
+          " />
 
       <span class="button-separator" />
 
@@ -500,12 +312,8 @@
 
       <span class="button-separator" />
 
-      <ToolbarButton
-        icon="search"
-        :title="$t('show.searchAndReplace')"
-        :shortcut="SK.SHOW_SEARCH_DIALOG"
-        @click="$emit('toggleSearchAndReplaceDialog')"
-      />
+      <ToolbarButton icon="search" :title="$t('show.searchAndReplace')" :shortcut="SK.SHOW_SEARCH_DIALOG"
+        @click="$emit('toggleSearchAndReplaceDialog')" />
 
       <WholeDocTransformsButton :editor="editor" />
 
@@ -524,26 +332,14 @@
 
       <q-space />
 
-      <q-badge
-        v-if="gui.showConfiguration && configSummaries.length === 1"
-        color="accent"
-        ><b>{{ configuration?.name || 'unknown' }}</b></q-badge
-      >
-      <ChooseConfigButton
-        :current-configuration-name="configuration?.name"
-        :title="$t('document.reloadWithConfiguration')"
-        @change-configuration="reloadWithConfiguration"
-      />
-      <q-badge v-if="gui.showEditorKey" color="secondary"
-        ><b>{{ editorKey }}</b></q-badge
-      >
+      <q-badge v-if="gui.showConfiguration && configSummaries.length === 1" color="accent"><b>{{ configuration?.name ||
+        'unknown' }}</b></q-badge>
+      <ChooseConfigButton :current-configuration-name="configuration?.name"
+        :title="$t('document.reloadWithConfiguration')" @change-configuration="reloadWithConfiguration" />
+      <q-badge v-if="gui.showEditorKey" color="secondary"><b>{{ editorKey }}</b></q-badge>
     </q-bar>
-    <BreadCrumb
-      v-if="editor"
-      :editor="editor"
-      :current-nodes-with-pos="currentNodesWithPos"
-      @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
-    />
+    <BreadCrumb v-if="editor" :editor="editor" :current-nodes-with-pos="currentNodesWithPos"
+      @edit-node-or-mark-attributes="editNodeOrMarkAttributes" />
   </div>
 </template>
 
@@ -567,8 +363,6 @@ import ImageButton from './ImageButton.vue';
 import IncludeDocumentButton from './IncludeDocumentButton.vue';
 import IndicesButtons from './IndicesButtons.vue';
 import InsertNoteButton from './InsertNoteButton.vue';
-import ImportToolbarButton from './ImportToolbarButton.vue';
-import ExportToolbarButton from './ExportToolbarButton.vue';
 import NewDocumentButton from './NewDocumentButton.vue';
 import RawInlineButton from './RawInlineButton.vue';
 import RawBlockMenu from './RawBlockMenu.vue';
@@ -577,8 +371,6 @@ import SaveButton from './SaveButton.vue';
 import ToolbarButton from './ToolbarButton.vue';
 import WholeDocTransformsButton from './WholeDocTransformsButton.vue';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
-// import TextAlignMenubarItem from "./TextAlignMenubarItem.vue";
-// import VerticalAlignMenubarItem from "./VerticalAlignMenubarItem.vue";
 import {
   COLOR_SAVED_ONLY_AS_COPY,
   COLOR_UNSAVED,
@@ -627,18 +419,14 @@ export default {
     CharsTableButton,
     ChooseConfigButton,
     CodemirrorButton,
-    // CustomBlocksButtons,
-    // CustomMarkMenu,
     CustomWrapperMenu,
     ElementSelectionButton,
     ExportProgress,
-    ExportToolbarButton,
     GlobalProceduresDialog,
     ImageButton,
     IncludeDocumentButton,
     IndicesButtons,
     InsertNoteButton,
-    ImportToolbarButton,
     NewDocumentButton,
     OpenButton,
     RawInlineButton,
@@ -646,9 +434,7 @@ export default {
     RenderButton,
     SaveButton,
     TableTools,
-    // TextAlignMenubarItem,
     ToolbarButton,
-    // VerticalAlignMenubarItem,
     WholeDocTransformsButton,
   },
   props: [
