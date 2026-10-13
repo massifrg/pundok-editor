@@ -803,6 +803,9 @@
     "cancel": "Annulla",
     "retry": "Riprova invio"
   },
+  "gitUpdatesNotification": {
+    "message": "Sono disponibili aggiornamenti nei rami remoti: {branches}"
+  },
   "gitRepositoryDialog": {
     "cloneTitle": "Clona progetto remoto",
     "shareTitle": "Condividi progetto",

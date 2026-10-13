@@ -146,6 +146,14 @@
           :visible="!!message"
           :message="message"
           @close-show-message-dialog="message = null"
+          :show-check-updates="message?.type === 'warning'"
+          :icon="
+            message?.source === 'git-no-updates' ? 'message_info' : undefined
+          "
+          :color="
+            message?.source === 'git-no-updates' ? 'secondary' : undefined
+          "
+          @check-updates="openGitUpdates"
         />
         <InputTextDialog
           :editor="editor"
@@ -225,6 +233,8 @@ import {
   getDocAsJsonString,
   CreateDocumentOptions,
 } from '../schema';
+
+const gitUpdateSnapshots = new Map<string, Map<string, number>>();
 // the next one is not imported from '../schema' to avoid a circular ref
 import { Pandoc } from '../schema/nodes/Pandoc';
 import {
@@ -1546,8 +1556,54 @@ export default {
         await this.setConfiguration(project.computedConfig);
         useProjectCache().setIndices();
         this.updateEditorDocState({ projectStructure: null });
+        void this.checkGitUpdates(project);
         // this.updateEditorDocState({ configuration: project.computedConfig })
       }
+    },
+    async checkGitUpdates(project: PundokEditorProject) {
+      const backend = this.backend;
+      if (!backend) return;
+      try {
+        const status = await backend.gitProjectStatus(project.path);
+        if (!status.managed || !status.remote) return;
+        const branches = await backend.gitProjectUpdates(project.path);
+        const ahead = branches.filter((branch) => branch.ahead > 0);
+        const snapshot = new Map(
+          ahead.map((branch) => [branch.name, branch.ahead]),
+        );
+        const previousSnapshot = gitUpdateSnapshots.get(project.path);
+        gitUpdateSnapshots.set(project.path, snapshot);
+        const snapshotChanged =
+          !previousSnapshot ||
+          snapshot.size !== previousSnapshot.size ||
+          [...snapshot].some(
+            ([name, count]) => previousSnapshot.get(name) !== count,
+          );
+        if (!snapshotChanged) return;
+        if (this.docState()?.project?.path !== project.path) return;
+        this.message = {
+          type: 'warning',
+          source: ahead.length ? 'git-updates' : 'git-no-updates',
+          message: ahead.length
+            ? this.$t('gitUpdatesNotification.message', {
+                branches: ahead
+                  .map((branch) => `${branch.name} (${branch.ahead})`)
+                  .join(', '),
+              })
+            : this.$t('gitChangesDialog.noUpdates', {
+                name: status.branch || '',
+              }),
+        };
+      } catch (error) {
+        console.error(
+          'Unable to check Git updates after loading project',
+          error,
+        );
+      }
+    },
+    openGitUpdates() {
+      this.message = null;
+      this.visibleGitUpdates = true;
     },
     async loadProjectStructure(project: PundokEditorProject): Promise<void> {
       const backend = this.backend;

@@ -804,6 +804,9 @@
     "cancel": "Cancel",
     "retry": "Retry push"
   },
+  "gitUpdatesNotification": {
+    "message": "Remote branches have updates available: {branches}"
+  },
   "gitRepositoryDialog": {
     "cloneTitle": "Clone remote project",
     "shareTitle": "Share project",

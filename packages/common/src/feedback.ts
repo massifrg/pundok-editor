@@ -2,10 +2,7 @@
  * Kinds of feedback messages, from the backend to the frontend.
  */
 export type FeedbackMessageType =
-  | 'command-line'
-  | 'error'
-  | 'progress'
-  | 'success';
+  'command-line' | 'error' | 'progress' | 'success' | 'warning';
 
 /**
  * A feedback message from the backend to the frontend.
