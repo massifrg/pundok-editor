@@ -1,92 +1,38 @@
 <template>
-  <q-dialog
-    :model-value="visible"
-    :full-width="!minimized"
-    :full-height="maximized"
-    :position="minimized ? 'right' : 'standard'"
-    seamless
-  >
+  <q-dialog :model-value="visible" :full-width="!minimized" :full-height="maximized"
+    :position="minimized ? 'right' : 'standard'" seamless>
     <!-- <div class="shadow shadow-24 structure-dialog"> -->
     <q-card class="shadow shadow-24">
       <q-card-actions horizontal align="stretch" class="bg-primary">
-        <q-btn
-          v-if="!minimized"
-          :title="$t('projectStructureDialog.reloadStructure')"
-          size="sm"
-          icon="refresh"
-          @click="reloadStructure()"
-        />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.reloadStructure')" size="sm" icon="refresh"
+          @click="reloadStructure()" />
         <q-space v-if="!minimized" />
         <q-chip v-if="!minimized">{{
           loaded?.id || loaded?.path || ''
-        }}</q-chip>
+          }}</q-chip>
         <q-space v-if="!minimized" />
-        <q-btn
-          v-if="!minimized"
-          :title="$t('projectStructureDialog.openInMainEditor')"
-          size="sm"
-          icon="document_open_in_main_editor"
-          :disabled="!selected"
-          @click="openInMainEditor"
-        />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.openInMainEditor')" size="sm"
+          icon="document_open_in_main_editor" :disabled="!selected" @click="openInMainEditor" />
         <q-space v-if="!minimized" style="max-width: 2rem" />
-        <q-btn
-          v-if="!minimized"
-          :title="$t('projectStructureDialog.minimize')"
-          size="sm"
-          icon="dialog_minimize"
-          @click="setShowMode('minimized')"
-        />
-        <q-btn
-          v-if="!normalSized"
-          :title="$t('projectStructureDialog.normalSize')"
-          size="sm"
-          icon="dialog_normal"
-          @click="setShowMode('normal')"
-        />
-        <q-btn
-          v-if="!maximized"
-          :title="$t('projectStructureDialog.maximize')"
-          size="sm"
-          icon="dialog_maximize"
-          @click="setShowMode('maximized')"
-        />
-        <q-btn
-          :title="$t('close')"
-          size="sm"
-          icon="window_close"
-          @click="closeDialog()"
-        />
+        <q-btn v-if="!minimized" :title="$t('projectStructureDialog.minimize')" size="sm" icon="dialog_minimize"
+          @click="setShowMode('minimized')" />
+        <q-btn v-if="!normalSized" :title="$t('projectStructureDialog.normalSize')" size="sm" icon="dialog_normal"
+          @click="setShowMode('normal')" />
+        <q-btn v-if="!maximized" :title="$t('projectStructureDialog.maximize')" size="sm" icon="dialog_maximize"
+          @click="setShowMode('maximized')" />
+        <q-btn :title="$t('close')" size="sm" icon="window_close" @click="closeDialog()" />
       </q-card-actions>
       <q-card-section>
-        <q-splitter
-          v-model="splitterModel"
-          :after-class="afterClass"
-          :before-class="beforeClass"
-          separator-style="background-color: black"
-        >
+        <q-splitter v-model="splitterModel" :after-class="afterClass" :before-class="beforeClass"
+          separator-style="background-color: black">
           <template v-slot:before>
             <q-card>
               <!-- <q-card-actions> </q-card-actions> -->
               <q-card-section>
-                <transition
-                  appear
-                  enter-active-class="animated fadeIn"
-                  leave-active-class="animated fadeOut"
-                >
-                  <q-tree
-                    ref="tree"
-                    v-show="!isLoadingStructure"
-                    :nodes="docTree"
-                    node-key="label"
-                    dense
-                    v-model:expanded="expanded"
-                    :selected="selected"
-                    :selected-color="selectedColor"
-                    default-expand-all
-                    @update:selected="updateSelected"
-                    @dblclick.stop="openInMainEditor"
-                  />
+                <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
+                  <q-tree ref="tree" v-show="!isLoadingStructure" :nodes="docTree" node-key="label" dense
+                    v-model:expanded="expanded" :selected="selected" :selected-color="selectedColor" default-expand-all
+                    @update:selected="updateSelected" @dblclick.stop="openInMainEditor" />
                 </transition>
               </q-card-section>
             </q-card>
@@ -94,14 +40,8 @@
           <template v-slot:after>
             <q-card class="q-pa-none">
               <q-card-section class="scroll q-pa-none">
-                <PundokEditor
-                  :height="height"
-                  :mainEditor="false"
-                  @document-loaded="documentLoaded"
-                  :gui-props="guiProps"
-                  @pending-confirmed="pendingCloseConfirmed"
-                  @new-editor="forwardEditorKey"
-                />
+                <PundokEditor :height="height" :mainEditor="false" @document-loaded="documentLoaded"
+                  :gui-props="guiProps" @pending-confirmed="pendingCloseConfirmed" @new-editor="forwardEditorKey" />
               </q-card-section>
             </q-card>
           </template>
@@ -109,12 +49,8 @@
       </q-card-section>
     </q-card>
     <!-- </div> -->
-    <q-inner-loading
-      :showing="isLoadingStructure"
-      :label="$t('projectStructureDialog.loading')"
-      label-class="text-teal"
-      label-style="font-size: 1.1em"
-    />
+    <q-inner-loading :showing="isLoadingStructure" :label="$t('projectStructureDialog.loading')" label-class="text-teal"
+      label-style="font-size: 1.1em" />
   </q-dialog>
 </template>
 
@@ -224,7 +160,7 @@ const ProjectStructureDialog: Component = {
         newDocument: false,
         openButton: false,
         importButton: false,
-        exportButton: false,
+        renderButton: false,
         projectStructure: false,
         showEditorVersion: false,
         showConfiguration: false,

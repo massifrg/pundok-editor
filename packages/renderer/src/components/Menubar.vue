@@ -8,13 +8,14 @@
 
       <SaveButton :editor="editor" :text-color="savedColor" />
 
-      <RenderButton :editor="editor" />
+      <OutputRenderersButton v-if="gui.renderButton" :editor="editor" :rendering-targets="renderingTargets"
+        @render="renderOutput" />
 
-      <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
+      <span v-if="gui.renderButton" class="button-separator" />
 
-      <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
+      <!-- <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
 
-      <span class="button-separator" />
+      <span class="button-separator" /> -->
 
       <IncludeDocumentButton :editor="editor" />
 
@@ -366,7 +367,7 @@ import InsertNoteButton from './InsertNoteButton.vue';
 import NewDocumentButton from './NewDocumentButton.vue';
 import RawInlineButton from './RawInlineButton.vue';
 import RawBlockMenu from './RawBlockMenu.vue';
-import RenderButton from './RenderButton.vue';
+import OutputRenderersButton from './OutputRenderersButton.vue';
 import SaveButton from './SaveButton.vue';
 import ToolbarButton from './ToolbarButton.vue';
 import WholeDocTransformsButton from './WholeDocTransformsButton.vue';
@@ -376,6 +377,7 @@ import {
   COLOR_UNSAVED,
   ConfigurationSummary,
   CustomStyleInstance,
+  OutputConverter,
   MARK_NAME_SPAN,
   NODE_NAME_FIGURE,
   NODE_NAME_FIGURE_CAPTION,
@@ -431,7 +433,7 @@ export default {
     OpenButton,
     RawInlineButton,
     RawBlockMenu,
-    RenderButton,
+    OutputRenderersButton,
     SaveButton,
     TableTools,
     ToolbarButton,
@@ -442,6 +444,7 @@ export default {
     'currentNodesWithPos',
     'savedChanges',
     'savedChangesAsCopy',
+    'renderingTargets',
   ],
   emits: [
     'openDocument',
@@ -457,6 +460,7 @@ export default {
     'toggleSearchAndReplaceDialog',
     'editNodeOrMarkAttributes',
     'reloadWithConfiguration',
+    'render-output',
   ],
   data() {
     return {
@@ -675,6 +679,9 @@ export default {
     },
     async debug() {
       showDocStateDialog(this.editor);
+    },
+    renderOutput(converter: OutputConverter, path?: string) {
+      this.$emit('render-output', converter, path);
     },
   },
 };

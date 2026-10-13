@@ -11,7 +11,8 @@
             @show-configuration-editor="visibleConfigurationEditor = true"
             @manage-git-project="visibleGitChanges = true" @check-git-updates="visibleGitUpdates = true"
             @share-git-project="showGitRepository('publish')" @connect-git-project="showGitRepository('connect')"
-            @clone-git-project="showGitRepository('clone')" @reload-with-configuration="reloadWithConfiguration" />
+            @clone-git-project="showGitRepository('clone')" @reload-with-configuration="reloadWithConfiguration"
+            @render-output="renderOutput" :rendering-targets="renderingTargets" />
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
@@ -344,6 +345,7 @@ export default {
       $q: useQuasar(),
       jsonSpace: DEFAULT_JSON_SPACE as string | number | undefined,
       splitterModel: 1,
+      renderingTargets: [] as { converterName: string; path?: string }[],
     };
   },
 
@@ -1205,8 +1207,9 @@ export default {
     async exportDoc(
       converter: OutputConverter,
       storedDoc?: Partial<CxDocument>,
+      preserveEditor = false,
     ): Promise<SaveResponse> {
-      const jsonDoc = this.getDocAsJsonString();
+      const jsonDoc = storedDoc?.content || this.getDocAsJsonString();
       try {
         const backend = this.backend;
         if (backend) {
@@ -1216,13 +1219,15 @@ export default {
           );
           const docState = this.docState();
           if (docState) {
-            const { configuration, documentName, project, resourcePath } =
+            const { configuration, documentName, workingFolder, project, resourcePath } =
               docState;
             this.setOperationInProgress(true);
             const response = await backend.save({
               editorKey: this.editorKey(),
               id: sdoc.id || docState?.documentName,
-              path: sdoc.path,
+              path: sdoc.path || (workingFolder && documentName
+                ? `${workingFolder}/${documentName}`
+                : undefined),
               content: jsonDoc,
               project,
               documentFormat,
@@ -1233,12 +1238,12 @@ export default {
               this.setOperationInProgress(false);
             }, 3000);
             // console.log(response.doc)
-            await this.setWindowTitleFromDoc(response.doc);
+            if (!preserveEditor) await this.setWindowTitleFromDoc(response.doc);
             if (response.error) {
               const errmsg = `ERROR, ${response.message}: ${response.error}`;
               console.log(errmsg);
               return Promise.reject(errmsg);
-            } else {
+            } else if (!preserveEditor) {
               // this.currentState.setLastExportResponse(response)
               this.updateEditorDocState({
                 unsavedChangesAsCopy: false,
@@ -1260,6 +1265,43 @@ export default {
         console.log(error);
         console.log(JSON.stringify(error));
         return Promise.reject(error);
+      }
+    },
+    async renderOutput(converter: OutputConverter, path?: string) {
+      const docState = this.docState();
+      const currentPath =
+        docState?.workingFolder && docState.documentName
+          ? `${docState.workingFolder}/${docState.documentName}`
+          : undefined;
+      const renderingPath = path || currentPath;
+      const renderingTarget = {
+        converterName: converter.name,
+        path: renderingPath,
+      };
+      if (
+        this.renderingTargets.some(
+          (target) =>
+            target.converterName === renderingTarget.converterName &&
+            target.path === renderingTarget.path,
+        )
+      )
+        return;
+      this.renderingTargets.push(renderingTarget);
+      let source: Partial<CxDocument> | undefined;
+      try {
+        if (renderingPath && renderingPath !== currentPath) {
+        source = await this.backend?.open({
+          path: renderingPath,
+          project: docState?.project,
+        });
+        }
+        await this.exportDoc(converter, source, true);
+      } finally {
+        this.renderingTargets = this.renderingTargets.filter(
+          (target) =>
+            target.converterName !== renderingTarget.converterName ||
+            target.path !== renderingTarget.path,
+        );
       }
     },
     async importDoc(converter: InputConverter) {

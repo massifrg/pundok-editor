@@ -272,6 +272,7 @@ import {
   mdiInvoiceTextEdit,
   mdiInvoiceTextPlus,
   mdiArrowProjectile,
+  mdiCogPlay,
 } from '@mdi/js';
 
 import {
@@ -396,7 +397,7 @@ export const icons: Record<string, string> = {
   document_open: mdiFolderOpen,
   document_open_in_main_editor: mdiOpenInApp,
   document_question: mdiFileQuestion,
-  document_render: mdiBookPlay,
+  document_render: mdiCogPlay,
   document_save: mdiContentSave,
   document_save_as: mdiContentSaveEdit,
   document_save_copy: mdiContentSavePlus,
