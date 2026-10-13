@@ -6,11 +6,9 @@ import { NamedAndDescribed } from '../types';
 /**
  * Output conversion can be done:
  * - spawning a `pandoc` process
- * - a `lua` script
  * - a generic external program or `script`
- * - `custom` hardcoded function
  */
-export type OutputConverterType = 'pandoc' | 'lua' | 'custom' | 'script';
+export type OutputConverterType = 'pandoc' | 'script';
 
 /**
  * The result of a conversion can be opened in the internal viewer
@@ -23,14 +21,12 @@ export type ShowOutputConversion = 'editor' | 'os';
  * Use only 0-9a-z_- characters for its name.
  */
 export interface BaseOutputConverter extends NamedAndDescribed {
-  /** converter's type: pandoc, lua script, generic program or internal function */
+  /** converter's type: pandoc or external script */
   type: OutputConverterType;
   /** true for the default output converter (only one can be default, otherwise it's the first encountered) */
   default?: boolean;
   /** the conversion takes a long time, like the build of a project-wise product (tipically PDF) */
   longRendering?: boolean;
-  /** format of the resulting output (pandoc's `-t` option) */
-  format: string;
   /** extension of the resulting file */
   extension?: string;
   /** don't ask for the output file, because the script knows where to save its output */
@@ -40,7 +36,7 @@ export interface BaseOutputConverter extends NamedAndDescribed {
   /**
    * open resulting file in editor or with the OS's predefined app
    * for that format/extension (Windows: "start", Linux: "xdg-open|exo-open|gnome-open", Mac: "open")
-   */
+  */
   openResult?: ShowOutputConversion;
   /** optional icon */
   icon?: string;
@@ -48,27 +44,23 @@ export interface BaseOutputConverter extends NamedAndDescribed {
 
 export interface PandocOutputConverter extends BaseOutputConverter {
   type: 'pandoc';
+  /** format of the resulting output (pandoc's `-t` option) */
+  format: string;
   /** The extensions of the format to be used */
   formatExtensions?: string[];
   /** optional filter (pandoc's `--filter` option) */
   filters?: (string | PandocFilter)[];
-  /** reference file for DOCX and ODT (pandoc's `--reference-doc` option) */
-  referenceFile?: string;
-  /** standalone output file (pandoc's `-s` option) */
-  standalone?: boolean;
-  /** pandoc template for standalone output (pandoc's `--template` option) */
-  pandocTemplate?: string;
   /** Extra Pandoc options, each as [name, value?]. */
   pandocOptions?: PandocOption[];
 }
 
-export interface PandocLuaOutputConverter extends BaseOutputConverter {
-  type: 'lua';
-}
+// export interface PandocLuaOutputConverter extends BaseOutputConverter {
+//   type: 'lua';
+// }
 
-export interface CustomOutputConverter extends BaseOutputConverter {
-  type: 'custom';
-}
+// export interface CustomOutputConverter extends BaseOutputConverter {
+//   type: 'custom';
+// }
 
 export interface ScriptOutputConverter extends BaseOutputConverter {
   type: 'script';
@@ -80,6 +72,4 @@ export interface ScriptOutputConverter extends BaseOutputConverter {
 
 export type OutputConverter =
   | PandocOutputConverter
-  | PandocLuaOutputConverter
-  | CustomOutputConverter
   | ScriptOutputConverter;

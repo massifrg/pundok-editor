@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import {
   delimiter as pathDelimiter,
   format as formatPath,
@@ -163,8 +162,19 @@ export function exportWithPandoc(
     PandocOutputConverter | undefined;
   if (!converter) return Promise.reject('No Pandoc output converter specified');
 
-  const { format, pandocOptions, pandocTemplate, referenceFile, standalone } =
-    converter;
+  const { format } = converter;
+  let pandocOptions = converter.pandocOptions;
+  const standalone = pandocOptions?.some(
+    ([name, value]) =>
+      (name === 'standalone' || name === 's') &&
+      (value === undefined || value === true),
+  );
+  const pandocTemplate = pandocOptions?.find(
+    ([name]) => name === 'template',
+  )?.[1];
+  const referenceFile = pandocOptions?.find(
+    ([name]) => name === 'reference-doc',
+  )?.[1];
   const findOptions: Partial<FindResourceFileOptions> = {
     baseResourcePaths: resourcesPaths || [],
     kind: 'writer',
@@ -211,23 +221,26 @@ export function exportWithPandoc(
         .join(pathDelimiter)}`,
     );
   if (standalone) {
-    pandocOpts.push('-s');
-    if (pandocTemplate) {
+    if (typeof pandocTemplate === 'string') {
       const template =
         findResourceFile(directories, pandocTemplate, {
           ...findOptions,
           kind: 'template',
         }) || pandocTemplate;
-      pandocOpts.push(`--template=${encloseInDblQuotes(template)}`);
+      pandocOptions = pandocOptions?.map(([name, value]) =>
+        name === 'template' ? [name, template] : [name, value],
+      );
     }
   }
-  if (referenceFile) {
+  if (typeof referenceFile === 'string') {
     const reference =
       findResourceFile(directories, referenceFile, {
         ...findOptions,
         kind: 'referenceDoc',
       }) || referenceFile;
-    pandocOpts.push(`--reference-doc=${encloseInDblQuotes(reference)}`);
+    pandocOptions = pandocOptions?.map(([name, value]) =>
+      name === 'reference-doc' ? [name, reference] : [name, value],
+    );
   }
   if (isArray(pandocOptions))
     pandocOpts.push(...pandocOptionsToCliOptions(pandocOptions));
@@ -248,9 +261,9 @@ export async function exportWithScript(
     ScriptOutputConverter | undefined;
   if (!converter) throw new Error('no output converter specified');
   let { command, commandArgs } = converter;
-  if (!existsSync(command))
-    command = formatPath({ dir: exportOptions.cwd, name: command });
   if (!command) throw new Error('this converter has no command to run');
+  const commandCwd = exportOptions.cwd || parsePath(exportOptions.sourceFile || '').dir;
+  if (!isAbsolute(command)) command = resolve(commandCwd, command);
   return exportWithExternalProgram(
     command,
     expandCommandArgs(commandArgs || [], {

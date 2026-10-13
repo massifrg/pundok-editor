@@ -2,12 +2,12 @@ import { PandocOption } from "../pandocOptions";
 import { PandocFilter } from "../pandoc";
 import { NamedAndDescribed } from "../types";
 
-export type InputConverterType = 'pandoc' | 'script' | 'custom';
+export type InputConverterType = 'pandoc' | 'script';
 
 /**
  * A base type for documents' import. Use only 0-9a-z_- characters for its name.
  */
-export type BaseInputConverter = NamedAndDescribed & {
+export interface BaseInputConverter extends NamedAndDescribed {
   /** kind of importer (used by derived types) */
   type: InputConverterType;
   /** true for the default input converter (only one can be default, otherwise it's the first encountered) */
@@ -21,7 +21,7 @@ export type BaseInputConverter = NamedAndDescribed & {
 /**
  * An input converter that spawns a pandoc process to import a document.
  */
-export type PandocInputConverter = BaseInputConverter & {
+export interface PandocInputConverter extends BaseInputConverter {
   type: 'pandoc';
   /** a pandoc's input format or a custom reader */
   format: string;
@@ -39,7 +39,7 @@ export type PandocInputConverter = BaseInputConverter & {
 //   options: Record<string, any>;
 // };
 
-export type ExternalInputConverter = BaseInputConverter & {
+export interface ExternalInputConverter extends BaseInputConverter {
   type: 'script';
   /** command to execute for external "script" converters */
   command: string;

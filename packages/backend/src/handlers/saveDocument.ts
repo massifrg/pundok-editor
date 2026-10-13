@@ -79,7 +79,10 @@ export async function exportDocument(
   const sourceFile = localizePath(doc.path);
   const cwd = localizePath(doc.project?.path || parse(sourceFile).dir);
   let resultFile = converter?.resultFile
-    ? expandCommandArgs([converter.resultFile], { path: sourceFile })[0]
+    ? expandCommandArgs([converter.resultFile], {
+        path: sourceFile,
+        project: doc.project,
+      })[0]
     : undefined;
   if (resultFile && !isAbsolute(resultFile)) resultFile = resolve(cwd, resultFile);
   const resourcesPaths = validResourcePaths(
@@ -99,9 +102,6 @@ export async function exportDocument(
   try {
     let result: ExternalProgramResult;
     switch (converter?.type) {
-      case 'custom':
-      case 'lua':
-        throw new Error(`${converter.type} converter not implemented yet`);
       case 'script':
         result = await exportWithScript(doc, {
           cwd,
@@ -183,7 +183,7 @@ export async function exportDocument(
       message: `${operationName} failed`,
       doc: {
         content: doc.content,
-        format: converter?.format,
+        format: converter?.type === 'pandoc' ? converter.format : undefined,
         configurationName: doc.configurationName,
       } as CxDocument,
       resultFile,

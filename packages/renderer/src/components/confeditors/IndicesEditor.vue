@@ -125,7 +125,7 @@ import { mdiEyeOff } from '@mdi/js';
 import { useQuasar } from 'quasar';
 import type { Editor } from '@tiptap/vue-3';
 import type { DocumentFormat, Index, IndexRefPlacement } from '../../common';
-import { showSelectImageDialog } from '../helpers';
+import { extractSvgPathData, showSelectImageDialog } from '../helpers';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { useBackend } from '../../stores';
 
@@ -269,17 +269,9 @@ function chooseIconFile(): void {
 
 async function loadIconFile(path: string): Promise<void> {
   try {
-    const document = new DOMParser().parseFromString(
+    const pathData = extractSvgPathData(
       await backend.backend!.getFileContents(path),
-      'image/svg+xml',
     );
-    const pathData = Array.from(document.querySelectorAll('path[d]'))
-      .map((pathElement) => pathElement.getAttribute('d')?.trim())
-      .filter((value): value is string => !!value)
-      .join(' ');
-    if (document.querySelector('parsererror') || !pathData) {
-      throw new Error('The SVG does not contain a path with a d attribute.');
-    }
     if (draft.value) draft.value.iconSvg = pathData;
   } catch (error) {
     console.error('Could not load SVG icon file.', error);

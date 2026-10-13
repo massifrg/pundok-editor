@@ -21,7 +21,9 @@
               {{ $t('configEditor.outputConverters.default') }}
             </q-badge>
             <q-space />
-            <span class="text-caption text-grey-7">{{ converter.type }} · {{ converter.format }}</span>
+            <span class="text-caption text-grey-7">
+              {{ converter.type }} · {{ converter.type === 'pandoc' ? converter.format : converter.command }}
+            </span>
           </q-item-label>
           <q-item-label v-if="converter.description" caption>{{
             converter.description
@@ -73,6 +75,19 @@
           <q-input v-model="draft.description" :label="$t('configEditor.outputConverters.description')" outlined dense
             type="textarea" autogrow />
           <q-checkbox v-model="draft.default" :label="$t('configEditor.outputConverters.default')" />
+          <q-checkbox v-model="draft.longRendering" :label="$t('configEditor.outputConverters.longRendering')" />
+          <q-input v-model="draft.extension" :label="$t('configEditor.outputConverters.extension')" outlined dense />
+          <q-checkbox v-model="draft.dontAskForResultFile"
+            :label="$t('configEditor.outputConverters.dontAskForResultFile')" />
+          <q-input v-model="draft.resultFile" :label="$t('configEditor.outputConverters.resultFile')" outlined dense />
+          <q-select v-model="draft.openResult" :options="openResultOptions"
+            :label="$t('configEditor.outputConverters.openResult')" outlined dense emit-value map-options />
+          <q-input v-model="draft.icon" :label="$t('configEditor.outputConverters.icon')" outlined dense>
+            <template #append>
+              <q-btn flat round dense icon="image" :title="$t('configEditor.indices.chooseIconFile')"
+                @click="chooseIconFile" />
+            </template>
+          </q-input>
           <div v-if="draft.type === 'pandoc'" class="row q-col-gutter-md">
             <div class="col">
               <PandocFormatEditor :model-value="selectedPandocFormat" :format-extensions="selectedFormatExtensions"
@@ -107,7 +122,12 @@
               </q-card>
             </div>
           </div>
-          <q-input v-else v-model="draft.format" :label="$t('configEditor.outputConverters.format')" outlined dense />
+          <div v-else-if="draft.type === 'script'" class="q-gutter-md">
+            <q-input v-model="draft.command" :label="$t('configEditor.outputConverters.command')" outlined dense />
+            <q-input :model-value="draft.commandArgs?.join(' ') || ''"
+              :label="$t('configEditor.outputConverters.commandArgs')" outlined dense
+              @update:model-value="updateCommandArgs" />
+          </div>
           <PandocFiltersEditor v-if="draft.type === 'pandoc'" :model-value="draft.filters || []"
             :resource-options="resourceOptions" @update:model-value="draft.filters = $event" />
           <PandocOptionsEditor v-if="draft.type === 'pandoc'" :model-value="draft.pandocOptions || []"
@@ -126,7 +146,9 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { mdiEyeOff } from '@mdi/js';
+import { useQuasar } from 'quasar';
 import type {
   BaseOutputConverter,
   FindResourceOptions,
@@ -142,6 +164,9 @@ import PandocLuaResourceDialog, {
 } from './PandocLuaResourceDialog.vue';
 import PandocOptionsEditor from './PandocOptionsEditor.vue';
 import type { Editor } from '@tiptap/vue-3';
+import type { DocumentFormat } from '../../common';
+import { extractSvgPathData, showSelectImageDialog } from '../helpers';
+import { useBackend } from '../../stores';
 
 type OutputConverterDraft = Omit<
   BaseOutputConverter,
@@ -151,11 +176,9 @@ type OutputConverterDraft = Omit<
   description: string;
   default: boolean;
   filters?: (string | PandocFilter)[];
-  referenceFile?: string;
-  standalone?: boolean;
-  pandocTemplate?: string;
   pandocOptions?: PandocOption[];
   formatExtensions?: string[];
+  format?: string;
   command?: string;
   commandArgs?: string[];
 };
@@ -169,6 +192,9 @@ const props = defineProps<{
   provenance?: Record<string, string>;
 }>();
 const editor = props.editor;
+const { t } = useI18n();
+const $q = useQuasar();
+const backend = useBackend();
 
 const emit = defineEmits<{
   'update:modelValue': [value: OutputConverter[]];
@@ -184,10 +210,12 @@ const selectedOutputChoice = ref<'format' | 'writer'>('format');
 const selectedPandocFormat = ref('');
 const selectedFormatExtensions = ref<string[]>([]);
 const selectedWriter = ref('');
+const openResultOptions = [
+  { label: 'Editor', value: 'editor' },
+  { label: 'Operating system', value: 'os' },
+];
 const converterTypeOptions: { label: string; value: OutputConverterType }[] = [
   { label: 'Pandoc', value: 'pandoc' },
-  { label: 'Lua', value: 'lua' },
-  { label: 'Custom', value: 'custom' },
   { label: 'Script', value: 'script' },
 ];
 
@@ -207,7 +235,7 @@ const canApply = computed(
       ? selectedOutputChoice.value === 'format'
         ? selectedPandocFormat.value
         : selectedWriter.value
-      : draft.value?.format),
+      : draft.value.command?.trim()),
 );
 
 watch(
@@ -226,6 +254,40 @@ watch(
     }
   },
 );
+
+function chooseIconFile(): void {
+  if (!props.editor) return;
+  const svgFormat: DocumentFormat = {
+    ftype: 'image',
+    name: 'svg',
+    extensions: ['svg'],
+    isVectorial: true,
+  };
+  showSelectImageDialog({
+    editor: props.editor,
+    options: {
+      prompt: t('configEditor.outputConverters.chooseIconFile'),
+      startFormat: svgFormat,
+    },
+    callback: (context) => {
+      if (!context.path || !backend.backend) return;
+      void loadIconFile(context.path);
+    },
+  });
+}
+
+async function loadIconFile(path: string): Promise<void> {
+  try {
+    const icon = extractSvgPathData(await backend.backend!.getFileContents(path));
+    if (draft.value) draft.value.icon = icon;
+  } catch (error) {
+    console.error('Could not load SVG output converter icon.', error);
+    $q.notify({
+      type: 'negative',
+      message: t('configEditor.outputConverters.invalidIconFile'),
+    });
+  }
+}
 
 function isRemoved(name: string): boolean {
   return (props.removed || []).includes(name);
@@ -268,8 +330,6 @@ function copyConverter(converter: OutputConverter): OutputConverter {
         ...converter,
         commandArgs: [...converter.commandArgs],
       };
-    default:
-      return { ...converter };
   }
 }
 
@@ -309,7 +369,6 @@ function newConverter() {
     name: '',
     description: '',
     default: false,
-    format: '',
   };
   selectedOutputChoice.value = 'format';
   selectedPandocFormat.value = '';
@@ -395,7 +454,6 @@ function applyEdit() {
 function normalizeConverter(draft: OutputConverterDraft): OutputConverter {
   const base: Omit<BaseOutputConverter, 'type'> = {
     name: draft.name,
-    format: draft.format,
     ...(draft.description ? { description: draft.description } : {}),
     ...(draft.default ? { default: true } : {}),
     ...(draft.longRendering !== undefined
@@ -415,14 +473,8 @@ function normalizeConverter(draft: OutputConverterDraft): OutputConverter {
       return {
         ...base,
         type: 'pandoc',
+        format: draft.format || '',
         ...(draft.filters ? { filters: [...draft.filters] } : {}),
-        ...(draft.referenceFile ? { referenceFile: draft.referenceFile } : {}),
-        ...(draft.standalone !== undefined
-          ? { standalone: draft.standalone }
-          : {}),
-        ...(draft.pandocTemplate
-          ? { pandocTemplate: draft.pandocTemplate }
-          : {}),
         ...(draft.pandocOptions
           ? { pandocOptions: [...draft.pandocOptions] }
           : {}),
@@ -437,23 +489,25 @@ function normalizeConverter(draft: OutputConverterDraft): OutputConverter {
         command: draft.command || '',
         commandArgs: draft.commandArgs ? [...draft.commandArgs] : [],
       };
-    case 'lua':
-      return { ...base, type: 'lua' };
-    case 'custom':
-      return { ...base, type: 'custom' };
   }
+}
+
+function updateCommandArgs(value: string | number | null): void {
+  if (!draft.value || typeof value !== 'string') return;
+  draft.value.commandArgs = value.trim() ? value.trim().split(/\s+/) : [];
 }
 
 function initializePandocChoice(converter: OutputConverterDraft): void {
   if (converter.type !== 'pandoc') return;
-  if (isCustomWriter(converter.format)) {
+  const format = converter.format || '';
+  if (isCustomWriter(format)) {
     selectedOutputChoice.value = 'writer';
-    selectedWriter.value = converter.format;
+    selectedWriter.value = format;
     selectedPandocFormat.value = '';
     selectedFormatExtensions.value = [];
   } else {
     selectedOutputChoice.value = 'format';
-    selectedPandocFormat.value = converter.format;
+    selectedPandocFormat.value = format;
     selectedFormatExtensions.value = [...(converter.formatExtensions || [])];
     selectedWriter.value = '';
   }

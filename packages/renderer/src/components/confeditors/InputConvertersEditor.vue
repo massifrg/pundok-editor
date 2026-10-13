@@ -102,7 +102,12 @@
               </q-card>
             </div>
           </div>
-          <q-input v-else v-model="draft.format" :label="$t('configEditor.inputConverters.format')" outlined dense />
+          <div v-else-if="draft.type === 'script'" class="q-gutter-md">
+            <q-input v-model="draft.command" :label="$t('configEditor.inputConverters.command')" outlined dense />
+            <q-input :model-value="draft.commandArgs?.join(' ') || ''"
+              :label="$t('configEditor.inputConverters.commandArgs')" outlined dense
+              @update:model-value="updateCommandArgs" />
+          </div>
           <PandocFiltersEditor v-if="draft.type === 'pandoc'" :model-value="draft.filters || []"
             :resource-options="resourceOptions" @update:model-value="draft.filters = $event" />
           <PandocOptionsEditor v-if="draft.type === 'pandoc'" :model-value="draft.pandocOptions || []"
@@ -151,7 +156,6 @@ type InputConverterDraft = Omit<
   pandocOptions?: PandocOption[];
   command?: string;
   commandArgs?: string[];
-  options?: Record<string, any>;
   extensionsText: string;
 };
 
@@ -185,7 +189,6 @@ const editor = props.editor;
 const converterTypeOptions: { label: string; value: InputConverterType }[] = [
   { label: 'Pandoc', value: 'pandoc' },
   { label: 'Script', value: 'script' },
-  { label: 'Custom', value: 'custom' },
 ];
 
 const allConverters = computed(() => {
@@ -266,8 +269,6 @@ function copyConverter(converter: InputConverter): InputConverter {
       };
     case 'script':
       return { ...converter, commandArgs: [...converter.commandArgs] };
-    default:
-      return { ...converter };
   }
 }
 
@@ -424,8 +425,6 @@ function normalizeConverter(draft: InputConverterDraft): InputConverter {
         command: draft.command || '',
         commandArgs: draft.commandArgs ? [...draft.commandArgs] : [],
       };
-    case 'custom':
-      return { ...base, type: 'custom', options: draft.options || {} };
   }
 }
 
@@ -467,14 +466,18 @@ function selectReaderCard(): void {
   }
 }
 
+function updateCommandArgs(value: string | number | null): void {
+  if (!draft.value || draft.value.type !== 'script') return;
+  draft.value.commandArgs =
+    typeof value === 'string' ? value.trim().split(/\s+/).filter(Boolean) : [];
+}
+
 function converterSummary(converter: InputConverter): string {
   switch (converter.type) {
     case 'pandoc':
       return converter.format;
     case 'script':
       return converter.command;
-    case 'custom':
-      return 'custom';
   }
 }
 </script>

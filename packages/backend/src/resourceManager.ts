@@ -188,14 +188,7 @@ export function migrateConfigurationPandocOptions<
 >(config: T): T {
   return {
     ...config,
-    outputConverters: config.outputConverters?.map((converter) =>
-      converter.type === 'pandoc'
-        ? {
-          ...converter,
-          pandocOptions: migratePandocOptions(converter.pandocOptions),
-        }
-        : converter,
-    ),
+    outputConverters: config.outputConverters?.map(migrateOutputConverter),
     automations: config.automations?.map((automation) =>
       automation.type === 'pandoc-filter'
         ? {
@@ -207,6 +200,38 @@ export function migrateConfigurationPandocOptions<
         : automation,
     ),
   } as T;
+}
+
+function migrateOutputConverter(
+  converter: NonNullable<PundokEditorConfigInit['outputConverters']>[number],
+): NonNullable<PundokEditorConfigInit['outputConverters']>[number] {
+  if (converter.type !== 'pandoc') return converter;
+
+  const legacy = converter as typeof converter & {
+    referenceFile?: string;
+    standalone?: boolean;
+    pandocTemplate?: string;
+  };
+  const {
+    referenceFile,
+    standalone,
+    pandocTemplate,
+    ...withoutLegacyFields
+  } = legacy;
+  const pandocOptions = migratePandocOptions(converter.pandocOptions) || [];
+  const existingNames = new Set(pandocOptions.map(([name]) => name));
+
+  if (referenceFile && !existingNames.has('reference-doc'))
+    pandocOptions.push(['reference-doc', referenceFile]);
+  if (standalone && !existingNames.has('standalone') && !existingNames.has('s'))
+    pandocOptions.push(['standalone']);
+  if (pandocTemplate && !existingNames.has('template'))
+    pandocOptions.push(['template', pandocTemplate]);
+
+  return {
+    ...withoutLegacyFields,
+    pandocOptions: pandocOptions.length > 0 ? pandocOptions : undefined,
+  };
 }
 
 function migratePandocFilterParameters(

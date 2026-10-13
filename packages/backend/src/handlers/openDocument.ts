@@ -1,8 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { format, isAbsolute, parse, resolve } from 'node:path';
 import {
-  CUSTOM_PANDOC_READERS,
-  type CustomPandocReader,
   documentFormatToInputConverter,
   type CxDocument,
   type DocumentContext,
@@ -12,7 +10,7 @@ import {
   type PundokEditorProject,
 } from '../../../common/src';
 import { updateBookmarks } from '../bookmarks';
-import { errorFeedback, commandLineFeedback, type FeedbackSink } from '../feedback';
+import { errorFeedback, type FeedbackSink } from '../feedback';
 import { importWithPandoc } from '../importExport';
 import { pandocFeatures } from '../pandocFeatures';
 import { computeProjectFromDocFile } from './project';
@@ -102,16 +100,6 @@ async function openWithFormat(
         case 'pandoc':
           result = await importWithPandoc(directories, { ...context, path });
           break;
-        case 'custom': {
-          const reader: CustomPandocReader | undefined =
-            CUSTOM_PANDOC_READERS[inputConverter.name];
-          result = reader
-            ? await reader.readFile(path)
-            : externalProgramError(
-                `there's no "${inputConverter.name}" custom reader!`,
-              );
-          break;
-        }
         case 'script':
           result = await runExternalProgram(
             inputConverter.command,
@@ -144,9 +132,6 @@ async function openWithFormat(
     errorFeedback(feedback, message, editorKey);
     throw new Error(`Error trying to open "${path}"`);
   }
-  if (inputConverter?.feedback)
-    commandLineFeedback(feedback, result.commandLine, editorKey);
-
   const doc: CxDocument = {
     editorKey,
     id: name,

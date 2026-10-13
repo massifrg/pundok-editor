@@ -746,7 +746,8 @@ export default {
         .filter((converter) => inputNames.has(converter.name))
         .map((converter) => ({
           label: `${converter.name} - ${
-            converter.description || converter.format
+            converter.description ||
+            (converter.type === 'pandoc' ? converter.format : converter.command)
           }`,
           value: converter.name,
         }));
@@ -1009,11 +1010,10 @@ export default {
       this.values[fieldName] = format;
     },
     pandocFormatForSelection(format: string): string {
-      return (
-        this.displayConfiguration?.outputConverters?.find(
-          (converter) => converter.name === format,
-        )?.format || format
+      const converter = this.displayConfiguration?.outputConverters?.find(
+        (item) => item.name === format,
       );
+      return converter?.type === 'pandoc' ? converter.format : format;
     },
     updateFormatExtensions(fieldName: string, extensions?: string[]) {
       const selection = this.formatSelections[fieldName];

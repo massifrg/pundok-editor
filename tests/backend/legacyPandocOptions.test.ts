@@ -99,6 +99,45 @@ describe('migrateLegacyPandocOptions', () => {
     ]);
   });
 
+  it('migrates legacy Pandoc output converter fields to Pandoc options', async () => {
+    await writeFile(
+      join(directories.configurationsDir, 'legacy-output-converter.config.json'),
+      JSON.stringify({
+        name: 'legacy-output-converter',
+        version: [1],
+        outputConverters: [
+          {
+            name: 'legacy',
+            type: 'pandoc',
+            format: 'docx',
+            referenceFile: 'reference.docx',
+            standalone: true,
+            pandocTemplate: 'template.html',
+            pandocOptions: [['template', 'explicit.html']],
+          },
+        ],
+      }),
+    );
+
+    const configuration = await getConfigurationInit(
+      directories,
+      'legacy-output-converter',
+    );
+
+    expect(configuration?.outputConverters).toEqual([
+      {
+        name: 'legacy',
+        type: 'pandoc',
+        format: 'docx',
+        pandocOptions: [
+          ['template', 'explicit.html'],
+          ['reference-doc', 'reference.docx'],
+          ['standalone'],
+        ],
+      },
+    ]);
+  });
+
   it('moves legacy Pandoc filter parameters to the first filter', async () => {
     await writeFile(
       join(directories.configurationsDir, 'legacy-parameters.config.json'),
