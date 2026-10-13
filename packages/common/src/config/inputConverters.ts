@@ -33,11 +33,11 @@ export type PandocInputConverter = BaseInputConverter & {
   pandocOptions?: PandocOption[];
 };
 
-export type CustomInputConverter = BaseInputConverter & {
-  type: 'custom';
-  /** options for internal "custom" converters */
-  options: Record<string, any>;
-};
+// export type CustomInputConverter = BaseInputConverter & {
+//   type: 'custom';
+//   /** options for internal "custom" converters */
+//   options: Record<string, any>;
+// };
 
 export type ExternalInputConverter = BaseInputConverter & {
   type: 'script';
@@ -49,5 +49,5 @@ export type ExternalInputConverter = BaseInputConverter & {
 
 export type InputConverter =
   | PandocInputConverter
-  | CustomInputConverter
+  // | CustomInputConverter
   | ExternalInputConverter;
