@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import type { Editor } from '@tiptap/vue-3';
+import { isAbsolute, resolve } from 'path-browserify';
 import type { OutputConverter, ProjectComponent, PundokEditorProject } from '../common';
 import { getParentProjectComponent } from '../common';
 import { getDocState, getEditorConfiguration } from '../schema';
 import { expandCommandArgs } from './helpers/expandCommandArgs';
+
+const CurrentRenderingsDialog = defineAsyncComponent(
+  () => import('./CurrentRenderingsDialog.vue'),
+);
 
 const props = defineProps<{
   editor?: Editor;
@@ -16,6 +21,7 @@ const emit = defineEmits<{
 
 const menu = ref<{ show: () => void }>();
 const defaultTarget = ref<RenderTarget>();
+const renderingDialog = ref(false);
 
 interface RenderTarget {
   converter: OutputConverter;
@@ -25,6 +31,7 @@ interface RenderTarget {
 interface RenderingTarget {
   converterName: string;
   path?: string;
+  feedback: readonly string[];
 }
 
 const docState = computed(() => getDocState(props.editor?.state));
@@ -51,39 +58,67 @@ const renderers = computed(() =>
 );
 
 const ancestorTargets = computed(() => {
-  const result: { path: string; label: string }[] = [];
+  const result: { path: string }[] = [];
   let source = currentProjectSource(structure.value, currentPath.value, project.value);
   while (source) {
     const parent = structure.value && getParentProjectComponent(structure.value, source);
     if (!parent?.src) break;
-    const path = project.value?.path
-      ? joinPath(project.value.path, parent.src)
-      : parent.src;
-    result.push({ path, label: path });
+    const path = projectSourcePath(parent.src, project.value);
+    result.push({ path });
     source = parent.src;
   }
   return result;
 });
 
-const menuItems = computed(() =>
-  renderers.value.map((item) => ({
-    ...item,
-    hasAncestors: ancestorTargets.value.length > 0,
-    ancestors: [
-      ...(currentPath.value
-        ? [{
-            path: currentPath.value,
-            label: currentPath.value,
-            resultFile: resultFileFor(item.converter, currentPath.value, project.value),
-          }]
-        : []),
-      ...ancestorTargets.value.map((ancestor) => ({
-      ...ancestor,
-      resultFile: resultFileFor(item.converter, ancestor.path, project.value),
-      })),
-    ],
-  })),
-);
+function targetsFor(converter: OutputConverter): {
+  path?: string;
+  resultFile: string;
+}[] {
+  const candidates = [
+    ...(currentPath.value ? [{ path: currentPath.value }] : [{}]),
+    ...ancestorTargets.value,
+  ].map(({ path }) => ({
+    path,
+    resultFile: resultFileFor(converter, path, project.value),
+  }));
+  const result: typeof candidates = [];
+  for (const candidate of candidates) {
+    if (!result.some((item) => item.resultFile === candidate.resultFile))
+      result.push(candidate);
+  }
+  return result;
+}
+
+const menuItems = computed(() => {
+  const result: {
+    converter: OutputConverter;
+    path?: string;
+    resultFile: string;
+    ancestors: { path?: string; resultFile: string }[];
+    hasAncestors: boolean;
+  }[] = [];
+  for (const item of renderers.value) {
+    const targets = targetsFor(item.converter);
+    if (targets.length > 2) {
+      result.push({
+        ...item,
+        ancestors: targets,
+        hasAncestors: true,
+      });
+    } else {
+      result.push(
+        ...targets.map((target) => ({
+          converter: item.converter,
+          path: target.path,
+          resultFile: target.resultFile,
+          ancestors: [],
+          hasAncestors: false,
+        })),
+      );
+    }
+  }
+  return result;
+});
 
 const dropdownTitle = computed(() => {
   const target = defaultTarget.value;
@@ -94,8 +129,22 @@ const dropdownTitle = computed(() => {
   );
 });
 
-const mainRendering = computed(() =>
-  defaultTarget.value ? isRendering(defaultTarget.value) : false,
+const renderingProcesses = computed(() =>
+  (props.renderingTargets || []).map((target) => {
+    const converter = renderers.value.find(
+      (item) => item.converter.name === target.converterName,
+    )?.converter;
+    const resultFile = converter
+      ? resultFileFor(converter, target.path || currentPath.value, project.value)
+      : target.path || '';
+    return {
+      ...target,
+      feedback: [...target.feedback],
+      label: converter
+        ? labelFor(converter, resultFile)
+        : `render ${resultFile} with ${target.converterName}`,
+    };
+  }),
 );
 
 watch(
@@ -108,6 +157,13 @@ watch(
 
 function joinPath(base: string, name: string): string {
   return `${base.replace(/[\\/]+$/, '')}/${name.replace(/^[\\/]+/, '')}`;
+}
+
+function projectSourcePath(source: string, currentProject?: PundokEditorProject): string {
+  const normalized = source.replace(/^file:\/\//, '');
+  return currentProject?.path && !isAbsolute(normalized)
+    ? resolve(currentProject.path, normalized)
+    : normalized;
 }
 
 function normalizedSource(source: string): string {
@@ -171,8 +227,11 @@ function select(target: RenderTarget): void {
 }
 
 function clickMain(): void {
+  if (renderingProcesses.value.length) {
+    renderingDialog.value = true;
+    return;
+  }
   if (defaultTarget.value) {
-    if (mainRendering.value) return;
     emit('render', defaultTarget.value.converter, defaultTarget.value.path);
   } else {
     menu.value?.show();
@@ -187,12 +246,16 @@ function clickMain(): void {
       dense
       size="sm"
       color="grey-5"
-      icon="document_render"
-      :disable="mainRendering"
-      :loading="mainRendering"
+      :icon="renderingProcesses.length ? undefined : 'document_render'"
       :title="dropdownTitle"
       @click="clickMain"
-    />
+    >
+      <q-circular-progress
+        v-if="renderingProcesses.length"
+        indeterminate
+        size="1em"
+      />
+    </q-btn>
     <q-btn-dropdown
       ref="menu"
       dense
@@ -204,7 +267,7 @@ function clickMain(): void {
     <q-list dense>
       <q-item
         v-for="item in menuItems"
-        :key="item.converter.name"
+        :key="`${item.converter.name}:${item.path || ''}:${item.resultFile}`"
         :disable="isRendering(item)"
         :clickable="!item.hasAncestors && !isRendering(item)"
         @click="!item.hasAncestors && select(item)"
@@ -255,4 +318,9 @@ function clickMain(): void {
     </q-list>
     </q-btn-dropdown>
   </q-btn-group>
+  <CurrentRenderingsDialog
+    :visible="renderingDialog"
+    :processes="renderingProcesses"
+    @close="renderingDialog = false"
+  />
 </template>

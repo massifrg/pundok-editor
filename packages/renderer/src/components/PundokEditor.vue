@@ -345,7 +345,11 @@ export default {
       $q: useQuasar(),
       jsonSpace: DEFAULT_JSON_SPACE as string | number | undefined,
       splitterModel: 1,
-      renderingTargets: [] as { converterName: string; path?: string }[],
+      renderingTargets: [] as {
+        converterName: string;
+        path?: string;
+        feedback: string[];
+      }[],
     };
   },
 
@@ -597,6 +601,8 @@ export default {
           case ACTION_BACKEND_FEEDBACK.name:
             const { feedback } = props as BackendFeedbackActionProps;
             const { message, type } = feedback;
+            for (const renderingTarget of this.renderingTargets)
+              renderingTarget.feedback.push(message);
             const isSuccess = type === 'success';
             if (isSuccess) {
               // console.log(`success feedback: ${message.message}`);
@@ -1277,6 +1283,7 @@ export default {
       const renderingTarget = {
         converterName: converter.name,
         path: renderingPath,
+        feedback: [] as string[],
       };
       if (
         this.renderingTargets.some(

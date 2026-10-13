@@ -273,6 +273,7 @@ import {
   mdiInvoiceTextPlus,
   mdiArrowProjectile,
   mdiCogPlay,
+  mdiMenuUp,
 } from '@mdi/js';
 
 import {
@@ -494,6 +495,7 @@ export const icons: Record<string, string> = {
   menu: mdiMenu,
   menu_down: mdiMenuDown,
   menu_right: mdiMenuRight,
+  menu_up: mdiMenuUp,
   message_cli: mdiBash,
   message_error: mdiAlertCircle,
   message_info: mdiInformationOutline,
