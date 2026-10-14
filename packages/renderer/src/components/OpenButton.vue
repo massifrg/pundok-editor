@@ -13,6 +13,7 @@ import {
   getNextProjectComponentAcrossContainers,
   getParentProjectComponent,
   getPreviousProjectComponentAcrossContainers,
+  getProjectComponentChildren,
   ProjectBookmark,
   PundokBookmark,
   type ProjectComponent,
@@ -97,15 +98,15 @@ export default {
       const projectRelativeSource = relative(project.path, absoluteSource);
       return structure
         ? findProjectSource(
-            structure,
-            [
-              absoluteSource,
-              projectRelativeSource,
-              docState.documentName,
-              resolve(project.path, docState.documentName),
-            ],
-            project.path,
-          )
+          structure,
+          [
+            absoluteSource,
+            projectRelativeSource,
+            docState.documentName,
+            resolve(project.path, docState.documentName),
+          ],
+          project.path,
+        )
         : undefined;
     },
     previousProjectComponent() {
@@ -128,6 +129,13 @@ export default {
       return structure && src
         ? getParentProjectComponent(structure, src)
         : undefined;
+    },
+    childProjectComponents() {
+      const src = this.currentProjectSource;
+      const structure = this.activeDocState?.projectStructure;
+      return structure && src
+        ? (getProjectComponentChildren(structure, src) ?? [])
+        : [];
     },
   },
   methods: {
@@ -184,30 +192,25 @@ export default {
     projectComponentFilename(component?: ProjectComponent) {
       return component?.src ? basename(component.src) : '';
     },
+    projectComponentTooltip(
+      translationKey: string,
+      component?: ProjectComponent,
+    ) {
+      const tooltip = this.$t(translationKey);
+      return component
+        ? `${tooltip}: “${component.title || component.src || component.id}”`
+        : tooltip
+    },
   },
 };
 </script>
 
 <template>
-  <q-btn-dropdown
-    class="toolbar-button"
-    :title="$t('document.open')"
-    split
-    dense
-    icon="document_open"
-    dropdown-icon="menu_down"
-    @click="openDocument()"
-    @before-show="loadBookmarks()"
-    elevation="3"
-    size="sm"
-    color="grey-5"
-  >
+  <q-btn-dropdown class="toolbar-button" :title="$t('document.open')" split dense icon="document_open"
+    dropdown-icon="menu_down" @click="openDocument()" @before-show="loadBookmarks()" elevation="3" size="sm"
+    color="grey-5">
     <q-list dense>
-      <q-item
-        :disable="projectBookmarks.length === 0"
-        key="recent-projects"
-        clickable
-      >
+      <q-item :disable="projectBookmarks.length === 0" key="recent-projects" clickable>
         <q-item-section>
           <q-item-label>{{ $t('recent.projects') }}</q-item-label>
         </q-item-section>
@@ -216,14 +219,8 @@ export default {
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>
-            <q-item
-              v-for="p in projectBookmarks"
-              :key="p.url"
-              :title="titleForBookmark(p)"
-              clickable
-              v-close-popup
-              @click="openProjectBookmark(p)"
-            >
+            <q-item v-for="p in projectBookmarks" :key="p.url" :title="titleForBookmark(p)" clickable v-close-popup
+              @click="openProjectBookmark(p)">
               <q-item-section>
                 {{ p.name }}
               </q-item-section>
@@ -231,11 +228,7 @@ export default {
           </q-list>
         </q-menu>
       </q-item>
-      <q-item
-        :disable="docBookmarks.length === 0"
-        key="recent-documents"
-        clickable
-      >
+      <q-item :disable="docBookmarks.length === 0" key="recent-documents" clickable>
         <q-item-section>
           <q-item-label>{{ $t('recent.documents') }}</q-item-label>
         </q-item-section>
@@ -244,14 +237,8 @@ export default {
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>
-            <q-item
-              v-for="d in docBookmarks"
-              :key="d.url"
-              :title="titleForBookmark(d)"
-              clickable
-              v-close-popup
-              @click="openDocBookmark(d)"
-            >
+            <q-item v-for="d in docBookmarks" :key="d.url" :title="titleForBookmark(d)" clickable v-close-popup
+              @click="openDocBookmark(d)">
               <q-item-section>
                 {{ labelForBookmark(d) }}
               </q-item-section>
@@ -259,22 +246,16 @@ export default {
           </q-list>
         </q-menu>
       </q-item>
-      <q-separator
-        v-if="
-          project &&
-          (previousProjectComponent?.src ||
-            nextProjectComponent?.src ||
-            parentProjectComponent?.src)
-        "
-      />
-      <q-item
-        v-if="project && nextProjectComponent?.src"
-        key="next-project-component"
-        :title="$t('document.openNextProjectDocument')"
-        clickable
-        v-close-popup
-        @click="openProjectComponent(nextProjectComponent)"
-      >
+      <q-separator v-if="
+        project &&
+        (previousProjectComponent?.src ||
+          nextProjectComponent?.src ||
+          parentProjectComponent?.src ||
+          childProjectComponents.length > 0)
+      " />
+      <q-item v-if="project && nextProjectComponent?.src" key="next-project-component"
+        :title="projectComponentTooltip('document.openNextProjectDocument', nextProjectComponent)" clickable
+        v-close-popup @click="openProjectComponent(nextProjectComponent)">
         <q-item-section>
           <q-item-label>
             {{ projectComponentFilename(nextProjectComponent) }}
@@ -284,14 +265,9 @@ export default {
           <q-icon name="skip_next" />
         </q-item-section>
       </q-item>
-      <q-item
-        v-if="project && previousProjectComponent?.src"
-        key="previous-project-component"
-        :title="$t('document.openPreviousProjectDocument')"
-        clickable
-        v-close-popup
-        @click="openProjectComponent(previousProjectComponent)"
-      >
+      <q-item v-if="project && previousProjectComponent?.src" key="previous-project-component"
+        :title="projectComponentTooltip('document.openPreviousProjectDocument', previousProjectComponent)" clickable
+        v-close-popup @click="openProjectComponent(previousProjectComponent)">
         <q-item-section>
           <q-item-label>
             {{ projectComponentFilename(previousProjectComponent) }}
@@ -301,14 +277,9 @@ export default {
           <q-icon name="skip_previous" />
         </q-item-section>
       </q-item>
-      <q-item
-        v-if="project && parentProjectComponent?.src"
-        key="parent-project-component"
-        :title="$t('document.openParentProjectDocument')"
-        clickable
-        v-close-popup
-        @click="openProjectComponent(parentProjectComponent)"
-      >
+      <q-item v-if="project && parentProjectComponent?.src" key="parent-project-component"
+        :title="projectComponentTooltip('document.openParentProjectDocument', parentProjectComponent)" clickable
+        v-close-popup @click="openProjectComponent(parentProjectComponent)">
         <q-item-section>
           <q-item-label>
             {{ projectComponentFilename(parentProjectComponent) }}
@@ -317,6 +288,43 @@ export default {
         <q-item-section side>
           <q-icon name="package_up" />
         </q-item-section>
+      </q-item>
+      <q-item v-if="project && childProjectComponents.length === 1" key="only-child-project-component"
+        :title="projectComponentTooltip('document.open', childProjectComponents[0])" clickable v-close-popup
+        @click="openProjectComponent(childProjectComponents[0])">
+        <q-item-section>
+          <q-item-label>
+            {{ projectComponentFilename(childProjectComponents[0]) }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="package_down" />
+        </q-item-section>
+      </q-item>
+      <q-item v-if="project && childProjectComponents.length > 1" key="contained-project-components"
+        :title="$t('document.openContainedProjectDocument')" clickable>
+        <q-item-section>
+          <q-item-label>
+            {{ $t('document.openContainedProjectDocument') }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="package_down" />
+        </q-item-section>
+        <q-menu anchor="top right" self="top left">
+          <q-list>
+            <q-item v-for="(component, index) in childProjectComponents" :key="component.src"
+              :title="projectComponentTooltip('document.open', component)" clickable v-close-popup
+              @click="openProjectComponent(component)">
+              <q-item-section side>
+                <div class="text-right" style="width: 1.5rem">{{ index + 1 }}.</div>
+              </q-item-section>
+              <q-item-section>
+                {{ projectComponentFilename(component) }}
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
       </q-item>
     </q-list>
   </q-btn-dropdown>

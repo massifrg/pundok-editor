@@ -593,6 +593,7 @@
     "open": "open document",
     "openNextProjectDocument": "open next document in project structure",
     "openParentProjectDocument": "open the container document (book, part, chapter, section...)",
+    "openContainedProjectDocument": "open contained document...",
     "openPreviousProjectDocument": "open previous document in project structure",
     "reloadWithConfiguration": "reload document with a different configuration"
   },

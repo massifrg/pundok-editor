@@ -4,6 +4,7 @@ import {
   getNextProjectComponent,
   getNextProjectComponentAcrossContainers,
   getParentProjectComponent,
+  getProjectComponentChildren,
   getPreviousProjectComponent,
   getPreviousProjectComponentAcrossContainers,
   type PundokEditorProject,
@@ -298,6 +299,29 @@ describe('project utilities', () => {
     expect(getParentProjectComponent(structure, 'missing.md')).toBeUndefined();
   });
 
+  it('returns the children of a container document', () => {
+    const containerStructure: ProjectComponent = {
+      id: 'root',
+      children: [
+        {
+          src: 'part.md',
+          children: [{ src: 'chapter-one.md' }, { src: 'chapter-two.md' }],
+        },
+      ],
+    };
+
+    expect(getProjectComponentChildren(containerStructure, 'part.md')).toEqual([
+      { src: 'chapter-one.md' },
+      { src: 'chapter-two.md' },
+    ]);
+    expect(
+      getProjectComponentChildren(containerStructure, 'chapter-one.md'),
+    ).toEqual([]);
+    expect(
+      getProjectComponentChildren(containerStructure, 'missing.md'),
+    ).toBeUndefined();
+  });
+
   it('crosses to the first child of the next container', () => {
     expect(
       getNextProjectComponentAcrossContainers(structure, 'chapter-three.md'),
@@ -306,6 +330,45 @@ describe('project utilities', () => {
       getNextProjectComponentAcrossContainers(structure, 'chapter-four.md'),
     ).toEqual({
       src: 'appendix.md',
+    });
+  });
+
+  it('keeps navigation at the same level for container documents', () => {
+    const containerStructure: ProjectComponent = {
+      id: 'root',
+      children: [
+        {
+          id: 'part-one',
+          src: 'part-one.md',
+          children: [{ src: 'chapter-one.md' }],
+        },
+        {
+          id: 'part-two',
+          src: 'part-two.md',
+          children: [{ src: 'chapter-two.md' }],
+        },
+      ],
+    };
+
+    expect(
+      getNextProjectComponentAcrossContainers(
+        containerStructure,
+        'part-one.md',
+      ),
+    ).toEqual({
+      id: 'part-two',
+      src: 'part-two.md',
+      children: [{ src: 'chapter-two.md' }],
+    });
+    expect(
+      getPreviousProjectComponentAcrossContainers(
+        containerStructure,
+        'part-two.md',
+      ),
+    ).toEqual({
+      id: 'part-one',
+      src: 'part-one.md',
+      children: [{ src: 'chapter-one.md' }],
     });
   });
 

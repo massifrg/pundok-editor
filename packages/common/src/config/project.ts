@@ -24,6 +24,8 @@ interface AbstractProjectComponent {
   id?: string;
   /** the component source (file path or URI) */
   src?: string;
+  /** the component title */
+  title?: string;
   /** the component content format */
   format?: string;
   /** the sha1 of the contents (it may be used to check updates) */
@@ -118,6 +120,23 @@ export function getParentProjectComponent(
   return undefined;
 }
 
+/**
+ * Returns the children of the component with the given source.
+ */
+export function getProjectComponentChildren(
+  structure: ProjectComponent,
+  src: string,
+): ProjectComponent[] | undefined {
+  if (structure.src === src) return structure.children || [];
+
+  for (const child of structure.children || []) {
+    const children = getProjectComponentChildren(child, src);
+    if (children) return children;
+  }
+
+  return undefined;
+}
+
 interface ProjectComponentLocation {
   container: ProjectComponent;
   index: number;
@@ -168,6 +187,8 @@ function adjacentProjectComponent(
 
     const sibling = children[index + offset];
     if (!sibling) continue;
+    if (level === path.length - 1 && children[index].children?.length)
+      return sibling;
     if (!sibling.children?.length) return sibling;
 
     return offset === 1
@@ -183,7 +204,8 @@ function adjacentProjectComponent(
  *
  * When the source is the last child of a container, the search moves to the
  * next sibling container and returns its first child. If that container has no
- * children, the container itself is returned.
+ * children, the container itself is returned. When the source itself has
+ * children, its sibling is returned without descending into it.
  */
 export function getNextProjectComponentAcrossContainers(
   structure: ProjectComponent,
@@ -198,7 +220,8 @@ export function getNextProjectComponentAcrossContainers(
  *
  * When the source is the first child of a container, the search moves to the
  * previous sibling container and returns its last child. If that container has
- * no children, the container itself is returned.
+ * no children, the container itself is returned. When the source itself has
+ * children, its sibling is returned without descending into it.
  */
 export function getPreviousProjectComponentAcrossContainers(
   structure: ProjectComponent,
