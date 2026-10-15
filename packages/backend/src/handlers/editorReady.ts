@@ -15,7 +15,9 @@ const STARTUP_FILENAME = 'startup.json';
 type StartupConfiguration = {
   version: string;
   configuration: string;
-  env: Record<string, string>;
+  env: Record<string, string> & {
+    additionalPath?: string;
+  };
 };
 
 export async function editorReady(

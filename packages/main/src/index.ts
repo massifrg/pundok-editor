@@ -3,6 +3,7 @@ import './security-restrictions';
 import { restoreOrCreateWindow, WindowWithIpc } from './mainWindow';
 import { copyMissingStaticResourcesInUserDir } from './staticResources';
 import { parseCommandLineOpts } from './cli';
+import { getExtendedEnvironment } from './resourcesManager';
 
 /** A global variable of the main window with its Ipc */
 let mainWindowWithIpc: WindowWithIpc | undefined = undefined
@@ -54,6 +55,9 @@ app.on('activate', restoreOrCreateWindow);
  */
 app
   .whenReady()
+  .then(async () => {
+    Object.assign(process.env, await getExtendedEnvironment());
+  })
   .then(restoreOrCreateWindow)
   .then(windowWithIpc => {
     if (windowWithIpc) {

@@ -45,7 +45,10 @@ export interface StartupConfiguration {
   /** The name of the configuration to start with. */
   configuration: string;
   /** A complement for the variables in the process environment. */
-  env: Record<string, string>;
+  env: Record<string, string> & {
+    /** Paths to append to PATH when running external programs. */
+    additionalPath?: string;
+  };
 }
 
 function checkAndAddFolder(path: string) {
@@ -246,14 +249,29 @@ export async function getExtendedEnvironment(): Promise<
   try {
     const env = { ...process.env };
     const startup = await getStartup();
+    let additionalPath: string | undefined;
     if (startup.env) {
       Object.entries(startup.env).forEach(([varName, value]) => {
-        if (varName === 'PATH' && env.PATH) {
-          env.PATH = env.PATH + delimiter + value;
+        if (varName === 'additionalPath') {
+          additionalPath = value;
+        } else if (varName.toUpperCase() === 'PATH') {
+          const pathName =
+            Object.keys(env).find((name) => name.toUpperCase() === 'PATH') ||
+            varName;
+          env[pathName] = env[pathName]
+            ? env[pathName] + delimiter + value
+            : value;
         } else {
           env[varName] = value;
         }
       });
+    }
+    if (additionalPath) {
+      const pathName =
+        Object.keys(env).find((name) => name.toUpperCase() === 'PATH') || 'PATH';
+      env[pathName] = env[pathName]
+        ? env[pathName] + delimiter + additionalPath
+        : additionalPath;
     }
     return env;
   } catch (err) {
