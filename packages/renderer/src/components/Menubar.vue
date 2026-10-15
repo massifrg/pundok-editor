@@ -335,7 +335,7 @@
 
       <q-badge v-if="gui.showConfiguration && configSummaries.length === 1" color="accent"><b>{{ configuration?.name ||
         'unknown' }}</b></q-badge>
-      <ChooseConfigButton :current-configuration-name="configuration?.name"
+      <ChooseConfigButton :current-configuration-name="configuration?.name" :current-project-name="project?.name"
         :title="$t('document.reloadWithConfiguration')" @change-configuration="reloadWithConfiguration" />
       <q-badge v-if="gui.showEditorKey" color="secondary"><b>{{ editorKey }}</b></q-badge>
     </q-bar>
