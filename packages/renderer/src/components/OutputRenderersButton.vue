@@ -265,56 +265,59 @@ function clickMain(): void {
       title="render..."
     >
     <q-list dense>
-      <q-item
-        v-for="item in menuItems"
-        :key="`${item.converter.name}:${item.path || ''}:${item.resultFile}`"
-        :disable="isRendering(item)"
-        :clickable="!item.hasAncestors && !isRendering(item)"
-        @click="!item.hasAncestors && select(item)"
-      >
-        <q-item-section avatar>
-          <q-circular-progress v-if="isRendering(item)" indeterminate size="1em" />
-          <svg v-else-if="item.converter.icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
-            <path :d="item.converter.icon" />
-          </svg>
-          <q-icon v-else name="document_render" />
-        </q-item-section>
-        <q-item-section>
-          {{ item.hasAncestors
-            ? `render with ${item.converter.name}`
-            : labelFor(item.converter, item.resultFile) }}
-        </q-item-section>
-        <q-item-section v-if="item.hasAncestors" side>
-          <q-icon name="menu_right" />
-        </q-item-section>
-        <q-menu v-if="item.hasAncestors" anchor="top right" self="top left">
-          <q-list dense>
-            <q-item
-              v-for="ancestor in item.ancestors"
-              :key="ancestor.path"
-              :disable="isRendering({ converter: item.converter, path: ancestor.path })"
-              clickable
-              v-close-popup
-              @click="select({ converter: item.converter, path: ancestor.path })"
-            >
-              <q-item-section avatar>
-                <q-circular-progress
-                  v-if="isRendering({ converter: item.converter, path: ancestor.path })"
-                  indeterminate
-                  size="1em"
-                />
-                <svg v-else-if="item.converter.icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
-                  <path :d="item.converter.icon" />
-                </svg>
-                <q-icon v-else name="document_render" />
-              </q-item-section>
-              <q-item-section>
-                {{ ancestor.resultFile }}
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-menu>
-      </q-item>
+      <template v-for="(item, index) in menuItems" :key="`${item.converter.name}:${item.path || ''}:${item.resultFile}`">
+        <q-separator
+          v-if="index > 0 && menuItems[index - 1].converter.name !== item.converter.name"
+        />
+        <q-item
+          :disable="isRendering(item)"
+          :clickable="!item.hasAncestors && !isRendering(item)"
+          @click="!item.hasAncestors && select(item)"
+        >
+          <q-item-section avatar>
+            <q-circular-progress v-if="isRendering(item)" indeterminate size="1em" />
+            <svg v-else-if="item.converter.icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="item.converter.icon" />
+            </svg>
+            <q-icon v-else name="document_render" />
+          </q-item-section>
+          <q-item-section>
+            {{ item.hasAncestors
+              ? `render with ${item.converter.name}`
+              : labelFor(item.converter, item.resultFile) }}
+          </q-item-section>
+          <q-item-section v-if="item.hasAncestors" side>
+            <q-icon name="menu_right" />
+          </q-item-section>
+          <q-menu v-if="item.hasAncestors" anchor="top right" self="top left">
+            <q-list dense>
+              <q-item
+                v-for="ancestor in item.ancestors"
+                :key="ancestor.path"
+                :disable="isRendering({ converter: item.converter, path: ancestor.path })"
+                clickable
+                v-close-popup
+                @click="select({ converter: item.converter, path: ancestor.path })"
+              >
+                <q-item-section avatar>
+                  <q-circular-progress
+                    v-if="isRendering({ converter: item.converter, path: ancestor.path })"
+                    indeterminate
+                    size="1em"
+                  />
+                  <svg v-else-if="item.converter.icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
+                    <path :d="item.converter.icon" />
+                  </svg>
+                  <q-icon v-else name="document_render" />
+                </q-item-section>
+                <q-item-section>
+                  {{ ancestor.resultFile }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-item>
+      </template>
     </q-list>
     </q-btn-dropdown>
   </q-btn-group>
