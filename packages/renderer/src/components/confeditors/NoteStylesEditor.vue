@@ -73,6 +73,14 @@
               :title="$t('configEditor.noteStyles.deleteStyle')"
               @click="deleteStyle(style.noteType)"
             />
+            <q-btn
+              dense
+              flat
+              round
+              icon="content_copy"
+              :title="$t('configEditor.noteStyles.copyStyle')"
+              @click="copyProjectStyle(style)"
+            />
           </div>
         </q-item-section>
       </q-item>
@@ -226,6 +234,7 @@ import { mdiEyeOff } from '@mdi/js';
 import { useI18n } from 'vue-i18n';
 import type { MarkerConversion, NoteStyle } from '../../common';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
+import { nextCopyName } from '../helpers/copyName';
 
 setupQuasarIcons();
 
@@ -344,6 +353,16 @@ function editStyle(noteType: string): void {
 
 function copyInheritedStyle(style: NoteStyle): void {
   const copy = copyStyle(style);
+  styles.value = [...styles.value, copy];
+  emit('update:modelValue', styles.value.map(copyStyle));
+}
+
+function copyProjectStyle(style: NoteStyle): void {
+  const copy = copyStyle(style);
+  copy.noteType = nextCopyName(
+    style.noteType,
+    styles.value.map((item) => item.noteType),
+  );
   styles.value = [...styles.value, copy];
   emit('update:modelValue', styles.value.map(copyStyle));
 }

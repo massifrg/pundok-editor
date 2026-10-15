@@ -40,8 +40,12 @@
               :title="$t('configEditor.removeInherited', { name: converter.name })"
               @update:model-value="setRemoved(converter.name, $event)" />
           </div>
-          <q-btn v-else dense flat round icon="edit" :title="$t('configEditor.outputConverters.editConverter')"
-            @click="editConverter(converter.name)" />
+          <div v-else class="row no-wrap items-center q-gutter-xs">
+            <q-btn dense flat round icon="edit" :title="$t('configEditor.outputConverters.editConverter')"
+              @click="editConverter(converter.name)" />
+            <q-btn dense flat round icon="content_copy" :title="$t('configEditor.outputConverters.copyConverter')"
+              @click="copyProjectConverter(converter)" />
+          </div>
         </q-item-section>
       </q-item>
     </q-list>
@@ -166,6 +170,7 @@ import PandocOptionsEditor from './PandocOptionsEditor.vue';
 import type { Editor } from '@tiptap/vue-3';
 import type { DocumentFormat } from '../../common';
 import { extractSvgPathData, showSelectImageDialog } from '../helpers';
+import { nextCopyName } from '../helpers';
 import { useBackend } from '../../stores';
 
 type OutputConverterDraft = Omit<
@@ -396,6 +401,16 @@ function isInherited(converter: OutputConverter): boolean {
 
 function copyInheritedConverter(converter: OutputConverter): void {
   converters.value = [...converters.value, copyConverter(converter)];
+  emit('update:modelValue', converters.value.map(copyConverter));
+}
+
+function copyProjectConverter(converter: OutputConverter): void {
+  const copy = copyConverter(converter);
+  copy.name = nextCopyName(
+    converter.name,
+    converters.value.map((item) => item.name),
+  );
+  converters.value = [...converters.value, copy];
   emit('update:modelValue', converters.value.map(copyConverter));
 }
 

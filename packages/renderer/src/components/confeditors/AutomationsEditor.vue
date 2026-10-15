@@ -32,7 +32,17 @@
           <q-item-label caption>{{ automation.description }}</q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-icon name="edit" />
+          <div class="row items-center no-wrap q-gutter-xs">
+            <q-icon name="edit" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="content_copy"
+              :title="$t('configEditor.automations.copyAutomation')"
+              @click.stop="copyProjectAutomation(automation)"
+            />
+          </div>
         </q-item-section>
       </q-item>
       <q-item v-for="automation in inherited" :key="`inherited-${automation.name}`" clickable
@@ -202,6 +212,7 @@ import {
 import MarksPaletteDropdown from '../MarksPaletteDropdown.vue';
 import PandocFiltersEditor from './PandocFiltersEditor.vue';
 import ActionsOnReplaceDropdown from '../ActionsOnReplaceDropdown.vue';
+import { nextCopyName } from '../helpers/copyName';
 
 type AutomationDraft =
   | (SearchAndReplace & { description: string })
@@ -402,6 +413,18 @@ function applyEdit(): void {
   automations.value = updated;
   emit('update:modelValue', updated.map(copyAutomation));
   cancelEdit();
+}
+
+function copyProjectAutomation(automation: Automation): void {
+  const copy = copyAutomation(automation);
+  copy.name = nextCopyName(
+    automation.name,
+    automations.value
+      .filter((item) => item.type === automation.type)
+      .map((item) => item.name),
+  );
+  automations.value = [...automations.value, copy];
+  emit('update:modelValue', automations.value.map(copyAutomation));
 }
 
 function setRemoved(name: string, value: boolean | null): void {

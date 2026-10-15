@@ -60,6 +60,14 @@
               :title="$t('configEditor.customMetadata.deleteMetadata')"
               @click="deleteMetadata(metadata.name)"
             />
+            <q-btn
+              dense
+              flat
+              round
+              icon="content_copy"
+              :title="$t('configEditor.customMetadata.copyMetadata')"
+              @click="copyProjectMetadata(metadata)"
+            />
           </template>
           <q-toggle
             v-if="isInherited(metadata)"
@@ -153,6 +161,7 @@
 import { computed, ref, watch } from 'vue';
 import { mdiEyeOff } from '@mdi/js';
 import type { CustomMetadata, MetaValueName } from '../../common';
+import { nextCopyName } from '../helpers/copyName';
 
 type MetadataDraft = {
   name: string;
@@ -232,6 +241,16 @@ function editMetadata(name: string): void {
 
 function copyInheritedMetadata(item: CustomMetadata): void {
   metadata.value = [...metadata.value, copyMetadata(item)];
+  emitMetadata();
+}
+
+function copyProjectMetadata(item: CustomMetadata): void {
+  const copy = copyMetadata(item);
+  copy.name = nextCopyName(
+    item.name,
+    metadata.value.map((value) => value.name),
+  );
+  metadata.value = [...metadata.value, copy];
   emitMetadata();
 }
 

@@ -68,6 +68,14 @@
                 :title="$t('configEditor.customStyles.deleteStyle')"
                 @click="deleteStyle(style.name)"
               />
+              <q-btn
+                dense
+                flat
+                round
+                icon="content_copy"
+                :title="$t('configEditor.customStyles.copyStyle')"
+                @click="copyProjectStyle(style)"
+              />
             </template>
             <q-toggle
               v-if="isInherited(style)"
@@ -210,6 +218,7 @@ import {
 } from '../../common';
 import { mdiEyeOff } from '@mdi/js';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
+import { nextCopyName } from '../helpers/copyName';
 import CssPropertiesEditor from './CssPropertiesEditor.vue';
 
 type CustomStyleDraft = CustomStyleDef;
@@ -383,6 +392,15 @@ export default {
     },
     copyInheritedStyle(style: CustomStyleDef) {
       this.styles = [...this.styles, this.copyStyle(style)];
+      this.emitStyles();
+    },
+    copyProjectStyle(style: CustomStyleDef) {
+      const copy = this.copyStyle(style);
+      copy.name = nextCopyName(
+        style.name,
+        this.styles.map((item) => item.name),
+      );
+      this.styles = [...this.styles, copy];
       this.emitStyles();
     },
     onAppliesToChanged(appliesTo: CustomizableElement[]) {

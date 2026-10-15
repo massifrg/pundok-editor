@@ -66,6 +66,14 @@
                 :title="$t('configEditor.customAttributes.deleteAttribute')"
                 @click="deleteAttribute(attribute.name)"
               />
+              <q-btn
+                dense
+                flat
+                round
+                icon="content_copy"
+                :title="$t('configEditor.customAttributes.copyAttribute')"
+                @click="copyProjectAttribute(attribute)"
+              />
             </template>
             <q-toggle
               v-if="isInherited(attribute)"
@@ -207,6 +215,7 @@ import { computed, ref, watch } from 'vue';
 import { mdiEyeOff } from '@mdi/js';
 import type { CustomAttribute } from '../../common';
 import { HasPandocAttr } from '../../common';
+import { nextCopyName } from '../helpers/copyName';
 
 type AttributeDraft = Omit<CustomAttribute, 'description' | 'appliesTo'> & {
   description: string;
@@ -279,6 +288,16 @@ function appliesToLabel(appliesTo: CustomAttribute['appliesTo']): string {
 
 function copyInheritedAttribute(attribute: CustomAttribute): void {
   attributes.value = [...attributes.value, copyAttribute(attribute)];
+  emitAttributes();
+}
+
+function copyProjectAttribute(attribute: CustomAttribute): void {
+  const copy = copyAttribute(attribute);
+  copy.name = nextCopyName(
+    attribute.name,
+    attributes.value.map((item) => item.name),
+  );
+  attributes.value = [...attributes.value, copy];
   emitAttributes();
 }
 

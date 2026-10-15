@@ -38,8 +38,12 @@
               :title="$t('configEditor.removeInherited', { name: converter.name })"
               @update:model-value="setRemoved(converter.name, $event)" />
           </div>
-          <q-btn v-else dense flat round icon="edit" :title="$t('configEditor.inputConverters.editConverter')"
-            @click="editConverter(converter.name)" />
+          <div v-else class="row no-wrap items-center q-gutter-xs">
+            <q-btn dense flat round icon="edit" :title="$t('configEditor.inputConverters.editConverter')"
+              @click="editConverter(converter.name)" />
+            <q-btn dense flat round icon="content_copy" :title="$t('configEditor.inputConverters.copyConverter')"
+              @click="copyProjectConverter(converter)" />
+          </div>
         </q-item-section>
       </q-item>
     </q-list>
@@ -142,6 +146,7 @@ import PandocLuaResourceDialog, {
 } from './PandocLuaResourceDialog.vue';
 import PandocOptionsEditor from './PandocOptionsEditor.vue';
 import type { Editor } from '@tiptap/vue-3';
+import { nextCopyName } from '../helpers';
 
 type InputConverterDraft = Omit<
   BaseInputConverter,
@@ -334,6 +339,16 @@ function isInherited(converter: InputConverter): boolean {
 
 function copyInheritedConverter(converter: InputConverter): void {
   converters.value = [...converters.value, copyConverter(converter)];
+  emit('update:modelValue', converters.value.map(copyConverter));
+}
+
+function copyProjectConverter(converter: InputConverter): void {
+  const copy = copyConverter(converter);
+  copy.name = nextCopyName(
+    converter.name,
+    converters.value.map((item) => item.name),
+  );
+  converters.value = [...converters.value, copy];
   emit('update:modelValue', converters.value.map(copyConverter));
 }
 

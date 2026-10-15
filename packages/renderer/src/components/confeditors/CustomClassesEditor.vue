@@ -66,6 +66,14 @@
                 :title="$t('configEditor.customClasses.deleteClass')"
                 @click="deleteClass(customClass.name)"
               />
+              <q-btn
+                dense
+                flat
+                round
+                icon="content_copy"
+                :title="$t('configEditor.customClasses.copyClass')"
+                @click="copyProjectClass(customClass)"
+              />
             </template>
             <q-toggle
               v-if="isInherited(customClass)"
@@ -165,6 +173,7 @@ import { mdiEyeOff } from '@mdi/js';
 import type { CustomAttribute, CustomClass } from '../../common';
 import { HasPandocAttr } from '../../common';
 import CustomAttributesEditor from './CustomAttributesEditor.vue';
+import { nextCopyName } from '../helpers/copyName';
 
 type ClassDraft = Omit<
   CustomClass,
@@ -242,6 +251,16 @@ function appliesToLabel(appliesTo: CustomClass['appliesTo']): string {
 
 function copyInheritedClass(customClass: CustomClass): void {
   classes.value = [...classes.value, copyClass(customClass)];
+  emitClasses();
+}
+
+function copyProjectClass(customClass: CustomClass): void {
+  const copy = copyClass(customClass);
+  copy.name = nextCopyName(
+    customClass.name,
+    classes.value.map((item) => item.name),
+  );
+  classes.value = [...classes.value, copy];
   emitClasses();
 }
 
