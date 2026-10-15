@@ -437,6 +437,51 @@ describe('PandocJsonParser', () => {
     ]);
   });
 
+  it('exports the configured default note without wrapping it in a Span', () => {
+    const noteStyles = [{ noteType: 'endnote', default: true }];
+    const doc = pandocJsonToPMNode(
+      {
+        'pandoc-api-version': [1, 23],
+        meta: {},
+        blocks: [
+          {
+            t: 'Para',
+            c: [
+              {
+                t: 'Note',
+                c: [
+                  {
+                    t: 'Para',
+                    c: [
+                      { t: 'Str', c: 'note' },
+                      { t: 'Space' },
+                      { t: 'Str', c: 'text' },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      { noteStyles },
+    );
+
+    expect(
+      JSON.parse(nodeToPandocJsonString(doc, { noteStyles })).blocks,
+    ).toEqual([
+      {
+        t: 'Para',
+        c: [
+          {
+            t: 'Note',
+            c: [{ t: 'Para', c: [{ t: 'Str', c: 'note text' }] }],
+          },
+        ],
+      },
+    ]);
+  });
+
   it('parses metadata values and preserves metadata keys', () => {
     const doc = pandocJsonToPMNode({
       'pandoc-api-version': [1, 23],

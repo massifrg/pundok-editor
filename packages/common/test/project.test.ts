@@ -273,6 +273,31 @@ describe('project utilities', () => {
     expect(getNextProjectComponent(structure, 'appendix.md')).toBeUndefined();
   });
 
+  it('uses the top configuration as the only default note style', () => {
+    const base = new PundokEditorConfig({
+      name: 'base',
+      version: [1],
+      noteStyles: [
+        { noteType: 'footnote', default: true },
+        { noteType: 'endnote' },
+      ],
+    });
+    const top = new PundokEditorConfig({
+      name: 'top',
+      version: [1],
+      noteStyles: [
+        { noteType: 'endnote', default: true },
+        { noteType: 'sidenote' },
+      ],
+    });
+
+    expect(base.addConfiguration(top).noteStyles).toEqual([
+      { noteType: 'endnote', default: true },
+      { noteType: 'sidenote' },
+      { noteType: 'footnote', default: false },
+    ]);
+  });
+
   it('returns undefined when the source is not a child document', () => {
     expect(
       getPreviousProjectComponent(structure, 'missing.md'),

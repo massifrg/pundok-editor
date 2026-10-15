@@ -180,7 +180,11 @@ export function getDocAsJsonString(
       indexingState?.indices || docState?.configuration?.indices,
       indexingState?.docIndices,
     );
-    return nodeToPandocJsonString(document, { indices, ...options });
+    return nodeToPandocJsonString(document, {
+      indices,
+      noteStyles: docState?.configuration?.noteStyles,
+      ...options,
+    });
   }
   return '{}';
 }

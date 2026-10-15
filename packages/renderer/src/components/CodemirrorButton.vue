@@ -92,7 +92,9 @@ export default defineComponent({
       const state = this.editor.state;
       if (newValue && state) {
         const docState = getDocState(state);
-        const json = getDocAsJsonString(state);
+        const json = getDocAsJsonString(state, {
+          noteStyles: docState?.configuration?.noteStyles,
+        });
         // console.log(json);
         try {
           const transformed = await this.backend?.transformPandocJson(

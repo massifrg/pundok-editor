@@ -77,6 +77,7 @@ import {
   NODE_NAME_PARAGRAPH,
   NODE_NAME_SHORT_CAPTION,
   NOTE_TYPE_ATTRIBUTE,
+  NoteStyle,
   emptyIdentifier,
 } from '../../common';
 import {
@@ -168,6 +169,8 @@ export interface PandocJsonExporterOptions {
   apiVersion?: number[];
   /** The indices defined for the document. */
   indices?: Index[];
+  /** The note styles defined for the document. */
+  noteStyles?: NoteStyle[];
   /** A function that compares Marks precedence. */
   compareMarks?: CompareMarksFunction;
   /** The third argument of JSON.stringify, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#syntax */
@@ -243,6 +246,7 @@ export class PandocJsonExporter {
   private knownMarksDict: Record<string, number[]> = {};
   private compareMarks: CompareMarksFunction = defaultCompareMarks;
   private indices: Index[] = [];
+  private defaultNoteType = DEFAULT_NOTE_TYPE;
   private citationCount: number = 0;
 
   constructor(
@@ -251,6 +255,10 @@ export class PandocJsonExporter {
   ) {
     this.compareMarks = options?.compareMarks || this.compareMarks;
     this.indices = options?.indices || this.indices;
+    this.defaultNoteType =
+      options?.noteStyles?.find((ns) => ns.default === true)?.noteType ||
+      this.defaultNoteType;
+    console.log(`DEFAULT NOTE TYPE: ${this.defaultNoteType}`)
     this.knownMarks.forEach((m, i) => {
       this.knownMarksDict[m.type] = [i];
     });
@@ -523,7 +531,7 @@ export class PandocJsonExporter {
     let noteContent: Block[] = (node.content || []).map(
       (b) => this.nodeToPandocItem(b) as Block,
     );
-    if (isPlainFootnote(node))
+    if (isPlainFootnote(node, this.defaultNoteType))
       return new Note(noteContent)
     const { id, classes, kv } = attrs;
     const noteSpan = new Span(
@@ -1095,11 +1103,14 @@ export class PandocJsonExporter {
  * @param note
  * @returns 
  */
-export function isPlainFootnote(note: PmJsonNode): boolean {
+export function isPlainFootnote(
+  note: PmJsonNode,
+  defaultNoteType = DEFAULT_NOTE_TYPE,
+): boolean {
   const attrs = note.attrs;
   if (!attrs) return true;
   const { noteType, id, classes, kv } = attrs;
-  if (noteType && noteType !== DEFAULT_NOTE_TYPE) return false;
+  if (noteType && noteType !== defaultNoteType) return false;
   const keys = Object.keys(kv || {})
   console.log(`id=${JSON.stringify(id)}, classes=${JSON.stringify(classes)}, keys=${JSON.stringify(keys)}`)
   return emptyIdentifier(id)

@@ -295,6 +295,21 @@ function mergeInsertableRaws(
     .concat(raw2.filter((r2, index2) => !commons.find((c) => c[1] === index2)));
 }
 
+function mergeNoteStyles(
+  enriching?: NoteStyle[],
+  base?: NoteStyle[],
+): NoteStyle[] {
+  const merged = mergeNamedObjects(enriching, base, 'noteType') as NoteStyle[];
+  const enrichingDefault = enriching?.find((style) => style.default === true);
+  if (!enrichingDefault) return merged;
+  return merged.map((style) => {
+    if (style.noteType === enrichingDefault.noteType)
+      return { ...style, default: true };
+    if (style.default === true) return { ...style, default: false };
+    return style;
+  });
+}
+
 /**
  * Enriches a base configuration with another one.
  * When the "enriching" configuration has elements that are present
@@ -346,11 +361,7 @@ export function enrichConfiguration(
         enriching.customMetadata,
         base.customMetadata,
       ) as CustomMetadata[],
-      noteStyles: mergeNamedObjects(
-        enriching.noteStyles,
-        base.noteStyles,
-        'noteType',
-      ) as NoteStyle[],
+      noteStyles: mergeNoteStyles(enriching.noteStyles, base.noteStyles),
       customCss: uniq((enriching.customCss || []).concat(base.customCss || [])),
       indices: mergeNamedObjects(
         enriching.indices,

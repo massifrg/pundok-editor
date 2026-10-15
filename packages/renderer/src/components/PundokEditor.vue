@@ -1535,9 +1535,11 @@ export default {
     },
     getDocAsJsonString(): string {
       const state = this.editorState();
+      const docState = state ? getDocState(state) : undefined;
       return getDocAsJsonString(state!, {
         // TODO: check state!
         space: this.jsonSpace,
+        noteStyles: docState?.configuration?.noteStyles,
       });
     },
     showResultMessage(props: ResultMessageActionProps) {
