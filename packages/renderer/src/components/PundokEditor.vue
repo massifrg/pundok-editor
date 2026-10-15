@@ -1644,7 +1644,10 @@ export default {
         ...options,
         computeConfig: true,
       });
-      if (project) await this.setProject(project);
+      if (project) {
+        await this.setProject(project);
+        await this.loadProjectStructure(project);
+      }
     },
     async setConfiguration(
       name_or_config?: string | PundokEditorConfig,
