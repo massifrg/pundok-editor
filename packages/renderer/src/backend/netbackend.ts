@@ -241,6 +241,10 @@ export class NetBackend implements Backend {
     return this.request<ClonedGitProject>('clone-git-project', { options });
   }
 
+  gitDefaultBranchName(): Promise<string> {
+    return this.request<string>('git-default-branch-name', {});
+  }
+
   publishGitProject(
     options: LocalGitProjectOptions,
   ): Promise<ClonedGitProject> {

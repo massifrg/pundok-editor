@@ -282,6 +282,10 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/git-default-branch-name',
+    asyncHandler((req) => backend.gitDefaultBranchName(username(req))),
+  );
+  router.post(
     '/git-project-updates',
     asyncHandler((req) =>
       backend.gitProjectUpdates(username(req), req.body?.path),

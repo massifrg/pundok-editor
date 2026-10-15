@@ -44,7 +44,11 @@
                 {{ $t('gitChangesDialog.behindBy', { count: branch.behind }) }}
               </q-item-label>
               <q-item-label v-if="!branch.ahead && !branch.behind" caption>
-                {{ $t('gitChangesDialog.inSync') }}
+                {{
+                  branch.localOnly
+                    ? $t('gitChangesDialog.localOnly')
+                    : $t('gitChangesDialog.inSync')
+                }}
               </q-item-label>
               <q-item-label v-if="branch.mergeable" class="text-positive">
                 {{ $t('gitChangesDialog.mergeable') }}
@@ -65,7 +69,10 @@
                 @click="merge(branch)"
               />
               <q-btn
-                v-if="isLocalActive(branch) && branch.behind > 0"
+                v-if="
+                  isLocalActive(branch) &&
+                  (branch.behind > 0 || branch.localOnly)
+                "
                 color="dark"
                 :label="$t('gitChangesDialog.push')"
                 :loading="branch.busy"
@@ -203,7 +210,7 @@ type BranchState = GitRemoteBranch & {
 
 export default {
   props: { visible: Boolean, projectPath: { type: String, required: true } },
-  emits: ['close'],
+  emits: ['close', 'reload-project'],
   data() {
     return {
       status: { managed: false, files: [] } as GitProjectStatus,
@@ -240,13 +247,19 @@ export default {
     },
   },
   methods: {
-    branchColor(branch: BranchState): 'positive' | 'dark' | 'primary' {
+    branchColor(
+      branch: BranchState,
+    ): 'positive' | 'dark' | 'primary' | 'accent' {
+      if (branch.localOnly) return 'accent';
       if (branch.ahead > 0) return 'positive';
       if (branch.behind > 0) return 'dark';
       return 'primary';
     },
     isLocalActive(branch: BranchState): boolean {
-      return branch.name === `${this.status.remote}/${this.status.branch}`;
+      return (
+        branch.localOnly ||
+        branch.name === `${this.status.remote}/${this.status.branch}`
+      );
     },
     async refresh() {
       if (!this.backend) return;
@@ -382,6 +395,7 @@ export default {
         );
         this.conflictDialogVisible = false;
         await this.refresh();
+        this.$emit('reload-project');
       } catch (error) {
         this.error = error instanceof Error ? error.message : String(error);
         this.conflictBranch.busy = false;
@@ -393,6 +407,7 @@ export default {
       try {
         await this.backend.mergeGitProject(this.projectPath, branch.name);
         await this.refresh();
+        this.$emit('reload-project');
       } catch (error) {
         this.error = error instanceof Error ? error.message : String(error);
         branch.busy = false;

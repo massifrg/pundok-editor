@@ -228,6 +228,9 @@ export class IpcHub implements RendererHub {
     ipcMain.handle('clone-git-project', (_event, options) =>
       this.gitRepositories.clone(options),
     );
+    ipcMain.handle('git-default-branch-name', () =>
+      this.gitRepositories.defaultBranchName(),
+    );
     ipcMain.handle('publish-git-project', (_event, options) =>
       this.gitRepositories.publish(options),
     );

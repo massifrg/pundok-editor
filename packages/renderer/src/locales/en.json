@@ -796,6 +796,7 @@
     "aheadBy": "{count} commit(s) ahead",
     "behindBy": "{count} commit(s) behind",
     "inSync": "In sync with the active branch",
+    "localOnly": "This branch exists only locally",
     "checkMergeable": "Check if mergeable",
     "merge": "Merge",
     "mergeable": "This branch can be merged.",
@@ -833,7 +834,9 @@
     "share": "Share",
     "connect": "Connect",
     "cancel": "Cancel",
-    "selectDestination": "Select the clone destination folder:"
+    "selectDestination": "Select the clone destination folder:",
+    "branchTitle": "Choose local branch",
+    "branch": "Local branch name"
   },
   "show": {
     "indicesButtons": "show buttons for indices' references",

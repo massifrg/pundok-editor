@@ -127,6 +127,7 @@ export interface Ipc {
   cloneGitProject: (
     options: CloneGitProjectOptions,
   ) => Promise<ClonedGitProject>;
+  gitDefaultBranchName: () => Promise<string>;
 
   publishGitProject: (
     options: LocalGitProjectOptions,
@@ -249,6 +250,7 @@ contextBridge.exposeInMainWorld('ipc', {
   listGitRepositories: () => ipcRenderer.invoke('list-git-repositories'),
   cloneGitProject: (options: CloneGitProjectOptions) =>
     ipcRenderer.invoke('clone-git-project', options),
+  gitDefaultBranchName: () => ipcRenderer.invoke('git-default-branch-name'),
   publishGitProject: (options: LocalGitProjectOptions) =>
     ipcRenderer.invoke('publish-git-project', options),
   connectGitProject: (options: LocalGitProjectOptions) =>

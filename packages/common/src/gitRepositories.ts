@@ -44,6 +44,7 @@ export interface GitRemoteBranch {
   name: string;
   ahead: number;
   behind: number;
+  localOnly?: boolean;
 }
 
 export interface GitMergeCheck {

@@ -795,6 +795,7 @@
     "aheadBy": "{count} commit avanti",
     "behindBy": "{count} commit indietro",
     "inSync": "Sincronizzato con il ramo attivo",
+    "localOnly": "Questo ramo esiste solo localmente",
     "checkMergeable": "Controlla se integrabile",
     "merge": "Integra",
     "mergeable": "Questo ramo può essere integrato.",
@@ -832,7 +833,9 @@
     "share": "Condividi",
     "connect": "Collega",
     "cancel": "Annulla",
-    "selectDestination": "Seleziona la cartella di destinazione della clonazione:"
+    "selectDestination": "Seleziona la cartella di destinazione della clonazione:",
+    "branchTitle": "Scegli il ramo locale",
+    "branch": "Nome del ramo locale"
   },
   "show": {
     "indicesButtons": "mostra i bottoni per i riferimenti ad indice",

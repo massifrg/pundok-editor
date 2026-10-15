@@ -178,6 +178,10 @@ export class PundokEditorServer {
     return this.gitRepositoriesForUser(user).status(this.userPath(user, path));
   }
 
+  async gitDefaultBranchName(user: string): Promise<string> {
+    return user;
+  }
+
   async gitProjectUpdates(
     user: string,
     path: string,

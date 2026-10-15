@@ -38,6 +38,10 @@ export class GitRepositoryManager {
 
   constructor(private readonly directories: BackendDirectories) {}
 
+  defaultBranchName(): string {
+    return userInfo().username || 'user';
+  }
+
   async status(path: string): Promise<GitProjectStatus> {
     try {
       const branch = await this.currentBranch(path, { user: '', password: '' });
@@ -77,8 +81,10 @@ export class GitRepositoryManager {
       path,
     );
     const updates: GitRemoteBranch[] = [];
+    let hasLocalBranch = false;
     for (const name of refs.output.split(/\r?\n/).filter(Boolean)) {
       if (name === `${remote}/HEAD`) continue;
+      if (name === `${remote}/${branch}`) hasLocalBranch = true;
       const counts = await this.runGit(
         ['rev-list', '--left-right', '--count', `${branch}...${name}`],
         credentials.user,
@@ -89,6 +95,13 @@ export class GitRepositoryManager {
       if (Number.isFinite(ahead) && Number.isFinite(behind))
         updates.push({ name, ahead, behind });
     }
+    if (!hasLocalBranch)
+      updates.push({
+        name: branch,
+        ahead: 0,
+        behind: 0,
+        localOnly: true,
+      });
     return updates;
   }
 
@@ -249,13 +262,14 @@ export class GitRepositoryManager {
   }
 
   async clone(options: CloneGitProjectOptions): Promise<ClonedGitProject> {
-    validateCredentials(options);
+    if (!options.url) throw new Error('A repository URL is required');
     const metadata = await repositoryMetadata(
       options.url,
       options.user,
       options.password,
     );
-    const branch = options.branch || options.user;
+    const branch =
+      options.branch || options.user || userInfo().username || 'user';
     validateBranch(branch);
     const projectPath = resolve(
       options.destination || this.directories.userDataDir,
@@ -619,7 +633,9 @@ async function repositoryMetadata(
         headers: {
           Accept: 'application/json',
           'User-Agent': 'pundok-editor',
-          Authorization: basicAuth(user, password),
+          ...(user && password
+            ? { Authorization: basicAuth(user, password) }
+            : {}),
         },
         signal: AbortSignal.timeout(10_000),
       },

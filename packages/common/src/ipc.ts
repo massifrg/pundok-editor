@@ -58,6 +58,7 @@ export type IpcRendererToMainChannel =
   | 'update-config'
   | 'list-git-repositories'
   | 'clone-git-project'
+  | 'git-default-branch-name'
   | 'publish-git-project'
   | 'connect-git-project'
   | 'git-project-status'
@@ -238,6 +239,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'connect-git-project': {
     dir: 'r2m',
     description: 'add an existing remote to a local project',
+  },
+  'git-default-branch-name': {
+    dir: 'r2m',
+    description: 'get the default local Git branch name',
   },
   'git-project-status': {
     dir: 'r2m',

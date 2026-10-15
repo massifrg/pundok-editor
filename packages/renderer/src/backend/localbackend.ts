@@ -481,6 +481,10 @@ export class LocalBackend implements Backend {
     return window.ipc.cloneGitProject(options);
   }
 
+  gitDefaultBranchName() {
+    return window.ipc.gitDefaultBranchName();
+  }
+
   publishGitProject(options: LocalGitProjectOptions) {
     return window.ipc.publishGitProject(options);
   }

@@ -244,6 +244,7 @@ export interface Backend {
   listGitRepositories(): Promise<DocRepository[]>;
 
   cloneGitProject(options: CloneGitProjectOptions): Promise<ClonedGitProject>;
+  gitDefaultBranchName(): Promise<string>;
 
   publishGitProject(options: LocalGitProjectOptions): Promise<ClonedGitProject>;
 

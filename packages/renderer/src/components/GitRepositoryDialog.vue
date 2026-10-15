@@ -72,13 +72,41 @@
         <q-btn
           :label="actionLabel"
           color="primary"
-          :disable="busy || !url || !user || (mode === 'clone' && !destination)"
-          @click="submit"
+          :disable="busy || !url || (mode === 'clone' && !destination)"
+          @click="mode === 'clone' ? openCloneBranchDialog() : submit()"
         />
         <q-btn
           :label="$t('gitRepositoryDialog.cancel')"
           :disable="busy"
           @click="$emit('close')"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="cloneBranchDialogVisible">
+    <q-card style="min-width: 30rem">
+      <q-card-section class="text-h6">
+        {{ $t('gitRepositoryDialog.branchTitle') }}
+      </q-card-section>
+      <q-card-section>
+        <q-input
+          v-model="cloneBranch"
+          :label="$t('gitRepositoryDialog.branch')"
+          outlined
+          autofocus
+          @keyup.enter="confirmClone"
+        />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn
+          :label="$t('gitRepositoryDialog.cancel')"
+          @click="cloneBranchDialogVisible = false"
+        />
+        <q-btn
+          color="primary"
+          :label="$t('gitRepositoryDialog.clone')"
+          :disable="!cloneBranch.trim()"
+          @click="confirmClone"
         />
       </q-card-actions>
     </q-card>
@@ -116,6 +144,8 @@ export default {
       projects: [] as Array<{ name: string; description: string; url: string }>,
       selectedProject: undefined as
         { name: string; description: string; url: string } | undefined,
+      cloneBranchDialogVisible: false,
+      cloneBranch: '',
     };
   },
   computed: {
@@ -136,6 +166,16 @@ export default {
     },
   },
   methods: {
+    async openCloneBranchDialog() {
+      this.cloneBranch =
+        this.user || (await this.backend?.gitDefaultBranchName()) || 'user';
+      this.cloneBranchDialogVisible = true;
+    },
+    async confirmClone() {
+      if (!this.cloneBranch.trim()) return;
+      this.cloneBranchDialogVisible = false;
+      await this.submit(this.cloneBranch.trim());
+    },
     chooseDestination() {
       if (!this.editor) return;
       showSelectFolderDialog({
@@ -160,7 +200,7 @@ export default {
         this.busy = false;
       }
     },
-    async submit() {
+    async submit(branch?: string) {
       if (!this.backend || this.busy) return;
       this.busy = true;
       try {
@@ -174,6 +214,7 @@ export default {
                 url: remote,
                 user: this.user,
                 password: this.password,
+                branch,
                 destination: this.destination,
               })
             : this.mode === 'publish'
