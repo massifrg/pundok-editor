@@ -66,9 +66,13 @@ export function runExternalProgram(
     if (callback) callback('err', chunk);
     else error.push(chunk.toString());
   });
+  childProcess.stdin.on('error', (stdinError) => {
+    if ((stdinError as NodeJS.ErrnoException).code !== 'EPIPE') {
+      error.push(stdinError.toString());
+    }
+  });
   if (input) {
-    childProcess.stdin.write(input);
-    childProcess.stdin.end();
+    childProcess.stdin.end(input);
   }
 
   return {
