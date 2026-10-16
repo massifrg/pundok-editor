@@ -85,6 +85,11 @@
       <q-card-actions align="right">
         <q-spinner v-if="busy" class="q-mr-sm" />
         <q-btn
+          :label="$t('gitChangesDialog.changesAndCommits')"
+          :disable="busy"
+          @click="openChanges"
+        />
+        <q-btn
           :label="$t('gitChangesDialog.close')"
           :disable="busy"
           @click="$emit('close')"
@@ -210,7 +215,7 @@ type BranchState = GitRemoteBranch & {
 
 export default {
   props: { visible: Boolean, projectPath: { type: String, required: true } },
-  emits: ['close', 'reload-project'],
+  emits: ['close', 'open-changes', 'reload-project'],
   data() {
     return {
       status: { managed: false, files: [] } as GitProjectStatus,
@@ -247,6 +252,10 @@ export default {
     },
   },
   methods: {
+    openChanges() {
+      this.$emit('close');
+      this.$emit('open-changes');
+    },
     branchColor(
       branch: BranchState,
     ): 'positive' | 'dark' | 'primary' | 'accent' {

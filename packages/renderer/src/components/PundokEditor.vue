@@ -177,11 +177,19 @@
           :visible="visibleGitChanges"
           :project-path="docState()?.project?.path || ''"
           @close="visibleGitChanges = false"
+          @open-updates="
+            visibleGitChanges = false;
+            visibleGitUpdates = true;
+          "
         />
         <GitUpdatesDialog
           :visible="visibleGitUpdates"
           :project-path="docState()?.project?.path || ''"
           @close="visibleGitUpdates = false"
+          @open-changes="
+            visibleGitUpdates = false;
+            visibleGitChanges = true;
+          "
           @reload-project="reloadProjectAfterGitMerge"
         />
         <GitRepositoryDialog
