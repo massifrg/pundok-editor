@@ -1,7 +1,9 @@
+import type { Backend, IpcRendererListener } from './backend';
 import type {
-  Backend,
-  IpcRendererListener,
-} from './backend';
+  CloneGitProjectOptions,
+  LocalGitProjectOptions,
+  GitCommitOptions,
+} from '../common';
 import {
   type ConfigurationSummary,
   PundokEditorConfig,
@@ -14,6 +16,7 @@ import {
   PreviewOptions,
   Query,
   QueryResult,
+  ResourceFile,
   PundokEditorProject,
   EditorKeyType,
   ServerMessageSetConfiguration,
@@ -29,6 +32,7 @@ import {
   IpcRendererToMainChannel,
   IpcMainToRendererChannel,
   ServerMessageForViewer,
+  ServerMessage,
   PandocFilterTransform,
   SynctexInfo,
   RenderingJob,
@@ -47,6 +51,8 @@ import {
   PandocFeatureName,
   PandocFeatureOptions,
   ConfigQueryOptions,
+  ConfigurationUpdateOptions,
+  BackendValueKey,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -65,6 +71,7 @@ import {
   setActionSetupViewer,
 } from '../actions';
 import { useActions } from '../stores';
+import { handleEditorEvent } from './editorEventHandlers';
 
 type Listener = () => void;
 
@@ -85,9 +92,21 @@ export class LocalBackend implements Backend {
       let listeners: Listener[] = this.listeners;
       const addListener = (
         channel: IpcMainToRendererChannel,
-        listener: IpcRendererListener,
+        _listener: IpcRendererListener,
       ) => {
-        const l = ipc.listen(channel, listener);
+        const l = ipc.listen(
+          channel,
+          (
+            _event: Parameters<IpcRendererListener>[0],
+            message: ServerMessage,
+          ) => {
+            void handleEditorEvent(
+              channel,
+              message,
+              getConfigurationFunction(ipc),
+            ).catch(console.error);
+          },
+        );
         if (l) {
           listeners.push(l);
         }
@@ -144,31 +163,32 @@ export class LocalBackend implements Backend {
 
           const project_with_conf: PundokEditorProject | undefined = project
             ? await computeProjectConfiguration(
-              project,
-              getConfigurationFunction(window.ipc),
-            )
+                project,
+                getConfigurationFunction(window.ipc),
+              )
             : undefined;
           const action: EditorAction = project_with_conf
             ? {
-              ...ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
-              editorKey: editorKey!,
-              props: {
-                project: project_with_conf,
-                configuration: project_with_conf.computedConfig,
-                content,
-              } as BackendSetContentWithProjectActionProps,
-            }
+                ...ACTION_BACKEND_SET_CONTENT_WITH_PROJECT,
+                editorKey: editorKey!,
+                props: {
+                  project: project_with_conf,
+                  configuration: project_with_conf.computedConfig,
+                  content,
+                } as BackendSetContentWithProjectActionProps,
+              }
             : {
-              ...ACTION_BACKEND_SET_CONTENT,
-              editorKey: editorKey!,
-              props: { content } as BackendSetContentActionProps,
-            };
+                ...ACTION_BACKEND_SET_CONTENT,
+                editorKey: editorKey!,
+                props: { content } as BackendSetContentActionProps,
+              };
           actions.setAction(action);
         },
       );
 
       addListener('document', (e: any, commandMsg: ServerMessageCommand) => {
-        const { editorKey, command, path, configurationName, atLine } = commandMsg;
+        const { editorKey, command, path, configurationName, atLine } =
+          commandMsg;
         let props: Record<string, any> = {};
         let baseAction: BaseEditorAction;
         switch (command) {
@@ -180,7 +200,7 @@ export class LocalBackend implements Backend {
                 configurationName,
               } as DocumentContext,
               atLine,
-            } as DocumentOpenActionProps
+            } as DocumentOpenActionProps;
             break;
           case 'save':
             baseAction = ACTION_DOCUMENT_SAVE;
@@ -196,7 +216,7 @@ export class LocalBackend implements Backend {
             break;
           case 'new-project':
             baseAction = ACTION_PROJECT_NEW;
-            break
+            break;
           default:
             return;
         }
@@ -205,7 +225,7 @@ export class LocalBackend implements Backend {
           editorKey: editorKey!,
           props,
         };
-        console.log(`setting DOCUMENT action for editor ${editorKey}`)
+        console.log(`setting DOCUMENT action for editor ${editorKey}`);
         if (action) actions.setAction(action);
       });
 
@@ -251,16 +271,20 @@ export class LocalBackend implements Backend {
     window.ipc.editorReady(editorKey);
   }
 
-  getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents> {
-    return window.ipc.getFolderContents(JSON.stringify(context))
+  getFolderContents(
+    context: Partial<DocumentContext>,
+  ): Promise<FolderContents> {
+    return window.ipc.getFolderContents(JSON.stringify(context));
   }
 
   async createFolder(path: string): Promise<string> {
-    return window.ipc.createFolder(path)
+    return window.ipc.createFolder(path);
   }
 
-  async getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]> {
-    return window.ipc.getBookmarks(bookmarkType)
+  async getBookmarks(
+    bookmarkType?: PundokBookmarkType,
+  ): Promise<PundokBookmark[]> {
+    return window.ipc.getBookmarks(bookmarkType);
   }
 
   async open(context: DocumentContext): Promise<CxDocument> {
@@ -273,8 +297,8 @@ export class LocalBackend implements Backend {
 
   save(doc: CxDocument): Promise<SaveResponse> {
     let preview: Partial<PreviewOptions> | undefined = undefined;
-    const { documentFormat } = doc
-    const outputConverter = documentFormatToOutputConverter(documentFormat)
+    const { documentFormat } = doc;
+    const outputConverter = documentFormatToOutputConverter(documentFormat);
     const openResult = outputConverter?.openResult;
     if (openResult)
       preview = {
@@ -292,15 +316,22 @@ export class LocalBackend implements Backend {
     return window.ipc.debugInfo();
   }
 
-  async getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined> {
+  async getProject(
+    options: GetProjectOptions,
+  ): Promise<PundokEditorProject | undefined> {
     return window.ipc.getProject(options);
   }
 
-  async createProject(path: string, project: Partial<PundokEditorProject>): Promise<void> {
+  async createProject(
+    path: string,
+    project: Partial<PundokEditorProject>,
+  ): Promise<void> {
     return window.ipc.newProject(path, JSON.stringify(project));
   }
 
-  async availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]> {
+  async availableConfigurations(
+    options?: ConfigQueryOptions,
+  ): Promise<ConfigurationSummary[]> {
     const ipc = window.ipc;
     let configs: ConfigurationSummary[] = [
       {
@@ -341,12 +372,30 @@ export class LocalBackend implements Backend {
     return window.ipc.fileContents(filename, options);
   }
 
+  async findResourceFiles(
+    filenameRegex: RegExp,
+    options?: Partial<FindResourceOptions>,
+  ): Promise<ResourceFile[]> {
+    return window.ipc.findResourceFiles(
+      filenameRegex.source,
+      filenameRegex.flags,
+      options,
+    );
+  }
+
   async setValue(key: string, value?: any): Promise<void> {
     window.ipc.setValue(key, JSON.stringify(value));
   }
 
-  pandocFeature(featureName: PandocFeatureName, options?: PandocFeatureOptions): Promise<any[]> {
-    return window.ipc.pandocFeature(featureName, options)
+  getValue(key: BackendValueKey) {
+    return window.ipc.getValue(key);
+  }
+
+  pandocFeature(
+    featureName: PandocFeatureName,
+    options?: PandocFeatureOptions,
+  ): Promise<any[]> {
+    return window.ipc.pandocFeature(featureName, options);
   }
 
   // async openViewer(
@@ -369,58 +418,127 @@ export class LocalBackend implements Backend {
 
   async getInclusionTree(
     project: PundokEditorProject,
+    refresh?: boolean,
   ): Promise<ProjectComponent | undefined> {
     try {
-      const structure = await window.ipc.getInclusionTree(JSON.stringify(project));
+      const structure = await window.ipc.getInclusionTree(
+        JSON.stringify(project),
+        refresh,
+      );
       if (structure) {
         return JSON.parse(structure) as ProjectComponent;
       }
       return undefined;
     } catch (err) {
-      return Promise.reject(err)
+      return Promise.reject(err);
     }
   }
 
   async transformPandocJson(
     doc: Partial<CxDocument>,
-    transform: PandocFilterTransform
+    transform: PandocFilterTransform,
   ): Promise<string> {
-    console.log(doc)
+    console.log(doc);
     return window.ipc.transformJson(
       JSON.stringify(doc),
       JSON.stringify(transform || {}),
     );
   }
 
-  async gotoSource(
-    editorKey: EditorKeyType,
-    info: SynctexInfo,
-  ): Promise<void> {
-    window.ipc.getSourceFile(editorKey, info)
+  async gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void> {
+    window.ipc.getSourceFile(editorKey, info);
   }
 
   async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    window.ipc.showRenderedAgain(hash, editorKey)
+    window.ipc.showRenderedAgain(hash, editorKey);
   }
 
   async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    window.ipc.renderAgain(hash, editorKey)
+    window.ipc.renderAgain(hash, editorKey);
   }
 
   async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
-    const job_as_string: string | undefined = await window.ipc.getRenderingJob(hash)
-    return job_as_string && JSON.parse(job_as_string) as RenderingJob || undefined
+    const job_as_string: string | undefined =
+      await window.ipc.getRenderingJob(hash);
+    return (
+      (job_as_string && (JSON.parse(job_as_string) as RenderingJob)) ||
+      undefined
+    );
   }
 
   async storeInConfiguration(
-    where: ConfigInitField,
-    obj: object,
-    isDeletion: boolean,
-    isProject: boolean,
-    configNameOrProjectPath: string
+    options: ConfigurationUpdateOptions,
   ): Promise<void> {
-    console.log(`calling backend to update configuration`)
-    return window.ipc.updateConfig(where, JSON.stringify(obj), isDeletion, isProject, configNameOrProjectPath)
+    console.log(`calling backend to update configuration`);
+    return window.ipc.updateConfig(options);
+  }
+
+  listGitRepositories() {
+    return window.ipc.listGitRepositories();
+  }
+
+  cloneGitProject(options: CloneGitProjectOptions) {
+    return window.ipc.cloneGitProject(options);
+  }
+
+  gitDefaultBranchName() {
+    return window.ipc.gitDefaultBranchName();
+  }
+
+  publishGitProject(options: LocalGitProjectOptions) {
+    return window.ipc.publishGitProject(options);
+  }
+
+  connectGitProject(options: LocalGitProjectOptions) {
+    return window.ipc.connectGitProject(options);
+  }
+
+  gitProjectStatus(path: string) {
+    return window.ipc.gitProjectStatus(path);
+  }
+
+  initGitProject(path: string) {
+    return window.ipc.initGitProject(path);
+  }
+
+  stageGitProject(path: string, paths: string[]) {
+    return window.ipc.stageGitProject(path, paths);
+  }
+
+  unstageGitProject(path: string, paths: string[]) {
+    return window.ipc.unstageGitProject(path, paths);
+  }
+
+  updateGitignore(path: string, paths: string[]) {
+    return window.ipc.updateGitignore(path, paths);
+  }
+
+  commitGitProject(options: GitCommitOptions) {
+    return window.ipc.commitGitProject(options);
+  }
+
+  gitProjectUpdates(path: string) {
+    return window.ipc.gitProjectUpdates(path);
+  }
+
+  checkGitMerge(path: string, remoteBranch: string) {
+    return window.ipc.checkGitMerge(path, remoteBranch);
+  }
+
+  mergeGitProject(
+    path: string,
+    remoteBranch: string,
+    strategy?: 'ours' | 'theirs',
+  ) {
+    return window.ipc.mergeGitProject(path, remoteBranch, strategy);
+  }
+
+  pushGitProject(path: string, user?: string, password?: string) {
+    return window.ipc.pushGitProject(path, user, password);
+  }
+
+  scanGitProjects(url: string, user: string, password: string) {
+    return window.ipc.scanGitProjects(url, user, password);
   }
 }
 

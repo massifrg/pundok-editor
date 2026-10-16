@@ -8,6 +8,16 @@ import {
   ConfigQueryOptions,
   ConfigurationSummary,
   CxDocument,
+  BackendValueKey,
+  DocRepository,
+  CloneGitProjectOptions,
+  ClonedGitProject,
+  LocalGitProjectOptions,
+  GitProjectStatus,
+  GitRemoteBranch,
+  GitMergeCheck,
+  GitMergeStrategy,
+  GitCommitOptions,
   EditorKeyType,
   FindResourceOptions,
   FolderContents,
@@ -24,8 +34,9 @@ import {
   PundokEditorConfigInit,
   PundokEditorProject,
   QueryResult,
+  ResourceFile,
   SaveResponse,
-  SynctexInfo
+  SynctexInfo,
 } from './common';
 
 export interface Ipc {
@@ -36,59 +47,119 @@ export interface Ipc {
     listener: IpcRendererListener,
   ) => (() => void) | undefined;
 
-  debugInfo: () => Promise<object>
+  debugInfo: () => Promise<object>;
 
-  getFolderContents: (context: string) => Promise<FolderContents>
+  getFolderContents: (context: string) => Promise<FolderContents>;
 
-  createFolder: (path: string) => Promise<string>
+  createFolder: (path: string) => Promise<string>;
 
-  openDocument: (context: string) => Promise<CxDocument>
+  openDocument: (context: string) => Promise<CxDocument>;
 
-  saveDocument: (doc: string) => Promise<SaveResponse>
+  saveDocument: (doc: string) => Promise<SaveResponse>;
 
-  getBookmarks: (bookmarkType?: PundokBookmarkType) => Promise<PundokBookmark[]>
+  getBookmarks: (
+    bookmarkType?: PundokBookmarkType,
+  ) => Promise<PundokBookmark[]>;
 
-  availableConfigurations: (options?: ConfigQueryOptions) => Promise<ConfigurationSummary[]>
+  getValue: (key: BackendValueKey) => Promise<DocRepository[]>;
 
-  editorReady: (editorKey?: EditorKeyType) => Promise<void>
+  availableConfigurations: (
+    options?: ConfigQueryOptions,
+  ) => Promise<ConfigurationSummary[]>;
 
-  loadConfiguration: (name?: string) => Promise<PundokEditorConfigInit | undefined>
+  editorReady: (editorKey?: EditorKeyType) => Promise<void>;
 
-  fileContents: (filename: string, options?: Partial<FindResourceOptions>) => Promise<string>
+  loadConfiguration: (
+    name?: string,
+  ) => Promise<PundokEditorConfigInit | undefined>;
 
-  newProject: (path: string, project: string) => Promise<void>
+  fileContents: (
+    filename: string,
+    options?: Partial<FindResourceOptions>,
+  ) => Promise<string>;
 
-  getProject: (options: GetProjectOptions) => Promise<PundokEditorProject | undefined>
+  findResourceFiles: (
+    filenameRegex: string,
+    regexFlags?: string,
+    options?: Partial<FindResourceOptions>,
+  ) => Promise<ResourceFile[]>;
 
-  getInclusionTree: (project: string) => Promise<string | undefined>
+  newProject: (path: string, project: string) => Promise<void>;
 
-  transformJson: (doc: string, transform: string) => Promise<string>
+  getProject: (
+    options: GetProjectOptions,
+  ) => Promise<PundokEditorProject | undefined>;
+
+  getInclusionTree: (
+    project: string,
+    refresh?: boolean,
+  ) => Promise<string | undefined>;
+
+  transformJson: (doc: string, transform: string) => Promise<string>;
 
   pandocFeature: (
     featureName: PandocFeatureName,
-    options?: PandocFeatureOptions
-  ) => Promise<string[] | PandocFormatExtension[]>
+    options?: PandocFeatureOptions,
+  ) => Promise<string[] | PandocFormatExtension[]>;
 
-  setValue: (key: string, value?: any) => Promise<void>
+  setValue: (key: string, value?: any) => Promise<void>;
 
-  query: (query: string) => Promise<QueryResult[]>
+  query: (query: string) => Promise<QueryResult[]>;
 
-  getSourceFile: (editorKey: EditorKeyType, info: SynctexInfo) => Promise<void>
+  getSourceFile: (editorKey: EditorKeyType, info: SynctexInfo) => Promise<void>;
 
-  showRenderedAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>
+  showRenderedAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>;
 
-  renderAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>
+  renderAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>;
 
-  getRenderingJob: (hash: string) => Promise<string | undefined>
+  getRenderingJob: (hash: string) => Promise<string | undefined>;
 
   updateConfig: (
     where: ConfigInitField,
     obj: string,
     isDeletion: boolean,
     isProject: boolean,
-    configNameOrProjectPath: string
-  ) => Promise<void>
+    configNameOrProjectPath: string,
+  ) => Promise<void>;
 
+  listGitRepositories: () => Promise<DocRepository[]>;
+
+  cloneGitProject: (
+    options: CloneGitProjectOptions,
+  ) => Promise<ClonedGitProject>;
+  gitDefaultBranchName: () => Promise<string>;
+
+  publishGitProject: (
+    options: LocalGitProjectOptions,
+  ) => Promise<ClonedGitProject>;
+
+  connectGitProject: (
+    options: LocalGitProjectOptions,
+  ) => Promise<ClonedGitProject>;
+
+  gitProjectStatus: (path: string) => Promise<GitProjectStatus>;
+  gitProjectUpdates: (path: string) => Promise<GitRemoteBranch[]>;
+  checkGitMerge: (path: string, remoteBranch: string) => Promise<GitMergeCheck>;
+  mergeGitProject: (
+    path: string,
+    remoteBranch: string,
+    strategy?: GitMergeStrategy,
+  ) => Promise<void>;
+  pushGitProject: (
+    path: string,
+    user?: string,
+    password?: string,
+  ) => Promise<void>;
+  initGitProject: (path: string) => Promise<void>;
+  stageGitProject: (path: string, paths: string[]) => Promise<void>;
+  unstageGitProject: (path: string, paths: string[]) => Promise<void>;
+  updateGitignore: (path: string, paths: string[]) => Promise<void>;
+  commitGitProject: (options: GitCommitOptions) => Promise<void>;
+  scanGitProjects: (
+    url: string,
+    user: string,
+    password: string,
+  ) => Promise<Array<{ name: string; description: string; url: string }>>;
 }
 
 contextBridge.exposeInMainWorld('ipc', {
@@ -113,25 +184,45 @@ contextBridge.exposeInMainWorld('ipc', {
   getFolderContents: (context: string) =>
     ipcRenderer.invoke('get-folder-contents', context),
   createFolder: (path: string) => ipcRenderer.invoke('create-folder', path),
-  openDocument: (context: string) => ipcRenderer.invoke('open-document', context),
+  openDocument: (context: string) =>
+    ipcRenderer.invoke('open-document', context),
   saveDocument: (doc: string) => ipcRenderer.invoke('save-document', doc),
   getBookmarks: (bookmarkType?: PundokBookmarkType) =>
     ipcRenderer.invoke('get-bookmarks', bookmarkType),
+  getValue: (key: BackendValueKey) => ipcRenderer.invoke('get-value', key),
   availableConfigurations: (options?: ConfigQueryOptions) =>
     ipcRenderer.invoke('available-configurations', options),
-  editorReady: (editorKey?: EditorKeyType) => ipcRenderer.invoke('editor-ready', editorKey),
-  loadConfiguration: (name?: string) => ipcRenderer.invoke('load-configuration', name),
+  editorReady: (editorKey?: EditorKeyType) =>
+    ipcRenderer.invoke('editor-ready', editorKey),
+  loadConfiguration: (name?: string) =>
+    ipcRenderer.invoke('load-configuration', name),
   fileContents: (filename: string, options?: Partial<FindResourceOptions>) =>
     ipcRenderer.invoke('file-contents', filename, options),
+  findResourceFiles: (
+    filenameRegex: string,
+    regexFlags?: string,
+    options?: Partial<FindResourceOptions>,
+  ) =>
+    ipcRenderer.invoke(
+      'find-resource-files',
+      filenameRegex,
+      regexFlags,
+      options,
+    ),
   newProject: (path: string, project: string) =>
     ipcRenderer.invoke('new-project', path, project),
-  getProject: (options: GetProjectOptions) => ipcRenderer.invoke('get-project', options),
-  getInclusionTree: (project: string) => ipcRenderer.invoke('get-inclusion-tree', project),
+  getProject: (options: GetProjectOptions) =>
+    ipcRenderer.invoke('get-project', options),
+  getInclusionTree: (project: string, refresh?: boolean) =>
+    ipcRenderer.invoke('get-inclusion-tree', project, refresh),
   transformJson: (doc: string, transform: string) =>
     ipcRenderer.invoke('transform-json', doc, transform),
-  pandocFeature: (featureName: PandocFeatureName, options?: PandocFeatureOptions) =>
-    ipcRenderer.invoke('pandoc-feature', featureName, options),
-  setValue: (key: string, value?: any) => ipcRenderer.invoke('set-value', key, value),
+  pandocFeature: (
+    featureName: PandocFeatureName,
+    options?: PandocFeatureOptions,
+  ) => ipcRenderer.invoke('pandoc-feature', featureName, options),
+  setValue: (key: string, value?: any) =>
+    ipcRenderer.invoke('set-value', key, value),
   query: (query: string) => ipcRenderer.invoke('query', query),
   getSourceFile: (editorKey: EditorKeyType, info: SynctexInfo) =>
     ipcRenderer.invoke('get-source-file', editorKey, info),
@@ -139,9 +230,56 @@ contextBridge.exposeInMainWorld('ipc', {
     ipcRenderer.invoke('show-rendered-again', hash, editorKey),
   renderAgain: (hash: string, editorKey: EditorKeyType) =>
     ipcRenderer.invoke('render-again', hash, editorKey),
-  getRenderingJob: (hash: string) => ipcRenderer.invoke('get-rendering-job', hash),
-  updateConfig: (where: ConfigInitField, obj: string, isDeletion: boolean, isProject: boolean, configNameOrProjectPath: string) =>
-    ipcRenderer.invoke('update-config', where, obj, isDeletion, isProject, configNameOrProjectPath),
+  getRenderingJob: (hash: string) =>
+    ipcRenderer.invoke('get-rendering-job', hash),
+  updateConfig: (
+    where: ConfigInitField,
+    obj: string,
+    isDeletion: boolean,
+    isProject: boolean,
+    configNameOrProjectPath: string,
+  ) =>
+    ipcRenderer.invoke(
+      'update-config',
+      where,
+      obj,
+      isDeletion,
+      isProject,
+      configNameOrProjectPath,
+    ),
+  listGitRepositories: () => ipcRenderer.invoke('list-git-repositories'),
+  cloneGitProject: (options: CloneGitProjectOptions) =>
+    ipcRenderer.invoke('clone-git-project', options),
+  gitDefaultBranchName: () => ipcRenderer.invoke('git-default-branch-name'),
+  publishGitProject: (options: LocalGitProjectOptions) =>
+    ipcRenderer.invoke('publish-git-project', options),
+  connectGitProject: (options: LocalGitProjectOptions) =>
+    ipcRenderer.invoke('connect-git-project', options),
+  gitProjectStatus: (path: string) =>
+    ipcRenderer.invoke('git-project-status', path),
+  gitProjectUpdates: (path: string) =>
+    ipcRenderer.invoke('git-project-updates', path),
+  checkGitMerge: (path: string, remoteBranch: string) =>
+    ipcRenderer.invoke('check-git-merge', path, remoteBranch),
+  mergeGitProject: (
+    path: string,
+    remoteBranch: string,
+    strategy?: GitMergeStrategy,
+  ) => ipcRenderer.invoke('merge-git-project', path, remoteBranch, strategy),
+  pushGitProject: (path: string, user?: string, password?: string) =>
+    ipcRenderer.invoke('push-git-project', path, user, password),
+  initGitProject: (path: string) =>
+    ipcRenderer.invoke('init-git-project', path),
+  stageGitProject: (path: string, paths: string[]) =>
+    ipcRenderer.invoke('stage-git-project', path, paths),
+  unstageGitProject: (path: string, paths: string[]) =>
+    ipcRenderer.invoke('unstage-git-project', path, paths),
+  updateGitignore: (path: string, paths: string[]) =>
+    ipcRenderer.invoke('update-gitignore', path, paths),
+  commitGitProject: (options: GitCommitOptions) =>
+    ipcRenderer.invoke('commit-git-project', options),
+  scanGitProjects: (url: string, user: string, password: string) =>
+    ipcRenderer.invoke('scan-git-projects', url, user, password),
 } as Ipc);
 
 window.addEventListener('DOMContentLoaded', () => {

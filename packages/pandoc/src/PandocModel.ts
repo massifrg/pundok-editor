@@ -557,7 +557,7 @@ export class Attr implements PandocItem {
       obj.id || '',                         // no null or undefined identifier
       (obj.classes || []).filter(c => !!c), // no empty classes
       Object.fromEntries(Object.entries(obj.attributes || {})
-        .filter(([k, v]) => [k, v || '']))  // no null or undefined values
+        .filter(([_, v]) => !!v))           // no null or undefined values
     );
   }
 

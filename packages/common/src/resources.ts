@@ -30,22 +30,37 @@ export const RESOURCE_SUBPATHS: Record<ResourceType, string[]> = {
   template: ['templates'],
   referenceDoc: ['templates'],
   script: ['scripts'],
-  index: ['indices'],
+  index: ['indices', 'indexes'],
   other: ['other'],
 };
+
+export type ResourceSearchMode = 'loose' | 'strict';
 
 /** structure used to find a resource for a document */
 export interface FindResourceOptions {
   kind: ResourceType;
   project: PundokEditorProject | string;
   configurationName: string;
+  /** Whether to match files only by name or also verify their contents. */
+  searchMode: ResourceSearchMode;
+  /** Localized terms that identify a Pandoc filter in its initial comments. */
+  filterSearchTerms: string[];
   base64?: boolean;
+}
+
+export type ResourceFileProvenance = 'project' | 'configuration' | 'common';
+
+export interface ResourceFile {
+  path: string;
+  sourcePath: string;
+  provenance: ResourceFileProvenance;
+  configurationName?: string;
 }
 
 /**
  * Provide an array of possible resource types from the extension of a filename.
  * @param ext The extension of the filename.
- * @returns 
+ * @returns
  */
 export function resourceTypesFromExtension(ext: string): ResourceType[] {
   switch (ext) {
@@ -57,7 +72,7 @@ export function resourceTypesFromExtension(ext: string): ResourceType[] {
     case 'odt':
       return ['referenceDoc'];
     case 'txt':
-      return ['other']
+      return ['other'];
     default:
       return [];
   }

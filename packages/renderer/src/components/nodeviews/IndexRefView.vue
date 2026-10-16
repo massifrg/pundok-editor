@@ -1,9 +1,14 @@
 <template>
   <node-view-wrapper class="inline-wrapper draggable-item">
     <span class="p-pa-xs" :style="{ backgroundColor: isUnderCursor ? '#3584e4' : '' }">
-      <q-icon size="sm" :name="iconSvg" :style="{ color: color }" :title="title">
-        <q-badge v-if="!idref" color="red" floating rounded :style="{ color: overColor }" />
-      </q-icon>
+      <span class="index-icon">
+        <q-icon size="sm" :name="iconSvg" :style="{ color: color }" :title="title">
+          <q-badge v-if="!idref" color="red" floating rounded :style="{ color: overColor }" />
+          <q-badge v-if="rangeIcon" size="xs" floating rounded :style="{ backgroundColor: color }">
+            <q-icon size="0.65rem" :name="rangeIcon" :style="{ color: rangeColor }" />
+          </q-badge>
+        </q-icon>
+      </span>
     </span>
     <node-view-content as="span" class="content" />
   </node-view-wrapper>
@@ -17,11 +22,19 @@ import {
   DEFAULT_INDEX_NAME,
   Index,
   INDEX_NAME_ATTR,
+  INDEX_RANGE_ATTR,
   INDEX_REF_TERM_TEXT,
   INDEXED_TEXT_ATTR
 } from '../../common';
-import { getEditorConfiguration, getIndexingState } from '../../schema';
+import {
+  getEditorConfiguration,
+  getIndexingState,
+  INDEX_RANGE_START,
+  INDEX_RANGE_STOP,
+} from '../../schema';
 import { mergeIndices } from '../../schema/helpers/indices';
+import { contrastingColor } from '../helpers/color';
+import { setupQuasarIcons } from '../helpers/quasarIcons';
 
 export default {
   components: {
@@ -30,6 +43,10 @@ export default {
   },
 
   props: nodeViewProps,
+
+  setup() {
+    setupQuasarIcons();
+  },
 
   computed: {
     configuration() {
@@ -72,6 +89,15 @@ export default {
     },
     iconSvg() {
       return this.index && this.index.iconSvg || DEFAULT_INDEX_ICON_SVG;
+    },
+    rangeIcon() {
+      const range = this.node.attrs?.kv?.[INDEX_RANGE_ATTR];
+      if (range === INDEX_RANGE_START) return 'index_range_start';
+      if (range === INDEX_RANGE_STOP) return 'index_range_stop';
+      return undefined;
+    },
+    rangeColor() {
+      return contrastingColor(this.color);
     },
     color() {
       if (this.isUnderCursor) return 'white';

@@ -1,5 +1,5 @@
 import { MarkType, Node as PmNode, Schema } from '@tiptap/pm/model';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { PluginKey } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import {
   CustomStyleInstance,
@@ -16,15 +16,13 @@ import {
   TypeOrNode,
   UpdateNodeOrMarkCallback,
   nodeTypeOf,
-  updateAttributesCommand,
+  updateAttributesTiptapCommand,
 } from './HelperCommandsExtension';
 import { CommandProps } from '@tiptap/vue-3';
-import { cloneDeep, isArray, isString } from 'lodash-es';
+import { cloneDeep, isString } from 'lodash-es';
 import { setMarkNoAtoms, toggleMarkNoAtoms } from '../../commands';
 import {
   addClass,
-  getDocState,
-  META_UPDATE_DOC_STATE,
   setCustomClassAttr,
   setCustomStyleAttr,
   setCustomStyleAttribute,
@@ -129,41 +127,6 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
     ];
   },
 
-  // addProseMirrorPlugins() {
-  //   const storage = this.storage;
-  //   return [
-  //     new Plugin({
-  //       key: customStylePluginKey,
-  //       state: {
-  //         init(config, state) { },
-  //         apply(tr, pluginState, oldState, newState) {
-  //           const updateDocState = tr.getMeta(META_UPDATE_DOC_STATE);
-  //           if (
-  //             !storage.styleAttrForCustomStyle ||
-  //             updateDocState?.configuration
-  //           ) {
-  //             const configuration: PundokEditorConfig | undefined =
-  //               updateDocState?.configuration ||
-  //               getDocState(newState)?.configuration;
-  //             if (configuration) {
-  //               const cs2style: Record<string, string> = {};
-  //               configuration?.customStyles?.forEach((styleDef) => {
-  //                 const cssProps = styleDef && styleDef.css;
-  //                 if (isArray(cssProps)) {
-  //                   cs2style[styleDef.name] = cssProps
-  //                     .map(([prop, value]) => `${prop}: ${value}`)
-  //                     .join('; ');
-  //                 }
-  //               });
-  //               storage.styleAttrForCustomStyle = cs2style;
-  //             }
-  //           }
-  //         },
-  //       },
-  //     }),
-  //   ];
-  // },
-
   addCommands() {
     return {
       setCustomStyle:
@@ -199,7 +162,7 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
                 }),
               );
             }
-            return updateAttributesCommand(
+            return updateAttributesTiptapCommand(
               typeOrNode,
               setNodeCustomStyleCallback(typeOrNode, cs, schema),
             )({ ...cp, tr });
@@ -233,7 +196,7 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
               return true;
             } else {
               const schema = cp.state.schema;
-              return updateAttributesCommand(
+              return updateAttributesTiptapCommand(
                 typeOrNode,
                 unsetNodeCustomStyleCallback(typeOrNode, cs, schema),
               )(cp);
@@ -313,7 +276,7 @@ export const CustomStyleExtension = Extension.create<CustomStyleOptions>({
               cs,
               schema,
             );
-            return updateAttributesCommand(typeOrNode, (n) =>
+            return updateAttributesTiptapCommand(typeOrNode, (n) =>
               isCustomStyleActive(cs, n) ? unsetCallback(n) : setCallback(n),
             )(cp);
           },

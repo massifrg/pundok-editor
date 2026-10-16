@@ -1,0 +1,260 @@
+<template>
+  <q-dialog :model-value="visible" @hide="$emit('close')">
+    <q-card style="min-width: 36rem">
+      <q-card-section class="text-h6">{{ title }}</q-card-section>
+      <q-card-section>
+        <q-input
+          v-model="url"
+          :label="$t('gitRepositoryDialog.repositoryUrl')"
+          outlined
+          :disable="busy"
+        />
+        <q-input
+          v-model="user"
+          :label="$t('gitRepositoryDialog.username')"
+          outlined
+          class="q-mt-sm"
+          :disable="busy"
+        />
+        <q-input
+          v-model="password"
+          :label="$t('gitRepositoryDialog.password')"
+          type="password"
+          outlined
+          class="q-mt-sm"
+          :disable="busy"
+        />
+        <q-input
+          v-if="mode === 'clone'"
+          v-model="destination"
+          :label="$t('gitRepositoryDialog.destination')"
+          outlined
+          class="q-mt-sm"
+          readonly
+          :disable="busy"
+        >
+          <template #append
+            ><q-btn flat icon="folder" @click="chooseDestination"
+          /></template>
+        </q-input>
+        <q-select
+          v-if="mode === 'clone' && projects.length"
+          v-model="selectedProject"
+          :options="projects"
+          option-label="name"
+          :label="$t('gitRepositoryDialog.project')"
+          outlined
+          class="q-mt-sm"
+          :disable="busy"
+        />
+        <q-checkbox
+          v-if="mode === 'publish'"
+          v-model="privateRepository"
+          :label="$t('gitRepositoryDialog.privateRepository')"
+          class="q-mt-sm"
+          :disable="busy"
+        />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-circular-progress
+          v-if="busy"
+          indeterminate
+          rounded
+          size="1.5rem"
+          class="q-mr-sm"
+        />
+        <q-btn
+          v-if="mode === 'clone'"
+          :label="$t('gitRepositoryDialog.scan')"
+          :disable="busy || !url || !user"
+          @click="scan"
+        />
+        <q-btn
+          :label="actionLabel"
+          color="primary"
+          :disable="busy || !url || (mode === 'clone' && !destination)"
+          @click="mode === 'clone' ? openCloneBranchDialog() : submit()"
+        />
+        <q-btn
+          :label="$t('gitRepositoryDialog.cancel')"
+          :disable="busy"
+          @click="$emit('close')"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="cloneBranchDialogVisible">
+    <q-card style="min-width: 30rem">
+      <q-card-section class="text-h6">
+        {{ $t('gitRepositoryDialog.branchTitle') }}
+      </q-card-section>
+      <q-card-section>
+        <q-input
+          v-model="cloneBranch"
+          :label="$t('gitRepositoryDialog.branch')"
+          outlined
+          autofocus
+          @keyup.enter="confirmClone"
+        />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn
+          :label="$t('gitRepositoryDialog.cancel')"
+          @click="cloneBranchDialogVisible = false"
+        />
+        <q-btn
+          color="primary"
+          :label="$t('gitRepositoryDialog.clone')"
+          :disable="!cloneBranch.trim()"
+          @click="confirmClone"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+</template>
+
+<script lang="ts">
+import type { PropType } from 'vue';
+import type { Editor } from '@tiptap/vue-3';
+import { mapState } from 'pinia';
+import { useBackend } from '../stores';
+import { showSelectFolderDialog } from './helpers';
+import type { PundokEditorProject } from '../common';
+
+export default {
+  props: {
+    visible: Boolean,
+    mode: { type: String, required: true },
+    editor: { type: Object as PropType<Editor>, default: undefined },
+    projectPath: { type: String, default: '' },
+    project: {
+      type: Object as PropType<PundokEditorProject>,
+      default: undefined,
+    },
+  },
+  emits: ['close', 'done'],
+  data() {
+    return {
+      url: '',
+      user: '',
+      password: '',
+      destination: '',
+      busy: false,
+      privateRepository: true,
+      projects: [] as Array<{ name: string; description: string; url: string }>,
+      selectedProject: undefined as
+        { name: string; description: string; url: string } | undefined,
+      cloneBranchDialogVisible: false,
+      cloneBranch: '',
+    };
+  },
+  computed: {
+    ...mapState(useBackend, ['backend']),
+    title(): string {
+      return this.mode === 'clone'
+        ? this.$t('gitRepositoryDialog.cloneTitle')
+        : this.mode === 'publish'
+          ? this.$t('gitRepositoryDialog.shareTitle')
+          : this.$t('gitRepositoryDialog.connectTitle');
+    },
+    actionLabel(): string {
+      return this.mode === 'clone'
+        ? this.$t('gitRepositoryDialog.clone')
+        : this.mode === 'publish'
+          ? this.$t('gitRepositoryDialog.share')
+          : this.$t('gitRepositoryDialog.connect');
+    },
+  },
+  methods: {
+    async openCloneBranchDialog() {
+      this.cloneBranch =
+        this.user || (await this.backend?.gitDefaultBranchName()) || 'user';
+      this.cloneBranchDialogVisible = true;
+    },
+    async confirmClone() {
+      if (!this.cloneBranch.trim()) return;
+      this.cloneBranchDialogVisible = false;
+      await this.submit(this.cloneBranch.trim());
+    },
+    chooseDestination() {
+      if (!this.editor) return;
+      showSelectFolderDialog({
+        editor: this.editor,
+        options: { prompt: this.$t('gitRepositoryDialog.selectDestination') },
+        callback: ({ path }) => {
+          if (path) this.destination = path;
+        },
+      });
+    },
+    async scan() {
+      if (!this.backend || this.busy) return;
+      this.busy = true;
+      try {
+        this.projects = await this.backend.scanGitProjects(
+          this.url,
+          this.user,
+          this.password,
+        );
+        this.selectedProject = this.projects[0];
+      } finally {
+        this.busy = false;
+      }
+    },
+    async submit(branch?: string) {
+      if (!this.backend || this.busy) return;
+      this.busy = true;
+      try {
+        const remote = this.repositoryUrl(
+          this.selectedProject?.url || this.url,
+          this.selectedProject?.name || this.project?.name,
+        );
+        const result =
+          this.mode === 'clone'
+            ? await this.backend.cloneGitProject({
+                url: remote,
+                user: this.user,
+                password: this.password,
+                branch,
+                destination: this.destination,
+              })
+            : this.mode === 'publish'
+              ? await this.backend.publishGitProject({
+                  projectPath: this.projectPath,
+                  url: remote,
+                  user: this.user,
+                  password: this.password,
+                  private: this.privateRepository,
+                })
+              : await this.backend.connectGitProject({
+                  projectPath: this.projectPath,
+                  url: remote,
+                  user: this.user,
+                  password: this.password,
+                });
+        this.$emit('done', result);
+        this.$emit('close');
+      } finally {
+        this.busy = false;
+      }
+    },
+    repositoryUrl(url: string, projectName?: string): string {
+      if (!projectName) return url;
+      try {
+        const parsed = new URL(url);
+        const parts = parsed.pathname.split('/').filter(Boolean);
+        if (parts.length >= 2) return url;
+        const path = parsed.pathname.replace(/\/+$/, '');
+        const missingParts = parts.length
+          ? [projectName]
+          : [this.user, projectName];
+        parsed.pathname = `${path}/${missingParts
+          .map((part) => encodeURIComponent(part))
+          .join('/')}`;
+        return parsed.toString();
+      } catch {
+        return url;
+      }
+    },
+  },
+};
+</script>

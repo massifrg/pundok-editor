@@ -92,7 +92,9 @@ export default defineComponent({
       const state = this.editor.state;
       if (newValue && state) {
         const docState = getDocState(state);
-        const json = getDocAsJsonString(state);
+        const json = getDocAsJsonString(state, {
+          noteStyles: docState?.configuration?.noteStyles,
+        });
         // console.log(json);
         try {
           const transformed = await this.backend?.transformPandocJson(
@@ -107,7 +109,10 @@ export default defineComponent({
               type: 'pandoc-filter',
               fromFormat: 'json',
               toFormat: 'markdown',
-              pandocOptions: ['--wrap=none', '-s'],
+              pandocOptions: [
+                ['wrap', 'none'],
+                ['s'],
+              ],
             },
           );
           if (transformed)
@@ -141,7 +146,7 @@ export default defineComponent({
             type: 'pandoc-filter',
             fromFormat: 'markdown',
             toFormat: 'json',
-            pandocOptions: ['-s'],
+            pandocOptions: [['s']],
           },
         );
         // console.log(content);

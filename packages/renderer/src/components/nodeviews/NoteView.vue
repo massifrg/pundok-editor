@@ -44,7 +44,8 @@ import {
   DEFAULT_NOTE_TYPE,
   DEFAULT_NOTE_TEXT_COLOR,
   DEFAULT_NOTE_BACKGROUND_COLOR,
-  MarkerConversion
+  MarkerConversion,
+  emptyIdentifier
 } from '../../common';
 import { getEditorConfiguration, getEditorDocState } from '../../schema';
 import { mapState } from 'pinia'
@@ -160,8 +161,7 @@ export default {
     },
     idValue() {
       const id = this.node.attrs.id;
-      if (id) return `[id=${id}]`;
-      return '[no id]';
+      return emptyIdentifier(id) ? '[no id]' : `[id=${id}]`;
     },
   },
 

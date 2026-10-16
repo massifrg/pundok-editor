@@ -1,5 +1,6 @@
 <template>
-  <q-btn-dropdown v-if="configurations.length > 1" class="toolbar-button" :label="currentConfigurationName"
+  <q-btn-dropdown v-if="configurations.length > 1" class="toolbar-button"
+    :label="currentProjectName || currentConfigurationName"
     :title="title" icon="reload_with_other_configuration" dense dropdown-icon="menu_down" @click="" elevation="3"
     size="sm" color="grey-5" auto-close>
     <q-list>
@@ -20,7 +21,7 @@ import { ConfigurationSummary } from '../common';
 import { useBackend } from '../stores';
 
 export default {
-  props: ['currentConfigurationName', 'title'],
+  props: ['currentConfigurationName', 'currentProjectName', 'title'],
   emits: ['change-configuration'],
   data() {
     return {

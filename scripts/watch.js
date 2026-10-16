@@ -48,7 +48,7 @@ const setupMainPackageWatcher = ({ config: { server } }) => {
   {
     const protocol = server.https ? 'https:' : 'http:';
     const host = server.host || 'localhost';
-    const port = server.port; // Vite searches for and occupies the first free port: 3000, 3001, 3002 and so on
+    const port = server.port; // Vite searches for and occupies the first free port: 3001, 3001, 3002 and so on
     const path = '/';
     process.env.VITE_DEV_SERVER_URL = `${protocol}//${host}:${port}${path}`;
   }
@@ -71,7 +71,11 @@ const setupMainPackageWatcher = ({ config: { server } }) => {
       }
 
       const argv = process.argv.slice(2);
-      spawnProcess = spawn(String(electronPath), ['.', ...argv]);
+      const electronArgs =
+        process.platform === 'linux'
+          ? ['.', '--no-sandbox', ...argv]
+          : ['.', ...argv];
+      spawnProcess = spawn(String(electronPath), electronArgs);
 
       spawnProcess.stdout.on(
         'data',

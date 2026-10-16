@@ -15,6 +15,8 @@ export const Link = TiptapLink.extend<LinkOptions>({
     return {
       openOnClick: true,
       linkOnPaste: true,
+      // support for GitHub-style markdown links — disabled by default
+      markdownLinks: false,
       autolink: true,
       defaultProtocol: 'http',
       protocols: [],

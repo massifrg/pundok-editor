@@ -1,8 +1,9 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { Node as PmNode } from '@tiptap/pm/model';
+import type { Command } from '@tiptap/pm/state';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { Component } from 'vue';
-import { IndexRefView } from '../../components';
+import IndexRefView from '../../components/nodeviews/IndexRefView.vue';
 import {
   DEFAULT_INDEX_NAME,
   DEFAULT_INDEX_REF_CLASS,
@@ -15,6 +16,7 @@ import {
 } from '../../common';
 import { documentIndices } from '../helpers/indices';
 import { getSpanAttrs } from '../helpers';
+import { asTiptapCommand } from '../helpers';
 
 export const INDEX_RANGE_START_CLASS = 'index-start';
 export const INDEX_RANGE_STOP_CLASS = 'index-stop';
@@ -64,48 +66,6 @@ export const IndexRef = Node.create<IndexRefOptions>({
     };
   },
 
-  // addAttributes() {
-  //   return {
-  //     indexName: {
-  //       default: DEFAULT_INDEX_NAME,
-  //       parseHTML: (element) => element.getAttribute('data-index-name'),
-  //       renderHTML: (attributes) => ({
-  //         'data-index-name': attributes.indexName,
-  //       }),
-  //     },
-  //     idref: {
-  //       default: null,
-  //       parseHTML: (element) => element.getAttribute('idref'),
-  //       renderHTML: ({ idref }) => (idref ? { idref } : {}),
-  //     },
-  //     indexRange: {
-  //       default: INDEX_RANGE_NONE,
-  //       parseHTML(element: HTMLElement) {
-  //         const cl = element.classList;
-  //         const isStart = cl.contains(INDEX_RANGE_START_CLASS);
-  //         const isStop = cl.contains(INDEX_RANGE_STOP_CLASS);
-  //         return isStart === isStop
-  //           ? INDEX_RANGE_NONE
-  //           : isStart
-  //           ? INDEX_RANGE_START
-  //           : INDEX_RANGE_STOP;
-  //       },
-  //       renderHTML: ({ indexRange }) =>
-  //         !indexRange || indexRange === INDEX_RANGE_NONE
-  //           ? {}
-  //           : {
-  //               class:
-  //                 indexRange === INDEX_RANGE_START
-  //                   ? INDEX_RANGE_START_CLASS
-  //                   : INDEX_RANGE_STOP_CLASS,
-  //             },
-  //     },
-  //     indexedText: {
-  //       default: null,
-  //     },
-  //   };
-  // },
-
   parseHTML() {
     return [
       {
@@ -141,69 +101,73 @@ export const IndexRef = Node.create<IndexRefOptions>({
 
   addCommands() {
     return {
-      propagateIdref:
-        (
-          refNode: PmNode,
-          propagate: (
-            refNode: PmNode,
-            node: PmNode,
-          ) => boolean = defaultPropagate,
-        ) =>
-          ({ dispatch, state, tr }) => {
-            if (refNode.type.name !== NODE_NAME_INDEX_REF) return false;
-            const idref = refNode.attrs.kv.idref;
-            if (!idref) return false;
-            if (dispatch) {
-              state.doc.descendants((node, pos) => {
-                if (refNode !== node && node.type.name === NODE_NAME_INDEX_REF) {
-                  if (propagate(refNode, node)) {
-                    const newAttrs = {
-                      ...node.attrs,
-                      kv: { ...node.attrs.kv, idref },
-                    };
-                    tr.setNodeMarkup(pos, null, newAttrs);
-                  }
-                }
-                return true;
-              });
-              dispatch(tr);
-            }
-            return true;
-          },
-      fixIndexRefs: () => ({ dispatch, state, tr }) => {
-        const { doc, schema } = state
-        const indices = documentIndices(doc)
-        if (indices.length === 0)
-          return false
-        const indexRefType = schema.nodes[NODE_NAME_INDEX_REF]
-        if (!indexRefType)
-          return false
-        if (dispatch) {
-          const positions: number[] = []
-          const refClassToIndex: Record<string, Index> = {}
-          indices.forEach(index => {
-            refClassToIndex[index.refClass] = index
-          })
-          doc.descendants((node, pos) => {
-            const classes: string[] = node.attrs?.classes
-            if (classes && node.type.name === NODE_NAME_EMPTY_SPAN && classes.find(c => !!refClassToIndex[c]))
-              positions.push(pos)
-          })
-          if (positions.length === 0)
-            return false
-          positions.sort((p1, p2) => p2 - p1)
-          positions.forEach(pos => {
-            const node = doc.nodeAt(pos)
-            if (node)
-              tr.setNodeMarkup(pos, indexRefType, node.attrs, node.marks)
-          })
-          dispatch(tr)
-        }
-        return true
-      }
+      propagateIdref: (
+        refNode: PmNode,
+        propagate: (refNode: PmNode, node: PmNode) => boolean = defaultPropagate,
+      ) => asTiptapCommand(propagateIdrefCommand(refNode, propagate)),
+      fixIndexRefs: () => asTiptapCommand(fixIndexRefsCommand),
     };
   },
 });
+
+const propagateIdrefCommand = (
+  refNode: PmNode,
+  propagate: (refNode: PmNode, node: PmNode) => boolean = defaultPropagate,
+): Command => (state, dispatch) => {
+  if (refNode.type.name !== NODE_NAME_INDEX_REF) return false;
+  const idref = refNode.attrs.kv.idref;
+  if (!idref) return false;
+  if (dispatch) {
+    const tr = state.tr;
+    state.doc.descendants((node, pos) => {
+      if (refNode !== node && node.type.name === NODE_NAME_INDEX_REF) {
+        if (propagate(refNode, node)) {
+          const newAttrs = {
+            ...node.attrs,
+            kv: { ...node.attrs.kv, idref },
+          };
+          tr.setNodeMarkup(pos, null, newAttrs);
+        }
+      }
+      return true;
+    });
+    dispatch(tr);
+  }
+  return true;
+};
+
+const fixIndexRefsCommand: Command = (state, dispatch) => {
+  const tr = state.tr;
+  const { doc, schema } = state
+  const indices = documentIndices(doc)
+  if (indices.length === 0)
+    return false
+  const indexRefType = schema.nodes[NODE_NAME_INDEX_REF]
+  if (!indexRefType)
+    return false
+  if (dispatch) {
+    const positions: number[] = []
+    const refClassToIndex: Record<string, Index> = {}
+    indices.forEach(index => {
+      refClassToIndex[index.refClass] = index
+    })
+    doc.descendants((node, pos) => {
+      const classes: string[] = node.attrs?.classes
+      if (classes && node.type.name === NODE_NAME_EMPTY_SPAN && classes.find(c => !!refClassToIndex[c]))
+        positions.push(pos)
+    })
+    if (positions.length === 0)
+      return false
+    positions.sort((p1, p2) => p2 - p1)
+    positions.forEach(pos => {
+      const node = doc.nodeAt(pos)
+      if (node)
+        tr.setNodeMarkup(pos, indexRefType, node.attrs, node.marks)
+    })
+    dispatch(tr)
+  }
+  return true
+};
 
 function defaultPropagate(refNode: PmNode, node: PmNode): boolean {
   const refkv = refNode.attrs.kv || {};

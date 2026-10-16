@@ -3,16 +3,24 @@ import { currentRepeatableCommandTooltip, SearchTextVariant } from '../schema';
 import { DocState, SelectedNodeOrMark } from '../schema/helpers';
 import {
   ActionProps,
-  AddOrRemoveClassActionProps,
+  AddRemoveRenameClassActionProps,
   DocumentOpenActionProps,
+  ActionDescriptor,
   EditorKeyType,
   MetaMapTextActionProps,
   TableCellVertAlignActionProps,
-  TextAlignmentActionProps
+  TextAlignmentActionProps,
+  AddRemoveRenameAttributeActionProps
 } from '../common';
 import { ActionsGroup } from './actionGroup';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
-import isString from 'lodash-es/isString';
+import {
+  isHighlightedAction as _isHighlightedAction,
+  labelForAction as _labelForAction,
+  tooltipForAction as _tooltipForAction,
+  executeEditorAction as _executeEditorAction,
+} from './helpers'
+import { ACTION_DESCRIPTORS } from '../common'
 
 export type ActionName =
   | 'update-doc-state'
@@ -49,6 +57,10 @@ export type ActionName =
   | 'modify-metamap-entry-key'
   | 'add-class'
   | 'remove-class'
+  | 'rename-class'
+  | 'add-attribute'
+  | 'remove-attribute'
+  | 'rename-attribute'
   | 'new-empty-document'
   | 'new-document'
   | 'setup-viewer'
@@ -97,6 +109,7 @@ export type ActionName =
   | 'move-after-last-sibling'
   | 'move-inside-prev-sibling'
   | 'move-inside-next-sibling'
+  | 'convert-node'
 
 export type LabelForAction =
   | string
@@ -306,18 +319,6 @@ export const ACTION_SHOW_RESULT_MESSAGE: BaseEditorAction = {
   icon: 'result_message',
 }
 
-export const ACTION_SHOW_EXPORT_DIALOG: BaseEditorAction = {
-  name: 'show-export-dialog',
-  label: 'open export dialog',
-  icon: 'export',
-};
-
-export const ACTION_SHOW_IMPORT_DIALOG: BaseEditorAction = {
-  name: 'show-import-dialog',
-  label: 'open import dialog',
-  icon: 'import',
-};
-
 export const ACTION_SHOW_SEARCH_DIALOG: BaseEditorAction = {
   name: 'show-search-dialog',
   label: 'open search dialog',
@@ -401,15 +402,15 @@ export const ACTION_ADD_CLASS: BaseActionForNodeOrMark = {
   icon: 'classes_add',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddRemoveRenameClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
-    return typ && className && editor.can().addPandocAttrClass(typ, className) || false
+    return className && editor.can().addPandocAttrClass(className, typ) || false
   },
   do: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddRemoveRenameClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
-    return typ && className && editor.commands.addPandocAttrClass(typ, className) || false
+    return className && editor.commands.addPandocAttrClass(className, typ) || false
   }
 }
 
@@ -419,15 +420,87 @@ export const ACTION_REMOVE_CLASS: BaseActionForNodeOrMark = {
   icon: 'remove_class',
   canDo: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddRemoveRenameClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
-    return typ && className && editor.can().removePandocAttrClass(typ, className) || false
+    return typ && className && editor.can().removePandocAttrClass(className, typ) || false
   },
   do: (editor, action) => {
     const { nodeOrMark, props } = action || {}
-    const { className, typeName } = (props as AddOrRemoveClassActionProps) || {}
+    const { className, typeName } = (props as AddRemoveRenameClassActionProps) || {}
     const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
-    return typ && className && editor.commands.removePandocAttrClass(typ, className) || false
+    return typ && className && editor.commands.removePandocAttrClass(className, typ) || false
+  }
+}
+
+export const ACTION_RENAME_CLASS: BaseActionForNodeOrMark = {
+  name: 'rename-class',
+  label: 'rename a class',
+  icon: 'rename_class',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { className, newName, typeName } = (props as AddRemoveRenameClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.can().renamePandocAttrClass(className, newName, typ) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { className, newName, typeName } = (props as AddRemoveRenameClassActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && className && editor.commands.renamePandocAttrClass(className, newName, typ) || false
+  }
+}
+
+export const ACTION_ADD_ATTRIBUTE: BaseActionForNodeOrMark = {
+  name: 'add-attribute',
+  label: 'add an attribute',
+  icon: 'add_attribute',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, attrValue, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().addPandocAttribute(attrName, attrValue, typ) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, attrValue, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().addPandocAttribute(attrName, attrValue, typ) || false
+  }
+}
+
+export const ACTION_REMOVE_ATTRIBUTE: BaseActionForNodeOrMark = {
+  name: 'remove-attribute',
+  label: 'remove an attribute',
+  icon: 'remove_attribute',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().removePandocAttribute(attrName, typ) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().removePandocAttribute(attrName, typ) || false
+  }
+}
+
+export const ACTION_RENAME_ATTRIBUTE: BaseActionForNodeOrMark = {
+  name: 'rename-attribute',
+  label: 'rename an attribute',
+  icon: 'rename_attribute',
+  canDo: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, newName, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().renamePandocAttribute(attrName, newName, typ) || false
+  },
+  do: (editor, action) => {
+    const { nodeOrMark, props } = action || {}
+    const { attrName, newName, typeName } = (props as AddRemoveRenameAttributeActionProps) || {}
+    const typ: TypeOrNode | undefined = typeName || nodeOrMark?.node?.type || nodeOrMark?.mark?.type
+    return typ && attrName && editor.can().renamePandocAttribute(attrName, newName, typ) || false
   }
 }
 
@@ -525,6 +598,12 @@ export const ACTION_UNWRAP_CSS_SELECTED: BaseActionForNodeOrMark = {
   icon: 'unwrap'
 }
 
+export const ACTION_CONVERT_NODE: BaseActionForNodeOrMark = {
+  name: 'convert-node',
+  label: 'convert a Node (paragraph, header, ...)',
+  icon: 'convert_node'
+}
+
 export const ACTION_SETUP_VIEWER: BaseEditorAction = {
   name: 'setup-viewer',
   label: 'setup viewer',
@@ -566,9 +645,14 @@ export const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
     !!action?.nodeOrMark?.pos &&
     editor.commands.unwrapNode(action.nodeOrMark.pos),
 };
+export const HORIZONTAL_ALIGNMENTS = ['left', 'center', 'right'] as const;
+export type HorizontalAlignment = typeof HORIZONTAL_ALIGNMENTS[number];
+
+export const VERTICAL_ALIGNMENTS = ['top', 'middle', 'bottom'] as const;
+export type VerticalAlignment = typeof VERTICAL_ALIGNMENTS[number];
 
 export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
-(['left', 'center', 'right'] as string[]).forEach((alignment) => {
+HORIZONTAL_ALIGNMENTS.forEach((alignment) => {
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: `set-text-align`,
     label: `horizontal ${alignment} align`,
@@ -578,7 +662,7 @@ export const TABLE_CELL_ALIGNMENT_ACTIONS: BaseActionForNodeOrMark[] = [];
     props: { alignment } as TextAlignmentActionProps
   });
 });
-(['top', 'middle', 'bottom'] as string[]).forEach((alignment) => {
+VERTICAL_ALIGNMENTS.forEach((alignment) => {
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: 'set-vertical-align',
     label: `vertical ${alignment} align`,
@@ -596,23 +680,9 @@ export function canExecuteEditorAction(
   return !action.canDo || action.canDo(editor, action);
 }
 
-export function executeEditorAction(
-  action: ActionForNodeOrMark,
-  editor: Editor,
-): void {
-  const { canDo: canDoAction, do: doAction } = action;
-  if (canDoAction && doAction) {
-    if (canDoAction(editor, action)) {
-      const bookmark =
-        (action as ActionForNodeOrMark).restoreSelection &&
-        editor.state.selection.getBookmark();
-      doAction(editor, action);
-      if (bookmark) editor.commands.setSelectionFromBookmark(bookmark);
-    }
-  }
-}
+export const executeEditorAction = _executeEditorAction
 
-const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEntries([
+const ACTION_LIST: BaseActionForNodeOrMark[] = [
   ACTION_ADD_MARK,
   ACTION_REMOVE_MARK,
   ACTION_DELETE_CSS_SELECTED,
@@ -625,18 +695,40 @@ const AVAILABLE_ACTIONS: Record<string, BaseActionForNodeOrMark> = Object.fromEn
   ACTION_SET_SPAN,
   ACTION_ADD_CUSTOM_CLASS,
   ACTION_REMOVE_CUSTOM_CLASS,
-  // ACTION_ADD_CLASS,
-  // ACTION_REMOVE_CLASS,
+  ACTION_ADD_CLASS,
+  ACTION_REMOVE_CLASS,
+  ACTION_RENAME_CLASS,
+  ACTION_ADD_ATTRIBUTE,
+  ACTION_REMOVE_ATTRIBUTE,
+  ACTION_RENAME_ATTRIBUTE,
   ACTION_SET_INDEX_REF,
   ACTION_INSERT_RAW_INLINE,
-].map(action => [action.name, action]))
+  ACTION_CONVERT_NODE,
+]
 
-export function availableActionsNames(): string[] {
-  return Object.keys(AVAILABLE_ACTIONS)
+function mergeWithDescriptor(action: BaseActionForNodeOrMark) {
+  const desc = ACTION_DESCRIPTORS[action.name]
+  const label = action.label
+  const icon = action.icon ?? desc?.icon
+  const iconRight = action.iconRight ?? (desc as any)?.iconRight
+  return { ...action, label, icon, iconRight }
 }
 
-export function availableAction(actionName: string): BaseActionForNodeOrMark | undefined {
-  return AVAILABLE_ACTIONS[actionName]
+const AVAILABLE_ACTIONS: Readonly<Record<string, BaseActionForNodeOrMark>> = Object.freeze(Object.fromEntries(
+  ACTION_LIST.map(a => {
+    const merged = mergeWithDescriptor(a)
+    return [a.name, merged]
+  })
+))
+
+export function availableActionsNames(): string[] {
+  const runtimeNames = Object.keys(AVAILABLE_ACTIONS)
+  const descNames = Object.keys(ACTION_DESCRIPTORS)
+  return Array.from(new Set([...runtimeNames, ...descNames]))
+}
+
+export function availableAction(actionName: string): BaseActionForNodeOrMark | ActionDescriptor | undefined {
+  return (AVAILABLE_ACTIONS as any)[actionName] || (ACTION_DESCRIPTORS as any)[actionName]
 }
 
 export function fillAvailableAction(
@@ -648,31 +740,21 @@ export function fillAvailableAction(
   }
 ): ActionForNodeOrMark | undefined {
   const { props, editorKey, nodeOrMark } = fields
-  const available = availableAction(actionName)
-  if (available && editorKey)
-    return { ...available, props, editorKey, nodeOrMark }
+  const available = AVAILABLE_ACTIONS[actionName] as BaseActionForNodeOrMark | undefined
+  if (available && editorKey) return { ...available, props, editorKey, nodeOrMark }
+  const desc = ACTION_DESCRIPTORS[actionName]
+  if (desc && editorKey) return { ...desc, props, editorKey, nodeOrMark } as ActionForNodeOrMark
+  return undefined
 }
 
 export function isHighlightedAction(action: ActionCore, editor?: Editor): boolean {
-  const hl = action?.highlight
-  if (!hl) return false
-  if (hl === true)
-    return true
-  return hl && hl(editor, action) || false
+  return _isHighlightedAction(action as any, editor)
 }
 
-export function labelForAction(action: ActionCore, editor?: Editor): string | undefined {
-  const label = action?.label
-  if (label)
-    return isString(label)
-      ? label
-      : label(editor, action)
+export function labelForAction(action: ActionCore, editor?: Editor, t?: (key: string, vars?: Record<string, any>) => string): string | undefined {
+  return _labelForAction(action as any, editor, t)
 }
 
 export function tooltipForAction(action: ActionCore, editor?: Editor): string | undefined {
-  const tooltip = action?.tooltip
-  if (tooltip)
-    return isString(tooltip)
-      ? tooltip
-      : tooltip(editor, action)
+  return _tooltipForAction(action as any, editor)
 }

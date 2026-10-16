@@ -122,7 +122,7 @@ export function getMark(
   if (m instanceof Mark) {
     mark = m;
   } else {
-    const a: Attrs = { id: null, classes: [], kv: {}, ...(attrs || {}) }
+    const a: Attrs = { id: "", classes: [], kv: {}, ...(attrs || {}) }
     if (m instanceof MarkType)
       mark = m.create(a);
     else

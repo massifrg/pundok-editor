@@ -8,6 +8,7 @@ import type {
   ProjectComponent,
   Query,
   QueryResult,
+  ResourceFile,
   SaveResponse,
   CxDocument,
   PandocFilterTransform,
@@ -21,6 +22,17 @@ import type {
   PandocFeatureName,
   PandocFeatureOptions,
   ConfigQueryOptions,
+  ConfigurationUpdateOptions,
+  BackendValueKey,
+  DocRepository,
+  CloneGitProjectOptions,
+  ClonedGitProject,
+  LocalGitProjectOptions,
+  GitProjectStatus,
+  GitRemoteBranch,
+  GitMergeCheck,
+  GitMergeStrategy,
+  GitCommitOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -32,10 +44,10 @@ export type IpcRendererListener = (
 ) => void;
 
 export type WhyAskingForIdOrPath =
-  | 'edit'      // document to open and edit
+  | 'edit' // document to open and edit
   | 'inclusion' // inclusion of a (sub-)document
-  | 'image'     // image file path
-  | 'project'   // directory for a new project
+  | 'image' // image file path
+  | 'project'; // directory for a new project
 
 /**
  * An interface to connect to the backend, to get the documents' data.
@@ -78,7 +90,7 @@ export interface Backend {
    */
   editorReady(editorKey?: EditorKeyType): Promise<void>;
 
-  /** 
+  /**
    * Get the contents of a folder (a collection of documents and/or sub-folders).
    * @param path The folders path (an array of the names of the path's folders).
    */
@@ -86,7 +98,7 @@ export interface Backend {
 
   /**
    * Get the bookmarks (projects and documents).
-   * @param bookmarkType 
+   * @param bookmarkType
    */
   getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]>;
 
@@ -106,14 +118,19 @@ export interface Backend {
    * Retrieves the project of a document from the backend.
    * @param context
    */
-  getProject(options: GetProjectOptions): Promise<PundokEditorProject | undefined>;
+  getProject(
+    options: GetProjectOptions,
+  ): Promise<PundokEditorProject | undefined>;
 
   /**
    * Create a new project in a directory.
    * @param path
-   * @param project 
+   * @param project
    */
-  createProject(path: string, project: Partial<PundokEditorProject>): Promise<void>;
+  createProject(
+    path: string,
+    project: Partial<PundokEditorProject>,
+  ): Promise<void>;
 
   /**
    * Retrieves a tree-structure of a document made of multiple documents.
@@ -121,6 +138,7 @@ export interface Backend {
    */
   getInclusionTree(
     project: PundokEditorProject,
+    refresh?: boolean,
   ): Promise<ProjectComponent | undefined>;
 
   /**
@@ -133,7 +151,9 @@ export interface Backend {
    * Retrieves all the available configurations for the editor.
    * @param options Options to select only a subset of the configurations.
    */
-  availableConfigurations(options?: ConfigQueryOptions): Promise<ConfigurationSummary[]>;
+  availableConfigurations(
+    options?: ConfigQueryOptions,
+  ): Promise<ConfigurationSummary[]>;
 
   /**
    * Retrieves the configuration with a particular name.
@@ -150,6 +170,22 @@ export interface Backend {
     filename: string,
     options?: Partial<FindResourceOptions>,
   ): Promise<string>;
+
+  /**
+   * Retrieves resource filenames matching a regular expression.
+   * @param filenameRegex The regular expression to match against filenames.
+   * @param options Options that identify the resource directories to search.
+   */
+  findResourceFiles(
+    filenameRegex: RegExp,
+    options?: Partial<FindResourceOptions>,
+  ): Promise<ResourceFile[]>;
+
+  /**
+   * Retrieves a stored backend value.
+   * @param key The value to retrieve.
+   */
+  getValue(key: BackendValueKey): Promise<DocRepository[]>;
 
   /**
    * Query the backend for accessory data, e.g. an index database.
@@ -169,7 +205,7 @@ export interface Backend {
    */
   pandocFeature(
     featureName: PandocFeatureName,
-    options?: PandocFeatureOptions
+    options?: PandocFeatureOptions,
   ): Promise<any[]>;
 
   /**
@@ -188,35 +224,53 @@ export interface Backend {
    */
   transformPandocJson(
     doc: Partial<CxDocument>,
-    transform: PandocFilterTransform
+    transform: PandocFilterTransform,
   ): Promise<string>;
 
-  gotoSource(
-    editorKey: EditorKeyType,
-    info: SynctexInfo,
-  ): Promise<void>
+  gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void>;
 
   renderAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 
   getRenderingJob(hash: string): Promise<RenderingJob | undefined>;
 
-  showAgain(hash: string, editorKey: EditorKeyType): Promise<void>
+  showAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 
   /**
    * Update a configuration or project JSON file adding/updating an object
    * like `CustomStyle`, `Automation`, etc.
-   * @param where The configuration's key where the object must go ("automations", "customStyles", etc.).
-   * @param obj The added/updated object.
-   * @param isProject When `false` the next argument is the configuration name, when `true` it's the project path.
-   * @param configNameOrProjectPath The configuration name or the project path when `isProject` is `true`.
    */
-  storeInConfiguration(
-    where: ConfigInitField,
-    obj: object,
-    isDeletion: boolean,
-    isProject: boolean,
-    configNameOrProjectPath: string
+  storeInConfiguration(options: ConfigurationUpdateOptions): Promise<void>;
+
+  listGitRepositories(): Promise<DocRepository[]>;
+
+  cloneGitProject(options: CloneGitProjectOptions): Promise<ClonedGitProject>;
+  gitDefaultBranchName(): Promise<string>;
+
+  publishGitProject(options: LocalGitProjectOptions): Promise<ClonedGitProject>;
+
+  connectGitProject(options: LocalGitProjectOptions): Promise<ClonedGitProject>;
+
+  gitProjectStatus(path: string): Promise<GitProjectStatus>;
+  gitProjectUpdates(path: string): Promise<GitRemoteBranch[]>;
+  checkGitMerge(path: string, remoteBranch: string): Promise<GitMergeCheck>;
+  mergeGitProject(
+    path: string,
+    remoteBranch: string,
+    strategy?: GitMergeStrategy,
   ): Promise<void>;
+  pushGitProject(path: string, user?: string, password?: string): Promise<void>;
+
+  initGitProject(path: string): Promise<void>;
+  stageGitProject(path: string, paths: string[]): Promise<void>;
+  unstageGitProject(path: string, paths: string[]): Promise<void>;
+  updateGitignore(path: string, paths: string[]): Promise<void>;
+  commitGitProject(options: GitCommitOptions): Promise<void>;
+
+  scanGitProjects(
+    url: string,
+    user: string,
+    password: string,
+  ): Promise<Array<{ name: string; description: string; url: string }>>;
 }
 
 export function createBackend(): Backend {

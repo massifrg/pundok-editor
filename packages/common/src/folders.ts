@@ -4,7 +4,10 @@ export type Folder = {
 }
 
 export type Document = {
-  name: string
+  name: string,
+  size?: number,
+  /** Modification time in milliseconds since the Unix epoch. */
+  lastModified?: number,
 }
 
 export type Place = {

@@ -22,13 +22,15 @@ declare module 'vue-i18n' {
 }
 /* eslint-enable @typescript-eslint/no-empty-object-type */
 
-export default defineBoot(({ app }) => {
+export default defineBoot(({ app }: any) => {
   const locale = Lang.getLocale()
   const i18n = createI18n<{ message: MessageSchema }, MessageLanguages>({
     locale,
     fallbackLocale: 'en',
     legacy: false,
-    messages,
+    // messages may include multiple locales and strict typing can be
+    // cumbersome here; cast to `any` to satisfy the createI18n signature.
+    messages: messages as unknown as any,
   });
 
   // Set i18n instance on app

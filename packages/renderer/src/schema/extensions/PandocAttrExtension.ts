@@ -4,6 +4,7 @@ import {
   pandocAttrIdToHtmlAttrs,
   pandocAttrKvToHtmlAttrs,
 } from '../helpers';
+import { emptyIdentifier } from '../../common';
 
 export interface PandocAttrOptions {
   types: string[];
@@ -57,7 +58,7 @@ export const PandocAttrExtension = Extension.create<PandocAttrOptions>({
             default: '',
             renderHTML: (attributes) => {
               const id = attributes.id;
-              return id ? { id, ...pandocAttrIdToHtmlAttrs(id) } : {};
+              return emptyIdentifier(id) ? {} : { id, ...pandocAttrIdToHtmlAttrs(id) };
             },
           },
           classes: {
@@ -86,17 +87,4 @@ export const PandocAttrExtension = Extension.create<PandocAttrOptions>({
     ];
   },
 
-  addCommands() {
-    return {
-      // setAttr: (alignment: string) => ({ commands }) => {
-      //   if (!this.options.alignments.includes(alignment)) {
-      //     return false
-      //   }
-      //   return this.options.types.every(type => commands.updateAttributes(type, { verticalAlign: alignment }))
-      // },
-      // unsetAttr: () => ({ commands }) => {
-      //   return this.options.types.every(type => commands.resetAttributes(type, 'verticalAlign'))
-      // },
-    };
-  },
 });

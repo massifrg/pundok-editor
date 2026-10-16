@@ -149,7 +149,7 @@ export function documentFormatToInputConverter(format?: DocumentFormat): InputCo
   if (format) {
     switch (format.ftype) {
       case 'format':
-        return pandocFormatToInputConverter(format)
+        return pandocFormatToInputConverter(format as PandocFormatDescription)
       case 'input-converter':
         return format as InputConverter
       default:
@@ -163,7 +163,7 @@ export function documentFormatToOutputConverter(format?: DocumentFormat): Output
   if (format) {
     switch (format.ftype) {
       case 'format':
-        return pandocFormatToOutputConverter(format)
+        return pandocFormatToOutputConverter(format as PandocFormatDescription)
       case 'output-converter':
         return format as OutputConverter
       default:

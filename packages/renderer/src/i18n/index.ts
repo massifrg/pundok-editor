@@ -1,5 +1,5 @@
-import enUS from '../locales/en.json';
-import it from '../locales/it.json';
+import enUS from '../locales/en.json' with { type: 'json' };
+import it from '../locales/it.json' with { type: 'json' };
 import { Lang } from 'quasar';
 import { createI18n } from 'vue-i18n';
 

@@ -1,0 +1,565 @@
+<template>
+  <div class="output-converters-editor">
+    <div class="row items-center q-mb-sm">
+      <div class="text-subtitle1">
+        {{ $t('configEditor.outputConverters.title') }}
+      </div>
+      <q-space />
+      <q-btn dense icon="add" :label="$t('configEditor.outputConverters.newConverter')" @click="newConverter" />
+    </div>
+
+    <q-list v-if="allConverters.length > 0" bordered separator>
+      <q-item v-for="converter in allConverters" :key="converter.name" dense :class="{
+        'text-grey-7': isInherited(converter),
+      }" :style="{ backgroundColor: inheritedBackground(converter.name) }">
+        <q-item-section>
+          <q-item-label class="row items-center no-wrap">
+            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(converter.name) }">
+              {{ converter.name }}
+            </span>
+            <q-badge v-if="converter.default" class="q-ml-sm" color="primary">
+              {{ $t('configEditor.outputConverters.default') }}
+            </q-badge>
+            <q-space />
+            <span class="text-caption text-grey-7">
+              {{ converter.type }} · {{ converter.type === 'pandoc' ? converter.format : converter.command }}
+            </span>
+          </q-item-label>
+          <q-item-label v-if="converter.description" caption>{{
+            converter.description
+            }}</q-item-label>
+          <q-item-label v-if="isInherited(converter)" caption>
+            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(converter.name) }) }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <div v-if="isInherited(converter)" class="row no-wrap items-center q-gutter-xs">
+            <q-btn dense flat round icon="content_copy" :title="$t('configEditor.outputConverters.copyConverter')"
+              @click="copyInheritedConverter(converter)" />
+            <q-toggle :model-value="isRemoved(converter.name)" color="primary" :icon="mdiEyeOff"
+              :title="$t('configEditor.removeInherited', { name: converter.name })"
+              @update:model-value="setRemoved(converter.name, $event)" />
+          </div>
+          <div v-else class="row no-wrap items-center q-gutter-xs">
+            <q-btn dense flat round icon="edit" :title="$t('configEditor.outputConverters.editConverter')"
+              @click="editConverter(converter.name)" />
+            <q-btn dense flat round icon="content_copy" :title="$t('configEditor.outputConverters.copyConverter')"
+              @click="copyProjectConverter(converter)" />
+          </div>
+        </q-item-section>
+      </q-item>
+    </q-list>
+    <div v-else class="text-caption q-pa-sm">
+      {{ $t('configEditor.outputConverters.none') }}
+    </div>
+
+    <q-dialog :model-value="!!draft" @hide="cancelEdit">
+      <q-card v-if="draft" flat bordered class="q-mt-md" style="width: 80vw; max-width: 80vw">
+        <q-card-section class="q-pb-sm">
+          <div class="text-subtitle2">
+            {{
+              $t(
+                editingIndex === null
+                  ? 'configEditor.outputConverters.newTitle'
+                  : 'configEditor.outputConverters.editTitle',
+              )
+            }}
+          </div>
+        </q-card-section>
+        <q-card-section class="q-pt-none q-gutter-md">
+          <q-select v-model="draft.type" :options="converterTypeOptions"
+            :label="$t('configEditor.outputConverters.type')" outlined dense emit-value map-options />
+          <q-input v-model="draft.name" :label="$t('configEditor.outputConverters.name')" outlined dense
+            :error="!!nameError" :error-message="nameError ? $t(nameError) : undefined">
+            <template v-if="nameError" #error>
+              <q-icon name="alert_circle" size="xs" class="q-mr-xs" />
+              {{ $t(nameError) }}
+            </template>
+          </q-input>
+          <q-input v-model="draft.description" :label="$t('configEditor.outputConverters.description')" outlined dense
+            type="textarea" autogrow />
+          <q-checkbox v-model="draft.default" :label="$t('configEditor.outputConverters.default')" />
+          <q-checkbox v-model="draft.longRendering" :label="$t('configEditor.outputConverters.longRendering')" />
+          <q-input v-model="draft.extension" :label="$t('configEditor.outputConverters.extension')" outlined dense />
+          <q-checkbox v-model="draft.dontAskForResultFile"
+            :label="$t('configEditor.outputConverters.dontAskForResultFile')" />
+          <q-input v-model="draft.resultFile" :label="$t('configEditor.outputConverters.resultFile')" outlined dense />
+          <q-select v-model="draft.openResult" :options="openResultOptions"
+            :label="$t('configEditor.outputConverters.openResult')" outlined dense emit-value map-options />
+          <q-input v-model="draft.icon" :label="$t('configEditor.outputConverters.icon')" outlined dense>
+            <template #append>
+              <q-btn flat round dense icon="image" :title="$t('configEditor.indices.chooseIconFile')"
+                @click="chooseIconFile" />
+            </template>
+          </q-input>
+          <div v-if="draft.type === 'pandoc'" class="row q-col-gutter-md">
+            <div class="col">
+              <PandocFormatEditor :model-value="selectedPandocFormat" :format-extensions="selectedFormatExtensions"
+                :selected="selectedOutputChoice === 'format'" @update:model-value="selectPandocFormat"
+                @update:format-extensions="selectedFormatExtensions = $event"
+                @select="selectedOutputChoice = 'format'" />
+            </div>
+            <div class="col">
+              <q-card flat bordered class="output-converters-editor__writer cursor-pointer" :class="{
+                'output-converters-editor__writer--selected':
+                  selectedOutputChoice === 'writer',
+              }" @click="selectWriterCard">
+                <q-card-section>
+                  <div class="text-subtitle2">
+                    {{ $t('configEditor.outputConverters.customWriter') }}
+                  </div>
+                  <div class="text-body2 q-mt-sm">
+                    {{
+                      selectedWriter
+                        ? selectedWriter
+                        : $t('configEditor.outputConverters.chooseCustomWriter')
+                    }}
+                  </div>
+                  <div class="text-caption text-grey">
+                    {{
+                      $t(
+                        'configEditor.outputConverters.customWriterDescription',
+                      )
+                    }}
+                  </div>
+                </q-card-section>
+              </q-card>
+            </div>
+          </div>
+          <div v-else-if="draft.type === 'script'" class="q-gutter-md">
+            <q-input v-model="draft.command" :label="$t('configEditor.outputConverters.command')" outlined dense />
+            <q-input :model-value="draft.commandArgs?.join(' ') || ''"
+              :label="$t('configEditor.outputConverters.commandArgs')" outlined dense
+              @update:model-value="updateCommandArgs" />
+          </div>
+          <PandocFiltersEditor v-if="draft.type === 'pandoc'" :model-value="draft.filters || []"
+            :resource-options="resourceOptions" @update:model-value="draft.filters = $event" />
+          <PandocOptionsEditor v-if="draft.type === 'pandoc'" :model-value="draft.pandocOptions || []"
+            option-type="writer" :editor="editor" @update:model-value="draft.pandocOptions = $event" />
+          <PandocLuaResourceDialog v-if="draft.type === 'pandoc'" v-model="writerDialogOpen" resource-type="writer"
+            :resource-options="resourceOptions" @select="selectWriter" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat :label="$t('configEditor.buttons.cancel')" @click="cancelEdit" />
+          <q-btn color="primary" :label="$t('configEditor.buttons.apply')" :disable="!canApply" @click="applyEdit" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { mdiEyeOff } from '@mdi/js';
+import { useQuasar } from 'quasar';
+import type {
+  BaseOutputConverter,
+  FindResourceOptions,
+  OutputConverter,
+  OutputConverterType,
+  PandocFilter,
+  PandocOption,
+} from '../../common';
+import PandocFormatEditor from './PandocFormatEditor.vue';
+import PandocFiltersEditor from './PandocFiltersEditor.vue';
+import PandocLuaResourceDialog, {
+  type PandocLuaResourceSelection,
+} from './PandocLuaResourceDialog.vue';
+import PandocOptionsEditor from './PandocOptionsEditor.vue';
+import type { Editor } from '@tiptap/vue-3';
+import type { DocumentFormat } from '../../common';
+import { extractSvgPathData, showSelectImageDialog } from '../helpers';
+import { nextCopyName } from '../helpers';
+import { useBackend } from '../../stores';
+
+type OutputConverterDraft = Omit<
+  BaseOutputConverter,
+  'type' | 'description' | 'default'
+> & {
+  type: OutputConverterType;
+  description: string;
+  default: boolean;
+  filters?: (string | PandocFilter)[];
+  pandocOptions?: PandocOption[];
+  formatExtensions?: string[];
+  format?: string;
+  command?: string;
+  commandArgs?: string[];
+};
+
+const props = defineProps<{
+  modelValue: OutputConverter[];
+  inherited?: OutputConverter[];
+  resourceOptions?: Partial<FindResourceOptions>;
+  editor?: Editor;
+  removed?: string[];
+  provenance?: Record<string, string>;
+}>();
+const editor = props.editor;
+const { t } = useI18n();
+const $q = useQuasar();
+const backend = useBackend();
+
+const emit = defineEmits<{
+  'update:modelValue': [value: OutputConverter[]];
+  'update:removed': [value: string[]];
+}>();
+
+const converters = ref<OutputConverter[]>([]);
+const draft = ref<OutputConverterDraft>();
+const editingIndex = ref<number>();
+const nameError = ref('');
+const writerDialogOpen = ref(false);
+const selectedOutputChoice = ref<'format' | 'writer'>('format');
+const selectedPandocFormat = ref('');
+const selectedFormatExtensions = ref<string[]>([]);
+const selectedWriter = ref('');
+const openResultOptions = [
+  { label: 'Editor', value: 'editor' },
+  { label: 'Operating system', value: 'os' },
+];
+const converterTypeOptions: { label: string; value: OutputConverterType }[] = [
+  { label: 'Pandoc', value: 'pandoc' },
+  { label: 'Script', value: 'script' },
+];
+
+const allConverters = computed(() => {
+  const inherited = (props.inherited || [])
+    .filter((item) => !converters.value.some((local) => local.name === item.name))
+    .sort((first, second) =>
+      inheritedSource(first.name).localeCompare(inheritedSource(second.name)),
+    );
+  return [...converters.value, ...inherited];
+});
+
+const canApply = computed(
+  () =>
+    !!draft.value?.name.trim() &&
+    !!(draft.value?.type === 'pandoc'
+      ? selectedOutputChoice.value === 'format'
+        ? selectedPandocFormat.value
+        : selectedWriter.value
+      : draft.value.command?.trim()),
+);
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (!draft.value) converters.value = value.map(copyConverter);
+  },
+  { immediate: true },
+);
+
+watch(
+  () => draft.value?.type,
+  (type, previousType) => {
+    if (type === 'pandoc' && previousType !== 'pandoc' && draft.value) {
+      initializePandocChoice(draft.value);
+    }
+  },
+);
+
+function chooseIconFile(): void {
+  if (!props.editor) return;
+  const svgFormat: DocumentFormat = {
+    ftype: 'image',
+    name: 'svg',
+    extensions: ['svg'],
+    isVectorial: true,
+  };
+  showSelectImageDialog({
+    editor: props.editor,
+    options: {
+      prompt: t('configEditor.outputConverters.chooseIconFile'),
+      startFormat: svgFormat,
+    },
+    callback: (context) => {
+      if (!context.path || !backend.backend) return;
+      void loadIconFile(context.path);
+    },
+  });
+}
+
+async function loadIconFile(path: string): Promise<void> {
+  try {
+    const icon = extractSvgPathData(await backend.backend!.getFileContents(path));
+    if (draft.value) draft.value.icon = icon;
+  } catch (error) {
+    console.error('Could not load SVG output converter icon.', error);
+    $q.notify({
+      type: 'negative',
+      message: t('configEditor.outputConverters.invalidIconFile'),
+    });
+  }
+}
+
+function isRemoved(name: string): boolean {
+  return (props.removed || []).includes(name);
+}
+
+function setRemoved(name: string, value: boolean | null): void {
+  const names = new Set(props.removed || []);
+  if (value) names.add(name);
+  else names.delete(name);
+  emit('update:removed', [...names]);
+}
+
+function inheritedSource(name: string): string {
+  return props.provenance?.[name] || '';
+}
+
+function inheritedBackground(name: string): string | undefined {
+  const source = inheritedSource(name);
+  if (!source) return undefined;
+  const sources = [...new Set(Object.values(props.provenance || {}))];
+  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
+  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
+}
+
+function copyConverter(converter: OutputConverter): OutputConverter {
+  switch (converter.type) {
+    case 'pandoc':
+      return {
+        ...converter,
+        filters: converter.filters ? [...converter.filters] : undefined,
+        pandocOptions: converter.pandocOptions
+          ? [...converter.pandocOptions]
+          : undefined,
+        formatExtensions: converter.formatExtensions
+          ? [...converter.formatExtensions]
+          : undefined,
+      };
+    case 'script':
+      return {
+        ...converter,
+        commandArgs: [...converter.commandArgs],
+      };
+  }
+}
+
+function converterDraft(converter: OutputConverter): OutputConverterDraft {
+  const base = {
+    ...converter,
+    description: converter.description || '',
+    default: converter.default === true,
+  };
+  switch (converter.type) {
+    case 'pandoc':
+      return {
+        ...base,
+        filters: converter.filters ? [...converter.filters] : undefined,
+        pandocOptions: converter.pandocOptions
+          ? [...converter.pandocOptions]
+          : undefined,
+        formatExtensions: converter.formatExtensions
+          ? [...converter.formatExtensions]
+          : undefined,
+      };
+    case 'script':
+      return {
+        ...base,
+        commandArgs: [...converter.commandArgs],
+      };
+    default:
+      return base;
+  }
+}
+
+function newConverter() {
+  editingIndex.value = undefined;
+  nameError.value = '';
+  draft.value = {
+    type: 'pandoc',
+    name: '',
+    description: '',
+    default: false,
+  };
+  selectedOutputChoice.value = 'format';
+  selectedPandocFormat.value = '';
+  selectedFormatExtensions.value = [];
+  selectedWriter.value = '';
+}
+
+function editConverter(name: string) {
+  const index = converters.value.findIndex(
+    (converter) => converter.name === name,
+  );
+  if (index < 0) return;
+  editingIndex.value = index;
+  nameError.value = '';
+  draft.value = converterDraft(converters.value[index]);
+  initializePandocChoice(draft.value);
+}
+
+function isInherited(converter: OutputConverter): boolean {
+  return (
+    !converters.value.some((item) => item.name === converter.name) &&
+    (props.inherited || []).some((item) => item.name === converter.name)
+  );
+}
+
+function copyInheritedConverter(converter: OutputConverter): void {
+  converters.value = [...converters.value, copyConverter(converter)];
+  emit('update:modelValue', converters.value.map(copyConverter));
+}
+
+function copyProjectConverter(converter: OutputConverter): void {
+  const copy = copyConverter(converter);
+  copy.name = nextCopyName(
+    converter.name,
+    converters.value.map((item) => item.name),
+  );
+  converters.value = [...converters.value, copy];
+  emit('update:modelValue', converters.value.map(copyConverter));
+}
+
+function cancelEdit() {
+  draft.value = undefined;
+  editingIndex.value = undefined;
+  nameError.value = '';
+}
+
+function applyEdit() {
+  if (!draft.value) return;
+  const name = draft.value.name.trim();
+  if (!name) {
+    nameError.value = 'configEditor.outputConverters.nameRequired';
+    return;
+  }
+  if (
+    converters.value.some(
+      (converter, index) =>
+        index !== editingIndex.value && converter.name === name,
+    )
+  ) {
+    nameError.value = 'configEditor.outputConverters.duplicateName';
+    return;
+  }
+
+  const converterDraft = {
+    ...draft.value,
+    name,
+    ...(draft.value.type === 'pandoc' && {
+      format:
+        selectedOutputChoice.value === 'format'
+          ? selectedPandocFormat.value
+          : selectedWriter.value,
+      formatExtensions:
+        selectedOutputChoice.value === 'format'
+          ? selectedFormatExtensions.value
+          : undefined,
+    }),
+  };
+  const converter = normalizeConverter(converterDraft);
+  const updated = converters.value.map(copyConverter);
+  if (editingIndex.value === undefined) updated.push(converter);
+  else updated.splice(editingIndex.value, 1, converter);
+  if (converter.default) {
+    updated.forEach((item, index) => {
+      if (index !== (editingIndex.value ?? updated.length - 1))
+        item.default = false;
+    });
+  }
+  converters.value = updated;
+  emit('update:modelValue', updated.map(copyConverter));
+  cancelEdit();
+}
+
+function normalizeConverter(draft: OutputConverterDraft): OutputConverter {
+  const base: Omit<BaseOutputConverter, 'type'> = {
+    name: draft.name,
+    ...(draft.description ? { description: draft.description } : {}),
+    ...(draft.default ? { default: true } : {}),
+    ...(draft.longRendering !== undefined
+      ? { longRendering: draft.longRendering }
+      : {}),
+    ...(draft.extension ? { extension: draft.extension } : {}),
+    ...(draft.dontAskForResultFile !== undefined
+      ? { dontAskForResultFile: draft.dontAskForResultFile }
+      : {}),
+    ...(draft.resultFile ? { resultFile: draft.resultFile } : {}),
+    ...(draft.openResult ? { openResult: draft.openResult } : {}),
+    // ...(draft.feedback ? { feedback: draft.feedback } : {}),
+    ...(draft.icon ? { icon: draft.icon } : {}),
+  };
+  switch (draft.type) {
+    case 'pandoc':
+      return {
+        ...base,
+        type: 'pandoc',
+        format: draft.format || '',
+        ...(draft.filters ? { filters: [...draft.filters] } : {}),
+        ...(draft.pandocOptions
+          ? { pandocOptions: [...draft.pandocOptions] }
+          : {}),
+        ...(draft.formatExtensions
+          ? { formatExtensions: [...draft.formatExtensions] }
+          : {}),
+      };
+    case 'script':
+      return {
+        ...base,
+        type: 'script',
+        command: draft.command || '',
+        commandArgs: draft.commandArgs ? [...draft.commandArgs] : [],
+      };
+  }
+}
+
+function updateCommandArgs(value: string | number | null): void {
+  if (!draft.value || typeof value !== 'string') return;
+  draft.value.commandArgs = value.trim() ? value.trim().split(/\s+/) : [];
+}
+
+function initializePandocChoice(converter: OutputConverterDraft): void {
+  if (converter.type !== 'pandoc') return;
+  const format = converter.format || '';
+  if (isCustomWriter(format)) {
+    selectedOutputChoice.value = 'writer';
+    selectedWriter.value = format;
+    selectedPandocFormat.value = '';
+    selectedFormatExtensions.value = [];
+  } else {
+    selectedOutputChoice.value = 'format';
+    selectedPandocFormat.value = format;
+    selectedFormatExtensions.value = [...(converter.formatExtensions || [])];
+    selectedWriter.value = '';
+  }
+}
+
+function isCustomWriter(format: string): boolean {
+  return format.toLowerCase().endsWith('.lua');
+}
+
+function selectPandocFormat(format: string): void {
+  selectedPandocFormat.value = format;
+  selectedOutputChoice.value = 'format';
+}
+
+function selectWriter(selection: PandocLuaResourceSelection): void {
+  if (!draft.value) return;
+  selectedWriter.value = selection.path.replace(/^.*[\\/]/, '');
+  selectedOutputChoice.value = 'writer';
+}
+
+function selectWriterCard(): void {
+  if (selectedOutputChoice.value === 'writer' || !selectedWriter.value) {
+    writerDialogOpen.value = true;
+  } else {
+    selectedOutputChoice.value = 'writer';
+  }
+}
+</script>
+
+<style scoped>
+.output-converters-editor__writer {
+  min-width: 18rem;
+  height: 100%;
+}
+
+.output-converters-editor__writer--selected {
+  border: 2px solid var(--q-primary);
+  background-color: color-mix(in srgb, var(--q-primary) 10%, transparent);
+}
+</style>

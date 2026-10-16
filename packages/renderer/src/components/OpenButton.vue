@@ -1,17 +1,59 @@
 <script setup lang="ts">
 import { setupQuasarIcons } from './helpers';
-setupQuasarIcons()
+setupQuasarIcons();
 </script>
 
 <script lang="ts">
 import { mapState } from 'pinia';
+import { ACTION_DOCUMENT_OPEN, setActionCommand } from '../actions';
 import {
-  ACTION_DOCUMENT_OPEN,
-  setActionCommand
-} from '../actions';
-import { bookmarkLabel, DocumentBookmark, DocumentOpenActionProps, ProjectBookmark, PundokBookmark } from '../common';
-import { editorKeyFromState, getDocState } from '../schema';
+  bookmarkLabel,
+  DocumentBookmark,
+  DocumentOpenActionProps,
+  getNextProjectComponentAcrossContainers,
+  getParentProjectComponent,
+  getPreviousProjectComponentAcrossContainers,
+  getProjectComponentChildren,
+  ProjectBookmark,
+  PundokBookmark,
+  type ProjectComponent,
+} from '../common';
+import { editorKeyFromState, getDocState, type DocState } from '../schema';
 import { useBackend } from '../stores';
+import { basename, isAbsolute, relative, resolve } from 'path-browserify';
+
+function normalizedProjectSource(src: string): string {
+  return src
+    .replace(/^file:\/\//, '')
+    .replaceAll('\\', '/')
+    .replace(/^\.\/+/, '');
+}
+
+function findProjectSource(
+  structure: ProjectComponent,
+  candidates: string[],
+  projectPath: string,
+): string | undefined {
+  const normalizedCandidates = candidates.map(normalizedProjectSource);
+  const matchesCandidate = (src: string) => {
+    const normalizedSource = normalizedProjectSource(src);
+    if (normalizedCandidates.includes(normalizedSource)) return true;
+    if (!isAbsolute(src) && normalizedSource) {
+      return normalizedCandidates.includes(
+        normalizedProjectSource(resolve(projectPath, src)),
+      );
+    }
+    return false;
+  };
+  if (structure.src && matchesCandidate(structure.src)) return structure.src;
+
+  for (const child of structure.children || []) {
+    const source = findProjectSource(child, candidates, projectPath);
+    if (source) return source;
+  }
+
+  return undefined;
+}
 
 export default {
   props: ['editor'],
@@ -19,53 +61,148 @@ export default {
     return {
       docBookmarks: [] as DocumentBookmark[],
       projectBookmarks: [] as ProjectBookmark[],
-    }
+      activeDocState: undefined as DocState | undefined,
+    };
+  },
+  watch: {
+    editor: {
+      immediate: true,
+      handler(editor: any, previousEditor: any) {
+        previousEditor?.off('transaction', this.refreshDocState);
+        editor?.on('transaction', this.refreshDocState);
+        this.refreshDocState();
+      },
+    },
+  },
+  beforeUnmount() {
+    this.editor?.off('transaction', this.refreshDocState);
   },
   computed: {
     ...mapState(useBackend, ['backend']),
     editorKey() {
-      return editorKeyFromState(this.editor?.state)
+      return editorKeyFromState(this.editor?.state);
+    },
+    project() {
+      return this.activeDocState?.project;
+    },
+    currentProjectSource() {
+      const docState = this.activeDocState;
+      const structure = docState?.projectStructure;
+      const project = this.project;
+      if (!project?.path || !docState?.workingFolder || !docState.documentName)
+        return undefined;
+      const absoluteSource = resolve(
+        docState.workingFolder,
+        docState.documentName,
+      );
+      const projectRelativeSource = relative(project.path, absoluteSource);
+      return structure
+        ? findProjectSource(
+          structure,
+          [
+            absoluteSource,
+            projectRelativeSource,
+            docState.documentName,
+            resolve(project.path, docState.documentName),
+          ],
+          project.path,
+        )
+        : undefined;
+    },
+    previousProjectComponent() {
+      const src = this.currentProjectSource;
+      const structure = this.activeDocState?.projectStructure;
+      return structure && src
+        ? getPreviousProjectComponentAcrossContainers(structure, src)
+        : undefined;
+    },
+    nextProjectComponent() {
+      const src = this.currentProjectSource;
+      const structure = this.activeDocState?.projectStructure;
+      return structure && src
+        ? getNextProjectComponentAcrossContainers(structure, src)
+        : undefined;
+    },
+    parentProjectComponent() {
+      const src = this.currentProjectSource;
+      const structure = this.activeDocState?.projectStructure;
+      return structure && src
+        ? getParentProjectComponent(structure, src)
+        : undefined;
+    },
+    childProjectComponents() {
+      const src = this.currentProjectSource;
+      const structure = this.activeDocState?.projectStructure;
+      return structure && src
+        ? (getProjectComponentChildren(structure, src) ?? [])
+        : [];
     },
   },
   methods: {
+    refreshDocState() {
+      this.activeDocState = getDocState(this.editor?.view?.state);
+    },
     docState() {
-      return getDocState(this.editor)
+      return getDocState(this.editor);
     },
     async loadBookmarks() {
-      this.docBookmarks = (await this.backend?.getBookmarks('document') || []) as DocumentBookmark[]
-      this.projectBookmarks = (await this.backend?.getBookmarks('project') || []) as ProjectBookmark[]
+      this.docBookmarks = ((await this.backend?.getBookmarks('document')) ||
+        []) as DocumentBookmark[];
+      this.projectBookmarks = ((await this.backend?.getBookmarks('project')) ||
+        []) as ProjectBookmark[];
     },
     titleForBookmark(b: PundokBookmark) {
-      const { label, tooltip } = bookmarkLabel(b)
-      return `${label}, ${tooltip}`
+      const { label, tooltip } = bookmarkLabel(b);
+      return `${label}, ${tooltip}`;
     },
     labelForBookmark(b: PundokBookmark) {
-      const { label } = bookmarkLabel(b)
-      return label
+      const { label } = bookmarkLabel(b);
+      return label;
     },
     openDocument() {
       if (this.editorKey)
-        setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {})
+        setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {});
     },
     openProjectBookmark(p: ProjectBookmark) {
       if (this.editorKey)
         setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {
           context: {
-            path: p.url
-          }
-        } as DocumentOpenActionProps)
+            path: p.url,
+          },
+        } as DocumentOpenActionProps);
     },
     openDocBookmark(d: DocumentBookmark) {
       if (this.editorKey)
         setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {
           context: {
             path: d.url,
-            configurationName: d.configurationName
-          }
-        } as DocumentOpenActionProps)
+            configurationName: d.configurationName,
+          },
+        } as DocumentOpenActionProps);
     },
-  }
-}
+    openProjectComponent(component: ProjectComponent) {
+      if (this.editorKey && this.project?.path && component.src)
+        setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {
+          context: {
+            path: resolve(this.project.path, component.src),
+            project: this.project,
+          },
+        } as DocumentOpenActionProps);
+    },
+    projectComponentFilename(component?: ProjectComponent) {
+      return component?.src ? basename(component.src) : '';
+    },
+    projectComponentTooltip(
+      translationKey: string,
+      component?: ProjectComponent,
+    ) {
+      const tooltip = this.$t(translationKey);
+      return component
+        ? `${tooltip}: “${component.title || component.src || component.id}”`
+        : tooltip
+    },
+  },
+};
 </script>
 
 <template>
@@ -104,6 +241,86 @@ export default {
               @click="openDocBookmark(d)">
               <q-item-section>
                 {{ labelForBookmark(d) }}
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-item>
+      <q-separator v-if="
+        project &&
+        (previousProjectComponent?.src ||
+          nextProjectComponent?.src ||
+          parentProjectComponent?.src ||
+          childProjectComponents.length > 0)
+      " />
+      <q-item v-if="project && nextProjectComponent?.src" key="next-project-component"
+        :title="projectComponentTooltip('document.openNextProjectDocument', nextProjectComponent)" clickable
+        v-close-popup @click="openProjectComponent(nextProjectComponent)">
+        <q-item-section>
+          <q-item-label>
+            {{ projectComponentFilename(nextProjectComponent) }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="skip_next" />
+        </q-item-section>
+      </q-item>
+      <q-item v-if="project && previousProjectComponent?.src" key="previous-project-component"
+        :title="projectComponentTooltip('document.openPreviousProjectDocument', previousProjectComponent)" clickable
+        v-close-popup @click="openProjectComponent(previousProjectComponent)">
+        <q-item-section>
+          <q-item-label>
+            {{ projectComponentFilename(previousProjectComponent) }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="skip_previous" />
+        </q-item-section>
+      </q-item>
+      <q-item v-if="project && parentProjectComponent?.src" key="parent-project-component"
+        :title="projectComponentTooltip('document.openParentProjectDocument', parentProjectComponent)" clickable
+        v-close-popup @click="openProjectComponent(parentProjectComponent)">
+        <q-item-section>
+          <q-item-label>
+            {{ projectComponentFilename(parentProjectComponent) }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="package_up" />
+        </q-item-section>
+      </q-item>
+      <q-item v-if="project && childProjectComponents.length === 1" key="only-child-project-component"
+        :title="projectComponentTooltip('document.open', childProjectComponents[0])" clickable v-close-popup
+        @click="openProjectComponent(childProjectComponents[0])">
+        <q-item-section>
+          <q-item-label>
+            {{ projectComponentFilename(childProjectComponents[0]) }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="package_down" />
+        </q-item-section>
+      </q-item>
+      <q-item v-if="project && childProjectComponents.length > 1" key="contained-project-components"
+        :title="$t('document.openContainedProjectDocument')" clickable>
+        <q-item-section>
+          <q-item-label>
+            {{ $t('document.openContainedProjectDocument') }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="package_down" />
+        </q-item-section>
+        <q-menu anchor="top right" self="top left">
+          <q-list>
+            <q-item v-for="(component, index) in childProjectComponents" :key="component.src"
+              :title="projectComponentTooltip('document.open', component)" clickable v-close-popup
+              @click="openProjectComponent(component)">
+              <q-item-section side>
+                <div class="text-right" style="width: 1.5rem">{{ index + 1 }}.</div>
+              </q-item-section>
+              <q-item-section>
+                {{ projectComponentFilename(component) }}
               </q-item-section>
             </q-item>
           </q-list>

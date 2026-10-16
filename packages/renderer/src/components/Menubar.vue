@@ -8,13 +8,14 @@
 
       <SaveButton :editor="editor" :text-color="savedColor" />
 
-      <RenderButton :editor="editor" />
+      <OutputRenderersButton v-if="gui.renderButton" :editor="editor" :rendering-targets="renderingTargets"
+        @render="renderOutput" />
 
-      <span v-if="gui.importButton || gui.exportButton" class="button-separator" />
+      <span v-if="gui.renderButton" class="button-separator" />
 
-      <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
+      <!-- <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
 
-      <span class="button-separator" />
+      <span class="button-separator" /> -->
 
       <IncludeDocumentButton :editor="editor" />
 
@@ -33,7 +34,11 @@
         @click="editor.commands.toggleSwapBlocks()" />
 
       <ToolbarButton icon="toggle_plain" :disabled="!editor.can().togglePlain()" :shortcut="SK.TOGGLE_PLAIN" @click="
-        editor.commands.runRepeatableCommand('togglePlain', $t('togglePlainPara'))" :title="$t('togglePlainPara')" />
+        editor.commands.runRepeatableCommand(
+          'togglePlain',
+          $t('togglePlainPara'),
+        )
+        " :title="$t('togglePlainPara')" />
 
       <CustomWrapperMenu :editor="editor" wrapper-type-name="div" pandoc-type="Div" :shortcut="SK.TOGGLE_DIV" />
 
@@ -41,7 +46,7 @@
 
       <CustomWrapperMenu :editor="editor" wrapper-type-name="figure" pandoc-type="Figure" :shortcut="SK.TOGGLE_FIGURE"
         wrap-icon="figure_wrap" unwrap-icon="figure_unwrap" />
-      <ToolbarButton v-if="inFigure()" icon="caption" :title='$t("wrapIn.Caption")' @click="wrapInFigureCaption()" />
+      <ToolbarButton v-if="inFigure()" icon="caption" :title="$t('wrapIn.Caption')" @click="wrapInFigureCaption()" />
 
       <span class="button-separator" />
 
@@ -49,7 +54,10 @@
         :disabled="!editor.can().toggleBlockquote()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleBlockquote', toggleLabelForNode('blockquote'))
+            .runRepeatableCommand(
+              'toggleBlockquote',
+              toggleLabelForNode('blockquote'),
+            )
             .focus()
             .run()
           " />
@@ -58,7 +66,10 @@
         :disabled="!editor.can().toggleBulletList()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleBulletList', toggleLabelForNode('bulletList'))
+            .runRepeatableCommand(
+              'toggleBulletList',
+              toggleLabelForNode('bulletList'),
+            )
             .focus()
             .run()
           " />
@@ -67,7 +78,10 @@
         :disabled="!editor.can().toggleOrderedList()" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleOrderedList', toggleLabelForNode('orderedList'))
+            .runRepeatableCommand(
+              'toggleOrderedList',
+              toggleLabelForNode('orderedList'),
+            )
             .focus()
             .run()
           " />
@@ -99,6 +113,30 @@
 
       <ToolbarButton v-if="gui.projectStructure && project" icon="project_structure"
         :title="$t('show.projectStructure')" @click="showProjectStructure()" />
+      <q-btn-dropdown v-if="project" :title="$t('projectMenu.title')" icon="menu" color="grey-5" dense size="sm"
+        dropdown-icon="menu_down">
+        <q-list>
+          <q-item clickable v-close-popup @click="showConfigurationEditor()"><q-item-section>{{
+            $t('projectMenu.editConfiguration')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('manageGitProject')"><q-item-section>{{
+            $t('projectMenu.manageChanges')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('checkGitUpdates')"><q-item-section>{{
+            $t('projectMenu.checkUpdates')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('shareGitProject')"><q-item-section>{{
+            $t('projectMenu.share')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('connectGitProject')"><q-item-section>{{
+            $t('projectMenu.connect')
+              }}</q-item-section></q-item>
+          <q-item clickable v-close-popup @click="$emit('cloneGitProject')"><q-item-section>{{
+            $t('projectMenu.clone')
+              }}</q-item-section></q-item>
+        </q-list>
+      </q-btn-dropdown>
+      <ToolbarButton v-else icon="cloud_download" :title="$t('projectMenu.clone')" @click="$emit('cloneGitProject')" />
 
       <q-space />
       <ToolbarButton v-if="gui.isDevelopmentMode" icon="debug" title="debug" @click="debug" />
@@ -128,7 +166,10 @@
         :title="toggleLabelForMark('underline')" :shortcut="SK.TOGGLE_UNDERLINE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleUnderline', toggleLabelForMark('underline'))
+            .runRepeatableCommand(
+              'toggleUnderline',
+              toggleLabelForMark('underline'),
+            )
             .focus()
             .run()
           " />
@@ -136,7 +177,10 @@
         :title="toggleLabelForMark('strikeout')" :shortcut="SK.TOGGLE_STRIKEOUT" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleStrikeout', toggleLabelForMark('strikeout'))
+            .runRepeatableCommand(
+              'toggleStrikeout',
+              toggleLabelForMark('strikeout'),
+            )
             .focus()
             .run()
           " />
@@ -144,18 +188,32 @@
         :title="toggleLabelForMark('superscript')" :shortcut="SK.TOGGLE_SUPERSCRIPT" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSuperscript', toggleLabelForMark('superscript'))
+            .runRepeatableCommand(
+              'toggleSuperscript',
+              toggleLabelForMark('superscript'),
+            )
             .focus()
             .run()
           " />
       <ToolbarButton :icon="iconFor('Subscript')" :styleactive="isActive('subscript')"
-        :title="toggleLabelForMark('subscript')" :shortcut="SK.TOGGLE_SUBSCRIPT"
-        @click="editor.chain().runRepeatableCommand('toggleSubscript', toggleLabelForMark('Subscript')).focus().run()" />
+        :title="toggleLabelForMark('subscript')" :shortcut="SK.TOGGLE_SUBSCRIPT" @click="
+          editor
+            .chain()
+            .runRepeatableCommand(
+              'toggleSubscript',
+              toggleLabelForMark('Subscript'),
+            )
+            .focus()
+            .run()
+          " />
       <ToolbarButton :icon="iconFor('smallcaps')" :styleactive="isActive('smallcaps')"
         :title="toggleLabelForMark('smallCaps')" :shortcut="SK.TOGGLE_SMALLCAPS" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSmallcaps', toggleLabelForMark('smallCaps'))
+            .runRepeatableCommand(
+              'toggleSmallcaps',
+              toggleLabelForMark('smallCaps'),
+            )
             .focus()
             .run()
           " />
@@ -163,7 +221,10 @@
         :title="toggleLabelForMark('singleQuoted')" :shortcut="SK.TOGGLE_SINGLEQUOTE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleSingleQuoted', toggleLabelForMark('singleQuoted'))
+            .runRepeatableCommand(
+              'toggleSingleQuoted',
+              toggleLabelForMark('singleQuoted'),
+            )
             .focus()
             .run()
           " />
@@ -171,7 +232,10 @@
         :title="toggleLabelForMark('doubleQuoted')" :shortcut="SK.TOGGLE_DOUBLEQUOTE" @click="
           editor
             .chain()
-            .runRepeatableCommand('toggleDoubleQuoted', toggleLabelForMark('doubleQuoted'))
+            .runRepeatableCommand(
+              'toggleDoubleQuoted',
+              toggleLabelForMark('doubleQuoted'),
+            )
             .focus()
             .run()
           " />
@@ -271,7 +335,7 @@
 
       <q-badge v-if="gui.showConfiguration && configSummaries.length === 1" color="accent"><b>{{ configuration?.name ||
         'unknown' }}</b></q-badge>
-      <ChooseConfigButton :current-configuration-name="configuration?.name"
+      <ChooseConfigButton :current-configuration-name="configuration?.name" :current-project-name="project?.name"
         :title="$t('document.reloadWithConfiguration')" @change-configuration="reloadWithConfiguration" />
       <q-badge v-if="gui.showEditorKey" color="secondary"><b>{{ editorKey }}</b></q-badge>
     </q-bar>
@@ -281,19 +345,18 @@
 </template>
 
 <script setup lang="ts">
-import { SK } from '../common'
+import { SK } from '../common';
 import { setupQuasarIcons } from './helpers';
-import { t, tfb } from '../i18n'
-setupQuasarIcons()
+import { t, tfb } from '../i18n';
+setupQuasarIcons();
 </script>
 
 <script lang="ts">
+import { defineAsyncComponent } from 'vue';
 import type { Node, Mark } from '@tiptap/pm/model';
 import { MarkRange, NodeWithPos } from '@tiptap/vue-3';
 import BreadCrumb from './BreadCrumb.vue';
-import CharsTableButton from './CharsTableButton.vue';
 import ChooseConfigButton from './ChooseConfigButton.vue';
-import CodemirrorButton from './CodemirrorButton.vue';
 import CustomWrapperMenu from './CustomWrapperMenu.vue';
 import ElementSelectionButton from './ElementSelectionButton.vue';
 import GlobalProceduresDialog from './GlobalProceduresDialog.vue';
@@ -301,24 +364,20 @@ import ImageButton from './ImageButton.vue';
 import IncludeDocumentButton from './IncludeDocumentButton.vue';
 import IndicesButtons from './IndicesButtons.vue';
 import InsertNoteButton from './InsertNoteButton.vue';
-import ImportToolbarButton from './ImportToolbarButton.vue';
-import ExportToolbarButton from './ExportToolbarButton.vue';
 import NewDocumentButton from './NewDocumentButton.vue';
 import RawInlineButton from './RawInlineButton.vue';
 import RawBlockMenu from './RawBlockMenu.vue';
-import RenderButton from './RenderButton.vue';
+import OutputRenderersButton from './OutputRenderersButton.vue';
 import SaveButton from './SaveButton.vue';
-import TableTools from './TableTools.vue';
 import ToolbarButton from './ToolbarButton.vue';
 import WholeDocTransformsButton from './WholeDocTransformsButton.vue';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
-// import TextAlignMenubarItem from "./TextAlignMenubarItem.vue";
-// import VerticalAlignMenubarItem from "./VerticalAlignMenubarItem.vue";
 import {
   COLOR_SAVED_ONLY_AS_COPY,
   COLOR_UNSAVED,
   ConfigurationSummary,
   CustomStyleInstance,
+  OutputConverter,
   MARK_NAME_SPAN,
   NODE_NAME_FIGURE,
   NODE_NAME_FIGURE_CAPTION,
@@ -341,12 +400,20 @@ import {
   EditorGUIPropsClass,
   getEditorGuiProps,
   getTextMarkRangesBetween,
-  iconFor
+  iconFor,
 } from '../schema/helpers';
 import ExportProgress from './ExportProgress.vue';
 import OpenButton from './OpenButton.vue';
 import { showDocStateDialog } from './helpers';
 // import { SK } from '../common'
+
+const CodemirrorButton = defineAsyncComponent(
+  () => import('./CodemirrorButton.vue'),
+);
+const CharsTableButton = defineAsyncComponent(
+  () => import('./CharsTableButton.vue'),
+);
+const TableTools = defineAsyncComponent(() => import('./TableTools.vue'));
 
 export default {
   components: {
@@ -354,28 +421,22 @@ export default {
     CharsTableButton,
     ChooseConfigButton,
     CodemirrorButton,
-    // CustomBlocksButtons,
-    // CustomMarkMenu,
     CustomWrapperMenu,
     ElementSelectionButton,
     ExportProgress,
-    ExportToolbarButton,
     GlobalProceduresDialog,
     ImageButton,
     IncludeDocumentButton,
     IndicesButtons,
     InsertNoteButton,
-    ImportToolbarButton,
     NewDocumentButton,
     OpenButton,
     RawInlineButton,
     RawBlockMenu,
-    RenderButton,
+    OutputRenderersButton,
     SaveButton,
     TableTools,
-    // TextAlignMenubarItem,
     ToolbarButton,
-    // VerticalAlignMenubarItem,
     WholeDocTransformsButton,
   },
   props: [
@@ -383,15 +444,23 @@ export default {
     'currentNodesWithPos',
     'savedChanges',
     'savedChangesAsCopy',
+    'renderingTargets',
   ],
   emits: [
     'openDocument',
     // 'saveContent',
     // 'exportAgain',
     'showConfigurationsDialog',
+    'showConfigurationEditor',
+    'manageGitProject',
+    'checkGitUpdates',
+    'shareGitProject',
+    'connectGitProject',
+    'cloneGitProject',
     'toggleSearchAndReplaceDialog',
     'editNodeOrMarkAttributes',
     'reloadWithConfiguration',
+    'render-output',
   ],
   data() {
     return {
@@ -497,17 +566,17 @@ export default {
       return this.editor && this.editor.isActive(name, attrs);
     },
     iconFor(typename: string) {
-      return iconFor(typename)
+      return iconFor(typename);
     },
     toggleLabelForMark(markname: string) {
       return this.$t('toggle', {
-        what: tfb('marks.title.' + markname, markname)
-      })
+        what: tfb('marks.title.' + markname, markname),
+      });
     },
     toggleLabelForNode(nodename: string) {
       return this.$t('toggle', {
-        what: tfb('nodes.title.' + nodename, nodename)
-      })
+        what: tfb('nodes.title.' + nodename, nodename),
+      });
     },
     getAttribute(name: string, attrName: string) {
       const attrs = this.editor && this.editor.getAttributes(name);
@@ -593,6 +662,9 @@ export default {
     showProjectStructure() {
       setActionShowProjectStructureDialog(this.editor.state);
     },
+    showConfigurationEditor() {
+      this.$emit('showConfigurationEditor');
+    },
     repeatCommandTitle() {
       return currentRepeatableCommandTooltip(this.editor.state);
     },
@@ -602,11 +674,14 @@ export default {
     swapBlocksToggleTooltip() {
       return this.$t('clickTo.moveOrSwapVertically', {
         state: this.$t(this.swapBlocksActive ? 'enabled' : 'disabled'),
-        shortcut: `${SK.MOVE_NODE_UP}/${SK.MOVE_NODE_DOWN}`
-      })
+        shortcut: `${SK.MOVE_NODE_UP}/${SK.MOVE_NODE_DOWN}`,
+      });
     },
     async debug() {
-      showDocStateDialog(this.editor)
+      showDocStateDialog(this.editor);
+    },
+    renderOutput(converter: OutputConverter, path?: string) {
+      this.$emit('render-output', converter, path);
     },
   },
 };

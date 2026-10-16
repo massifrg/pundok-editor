@@ -2,15 +2,12 @@ import {
   ACTION_EDIT_ATTRIBUTES,
   ACTION_DOCUMENT_EXPORT,
   ACTION_DOCUMENT_IMPORT,
-  ACTION_SHOW_EXPORT_DIALOG,
-  ACTION_SHOW_IMPORT_DIALOG,
   ActionForNodeOrMark,
   ACTION_NEW_EMPTY_DOCUMENT,
   ACTION_SHOW_PROJECT_STRUCTURE_DIALOG,
   ACTION_DOCUMENT_OPEN,
   ACTION_CLOSE_EDITOR,
   ACTION_SETUP_VIEWER,
-  ACTION_DOCUMENT_TRANSFORM,
   ACTION_SHOW_SEARCH_DIALOG,
   BaseEditorAction,
   ACTION_SHOW_RESULT_MESSAGE,
@@ -27,10 +24,8 @@ import {
   MetaMapTextActionProps,
   NewEmptyDocumentActionProps,
   OutputConverter,
-  PandocFilterTransform,
   ResultMessageActionProps,
   CxDocument,
-  TransformDocumentActionProps,
   ViewerSetup,
 } from '../common';
 import { useActions } from '../stores';
@@ -132,22 +127,6 @@ export function setActionShowResultMessage(
       editorKey,
       props,
     });
-}
-
-export function setActionShowImportDialog(
-  stateOrKey: EditorState | EditorKeyType,
-) {
-  const editorKey = editorKeyFrom(stateOrKey);
-  if (editorKey)
-    useActions().setAction({ ...ACTION_SHOW_IMPORT_DIALOG, editorKey });
-}
-
-export function setActionShowExportDialog(
-  stateOrKey: EditorState | EditorKeyType,
-) {
-  const editorKey = editorKeyFrom(stateOrKey);
-  if (editorKey)
-    useActions().setAction({ ...ACTION_SHOW_EXPORT_DIALOG, editorKey });
 }
 
 export function setActionShowSearchDialog(

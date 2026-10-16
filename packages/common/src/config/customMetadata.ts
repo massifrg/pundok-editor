@@ -1,4 +1,4 @@
-import { NamedAndDescribed } from "./types";
+import { NamedAndDescribed } from "../types";
 
 export type MetaValueName =
   | 'MetaBool'

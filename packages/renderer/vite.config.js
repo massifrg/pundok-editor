@@ -1,9 +1,7 @@
-/* eslint-env node */
 import { defineConfig } from 'vite';
 import { getChromeVersion } from '../electron-versions/index.js';
-import { join } from 'path';
 import { builtinModules } from 'module';
-import { resolve, dirname } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 import vue from '@vitejs/plugin-vue';
@@ -12,6 +10,9 @@ import vue from '@vitejs/plugin-vue';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 // import { visualizer } from 'rollup-plugin-visualizer';
 import { analyzer } from 'vite-bundle-analyzer';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const PACKAGE_ROOT = __dirname;
 
@@ -47,10 +48,13 @@ export default defineConfig({
         './src/locales/**',
       ),
     }),
-    // analyzer({
-    //   analyzerMode: 'server',
-    //   brotliOptions: {},
-    // }),
+    analyzer({
+      analyzerMode: 'static',
+      fileName: 'bundle-report',
+      openAnalyzer: false,
+      brotliOptions: {},
+      enabled: process.env.ANALYZE === 'true',
+    }),
     // visualizer({
     // filename: 'stats.html', // output file
     // template: 'network', // "sunburst" | "treemap" | "network"
@@ -63,6 +67,7 @@ export default defineConfig({
   server: {
     fs: {
       strict: true,
+      allow: [resolve(PACKAGE_ROOT, '../../')],
     },
   },
   define: {
@@ -79,6 +84,25 @@ export default defineConfig({
         editor: 'index.html',
       },
       external: [...builtinModules.flatMap((p) => [p, `node:${p}`])],
+      output: {
+        manualChunks(id) {
+          if (id.includes('/node_modules/@codemirror/view/')) {
+            return 'codemirror-view';
+          }
+          if (id.includes('/node_modules/@codemirror/')) {
+            return 'codemirror';
+          }
+          if (id.includes('/node_modules/@lezer/')) {
+            return 'lezer';
+          }
+          if (
+            id.includes('/node_modules/highlight.js/') ||
+            id.includes('/node_modules/lowlight/')
+          ) {
+            return 'syntax-highlighting';
+          }
+        },
+      },
     },
     emptyOutDir: true,
     brotliSize: false,

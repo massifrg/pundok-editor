@@ -82,12 +82,6 @@ export const PundokEditorUtilsExtension =
         new Plugin({
           key: pundokEditorUtilsPluginKey,
           state: {
-            // init(config, instance): DocumentState {
-            //   return new DocumentState(newEditorKey());
-            // },
-            // apply(tr, value, oldState, newState): DocumentState {
-            //   return value;
-            // },
             init(config, instance): DocState {
               return {
                 editorKey: newEditorKey(),

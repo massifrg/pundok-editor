@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import {
-  AddOrRemoveMarkActionProps,
+  AddRemoveMarkActionProps,
   MARK_NAME_CITE,
   MARK_NAME_CODE,
   MARK_NAME_DOUBLE_QUOTED,
@@ -49,12 +49,12 @@ export default {
         ['Link', { markType: MARK_NAME_LINK }],
         ['Cite', { markType: MARK_NAME_CITE }],
         ['Code', { markType: MARK_NAME_CODE }],
-      ] as [label: string, props: AddOrRemoveMarkActionProps][]
+      ] as [label: string, props: AddRemoveMarkActionProps][]
     }
   },
   computed: {
     markTypeName() {
-      return (this.action?.props as AddOrRemoveMarkActionProps)?.markType || MARK_NAME_EMPH
+      return (this.action?.props as AddRemoveMarkActionProps)?.markType || MARK_NAME_EMPH
     }
   },
   setup() {
@@ -69,7 +69,7 @@ export default {
       return iconFor(markTypeName)
     },
     setMarkType(markType: string) {
-      this.$emit('set-props', this.index, { markType } as AddOrRemoveMarkActionProps)
+      this.$emit('set-props', this.index, { markType } as AddRemoveMarkActionProps)
     }
   }
 }

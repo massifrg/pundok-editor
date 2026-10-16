@@ -59,7 +59,7 @@ class PandocJsonParseState {
   currentParaCustomStyle?: string;
   defaultNoteType: string = DEFAULT_NOTE_TYPE;
   currentNoteType?: string;
-  currentNoteAttrs?: Record<string, any>;
+  currentNoteAttrs?: Attrs;
 
   constructor(
     readonly schema: Schema,
@@ -137,7 +137,10 @@ class PandocJsonParseState {
       const item = items[i];
       const handler = this.pandocHandlers[item.t];
       if (!handler)
-        throw new Error('Type `' + item.t + '` not supported by Pandoc parser');
+        throw new PandocJsonParserError(
+          'Type `' + item.t + '` not supported by Pandoc parser',
+          item.t,
+        );
       handler(this, item);
     }
   }
@@ -183,13 +186,6 @@ function noOp() {
   /* eslint-disable no-empty-function */
 }
 
-function withParent(parent: PandocJson, children: PandocJson[]): PandocJson[] {
-  children.forEach((c) => {
-    c.p = parent;
-  });
-  return children;
-}
-
 function parseChildren(
   state: PandocJsonParseState,
   spec: ParseSpec,
@@ -206,7 +202,6 @@ function parseChildren(
               {
                 t: child.blessAs,
                 c: pandocItem.c[child.index],
-                p: pandocItem,
               },
             ],
             spec.contentsIfEmpty,
@@ -227,7 +222,7 @@ function parseChildren(
       } else {
         // console.log(`children: ${JSON.stringify(pandocItem.c[child.index])}`)
         state.parseContents(
-          withParent(pandocItem, pandocItem.c[child.index] as PandocJson[]),
+          pandocItem.c[child.index] as PandocJson[],
           spec.contentsIfEmpty,
         );
       }
@@ -400,9 +395,78 @@ interface ParseSpec {
   contentsIfEmpty?: PandocJson[];
 }
 
-export interface PandocJsonParserOptions extends Record<string, any> {
+export interface PandocJsonParserOptions {
   indices?: Index[];
   noteStyles?: NoteStyle[];
+}
+
+export class PandocJsonParserError extends Error {
+  constructor(message: string, readonly pandocType?: string) {
+    super(message);
+    this.name = 'PandocJsonParserError';
+  }
+}
+
+function validateDocument(value: unknown): asserts value is PandocJsonDocument {
+  if (!value || typeof value !== 'object') {
+    throw new PandocJsonParserError('Pandoc JSON document must be an object');
+  }
+  const document = value as Partial<PandocJsonDocument>;
+  if (!Array.isArray(document['pandoc-api-version'])) {
+    throw new PandocJsonParserError(
+      'Pandoc JSON document is missing pandoc-api-version',
+    );
+  }
+  if (!document.meta || typeof document.meta !== 'object') {
+    throw new PandocJsonParserError(
+      'Pandoc JSON document metadata must be an object',
+    );
+  }
+  if (!Array.isArray(document.blocks)) {
+    throw new PandocJsonParserError(
+      'Pandoc JSON document blocks must be an array',
+    );
+  }
+  const validateItems = (items: unknown[]): void => {
+    items.forEach((item) => {
+      if (Array.isArray(item)) {
+        validateItems(item);
+      } else if (
+        item &&
+        typeof item === 'object' &&
+        typeof (item as PandocJson).t === 'string'
+      ) {
+        validateItem(item);
+      }
+    });
+  };
+  const validateItem = (item: unknown): void => {
+    if (
+      !item ||
+      typeof item !== 'object' ||
+      typeof (item as PandocJson).t !== 'string'
+    ) {
+      throw new PandocJsonParserError(
+        'Every Pandoc JSON item must contain a string t field',
+      );
+    }
+    const content = (item as PandocJson).c;
+    if (Array.isArray(content)) validateItems(content);
+  };
+  document.blocks.forEach(validateItem);
+  Object.values(document.meta).forEach(validateItem);
+}
+
+export function isPandocJsonDocument(
+  value: unknown,
+): value is PandocJsonDocument {
+  try {
+    const parsed = isString(value) ? JSON.parse(value) : value;
+    validateDocument(parsed);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /// A configuration of a Pandoc parser.
@@ -436,27 +500,23 @@ export class PandocJsonParser {
     const pdoc: PandocJsonDocument = isString(pandocDoc)
       ? JSON.parse(pandocDoc)
       : pandocDoc;
+    validateDocument(pdoc);
     const state = new PandocJsonParseState(
       this.schema,
       this.pandocHandlers,
       this.options,
     );
     let doc;
-    try {
-      const metaBlock = {
-        t: 'metadata',
-        c: state.transformMetaMapContents(pdoc.meta)
-      };
+    const metaBlock = {
+      t: 'metadata',
+      c: state.transformMetaMapContents(pdoc.meta),
+    };
 
-      state.parseContents([metaBlock, ...pdoc.blocks]);
-      do {
-        doc = state.closeNode();
-      } while (state.stack.length);
-      return doc || this.schema.topNodeType.createAndFill();
-    } catch (err) {
-      console.log(err)
-      return null
-    }
+    state.parseContents([metaBlock, ...pdoc.blocks]);
+    do {
+      doc = state.closeNode();
+    } while (state.stack.length);
+    return doc || this.schema.topNodeType.createAndFill();
   }
 }
 
@@ -470,7 +530,8 @@ export function pandocJsonToPMNode(
     options,
   );
   const doc = parser.parse(json);
-  return Node.fromJSON(schema, JSON.parse(JSON.stringify(doc)));
+  if (!doc) throw new PandocJsonParserError('Pandoc JSON produced no document');
+  return doc;
 }
 
 export function parseJsonFragmentToPMJson(
@@ -495,8 +556,8 @@ export function parseJsonFragmentToPMJson(
     options,
   );
   const doc = parser.parse(pdoc);
-  const json = Node.fromJSON(schema, JSON.parse(JSON.stringify(doc)));
-  return json.lastChild;
+  if (!doc) return null;
+  return doc.lastChild;
 }
 
 export const getPandocAttrs = ([id, classes, attributes]: [

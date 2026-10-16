@@ -2,6 +2,7 @@ import { Command, EditorState, Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as PmNode } from '@tiptap/pm/model';
 import { Extension } from '@tiptap/core';
+import { asTiptapCommand } from '../helpers';
 import { changedNodes, DocState } from '../helpers';
 import type { NodeWithPos } from '@tiptap/vue-3';
 import {
@@ -18,6 +19,16 @@ import {
   SK,
   indexRefDecorationCss,
 } from '../../common';
+
+const redecorateIndexRefsCommand = (): Command => (state, dispatch) => {
+  if (dispatch) dispatch(state.tr.setMeta(META_REDECORATE_INDEX_REFS, true));
+  return true;
+};
+
+const detectDocumentIndicesCommand = (): Command => (state, dispatch) => {
+  if (dispatch) dispatch(state.tr.setMeta(META_DETECT_DOCUMENT_INDICES, true));
+  return true;
+};
 import { DEFAULT_INDEX_NAME } from '../../common';
 import { documentIndices, mergeIndices } from '../helpers/indices';
 import {
@@ -271,23 +282,13 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
     return {
       addIndexRef:
         (optIndex?: Index | string) =>
-          ({ state, dispatch }) => setIndexRefCommand(optIndex)(state, dispatch),
+          asTiptapCommand(setIndexRefCommand(optIndex)),
       redecorateIndexRefs:
         () =>
-          ({ tr, dispatch }) => {
-            if (dispatch) {
-              tr.setMeta(META_REDECORATE_INDEX_REFS, true);
-            }
-            return true;
-          },
+          asTiptapCommand(redecorateIndexRefsCommand()),
       detectDocumentIndices:
         () =>
-          ({ tr, dispatch }) => {
-            if (dispatch) {
-              tr.setMeta(META_DETECT_DOCUMENT_INDICES, true);
-            }
-            return true;
-          },
+          asTiptapCommand(detectDocumentIndicesCommand()),
       setIndexTermAutoId: (stv) => ({ dispatch, editor, state }) => {
         const backend = useBackend().backend
         if (!backend) return false
@@ -319,6 +320,7 @@ export const IndexingExtension = Extension.create<IndexingOptions>({
               terms_pos.push(indexDivStart + pos)
             return true
           });
+
           terms_pos.sort((p1, p2) => p2 - p1)
           const docState = getDocState(state)
           const doc = state.doc;
@@ -452,76 +454,6 @@ export function setIndexRefCommand(optIndex?: Index | string): Command {
     return true;
   }
 }
-
-// export async function indexTermsIdAutoAssignFromJsonTransaction(
-//   state: EditorState,
-//   pos: number,
-//   backend: Backend,
-//   searchTextVariant: 'first-2-words' | 'first-3-words',
-//   callback: (terms: number, withoutId: number, autoId: number) => void,
-// ): Promise<Transaction> {
-//   const indexDiv = state.doc.nodeAt(pos)
-//   if (indexDiv?.type.name !== NODE_NAME_INDEX_DIV)
-//     return Promise.reject('not an index node')
-//   const wordsCount = searchTextVariant === 'first-2-words'
-//     ? 2
-//     : searchTextVariant === 'first-3-words'
-//       ? 3
-//       : 2
-//   const docState = getDocState(state)
-//   let query: IndexTermQuery = {
-//     type: 'index-term',
-//     indexName: indexDiv?.attrs?.kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME,
-//     searchText: '',
-//     options: {
-//       kind: 'index',
-//       project: docState?.project,
-//       configurationName: docState?.configuration?.name,
-//     }
-//   }
-//   // check with dummy search
-//   try {
-//     await backend?.queryDatabase({ ...query, searchText: 'dummy' })
-//   } catch (err) {
-//     return Promise.reject(err)
-//   }
-//   const tr = state.tr
-//   let p = pos + 1
-//   let withoutIdCount = 0
-//   let termsCount = 0
-//   let autoAssignedCount = 0
-//   for (let i = 0; i < indexDiv.childCount; i++) {
-//     const child = indexDiv.child(i)
-//     if (child) {
-//       if (child.type.name === NODE_NAME_INDEX_TERM) {
-//         termsCount++
-//         if (!child.attrs.id) {
-//           withoutIdCount++
-//           const content = child.textContent || ''
-//           const searchText = content
-//             .split(/\P{Letter}+/u)
-//             .filter(t => t.length > 0)
-//             .slice(0, wordsCount)
-//             .join(' ')
-//           try {
-//             const results = await backend?.queryDatabase({ ...query, searchText })
-//             if (results.length === 1) {
-//               const id = results[0].id
-//               tr.setNodeMarkup(p, null, { ...child.attrs, id })
-//               autoAssignedCount++
-//             }
-//           } catch (err) {
-//             return Promise.reject(err)
-//           }
-//         }
-//         callback(termsCount, withoutIdCount, autoAssignedCount)
-//       }
-//       p = p + child.nodeSize
-//     } else
-//       break
-//   }
-//   return tr
-// }
 
 function getIndexTermInSelection(state: EditorState): NodeWithPos | undefined {
   const $pos = state.selection.$anchor

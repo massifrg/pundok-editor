@@ -38,7 +38,7 @@ import {
   NODE_NAME_SHORT_CAPTION,
   PundokEditorConfig,
 } from '../../common';
-import { isString } from 'lodash-es';
+import { flatten, isString, uniq } from 'lodash-es';
 import { RawBlock } from '../nodes';
 import { createPandocTable } from './pandocTable';
 import { innerNodeDepth } from './nodeDepth';
@@ -77,7 +77,14 @@ export function nodesWithTemplate(): string[] {
   ];
 }
 
-let COMPATIBLE_BLOCKS: string[][] = [];
+export const COMPATIBLE_BLOCKS: string[][] = [
+  [NODE_NAME_PARAGRAPH, NODE_NAME_PLAIN, NODE_NAME_HEADING],
+  [NODE_NAME_DIV, NODE_NAME_BLOCKQUOTE, NODE_NAME_FIGURE, NODE_NAME_INDEX_TERM, NODE_NAME_INDEX_DIV],
+  [NODE_NAME_BULLET_LIST, NODE_NAME_ORDERED_LIST],
+  [NODE_NAME_RAW_BLOCK, NODE_NAME_CODE_BLOCK]
+];
+
+export const CONVERTIBLE_BLOCKS: string[] = uniq(flatten(COMPATIBLE_BLOCKS))
 
 /**
  * Create a text node from a string, only if the string is non empty, otherwise return `null`.
@@ -278,14 +285,6 @@ export function nodeIcon(typename?: string) {
 }
 
 export function compatibleNodes(typename: string): string[] {
-  if (!COMPATIBLE_BLOCKS || COMPATIBLE_BLOCKS.length === 0) {
-    COMPATIBLE_BLOCKS = [
-      [NODE_NAME_PARAGRAPH, NODE_NAME_PLAIN, NODE_NAME_HEADING],
-      [NODE_NAME_DIV, NODE_NAME_BLOCKQUOTE, NODE_NAME_FIGURE, NODE_NAME_INDEX_TERM, NODE_NAME_INDEX_DIV],
-      [NODE_NAME_BULLET_LIST, NODE_NAME_ORDERED_LIST],
-      [NODE_NAME_RAW_BLOCK, NODE_NAME_CODE_BLOCK]
-    ];
-  }
   const compatibles = COMPATIBLE_BLOCKS.find((cb) => cb.includes(typename));
   return compatibles ? compatibles.filter((cb) => cb != typename) : [];
 }

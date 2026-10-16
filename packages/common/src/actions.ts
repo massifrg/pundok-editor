@@ -7,7 +7,7 @@ import {
 } from './config';
 import { DocumentContext, CxDocument } from './document';
 import { FeedbackMessage } from "./feedback"
-import { Node as ProsemirrorNode } from "@tiptap/pm/model"
+import { Attrs, Node as ProsemirrorNode } from "@tiptap/pm/model"
 import { ViewerSetup } from './viewer';
 import { DocumentFormat } from './documentFormat';
 
@@ -132,21 +132,29 @@ export interface TableCellVertAlignActionProps extends ActionProps {
   alignment: 'top' | 'middle' | 'bottom'
 }
 
-export interface AddOrRemoveClassActionProps extends ActionProps {
+export interface AddRemoveRenameClassActionProps extends ActionProps {
   className: string,
+  newName: string,
   typeName?: string,
 }
 
-export interface AddOrRemoveMarkActionProps extends ActionProps {
+export interface AddRemoveRenameAttributeActionProps extends ActionProps {
+  attrName: string,
+  attrValue?: string,
+  newName: string,
+  typeName?: string,
+}
+
+export interface AddRemoveMarkActionProps extends ActionProps {
   markType: string,
   attrs?: Record<string, string>,
 }
 
-export interface AddOrRemoveCustomStyleActionProps extends ActionProps {
+export interface AddRemoveCustomStyleActionProps extends ActionProps {
   styleName: string,
 }
 
-export interface AddOrRemoveCustomClassActionProps extends ActionProps {
+export interface AddRemoveCustomClassActionProps extends ActionProps {
   shortDesc?: string,
   className: string,
   attrs?: Record<string, string>,
@@ -169,13 +177,19 @@ export interface InsertRawInlineActionProps extends ActionProps {
   content: string | string[],
 }
 
+export interface ConvertNodeActionProps extends ActionProps {
+  nodeType: string,
+  attrs?: Attrs,
+}
+
 /**
  * Check if two action (names) do the opposite (e.g. "add-mark" and "remove-mark").
  * @param n1 The name of the first action.
  * @param n2 The name of the second action.
  * @returns 
  */
-export function isOppositeAction(n1: string, n2: string): boolean {
-  return n1 !== n2
-    && n1.replace(/^(add|remove)/, '') === n2.replace(/^(add|remove)/, '')
+export function isOppositeAction(n1: string | null | undefined, n2: string | null | undefined): boolean {
+  if (!n1 || !n2) return false
+  const normalize = (s: string) => s.trim().toLowerCase().replace(/^(add|remove)/, '')
+  return n1 !== n2 && normalize(n1) === normalize(n2)
 }

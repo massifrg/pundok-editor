@@ -1,20 +1,18 @@
 export { default as AttributesEditor } from './AttributesEditor.vue';
 export { default as BreadCrumb } from './BreadCrumb.vue';
 export { default as ConfigurationsDialog } from './ConfigurationsDialog.vue';
+export { default as ProjectConfigEditorDialog } from './ProjectConfigEditorDialog.vue';
+export { default as CustomStylesEditor } from './confeditors/CustomStylesEditor.vue';
+export { default as CssPropertiesEditor } from './confeditors/CssPropertiesEditor.vue';
 export { default as ContextMenu } from './ContextMenu.vue';
 export { default as CustomClassList } from './CustomClassList.vue';
 export { default as CustomStylesPanel } from './CustomStylesPanel.vue';
 export { default as CustomWrapperMenu } from './CustomWrapperMenu.vue';
 export { default as CustomMarkMenu } from './CustomMarkMenu.vue';
 export { default as DraggableDialog } from './DraggableDialog.vue';
-export { default as ExportDialog } from './ExportDialog.vue';
-export { default as ExportToolbarButton } from './ExportToolbarButton.vue';
 export { default as ImageButton } from './ImageButton.vue';
-export { default as ImportDialog } from './ImportDialog.vue';
-export { default as ImportToolbarButton } from './ImportToolbarButton.vue';
 export { default as InputTextDialog } from './InputTextDialog.vue';
 export { default as InsertNoteButton } from './InsertNoteButton.vue';
-// export { default as Menubar } from './Menubar.vue'
 export { default as NewDocumentButton } from './NewDocumentButton.vue';
 export { default as NewProjectDialog } from './NewProjectDialog.vue';
 export { default as NodeOrMarkContextMenu } from './NodeOrMarkContextMenu.vue';

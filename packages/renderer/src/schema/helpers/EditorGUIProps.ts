@@ -6,7 +6,7 @@ export interface EditorGUIProps {
   /** import document button (DEPRECATED) */
   importButton: boolean;
   /** export document button (DEPRECATED) */
-  exportButton: boolean;
+  renderButton: boolean;
   /** allow line/blocks swapping (with Alt+Up and Alt+Down) */
   swapBlocksActive: boolean;
   /** project structure button */
@@ -22,7 +22,7 @@ export class EditorGUIPropsClass implements EditorGUIProps {
   newDocument: boolean = true;
   openButton: boolean = true;
   importButton: boolean = true;
-  exportButton: boolean = true;
+  renderButton: boolean = true;
   swapBlocksActive: boolean = true;
   projectStructure: boolean = true;
   showEditorVersion: boolean = true;

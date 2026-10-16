@@ -1,19 +1,19 @@
-import { NamedAndDescribed } from "./types";
+import { PandocOption } from "../pandocOptions";
+import { PandocFilter } from "../pandoc";
+import { NamedAndDescribed } from "../types";
 
-export type InputConverterType = 'pandoc' | 'script' | 'custom';
+export type InputConverterType = 'pandoc' | 'script';
 
 /**
  * A base type for documents' import. Use only 0-9a-z_- characters for its name.
  */
-export type BaseInputConverter = NamedAndDescribed & {
+export interface BaseInputConverter extends NamedAndDescribed {
   /** kind of importer (used by derived types) */
   type: InputConverterType;
   /** true for the default input converter (only one can be default, otherwise it's the first encountered) */
   default?: boolean;
   /** input file extensions */
   extensions: string[];
-  /** asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion) */
-  feedback?: string;
   /** optional icon */
   icon?: string;
 };
@@ -21,21 +21,25 @@ export type BaseInputConverter = NamedAndDescribed & {
 /**
  * An input converter that spawns a pandoc process to import a document.
  */
-export type PandocInputConverter = BaseInputConverter & {
+export interface PandocInputConverter extends BaseInputConverter {
   type: 'pandoc';
-  /** a pandoc's input format or a lua script */
+  /** a pandoc's input format or a custom reader */
   format: string;
-  /** extra command-line options for pandoc */
-  pandocOptions?: string[];
+  /** The extensions of the format to be used */
+  formatExtensions?: string[];
+  /** optional filter (pandoc's `--filter` option) */
+  filters?: (string | PandocFilter)[];
+  /** Extra Pandoc options, each as [name, value?]. */
+  pandocOptions?: PandocOption[];
 };
 
-export type CustomInputConverter = BaseInputConverter & {
-  type: 'custom';
-  /** options for internal "custom" converters */
-  options: Record<string, any>;
-};
+// export type CustomInputConverter = BaseInputConverter & {
+//   type: 'custom';
+//   /** options for internal "custom" converters */
+//   options: Record<string, any>;
+// };
 
-export type ExternalInputConverter = BaseInputConverter & {
+export interface ExternalInputConverter extends BaseInputConverter {
   type: 'script';
   /** command to execute for external "script" converters */
   command: string;
@@ -45,5 +49,5 @@ export type ExternalInputConverter = BaseInputConverter & {
 
 export type InputConverter =
   | PandocInputConverter
-  | CustomInputConverter
+  // | CustomInputConverter
   | ExternalInputConverter;

@@ -1,6 +1,12 @@
-import { chrome } from '../../.electron-vendors.cache.json';
-import { join } from 'path';
+import vendors from '../../.electron-vendors.cache.json' with { type: 'json' };
 import { builtinModules } from 'module';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'node:url';
+
+const { chrome } = vendors;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const PACKAGE_ROOT = __dirname;
 

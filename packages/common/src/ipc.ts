@@ -38,10 +38,12 @@ export type IpcRendererToMainChannel =
   | 'open-document'
   | 'save-document'
   | 'get-bookmarks'
+  | 'get-value'
   | 'available-configurations'
   | 'editor-ready'
   | 'load-configuration'
   | 'file-contents'
+  | 'find-resource-files'
   | 'new-project'
   | 'get-project'
   | 'get-inclusion-tree'
@@ -54,6 +56,22 @@ export type IpcRendererToMainChannel =
   | 'render-again'
   | 'get-rendering-job'
   | 'update-config'
+  | 'list-git-repositories'
+  | 'clone-git-project'
+  | 'git-default-branch-name'
+  | 'publish-git-project'
+  | 'connect-git-project'
+  | 'git-project-status'
+  | 'init-git-project'
+  | 'stage-git-project'
+  | 'unstage-git-project'
+  | 'update-gitignore'
+  | 'commit-git-project'
+  | 'git-project-updates'
+  | 'check-git-merge'
+  | 'merge-git-project'
+  | 'push-git-project'
+  | 'scan-git-projects';
 
 export type IpcChannel = IpcMainToRendererChannel | IpcRendererToMainChannel;
 
@@ -94,7 +112,12 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   },
   'get-bookmarks': {
     dir: 'r2m',
-    description: 'the renderer asks main the list of bookmarks (projects and documents)'
+    description:
+      'the renderer asks main the list of bookmarks (projects and documents)',
+  },
+  'get-value': {
+    dir: 'r2m',
+    description: 'the renderer asks main for a stored backend value',
   },
   content: {
     dir: 'm2r',
@@ -124,6 +147,11 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     description:
       'the renderer asks main to send the contents of a file (i.e. a CSS file)',
   },
+  'find-resource-files': {
+    dir: 'r2m',
+    description:
+      'the renderer asks main for resource files with names matching a regular expression',
+  },
   'new-project': {
     dir: 'r2m',
     description: 'same as menu File|New Project in main window',
@@ -142,7 +170,8 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   },
   'pandoc-feature': {
     dir: 'r2m',
-    description: 'the renderer asks main to run pandoc for features like --list-input-formats, --list-output-formats, --list-extensions=...',
+    description:
+      'the renderer asks main to run pandoc for features like --list-input-formats, --list-output-formats, --list-extensions=...',
   },
   'transform-json': {
     dir: 'r2m',
@@ -173,30 +202,98 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   },
   'show-rendered-again': {
     dir: 'r2m',
-    description: 'show a rendered job (a PDF) again in the viewer, without recompiling it'
+    description:
+      'show a rendered job (a PDF) again in the viewer, without recompiling it',
   },
   'render-again': {
     dir: 'r2m',
-    description: 'render the document again (recompile PDF)'
+    description: 'render the document again (recompile PDF)',
   },
   'get-rendering-job': {
     dir: 'r2m',
-    description: 'retrieve information about a rendering job (e.g. a PDF instance of a document)'
+    description:
+      'retrieve information about a rendering job (e.g. a PDF instance of a document)',
   },
   'get-source-file': {
     dir: 'r2m',
-    description: 'open the source file corresponding to a point in a page of a result (PDF) file',
+    description:
+      'open the source file corresponding to a point in a page of a result (PDF) file',
   },
   'update-config': {
     dir: 'r2m',
-    description: 'update a configuration or project JSON file adding/updating an object (e.g. automation, custom style)'
-  }
+    description:
+      'update a configuration or project JSON file adding/updating an object (e.g. automation, custom style)',
+  },
+  'clone-git-project': {
+    dir: 'r2m',
+    description: 'clone a Git project and create the user branch',
+  },
+  'list-git-repositories': {
+    dir: 'r2m',
+    description: 'list configured remote Git repositories',
+  },
+  'publish-git-project': {
+    dir: 'r2m',
+    description: 'create a remote repository and publish a local project',
+  },
+  'connect-git-project': {
+    dir: 'r2m',
+    description: 'add an existing remote to a local project',
+  },
+  'git-default-branch-name': {
+    dir: 'r2m',
+    description: 'get the default local Git branch name',
+  },
+  'git-project-status': {
+    dir: 'r2m',
+    description: 'read the Git status of a project',
+  },
+  'init-git-project': {
+    dir: 'r2m',
+    description: 'initialize Git in a project directory',
+  },
+  'stage-git-project': {
+    dir: 'r2m',
+    description: 'stage project files in Git',
+  },
+  'unstage-git-project': {
+    dir: 'r2m',
+    description: 'unstage project files in Git',
+  },
+  'update-gitignore': {
+    dir: 'r2m',
+    description: 'append project paths to .gitignore',
+  },
+  'commit-git-project': {
+    dir: 'r2m',
+    description: 'commit staged project files',
+  },
+  'git-project-updates': {
+    dir: 'r2m',
+    description: 'find remote Git branches ahead of the current branch',
+  },
+  'check-git-merge': {
+    dir: 'r2m',
+    description: 'check whether a remote Git branch can be merged',
+  },
+  'merge-git-project': {
+    dir: 'r2m',
+    description: 'merge a remote Git branch into the current branch',
+  },
+  'push-git-project': {
+    dir: 'r2m',
+    description: 'push the active Git branch to its remote',
+  },
+  'scan-git-projects': {
+    dir: 'r2m',
+    description: 'find remote repositories containing a project file',
+  },
 };
 
 export function isMainToRendererChannel(channel: IpcChannel) {
-  const cdesc: IpcChannelDescription = IPC_CHANNELS[channel as IpcChannel]
-  const dir = cdesc?.dir
-  return dir === 'm2r' || dir === 'both'
+  const cdesc: IpcChannelDescription = IPC_CHANNELS[channel as IpcChannel];
+  const dir = cdesc?.dir;
+  return dir === 'm2r' || dir === 'both';
 }
 
 // export function isRendererToMainChannel(channel: IpcChannel) {
@@ -211,12 +308,7 @@ export const IPC_MAIN_EDITOR_KEY = 'main-editor-key';
 
 /** Types of messages from Main to Renderer. */
 export type ServerMessageType =
-  | 'command'
-  | 'configuration'
-  | 'content'
-  | 'feedback'
-  | 'project'
-  | 'viewer';
+  'command' | 'configuration' | 'content' | 'feedback' | 'project' | 'viewer';
 
 /** A message from Main to Renderer. */
 export interface ServerMessage extends Record<string, any> {
@@ -252,12 +344,7 @@ export interface ServerMessageSetProject extends ServerMessage {
 
 /** Kind of command to be executed in the Renderer. */
 export type CommandToRenderer =
-  | 'open'
-  | 'save'
-  | 'save-as'
-  | 'import'
-  | 'export'
-  | 'new-project';
+  'open' | 'save' | 'save-as' | 'import' | 'export' | 'new-project';
 
 /** A message from Main to Renderer to issue a command inside the editor. */
 export interface ServerMessageCommand extends ServerMessage {
@@ -275,4 +362,3 @@ export type IpcRendererListener = (
   e: Electron.IpcRendererEvent,
   ...args: any[]
 ) => void;
-

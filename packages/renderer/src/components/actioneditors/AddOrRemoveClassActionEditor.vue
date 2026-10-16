@@ -1,21 +1,46 @@
 <template>
-  <q-input v-model='className' label="class:" @update:model-value="change" />
+  <q-input v-model='className' :label="$t('actions.editors.class')" @update:model-value="changeOldName" />
+  <q-input v-if="isRenaming" v-model='newName' :label="$t('actions.editors.rename to') + ':'"
+    @update:model-value="changeNewName" />
 </template>
 
 <script lang="ts">
-import { AddOrRemoveClassActionProps } from '../../common';
+import { t } from '../../i18n'
+import { AddRemoveRenameClassActionProps } from '../../common';
 
 export default {
   props: ['index', 'action'],
   emits: ['set-props'],
   data() {
     return {
-      className: this.action?.props?.class || ''
+      className: this.action?.props?.className || '',
+      newName: this.action?.props?.newName || ''
+    }
+  },
+  computed: {
+    isRenaming() {
+      return this.action.name.startsWith('rename')
     }
   },
   methods: {
-    change(value: string | number | null) {
-      this.$emit('set-props', this.index, { className: this.className } as AddOrRemoveClassActionProps)
+    setProps(props: AddRemoveRenameClassActionProps) {
+      this.$emit('set-props', this.index, props)
+    },
+    changeOldName(value: string | number | null) {
+      this.setProps(
+        {
+          className: value,
+          newName: this.newName,
+        } as AddRemoveRenameClassActionProps
+      )
+    },
+    changeNewName(value: string | number | null) {
+      this.setProps(
+        {
+          className: this.className,
+          newName: value,
+        } as AddRemoveRenameClassActionProps
+      )
     }
   }
 }

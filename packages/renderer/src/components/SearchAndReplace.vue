@@ -62,7 +62,27 @@
         <q-card-section horizontal>
           <q-input autofocus class="search-and-replace-textfield q-mx-xs" :model-value="searchInput"
             :label="searchLabel" stack-label @update:model-value="updateSearchInput" @keypress="keypressed"
-            @keyup="keyup" />
+            @keyup="keyup">
+            <template #append>
+              <q-btn-dropdown v-if="searchHistory.length" flat dense round icon="load_predefined"
+                :title="$t('search.loadSearchHistory')">
+                <q-list dense>
+                  <q-item v-for="(entry, index) in searchHistory" :key="index" clickable v-close-popup
+                    @click="loadSearchHistory(entry)">
+                    <q-item-section v-if="entry.type === 'css'" avatar>
+                      <q-icon name="css_selectors" size="xs" />
+                    </q-item-section>
+                    <q-item-section>{{ searchHistoryLabel(entry) }}</q-item-section>
+                    <q-item-section side>
+                      <div class="row items-center no-wrap q-gutter-xs">
+                        <q-icon v-for="icon in searchHistoryOptionIcons(entry)" :key="icon" :name="icon" size="xs" />
+                      </div>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+            </template>
+          </q-input>
           <div class="q-pt-md q-gutter-none">
             <q-btn class="q-ma-xs" size="sm" round color="primary" :outline="!optionCycle" icon="search_cycle"
               :title="$t('search.cycleFoundItems')" @click="optionCycle = !optionCycle" />
@@ -98,7 +118,7 @@
         </q-card-section>
       </q-card-section>
       <q-card-actions>
-        <q-btn icon="search" :title="$t('search.search')" size="md" padding="md" @click="startSearch()" />
+        <q-btn icon="search" :title="$t('search.search')" size="md" padding="md" @click="startSearch(true)" />
         <q-btn :disabled="!canPrevFound()" icon="search_prev" size="md" padding="md" :title="$t('search.selectPrev')"
           @click="prevFound()" />
         <q-btn :disabled="!canNextFound()" icon="search_next" size="md" padding="md" :title="$t('search.selectNext')"
@@ -129,8 +149,8 @@ setupQuasarIcons()
 <script lang="ts">
 import {
   ActionNameWithProps,
-  AddOrRemoveCustomStyleActionProps,
-  AddOrRemoveMarkActionProps,
+  AddRemoveCustomStyleActionProps,
+  AddRemoveMarkActionProps,
   Automation,
   CustomStyleInstance,
   ElementsSelection,
@@ -147,6 +167,7 @@ import {
   getAllIndices,
   getCssSelected,
   getCssSelectionIndex,
+  getCurrentCssSelected,
   getEditorConfiguration,
 } from '../schema';
 import {
@@ -181,15 +202,34 @@ import {
   ACTION_UPPERCASE,
   ACTION_UPPERCASE_FIRST,
   ActionName,
+  actionsAsText,
   setActionCommand
 } from '../actions';
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { t } from '../i18n'
 import { toRaw } from 'vue';
+import { isEqual } from 'lodash-es';
 
 type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefined
 type NodeOrMarkToLabel = (doc: ProsemirrorNode, nom: SelectedNodeOrMark | undefined, key: string) => string | undefined
 const SELECTED_LABEL_MAX_LENGTH = 64
+export const SEARCH_HISTORY_LIMIT = 20
+
+type SearchHistoryEntry = {
+  type: 'text' | 'css'
+  search: string
+  replace: string
+  optionSearchOnly: boolean
+  optionCaseInsensitive: boolean
+  optionRegex: boolean
+  optionCycle: boolean
+  optionWholeWord: boolean
+  optionMergeSameAdjacentMarks: boolean
+  searchFilterSwitch: boolean
+  filterMarkPresence: AddableMark[]
+  filterMarkAbsence: AddableMark[]
+  actionsOnReplace: ActionNameWithProps[]
+}
 
 const defaultNodeOrMarkToLabel: NodeOrMarkToLabel = (doc, nom, key) => {
   if (!nom) return
@@ -256,6 +296,8 @@ export default {
       filterMarkAbsence: [] as AddableMark[],
       // actions to be performed on replaced text or selected with CSS
       actionsOnReplace: [] as ActionNameWithProps[],
+      searchHistory: [] as SearchHistoryEntry[],
+      suppressHistoryRecording: false,
     };
   },
   computed: {
@@ -391,6 +433,15 @@ export default {
     }
   },
   watch: {
+    visible(visible: boolean) {
+      if (!visible || !this.editor) return
+
+      const { from, to } = this.editor.state.selection
+      if (from === to) return
+
+      const selectedText = this.editor.state.doc.textBetween(from, to, '\n')
+      if (selectedText) this.updateSearchInput(selectedText)
+    },
     cssMode(css_mode: boolean, prev_mode: boolean) {
       if (css_mode !== prev_mode) {
         if (css_mode) {
@@ -427,7 +478,7 @@ export default {
     keypressed(e: KeyboardEvent) {
       if (this.editor) {
         if (e.key === 'Enter') {
-          this.startSearch();
+          this.startSearch(true);
         }
       } else {
         console.log('no editor');
@@ -511,12 +562,85 @@ export default {
       }
       return false
     },
-    startSearch() {
+    startSearch(rememberHistory = false) {
       const started = this.cssMode ? this.startSearchCss() : this.startSearchText()
       this.searchStarted = started
-      if (started)
+      if (started) {
+        if (rememberHistory && !this.suppressHistoryRecording)
+          this.rememberSearch()
         this.editor?.commands.focus()
+      }
       return started
+    },
+    rememberSearch() {
+      const entry: SearchHistoryEntry = {
+        type: this.cssMode ? 'css' : 'text',
+        search: this.searchInput,
+        replace: this.textToReplace,
+        optionSearchOnly: this.optionSearchOnly,
+        optionCaseInsensitive: this.optionCaseInsensitive,
+        optionRegex: this.optionRegex,
+        optionCycle: this.optionCycle,
+        optionWholeWord: this.optionWholeWord,
+        optionMergeSameAdjacentMarks: this.optionMergeSameAdjacentMarks,
+        searchFilterSwitch: this.searchFilterSwitch,
+        filterMarkPresence: structuredClone(toRaw(this.filterMarkPresence)),
+        filterMarkAbsence: structuredClone(toRaw(this.filterMarkAbsence)),
+        actionsOnReplace: structuredClone(toRaw(this.actionsOnReplace)),
+      }
+      if (this.searchHistory.some(existing => isEqual(existing, entry)))
+        return
+      this.searchHistory.unshift(entry)
+      if (this.searchHistory.length > SEARCH_HISTORY_LIMIT)
+        this.searchHistory.length = SEARCH_HISTORY_LIMIT
+    },
+    searchHistoryLabel(entry: SearchHistoryEntry) {
+      const filters = [...entry.filterMarkPresence.map(mark => `+${mark.name}`),
+      ...entry.filterMarkAbsence.map(mark => `-${mark.name}`)]
+      const filterLabel = entry.type === 'text' && filters.length ? ` (${filters.join(',')})` : ''
+      const actions = entry.actionsOnReplace.length
+        ? actionsAsText(entry.actionsOnReplace, this.configuration)
+        : ''
+      const replacement = entry.optionSearchOnly
+        ? actions ? ` -> ${actions}` : ''
+        : ` -> ${entry.replace}${actions ? ` (${actions})` : ''}`
+      return `${entry.search}${filterLabel}${replacement}`
+    },
+    searchHistoryOptionIcons(entry: SearchHistoryEntry) {
+      const icons: string[] = []
+      if (entry.optionSearchOnly) icons.push('search_only')
+      if (entry.optionCycle) icons.push('search_cycle')
+      if (entry.type === 'text') {
+        if (entry.optionCaseInsensitive) icons.push('search_case_insensitive')
+        if (entry.optionRegex) icons.push('regex')
+        if (entry.optionWholeWord) icons.push('whole_word')
+      } else if (entry.optionMergeSameAdjacentMarks) {
+        icons.push('marks_merge')
+      }
+      return icons
+    },
+    loadSearchHistory(entry: SearchHistoryEntry) {
+      this.suppressHistoryRecording = true
+      this.searchInput = entry.search
+      this.textToSearch = entry.type === 'text' ? entry.search : this.textToSearch
+      this.cssSelector = entry.type === 'css' ? entry.search : this.cssSelector
+      this.textToReplace = entry.replace
+      this.optionSearchOnly = entry.optionSearchOnly
+      this.optionCaseInsensitive = entry.optionCaseInsensitive
+      this.optionRegex = entry.optionRegex
+      this.optionCycle = entry.optionCycle
+      this.optionWholeWord = entry.optionWholeWord
+      this.optionMergeSameAdjacentMarks = entry.optionMergeSameAdjacentMarks
+      this.searchFilterSwitch = entry.searchFilterSwitch
+      this.filterMarkPresence = structuredClone(toRaw(entry.filterMarkPresence))
+      this.filterMarkAbsence = structuredClone(toRaw(entry.filterMarkAbsence))
+      this.actionsOnReplace = structuredClone(toRaw(entry.actionsOnReplace))
+      if (this.cssMode !== (entry.type === 'css'))
+        this.cssMode = entry.type === 'css'
+      this.searchStarted = false
+      this.$nextTick(() => {
+        this.suppressHistoryRecording = false
+      })
     },
     hideDialog() {
       if (this.editor) {
@@ -575,12 +699,12 @@ export default {
     },
     replaceSelected() {
       if (this.optionSearchOnly) {
-        this.editor.commands.applyActions(this.actionsOnReplace)
+        this.editor.commands.applyActions(this.actionsOnReplace, getCurrentCssSelected(this.editor.state))
       } else {
         if (this.cssMode)
           this.editor.chain()
             .replaceWithText(this.textToReplace)
-            .applyActions(this.actionsOnReplace)
+            .applyActions(this.actionsOnReplace, getCurrentCssSelected(this.editor.state))
             .run()
         else
           this.editor.chain()
@@ -647,6 +771,7 @@ export default {
         ? sel.optionSearchOnly
         : sel.replace !== undefined
       this.optionMergeSameAdjacentMarks = !!sel.optionMergeSameAdjacentMarks
+      this.actionsOnReplace = [...(sel.actions || [])]
       this.startSearch()
     },
     loadSearchAndReplace(sar: SearchAndReplace) {
@@ -680,7 +805,7 @@ export default {
           name: 'add-mark' as ActionName,
           props: {
             markType: m
-          } as AddOrRemoveMarkActionProps
+          } as AddRemoveMarkActionProps
         } as ActionNameWithProps)
       })
       // styles
@@ -689,7 +814,7 @@ export default {
           name: 'add-custom-style' as ActionName,
           props: {
             styleName: s
-          } as AddOrRemoveCustomStyleActionProps
+          } as AddRemoveCustomStyleActionProps
         } as ActionNameWithProps)
       })
       // spans
@@ -736,6 +861,7 @@ export default {
           optionSearchOnly,
           replace: optionSearchOnly ? undefined : toRaw(this.textToReplace),
           optionMergeSameAdjacentMarks: toRaw(this.optionMergeSameAdjacentMarks),
+          actions: toRaw(this.actionsOnReplace),
           // tab,
         } as ElementsSelection
       } else {
@@ -768,13 +894,12 @@ export default {
       }
       // console.log(serializeConfiguration(this.configuration!))
       if (isProject && this.project)
-        await this.backend?.storeInConfiguration(
-          'automations',
-          obj,
-          !!isDeletion,
-          isProject,
-          this.project.path
-        )
+        await this.backend?.storeInConfiguration({
+          projectPath: this.project.path,
+          field: 'automations',
+          value: JSON.stringify(obj),
+          operation: isDeletion ? 'delete' : 'append'
+        })
       setActionCommand(this.editor.state, ACTION_GET_PROJECT, {
         path: this.project?.path,
         computeConfig: true,

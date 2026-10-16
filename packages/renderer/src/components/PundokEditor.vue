@@ -1,67 +1,208 @@
 <template>
-  <q-layout view="LHH LpR LFf" :container="!mainEditor" :style="`height: ${height}`" class="shadow-2 rounded-borders">
+  <q-layout
+    view="LHH LpR LFf"
+    :container="!mainEditor"
+    :style="`height: ${height}`"
+    class="shadow-2 rounded-borders"
+  >
     <q-header>
       <q-toolbar class="text-white q-pa-none">
         <q-toolbar-title>
-          <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
-            :saved-changes="savedChanges" :saved-changes-as-copy="savedChangesAsCopy" @new-document="newDocument"
-            @open-document="openDocument()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+          <Menubar
+            :editor="editor"
+            :current-nodes-with-pos="currentNodesWithPos"
+            :gui-props="guiProps"
+            :saved-changes="savedChanges"
+            :saved-changes-as-copy="savedChangesAsCopy"
+            @new-document="newDocument"
+            @open-document="openDocument()"
+            @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
-            @reload-with-configuration="reloadWithConfiguration" />
+            @show-configuration-editor="visibleConfigurationEditor = true"
+            @manage-git-project="visibleGitChanges = true"
+            @check-git-updates="visibleGitUpdates = true"
+            @share-git-project="showGitRepository('publish')"
+            @connect-git-project="showGitRepository('connect')"
+            @clone-git-project="showGitRepository('clone')"
+            @reload-with-configuration="reloadWithConfiguration"
+            @render-output="renderOutput"
+            :rendering-targets="renderingTargets"
+          />
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
-    <q-drawer v-if="isMainEditor" show-if-above behavior="desktop" bordered :v-model="leftDrawerState === 'normal'"
-      side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="24"
-      :width="leftDrawerWidth" :breakpoint="500">
+    <q-drawer
+      v-if="isMainEditor"
+      show-if-above
+      behavior="desktop"
+      bordered
+      :v-model="leftDrawerState === 'normal'"
+      side="left"
+      :mini="leftDrawerState === 'mini'"
+      @click.capture="maximizePdfViewer"
+      :mini-width="24"
+      :width="leftDrawerWidth"
+      :breakpoint="500"
+    >
       <PdfViewer :backend="backend" class="pdf-viewer" />
       <div class="q-mini-drawer-only absolute" style="top: 150px; right: 3px">
-        <q-btn dense round unelevated color="secondary" icon="chevron_right" @click="maximizePdfViewer" />
+        <q-btn
+          dense
+          round
+          unelevated
+          color="secondary"
+          icon="chevron_right"
+          @click="maximizePdfViewer"
+        />
       </div>
       <div class="q-mini-drawer-hide absolute" style="top: 150px; right: -17px">
-        <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
+        <q-btn
+          dense
+          round
+          unelevated
+          color="secondary"
+          icon="chevron_left"
+          @click="minimizePdfViewer"
+        />
       </div>
       <div class="q-mini-drawer-hide absolute" style="top: 210px; right: -17px">
-        <q-btn dense round unelevated color="secondary" icon="arrow_left_right" @mousedown="startSettingLeftDrawerWidth"
-          @mousemove="changeLeftDrawerWidth" @mouseup="stopSettingLeftDrawerWidth"
-          @mouseleave="stopSettingLeftDrawerWidth" />
+        <q-btn
+          dense
+          round
+          unelevated
+          color="secondary"
+          icon="arrow_left_right"
+          @mousedown="startSettingLeftDrawerWidth"
+          @mousemove="changeLeftDrawerWidth"
+          @mouseup="stopSettingLeftDrawerWidth"
+          @mouseleave="stopSettingLeftDrawerWidth"
+        />
       </div>
     </q-drawer>
-    <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
-      :mini="rightDrawerState === 'mini'" @mouseenter="rightDrawerState = 'normal'"
-      @mouseleave="rightDrawerState = 'mini'" mini-to-overlay :mini-width="60" :width="240" :breakpoint="500"
-      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
-      <CustomStylesPanel :editor="editor" :panel-state="rightDrawerState" :current-blocks="currentNodesWithPos" />
+    <q-drawer
+      show-if-above
+      behavior="desktop"
+      bordered
+      :v-model="rightDrawerState === 'normal'"
+      side="right"
+      :mini="rightDrawerState === 'mini'"
+      @mouseenter="rightDrawerState = 'normal'"
+      @mouseleave="rightDrawerState = 'mini'"
+      mini-to-overlay
+      :mini-width="60"
+      :width="240"
+      :breakpoint="500"
+      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'"
+    >
+      <CustomStylesPanel
+        :editor="editor"
+        :panel-state="rightDrawerState"
+        :current-blocks="currentNodesWithPos"
+      />
     </q-drawer>
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
-        <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
-          @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
-        <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
-          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
-        <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
-          :on-attributes-editor-show="onAttributesEditorShow" @closeAttributesEditor="closeAttributesEditor()">
+        <PendingOperationDialog
+          :model-value="pending && !savedChanges"
+          :pending-operation="pending"
+          @pending-canceled="cancelPending"
+          @pending-confirmed="confirmPending"
+          @update-value="pendingValueUpdate"
+        />
+        <SearchAndReplace
+          :editor="editor"
+          :visible="visibleSearchAndReplaceDialog"
+          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()"
+        />
+        <AttributesEditor
+          :editor="editor"
+          :selected-node-or-mark="nodeOrMarkToEdit"
+          :start-tab="startAttributesTab"
+          :on-attributes-editor-show="onAttributesEditorShow"
+          @closeAttributesEditor="closeAttributesEditor()"
+        >
         </AttributesEditor>
-        <ConfigurationsDialog :editor="editor" :visible="visibleConfigurationDialog"
-          @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
+        <ConfigurationsDialog
+          :editor="editor"
+          :visible="visibleConfigurationDialog"
+          @set-configuration="setConfiguration"
+          @close-configurations-dialog="visibleConfigurationDialog = false"
+        >
         </ConfigurationsDialog>
-        <ExportDialog :editor="editor" :visible="visibleExportDialog" @set-output-converter="setOutputConverter"
-          @close-export-dialog="visibleExportDialog = false"></ExportDialog>
-        <ImportDialog :editor="editor" :visible="visibleImportDialog" @set-input-converter="setInputConverter"
-          @close-import-dialog="visibleImportDialog = false"></ImportDialog>
-        <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
-          @close-show-message-dialog="message = null" />
-        <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
-          :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
-        <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
-          :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
-          @new-editor="newSubEditor" />
-        <NewProjectDialog :editor="editor" :visible="visibleNewProjectDialog"
-          @close="visibleNewProjectDialog = false" />
+        <ShowMessageDialog
+          :editor="editor"
+          :visible="!!message"
+          :message="message"
+          @close-show-message-dialog="message = null"
+          :show-check-updates="message?.type === 'warning'"
+          :icon="
+            message?.source === 'git-no-updates' ? 'message_info' : undefined
+          "
+          :color="
+            message?.source === 'git-no-updates' ? 'secondary' : undefined
+          "
+          @check-updates="openGitUpdates"
+        />
+        <InputTextDialog
+          :editor="editor"
+          :visible="visibleInputTextDialog"
+          :label="inputTextDialogLabel"
+          :start-value="inputTextDialogStartValue"
+          @close-dialog="closeInputTextDialog"
+        />
+        <ProjectStructureDialog
+          :main-editor="editor"
+          :visible="visibleProjectStructureDialog"
+          :project="docState()?.project"
+          @close-project-structure-dialog="closeProjectStructureDialog"
+          @new-editor="newSubEditor"
+        />
+        <ProjectConfigEditorDialog
+          :visible="visibleConfigurationEditor"
+          :editor="editor"
+          :configuration="docState()?.project?.editorConfig || {}"
+          :project="docState()?.project"
+          :project-configurations="docState()?.project?.configurations || []"
+          @save="saveProject"
+          @close="visibleConfigurationEditor = false"
+        />
+        <NewProjectDialog
+          :editor="editor"
+          :visible="visibleNewProjectDialog"
+          @close="visibleNewProjectDialog = false"
+        />
+        <GitChangesDialog
+          :visible="visibleGitChanges"
+          :project-path="docState()?.project?.path || ''"
+          @close="visibleGitChanges = false"
+          @open-updates="
+            visibleGitChanges = false;
+            visibleGitUpdates = true;
+          "
+        />
+        <GitUpdatesDialog
+          :visible="visibleGitUpdates"
+          :project-path="docState()?.project?.path || ''"
+          @close="visibleGitUpdates = false"
+          @open-changes="
+            visibleGitUpdates = false;
+            visibleGitChanges = true;
+          "
+          @reload-project="reloadProjectAfterGitMerge"
+        />
+        <GitRepositoryDialog
+          :visible="!!gitRepositoryMode"
+          :mode="gitRepositoryMode || 'clone'"
+          :editor="editor as Editor"
+          :project-path="docState()?.project?.path || ''"
+          :project="docState()?.project"
+          @close="gitRepositoryMode = undefined"
+          @done="gitRepositoryDone"
+        />
         <ContextMenu :editor="editor" />
-        <editor-content class="pundok-editor" :editor="(editor as Editor)" />
+        <editor-content class="pundok-editor" :editor="editor as Editor" />
       </q-page>
     </q-page-container>
   </q-layout>
@@ -69,7 +210,7 @@
 
 <script setup lang="ts">
 import { setupQuasarIcons } from './helpers';
-setupQuasarIcons()
+setupQuasarIcons();
 </script>
 
 <script lang="ts">
@@ -91,10 +232,11 @@ import {
   getDocAsJsonString,
   CreateDocumentOptions,
 } from '../schema';
+
+const gitUpdateSnapshots = new Map<string, Map<string, number>>();
 // the next one is not imported from '../schema' to avoid a circular ref
-import { Pandoc } from '../schema/nodes/Pandoc'
+import { Pandoc } from '../schema/nodes/Pandoc';
 import {
-  IPC_VALUE_WINDOW_TITLE,
   type FeedbackMessage,
   type InputConverter,
   type OutputConverter,
@@ -121,7 +263,6 @@ import {
   NewDocumentActionProps,
   GoToLineActionProps,
   ResultMessageActionProps,
-  ShowExportDialogActionProps,
   BackendFeedbackActionProps,
   SetAlternativeActionProps,
   EditAttributesActionProps,
@@ -142,20 +283,15 @@ import {
   getDefaultWorkingFormat,
   getDefaultCopyFormat,
 } from '../common';
+import { setWindowTitle as setRendererWindowTitle } from '../backend/windowTitle';
 import { useActions, useBackend, useProjectCache } from '../stores';
-import AttributesEditor from './AttributesEditor.vue'
-import ConfigurationsDialog from './ConfigurationsDialog.vue'
-import ContextMenu from './ContextMenu.vue'
-import CustomStylesPanel from './CustomStylesPanel.vue'
-import ExportDialog from './ExportDialog.vue'
-import ImportDialog from './ImportDialog.vue'
-import InputTextDialog from './InputTextDialog.vue'
+import ContextMenu from './ContextMenu.vue';
+import InputTextDialog from './InputTextDialog.vue';
 import Menubar from './Menubar.vue';
-import NewProjectDialog from './NewProjectDialog.vue'
-import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue'
-import PendingOperationDialog from './PendingOperationDialog.vue'
-import SearchAndReplace from './SearchAndReplace.vue'
-import ShowMessageDialog from './ShowMessageDialog.vue'
+import NewProjectDialog from './NewProjectDialog.vue';
+import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue';
+import PendingOperationDialog from './PendingOperationDialog.vue';
+import ShowMessageDialog from './ShowMessageDialog.vue';
 import {
   ActionForNodeOrMark,
   EditorAction,
@@ -164,8 +300,6 @@ import {
   ACTION_EDIT_META_MAP_TEXT,
   ACTION_NEW_EMPTY_DOCUMENT,
   ACTION_SHOW_RESULT_MESSAGE,
-  ACTION_SHOW_EXPORT_DIALOG,
-  ACTION_SHOW_IMPORT_DIALOG,
   ACTION_SHOW_SEARCH_DIALOG,
   executeEditorAction,
   ACTION_NEW_DOCUMENT,
@@ -196,13 +330,14 @@ import {
   ACTION_DOCUMENT_SAVE_COPY,
 } from '../actions';
 import { useQuasar } from 'quasar';
+import { t } from '../i18n';
 import {
   PendingOperation,
   PendingOperationExtraValue,
   DocumentDialogProps,
   showOpenDocumentDialog,
   showSaveCopyDialog,
-  showSaveDocumentDialog
+  showSaveDocumentDialog,
 } from './helpers';
 
 const EMPTY_DOCUMENT =
@@ -225,6 +360,19 @@ function cssfilename2id(cssfilename: string) {
   return cssfilename ? cssfilename.replace(/[^_0-9A-Za-z]+/g, '-') : '';
 }
 
+const AttributesEditor = defineAsyncComponent(
+  () => import('./AttributesEditor.vue'),
+);
+const ConfigurationsDialog = defineAsyncComponent(
+  () => import('./ConfigurationsDialog.vue'),
+);
+const CustomStylesPanel = defineAsyncComponent(
+  () => import('./CustomStylesPanel.vue'),
+);
+const SearchAndReplace = defineAsyncComponent(
+  () => import('./SearchAndReplace.vue'),
+);
+
 export default {
   components: {
     EditorContent,
@@ -232,8 +380,6 @@ export default {
     ContextMenu,
     ShowMessageDialog,
     ConfigurationsDialog,
-    ExportDialog,
-    ImportDialog,
     InputTextDialog,
     SearchAndReplace,
     AttributesEditor,
@@ -241,8 +387,22 @@ export default {
     NodeOrMarkContextMenu,
     PendingOperationDialog,
     NewProjectDialog,
-    "ProjectStructureDialog": defineAsyncComponent(() => import('./ProjectStructureDialog.vue')),
-    "PdfViewer": defineAsyncComponent(() => import('./PdfViewer.vue'))
+    ProjectStructureDialog: defineAsyncComponent(
+      () => import('./ProjectStructureDialog.vue'),
+    ),
+    ProjectConfigEditorDialog: defineAsyncComponent(
+      () => import('./ProjectConfigEditorDialog.vue'),
+    ),
+    GitChangesDialog: defineAsyncComponent(
+      () => import('./GitChangesDialog.vue'),
+    ),
+    GitUpdatesDialog: defineAsyncComponent(
+      () => import('./GitUpdatesDialog.vue'),
+    ),
+    GitRepositoryDialog: defineAsyncComponent(
+      () => import('./GitRepositoryDialog.vue'),
+    ),
+    PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
   },
 
   props: {
@@ -290,19 +450,21 @@ export default {
       prevLeftDrawerWidth: 640,
       rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
-      visibleImportDialog: false,
-      visibleExportDialog: false,
       visibleSearchAndReplaceDialog: false,
       visibleInputTextDialog: false,
       visibleProjectStructureDialog: false,
+      visibleConfigurationEditor: false,
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
       visibleNewProjectDialog: false,
+      visibleGitChanges: false,
+      visibleGitUpdates: false,
+      gitRepositoryMode: undefined as
+        'clone' | 'publish' | 'connect' | undefined,
       swapBlocksWasActive: this.guiProps.swapBlocksActive,
       inputTextDialogLabel: DEFAULT_INPUT_TEXT_DIALOG_LABEL,
       inputTextDialogStartValue: DEFAULT_INPUT_TEXT_DIALOG_START_VALUE,
       inputTextDialogCallback: undefined as
-        | ((text: string, oldText?: string) => void)
-        | undefined,
+        ((text: string, oldText?: string) => void) | undefined,
       nodeOrMarkToEdit: undefined as SelectedNodeOrMark | undefined,
       startAttributesTab: undefined as string | undefined,
       onAttributesEditorShow: undefined as ActionNameWithProps | undefined,
@@ -311,6 +473,11 @@ export default {
       $q: useQuasar(),
       jsonSpace: DEFAULT_JSON_SPACE as string | number | undefined,
       splitterModel: 1,
+      renderingTargets: [] as {
+        converterName: string;
+        path?: string;
+        feedback: string[];
+      }[],
     };
   },
 
@@ -340,12 +507,13 @@ export default {
 
   watch: {
     visibleSearchAndReplaceDialog(visible: boolean) {
-      const editor = this.editor as Editor
+      const editor = this.editor as Editor;
       if (visible) {
-        this.swapBlocksWasActive = getEditorGuiProps(editor)?.swapBlocksActive || false
-        editor?.commands.toggleSwapBlocks(false)
+        this.swapBlocksWasActive =
+          getEditorGuiProps(editor)?.swapBlocksActive || false;
+        editor?.commands.toggleSwapBlocks(false);
       } else {
-        editor?.commands.toggleSwapBlocks(this.swapBlocksWasActive)
+        editor?.commands.toggleSwapBlocks(this.swapBlocksWasActive);
       }
     },
     lastAction(action: EditorAction) {
@@ -358,8 +526,8 @@ export default {
         switch (actionName) {
           case ACTION_UPDATE_DOC_STATE.name:
             {
-              const docState = (props as UpdateDocStateActionProps).docState
-              console.log('UPDATING DOC STATE...')
+              const docState = (props as UpdateDocStateActionProps).docState;
+              console.log('UPDATING DOC STATE...');
               if (docState) {
                 this.savedChanges = !docState.unsavedChanges;
                 this.savedChangesAsCopy = !docState.unsavedChangesAsCopy;
@@ -370,30 +538,34 @@ export default {
             this.setClosePending();
             break;
           case ACTION_BACKEND_SET_PROJECT.name:
-            this.setProject({ ...(props as BackendSetProjectActionProps)?.project });
+            this.setProject({
+              ...(props as BackendSetProjectActionProps)?.project,
+            });
             break;
           case ACTION_GET_PROJECT.name:
             this.reloadProject(props as GetProjectOptions);
             break;
           case ACTION_BACKEND_SET_CONFIG_NAME.name:
-            const configurationName = (props as BackendSetConfigNameActionProps)?.configurationName;
+            const configurationName = (props as BackendSetConfigNameActionProps)
+              ?.configurationName;
             this.setConfiguration(configurationName);
             break;
           case ACTION_SET_CONTENT.name:
             {
-              const { content } = props as SetContentActionProps
+              const { content } = props as SetContentActionProps;
               if (content) this.setContent(content);
             }
             break;
           case ACTION_BACKEND_SET_CONTENT.name:
             {
-              const { content } = props as BackendSetContentActionProps
+              const { content } = props as BackendSetContentActionProps;
               if (content) this.loadDocument(content);
             }
             break;
           case ACTION_BACKEND_SET_CONTENT_WITH_PROJECT.name:
             if (props) {
-              const { content, project, configuration } = props as BackendSetContentWithProjectActionProps;
+              const { content, project, configuration } =
+                props as BackendSetContentWithProjectActionProps;
               if (project) this.setProject(project);
               else if (configuration) this.setConfiguration(configuration);
               if (content) this.loadDocument(content);
@@ -408,49 +580,68 @@ export default {
           case ACTION_PROJECT_NEW.name:
             this.visibleProjectStructureDialog = false;
             this.visibleNewProjectDialog = true;
-            break
+            break;
           case ACTION_DOCUMENT_OPEN.name:
             {
-              const { context, atLine } = props as DocumentOpenActionProps
+              const { context, atLine } = props as DocumentOpenActionProps;
               this.openDocument(context, atLine);
             }
             break;
           case ACTION_DOCUMENT_SAVE.name:
-            if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
-              setActionCommand(this.projectStructureEditorKey, action, props)
-            else
-              this.save(props as DocumentSaveActionProps);
+            if (
+              this.visibleProjectStructureDialog &&
+              this.projectStructureEditorKey
+            )
+              setActionCommand(this.projectStructureEditorKey, action, props);
+            else this.save(props as DocumentSaveActionProps);
             break;
           case ACTION_DOCUMENT_SAVE_AS.name:
-            if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
-              setActionCommand(this.projectStructureEditorKey, action, props)
+            if (
+              this.visibleProjectStructureDialog &&
+              this.projectStructureEditorKey
+            )
+              setActionCommand(this.projectStructureEditorKey, action, props);
             else
-              this.save({ ...(props as DocumentSaveActionProps), isSaveAs: true });
+              this.save({
+                ...(props as DocumentSaveActionProps),
+                isSaveAs: true,
+              });
             break;
           case ACTION_DOCUMENT_SAVE_COPY.name:
-            if (this.visibleProjectStructureDialog && this.projectStructureEditorKey)
-              setActionCommand(this.projectStructureEditorKey, action, props)
+            if (
+              this.visibleProjectStructureDialog &&
+              this.projectStructureEditorKey
+            )
+              setActionCommand(this.projectStructureEditorKey, action, props);
             else
-              this.save({ ...(props as DocumentSaveActionProps), isCopy: true });
+              this.save({
+                ...(props as DocumentSaveActionProps),
+                isCopy: true,
+              });
             break;
           case ACTION_SET_DOCUMENT_FORMAT.name:
-            const { whichFormat, documentFormat } = props as SetDocumentFormatActionProps
-            const property = (whichFormat === 'input' && 'workingFormat')
-              || (whichFormat === 'copy' && 'copyFormat')
+            const { whichFormat, documentFormat } =
+              props as SetDocumentFormatActionProps;
+            const property =
+              (whichFormat === 'input' && 'workingFormat') ||
+              (whichFormat === 'copy' && 'copyFormat');
             if (property)
-              this.updateEditorDocState({ [whichFormat]: documentFormat || null })
-            break
+              this.updateEditorDocState({
+                [whichFormat]: documentFormat || null,
+              });
+            break;
           case ACTION_DOCUMENT_GO_TO_LINE.name:
             {
-              const { atLine } = props as GoToLineActionProps
-              if (atLine) console.log("moving to line " + atLine)
-              this.editor?.chain()
+              const { atLine } = props as GoToLineActionProps;
+              if (atLine) console.log('moving to line ' + atLine);
+              this.editor
+                ?.chain()
                 .gotoDocLine(atLine)
                 .focus()
                 .scrollIntoView()
-                .run()
+                .run();
             }
-            break
+            break;
           case ACTION_EDIT_ATTRIBUTES.name:
             if (nom) this.editNodeOrMarkAttributes(nom, props);
             break;
@@ -492,42 +683,28 @@ export default {
           //   break;
           case ACTION_SHOW_RESULT_MESSAGE.name:
             if (props)
-              this.showResultMessage(props as ResultMessageActionProps)
-            break
-          case ACTION_SHOW_EXPORT_DIALOG.name:
-            {
-              const { outputConverter } = props as ShowExportDialogActionProps
-              // FIXME: not clear: only showing or also exporting?
-              if (outputConverter)
-                this.setOutputConverter(outputConverter);
-              else
-                this.visibleExportDialog = true;
-            }
-            break;
-          case ACTION_SHOW_IMPORT_DIALOG.name:
-            this.visibleImportDialog = true;
+              this.showResultMessage(props as ResultMessageActionProps);
             break;
           case ACTION_SHOW_SEARCH_DIALOG.name:
             this.visibleSearchAndReplaceDialog = true;
             break;
           case ACTION_NEW_EMPTY_DOCUMENT.name:
             {
-              const { configurationName } = props as NewEmptyDocumentActionProps
+              const { configurationName } =
+                props as NewEmptyDocumentActionProps;
               this.newDocument(configurationName);
             }
             break;
           case ACTION_NEW_DOCUMENT.name:
-            const { configurationName: configName, content } = props as NewDocumentActionProps
-            this.newDocument(
-              configName,
-              content,
-            );
+            const { configurationName: configName, content } =
+              props as NewDocumentActionProps;
+            this.newDocument(configName, content);
             break;
           case ACTION_DOCUMENT_INCLUDE.name:
             {
-              const ctx = (props as DocumentOpenActionProps).context
+              const ctx = (props as DocumentOpenActionProps).context;
               if (ctx) {
-                const { path, documentFormat } = ctx
+                const { path, documentFormat } = ctx;
                 if (path) {
                   const appendTransform: PandocFilterTransform = {
                     type: 'pandoc-filter',
@@ -537,22 +714,24 @@ export default {
                     fromFormat: documentFormat?.name || 'json',
                     toFormat: 'json',
                     sources: [path],
-                  }
-                  setActionCommand(editorKey, ACTION_DOCUMENT_TRANSFORM,
-                    { transform: appendTransform } as TransformDocumentActionProps)
+                  };
+                  setActionCommand(editorKey, ACTION_DOCUMENT_TRANSFORM, {
+                    transform: appendTransform,
+                  } as TransformDocumentActionProps);
                 }
               }
             }
-            break
+            break;
           case ACTION_DOCUMENT_TRANSFORM.name:
-            const { transform } = props as TransformDocumentActionProps
-            console.log(transform);
+            const { transform } = props as TransformDocumentActionProps;
             this.transformDocument(transform);
             break;
           case ACTION_BACKEND_FEEDBACK.name:
-            const { feedback } = props as BackendFeedbackActionProps
-            const { message, type } = feedback
-            const isSuccess = type === 'success'
+            const { feedback } = props as BackendFeedbackActionProps;
+            const { message, type } = feedback;
+            for (const renderingTarget of this.renderingTargets)
+              renderingTarget.feedback.push(message);
+            const isSuccess = type === 'success';
             if (isSuccess) {
               // console.log(`success feedback: ${message.message}`);
               this.$q.notify({
@@ -562,7 +741,7 @@ export default {
                 position: 'top',
                 color: 'positive',
                 timeout: isSuccess ? 2000 : 5000,
-              })
+              });
             } else {
               if (type !== 'progress') {
                 this.message = feedback;
@@ -581,7 +760,7 @@ export default {
             }
             break;
           case ACTION_SET_ALTERNATIVE.name:
-            const { context } = props as SetAlternativeActionProps
+            const { context } = props as SetAlternativeActionProps;
             if (!context) {
               // re-dispatch action with the proper context
               if (this.visibleSearchAndReplaceDialog) {
@@ -593,7 +772,7 @@ export default {
             }
             break;
           case ACTION_SETUP_VIEWER.name:
-            this.maximizePdfViewer()
+            this.maximizePdfViewer();
             break;
           default:
             executeEditorAction(action, editor);
@@ -622,6 +801,16 @@ export default {
   },
 
   methods: {
+    showGitRepository(mode: 'clone' | 'publish' | 'connect') {
+      this.gitRepositoryMode = mode;
+    },
+    gitRepositoryDone(result: { path?: string }) {
+      if (result.path)
+        this.$q.notify({
+          message: `Project ready at ${result.path}`,
+          color: 'positive',
+        });
+    },
     editorState(): EditorState | undefined {
       if (this.editor) return this.editor.view.state as EditorState;
     },
@@ -633,7 +822,7 @@ export default {
     },
     /**
      * Update the current document state.
-     * @param update 
+     * @param update
      */
     updateEditorDocState(update: Partial<DocStateUpdate>) {
       this.editor?.commands.updateDocState(update);
@@ -660,7 +849,7 @@ export default {
      * @param editorKey
      */
     newSubEditor(editorKey: EditorKeyType, editor?: Editor) {
-      this.projectStructureEditorKey = editorKey
+      this.projectStructureEditorKey = editorKey;
     },
     /**
      * Create a new editor component.
@@ -669,19 +858,18 @@ export default {
       const editor = new Editor({
         extensions: [
           Pandoc.configure({
-            // ...this.tiptapOptions,
+            //   // ...this.tiptapOptions,
           }),
         ],
         // content: '',
         onUpdate: () => {
           const editor = this.editor as Editor | undefined;
-          if (editor)
-            this.$emit('update:modelValue', editor.getHTML());
+          if (editor) this.$emit('update:modelValue', editor.getHTML());
         },
       });
       if (editor) {
         // @ts-ignore
-        const oldDocState = this.docState()
+        const oldDocState = this.docState();
         // @ts-ignore
         this.editor = editor;
         if (process.env.NODE_ENV === 'development') {
@@ -703,7 +891,7 @@ export default {
           includeFormat: oldDocState?.includeFormat,
           copyFormat: oldDocState?.copyFormat,
         });
-        this.$emit('new-editor', this.editorKey(), this.editor)
+        this.$emit('new-editor', this.editorKey(), this.editor);
       }
     },
     /**
@@ -737,10 +925,13 @@ export default {
     },
     /**
      * Set and show a dialog to save the current unsaved contents before creating a new document.
-     * @param options 
+     * @param options
      */
-    setPendingBeforeNewDoc(options: { configurationName?: string, content?: string }) {
-      const { configurationName, content } = options
+    setPendingBeforeNewDoc(options: {
+      configurationName?: string;
+      content?: string;
+    }) {
+      const { configurationName, content } = options;
       const pending: PendingOperation = {
         type: 'new',
         cancel: {
@@ -763,7 +954,7 @@ export default {
     },
     /**
      * Set and show a dialog to save the current unsaved contents before loading a document.
-     * @param options 
+     * @param options
      */
     setPendingBeforeLoadDoc(options: { doc: CxDocument }) {
       const pending: PendingOperation = {
@@ -797,25 +988,27 @@ export default {
       ignoreUnsaved?: boolean,
     ) {
       if (!ignoreUnsaved && this.askToSaveChanges) {
-        this.setPendingBeforeNewDoc({ configurationName, content })
-        return
+        this.setPendingBeforeNewDoc({ configurationName, content });
+        return;
       }
       const isNew = !content;
       try {
         if (configurationName) await this.setConfiguration(configurationName);
         // @ts-ignore
-        const prevDocState: Partial<DocStateUpdate> = this.docState() || {}
+        const prevDocState: Partial<DocStateUpdate> = this.docState() || {};
         this.editor?.destroy();
         await this.newEditor();
         this.editor?.commands.updateDocState({
           configuration: prevDocState?.configuration,
           workingFolder: prevDocState?.workingFolder,
-          workingFormat: getDefaultWorkingFormat(this.configuration) || prevDocState?.workingFormat,
+          workingFormat:
+            getDefaultWorkingFormat(this.configuration) ||
+            prevDocState?.workingFormat,
           copyFormat: getDefaultCopyFormat(this.configuration),
           imagesFolder: prevDocState?.imagesFolder,
           imagesFormat: prevDocState?.imagesFormat,
           // TODO: check which property should be inherited
-        })
+        });
         this.setMainEditorKey();
         this.setContent(content || EMPTY_DOCUMENT, isNew);
         this.setDocumentAsNativelySaved();
@@ -843,30 +1036,34 @@ export default {
      */
     async openDocument(context?: DocumentContext, atLine?: number) {
       const docState = this.docState();
-      const editorKey = this.editorKey()
+      const editorKey = this.editorKey();
       if (!context?.path) {
         if (editorKey) {
-          const { configuration, workingFolder, workingFormat } = docState || {}
+          const { configuration, workingFolder, workingFormat } =
+            docState || {};
           showOpenDocumentDialog({
             editor: this.editor,
             mode: 'open',
             options: {
-              prompt: 'Open document',
+              prompt: t('fileDialog.prompt.openDocument'),
               startFolder: workingFolder,
               startFormat: asInputFormat(workingFormat, configuration),
             },
             callback: (context) => {
               if (context.path) {
-                setActionCommand(editorKey, ACTION_DOCUMENT_OPEN, { context } as DocumentOpenActionProps)
+                setActionCommand(editorKey, ACTION_DOCUMENT_OPEN, {
+                  context,
+                } as DocumentOpenActionProps);
               }
-            }
-          } as DocumentDialogProps)
+            },
+          } as DocumentDialogProps);
         }
       } else {
         try {
-          const configurationName = context?.configurationName
-            || (!docState?.project && docState?.configuration?.name)
-            || undefined;
+          const configurationName =
+            context?.configurationName ||
+            (!docState?.project && docState?.configuration?.name) ||
+            undefined;
           const project = context?.project || docState?.project;
           const doc = await this.backend?.open({
             ...context,
@@ -876,50 +1073,56 @@ export default {
           });
           if (doc) {
             await this.loadDocument(doc, false, atLine);
-            const { configurationName, documentFormat, path, project } = doc
-            const configuration = project?.computedConfig
-              || (configurationName && await this.setConfiguration(configurationName))
-              || undefined
+            const { configurationName, documentFormat, path, project } = doc;
+            const configuration =
+              project?.computedConfig ||
+              (configurationName &&
+                (await this.setConfiguration(configurationName))) ||
+              undefined;
             const update: Partial<DocStateUpdate> = {
               workingFormat: documentFormat,
               copyFormat: getDefaultCopyFormat(configuration),
-            }
+            };
             if (path) {
-              const { folder, document } = splitFolderAndDoc(path)
-              update.workingFolder = folder
-              update.documentName = document
+              const { folder, document } = splitFolderAndDoc(path);
+              update.workingFolder = folder;
+              update.documentName = document;
             }
-            this.editor?.commands.updateDocState(update)
+            this.editor?.commands.updateDocState(update);
           }
         } catch (err) {
-          console.log(err)
+          console.log(err);
         }
       }
     },
     setDocumentAsNativelySaved() {
-      this.savedChanges = true
+      this.savedChanges = true;
       // this.savedChangesAsCopy = true
       this.updateEditorDocState({
         unsavedChanges: !this.savedChanges,
         // unsavedChangesAsCopy: !this.savedChangesAsCopy,
-        savedDoc: this.editor?.view.state.doc
+        savedDoc: this.editor?.view.state.doc,
       });
     },
-    async loadDocument(doc: CxDocument, ignoreUnsaved?: boolean, atLine?: number): Promise<void> {
+    async loadDocument(
+      doc: CxDocument,
+      ignoreUnsaved?: boolean,
+      atLine?: number,
+    ): Promise<void> {
       if (!ignoreUnsaved && this.askToSaveChanges) {
-        this.setPendingBeforeLoadDoc({ doc })
-        return Promise.reject("operation pending...")
+        this.setPendingBeforeLoadDoc({ doc });
+        return Promise.reject('operation pending...');
       }
       // ex TODO: remove history
       this.editor?.destroy();
       await this.newEditor();
       const editorKey = this.editorKey();
-      doc.editorKey = editorKey
+      doc.editorKey = editorKey;
       this.setMainEditorKey();
       console.log(`created new editor for doc:`);
       console.log(doc);
 
-      const { folder, document } = splitFolderAndDoc(doc.path!)
+      const { folder, document } = splitFolderAndDoc(doc.path!);
       this.updateEditorDocState({
         documentName: document,
         resourcePath: doc.resourcePath,
@@ -928,8 +1131,13 @@ export default {
       });
 
       // set project or configuration
-      if (doc.project) await this.setProject(doc.project);
-      else if (doc.configurationName) {
+      if (doc.project) {
+        await this.setProject(doc.project);
+        void this.loadProjectStructure(doc.project);
+      } else {
+        this.updateEditorDocState({ projectStructure: null });
+      }
+      if (!doc.project && doc.configurationName) {
         try {
           await this.setConfiguration(doc.configurationName);
         } catch (err) {
@@ -937,104 +1145,132 @@ export default {
         }
       }
 
-      this.setWindowTitleFromDoc(doc);
+      await this.setWindowTitleFromDoc(doc);
       this.setContent(doc.content, false);
       this.detectDocumentIndices();
       this.setDocumentAsNativelySaved();
       this.$emit('document-loaded', doc, this.editor);
-      const action = ACTION_DOCUMENT_GO_TO_LINE
-      if (atLine) action.label += ` ${atLine}`
-      setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps)
+      const action = ACTION_DOCUMENT_GO_TO_LINE;
+      if (atLine) action.label += ` ${atLine}`;
+      setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps);
     },
     beforeSaving() {
       this.editor?.commands.fixPandocTables();
     },
     async save(props?: DocumentSaveActionProps) {
-      const { dontAskCopyPath, isCopy, isSaveAs } = props || {}
+      const { dontAskCopyPath, isCopy, isSaveAs } = props || {};
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
-      const docState = this.docState()
-      const { documentName, copyFolder, workingFolder, configuration, workingFormat } = docState || {}
-      let path = props?.path
+      const docState = this.docState();
+      const {
+        documentName,
+        copyFolder,
+        workingFolder,
+        configuration,
+        workingFormat,
+      } = docState || {};
+      let path = props?.path;
       if (!path) {
-        const folder = isCopy ? copyFolder : workingFolder
-        path = folder && documentName && `${folder}/${documentName}` || undefined
+        const folder = isCopy ? copyFolder : workingFolder;
+        path =
+          (folder && documentName && `${folder}/${documentName}`) || undefined;
       }
-      const isSave = !isSaveAs && !isCopy
-      let documentFormat = asOutputFormat(props?.documentFormat || workingFormat, configuration)
+      const isSave = !isSaveAs && !isCopy;
+      let documentFormat = asOutputFormat(
+        props?.documentFormat || workingFormat,
+        configuration,
+      );
       if (
-        !path
-        || isSaveAs
-        || (isCopy && !dontAskCopyPath)
-        || (isSave && !documentFormat)
+        !path ||
+        isSaveAs ||
+        (isCopy && !dontAskCopyPath) ||
+        (isSave && !documentFormat)
       ) {
         if (isCopy) {
-          const { documentName, copyFolder, copyFormat, workingFolder } = docState || {}
-          const startFilename = documentName && copyFormat
-            ? changeFileExtensionToFormat(documentName, copyFormat)
-            : undefined
-          const defaultCopyFormat = getDefaultCopyFormat(configuration)
+          const { documentName, copyFolder, copyFormat, workingFolder } =
+            docState || {};
+          const startFilename =
+            documentName && copyFormat
+              ? changeFileExtensionToFormat(documentName, copyFormat)
+              : undefined;
+          const defaultCopyFormat = getDefaultCopyFormat(configuration);
           showSaveCopyDialog({
             editor: this.editor,
             options: {
-              prompt: 'Save a copy to:',
+              prompt: t('fileDialog.prompt.saveCopyTo'),
               startFolder: copyFolder || workingFolder,
-              startFormat: copyFormat || defaultCopyFormat
-                || asOutputFormat(workingFormat, configuration)
-                || DEFAULT_COPY_DOCUMENT_FORMAT,
+              startFormat:
+                copyFormat ||
+                defaultCopyFormat ||
+                asOutputFormat(workingFormat, configuration) ||
+                DEFAULT_COPY_DOCUMENT_FORMAT,
               startFilename,
             },
             callback: (context) => {
-              const { editorKey, documentFormat, path } = context
+              const { editorKey, documentFormat, path } = context;
               if (path) {
-                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY,
-                  { path, documentFormat, isCopy: true, dontAskCopyPath: true } as DocumentSaveActionProps)
+                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE_COPY, {
+                  path,
+                  documentFormat,
+                  isCopy: true,
+                  dontAskCopyPath: true,
+                } as DocumentSaveActionProps);
               } else {
                 // TODO: signal missing path!
               }
-            }
-          } as DocumentDialogProps)
+            },
+          } as DocumentDialogProps);
         } else {
-          const { configuration, documentName, workingFolder, workingFormat } = docState || {}
-          const defaultWorkingFormat = getDefaultWorkingFormat(configuration)
+          const { configuration, documentName, workingFolder, workingFormat } =
+            docState || {};
+          const defaultWorkingFormat = getDefaultWorkingFormat(configuration);
           const format = isSaveAs
             ? workingFormat || defaultWorkingFormat
-            : documentFormat || defaultWorkingFormat || DEFAULT_DOCUMENT_FORMAT
-          const startFormat = asOutputFormat(format, configuration)
-          const startFilename = documentName && startFormat
-            ? changeFileExtensionToFormat(documentName, startFormat)
-            : undefined
+            : documentFormat || defaultWorkingFormat || DEFAULT_DOCUMENT_FORMAT;
+          const startFormat = asOutputFormat(format, configuration);
+          const startFilename =
+            documentName && startFormat
+              ? changeFileExtensionToFormat(documentName, startFormat)
+              : undefined;
           showSaveDocumentDialog({
             editor: this.editor,
             options: {
-              prompt: isSaveAs ? 'Save document as:' : 'Save document:',
+              prompt: t(
+                isSaveAs
+                  ? 'fileDialog.prompt.save'
+                  : 'fileDialog.prompt.saveCurrent',
+              ),
               startFolder: isSaveAs ? workingFolder : workingFolder,
               startFormat,
               startFilename,
             },
             callback: (context) => {
-              const { editorKey, documentFormat, path } = context
+              const { editorKey, documentFormat, path } = context;
               if (path) {
-                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE,
-                  { path, documentFormat } as DocumentSaveActionProps)
+                setActionCommand(editorKey!, ACTION_DOCUMENT_SAVE, {
+                  path,
+                  documentFormat,
+                } as DocumentSaveActionProps);
               } else {
                 // TODO: signal missing path!
               }
-            }
-          } as DocumentDialogProps)
+            },
+          } as DocumentDialogProps);
         }
-        return
+        return;
       }
       try {
         const docState = this.docState();
-        console.log(toRaw(props))
-        documentFormat = toRaw(documentFormat || (
-          isCopy
-            ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
-            : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT
-        ))
+        console.log(toRaw(props));
+        documentFormat = toRaw(
+          documentFormat ||
+            (isCopy
+              ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
+              : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT),
+        );
         if (this.backend) {
-          const { configuration, documentName, project, resourcePath } = docState || {}
+          const { configuration, documentName, project, resourcePath } =
+            docState || {};
           const response = await this.backend.save({
             editorKey: this.editorKey(),
             id: documentNameToId(documentName),
@@ -1050,40 +1286,39 @@ export default {
               success: false,
               caption: 'SAVE ERROR',
               message: JSON.stringify(response.error),
-              icon: 'content_save_alert'
+              icon: 'content_save_alert',
             });
             return Promise.reject(errmsg);
           } else {
-            const path = response.doc.path
+            const path = response.doc.path;
             if (path) {
-              const { folder, document } = splitFolderAndDoc(path)
-              const update: Partial<DocStateUpdate> = {}
+              const { folder, document } = splitFolderAndDoc(path);
+              const update: Partial<DocStateUpdate> = {};
               if (isCopy) {
-                update.copyFolder = folder
-                update.copyFormat = documentFormat
-                update.unsavedChangesAsCopy = false
+                update.copyFolder = folder;
+                update.copyFormat = documentFormat;
+                update.unsavedChangesAsCopy = false;
               } else if (isSaveAs) {
-                update.documentName = document
-                update.workingFolder = folder
-                update.workingFormat = documentFormat
-                update.unsavedChanges = false
+                update.documentName = document;
+                update.workingFolder = folder;
+                update.workingFormat = documentFormat;
+                update.unsavedChanges = false;
               } else {
-                update.documentName = document
-                update.workingFolder = folder
-                update.workingFormat = documentFormat
-                update.unsavedChanges = false
+                update.documentName = document;
+                update.workingFolder = folder;
+                update.workingFormat = documentFormat;
+                update.unsavedChanges = false;
               }
-              this.editor?.commands.updateDocState(update)
+              this.editor?.commands.updateDocState(update);
             }
             // this.setDocumentAsNativelySaved();
             this.showResultMessage({
               success: true,
               caption: 'SAVE SUCCESS',
               message: `saved as ${response.doc.path || response.doc.id}`,
-              icon: 'content_save_check'
+              icon: 'content_save_check',
             });
-            if (!isCopy)
-              this.setWindowTitleFromDoc(response.doc);
+            if (!isCopy) await this.setWindowTitleFromDoc(response.doc);
           }
           if (response.doc && (response.doc.path || response.doc.id)) {
             return response;
@@ -1097,7 +1332,7 @@ export default {
           success: false,
           caption: 'SAVE ERROR',
           message,
-          icon: 'content_save_alert'
+          icon: 'content_save_alert',
         });
         console.log(message);
         return Promise.reject(errmsg);
@@ -1106,39 +1341,50 @@ export default {
     async exportDoc(
       converter: OutputConverter,
       storedDoc?: Partial<CxDocument>,
+      preserveEditor = false,
     ): Promise<SaveResponse> {
-      const jsonDoc = this.getDocAsJsonString();
+      const jsonDoc = storedDoc?.content || this.getDocAsJsonString();
       try {
         const backend = this.backend;
         if (backend) {
           const sdoc: Partial<CxDocument> = storedDoc || {};
-          const documentFormat = outputConverterToDocumentFormat(toRaw(converter) as OutputConverter)
+          const documentFormat = outputConverterToDocumentFormat(
+            toRaw(converter) as OutputConverter,
+          );
           const docState = this.docState();
           if (docState) {
-            const { configuration, documentName, project, resourcePath, } = docState;
-            this.setOperationInProgress(true)
-            const response = await backend.save(
-              {
-                editorKey: this.editorKey(),
-                id: sdoc.id || docState?.documentName,
-                path: sdoc.path,
-                content: jsonDoc,
-                project,
-                documentFormat,
-                configurationName: sdoc.configurationName || configuration?.name,
-                resourcePath,
-              },
-            );
+            const {
+              configuration,
+              documentName,
+              workingFolder,
+              project,
+              resourcePath,
+            } = docState;
+            this.setOperationInProgress(true);
+            const response = await backend.save({
+              editorKey: this.editorKey(),
+              id: sdoc.id || docState?.documentName,
+              path:
+                sdoc.path ||
+                (workingFolder && documentName
+                  ? `${workingFolder}/${documentName}`
+                  : undefined),
+              content: jsonDoc,
+              project,
+              documentFormat,
+              configurationName: sdoc.configurationName || configuration?.name,
+              resourcePath,
+            });
             setTimeout(() => {
-              this.setOperationInProgress(false)
-            }, 3000)
+              this.setOperationInProgress(false);
+            }, 3000);
             // console.log(response.doc)
-            this.setWindowTitleFromDoc(response.doc);
+            if (!preserveEditor) await this.setWindowTitleFromDoc(response.doc);
             if (response.error) {
               const errmsg = `ERROR, ${response.message}: ${response.error}`;
               console.log(errmsg);
               return Promise.reject(errmsg);
-            } else {
+            } else if (!preserveEditor) {
               // this.currentState.setLastExportResponse(response)
               this.updateEditorDocState({
                 unsavedChangesAsCopy: false,
@@ -1162,12 +1408,50 @@ export default {
         return Promise.reject(error);
       }
     },
+    async renderOutput(converter: OutputConverter, path?: string) {
+      const docState = this.docState();
+      const currentPath =
+        docState?.workingFolder && docState.documentName
+          ? `${docState.workingFolder}/${docState.documentName}`
+          : undefined;
+      const renderingPath = path || currentPath;
+      const renderingTarget = {
+        converterName: converter.name,
+        path: renderingPath,
+        feedback: [] as string[],
+      };
+      if (
+        this.renderingTargets.some(
+          (target) =>
+            target.converterName === renderingTarget.converterName &&
+            target.path === renderingTarget.path,
+        )
+      )
+        return;
+      this.renderingTargets.push(renderingTarget);
+      let source: Partial<CxDocument> | undefined;
+      try {
+        if (renderingPath && renderingPath !== currentPath) {
+          source = await this.backend?.open({
+            path: renderingPath,
+            project: docState?.project,
+          });
+        }
+        await this.exportDoc(converter, source, true);
+      } finally {
+        this.renderingTargets = this.renderingTargets.filter(
+          (target) =>
+            target.converterName !== renderingTarget.converterName ||
+            target.path !== renderingTarget.path,
+        );
+      }
+    },
     async importDoc(converter: InputConverter) {
       const docState = this.docState();
       const documentFormat: DocumentFormat = {
         ftype: 'input-converter',
-        ...toRaw(converter) as InputConverter
-      }
+        ...(toRaw(converter) as InputConverter),
+      };
       const doc = await this.backend?.open({
         editorKey: docState?.editorKey,
         configurationName: docState?.configuration?.name,
@@ -1176,26 +1460,16 @@ export default {
       });
       if (doc) this.loadDocument(doc);
     },
-    setOutputConverter(converter: OutputConverter) {
-      // console.log(converter)
-      this.visibleExportDialog = false;
-      if (converter) this.exportDoc(converter);
-    },
-    setInputConverter(converter: InputConverter) {
-      // console.log(converter)
-      this.visibleImportDialog = false;
-      if (converter) this.importDoc(converter);
-    },
     setOperationInProgress(remoteWorkInProgress: boolean) {
-      useActions().setRemoteWorkInProgress(remoteWorkInProgress)
+      useActions().setRemoteWorkInProgress(remoteWorkInProgress);
     },
     async transformDocument(transform: PandocFilterTransform) {
       const { sources, withResult } = transform;
       const whatToDo: WhatToDoWithResult =
         withResult || (sources ? 'append' : 'replace');
-      console.log(sources)
+      console.log(sources);
       const json = sources ? undefined : this.getDocAsJsonString();
-      console.log(json)
+      console.log(json);
       const docState = this.docState();
       try {
         this.setOperationInProgress(true);
@@ -1269,12 +1543,15 @@ export default {
     },
     getDocAsJsonString(): string {
       const state = this.editorState();
-      return getDocAsJsonString(state!, { // TODO: check state!
+      const docState = state ? getDocState(state) : undefined;
+      return getDocAsJsonString(state!, {
+        // TODO: check state!
         space: this.jsonSpace,
+        noteStyles: docState?.configuration?.noteStyles,
       });
     },
     showResultMessage(props: ResultMessageActionProps) {
-      const { success, message, caption, icon } = props
+      const { success, message, caption, icon } = props;
       this.$q.notify({
         message,
         caption,
@@ -1289,17 +1566,12 @@ export default {
     },
     async setWindowTitle(title: string) {
       if (this.isMainEditor) {
-        const backend = this.backend;
-        if (backend) {
-          backend.setValue(IPC_VALUE_WINDOW_TITLE, title);
-        }
+        await setRendererWindowTitle(title, this.backend);
       }
     },
-    setWindowTitleFromDoc(
-      doc: CxDocument,
-    ) {
-      const title = doc.path || doc.id || 'new document'
-      this.setWindowTitle(title);
+    async setWindowTitleFromDoc(doc: CxDocument): Promise<void> {
+      const title = doc.path || doc.id || 'new document';
+      await this.setWindowTitle(title);
     },
     async setProject(project: PundokEditorProject) {
       if (project) {
@@ -1308,13 +1580,84 @@ export default {
         this.updateEditorDocState({ project });
         await this.setConfiguration(project.computedConfig);
         useProjectCache().setIndices();
+        this.updateEditorDocState({ projectStructure: null });
+        void this.checkGitUpdates(project);
         // this.updateEditorDocState({ configuration: project.computedConfig })
       }
     },
+    async checkGitUpdates(project: PundokEditorProject) {
+      const backend = this.backend;
+      if (!backend) return;
+      try {
+        const status = await backend.gitProjectStatus(project.path);
+        if (!status.managed || !status.remote) return;
+        const branches = await backend.gitProjectUpdates(project.path);
+        const ahead = branches.filter((branch) => branch.ahead > 0);
+        const snapshot = new Map(
+          ahead.map((branch) => [branch.name, branch.ahead]),
+        );
+        const previousSnapshot = gitUpdateSnapshots.get(project.path);
+        gitUpdateSnapshots.set(project.path, snapshot);
+        const snapshotChanged =
+          !previousSnapshot ||
+          snapshot.size !== previousSnapshot.size ||
+          [...snapshot].some(
+            ([name, count]) => previousSnapshot.get(name) !== count,
+          );
+        if (!snapshotChanged) return;
+        if (this.docState()?.project?.path !== project.path) return;
+        this.message = {
+          type: 'warning',
+          source: ahead.length ? 'git-updates' : 'git-no-updates',
+          message: ahead.length
+            ? this.$t('gitUpdatesNotification.message', {
+                branches: ahead
+                  .map((branch) => `${branch.name} (${branch.ahead})`)
+                  .join(', '),
+              })
+            : this.$t('gitChangesDialog.noUpdates', {
+                name: status.branch || '',
+              }),
+        };
+      } catch (error) {
+        console.error(
+          'Unable to check Git updates after loading project',
+          error,
+        );
+      }
+    },
+    openGitUpdates() {
+      this.message = null;
+      this.visibleGitUpdates = true;
+    },
+    async reloadProjectAfterGitMerge() {
+      const projectPath = this.docState()?.project?.path;
+      if (projectPath) await this.reloadProject({ path: projectPath });
+    },
+    async loadProjectStructure(project: PundokEditorProject): Promise<void> {
+      const backend = this.backend;
+      if (!backend) return;
+
+      try {
+        const structure = await backend.getInclusionTree(project);
+        console.log(`STRUCTURE: ${JSON.stringify(structure)}`);
+        if (
+          JSON.stringify(this.docState()?.project) === JSON.stringify(project)
+        )
+          this.updateEditorDocState({ projectStructure: structure || null });
+      } catch (error) {
+        console.error('Unable to load project structure', error);
+      }
+    },
     async reloadProject(options: GetProjectOptions) {
-      const project = await this.backend?.getProject({ ...options, computeConfig: true })
-      if (project)
-        this.setProject(project)
+      const project = await this.backend?.getProject({
+        ...options,
+        computeConfig: true,
+      });
+      if (project) {
+        await this.setProject(project);
+        await this.loadProjectStructure(project);
+      }
     },
     async setConfiguration(
       name_or_config?: string | PundokEditorConfig,
@@ -1376,7 +1719,7 @@ export default {
       props?: EditAttributesActionProps,
     ) {
       if (nodeOrMark) {
-        let { tab, action } = props || {}
+        let { tab, action } = props || {};
         const node = nodeOrMark.node;
         if (!tab && node) {
           switch (node.type.name) {
@@ -1415,6 +1758,26 @@ export default {
     },
     closeProjectStructureDialog() {
       this.visibleProjectStructureDialog = false;
+    },
+    async saveProject(project: PundokEditorProject) {
+      const { computedConfig: _computedConfig, ...projectToSave } = project;
+      try {
+        await this.backend?.storeInConfiguration({
+          projectPath: project.path,
+          value: JSON.stringify(projectToSave),
+          operation: 'update',
+        });
+        await this.reloadProject({
+          path: project.path,
+        });
+        this.visibleConfigurationEditor = false;
+      } catch (error) {
+        console.error('Unable to save project configuration', error);
+        this.$q.notify({
+          type: 'negative',
+          message: 'Unable to save project configuration',
+        });
+      }
     },
     onClose(event: Event) {
       if (this.askToSaveChanges) {
@@ -1481,25 +1844,26 @@ export default {
       this.reloadDocumentWithConfiguration(configurationName);
     },
     maximizePdfViewer() {
-      this.leftDrawerState = 'normal'
+      this.leftDrawerState = 'normal';
     },
     minimizePdfViewer() {
-      this.leftDrawerState = 'mini'
+      this.leftDrawerState = 'mini';
     },
     startSettingLeftDrawerWidth(e: MouseEvent) {
-      this.leftDrawerHandleStart = e.clientX
-      this.prevLeftDrawerWidth = this.leftDrawerWidth
+      this.leftDrawerHandleStart = e.clientX;
+      this.prevLeftDrawerWidth = this.leftDrawerWidth;
     },
     changeLeftDrawerWidth(e: MouseEvent) {
       if (this.leftDrawerHandleStart) {
-        const w = this.prevLeftDrawerWidth + e.clientX - this.leftDrawerHandleStart
+        const w =
+          this.prevLeftDrawerWidth + e.clientX - this.leftDrawerHandleStart;
         if (w >= 16 && w <= 1024) {
-          this.leftDrawerWidth = w
+          this.leftDrawerWidth = w;
         }
       }
     },
     stopSettingLeftDrawerWidth(e: MouseEvent) {
-      this.leftDrawerHandleStart = undefined
+      this.leftDrawerHandleStart = undefined;
     },
   },
 } as Component;

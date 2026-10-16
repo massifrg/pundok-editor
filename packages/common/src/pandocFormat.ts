@@ -3,26 +3,26 @@ import {
   InputConverter,
   OutputConverter,
   PandocInputConverter,
-  PandocOutputConverter
+  PandocOutputConverter,
 } from './config';
 import { isString, uniq } from 'lodash-es';
 import * as browserify from 'path-browserify';
 import { commonIcons } from './icons';
 
-export const DEFAULT_FORMAT = 'json'
-export const DEFAULT_COPY_FORMAT = 'markdown'
-export const DEFAULT_MAIN_FORMATS = ['json', 'markdown', 'docx']
+export const DEFAULT_FORMAT = 'json';
+export const DEFAULT_COPY_FORMAT = 'markdown';
+export const DEFAULT_MAIN_FORMATS = ['json', 'markdown', 'docx'];
 
 export interface PandocFormatExtension {
-  name: string,
-  default: boolean,
+  name: string;
+  default: boolean;
 }
 
-export type PandocConversionDir = 'input' | 'output'
+export type PandocConversionDir = 'input' | 'output';
 
 export interface PandocFormatDescription {
-  name?: string,
-  see?: string,
+  name?: string;
+  see?: string;
   description?: string;
   priority?: number;
   input?: boolean;
@@ -30,6 +30,7 @@ export interface PandocFormatDescription {
   extensions?: string[];
   icon?: string;
   formatExtensions?: PandocFormatExtension[];
+  rawFormat?: string | string[];
 }
 
 export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
@@ -46,7 +47,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
     extensions: ['asc', 'adoc', 'asciidoc'],
   },
   asciidoctor: {
-    see: 'asciidoc'
+    see: 'asciidoc',
   },
   bbcode: {
     description: 'Bulletin Board Code',
@@ -100,6 +101,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   context: {
     description: 'ConTeXt',
     extensions: ['context', 'ctx', 'tex'],
+    icon: "format_context",
   },
   creole: {
     description: 'Creole Wiki',
@@ -134,6 +136,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
     description: 'Microsoft Word docx',
     extensions: ['docx'],
     icon: 'format_docx',
+    rawFormat: 'openxml',
   },
   dokuwiki: {
     description: 'DokuWiki',
@@ -151,14 +154,17 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   epub: {
     description: 'EPUB v2/v3',
     extensions: ['epub'],
+    rawFormat: 'html4',
   },
   epub2: {
     description: 'EPUB v2',
     see: 'epub',
+    rawFormat: 'html4',
   },
   epub3: {
     description: 'EPUB v3',
     see: 'epub',
+    rawFormat: 'html5',
   },
   fb2: {
     description: 'FictionBook2',
@@ -298,6 +304,7 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
     description: 'OpenOffice/LibreOffice docx',
     extensions: ['odt'],
     icon: commonIcons.odt_document,
+    rawFormat: 'opendocument',
   },
   opendocument: {
     description: 'OASIS OpenDocument XML',
@@ -319,7 +326,8 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   pdf: {
     description: 'PDF',
     extensions: ['pdf'],
-    icon: 'format_pdf'
+    icon: 'format_pdf',
+    rawFormat: ['latex', 'beamer', 'context', 'ms', 'html5'],
   },
   pod: {
     description: 'Perl Pod (Plain Old Documentation)',
@@ -353,11 +361,11 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   },
   slideous: {
     description: 'Slideous slide show',
-    extensions: ['html']
+    extensions: ['html'],
   },
   slidy: {
     description: 'Slidy slide show',
-    extensions: ['html']
+    extensions: ['html'],
   },
   t2t: {
     description: 'txt2tags',
@@ -419,29 +427,29 @@ export const pandocFormatsDefs: Record<string, PandocFormatDescription> = {
   },
 };
 Object.entries(pandocFormatsDefs).forEach(([format, desc]) => {
-  const mainFormat = desc.see
+  const mainFormat = desc.see;
   if (mainFormat) {
-    const mainDesc = pandocFormatsDefs[mainFormat]
+    const mainDesc = pandocFormatsDefs[mainFormat];
     pandocFormatsDefs[format] = {
       ...mainDesc,
       ...desc,
       name: format,
       input: true,
-      output: true
-    }
+      output: true,
+    };
   } else {
     pandocFormatsDefs[format] = {
       ...pandocFormatsDefs[format],
       name: format,
       input: true,
-      output: true
-    }
+      output: true,
+    };
   }
-})
+});
 const DEFAULT_FORMAT_FOR_EXTENSION: Record<string, string> = {
   txt: 'plain',
   tex: 'latex',
-}
+};
 
 const DEFAULT_FORMAT_PRIORITY = 1;
 
@@ -455,7 +463,7 @@ export function pandocInputFileFilters(priority?: number): FileFilter[] {
   return Object.entries(pandocFormatsDefs)
     .filter(([_, f]) => f.input === true && (f.priority || 0) >= p)
     .sort(([n1, f1], [n2, f2]) =>
-      f1.priority && f2.priority ? f2.priority - f1.priority : 0
+      f1.priority && f2.priority ? f2.priority - f1.priority : 0,
     )
     .map(([name, f]) => ({
       name: f.description || name,
@@ -467,16 +475,23 @@ export function pandocInputFileFilters(priority?: number): FileFilter[] {
  * List the formats that support a file extension for the `direction` (input or output) specified.
  * @param ext The file extension.
  * @param direction "input" | "output".
- * @returns 
+ * @returns
  */
-export function pandocFormatsFromExtension(ext: string, direction: PandocConversionDir): string[] {
+export function pandocFormatsFromExtension(
+  ext: string,
+  direction: PandocConversionDir,
+): string[] {
   if (!ext) return [];
   const ext_without_dot = ext.startsWith('.') ? ext.substring(1) : ext;
   return Object.entries(pandocFormatsDefs)
     .filter(([_, desc]) => {
-      const isRightDirection = (direction === 'input' && desc.input === true)
-        || (direction === 'output' && desc.output === true)
-      return isRightDirection && (desc.extensions || []).indexOf(ext_without_dot) >= 0
+      const isRightDirection =
+        (direction === 'input' && desc.input === true) ||
+        (direction === 'output' && desc.output === true);
+      return (
+        isRightDirection &&
+        (desc.extensions || []).indexOf(ext_without_dot) >= 0
+      );
     })
     .map(([format, _]) => format);
 }
@@ -485,53 +500,60 @@ export function pandocFormatsFromExtension(ext: string, direction: PandocConvers
  * List the likely formats of a document, from its file extension.
  * @param fn The document's file name.
  * @param direction Is it a document we want to read ("input") or a document we want to write ("output").
- * @returns 
+ * @returns
  */
-export function pandocFormatsFromFilename(fn: string, direction: PandocConversionDir): string[] {
-  return pandocFormatsFromExtension(browserify.extname(fn), direction)
+export function pandocFormatsFromFilename(
+  fn: string,
+  direction: PandocConversionDir,
+): string[] {
+  return pandocFormatsFromExtension(browserify.extname(fn), direction);
 }
 
 /**
  * Checks whether a format is read by pandoc as input.
  * @param format
- * @returns 
+ * @returns
  */
 export function isInputFormat(format: string): boolean {
-  return pandocFormatsDefs[format].input === true
+  return pandocFormatsDefs[format].input === true;
 }
 
 /**
  * Checks whether a format is written by pandoc as output.
  * @param format
- * @returns 
+ * @returns
  */
 export function isOutputFormat(format: string): boolean {
-  return pandocFormatsDefs[format].output === true
+  return pandocFormatsDefs[format].output === true;
 }
 
-export function getPandocFormatDescriptions(input_names: string[], output_names: string[]): PandocFormatDescription[] {
-  input_names.forEach(name => {
-    const pandocFormat = pandocFormatsDefs[name]
-    if (pandocFormat) pandocFormat.input = true
-  })
-  output_names.forEach(name => {
-    const pandocFormat = pandocFormatsDefs[name]
-    if (pandocFormat) pandocFormat.output = true
-  })
-  return Object.values(pandocFormatsDefs)
+export function getPandocFormatDescriptions(
+  input_names: string[],
+  output_names: string[],
+): PandocFormatDescription[] {
+  input_names.forEach((name) => {
+    const pandocFormat = pandocFormatsDefs[name];
+    if (pandocFormat) pandocFormat.input = true;
+  });
+  output_names.forEach((name) => {
+    const pandocFormat = pandocFormatsDefs[name];
+    if (pandocFormat) pandocFormat.output = true;
+  });
+  return Object.values(pandocFormatsDefs);
 }
 
 /**
  * Derives an `InputConverter` from the name of a Pandoc input format.
  * @param format The input format name.
- * @returns 
+ * @returns
  */
-export function pandocFormatToInputConverter(format?: string | PandocFormatDescription): InputConverter | undefined {
-  if (!format)
-    return undefined
+export function pandocFormatToInputConverter(
+  format?: string | PandocFormatDescription,
+): InputConverter | undefined {
+  if (!format) return undefined;
   const desc: PandocFormatDescription | undefined = isString(format)
     ? pandocFormatsDefs[format]
-    : format
+    : format;
   if (desc?.name && desc?.input === true) {
     return {
       type: 'pandoc',
@@ -539,22 +561,23 @@ export function pandocFormatToInputConverter(format?: string | PandocFormatDescr
       description: desc.description,
       format: desc.name!,
       extensions: desc.extensions || [],
-    } as PandocInputConverter
+    } as PandocInputConverter;
   }
-  return undefined
+  return undefined;
 }
 
 /**
  * Derives an `OutputConverter` from the name of a Pandoc output format.
  * @param format The output format name.
- * @returns 
+ * @returns
  */
-export function pandocFormatToOutputConverter(format?: string | PandocFormatDescription): OutputConverter | undefined {
-  if (!format)
-    return undefined
+export function pandocFormatToOutputConverter(
+  format?: string | PandocFormatDescription,
+): OutputConverter | undefined {
+  if (!format) return undefined;
   const desc: PandocFormatDescription | undefined = isString(format)
     ? pandocFormatsDefs[format]
-    : format
+    : format;
   if (desc?.name && desc?.output === true) {
     return {
       type: 'pandoc',
@@ -562,25 +585,31 @@ export function pandocFormatToOutputConverter(format?: string | PandocFormatDesc
       description: desc.description,
       format: desc.name!,
       extension: (desc.extensions || [])[0],
-    } as PandocOutputConverter
+    } as PandocOutputConverter;
   }
-  return undefined
+  return undefined;
 }
 
 /**
  * All the extensions that are associated at least to a Pandoc (input or output) format.
  * @param direction The direction of Pandoc conversion.
- * @returns 
+ * @returns
  */
-export function knownFormatExtensions(direction?: PandocConversionDir): string[] {
-  let exts: string[] = []
+export function knownFormatExtensions(
+  direction?: PandocConversionDir,
+): string[] {
+  let exts: string[] = [];
   Object.values(pandocFormatsDefs)
-    .filter((desc) => !direction || (direction === 'input' && desc.input === true) || (direction === 'output' && desc.output === true))
+    .filter(
+      (desc) =>
+        !direction ||
+        (direction === 'input' && desc.input === true) ||
+        (direction === 'output' && desc.output === true),
+    )
     .forEach((desc) => {
-      if (desc.extensions)
-        exts = [...exts, ...desc.extensions]
-    })
-  return uniq(exts.sort())
+      if (desc.extensions) exts = [...exts, ...desc.extensions];
+    });
+  return uniq(exts.sort());
 }
 
 /**
@@ -588,33 +617,41 @@ export function knownFormatExtensions(direction?: PandocConversionDir): string[]
  * @param pandocFormats A list of pandoc format descriptions.
  * @param filename The document filename (with extension).
  * @param direction The direction of Pandoc conversion.
- * @returns 
+ * @returns
  */
 export function formatDescriptionsFromFilename(
   pandocFormats: PandocFormatDescription[],
   filename: string,
-  direction: PandocConversionDir
+  direction: PandocConversionDir,
 ): PandocFormatDescription[] {
   return pandocFormats
-    .filter((desc) => (direction === 'input' && desc.input === true) || (direction === 'output' && desc.output === true))
-    .filter((desc) => desc.extensions && desc.extensions.find(e => filename.endsWith('.' + e)))
+    .filter(
+      (desc) =>
+        (direction === 'input' && desc.input === true) ||
+        (direction === 'output' && desc.output === true),
+    )
+    .filter(
+      (desc) =>
+        desc.extensions &&
+        desc.extensions.find((e) => filename.endsWith('.' + e)),
+    );
 }
 
 /**
  * Used to sort the formats associated with an extension.
  * @param ext The extension ending the name of the document.
  * @param direction The direction of Pandoc conversion.
- * @returns 
+ * @returns
  */
-function formatExtensionToNumber(ext: string, desc: PandocFormatDescription): number {
-  const format = desc.name
-  if (DEFAULT_FORMAT_FOR_EXTENSION[ext] === format)
-    return 100
-  if (format === ext)
-    return 10
-  if (!desc.see)
-    return 5
-  return 0
+function formatExtensionToNumber(
+  ext: string,
+  desc: PandocFormatDescription,
+): number {
+  const format = desc.name;
+  if (DEFAULT_FORMAT_FOR_EXTENSION[ext] === format) return 100;
+  if (format === ext) return 10;
+  if (!desc.see) return 5;
+  return 0;
 }
 
 /**
@@ -622,21 +659,21 @@ function formatExtensionToNumber(ext: string, desc: PandocFormatDescription): nu
  * @param pandocFormats A list of pandoc format descriptions.
  * @param ext The extension ending the name of the document.
  * @param direction The direction of Pandoc conversion.
- * @returns 
+ * @returns
  */
 export function formatsFromExtension(
   pandocFormats: PandocFormatDescription[],
   ext: string,
-  direction: PandocConversionDir
+  direction: PandocConversionDir,
 ): string[] {
-  const fd = formatDescriptionsFromFilename(pandocFormats, ext, direction)
+  const fd = formatDescriptionsFromFilename(pandocFormats, ext, direction);
   fd.sort((desc1, desc2) => {
-    const diff = formatExtensionToNumber(ext, desc2) - formatExtensionToNumber(ext, desc1)
-    if (diff === 0)
-      return desc1.name!.localeCompare(desc2.name!)
-    return diff
-  })
-  return fd.map(d => d.name!)
+    const diff =
+      formatExtensionToNumber(ext, desc2) - formatExtensionToNumber(ext, desc1);
+    if (diff === 0) return desc1.name!.localeCompare(desc2.name!);
+    return diff;
+  });
+  return fd.map((d) => d.name!);
 }
 
 /**
@@ -644,15 +681,36 @@ export function formatsFromExtension(
  * @param pandocFormats A list of pandoc format descriptions.
  * @param ext The extension ending the name of the document.
  * @param direction The direction of Pandoc conversion.
- * @returns 
+ * @returns
  */
 export function guessFormatFromExtension(
   pandocFormats: PandocFormatDescription[],
   ext: string,
-  direction: PandocConversionDir
+  direction: PandocConversionDir,
 ): string | undefined {
-  const formats = formatsFromExtension(pandocFormats, ext, direction)
-  if (formats.length === 0)
-    return undefined
-  return formats[0]
+  const formats = formatsFromExtension(pandocFormats, ext, direction);
+  if (formats.length === 0) return undefined;
+  return formats[0];
+}
+
+export function allRawFormats(): string[] {
+  return uniq(
+    Object.values(pandocFormatsDefs)
+      .map((pfd) => {
+        const rawFormat = pfd.rawFormat;
+        return rawFormat
+          ? isString(rawFormat)
+            ? rawFormat
+            : undefined
+          : pfd.name;
+      })
+      .filter((f) => isString(f)),
+  );
+}
+
+export function iconForFormat(format: string): string | undefined {
+  const found = Object.values(pandocFormatsDefs).find(
+    (pfd) => pfd.name === format || (pfd.rawFormat === format && pfd.icon),
+  );
+  return found && found.icon;
 }

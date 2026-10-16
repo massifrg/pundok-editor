@@ -177,6 +177,13 @@
         "before",
         "after"
       ]
+    },
+    {
+      "name": "index-term-text",
+      "description": "text of the index term referenced here",
+      "appliesTo": [
+        "indexRef"
+      ]
     }
   ],
   "notesStyles": [

@@ -6,8 +6,16 @@ import {
   CustomStyleDef,
   customStylesFromDef,
 } from './customStyles';
-import { PrunableConfigInitField, PundokEditorConfigInit } from './editorConfigInit';
-import { DEFAULT_COPY_FORMAT, DEFAULT_FORMAT, DEFAULT_MAIN_FORMATS } from '../pandocFormat';
+import {
+  ConfigurationPruning,
+  PrunableConfigInitField,
+  PundokEditorConfigInit,
+} from './editorConfigInit';
+import {
+  DEFAULT_COPY_FORMAT,
+  DEFAULT_FORMAT,
+  DEFAULT_MAIN_FORMATS,
+} from '../pandocFormat';
 import { CustomMetadata } from './customMetadata';
 import { NoteStyle } from './notes';
 import { Index, indexRefDecorationCss } from './indices';
@@ -15,7 +23,8 @@ import { InsertableRaw } from './rawElements';
 import { InputConverter } from './inputConverters';
 import { OutputConverter } from './outputConverters';
 import { Automation, SearchAndReplace } from './automations';
-import { NamedAndDescribed } from './types';
+import { NamedAndDescribed } from '../types';
+import { AutoDelimitersDef } from './autoDelimiters';
 
 export class PundokEditorConfig implements PundokEditorConfigInit {
   /** The name of this configuration of the editor. */
@@ -27,7 +36,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
   /** Description of the aim of this configuration. */
   description?: string;
   /** Options to configure [TipTap](https://tiptap.dev) components of the editor. */
-  tiptap: { options?: Record<string, any> | undefined };
+  // tiptap: { options?: Record<string, any> | undefined };
   /** the name of a pandoc format or an InputConverter used as default to open documents. */
   workingFormat?: string;
   /** the name of the format (pandoc or custom) used with "Save a copy" */
@@ -38,7 +47,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
   documentTemplate?: string | undefined;
   /** Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote)
    * in the editor. */
-  autoDelimiters?: Record<string, string[]>;
+  autoDelimiters?: AutoDelimitersDef;
   /** Definitions of custom styles available with this configuration.
    * These definitions can encompass multiple elements (e.g. `span`, `paragraph`).
    * See [Pandoc custom styles](https://pandoc.org/MANUAL.html#custom-styles) */
@@ -79,7 +88,7 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
     this.version = init.version || [];
     this.description = init.description || '';
     // this.inherits = init.inherits;
-    this.tiptap = init.tiptap || { options: {} };
+    // this.tiptap = init.tiptap || { options: {} };
     this.workingFormat = init.workingFormat || DEFAULT_FORMAT;
     this.copyFormat = init.copyFormat || DEFAULT_COPY_FORMAT;
     this.mainFormats = init.mainFormats || DEFAULT_MAIN_FORMATS;
@@ -109,9 +118,9 @@ export class PundokEditorConfig implements PundokEditorConfigInit {
     this.customStylesInstances = styles;
   }
 
-  get tiptapOptions() {
-    return { ...this.tiptap?.options };
-  }
+  // get tiptapOptions() {
+  //   return { ...this.tiptap?.options };
+  // }
 
   /**
    * The search and replace automations of this configuration.
@@ -246,19 +255,18 @@ function mergeNamedObjects(
     .concat(nobj2.filter((nobj) => !nobj1.find((n) => nobj[name] == n[name])));
   return default1 && default2
     ? merged.map((m) =>
-      m[name] === default1[name] ? { ...m, default: false } : m,
-    )
+        m[name] === default1[name] ? { ...m, default: false } : m,
+      )
     : merged;
 }
 
-type HasDefault = InputConverter | OutputConverter
+type HasDefault = InputConverter | OutputConverter;
 function onlyLastDefault(list: HasDefault[]): HasDefault[] {
-  let index: number
+  let index: number;
   for (index = list.length - 1; index >= 0; index--) {
-    if (list[index].default)
-      break
+    if (list[index].default) break;
   }
-  return list.map((item, i) => ({ ...item, default: i === index }))
+  return list.map((item, i) => ({ ...item, default: i === index }));
 }
 
 function mergeInsertableRaws(
@@ -287,6 +295,21 @@ function mergeInsertableRaws(
     .concat(raw2.filter((r2, index2) => !commons.find((c) => c[1] === index2)));
 }
 
+function mergeNoteStyles(
+  enriching?: NoteStyle[],
+  base?: NoteStyle[],
+): NoteStyle[] {
+  const merged = mergeNamedObjects(enriching, base, 'noteType') as NoteStyle[];
+  const enrichingDefault = enriching?.find((style) => style.default === true);
+  if (!enrichingDefault) return merged;
+  return merged.map((style) => {
+    if (style.noteType === enrichingDefault.noteType)
+      return { ...style, default: true };
+    if (style.default === true) return { ...style, default: false };
+    return style;
+  });
+}
+
 /**
  * Enriches a base configuration with another one.
  * When the "enriching" configuration has elements that are present
@@ -309,17 +332,19 @@ export function enrichConfiguration(
       version: minSuitableVersion(enriching.version, base.version || []),
       isLocal: base.isLocal || enriching.isLocal,
       description: base.description,
-      tiptap: {
-        options: mergeTiptapOptions(
-          enriching.tiptap?.options || {},
-          base.tiptap?.options || {},
-        ),
-      },
+      // tiptap: {
+      //   options: mergeTiptapOptions(
+      //     enriching.tiptap?.options || {},
+      //     base.tiptap?.options || {},
+      //   ),
+      // },
       workingFormat: enriching.workingFormat || base.workingFormat,
       copyFormat: enriching.copyFormat || base.copyFormat,
       mainFormats: enriching.mainFormats || base.mainFormats,
       documentTemplate: enriching.documentTemplate || base.documentTemplate,
-      autoDelimiters: { ...base.autoDelimiters, ...enriching.autoDelimiters },
+      autoDelimiters: base.autoDelimiters
+        ? { ...base.autoDelimiters, ...enriching.autoDelimiters }
+        : enriching.autoDelimiters,
       customStyles: mergeNamedObjects(
         enriching.customStyles,
         base.customStyles,
@@ -336,11 +361,7 @@ export function enrichConfiguration(
         enriching.customMetadata,
         base.customMetadata,
       ) as CustomMetadata[],
-      noteStyles: mergeNamedObjects(
-        enriching.noteStyles,
-        base.noteStyles,
-        'noteType',
-      ) as NoteStyle[],
+      noteStyles: mergeNoteStyles(enriching.noteStyles, base.noteStyles),
       customCss: uniq((enriching.customCss || []).concat(base.customCss || [])),
       indices: mergeNamedObjects(
         enriching.indices,
@@ -350,14 +371,18 @@ export function enrichConfiguration(
       defaultRawFormat: enriching.defaultRawFormat || base.defaultRawFormat,
       rawInlines: mergeInsertableRaws(enriching.rawInlines, base.rawInlines),
       rawBlocks: mergeInsertableRaws(enriching.rawBlocks, base.rawBlocks),
-      inputConverters: onlyLastDefault(mergeNamedObjects(
-        enriching.inputConverters,
-        base.inputConverters,
-      ) as InputConverter[]) as InputConverter[],
-      outputConverters: onlyLastDefault(mergeNamedObjects(
-        enriching.outputConverters,
-        base.outputConverters,
-      ) as OutputConverter[]) as OutputConverter[],
+      inputConverters: onlyLastDefault(
+        mergeNamedObjects(
+          enriching.inputConverters,
+          base.inputConverters,
+        ) as InputConverter[],
+      ) as InputConverter[],
+      outputConverters: onlyLastDefault(
+        mergeNamedObjects(
+          enriching.outputConverters,
+          base.outputConverters,
+        ) as OutputConverter[],
+      ) as OutputConverter[],
       automations: mergeNamedObjects(
         enriching.automations,
         base.automations,
@@ -372,27 +397,22 @@ export function enrichConfiguration(
   }
 }
 
-/**
- * A description of the elements to prune from an inherited configuration.
- */
-export type ConfigurationPruning = Record<PrunableConfigInitField, string[]>
-
 function prunedFieldsFromConfig(
   pruning: ConfigurationPruning,
   c: PundokEditorConfigInit | PundokEditorConfig,
-  init: Partial<Record<PrunableConfigInitField, any>> = {}
+  init: Partial<Record<PrunableConfigInitField, any>> = {},
 ): Partial<Record<PrunableConfigInitField, any>> {
-  const pruned = { ...init } as Partial<Record<PrunableConfigInitField, any>>
-  Object.entries(pruning).forEach(entry => {
-    const k = entry[0] as PrunableConfigInitField
-    const ids: string[] = entry[1] || []
-    const oldValue = (c as PundokEditorConfigInit)[k]
+  const pruned = { ...init } as Partial<Record<PrunableConfigInitField, any>>;
+  Object.entries(pruning).forEach((entry) => {
+    const k = entry[0] as PrunableConfigInitField;
+    const ids: string[] = entry[1] || [];
+    const oldValue = (c as PundokEditorConfigInit)[k];
     if (oldValue) {
-      let newValue = undefined
+      let newValue = undefined;
       switch (k as PrunableConfigInitField) {
         case 'autoDelimiters':
-          newValue = omit(oldValue as object, ids) as Record<string, string[]>
-          break
+          newValue = omit(oldValue as object, ids) as Record<string, string[]>;
+          break;
         case 'automations':
         case 'customAttributes':
         case 'customClasses':
@@ -400,26 +420,32 @@ function prunedFieldsFromConfig(
         case 'customStyles':
         case 'inputConverters':
         case 'outputConverters':
-          newValue = (oldValue as NamedAndDescribed[]).filter(o => !ids.includes(o.name))
-          break
+          newValue = (oldValue as NamedAndDescribed[]).filter(
+            (o) => !ids.includes(o.name),
+          );
+          break;
         case 'indices':
-          newValue = (oldValue as Index[]).filter(o => !ids.includes(o.indexName))
-          break
+          newValue = (oldValue as Index[]).filter(
+            (o) => !ids.includes(o.indexName),
+          );
+          break;
         case 'noteStyles':
-          newValue = (oldValue as NoteStyle[]).filter(o => !ids.includes(o.noteType))
-          break
+          newValue = (oldValue as NoteStyle[]).filter(
+            (o) => !ids.includes(o.noteType),
+          );
+          break;
         case 'customCss':
         case 'mainFormats':
-          newValue = (oldValue as string[]).filter(o => !ids.includes(o))
-          break
+          newValue = (oldValue as string[]).filter((o) => !ids.includes(o));
+          break;
       }
       if (newValue !== undefined) {
-        pruned[k] = newValue
+        pruned[k] = newValue;
         // console.log(`prune Config ${c.name}: ${JSON.stringify(oldValue)} => ${JSON.stringify(newValue)} `)
       }
     }
-  })
-  return pruned
+  });
+  return pruned;
 }
 
 /**
@@ -434,14 +460,19 @@ export function getPrunedConfigInit(
   c: PundokEditorConfigInit | PundokEditorConfig,
   prune: ConfigurationPruning,
 ): PundokEditorConfig {
-  let modified_fields: Partial<Record<PrunableConfigInitField, any>> = prunedFieldsFromConfig(prune, c)
-  return new PundokEditorConfig({ ...c, ...modified_fields })
+  let modified_fields: Partial<Record<PrunableConfigInitField, any>> =
+    prunedFieldsFromConfig(prune, c);
+  return new PundokEditorConfig({ ...c, ...modified_fields });
 }
 
-export function getRawInlineFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
+export function getRawInlineFormats(
+  config: PundokEditorConfig | PundokEditorConfigInit,
+): string[] {
   return uniq(config?.rawInlines?.map((r) => r.format)) || [];
 }
 
-export function getRawBlockFormats(config: PundokEditorConfig | PundokEditorConfigInit): string[] {
+export function getRawBlockFormats(
+  config: PundokEditorConfig | PundokEditorConfigInit,
+): string[] {
   return uniq(config?.rawBlocks?.map((r) => r.format)) || [];
 }

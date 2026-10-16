@@ -31,7 +31,7 @@ setupQuasarIcons()
 </script>
 
 <script lang="ts">
-import { AddOrRemoveCustomClassActionProps, CustomAttribute, CustomClass } from '../../common';
+import { AddRemoveCustomClassActionProps, CustomAttribute, CustomClass } from '../../common';
 import { getEditorConfiguration } from '../../schema';
 import { defaultPropsFor } from '../../actions';
 import OtherAttributesEditor from '../attreditors/OtherAttributesEditor.vue';
@@ -41,14 +41,14 @@ export default {
   emits: ['set-props'],
   components: { OtherAttributesEditor },
   data() {
-    const props: AddOrRemoveCustomClassActionProps = this.action?.props
+    const props: AddRemoveCustomClassActionProps = this.action?.props
       || defaultPropsFor(this.action.name)
       || { className: 'class-name', attrs: {} }
     return {
       shortDesc: '',
       className: props.className,
       attrs: props.attrs
-    } as AddOrRemoveCustomClassActionProps
+    } as AddRemoveCustomClassActionProps
   },
   computed: {
     configuration() {
@@ -101,7 +101,7 @@ export default {
       this.$emit('set-props', this.index, {
         className: this.className,
         attrs: this.attrs
-      } as AddOrRemoveCustomClassActionProps)
+      } as AddRemoveCustomClassActionProps)
     }
   }
 }

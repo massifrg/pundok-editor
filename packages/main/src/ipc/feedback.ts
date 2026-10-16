@@ -1,79 +1,42 @@
+import type { EditorKeyType } from '../common';
 import {
-  EditorKeyType,
-  FeedbackMessage,
-  ServerMessageFeedback,
-} from '../common';
-import { IpcHub } from './ipcHub';
+  commandLineFeedback as sendCommandLineFeedback,
+  errorFeedback as sendErrorFeedback,
+  feedbackSink,
+  messageFeedback as sendMessageFeedback,
+  progressFeedback as sendProgressFeedback,
+  type RendererHub,
+} from '../backend';
 
-/**
- * Send a message from `main` to `renderer` on the `feedback` channel.
- * @param hub       the sender hub
- * @param fbMessage the messate to be sent
- */
-function feedback(
-  hub: IpcHub,
-  fbMessage: FeedbackMessage,
-  editorKey?: EditorKeyType
-) {
-  const message: ServerMessageFeedback = {
-    type: 'feedback',
-    feedback: fbMessage,
-    editorKey,
-  };
-  hub.send('feedback', message);
-}
-
-/**
- *
- */
 export function messageFeedback(
-  hub: IpcHub,
+  events: RendererHub,
   message: string,
-  editorKey?: EditorKeyType
-) {
-  feedback(hub, { type: 'success', message, level: 1 }, editorKey);
+  editorKey?: EditorKeyType,
+): void {
+  sendMessageFeedback(feedbackSink(events), message, editorKey);
 }
 
-/**
- * Send an error message from `main` to `renderer` on the `feedback` channel.
- * @param hub     the sender hub
- * @param message the text message to be sent
- */
 export function errorFeedback(
-  hub: IpcHub,
+  events: RendererHub,
   message: string,
-  editorKey?: EditorKeyType
-) {
-  feedback(hub, { type: 'error', message, level: 1 }, editorKey);
+  editorKey?: EditorKeyType,
+): void {
+  sendErrorFeedback(feedbackSink(events), message, editorKey);
 }
 
-/**
- * Send a message from `main` to `renderer` on the `feedback` channel
- * about the command line used to run an external program.
- * @param hub     the sender hub
- * @param cmdline the command line used to run the external command
- */
 export function commandLineFeedback(
-  hub: IpcHub,
-  cmdline: string,
-  editorKey?: EditorKeyType
-) {
-  feedback(
-    hub,
-    { type: 'command-line', message: cmdline, level: 1 },
-    editorKey
-  );
+  events: RendererHub,
+  commandLine: string,
+  editorKey?: EditorKeyType,
+): void {
+  sendCommandLineFeedback(feedbackSink(events), commandLine, editorKey);
 }
 
 export function progressFeedback(
-  hub: IpcHub,
+  events: RendererHub,
   source: 'out' | 'err' | 'end',
-  data: any,
-  editorKey?: EditorKeyType
-) {
-  feedback(
-    hub,
-    { type: 'progress', source, message: data, level: 1 },
-    editorKey
-  );
+  message: string,
+  editorKey?: EditorKeyType,
+): void {
+  sendProgressFeedback(feedbackSink(events), source, message, editorKey);
 }

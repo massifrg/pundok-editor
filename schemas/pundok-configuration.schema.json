@@ -5,9 +5,11 @@
       "description": "Configuration of the interface of the editor to ease the transformation of the document, like:\n- selection of nodes or marks with CSS selectors;\n- transformation of the current document with Pandoc filters;\n- search and replace operations.",
       "properties": {
         "description": {
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "name": {
+          "description": "The name of this object.",
           "type": "string"
         },
         "type": {
@@ -15,8 +17,8 @@
         }
       },
       "required": [
-        "type",
-        "name"
+        "name",
+        "type"
       ],
       "type": "object"
     },
@@ -32,11 +34,8 @@
     "ConfigInitField": {
       "description": "The fields allowed in a configuration init object.",
       "enum": [
-        "name",
         "version",
-        "description",
-        "inherits",
-        "tiptap",
+        "isLocal",
         "workingFormat",
         "copyFormat",
         "mainFormats",
@@ -54,9 +53,46 @@
         "rawBlocks",
         "inputConverters",
         "outputConverters",
-        "automations"
+        "automations",
+        "name",
+        "description"
       ],
       "type": "string"
+    },
+    "ConfigurationUpdateOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "configurationName": {
+          "description": "The name of the configuration to be updated.",
+          "type": "string"
+        },
+        "field": {
+          "$ref": "#/definitions/ConfigInitField",
+          "description": "When updating a single section of the configuration, the name of the section (\"automations\", \"customStyles\", etc.)."
+        },
+        "operation": {
+          "description": "When where is defined, what kind of operation to perform",
+          "enum": [
+            "append",
+            "update",
+            "delete"
+          ],
+          "type": "string"
+        },
+        "projectPath": {
+          "description": "The path of the project to be updated.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The added/updated object (or the whole configuration), as a JSON-stringified object.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "operation"
+      ],
+      "type": "object"
     },
     "CustomAttribute": {
       "additionalProperties": false,
@@ -74,7 +110,7 @@
           "type": "string"
         },
         "description": {
-          "description": "optional description of the attribute",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "editAs": {
@@ -82,7 +118,7 @@
           "type": "string"
         },
         "name": {
-          "description": "the name of the attribute (the key in the attributes of `Attr`)",
+          "description": "The name of this object.",
           "type": "string"
         },
         "suggestions": {
@@ -124,11 +160,11 @@
           "type": "array"
         },
         "description": {
-          "description": "an optional description",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "name": {
-          "description": "the name and value of the class",
+          "description": "The name of this object.",
           "type": "string"
         }
       },
@@ -145,7 +181,7 @@
           "type": "boolean"
         },
         "description": {
-          "description": "description of the converter",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "extensions": {
@@ -164,7 +200,7 @@
           "type": "string"
         },
         "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
+          "description": "The name of this object.",
           "type": "string"
         },
         "options": {
@@ -190,9 +226,11 @@
       "properties": {
         "default": {},
         "description": {
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "name": {
+          "description": "The name of this object.",
           "type": "string"
         },
         "type": {
@@ -200,8 +238,8 @@
         }
       },
       "required": [
-        "type",
-        "name"
+        "name",
+        "type"
       ],
       "type": "object"
     },
@@ -213,7 +251,7 @@
           "type": "boolean"
         },
         "description": {
-          "description": "description of the converter",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "dontAskForResultFile": {
@@ -236,17 +274,17 @@
           "description": "optional icon",
           "type": "string"
         },
+        "longRendering": {
+          "description": "the conversion takes a long time, like the build of a project-wise product (tipically PDF)",
+          "type": "boolean"
+        },
         "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
+          "description": "The name of this object.",
           "type": "string"
         },
         "openResult": {
           "$ref": "#/definitions/ShowOutputConversion",
           "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
-        },
-        "projectBuild": {
-          "description": "it's the build of a project-wise product",
-          "type": "boolean"
         },
         "resultFile": {
           "description": "the path of the output file",
@@ -317,7 +355,7 @@
           "type": "array"
         },
         "description": {
-          "description": "A description of this style.",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "levels": {
@@ -328,13 +366,13 @@
           "type": "array"
         },
         "name": {
-          "description": "This becomes the value of the `custom-style` property or a class name.",
+          "description": "The name of this object.",
           "type": "string"
         }
       },
       "required": [
-        "name",
-        "appliesTo"
+        "appliesTo",
+        "name"
       ],
       "type": "object"
     },
@@ -363,7 +401,7 @@
           "type": "boolean"
         },
         "description": {
-          "description": "description of the converter",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "extensions": {
@@ -382,7 +420,7 @@
           "type": "string"
         },
         "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
+          "description": "The name of this object.",
           "type": "string"
         },
         "type": {
@@ -601,6 +639,42 @@
         }
       ]
     },
+    "PandocFilter": {
+      "additionalProperties": false,
+      "description": "A pandoc filter with its specific parameters",
+      "properties": {
+        "description": {
+          "description": "An optional description of this object.",
+          "type": "string"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "type": "object"
+        },
+        "name": {
+          "description": "The name of this object.",
+          "type": "string"
+        },
+        "variables": {
+          "additionalProperties": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
     "PandocInputConverter": {
       "additionalProperties": false,
       "description": "An input converter that spawns a pandoc process to import a document.",
@@ -610,7 +684,7 @@
           "type": "boolean"
         },
         "description": {
-          "description": "description of the converter",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "extensions": {
@@ -633,7 +707,7 @@
           "type": "string"
         },
         "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
+          "description": "The name of this object.",
           "type": "string"
         },
         "pandocOptions": {
@@ -664,7 +738,7 @@
           "type": "boolean"
         },
         "description": {
-          "description": "description of the converter",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "dontAskForResultFile": {
@@ -687,17 +761,17 @@
           "description": "optional icon",
           "type": "string"
         },
+        "longRendering": {
+          "description": "the conversion takes a long time, like the build of a project-wise product (tipically PDF)",
+          "type": "boolean"
+        },
         "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
+          "description": "The name of this object.",
           "type": "string"
         },
         "openResult": {
           "$ref": "#/definitions/ShowOutputConversion",
           "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
-        },
-        "projectBuild": {
-          "description": "it's the build of a project-wise product",
-          "type": "boolean"
         },
         "resultFile": {
           "description": "the path of the output file",
@@ -716,6 +790,32 @@
       ],
       "type": "object"
     },
+    "PandocOption": {
+      "description": "A configured Pandoc command-line option and its optional value.",
+      "items": [
+        {
+          "$ref": "#/definitions/PandocOptionName",
+          "title": "name"
+        },
+        {
+          "$ref": "#/definitions/PandocOptionValue",
+          "title": "value"
+        }
+      ],
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "PandocOptionName": {
+      "type": "string"
+    },
+    "PandocOptionValue": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
     "PandocOutputConverter": {
       "additionalProperties": false,
       "properties": {
@@ -724,7 +824,7 @@
           "type": "boolean"
         },
         "description": {
-          "description": "description of the converter",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "dontAskForResultFile": {
@@ -742,7 +842,14 @@
         "filters": {
           "description": "optional filter (pandoc's `--filter` option)",
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/PandocFilter"
+              }
+            ]
           },
           "type": "array"
         },
@@ -750,12 +857,23 @@
           "description": "format of the resulting output (pandoc's `-t` option)",
           "type": "string"
         },
+        "formatExtensions": {
+          "description": "The extensions of the format to be used",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "icon": {
           "description": "optional icon",
           "type": "string"
         },
+        "longRendering": {
+          "description": "the conversion takes a long time, like the build of a project-wise product (tipically PDF)",
+          "type": "boolean"
+        },
         "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
+          "description": "The name of this object.",
           "type": "string"
         },
         "openResult": {
@@ -763,19 +881,15 @@
           "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
         },
         "pandocOptions": {
-          "description": "extra command-line options for pandoc",
+          "description": "Extra Pandoc options, each as [name, value?].",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/PandocOption"
           },
           "type": "array"
         },
         "pandocTemplate": {
           "description": "pandoc template for standalone output (pandoc's `--template` option)",
           "type": "string"
-        },
-        "projectBuild": {
-          "description": "it's the build of a project-wise product",
-          "type": "boolean"
         },
         "referenceFile": {
           "description": "reference file for DOCX and ODT (pandoc's `--reference-doc` option)",
@@ -801,6 +915,23 @@
         "type"
       ],
       "type": "object"
+    },
+    "PrunableConfigInitField": {
+      "enum": [
+        "autoDelimiters",
+        "automations",
+        "customAttributes",
+        "customClasses",
+        "customCss",
+        "customMetadata",
+        "customStyles",
+        "indices",
+        "inputConverters",
+        "mainFormats",
+        "noteStyles",
+        "outputConverters"
+      ],
+      "type": "string"
     },
     "PundokEditorConfigInit": {
       "additionalProperties": false,
@@ -867,7 +998,7 @@
           "type": "string"
         },
         "description": {
-          "description": "a description of the aim of this configuration of the editor",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "documentTemplate": {
@@ -881,19 +1012,16 @@
           },
           "type": "array"
         },
-        "inherits": {
-          "description": "the names of other configurations to derive this from",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
         "inputConverters": {
           "description": "scripts, filters, etc. to import documents",
           "items": {
             "$ref": "#/definitions/InputConverter"
           },
           "type": "array"
+        },
+        "isLocal": {
+          "description": "the configuration is local (this is set by the editor, it's overridden if set by the user)",
+          "type": "boolean"
         },
         "mainFormats": {
           "description": "the names of the formats that are more visible in the GUI with this configuration",
@@ -903,7 +1031,7 @@
           "type": "array"
         },
         "name": {
-          "description": "the name of the configuration (please only letters, numbers and underscore)",
+          "description": "The name of this object.",
           "type": "string"
         },
         "noteStyles": {
@@ -934,16 +1062,6 @@
           },
           "type": "array"
         },
-        "tiptap": {
-          "additionalProperties": false,
-          "description": "options for TipTap/Prosemirror `Node`s and `Mark`s",
-          "properties": {
-            "options": {
-              "type": "object"
-            }
-          },
-          "type": "object"
-        },
         "version": {
           "description": "the minimal suitable version of the editor",
           "items": {
@@ -958,8 +1076,7 @@
       },
       "required": [
         "name",
-        "version",
-        "description"
+        "version"
       ],
       "type": "object"
     },
@@ -982,7 +1099,7 @@
           "type": "boolean"
         },
         "description": {
-          "description": "description of the converter",
+          "description": "An optional description of this object.",
           "type": "string"
         },
         "dontAskForResultFile": {
@@ -1005,17 +1122,17 @@
           "description": "optional icon",
           "type": "string"
         },
+        "longRendering": {
+          "description": "the conversion takes a long time, like the build of a project-wise product (tipically PDF)",
+          "type": "boolean"
+        },
         "name": {
-          "description": "name of the filter, use only 0-9a-z_- characters",
+          "description": "The name of this object.",
           "type": "string"
         },
         "openResult": {
           "$ref": "#/definitions/ShowOutputConversion",
           "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
-        },
-        "projectBuild": {
-          "description": "it's the build of a project-wise product",
-          "type": "boolean"
         },
         "resultFile": {
           "description": "the path of the output file",

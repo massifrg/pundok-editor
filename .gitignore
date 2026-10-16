@@ -1,9 +1,10 @@
 node_modules
 .DS_Store
 dist
+log
+todo
 *.local
 thumbs.db
-package-lock.json
 quasar-project
 local-config
 
@@ -96,8 +97,11 @@ yarn-error.log*
 *.njsproj
 *.sln
 
+.github/
+
 out/
 staticResources/other/UnicodeData.txt
 packages/renderer/stats.html
 packages/renderer/quasar.config.js.temporary.compiled.1779206680707.mjs
 packages/renderer/.quasar
+users.json
