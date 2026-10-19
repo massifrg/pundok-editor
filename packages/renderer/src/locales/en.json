@@ -573,7 +573,16 @@
       "addTextTransform": "Add text transform",
       "addFontWeight": "Add font weight",
       "addFontStyle": "Add font style",
-      "addFontVariant": "Add font variant"
+      "addFontVariant": "Add font variant",
+      "textDecorationLine": "Text decoration line",
+      "textDecorationColor": "Text decoration color",
+      "textDecorationStyle": "Text decoration style",
+      "textDecorationThickness": "Text decoration thickness",
+      "textDecorationThicknessUnit": "Text decoration thickness unit",
+      "textDecorationThicknessButton": "thickness: {value}",
+      "other": "Other",
+      "customName": "CSS property name",
+      "duplicateName": "This CSS property is already present"
     }
   },
   "customStyles": {

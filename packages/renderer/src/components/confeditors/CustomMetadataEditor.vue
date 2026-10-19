@@ -107,7 +107,6 @@
             outlined
             dense
             :label="$t('configEditor.customMetadata.name')"
-            :readonly="editingName !== undefined"
             :error="!!nameError"
             :error-message="nameError"
           />

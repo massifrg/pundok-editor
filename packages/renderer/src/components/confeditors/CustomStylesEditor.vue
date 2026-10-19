@@ -118,7 +118,6 @@
             :label="$t('configEditor.customStyles.name')"
             outlined
             dense
-            :readonly="editingIndex !== null"
             :error="!!nameError"
             :error-message="nameError"
           >
@@ -442,8 +441,9 @@ export default {
       if (this.draft.appliesTo.length === 0) return;
       const name = this.draft.name.trim();
       if (
-        this.editingIndex === null &&
-        this.styles.some((style) => style.name === name)
+        this.styles.some(
+          (style, index) => index !== this.editingIndex && style.name === name,
+        )
       ) {
         this.nameError = this.$t('configEditor.customStyles.duplicateName');
         return;
