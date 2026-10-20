@@ -1581,7 +1581,9 @@ export default {
         await this.setConfiguration(project.computedConfig);
         useProjectCache().setIndices();
         this.updateEditorDocState({ projectStructure: null });
-        void this.checkGitUpdates(project);
+        if (!this.guiProps.isDevelopmentMode) {
+          void this.checkGitUpdates(project);
+        }
         // this.updateEditorDocState({ configuration: project.computedConfig })
       }
     },

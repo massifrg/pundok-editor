@@ -13,6 +13,12 @@
             <q-item v-if="availableProperties.length === 0" disable>
               <q-item-section>{{ $t('configEditor.cssProperties.noneAvailable') }}</q-item-section>
             </q-item>
+            <q-separator />
+            <q-item clickable v-close-popup @click="openCustomPropertyDialog">
+              <q-item-section class="text-italic">
+                {{ $t('configEditor.cssProperties.other') }}
+              </q-item-section>
+            </q-item>
           </q-list>
         </q-menu>
       </q-btn>
@@ -114,6 +120,57 @@
             </q-list>
           </q-menu>
         </q-btn>
+        <q-select v-if="property === 'text-decoration'" dense outlined options-dense
+          multiple emit-value map-options hide-dropdown-icon class="css-decoration-select"
+          :label="$t('configEditor.cssProperties.textDecorationLine')"
+          :model-value="textDecorationLineValues" :options="textDecorationLineOptions"
+          @update:model-value="setTextDecorationLines">
+          <template #selected-item="scope">
+            <q-chip dense>{{ scope.opt.label }}</q-chip>
+          </template>
+        </q-select>
+        <q-btn v-if="property === 'text-decoration'" round flat dense icon="custom_style"
+          class="css-color-button" :style="{ backgroundColor: textDecorationColor || undefined }"
+          :aria-label="$t('configEditor.cssProperties.textDecorationColor')">
+          <q-tooltip>{{ $t('configEditor.cssProperties.textDecorationColor') }}</q-tooltip>
+          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+            <q-color :model-value="textDecorationColor"
+              @update:model-value="setTextDecorationColor" />
+          </q-popup-proxy>
+        </q-btn>
+        <q-select v-if="property === 'text-decoration'" dense outlined options-dense
+          emit-value map-options hide-dropdown-icon class="css-decoration-select"
+          :label="$t('configEditor.cssProperties.textDecorationStyle')"
+          :model-value="textDecorationStyle" :options="textDecorationStyles"
+          @update:model-value="setTextDecorationStyle" />
+        <q-btn v-if="property === 'text-decoration'" dense outline
+          no-caps class="css-decoration-thickness"
+          :label="textDecorationThicknessLabel"
+          :aria-label="$t('configEditor.cssProperties.textDecorationThickness')">
+          <q-menu>
+            <div class="q-pa-md css-decoration-thickness-menu">
+              <q-slider :model-value="textDecorationThicknessValue"
+                :min="0" :max="20" :step="0.1" label
+                @update:model-value="setTextDecorationThicknessValue" />
+              <div class="text-caption text-center q-mb-sm">
+                {{ textDecorationThicknessValue }}{{ textDecorationThicknessUnit }}
+              </div>
+              <q-separator />
+              <q-list dense>
+                <q-item-label header>
+                  {{ $t('configEditor.cssProperties.textDecorationThicknessUnit') }}
+                </q-item-label>
+                <q-item v-for="unit in textDecorationUnits" :key="unit"
+                  clickable v-close-popup
+                  :active="unit === textDecorationThicknessUnit"
+                  active-class="text-primary"
+                  @click="setTextDecorationThicknessUnit(unit)">
+                  <q-item-section>{{ unit }}</q-item-section>
+                </q-item>
+              </q-list>
+            </div>
+          </q-menu>
+        </q-btn>
         <q-btn round flat dense icon="remove_item"
           :aria-label="$t('configEditor.cssProperties.remove', { property })"
           @click="setPropertyValue(property, null)">
@@ -121,6 +178,27 @@
         </q-btn>
       </template>
     </q-input>
+    <q-dialog v-model="customPropertyDialog">
+      <q-card style="min-width: 20rem">
+        <q-card-section class="text-h6">
+          {{ $t('configEditor.cssProperties.other') }}
+        </q-card-section>
+        <q-card-section>
+          <q-input v-model="customPropertyName" autofocus outlined dense
+            :label="$t('configEditor.cssProperties.customName')"
+            :error="!!customPropertyError"
+            :error-message="customPropertyError"
+            @keyup.enter="addCustomProperty" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat :label="$t('configEditor.buttons.cancel')"
+            @click="customPropertyDialog = false" />
+          <q-btn color="primary" :label="$t('configEditor.buttons.add')"
+            :disable="!customPropertyName.trim()"
+            @click="addCustomProperty" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -141,6 +219,7 @@ type SupportedCssProperty =
   | 'font-weight'
   | 'font-size'
   | 'text-transform'
+  | 'text-decoration'
 type CssProperty = [propertyName: string, propertyValue: string]
 
 const supportedProperties: SupportedCssProperty[] = [
@@ -157,6 +236,7 @@ const supportedProperties: SupportedCssProperty[] = [
   'font-weight',
   'font-size',
   'text-transform',
+  'text-decoration',
 ]
 const colorProperties: SupportedCssProperty[] = ['color', 'background-color']
 const borderProperties: SupportedCssProperty[] = [
@@ -218,6 +298,37 @@ const fontWeights = [
   '900',
 ]
 const fontStyles = ['normal', 'italic', 'oblique']
+const textDecorationLineOptions = [
+  { label: 'underline', value: 'underline' },
+  { label: 'overline', value: 'overline' },
+  { label: 'strike-through', value: 'line-through' },
+]
+const textDecorationStyles = ['solid', 'double', 'dotted', 'dashed', 'wavy']
+const textDecorationUnits = [
+  'px', 'em', 'rem', 'ex', 'ch', 'vw', 'vh', 'vmin', 'vmax',
+  'cm', 'mm', 'in', 'pt', 'pc', '%',
+]
+type TextDecorationParts = {
+  lines: string[]
+  color: string
+  style: string
+  thickness: string
+}
+
+function parseTextDecoration(value: string): TextDecorationParts {
+  const parts: TextDecorationParts = { lines: [], color: '', style: '', thickness: '' }
+  for (const token of value.trim().split(/\s+/).filter(Boolean)) {
+    if (textDecorationLineOptions.some(option => option.value === token)) parts.lines.push(token)
+    else if (textDecorationStyles.includes(token)) parts.style = token
+    else if (token === 'from-font' || /^-?(?:\d+|\d*\.\d+)(?:px|em|rem|ex|ch|vw|vh|vmin|vmax|cm|mm|in|pt|pc|%)?$/.test(token)) parts.thickness = token
+    else parts.color = token
+  }
+  return parts
+}
+
+function serializeTextDecoration(parts: TextDecorationParts): string {
+  return [...parts.lines, parts.style, parts.thickness, parts.color].filter(Boolean).join(' ')
+}
 const fontVariants = [
   'normal',
   'none',
@@ -253,22 +364,33 @@ export default {
     },
   },
   emits: ['update:modelValue'],
+  data() {
+    return {
+      customPropertyDialog: false,
+      customPropertyName: '',
+      customPropertyError: '',
+    }
+  },
   computed: {
     cssProperties(): CssProperty[] {
       return this.modelValue as CssProperty[]
     },
-    selectedProperties(): SupportedCssProperty[] {
-      return supportedProperties.filter(property => this.cssProperties.some(
+    selectedProperties(): string[] {
+      const known = supportedProperties.filter(property => this.cssProperties.some(
         ([propertyName]) => propertyName === property,
       ))
+      const custom = this.cssProperties
+        .map(([propertyName]) => propertyName)
+        .filter(property => !supportedProperties.includes(property as SupportedCssProperty))
+      return [...known, ...custom]
     },
     availableProperties(): SupportedCssProperty[] {
       return supportedProperties.filter(property => !this.selectedProperties.includes(property))
     },
-    colorProperties(): SupportedCssProperty[] {
+    colorProperties(): string[] {
       return colorProperties
     },
-    borderProperties(): SupportedCssProperty[] {
+    borderProperties(): string[] {
       return borderProperties
     },
     borderStyles(): string[] {
@@ -295,19 +417,57 @@ export default {
     fontVariants(): string[] {
       return fontVariants
     },
+    textDecorationLineOptions(): typeof textDecorationLineOptions {
+      return textDecorationLineOptions
+    },
+    textDecorationStyles(): string[] {
+      return textDecorationStyles
+    },
+    textDecorationLineValues(): string[] {
+      return this.textDecorationParts().lines
+    },
+    textDecorationColor(): string {
+      return this.textDecorationParts().color
+    },
+    textDecorationStyle(): string | null {
+      return this.textDecorationParts().style || null
+    },
+    textDecorationThickness(): string {
+      return this.textDecorationParts().thickness
+    },
+    textDecorationThicknessLabel(): string {
+      return this.$t('configEditor.cssProperties.textDecorationThicknessButton', {
+        value: this.textDecorationThickness || '—',
+      })
+    },
+    textDecorationThicknessValue(): number {
+      const match = this.textDecorationThickness.match(
+        /^(-?(?:\d+|\d*\.\d+))(?:[a-z%]+)?$/,
+      )
+      return match ? Number(match[1]) : 1
+    },
+    textDecorationThicknessUnit(): string {
+      const match = this.textDecorationThickness.match(
+        /^-?(?:\d+|\d*\.\d+)([a-z%]+)$/,
+      )
+      return match?.[1] || 'px'
+    },
+    textDecorationUnits(): string[] {
+      return textDecorationUnits
+    },
   },
   setup() {
     setupQuasarIcons()
   },
   methods: {
-    propertyValue(property: SupportedCssProperty): string {
+    propertyValue(property: string): string {
       return this.cssProperties.find(([propertyName]) => propertyName === property)?.[1] || ''
     },
-    borderColor(property: SupportedCssProperty): string {
+    borderColor(property: string): string {
       const value = this.propertyValue(property)
       return this.borderColorMatch(value)?.[0] || ''
     },
-    setBorderStyle(property: SupportedCssProperty, style: string) {
+    setBorderStyle(property: string, style: string) {
       const value = this.propertyValue(property)
       const styles = borderStyles.join('|')
       const updated = new RegExp(`\\b(?:${styles})\\b`, 'i').test(value)
@@ -315,7 +475,7 @@ export default {
         : `${style}${value ? ` ${value}` : ''}`
       this.setPropertyValue(property, updated)
     },
-    setBorderColor(property: SupportedCssProperty, color: string | number | null) {
+    setBorderColor(property: string, color: string | number | null) {
       if (!color) return
       const value = this.propertyValue(property)
       const colorMatch = this.borderColorMatch(value)
@@ -330,7 +490,38 @@ export default {
       return matches.reverse().find(match => !borderStyles.includes(match[0].toLowerCase())
         && !['thin', 'medium', 'thick', 'px', 'pt', 'em', 'rem', 'cm', 'mm', 'in', 'pc', 'ex', 'ch', 'vw', 'vh', 'vmin', 'vmax'].includes(match[0].toLowerCase()))
     },
-    setPropertyValue(property: SupportedCssProperty, value: string | number | null) {
+    textDecorationParts(): TextDecorationParts {
+      return parseTextDecoration(this.propertyValue('text-decoration'))
+    },
+    setTextDecorationLines(lines: string[] | null) {
+      const parts = this.textDecorationParts()
+      parts.lines = (lines || []).filter(line =>
+        textDecorationLineOptions.some(option => option.value === line),
+      )
+      this.setPropertyValue('text-decoration', serializeTextDecoration(parts))
+    },
+    setTextDecorationColor(color: string | number | null) {
+      const parts = this.textDecorationParts()
+      parts.color = color ? String(color) : ''
+      this.setPropertyValue('text-decoration', serializeTextDecoration(parts))
+    },
+    setTextDecorationStyle(style: string | null) {
+      const parts = this.textDecorationParts()
+      parts.style = style && textDecorationStyles.includes(style) ? style : ''
+      this.setPropertyValue('text-decoration', serializeTextDecoration(parts))
+    },
+    setTextDecorationThicknessValue(value: number | null) {
+      const parts = this.textDecorationParts()
+      parts.thickness = `${value ?? 0}${this.textDecorationThicknessUnit}`
+      this.setPropertyValue('text-decoration', serializeTextDecoration(parts))
+    },
+    setTextDecorationThicknessUnit(unit: string) {
+      if (!textDecorationUnits.includes(unit)) return
+      const parts = this.textDecorationParts()
+      parts.thickness = `${this.textDecorationThicknessValue}${unit}`
+      this.setPropertyValue('text-decoration', serializeTextDecoration(parts))
+    },
+    setPropertyValue(property: string, value: string | number | null) {
       const css = [...this.cssProperties]
       const index = css.findIndex(([propertyName]) => propertyName === property)
       const propertyValue = value === null ? '' : String(value)
@@ -347,6 +538,21 @@ export default {
       if (this.selectedProperties.includes(property)) return
       this.$emit('update:modelValue', [...this.cssProperties, [property, '']])
     },
+    openCustomPropertyDialog() {
+      this.customPropertyName = ''
+      this.customPropertyError = ''
+      this.customPropertyDialog = true
+    },
+    addCustomProperty() {
+      const property = this.customPropertyName.trim()
+      if (!property) return
+      if (this.cssProperties.some(([name]) => name === property)) {
+        this.customPropertyError = this.$t('configEditor.cssProperties.duplicateName')
+        return
+      }
+      this.$emit('update:modelValue', [...this.cssProperties, [property, '']])
+      this.customPropertyDialog = false
+    },
   },
 }
 </script>
@@ -354,6 +560,14 @@ export default {
 <style scoped>
 .css-color-button {
   border: 1px solid var(--q-separator-color);
+}
+
+.css-decoration-select {
+  min-width: 8rem;
+}
+
+.css-decoration-thickness {
+  width: 7rem;
 }
 
 .css-specimen {

@@ -572,7 +572,16 @@
       "addTextTransform": "Aggiungi trasformazione del testo",
       "addFontWeight": "Aggiungi peso del carattere",
       "addFontStyle": "Aggiungi stile del carattere",
-      "addFontVariant": "Aggiungi variante del carattere"
+      "addFontVariant": "Aggiungi variante del carattere",
+      "textDecorationLine": "Linea di decorazione del testo",
+      "textDecorationColor": "Colore di decorazione del testo",
+      "textDecorationStyle": "Stile di decorazione del testo",
+      "textDecorationThickness": "Spessore di decorazione del testo",
+      "textDecorationThicknessUnit": "Unità dello spessore di decorazione del testo",
+      "textDecorationThicknessButton": "spessore: {value}",
+      "other": "Altro",
+      "customName": "Nome della proprietà CSS",
+      "duplicateName": "Questa proprietà CSS è già presente"
     }
   },
   "customStyles": {
