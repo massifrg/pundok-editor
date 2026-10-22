@@ -255,6 +255,9 @@ const SORTABLE_OBJECTS_ARRAYS_CRITERIA: SortableArrayCriterium[] = [
  */
 function sortConfigKeys(value: any, context?: string): any {
   if (Array.isArray(value)) {
+    if (context === 'actions') {
+      return value.map((item) => sortConfigKeys(item, context));
+    }
     for (let i = 0; i < SORTABLE_OBJECTS_ARRAYS_CRITERIA.length; i++) {
       const { fields, context: criteriumContext } =
         SORTABLE_OBJECTS_ARRAYS_CRITERIA[i];
