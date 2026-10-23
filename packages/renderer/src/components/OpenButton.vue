@@ -85,6 +85,12 @@ export default {
     project() {
       return this.activeDocState?.project;
     },
+    currentDocumentPath() {
+      const { workingFolder, documentName } = this.activeDocState || {};
+      return workingFolder && documentName
+        ? resolve(workingFolder, documentName)
+        : undefined;
+    },
     currentProjectSource() {
       const docState = this.activeDocState;
       const structure = docState?.projectStructure;
@@ -163,6 +169,14 @@ export default {
       if (this.editorKey)
         setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {});
     },
+    reloadCurrentDocument() {
+      if (this.editorKey && this.currentDocumentPath)
+        setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {
+          context: {
+            path: this.currentDocumentPath,
+          },
+        } as DocumentOpenActionProps);
+    },
     openProjectBookmark(p: ProjectBookmark) {
       if (this.editorKey)
         setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {
@@ -228,7 +242,7 @@ export default {
           </q-list>
         </q-menu>
       </q-item>
-      <q-item :disable="docBookmarks.length === 0" key="recent-documents" clickable>
+      <q-item :disable="docBookmarks.length === 0 && !currentDocumentPath" key="recent-documents" clickable>
         <q-item-section>
           <q-item-label>{{ $t('recent.documents') }}</q-item-label>
         </q-item-section>
@@ -237,6 +251,16 @@ export default {
         </q-item-section>
         <q-menu anchor="top right" self="top left">
           <q-list>
+            <q-item v-if="currentDocumentPath" key="reload-current-document" clickable v-close-popup class="bg-blue-1"
+              @click="reloadCurrentDocument">
+              <q-item-section avatar>
+                <q-icon name="refresh" />
+              </q-item-section>
+              <q-item-section>
+                {{ $t('recent.reloadCurrentDocument') }}
+              </q-item-section>
+            </q-item>
+            <q-separator v-if="currentDocumentPath" />
             <q-item v-for="d in docBookmarks" :key="d.url" :title="titleForBookmark(d)" clickable v-close-popup
               @click="openDocBookmark(d)">
               <q-item-section>

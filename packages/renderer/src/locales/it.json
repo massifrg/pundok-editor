@@ -780,6 +780,7 @@
   },
   "recent": {
     "documents": "documenti recenti",
+    "reloadCurrentDocument": "ricarica il documento corrente",
     "projects": "progetti recenti"
   },
   "redo": "ripeti",

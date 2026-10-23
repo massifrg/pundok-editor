@@ -781,6 +781,7 @@
   },
   "recent": {
     "documents": "recent documents",
+    "reloadCurrentDocument": "reload current document",
     "projects": "recent projects"
   },
   "redo": "redo",
