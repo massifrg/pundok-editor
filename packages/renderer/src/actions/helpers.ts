@@ -1,10 +1,13 @@
 import isString from 'lodash-es/isString'
 import type { Editor } from '@tiptap/core'
 import { ACTION_DESCRIPTORS } from '../common'
+import { BaseAction } from './actions'
 
 export type ActionCore = {
     label?: string | ((editor?: Editor, action?: any) => string | undefined)
+    labelParams?: Record<string, string>
     tooltip?: string | ((editor?: Editor, action?: any) => string | undefined)
+    tooltipParams?: Record<string, string>
     highlight?: boolean | ((editor?: Editor, action?: any) => boolean | undefined)
 }
 
@@ -15,29 +18,43 @@ export type ActionForNodeOrMark = {
     name?: string
 }
 
-export function isHighlightedAction(action: ActionCore, editor?: Editor): boolean {
+export function isHighlightedAction(action: BaseAction, editor?: Editor): boolean {
     const hl = action?.highlight
     if (!hl) return false
     if (hl === true) return true
     return (hl && hl(editor, action)) || false
 }
 
-export function labelForAction(action: ActionCore, editor?: Editor, t?: (key: string, vars?: Record<string, any>) => string): string | undefined {
-    // Prefer descriptor-based translation when available and a translator `t` is provided.
-    const anyAction: any = action
-    const desc = anyAction && anyAction.name ? (anyAction.name && (anyAction.name in ACTION_DESCRIPTORS) ? ACTION_DESCRIPTORS[anyAction.name] : undefined) : undefined
-    const labelKey = desc && (desc as any).labelKey
-    if (labelKey && t) return t(labelKey)
-
-    const label = action?.label
-    if (!label) return undefined
-    return isString(label) ? label : label(editor, action)
+export function labelForAction(
+    action: BaseAction,
+    editor?: Editor,
+    t?: (key: string, vars?: Record<string, any>) => string
+): string | undefined {
+    const { name, label } = action
+    const l4a = !label
+        ? name
+        : isString(label) ? label : name
+    if (t && name === 'convert-block' && action.labelParams?.from && action.labelParams?.to)
+        return t('actions.convertBlockAction', action.labelParams) || l4a
+    const descriptor = ACTION_DESCRIPTORS[name]
+    if (t && descriptor?.labelKey)
+        return t(descriptor.labelKey, action.labelParams || action.tooltipParams) || l4a
+    return l4a
 }
 
-export function tooltipForAction(action: ActionCore, editor?: Editor): string | undefined {
-    const tooltip = action?.tooltip
-    if (!tooltip) return undefined
-    return isString(tooltip) ? tooltip : tooltip(editor, action)
+export function tooltipForAction(
+    action: BaseAction,
+    editor?: Editor,
+    t?: (key: string, vars?: Record<string, any>) => string
+): string | undefined {
+    const { name, tooltip } = action
+    const t4a = !tooltip
+        ? name
+        : isString(tooltip) ? tooltip : name
+    const descriptor = ACTION_DESCRIPTORS[name]
+    if (t && descriptor?.tooltipKey)
+        return t(descriptor.tooltipKey, action.tooltipParams || action.labelParams) || t4a
+    return t4a
 }
 
 export function executeEditorAction(action: ActionForNodeOrMark, editor: Editor): boolean {

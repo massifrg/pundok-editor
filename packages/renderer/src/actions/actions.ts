@@ -12,7 +12,7 @@ import {
   TextAlignmentActionProps,
   AddRemoveRenameAttributeActionProps
 } from '../common';
-import { ActionsGroup } from './actionGroup';
+import { ActionsGroup, BaseActionsGroup } from './actionGroup';
 import { TypeOrNode } from '../schema/extensions/HelperCommandsExtension';
 import {
   isHighlightedAction as _isHighlightedAction,
@@ -101,6 +101,9 @@ export type ActionName =
   | 'auto-set-index-term-id'
   | 'auto-set-index-terms-ids'
   | 'insert-raw-inline'
+  | 'insert-block-before'
+  | 'insert-block-after'
+  | 'convert-block'
   | 'move-before-first-sibling'
   | 'move-before-previous-sibling'
   | 'move-before-next-sibling'
@@ -115,27 +118,29 @@ export type LabelForAction =
   | string
   | ((
     editor?: Editor,
-    action?: ActionCore,
+    action?: BaseAction,
   ) => string | undefined);
 
 export type TooltipForAction =
   | string
   | ((
     editor?: Editor,
-    action?: ActionCore,
+    action?: BaseAction,
   ) => string | undefined);
 
 export type HighlightForAction =
   | boolean
   | ((
     editor?: Editor,
-    action?: ActionCore,
+    action?: BaseAction,
   ) => boolean | undefined);
 
 /** Core properties of actions */
 export interface ActionCore {
-  label: LabelForAction;
+  label?: LabelForAction;
+  labelParams?: Record<string, string>;
   tooltip?: TooltipForAction;
+  tooltipParams?: Record<string, string>;
   icon?: string;
   iconRight?: string;
   order?: number;
@@ -163,6 +168,8 @@ interface ActionForNodeOrMarkCore {
 
 /** Action pertinent to a particular Node or Mark of the document (non linked version) */
 export type BaseActionForNodeOrMark = BaseEditorAction & ActionForNodeOrMarkCore
+
+export type BaseAction = BaseEditorAction | BaseActionForNodeOrMark | BaseActionsGroup
 
 /** Action pertinent to a particular Node or Mark of the document of the editor with that editorKey */
 export type ActionForNodeOrMark = EditorAction & ActionForNodeOrMarkCore
@@ -656,6 +663,7 @@ HORIZONTAL_ALIGNMENTS.forEach((alignment) => {
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: `set-text-align`,
     label: `horizontal ${alignment} align`,
+    labelParams: { alignment },
     icon: `align_${alignment}`,
     canDo: (editor, action) => editor.can().setTextAlign((action?.props as TextAlignmentActionProps)?.alignment),
     do: (editor, action) => editor.commands.setTextAlign((action?.props as TextAlignmentActionProps)?.alignment),
@@ -666,6 +674,7 @@ VERTICAL_ALIGNMENTS.forEach((alignment) => {
   TABLE_CELL_ALIGNMENT_ACTIONS.push({
     name: 'set-vertical-align',
     label: `vertical ${alignment} align`,
+    labelParams: { alignment },
     icon: `align_${alignment}`,
     canDo: (editor, action) => editor.can().setVerticalAlign((action?.props as TableCellVertAlignActionProps)?.alignment),
     do: (editor, action) => editor.commands.setVerticalAlign((action?.props as TableCellVertAlignActionProps)?.alignment),
@@ -755,6 +764,10 @@ export function labelForAction(action: ActionCore, editor?: Editor, t?: (key: st
   return _labelForAction(action as any, editor, t)
 }
 
-export function tooltipForAction(action: ActionCore, editor?: Editor): string | undefined {
-  return _tooltipForAction(action as any, editor)
+export function tooltipForAction(
+  action: ActionCore,
+  editor?: Editor,
+  t?: (key: string) => string,
+): string | undefined {
+  return _tooltipForAction(action as any, editor, t)
 }

@@ -4,6 +4,23 @@
       <q-btn :color="colorFor(crumb)" elevation="3" size="md" no-caps :class="`pandoc-label label-${crumb.class}`"
         @click="showCrumbMenu = crumb" @mouseenter="crumbEntered(crumb)">
         {{ crumb.label }}
+        <span v-if="crumb.mark || isUnwrappable(crumb)" class="breadcrumb-remove-mark">
+          <q-icon
+            :name="crumb.name === 'div'
+              ? 'unwrap'
+              : ['figure', 'blockquote'].includes(crumb.name)
+                ? 'figure_unwrap'
+                : 'close'"
+            size="xs"
+            role="button"
+            tabindex="0"
+            :aria-label="$t(crumb.mark ? 'actions.removeMark' : 'actions.removeContainer')"
+            @click.stop="removeMark(crumb)"
+          />
+          <q-tooltip>
+            {{ $t(crumb.mark ? 'actions.removeThisMark' : 'actions.removeContainer') }}
+          </q-tooltip>
+        </span>
       </q-btn>
       <q-tooltip v-if="showTooltips && tooltipFor(crumb)" class="bg-amber-2 text-black text-body2" anchor="bottom end"
         v-html="tooltipFor(crumb)" max-width="50vw" style="opacity: 0.8; min-width: 20vw" @show="highlight(crumb)"
@@ -22,6 +39,8 @@ import { CustomStyleDef } from '../common';
 import { type LabeledNodeOrMark, labeledNodesAndMarks, getMarkRangesBetween, colorFor, tooltipFor } from '../schema/helpers';
 import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue';
 import { getEditorConfiguration } from '../schema';
+import { actionsForNodeOrMark } from '../actions';
+import { useActions } from '../stores';
 
 const BREADCRUMB_TOOLTIP_CLASS = 'bc-tooltip';
 
@@ -81,6 +100,16 @@ export default {
     },
     tooltipFor(labeled: LabeledNodeOrMark) {
       return tooltipFor(labeled, this.doc, [BREADCRUMB_TOOLTIP_CLASS])
+    },
+    isUnwrappable(crumb: LabeledNodeOrMark) {
+      return !crumb.mark && ['div', 'figure', 'blockquote'].includes(crumb.name)
+    },
+    removeMark(crumb: LabeledNodeOrMark) {
+      const action = actionsForNodeOrMark(this.editor.state, crumb)
+        .find((candidate) =>
+          candidate.name === (crumb.mark ? 'remove-mark' : 'unwrap-blocks'),
+        );
+      if (action) useActions().setAction(action);
     }
   },
 };
@@ -92,6 +121,17 @@ export default {
   color: white;
   text-transform: none;
   margin-left: 3px;
+}
+
+.breadcrumb-remove-mark {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  margin-right: -0.25rem;
+  padding: 0.04rem;
+  font-size: 0.65rem;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 20%);
 }
 
 .label-Block {

@@ -162,7 +162,6 @@ export function nodeOrMarkToPandocName(
         || DEFAULT_RAW_INLINE_FORMAT
         })`;
     case NODE_NAME_RAW_BLOCK:
-      console.log(config)
       return `RawBlock(${attrs.format
         || config?.defaultRawFormat
         || RawBlock.options.defaultFormat

@@ -2,7 +2,13 @@ import { getEditorConfiguration } from '../schema';
 import { nodeOrMarkToPandocName } from '../schema/helpers/PandocVsProsemirror';
 import { nodeIcon, templateNode } from '../schema/helpers';
 import { EditorKeyType, PundokEditorConfig } from '../common';
-import { ActionCore, ActionForNodeOrMark, ActionName, TooltipForAction } from './actions';
+import {
+  ActionCore,
+  ActionForNodeOrMark,
+  ActionName,
+  BaseActionForNodeOrMark,
+  TooltipForAction
+} from './actions';
 
 /** Allowed names for Actions' groups */
 type ActionGroupName =
@@ -12,7 +18,7 @@ type ActionGroupName =
   | 'move-block'
 
 /** Useful to group actions in sub menus (not linked to an editor instance) */
-type BaseActionsGroup = ActionCore & {
+export type BaseActionsGroup = ActionCore & {
   name: ActionGroupName,
   tooltip?: TooltipForAction,
 }
@@ -55,8 +61,7 @@ const ACTION_GROUP_MOVE_BLOCK: BaseActionsGroup = {
 
 export function insertBlockAction(
   editorKey: EditorKeyType,
-  name: ActionName,
-  label: string,
+  action: BaseActionForNodeOrMark,
   pos: number,
   nodetypename: string,
   where: 'before' | 'after',
@@ -65,10 +70,12 @@ export function insertBlockAction(
   const icon = nodeIcon(nodetypename);
   const beforeGroup = { ...ACTION_GROUP_INSERT_BEFORE, editorKey } as ActionsGroup;
   const afterGroup = { ...ACTION_GROUP_INSERT_AFTER, editorKey } as ActionsGroup;
+  const { name, labelParams } = action
   return {
     editorKey,
     name,
-    label,
+    labelParams,
+    tooltipParams: labelParams,
     icon: isBefore ? icon : 'block',
     iconRight: isBefore ? 'block' : icon,
     group: isBefore ? beforeGroup : afterGroup,
@@ -134,12 +141,16 @@ export function convertBlockAction(
   const convertGroup = { ...ACTION_GROUP_CONVERT_BLOCK, editorKey } as ActionsGroup;
   return {
     editorKey,
-    name: `convert-${fromTypeName}-to-${toTypeName}` as ActionName,
-    label: `convert ${nodeOrMarkToPandocName(
-      fromTypeName,
-      undefined,
-      config,
-    )} to ${nodeOrMarkToPandocName(toTypeName, undefined, config)}`,
+    // name: `convert-${fromTypeName}-to-${toTypeName}` as ActionName,
+    name: 'convert-block',
+    labelParams: {
+      from: nodeOrMarkToPandocName(
+        fromTypeName,
+        undefined,
+        config,
+      ),
+      to: nodeOrMarkToPandocName(toTypeName, undefined, config),
+    },
     icon: 'block_convert',
     iconRight: nodeIcon(toTypeName),
     group: convertGroup,

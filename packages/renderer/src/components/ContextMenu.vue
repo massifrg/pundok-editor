@@ -33,12 +33,10 @@ import {
   ActionCore,
   ActionForNodeOrMark,
   actionsForNodeOrMark,
-  BaseEditorAction,
   canExecuteEditorAction,
   executeEditorAction,
   isHighlightedAction,
   labelForAction,
-  setActionCommand,
   tooltipForAction
 } from '../actions'
 import {
@@ -115,7 +113,7 @@ export default {
     tooltipForAction(a: ActionCore) {
       // @ts-ignore
       const t = (this as any).$t ? (this as any).$t.bind(this) : undefined
-      return tooltipForAction(a, this.editor)
+      return tooltipForAction(a, this.editor, t)
     },
     setAction(a: ActionForNodeOrMark) {
       const editor = this.editor

@@ -92,7 +92,8 @@ export default {
         this.actions.setAction(action as ActionForNodeOrMark)
     },
     titleFor(action: ActionForNodeOrMark | ActionsGroup) {
-      return tooltipForAction(action, this.editor)
+      const t = (this as any).$t ? (this as any).$t.bind(this) : undefined
+      return tooltipForAction(action, this.editor, t)
     },
     labelFor(action: ActionForNodeOrMark | ActionsGroup) {
       const t = (this as any).$t ? (this as any).$t.bind(this) : undefined

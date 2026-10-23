@@ -246,12 +246,13 @@ export function actionsForNodeOrMark(
         actions.push(
           insertBlockAction(
             editorKey,
-            `insert-${typename}-before` as ActionName,
-            `insert a ${nodeOrMarkToPandocName(
-              typename,
-              undefined,
-              config,
-            )} before`,
+            {
+              // name: `insert-${typename}-before` as ActionName,
+              name: `insert-block-before`,
+              labelParams: {
+                name: nodeOrMarkToPandocName(typename, undefined, config),
+              },
+            },
             pos,
             typename,
             'before',
@@ -260,12 +261,13 @@ export function actionsForNodeOrMark(
         actions.push(
           insertBlockAction(
             editorKey,
-            `insert-${typename}-after` as ActionName,
-            `insert a ${nodeOrMarkToPandocName(
-              typename,
-              undefined,
-              config,
-            )} after`,
+            {
+              // name: `insert-${typename}-after` as ActionName,
+              name: `insert-block-after`,
+              labelParams: {
+                name: nodeOrMarkToPandocName(typename, undefined, config),
+              }
+            },
             pos,
             typename,
             'after',
@@ -363,7 +365,7 @@ export function actionsForNodeOrMark(
     const removeMarkAction: ActionForNodeOrMark = {
       editorKey,
       name: 'remove-mark',
-      label: `remove ${mark?.type.name}`,
+      labelParams: { name: mark?.type.name },
       icon: 'marks_remove',
       canDo: (editor) => editor.can().removeMark(from, to, mark),
       do: (editor) => editor.commands.removeMark(from, to, mark),

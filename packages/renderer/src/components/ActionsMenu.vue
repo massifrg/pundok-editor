@@ -8,15 +8,14 @@
             <q-icon :name="action.iconRight" size="sm" />
           </span>
         </q-item-section>
-        <q-item-section>{{ action.label }}</q-item-section>
+        <q-item-section>{{ labelFor(action) }}</q-item-section>
       </q-item>
     </q-list>
   </q-menu>
 </template>
 
 <script lang="ts">
-import { isString } from 'lodash-es'
-import { ActionForNodeOrMark } from '../actions'
+import { ActionForNodeOrMark, labelForAction, tooltipForAction } from '../actions'
 import { useActions } from '../stores'
 
 export default {
@@ -31,14 +30,13 @@ export default {
       this.useActions.setAction(action)
     },
     titleFor(action: ActionForNodeOrMark) {
-      // console.log(`action tooltip!`)
-      const actionTooltip = action.tooltip
-      if (actionTooltip) {
-        return isString(actionTooltip)
-          ? actionTooltip
-          : actionTooltip(this.editor, action)
-      }
-    }
+      const t = (this as any).$t ? (this as any).$t.bind(this) : undefined
+      return tooltipForAction(action, this.editor, t)
+    },
+    labelFor(action: ActionForNodeOrMark) {
+      const t = (this as any).$t ? (this as any).$t.bind(this) : undefined
+      return labelForAction(action, this.editor, t)
+    },
   },
 }
 </script>
