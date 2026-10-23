@@ -169,6 +169,14 @@ function orderedIndexSources(sources: IndexSource[]): IndexSource[] {
   return [...sources].sort((a, b) => sourcePriority(a) - sourcePriority(b));
 }
 
+function sourceSelectionKey(source: IndexSource): string {
+  return source.type === 'json-file'
+    ? `${source.type}:${source.filename}`
+    : source.type;
+}
+
+const selectedSourcesByIndex = new Map<string, string[]>();
+
 const columns: QTableProps['columns'] = [
   {
     name: 'id',
@@ -270,6 +278,7 @@ export default {
   },
   async mounted() {
     await this.loadJsonSources();
+    this.restoreSelectedSources();
     if (this.searchText.length >= SEARCHTEXT_MIN_LENGTH) this.doSearch();
   },
   watch: {
@@ -479,10 +488,29 @@ export default {
         selected.add(index);
       }
       this.selectedSourceIndices = [...selected].sort((a, b) => a - b);
+      selectedSourcesByIndex.set(
+        this.indexSelectionKey(),
+        this.selectedSources.map(sourceSelectionKey),
+      );
       await this.doSearch();
     },
+    indexSelectionKey(): string {
+      return this.indexName || DEFAULT_INDEX_NAME;
+    },
+    restoreSelectedSources() {
+      const remembered = selectedSourcesByIndex.get(this.indexSelectionKey());
+      if (!remembered) return;
+
+      const rememberedSet = new Set(remembered);
+      const selected = this.orderedSources
+        .map((source, index) =>
+          rememberedSet.has(sourceSelectionKey(source)) ? index : -1,
+        )
+        .filter((index) => index >= 0);
+      if (selected.length > 0) this.selectedSourceIndices = selected;
+    },
     sourceKey(source: IndexSource, index: number) {
-      return `${source.type}-${(source as IndexSourceJsonFile).filename || index}`;
+      return `${sourceSelectionKey(source)}-${index}`;
     },
     sourceResultClass(source?: string) {
       switch (source) {

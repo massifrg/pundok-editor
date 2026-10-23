@@ -159,7 +159,8 @@ export default {
         this.setNewValueForAttr(INDEX_REF_TERM_TEXT, text)
     },
     keyup(e: KeyboardEvent) {
-      if (e.code === 'Escape') this.$emit('cancel')
+      if (e.code === 'Enter') this.$emit('commit')
+      else if (e.code === 'Escape') this.$emit('cancel')
     }
   },
 };

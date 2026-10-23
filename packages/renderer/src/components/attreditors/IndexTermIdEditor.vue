@@ -58,7 +58,8 @@ export default {
       this.$emit('change-search-text-variant', variant)
     },
     keyup(e: KeyboardEvent) {
-      if (e.code === 'Escape') this.$emit('cancel')
+      if (e.code === 'Enter') this.$emit('commit')
+      else if (e.code === 'Escape') this.$emit('cancel')
     }
   },
 };
