@@ -27,6 +27,7 @@
             @clone-git-project="showGitRepository('clone')"
             @reload-with-configuration="reloadWithConfiguration"
             @render-output="renderOutput"
+            @stop-rendering="stopRendering"
             :rendering-targets="renderingTargets"
           />
         </q-toolbar-title>
@@ -1445,6 +1446,10 @@ export default {
             target.path !== renderingTarget.path,
         );
       }
+    },
+    async stopRendering(converterName: string, path?: string) {
+      if (!path) return;
+      await this.backend?.stopRendering(converterName, path);
     },
     async importDoc(converter: InputConverter) {
       const docState = this.docState();

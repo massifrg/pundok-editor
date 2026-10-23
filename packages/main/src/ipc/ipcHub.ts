@@ -1,4 +1,5 @@
 import type { BaseWindow, WebContentsView } from 'electron';
+import { spawnSync } from 'node:child_process';
 import { ipcMain, shell } from 'electron';
 import {
   CommandToRenderer,
@@ -40,6 +41,11 @@ import {
   desktopRenderingJobStore,
   openDocument,
   saveDocument,
+  renderingProcessKey,
+  getRenderingProcess,
+  unregisterRenderingProcess,
+  stopRenderingProcess,
+  localizePath,
   errorFeedback,
   GitRepositoryManager,
 } from '../backend';
@@ -155,6 +161,27 @@ export class IpcHub implements RendererHub {
       }
       return response;
     });
+    ipcMain.handle(
+      'stop-rendering',
+      (_event, converterName: string, path: string) => {
+        const key = renderingProcessKey(converterName, localizePath(path));
+        if (process.platform === 'win32') {
+          const renderingProcess = getRenderingProcess(key);
+          if (renderingProcess?.pid) {
+            const result = spawnSync(
+              'taskkill',
+              ['/PID', String(renderingProcess.pid), '/T', '/F'],
+              { stdio: 'ignore' },
+            );
+            if (result.status === 0) {
+              unregisterRenderingProcess(key, renderingProcess);
+              return true;
+            }
+          }
+        }
+        return stopRenderingProcess(key);
+      },
+    );
     ipcMain.handle('debug-info', () =>
       getBackendDebugInfo(backendDirectories()),
     );

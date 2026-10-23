@@ -65,6 +65,8 @@ import {
   expandCommandArgs,
   openDocument,
   saveDocument,
+  renderingProcessKey,
+  stopRenderingProcess,
   GitRepositoryManager,
   type BackendDirectories,
   type RendererHub,
@@ -328,6 +330,16 @@ export class PundokEditorServer {
       feedbackSink(this.rendererHub(user)),
       this.renderingJobsForUser(user),
       this.documentForUser(user, doc) as CxDocument,
+    );
+  }
+
+  async stopRendering(
+    user: string,
+    converterName: string,
+    path: string,
+  ): Promise<boolean> {
+    return stopRenderingProcess(
+      renderingProcessKey(converterName, this.userPath(user, path)),
     );
   }
 

@@ -46,6 +46,7 @@ export interface ExportOptions {
   sourceFile?: string;
   resultFile: string;
   callback?: ProgressCallback;
+  processKey?: string;
 }
 
 export async function importWithPandoc(
@@ -132,6 +133,7 @@ async function exportWithExternalProgram(
       { shell: true, cwd },
       callback,
       jsonContent,
+      { key: exportOptions.processKey },
     );
     const output = await result;
     if (output.exitCode === 0) return output;

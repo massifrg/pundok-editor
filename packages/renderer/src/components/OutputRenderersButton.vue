@@ -17,6 +17,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   render: [converter: OutputConverter, path?: string];
+  'stop-rendering': [converterName: string, path?: string];
 }>();
 
 const menu = ref<{ show: () => void }>();
@@ -238,6 +239,10 @@ function clickMain(): void {
   }
 }
 
+function stopRendering(converterName: string, path?: string): void {
+  emit('stop-rendering', converterName, path);
+}
+
 </script>
 
 <template>
@@ -265,6 +270,13 @@ function clickMain(): void {
       title="render..."
     >
     <q-list dense>
+      <q-item clickable v-close-popup @click="renderingDialog = true">
+        <q-item-section avatar>
+          <q-icon name="document_render" />
+        </q-item-section>
+        <q-item-section>Current and recent renderings</q-item-section>
+      </q-item>
+      <q-separator />
       <template v-for="(item, index) in menuItems" :key="`${item.converter.name}:${item.path || ''}:${item.resultFile}`">
         <q-separator
           v-if="index > 0 && menuItems[index - 1].converter.name !== item.converter.name"
@@ -325,5 +337,6 @@ function clickMain(): void {
     :visible="renderingDialog"
     :processes="renderingProcesses"
     @close="renderingDialog = false"
+    @stop="stopRendering"
   />
 </template>

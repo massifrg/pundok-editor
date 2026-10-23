@@ -5,6 +5,10 @@ import {
 } from 'node:child_process';
 import { delimiter } from 'node:path';
 import type { ExternalProgramResult } from '../../common/src';
+import {
+  registerRenderingProcess,
+  unregisterRenderingProcess,
+} from './renderingProcess';
 
 export type ExternalProgramEnvironment = NodeJS.ProcessEnv & {
   /**
@@ -25,6 +29,10 @@ export type ProgressCallback = (
   source: 'out' | 'err' | 'end',
   chunk: any,
 ) => void;
+
+export interface ExternalProgramRegistration {
+  key?: string;
+}
 
 export interface ExternalProgram {
   childProcess: ChildProcessWithoutNullStreams;
@@ -53,11 +61,18 @@ export function runExternalProgram(
   options?: ExternalProgramOptions,
   callback?: ProgressCallback,
   input?: string,
+  registration?: ExternalProgramRegistration,
 ): ExternalProgram {
   const commandLine = [path, ...args].join(' ');
   const output: string[] = [];
   const error: string[] = [];
-  const childProcess = spawn(path, args, extendEnvironment(options));
+  const spawnOptions = extendEnvironment(options);
+  const childProcess = spawn(
+    path,
+    args,
+    registration?.key ? { ...spawnOptions, detached: true } : spawnOptions,
+  );
+  if (registration?.key) registerRenderingProcess(registration.key, childProcess);
   childProcess.stdout.on('data', (chunk) => {
     if (callback) callback('out', chunk);
     else output.push(chunk.toString());
@@ -80,10 +95,12 @@ export function runExternalProgram(
     result: new Promise((resolve, reject) => {
       const cwd = options?.cwd?.toString() || process.cwd();
       childProcess.on('close', (exitCode) => {
+        if (registration?.key)
+          unregisterRenderingProcess(registration.key, childProcess);
         resolve({
           commandLine,
           cwd,
-          exitCode: exitCode || 0,
+          exitCode: exitCode ?? -1,
           output: output.join(''),
           error: error.join(''),
         });

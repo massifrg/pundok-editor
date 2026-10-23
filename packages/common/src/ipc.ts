@@ -54,6 +54,7 @@ export type IpcRendererToMainChannel =
   | 'get-source-file'
   | 'show-rendered-again'
   | 'render-again'
+  | 'stop-rendering'
   | 'get-rendering-job'
   | 'update-config'
   | 'list-git-repositories'
@@ -208,6 +209,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'render-again': {
     dir: 'r2m',
     description: 'render the document again (recompile PDF)',
+  },
+  'stop-rendering': {
+    dir: 'r2m',
+    description: 'stop an ongoing rendering process',
   },
   'get-rendering-job': {
     dir: 'r2m',

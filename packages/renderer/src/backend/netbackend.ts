@@ -221,6 +221,10 @@ export class NetBackend implements Backend {
     return this.request('render-again', { hash, editorKey });
   }
 
+  stopRendering(converterName: string, path: string): Promise<boolean> {
+    return this.request('stop-rendering', { converterName, path });
+  }
+
   getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
     return this.request('get-rendering-job', { hash });
   }

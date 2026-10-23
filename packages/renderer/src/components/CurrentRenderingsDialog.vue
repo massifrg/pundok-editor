@@ -19,6 +19,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   close: [];
+  stop: [converterName: string, path?: string];
 }>();
 
 const expanded = ref<string>();
@@ -122,7 +123,7 @@ function close(): void {
   <q-dialog :model-value="visible" @hide="close">
     <q-card style="width: 60rem; max-width: 90vw">
       <q-card-section class="text-h6">
-        Current rendering processes
+        Current and recent renderings
       </q-card-section>
       <q-list dense>
         <template v-for="process in processes" :key="processKey(process)">
@@ -137,13 +138,25 @@ function close(): void {
             </q-item-section>
             <q-item-section>{{ process.label }}</q-item-section>
             <q-item-section side>
-              <q-btn
-                flat
-                dense
-                round
-                :icon="expanded === processKey(process) ? 'menu_up' : 'menu_down'"
-                @click="expanded = expanded === processKey(process) ? undefined : processKey(process)"
-              />
+              <div class="row items-center no-wrap">
+                <q-btn
+                  v-if="process.active"
+                  flat
+                  dense
+                  round
+                  icon="cancel"
+                  title="Stop rendering"
+                  @click.stop="emit('stop', process.converterName, process.path)"
+                />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  class="q-ml-sm"
+                  :icon="expanded === processKey(process) ? 'menu_up' : 'menu_down'"
+                  @click="expanded = expanded === processKey(process) ? undefined : processKey(process)"
+                />
+              </div>
             </q-item-section>
           </q-item>
           <q-item v-if="expanded === processKey(process)">

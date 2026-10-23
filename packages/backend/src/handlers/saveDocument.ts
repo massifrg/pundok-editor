@@ -24,6 +24,7 @@ import { localizePath } from '../filesystem';
 import { exportWithPandoc, exportWithScript } from '../importExport';
 import type { RendererHub } from '../rendererHub';
 import { validResourcePaths, type BackendDirectories } from '../resourceManager';
+import { renderingProcessKey } from '../renderingProcess';
 import { computeProjectFromDocFile } from './project';
 
 export async function saveDocument(
@@ -108,6 +109,9 @@ export async function exportDocument(
           resourcesPaths,
           sourceFile,
           resultFile: resultFile || doc.path,
+          processKey: isRendering
+            ? renderingProcessKey(converter!.name, sourceFile)
+            : undefined,
           callback: (source, chunk) =>
             progressFeedback(feedback, source, chunk.toString(), doc.editorKey),
         });
@@ -118,6 +122,9 @@ export async function exportDocument(
           cwd,
           resourcesPaths,
           resultFile: resultFile || doc.path,
+          processKey: isRendering
+            ? renderingProcessKey(converter!.name, sourceFile)
+            : undefined,
         });
     }
 

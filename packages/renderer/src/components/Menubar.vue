@@ -9,7 +9,7 @@
       <SaveButton :editor="editor" :text-color="savedColor" />
 
       <OutputRenderersButton v-if="gui.renderButton" :editor="editor" :rendering-targets="renderingTargets"
-        @render="renderOutput" />
+        @render="renderOutput" @stop-rendering="stopRendering" />
 
       <span v-if="gui.renderButton" class="button-separator" />
 
@@ -461,6 +461,7 @@ export default {
     'editNodeOrMarkAttributes',
     'reloadWithConfiguration',
     'render-output',
+    'stop-rendering',
   ],
   data() {
     return {
@@ -562,6 +563,9 @@ export default {
     });
   },
   methods: {
+    stopRendering(converterName: string, path?: string) {
+      this.$emit('stop-rendering', converterName, path);
+    },
     isActive(name: string, attrs?: Record<string, any>) {
       return this.editor && this.editor.isActive(name, attrs);
     },
