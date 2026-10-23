@@ -731,9 +731,7 @@ const AVAILABLE_ACTIONS: Readonly<Record<string, BaseActionForNodeOrMark>> = Obj
 ))
 
 export function availableActionsNames(): string[] {
-  const runtimeNames = Object.keys(AVAILABLE_ACTIONS)
-  const descNames = Object.keys(ACTION_DESCRIPTORS)
-  return Array.from(new Set([...runtimeNames, ...descNames]))
+  return Object.keys(AVAILABLE_ACTIONS)
 }
 
 export function availableAction(actionName: string): BaseActionForNodeOrMark | ActionDescriptor | undefined {
