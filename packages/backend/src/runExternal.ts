@@ -75,11 +75,11 @@ export function runExternalProgram(
   if (registration?.key) registerRenderingProcess(registration.key, childProcess);
   childProcess.stdout.on('data', (chunk) => {
     if (callback) callback('out', chunk);
-    else output.push(chunk.toString());
+    output.push(chunk.toString());
   });
   childProcess.stderr.on('data', (chunk) => {
     if (callback) callback('err', chunk);
-    else error.push(chunk.toString());
+    error.push(chunk.toString());
   });
   childProcess.stdin.on('error', (stdinError) => {
     if ((stdinError as NodeJS.ErrnoException).code !== 'EPIPE') {

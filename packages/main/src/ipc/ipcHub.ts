@@ -45,6 +45,7 @@ import {
   getRenderingProcess,
   unregisterRenderingProcess,
   stopRenderingProcess,
+  transformationProcessKey,
   localizePath,
   errorFeedback,
   GitRepositoryManager,
@@ -182,6 +183,9 @@ export class IpcHub implements RendererHub {
         return stopRenderingProcess(key);
       },
     );
+    ipcMain.handle('stop-transformation', (_event, editorKey: EditorKeyType) =>
+      stopRenderingProcess(transformationProcessKey(editorKey)),
+    );
     ipcMain.handle('debug-info', () =>
       getBackendDebugInfo(backendDirectories()),
     );
@@ -220,7 +224,12 @@ export class IpcHub implements RendererHub {
       createProject(directory, JSON.parse(project)),
     );
     ipcMain.handle('transform-json', (_event, document, transform) =>
-      transformJsonHandler(backendDirectories(), document, transform),
+      transformJsonHandler(
+        backendDirectories(),
+        document,
+        transform,
+        feedbackSink(this),
+      ),
     );
     ipcMain.handle('pandoc-feature', (_event, featureName, options) =>
       getPandocFeature(featureName, options),

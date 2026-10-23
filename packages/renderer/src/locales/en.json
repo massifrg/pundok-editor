@@ -155,6 +155,16 @@
     "moveOrSwapVertically": "moving/swapping locks/paragraphs vertically with {shortcut}: {state}"
   },
   "close": "close",
+  "transformationDialog": {
+    "title": "Whole-document transformation",
+    "inProgress": "Transformation in progress",
+    "finished": "Transformation finished",
+    "failedState": "Transformation failed",
+    "cancel": "Cancel transformation",
+    "started": "Starting whole-document transformation...",
+    "failed": "Transformation failed: {error}",
+    "completed": "Transformation finished."
+  },
   "compact": "compact",
   "convert": "convert",
   "configEditor": {

@@ -55,6 +55,7 @@ export type IpcRendererToMainChannel =
   | 'show-rendered-again'
   | 'render-again'
   | 'stop-rendering'
+  | 'stop-transformation'
   | 'get-rendering-job'
   | 'update-config'
   | 'list-git-repositories'
@@ -213,6 +214,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
   'stop-rendering': {
     dir: 'r2m',
     description: 'stop an ongoing rendering process',
+  },
+  'stop-transformation': {
+    dir: 'r2m',
+    description: 'stop an ongoing whole-document transformation',
   },
   'get-rendering-job': {
     dir: 'r2m',

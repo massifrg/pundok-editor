@@ -11,6 +11,8 @@ import {
   type BackendDirectories,
 } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
+import { transformationProcessKey } from '../renderingProcess';
+import { progressFeedback, type FeedbackSink } from '../feedback';
 import { isEmpty } from 'lodash';
 import { expandCommandArgs } from '../expandCommandArgs';
 
@@ -18,6 +20,7 @@ export async function transformJsonHandler(
   directories: BackendDirectories,
   jsonDocument: string,
   jsonTransform: string,
+  feedback?: FeedbackSink,
 ): Promise<string> {
   let document: Partial<CxDocument>;
   let transform: PandocFilterTransform;
@@ -27,13 +30,21 @@ export async function transformJsonHandler(
   } catch (error) {
     throw new Error(`Transform input must be valid JSON: ${error}`);
   }
-  return transformWithPandoc(directories, document, transform);
+  return transformWithPandoc(
+    directories,
+    document,
+    transform,
+    transformationProcessKey(document.editorKey),
+    feedback,
+  );
 }
 
 export async function transformWithPandoc(
   directories: BackendDirectories,
   document: Partial<CxDocument>,
   transform: PandocFilterTransform,
+  processKey = transformationProcessKey(document.editorKey),
+  feedback?: FeedbackSink,
 ): Promise<string> {
   const { configurationName, project, content } = document;
   const { sources } = transform;
@@ -103,8 +114,17 @@ export async function transformWithPandoc(
     'pandoc',
     args,
     { cwd: project?.path },
-    undefined,
+    (source, chunk) => {
+      if (feedback && source !== 'end')
+        progressFeedback(
+          feedback,
+          source,
+          chunk.toString(),
+          document.editorKey,
+        );
+    },
     content,
+    { key: processKey },
   );
   const output = await result;
   if (output.exitCode !== 0)

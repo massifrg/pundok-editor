@@ -232,6 +232,7 @@ export interface Backend {
   renderAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
 
   stopRendering(converterName: string, path: string): Promise<boolean>;
+  stopTransformation(editorKey: EditorKeyType): Promise<boolean>;
 
   getRenderingJob(hash: string): Promise<RenderingJob | undefined>;
 

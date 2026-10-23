@@ -67,6 +67,7 @@ import {
   saveDocument,
   renderingProcessKey,
   stopRenderingProcess,
+  transformationProcessKey,
   GitRepositoryManager,
   type BackendDirectories,
   type RendererHub,
@@ -343,6 +344,15 @@ export class PundokEditorServer {
     );
   }
 
+  async stopTransformation(
+    user: string,
+    editorKey: EditorKeyType,
+  ): Promise<boolean> {
+    return stopRenderingProcess(
+      transformationProcessKey(`${user}:${editorKey}`),
+    );
+  }
+
   async getProject(
     user: string,
     options: GetProjectOptions,
@@ -504,6 +514,8 @@ export class PundokEditorServer {
       this.directoriesForUser(user),
       this.documentForUser(user, doc),
       this.transformForUser(user, transform),
+      transformationProcessKey(`${user}:${doc.editorKey || 'default'}`),
+      feedbackSink(this.rendererHub(user)),
     );
   }
 

@@ -1,207 +1,85 @@
 <template>
-  <q-layout
-    view="LHH LpR LFf"
-    :container="!mainEditor"
-    :style="`height: ${height}`"
-    class="shadow-2 rounded-borders"
-  >
+  <q-layout view="LHH LpR LFf" :container="!mainEditor" :style="`height: ${height}`" class="shadow-2 rounded-borders">
     <q-header>
       <q-toolbar class="text-white q-pa-none">
         <q-toolbar-title>
-          <Menubar
-            :editor="editor"
-            :current-nodes-with-pos="currentNodesWithPos"
-            :gui-props="guiProps"
-            :saved-changes="savedChanges"
-            :saved-changes-as-copy="savedChangesAsCopy"
-            @new-document="newDocument"
-            @open-document="openDocument()"
-            @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+          <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
+            :saved-changes="savedChanges" :saved-changes-as-copy="savedChangesAsCopy" @new-document="newDocument"
+            @open-document="openDocument()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
             @show-configuration-editor="visibleConfigurationEditor = true"
-            @manage-git-project="visibleGitChanges = true"
-            @check-git-updates="visibleGitUpdates = true"
-            @share-git-project="showGitRepository('publish')"
-            @connect-git-project="showGitRepository('connect')"
-            @clone-git-project="showGitRepository('clone')"
-            @reload-with-configuration="reloadWithConfiguration"
-            @render-output="renderOutput"
-            @stop-rendering="stopRendering"
-            :rendering-targets="renderingTargets"
-          />
+            @manage-git-project="visibleGitChanges = true" @check-git-updates="visibleGitUpdates = true"
+            @share-git-project="showGitRepository('publish')" @connect-git-project="showGitRepository('connect')"
+            @clone-git-project="showGitRepository('clone')" @reload-with-configuration="reloadWithConfiguration"
+            @render-output="renderOutput" @stop-rendering="stopRendering" :rendering-targets="renderingTargets"
+            :transformation-log="transformationLog" :transformation-failed="transformationFailed" />
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
-    <q-drawer
-      v-if="isMainEditor"
-      show-if-above
-      behavior="desktop"
-      bordered
-      :v-model="leftDrawerState === 'normal'"
-      side="left"
-      :mini="leftDrawerState === 'mini'"
-      @click.capture="maximizePdfViewer"
-      :mini-width="24"
-      :width="leftDrawerWidth"
-      :breakpoint="500"
-    >
+    <q-drawer v-if="isMainEditor" show-if-above behavior="desktop" bordered :v-model="leftDrawerState === 'normal'"
+      side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="24"
+      :width="leftDrawerWidth" :breakpoint="500">
       <PdfViewer :backend="backend" class="pdf-viewer" />
       <div class="q-mini-drawer-only absolute" style="top: 150px; right: 3px">
-        <q-btn
-          dense
-          round
-          unelevated
-          color="secondary"
-          icon="chevron_right"
-          @click="maximizePdfViewer"
-        />
+        <q-btn dense round unelevated color="secondary" icon="chevron_right" @click="maximizePdfViewer" />
       </div>
       <div class="q-mini-drawer-hide absolute" style="top: 150px; right: -17px">
-        <q-btn
-          dense
-          round
-          unelevated
-          color="secondary"
-          icon="chevron_left"
-          @click="minimizePdfViewer"
-        />
+        <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
       </div>
       <div class="q-mini-drawer-hide absolute" style="top: 210px; right: -17px">
-        <q-btn
-          dense
-          round
-          unelevated
-          color="secondary"
-          icon="arrow_left_right"
-          @mousedown="startSettingLeftDrawerWidth"
-          @mousemove="changeLeftDrawerWidth"
-          @mouseup="stopSettingLeftDrawerWidth"
-          @mouseleave="stopSettingLeftDrawerWidth"
-        />
+        <q-btn dense round unelevated color="secondary" icon="arrow_left_right" @mousedown="startSettingLeftDrawerWidth"
+          @mousemove="changeLeftDrawerWidth" @mouseup="stopSettingLeftDrawerWidth"
+          @mouseleave="stopSettingLeftDrawerWidth" />
       </div>
     </q-drawer>
-    <q-drawer
-      show-if-above
-      behavior="desktop"
-      bordered
-      :v-model="rightDrawerState === 'normal'"
-      side="right"
-      :mini="rightDrawerState === 'mini'"
-      @mouseenter="rightDrawerState = 'normal'"
-      @mouseleave="rightDrawerState = 'mini'"
-      mini-to-overlay
-      :mini-width="60"
-      :width="240"
-      :breakpoint="500"
-      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'"
-    >
-      <CustomStylesPanel
-        :editor="editor"
-        :panel-state="rightDrawerState"
-        :current-blocks="currentNodesWithPos"
-      />
+    <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
+      :mini="rightDrawerState === 'mini'" @mouseenter="rightDrawerState = 'normal'"
+      @mouseleave="rightDrawerState = 'mini'" mini-to-overlay :mini-width="60" :width="240" :breakpoint="500"
+      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
+      <CustomStylesPanel :editor="editor" :panel-state="rightDrawerState" :current-blocks="currentNodesWithPos" />
     </q-drawer>
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
-        <PendingOperationDialog
-          :model-value="pending && !savedChanges"
-          :pending-operation="pending"
-          @pending-canceled="cancelPending"
-          @pending-confirmed="confirmPending"
-          @update-value="pendingValueUpdate"
-        />
-        <SearchAndReplace
-          :editor="editor"
-          :visible="visibleSearchAndReplaceDialog"
-          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()"
-        />
-        <AttributesEditor
-          :editor="editor"
-          :selected-node-or-mark="nodeOrMarkToEdit"
-          :start-tab="startAttributesTab"
-          :on-attributes-editor-show="onAttributesEditorShow"
-          @closeAttributesEditor="closeAttributesEditor()"
-        >
+        <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
+          @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
+        <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
+          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
+        <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
+          :on-attributes-editor-show="onAttributesEditorShow" @closeAttributesEditor="closeAttributesEditor()">
         </AttributesEditor>
-        <ConfigurationsDialog
-          :editor="editor"
-          :visible="visibleConfigurationDialog"
-          @set-configuration="setConfiguration"
-          @close-configurations-dialog="visibleConfigurationDialog = false"
-        >
+        <ConfigurationsDialog :editor="editor" :visible="visibleConfigurationDialog"
+          @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
         </ConfigurationsDialog>
-        <ShowMessageDialog
-          :editor="editor"
-          :visible="!!message"
-          :message="message"
-          @close-show-message-dialog="message = null"
-          :show-check-updates="message?.type === 'warning'"
-          :icon="
-            message?.source === 'git-no-updates' ? 'message_info' : undefined
-          "
-          :color="
-            message?.source === 'git-no-updates' ? 'secondary' : undefined
-          "
-          @check-updates="openGitUpdates"
-        />
-        <InputTextDialog
-          :editor="editor"
-          :visible="visibleInputTextDialog"
-          :label="inputTextDialogLabel"
-          :start-value="inputTextDialogStartValue"
-          @close-dialog="closeInputTextDialog"
-        />
-        <ProjectStructureDialog
-          :main-editor="editor"
-          :visible="visibleProjectStructureDialog"
-          :project="docState()?.project"
-          @close-project-structure-dialog="closeProjectStructureDialog"
-          @new-editor="newSubEditor"
-        />
-        <ProjectConfigEditorDialog
-          :visible="visibleConfigurationEditor"
-          :editor="editor"
-          :configuration="docState()?.project?.editorConfig || {}"
-          :project="docState()?.project"
-          :project-configurations="docState()?.project?.configurations || []"
-          @save="saveProject"
-          @close="visibleConfigurationEditor = false"
-        />
-        <NewProjectDialog
-          :editor="editor"
-          :visible="visibleNewProjectDialog"
-          @close="visibleNewProjectDialog = false"
-        />
-        <GitChangesDialog
-          :visible="visibleGitChanges"
-          :project-path="docState()?.project?.path || ''"
-          @close="visibleGitChanges = false"
-          @open-updates="
+        <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
+          @close-show-message-dialog="message = null" :show-check-updates="message?.type === 'warning'" :icon="message?.source === 'git-no-updates' ? 'message_info' : undefined
+            " :color="message?.source === 'git-no-updates' ? 'secondary' : undefined
+            " @check-updates="openGitUpdates" />
+        <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
+          :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
+        <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
+          :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
+          @new-editor="newSubEditor" />
+        <ProjectConfigEditorDialog :visible="visibleConfigurationEditor" :editor="editor"
+          :configuration="docState()?.project?.editorConfig || {}" :project="docState()?.project"
+          :project-configurations="docState()?.project?.configurations || []" @save="saveProject"
+          @close="visibleConfigurationEditor = false" />
+        <NewProjectDialog :editor="editor" :visible="visibleNewProjectDialog"
+          @close="visibleNewProjectDialog = false" />
+        <GitChangesDialog :visible="visibleGitChanges" :project-path="docState()?.project?.path || ''"
+          @close="visibleGitChanges = false" @open-updates="
             visibleGitChanges = false;
-            visibleGitUpdates = true;
-          "
-        />
-        <GitUpdatesDialog
-          :visible="visibleGitUpdates"
-          :project-path="docState()?.project?.path || ''"
-          @close="visibleGitUpdates = false"
-          @open-changes="
+          visibleGitUpdates = true;
+          " />
+        <GitUpdatesDialog :visible="visibleGitUpdates" :project-path="docState()?.project?.path || ''"
+          @close="visibleGitUpdates = false" @open-changes="
             visibleGitUpdates = false;
-            visibleGitChanges = true;
-          "
-          @reload-project="reloadProjectAfterGitMerge"
-        />
-        <GitRepositoryDialog
-          :visible="!!gitRepositoryMode"
-          :mode="gitRepositoryMode || 'clone'"
-          :editor="editor as Editor"
-          :project-path="docState()?.project?.path || ''"
-          :project="docState()?.project"
-          @close="gitRepositoryMode = undefined"
-          @done="gitRepositoryDone"
-        />
+          visibleGitChanges = true;
+          " @reload-project="reloadProjectAfterGitMerge" />
+        <GitRepositoryDialog :visible="!!gitRepositoryMode" :mode="gitRepositoryMode || 'clone'"
+          :editor="editor as Editor" :project-path="docState()?.project?.path || ''" :project="docState()?.project"
+          @close="gitRepositoryMode = undefined" @done="gitRepositoryDone" />
         <ContextMenu :editor="editor" />
         <editor-content class="pundok-editor" :editor="editor as Editor" />
       </q-page>
@@ -479,6 +357,9 @@ export default {
         path?: string;
         feedback: string[];
       }[],
+      transformationLog: [] as string[],
+      transformationFailed: false,
+      transformationEditorKey: undefined as EditorKeyType | undefined,
     };
   },
 
@@ -730,6 +611,11 @@ export default {
           case ACTION_BACKEND_FEEDBACK.name:
             const { feedback } = props as BackendFeedbackActionProps;
             const { message, type } = feedback;
+            if (
+              this.transformationEditorKey === editorKey &&
+              type === 'progress'
+            )
+              this.transformationLog.push(message);
             for (const renderingTarget of this.renderingTargets)
               renderingTarget.feedback.push(message);
             const isSuccess = type === 'success';
@@ -1265,9 +1151,9 @@ export default {
         console.log(toRaw(props));
         documentFormat = toRaw(
           documentFormat ||
-            (isCopy
-              ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
-              : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT),
+          (isCopy
+            ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
+            : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT),
         );
         if (this.backend) {
           const { configuration, documentName, project, resourcePath } =
@@ -1476,11 +1362,15 @@ export default {
       const json = sources ? undefined : this.getDocAsJsonString();
       console.log(json);
       const docState = this.docState();
+      this.transformationEditorKey = docState?.editorKey;
+      this.transformationLog = [this.$t('transformationDialog.started')];
+      this.transformationFailed = false;
       try {
         this.setOperationInProgress(true);
         const transformed = await this.backend?.transformPandocJson(
           {
             content: json,
+            editorKey: docState?.editorKey,
             project: docState?.project,
             configurationName: docState?.configuration?.name,
           },
@@ -1506,6 +1396,20 @@ export default {
         }
       } catch (err) {
         console.log(err);
+        this.transformationFailed = true;
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        this.transformationLog.push(
+          this.$t('transformationDialog.failed', { error: errorMessage }),
+        );
+        this.$q.notify({
+          type: 'negative',
+          message: errorMessage,
+          caption: this.$t('transformationDialog.failedState'),
+        });
+      } finally {
+        this.setOperationInProgress(false);
+        this.transformationLog.push(this.$t('transformationDialog.completed'));
+        this.transformationEditorKey = undefined;
       }
     },
     removeCssStylesheets(oldCsss: string[]) {
@@ -1618,13 +1522,13 @@ export default {
           source: ahead.length ? 'git-updates' : 'git-no-updates',
           message: ahead.length
             ? this.$t('gitUpdatesNotification.message', {
-                branches: ahead
-                  .map((branch) => `${branch.name} (${branch.ahead})`)
-                  .join(', '),
-              })
+              branches: ahead
+                .map((branch) => `${branch.name} (${branch.ahead})`)
+                .join(', '),
+            })
             : this.$t('gitChangesDialog.noUpdates', {
-                name: status.branch || '',
-              }),
+              name: status.branch || '',
+            }),
         };
       } catch (error) {
         console.error(

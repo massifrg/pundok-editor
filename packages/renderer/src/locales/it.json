@@ -154,6 +154,16 @@
     "moveOrSwapVertically": "spostamento verticale di blocchi/paragrafi con {shortcut}: {state}"
   },
   "close": "chiudi",
+  "transformationDialog": {
+    "title": "Trasformazione dell'intero documento",
+    "inProgress": "Trasformazione in corso",
+    "finished": "Trasformazione terminata",
+    "failedState": "Trasformazione fallita",
+    "cancel": "Annulla trasformazione",
+    "started": "Avvio della trasformazione dell'intero documento...",
+    "failed": "Trasformazione fallita: {error}",
+    "completed": "Trasformazione terminata."
+  },
   "compact": "compatta",
   "convert": "converti",
   "configEditor": {

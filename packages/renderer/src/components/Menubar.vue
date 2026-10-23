@@ -10,7 +10,6 @@
 
       <OutputRenderersButton v-if="gui.renderButton" :editor="editor" :rendering-targets="renderingTargets"
         @render="renderOutput" @stop-rendering="stopRendering" />
-
       <span v-if="gui.renderButton" class="button-separator" />
 
       <!-- <ExportProgress v-if="remoteWorkInProgress" :editor-key="editorKey" />
@@ -316,7 +315,11 @@
       <ToolbarButton icon="search" :title="$t('show.searchAndReplace')" :shortcut="SK.SHOW_SEARCH_DIALOG"
         @click="$emit('toggleSearchAndReplaceDialog')" />
 
-      <WholeDocTransformsButton :editor="editor" />
+      <WholeDocTransformsButton
+        :editor="editor"
+        :transformation-log="transformationLog"
+        :transformation-failed="transformationFailed"
+      />
 
       <span class="button-separator" />
 
@@ -445,6 +448,8 @@ export default {
     'savedChanges',
     'savedChangesAsCopy',
     'renderingTargets',
+    'transformationLog',
+    'transformationFailed',
   ],
   emits: [
     'openDocument',

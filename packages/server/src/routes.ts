@@ -252,6 +252,12 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/stop-transformation',
+    asyncHandler((req) =>
+      backend.stopTransformation(username(req), req.body?.editorKey),
+    ),
+  );
+  router.post(
     '/show-rendered-again',
     asyncHandler((req) =>
       backend.showAgain(username(req), req.body?.hash, req.body?.editorKey),

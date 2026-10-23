@@ -113,6 +113,7 @@ export interface Ipc {
   renderAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>;
 
   stopRendering: (converterName: string, path: string) => Promise<boolean>;
+  stopTransformation: (editorKey: EditorKeyType) => Promise<boolean>;
 
   getRenderingJob: (hash: string) => Promise<string | undefined>;
 
@@ -234,6 +235,8 @@ contextBridge.exposeInMainWorld('ipc', {
     ipcRenderer.invoke('render-again', hash, editorKey),
   stopRendering: (converterName: string, path: string) =>
     ipcRenderer.invoke('stop-rendering', converterName, path),
+  stopTransformation: (editorKey: EditorKeyType) =>
+    ipcRenderer.invoke('stop-transformation', editorKey),
   getRenderingJob: (hash: string) =>
     ipcRenderer.invoke('get-rendering-job', hash),
   updateConfig: (

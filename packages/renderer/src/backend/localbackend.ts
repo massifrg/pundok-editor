@@ -461,6 +461,10 @@ export class LocalBackend implements Backend {
     return window.ipc.stopRendering(converterName, path);
   }
 
+  stopTransformation(editorKey: EditorKeyType): Promise<boolean> {
+    return window.ipc.stopTransformation(editorKey);
+  }
+
   async getRenderingJob(hash: string): Promise<RenderingJob | undefined> {
     const job_as_string: string | undefined =
       await window.ipc.getRenderingJob(hash);

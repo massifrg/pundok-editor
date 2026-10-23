@@ -8,6 +8,10 @@ export function renderingProcessKey(converterName: string, path: string): string
   return JSON.stringify([converterName, path]);
 }
 
+export function transformationProcessKey(editorKey: string | number = 'default'): string {
+  return JSON.stringify(['transformation', editorKey]);
+}
+
 export function registerRenderingProcess(
   key: string,
   process: ChildProcessWithoutNullStreams,
