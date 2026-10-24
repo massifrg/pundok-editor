@@ -9,7 +9,6 @@
 
 <script lang="ts">
 import { AddableMark } from './helpers/addableMark';
-import { t } from "../i18n"
 import MarksPalette from './MarksPalette.vue';
 
 export default {

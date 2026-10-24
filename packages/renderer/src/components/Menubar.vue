@@ -350,7 +350,7 @@
 <script setup lang="ts">
 import { SK } from '../common';
 import { setupQuasarIcons } from './helpers';
-import { t, tfb } from '../i18n';
+import { tfb } from '../i18n';
 setupQuasarIcons();
 </script>
 

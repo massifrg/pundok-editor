@@ -50,7 +50,6 @@ import {
   getFolderContents,
   getInclusionTree,
   getProject,
-  parseConfigurationFiles,
   RenderingJobStore,
   getPandocFeature,
   dispatchQuery,

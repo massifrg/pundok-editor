@@ -267,7 +267,7 @@ setupQuasarIcons()
 
 <script lang="ts">
 import { NodeWithPos } from '@tiptap/core';
-import { CellSelection, isInTable, TableMap, tableSectionsCount } from '@massifrg/prosemirror-tables-sections'
+import { CellSelection, isInTable, TableMap } from '@massifrg/prosemirror-tables-sections'
 import { depthOfInnerNodeType } from '../schema/helpers';
 import ToolbarButton from './ToolbarButton.vue';
 import { Alignment } from '../pandoc';

@@ -21,7 +21,6 @@ setupQuasarIcons()
 import { mapState } from 'pinia'
 import { ConfigurationSummary } from '../common';
 import { useBackend } from '../stores';
-import { t } from '../i18n'
 
 export default {
   emits: ['newDocument'],

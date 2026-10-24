@@ -1,11 +1,9 @@
 <script lang="ts">
-import { toRaw } from 'vue';
 import { QBtnDropdown } from 'quasar';
 import { actionsAsText } from '../actions';
 import { ActionNameWithProps } from '../common';
 import ActionsList from './ActionsList.vue';
 import { getEditorConfiguration } from '../schema';
-import { t } from '../i18n'
 
 
 export default {

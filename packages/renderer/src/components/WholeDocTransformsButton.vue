@@ -28,7 +28,7 @@ setupQuasarIcons()
 import { mapState } from 'pinia';
 import { useActions, useBackend } from '../stores';
 import { ACTION_DOCUMENT_TRANSFORM, setActionCommand } from '../actions';
-import { getPandocFilterTransforms, PandocFilterTransform, SetDocumentFormatActionProps, TransformDocumentActionProps } from '../common';
+import { getPandocFilterTransforms, PandocFilterTransform, TransformDocumentActionProps } from '../common';
 import { editorKeyFromState, getEditorConfiguration } from '../schema';
 import TransformationDialog from './TransformationDialog.vue';
 

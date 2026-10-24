@@ -44,7 +44,6 @@ import {
   customClassesForNodeOrMark
 } from '../../common';
 import { IncludeDocCustomClass, getEditorConfiguration } from '../../schema';
-import { t } from '../../i18n'
 
 export default {
   props: ['editor', 'nodeOrMark', 'startValue', 'importantClasses', 'forbiddenClasses'],

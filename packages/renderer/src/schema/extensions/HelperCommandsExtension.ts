@@ -46,7 +46,6 @@ import {
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_FOOT,
   NODE_NAME_TABLE_HEAD,
-  PundokEditorConfig,
   SK,
   typeNameOfElement,
 } from '../../common';

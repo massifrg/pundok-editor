@@ -191,7 +191,6 @@ import {
 import { getEditorConfiguration, Heading } from '../schema';
 import { getTextMarkRangesBetween, nodeIcon, nodeOrMarkToPandocName } from '../schema/helpers';
 import { isString } from 'lodash-es';
-import { t } from '../i18n'
 
 const STARTING_TAB = 'summary'
 const MINI_SPLITTER_VALUE = 20

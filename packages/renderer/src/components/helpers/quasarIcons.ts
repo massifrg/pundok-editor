@@ -158,9 +158,7 @@ import {
   mdiHelpCircleOutline,
   mdiNoteRemove,
   mdiTagPlus,
-  mdiWrapDisabled,
   mdiPencil,
-  mdiBookPlay,
   mdiDebugStepInto,
   mdiMessageReplyOutline,
   mdiNumeric10BoxOutline,
@@ -274,7 +272,6 @@ import {
   mdiOctagramEdit,
   mdiInvoiceTextEdit,
   mdiInvoiceTextPlus,
-  mdiArrowProjectile,
   mdiCogPlay,
   mdiMenuUp,
 } from '@mdi/js';

@@ -58,7 +58,6 @@ import {
   nodeIcon,
   nodeOrMarkToPandocName
 } from '../../schema/helpers';
-import { t } from "../../i18n"
 
 export default {
   components: {

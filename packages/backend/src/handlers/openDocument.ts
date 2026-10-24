@@ -7,7 +7,6 @@ import {
   type DocumentFormat,
   type ExternalProgramResult,
   type PundokBookmark,
-  type PundokEditorProject,
 } from '../../../common/src';
 import { updateBookmarks } from '../bookmarks';
 import { errorFeedback, type FeedbackSink } from '../feedback';
@@ -15,7 +14,7 @@ import { importWithPandoc } from '../importExport';
 import { pandocFeatures } from '../pandocFeatures';
 import { computeProjectFromDocFile } from './project';
 import { isReadableFile, getConfigurationInit, type BackendDirectories } from '../resourceManager';
-import { externalProgramError, runExternalProgram } from '../runExternal';
+import { runExternalProgram } from '../runExternal';
 import { localizePath } from '../filesystem';
 
 export async function openDocument(

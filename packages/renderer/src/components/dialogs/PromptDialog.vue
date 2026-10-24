@@ -14,7 +14,6 @@
 </template>
 
 <script lang="ts">
-import { ValidationRule } from 'quasar';
 
 export default {
   props: {

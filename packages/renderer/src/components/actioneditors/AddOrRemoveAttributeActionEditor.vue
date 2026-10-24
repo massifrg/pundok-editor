@@ -7,7 +7,6 @@
 </template>
 
 <script lang="ts">
-import { t } from '../../i18n'
 import { AddRemoveRenameAttributeActionProps } from '../../common';
 
 export default {

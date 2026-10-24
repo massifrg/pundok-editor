@@ -288,7 +288,7 @@ import { toRaw } from 'vue';
 import { ACTION_ADD_CLASS } from '../actions';
 import { showIncludeDocumentDialog } from './helpers';
 import { relative } from 'path-browserify';
-import { t, tfb } from '../i18n'
+import { tfb } from '../i18n'
 import { lowlight } from '../schema/helpers/lowlight';
 
 const SHOW_INCLUDE_DIALOG_DELAY = 100

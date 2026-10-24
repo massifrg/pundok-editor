@@ -4,7 +4,6 @@ import {
   DEFAULT_DOCUMENT_FORMAT,
   documentFormatToOutputConverter,
   type CxDocument,
-  type DocumentFormat,
   type ExternalProgramResult,
   type SaveResponse,
   type ServerMessageForViewer,
@@ -13,9 +12,7 @@ import {
 import { updateBookmarks } from '../bookmarks';
 import { type RenderingJobStore } from '../documentHash';
 import {
-  commandLineFeedback,
   errorFeedback,
-  messageFeedback,
   progressFeedback,
   type FeedbackSink,
 } from '../feedback';

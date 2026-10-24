@@ -15,10 +15,9 @@ import {
   splitFolderAndDoc,
   TransformDocumentActionProps
 } from '../common';
-import { DocStateUpdate, editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject, updateDocState } from '../schema';
+import { DocStateUpdate, editorKeyFromState, getEditorConfiguration, getEditorDocState, getEditorProject } from '../schema';
 import { useBackend } from '../stores';
 import { setupQuasarIcons, showImportDocumentDialog } from './helpers';
-import { t } from '../i18n'
 
 export default {
   props: ['editor'],

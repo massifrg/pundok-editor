@@ -104,7 +104,6 @@ import {
   type DocState,
   type DocStateUpdate,
   getDocState,
-  getIndexingState,
   type SelectedNodeOrMark,
   getEditorGuiProps,
   EditorGUIPropsClass,

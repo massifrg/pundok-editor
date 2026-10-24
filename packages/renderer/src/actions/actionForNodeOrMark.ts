@@ -31,7 +31,6 @@ import {
   ACTION_EDIT_ATTRIBUTES,
   ACTION_REPEAT_CHANGE,
   ActionForNodeOrMark,
-  ActionName,
   BaseEditorAction,
   EditorAction,
   TABLE_CELL_ALIGNMENT_ACTIONS,

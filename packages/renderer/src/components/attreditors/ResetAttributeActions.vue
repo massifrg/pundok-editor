@@ -11,7 +11,6 @@ setupQuasarIcons()
 </script>
 
 <script lang="ts">
-import { t } from '../../i18n'
 export default {
   props: ['attributeName', 'attributeDesc'],
   emits: ['reset-attribute'],

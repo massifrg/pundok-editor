@@ -205,8 +205,7 @@ import {
   actionsAsText,
   setActionCommand
 } from '../actions';
-import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model'
-import { t } from '../i18n'
+import { Node as ProsemirrorNode } from '@tiptap/pm/model'
 import { toRaw } from 'vue';
 import { isEqual } from 'lodash-es';
 

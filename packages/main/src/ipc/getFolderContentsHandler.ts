@@ -2,18 +2,16 @@ import { IpcMainInvokeEvent } from 'electron';
 import { homedir } from 'os';
 import { dirname, resolve, sep as separator } from 'path';
 import { Dirent, existsSync, statSync } from 'fs';
-import { readdir, readFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { getDiskInfoSync } from 'node-disk-info';
 import { IpcHub } from './ipcHub';
 import { stringify } from '../utils';
 import {
-  Document,
   DocumentContext,
-  Folder,
   FolderContents,
   Place,
 } from '../common';
-import { pathToFileURLfixed, toUnixPath } from '../filesystem';
+import { pathToFileURLfixed } from '../filesystem';
 import { getFolderContents, localizePath } from '../backend';
 
 type DestinationParser = (bytes: Buffer) => Promise<any[]>;

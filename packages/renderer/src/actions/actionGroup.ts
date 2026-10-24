@@ -5,7 +5,6 @@ import { EditorKeyType, PundokEditorConfig } from '../common';
 import {
   ActionCore,
   ActionForNodeOrMark,
-  ActionName,
   BaseActionForNodeOrMark,
   TooltipForAction
 } from './actions';

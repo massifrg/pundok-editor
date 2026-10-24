@@ -1,4 +1,3 @@
-import { FeedbackMessageType } from '../feedback';
 import { PandocFilter } from '../pandoc';
 import { PandocOption } from '../pandocOptions';
 import { NamedAndDescribed } from '../types';
