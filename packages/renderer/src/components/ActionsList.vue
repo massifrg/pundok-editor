@@ -5,7 +5,13 @@ setupQuasarIcons()
 
 <script lang="ts">
 import { toRaw } from 'vue';
-import { ActionCore, ActionName, availableAction, availableActionsNames, labelForAction } from '../actions';
+import {
+  ActionCore,
+  ActionName,
+  actionsOnSelection,
+  actionsOnSelectionNames,
+  labelForAction
+} from '../actions';
 import { ActionNameWithProps, isOppositeAction } from '../common';
 import AddOrRemoveAttributeActionEditor from './actioneditors/AddOrRemoveAttributeActionEditor.vue'
 import AddOrRemoveClassActionEditor from './actioneditors/AddOrRemoveClassActionEditor.vue'
@@ -60,7 +66,7 @@ export default {
   },
   methods: {
     getAction(actionName: string) {
-      return availableAction(actionName)
+      return actionsOnSelection(actionName)
     },
     notifyActions(actions: ActionNameWithProps[]) {
       this.$emit('update-actions', toRaw(actions))
@@ -69,7 +75,7 @@ export default {
       return this.getAction(actionName)?.icon
     },
     actionLabel(actionName: string) {
-      return labelForAction(availableAction(actionName) as ActionCore, this.editor, t)
+      return labelForAction(actionsOnSelection(actionName) as ActionCore, this.editor, t)
     },
     isAddRemoveRenameAttributeAction(a: ActionNameWithProps) {
       const name = a.name as ActionName
@@ -104,7 +110,7 @@ export default {
       return (a.name as ActionName) === 'insert-raw-inline'
     },
     newActionItem(_name?: string) {
-      const name = _name || availableActionsNames()[0]
+      const name = _name || actionsOnSelectionNames()[0]
       console.log(`name=${name}`)
       const newAction = {
         name,
@@ -188,7 +194,7 @@ export default {
                   </q-item-section>
                 </q-item>
                 <q-separator />
-                <q-item v-for="action_name in availableActionsNames().filter(an => an !== a.name)" :key="action_name"
+                <q-item v-for="action_name in actionsOnSelectionNames().filter(an => an !== a.name)" :key="action_name"
                   clickable @click="setActionItem(index, action_name)" v-close-popup>
                   <q-item-section side>
                     <q-icon :name="actionIcon(action_name)"></q-icon>

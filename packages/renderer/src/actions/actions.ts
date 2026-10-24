@@ -723,22 +723,22 @@ function mergeWithDescriptor(action: BaseActionForNodeOrMark) {
   return { ...action, label, icon, iconRight }
 }
 
-const AVAILABLE_ACTIONS: Readonly<Record<string, BaseActionForNodeOrMark>> = Object.freeze(Object.fromEntries(
+const ACTIONS_ON_SELECTION: Readonly<Record<string, BaseActionForNodeOrMark>> = Object.freeze(Object.fromEntries(
   ACTION_LIST.map(a => {
     const merged = mergeWithDescriptor(a)
     return [a.name, merged]
   })
 ))
 
-export function availableActionsNames(): string[] {
-  return Object.keys(AVAILABLE_ACTIONS)
+export function actionsOnSelectionNames(): string[] {
+  return Object.keys(ACTIONS_ON_SELECTION)
 }
 
-export function availableAction(actionName: string): BaseActionForNodeOrMark | ActionDescriptor | undefined {
-  return (AVAILABLE_ACTIONS as any)[actionName] || (ACTION_DESCRIPTORS as any)[actionName]
+export function actionsOnSelection(actionName: string): BaseActionForNodeOrMark | ActionDescriptor | undefined {
+  return (ACTIONS_ON_SELECTION as any)[actionName] || (ACTION_DESCRIPTORS as any)[actionName]
 }
 
-export function fillAvailableAction(
+export function fillActionsOnSelection(
   actionName: string,
   fields: {
     props?: object,
@@ -747,7 +747,7 @@ export function fillAvailableAction(
   }
 ): ActionForNodeOrMark | undefined {
   const { props, editorKey, nodeOrMark } = fields
-  const available = AVAILABLE_ACTIONS[actionName] as BaseActionForNodeOrMark | undefined
+  const available = ACTIONS_ON_SELECTION[actionName] as BaseActionForNodeOrMark | undefined
   if (available && editorKey) return { ...available, props, editorKey, nodeOrMark }
   const desc = ACTION_DESCRIPTORS[actionName]
   if (desc && editorKey) return { ...desc, props, editorKey, nodeOrMark } as ActionForNodeOrMark
