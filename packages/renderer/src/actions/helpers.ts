@@ -31,15 +31,17 @@ export function labelForAction(
     t?: (key: string, vars?: Record<string, any>) => string
 ): string | undefined {
     const { name, label } = action
-    const l4a = !label
-        ? name
-        : isString(label) ? label : name
-    if (t && name === 'convert-block' && action.labelParams?.from && action.labelParams?.to)
-        return t('actions.convertBlockAction', action.labelParams) || l4a
-    const descriptor = ACTION_DESCRIPTORS[name]
-    if (t && descriptor?.labelKey)
-        return t(descriptor.labelKey, action.labelParams || action.tooltipParams) || l4a
-    return l4a
+    if (!label) {
+        const descriptor = ACTION_DESCRIPTORS[name]
+        return (t && descriptor?.labelKey)
+            ? t(descriptor.labelKey, action.labelParams || action.tooltipParams) || name
+            : name
+    } else if (isString(label))
+        return label
+    else if (typeof label === 'function')
+        return label(editor, action)
+    else
+        return name
 }
 
 export function tooltipForAction(
@@ -48,13 +50,17 @@ export function tooltipForAction(
     t?: (key: string, vars?: Record<string, any>) => string
 ): string | undefined {
     const { name, tooltip } = action
-    const t4a = !tooltip
-        ? name
-        : isString(tooltip) ? tooltip : name
-    const descriptor = ACTION_DESCRIPTORS[name]
-    if (t && descriptor?.tooltipKey)
-        return t(descriptor.tooltipKey, action.tooltipParams || action.labelParams) || t4a
-    return t4a
+    if (!tooltip) {
+        const descriptor = ACTION_DESCRIPTORS[name]
+        return (t && descriptor?.tooltipKey)
+            ? t(descriptor.tooltipKey, action.tooltipParams || action.labelParams) || name
+            : name
+    } else if (isString(tooltip))
+        return tooltip
+    else if (typeof tooltip === 'function')
+        return tooltip(editor, action)
+    else
+        return name
 }
 
 export function executeEditorAction(action: ActionForNodeOrMark, editor: Editor): boolean {
