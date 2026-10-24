@@ -475,7 +475,16 @@ describe('PandocJsonParser', () => {
         c: [
           {
             t: 'Note',
-            c: [{ t: 'Para', c: [{ t: 'Str', c: 'note text' }] }],
+            c: [
+              {
+                t: 'Para',
+                c: [
+                  { t: 'Str', c: 'note' },
+                  { t: 'Space' },
+                  { t: 'Str', c: 'text' },
+                ],
+              },
+            ],
           },
         ],
       },
