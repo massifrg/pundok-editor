@@ -5,8 +5,10 @@ import { pathToFileURL } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   BOOKMARKS_FILENAME,
+  getBookmarks,
   updateBookmarks,
 } from '../../packages/backend/src/bookmarks';
+import { localizePath } from '../../packages/backend/src/filesystem';
 import type { BackendDirectories } from '../../packages/backend/src/resourceManager';
 
 describe('updateBookmarks', () => {
@@ -55,5 +57,20 @@ describe('updateBookmarks', () => {
     const bookmarks = JSON.parse(await readFile(bookmarksPath, 'utf8'));
     expect(bookmarks).toHaveLength(1);
     expect(bookmarks[0].url).toBe(pathToFileURL(documentPath).href);
+  });
+
+  it('decodes file URL bookmarks before accessing files', async () => {
+    const documentPath = join(userDataDir, 'recent document.md');
+    await writeFile(documentPath, 'document contents');
+    await writeFile(
+      join(userDataDir, BOOKMARKS_FILENAME),
+      JSON.stringify([{ type: 'document', url: pathToFileURL(documentPath).href }]),
+    );
+
+    const [bookmark] = await getBookmarks(directories, 'document');
+
+    await expect(readFile(localizePath(bookmark.url), 'utf8')).resolves.toBe(
+      'document contents',
+    );
   });
 });
