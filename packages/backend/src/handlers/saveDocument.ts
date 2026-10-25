@@ -153,6 +153,21 @@ export async function exportDocument(
       };
     }
 
+    let project = doc.project;
+    const savedPath = resultFile || doc.path;
+    if (!isRendering) {
+      try {
+        project = await computeProjectFromDocFile(directories, savedPath);
+        events.send('set-project', {
+          type: 'project',
+          project,
+          editorKey: doc.editorKey,
+        });
+      } catch {
+        // Saving a document outside a project is valid.
+      }
+    }
+
     const response: SaveResponse = {
       message: `document ${operationName} successful`,
       doc: {
@@ -161,6 +176,7 @@ export async function exportDocument(
         configurationName: doc.configurationName,
         path: doc.path,
         content: result.output,
+        project,
       } as CxDocument,
       resultFile,
       documentHash,
@@ -206,18 +222,16 @@ async function savePandocJsonDocument(
   if (!doc.path) throw new Error('You must provide a document (file) name to save!');
   await writeFile(doc.path, doc.content);
   let project = doc.project;
-  if (!project) {
-    try {
-      project = await computeProjectFromDocFile(directories, doc.path);
-      const message: ServerMessageSetProject = {
-        type: 'project',
-        project,
-        editorKey: doc.editorKey,
-      };
-      events.send('set-project', message);
-    } catch {
-      // Saving a standalone document is valid.
-    }
+  try {
+    project = await computeProjectFromDocFile(directories, doc.path);
+    const message: ServerMessageSetProject = {
+      type: 'project',
+      project,
+      editorKey: doc.editorKey,
+    };
+    events.send('set-project', message);
+  } catch {
+    // Saving a standalone document is valid.
   }
   return {
     message: 'document saved',

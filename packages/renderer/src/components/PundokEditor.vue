@@ -55,7 +55,7 @@
         <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
           @close-show-message-dialog="message = null" :show-check-updates="message?.type === 'warning'" :icon="message?.source === 'git-no-updates' ? 'message_info' : undefined
             " :color="message?.source === 'git-no-updates' ? 'secondary' : undefined
-            " @check-updates="openGitUpdates" />
+              " @check-updates="openGitUpdates" />
         <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
           :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
         <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
@@ -1198,13 +1198,37 @@ export default {
               this.editor?.commands.updateDocState(update);
             }
             // this.setDocumentAsNativelySaved();
+            if (!isCopy && response.doc.path) {
+              await this.setWindowTitleFromDoc(response.doc);
+            }
+            let differentProject: PundokEditorProject | undefined = undefined
+            if (
+              !isCopy &&
+              response.doc.path &&
+              ((!isSaveAs && !project) ||
+                (isSaveAs &&
+                  splitFolderAndDoc(response.doc.path).folder !==
+                  workingFolder))
+            ) {
+              differentProject = await this.backend.getProject({
+                path: response.doc.path,
+                computeConfig: true,
+              });
+              if (differentProject) {
+                await this.openDocument({
+                  path: response.doc.path,
+                  documentFormat: response.doc.documentFormat,
+                  project: differentProject,
+                });
+              }
+            }
             this.showResultMessage({
               success: true,
               caption: 'SAVE SUCCESS',
-              message: `saved as ${response.doc.path || response.doc.id}`,
+              message: `saved as ${response.doc.path || response.doc.id}` +
+                (differentProject ? `, reloaded in project "${differentProject.name}"` : ''),
               icon: 'content_save_check',
             });
-            if (!isCopy) await this.setWindowTitleFromDoc(response.doc);
           }
           if (response.doc && (response.doc.path || response.doc.id)) {
             return response;
