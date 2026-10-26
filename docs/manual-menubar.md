@@ -1,16 +1,14 @@
 # Menubar
 
-The menubar is the grey toolbar at the top of an open editor. It is made of
-two rows of buttons and a breadcrumb below them. Some controls are only shown
-when the current configuration, project, selection, or editor state makes them
-available. A disabled button cannot perform its operation for the current
-selection. Hover a button to see its description and, where applicable, its
-keyboard shortcut.
+The menubar is made of two rows of buttons and a breadcrumb below them. Some
+controls are only shown when the current configuration, project, selection, or
+editor state makes them available. Hover a button to see its description and,
+where applicable, its keyboard shortcut.
 
 ## Desktop application menu
 
-The installed desktop application also has the operating-system application
-menu. Its contents are independent of the two-row editor toolbar.
+The desktop application also has the operating-system application menu. Its
+contents are independent of the two-row editor toolbar.
 
 ### File
 
@@ -60,13 +58,11 @@ If only one configuration is available, the arrow is not shown.
 
 ### ![media/menubar/document-open.jpg](media/menubar/document-open.jpg) Open document
 
-Click the main part to open a document using the file chooser. The arrow opens
-a menu that is populated when it is opened:
+Click the main part to open a document using the file chooser. The arrow opens a
+menu that is populated when it is opened:
 
-- **Recent projects** opens a submenu of recent projects. It is disabled when
-  there are none.
-- **Recent documents** opens a submenu of recent documents. It is disabled
-  when there are no recent documents and no current document.
+- **Recent projects** opens a submenu of recent projects.
+- **Recent documents** opens a submenu of recent documents.
 - **Reload current document** appears at the top of the recent-document submenu
   when a document is open and reads the file again.
 - When a project is open, entries can open the next or previous project
@@ -79,20 +75,29 @@ document. Recent-document entries retain their document configuration.
 
 ### ![media/menubar/save.jpg](media/menubar/save.jpg) Save
 
-The save control is a split button. Its main action is **Save** in compact
-mode and **Save a copy** in expanded mode. The arrow menu contains:
+The **Save** button saves the current document in its current format. The arrow
+menu contains:
 
 - ![media/menubar/save.jpg](media/menubar/save.jpg) **Save**
-- ![media/menubar/save-as.jpg](media/menubar/save-as.jpg) **Save as**
-- ![media/menubar/save-copy.jpg](media/menubar/save-copy.jpg) **Save a copy**
-- **Expand** or **Compact**, which changes whether Save and Save as are shown
-  as separate buttons beside the split button.
+- ![media/menubar/save-as.jpg](media/menubar/save-as.jpg) **Save as**, to save
+  the document with a different name and then switching to the new file
+- ![media/menubar/save-copy.jpg](media/menubar/save-copy.jpg) **Save a copy**,
+  to save the document with a different name and/or format, but then continuing
+  to edit the current document
+- **Expand** or **Compact**, which changes whether Save and Save as are shown as
+  separate buttons beside the split button.
 
 The button color indicates unsaved changes or a document that has only been
 saved/exported as a copy. Save dialogs ask for the destination and document
 format; canceling them leaves the document unchanged.
 
 ### ![media/menubar/render.jpg](media/menubar/render.jpg) Render output
+
+This button is used to render the document in a format like PDF, an operation
+that make take time. It's not different from saving to another format,
+especially with Pandoc, but it is a distinct button to separate almost immediate
+document saving from time consuming document typesetting or rendering (think of
+PDF, but also the generation of big, book-long documents in DOCX, ODT or ICML).
 
 This control is present when the configuration provides output converters. The
 main button renders the last selected target, or opens the target menu when no
@@ -110,57 +115,63 @@ can be closed without stopping a job.
 
 ### ![media/menubar/include.jpg](media/menubar/include.jpg) Include document
 
-The add-document button opens the document import chooser. It starts in the
-current include or working folder and uses the current include or working
-format as its initial format. After a file is chosen, its converted contents
-are appended to the current document. Canceling the chooser does nothing.
+The append document button opens the document import chooser, to append a
+document to the current one.
 
 ### ![media/menubar/undo.jpg](media/menubar/undo.jpg) Undo, redo, and repeat
 
-- ![media/menubar/undo.jpg](media/menubar/undo.jpg) **Undo** undoes the last edit and updates index references where necessary.
-- ![media/menubar/redo.jpg](media/menubar/redo.jpg) **Redo** reapplies an undone edit.
-- ![media/menubar/repeat.jpg](media/menubar/repeat.jpg) **Repeat command** repeats the last repeatable editor command. It is disabled
-  when there is no repeatable command; its tooltip describes the command that
-  will be repeated.
+- ![media/menubar/undo.jpg](media/menubar/undo.jpg) **Undo** undoes the last
+  edit and updates index references where necessary.
+- ![media/menubar/redo.jpg](media/menubar/redo.jpg) **Redo** reapplies an undone
+  edit.
+- ![media/menubar/repeat.jpg](media/menubar/repeat.jpg) **Repeat command**
+  repeats the last repeatable editor command. It is disabled when there is no
+  repeatable command; its tooltip describes the command that will be repeated.
 
-### Block movement, paragraph, and wrappers
+### Block movement
 
-- ![media/menubar/move-swap.jpg](media/menubar/move-swap.jpg) **Move or swap blocks** is a toggle. When enabled, the block-movement
-  commands move or swap blocks vertically; its tooltip shows the current state
-  and the movement shortcuts.
-- ![media/menubar/plain.jpg](media/menubar/plain.jpg) **Toggle plain paragraph** converts the selected block to or from a plain
-  paragraph.
-- ![media/menubar/wrap.jpg](media/menubar/wrap.jpg) **div** wraps the selection in a `Div`, or unwraps it with the adjacent
-  ![media/menubar/unwrap.jpg](media/menubar/unwrap.jpg) **unwrap** button. If custom styles are configured for `div`, the arrow opens a
-  list of classes; choosing one wraps the selection with that class.
-- ![media/menubar/figure-wrap.jpg](media/menubar/figure-wrap.jpg) **figure** behaves the same way for a `Figure`. Its adjacent ![media/menubar/figure-unwrap.jpg](media/menubar/figure-unwrap.jpg) **unwrap** button
-  removes the figure wrapper. When the cursor is inside a figure, the
-  ![media/menubar/caption.jpg](media/menubar/caption.jpg) **caption** button wraps the relevant content in a figure caption.
+- ![media/menubar/move-swap.jpg](media/menubar/move-swap.jpg) Enable or disable
+  **vertical moving of blocks**. When enabled, Alt-Up and Alt-Down let you move
+  the current block (usually a paragraph) before the previous block or after the
+  next one. This is usually turned off when the Search and Replace dialog is
+  visible, to prevent accidental displacements of paragraphs.
 
-Wrapper controls are disabled when the current selection cannot be wrapped or
-unwrapped. Choosing a custom class closes its popup and applies the class.
+### Plain, paragraph, and wrappers
+
+- ![media/menubar/plain.jpg](media/menubar/plain.jpg) **Toggle plain paragraph**
+  converts the current/selected block(s) to Plain or Para (if it is already a
+  Plain)
+- ![media/menubar/wrap.jpg](media/menubar/wrap.jpg) **Div** wraps the selection
+  in a `Div`; the arrow lets you choose a Div with a predefined class
+  ![media/menubar/unwrap.jpg](media/menubar/unwrap.jpg) **unwrap** Div button
+- ![media/menubar/figure-wrap.jpg](media/menubar/figure-wrap.jpg) **Figure** and
+  ![media/menubar/figure-unwrap.jpg](media/menubar/figure-unwrap.jpg) **unwrap
+  Figure** behave the same way for a `Figure`
+- ![media/menubar/caption.jpg](media/menubar/caption.jpg) **Caption** button
+  wraps the relevant content in a figure caption.
 
 ### Block types and lists
 
-- ![media/menubar/blockquote.jpg](media/menubar/blockquote.jpg) **Block quote** toggles a block quote.
-- ![media/menubar/bullet-list.jpg](media/menubar/bullet-list.jpg) **Bullet list** toggles a bulleted list.
-- ![media/menubar/ordered-list.jpg](media/menubar/ordered-list.jpg) **Ordered list** toggles a numbered list.
-
-These buttons are disabled when the corresponding operation is not valid for
-the current selection.
+- ![media/menubar/blockquote.jpg](media/menubar/blockquote.jpg) **Block quote**
+  toggles a block quote.
+- ![media/menubar/bullet-list.jpg](media/menubar/bullet-list.jpg) **Bullet
+  list** toggles a bulleted list.
+- ![media/menubar/ordered-list.jpg](media/menubar/ordered-list.jpg) **Ordered
+  list** toggles a numbered list.
 
 ### ![media/menubar/image.jpg](media/menubar/image.jpg) Image
 
 Click the image button to insert a new image at the cursor. The arrow menu
 contains:
 
-- **Fix absolute src** makes image sources relative in the selection.
+- **Fix absolute src** makes image sources (in the selection) relative to the
+  document or the project base directory.
 - **Fix all absolute src** makes image sources relative throughout the document.
 
 ### ![media/menubar/note.jpg](media/menubar/note.jpg) Notes
 
-The note button inserts a new note of the configured default note type.
-Its arrow opens the note menu. Each configured note type has:
+The note button inserts a new note of the configured default note type. Its
+arrow opens the note menu. Each configured note type has:
 
 - a button to insert a note of that type;
 - **Expand all** notes of that type;
@@ -172,9 +183,9 @@ notes regardless of type. The menu closes after an action.
 ### ![media/menubar/table.jpg](media/menubar/table.jpg) Table tools
 
 The table button opens a movable, non-modal table-tools dialog. The header
-contains buttons to move it to the top, bottom, left, or right, toggles for
-the groups listed below, and a close button. Turning a group off hides that
-group without changing the table.
+contains buttons to move it to the top, bottom, left, or right, toggles for the
+groups listed below, and a close button. Turning a group off hides that group
+without changing the table.
 
 - **Table**: create a table, convert text to a table, convert a table to text,
   delete the current table, check and fix a Pandoc table, maximize table width,
@@ -185,106 +196,118 @@ group without changing the table.
 - **Rows and columns**: add or remove rows and add or remove columns before or
   after the current position.
 - **Column alignments**: use default, left, center, or right alignment.
-- **Cell alignment**: use default, left, center, or right horizontal
-  alignment, and baseline, top, middle, or bottom vertical alignment.
+- **Cell alignment**: use default, left, center, or right horizontal alignment,
+  and baseline, top, middle, or bottom vertical alignment.
 - **Cells**: decrease or increase column span, decrease or increase row span,
   merge cells, or split a cell.
 
 Operations that do not apply to the current table or selection are disabled.
 Text/table conversion opens a small dialog with a separator field, a menu of
 predefined separators, and (for text-to-table) a regular-expression toggle.
-**Convert** performs the conversion; **Cancel** closes the dialog.
 
 ### ![media/menubar/horizontal-rule.jpg](media/menubar/horizontal-rule.jpg) Horizontal rule
 
-**Horizontal rule** inserts a horizontal rule at the cursor. It is disabled
-when the current document position cannot contain one.
+**Horizontal rule** inserts a horizontal rule at the cursor. It is disabled when
+the current document position cannot contain one.
 
 ### ![media/menubar/project-structure.jpg](media/menubar/project-structure.jpg) Project controls
 
-When a project is open, **Project structure** opens a dialog showing the
-project tree. Selecting a document in that dialog opens it; the dialog can
-also create a sub-editor where supported.
+When a project is open, **Project structure** opens a dialog showing the project
+tree. Selecting a document in that dialog opens it; the dialog can also show a
+sub-editor where supported.
 
-The ![media/menubar/project-menu.jpg](media/menubar/project-menu.jpg) project menu arrow contains:
+The ![media/menubar/project-menu.jpg](media/menubar/project-menu.jpg) project
+menu arrow contains:
 
 - **Edit configuration** opens the project editor configuration dialog.
-- **Manage changes** opens the Git changes dialog.
-- **Check updates** opens the Git updates dialog.
-- **Share** opens the repository dialog in publish mode.
-- **Connect** opens it in connect mode.
-- **Clone** opens it in clone mode.
+- **Manage changes** opens the Git changes and commits dialog.
+- **Check updates** opens the Git updates and branches dialog.
+- **Share** lets you publish the local repository.
+- **Connect** lets you connect the local repository to a remote one.
+- **Clone** lets you locally clone a remote repository.
 
-Each project dialog has its own cancel/close controls. The Git changes and Git
-updates dialogs can switch to each other; merging updates reloads the project.
-When no project is open, the project control is a direct ![media/menubar/clone.jpg](media/menubar/clone.jpg) **Clone** button and
-opens the repository dialog in clone mode.
-
-In development builds a **debug** button may appear at the far right. It opens
-the current document state information. The application version may also be
-shown there.
+When no project is open, instead of the project menu button you see a
+![media/menubar/clone.jpg](media/menubar/clone.jpg) **Clone** button that opens
+the repository dialog in clone mode.
 
 ## Second toolbar row
 
 ### ![media/menubar/clear-marks.jpg](media/menubar/clear-marks.jpg) Marks and text transformations
 
-- ![media/menubar/clear-marks.jpg](media/menubar/clear-marks.jpg) **Clear all marks/styles** removes all marks from the selection.
-- ![media/menubar/emphasis.jpg](media/menubar/emphasis.jpg) **Emphasis**, ![media/menubar/strong.jpg](media/menubar/strong.jpg) **strong**, ![media/menubar/underline.jpg](media/menubar/underline.jpg) **underline**, ![media/menubar/strikeout.jpg](media/menubar/strikeout.jpg) **strikeout**, ![media/menubar/superscript.jpg](media/menubar/superscript.jpg) **superscript**,
-  ![media/menubar/subscript.jpg](media/menubar/subscript.jpg) **subscript**, ![media/menubar/smallcaps.jpg](media/menubar/smallcaps.jpg) **small caps**, ![media/menubar/singlequoted.jpg](media/menubar/singlequoted.jpg) **single quotes**, ![media/menubar/doublequoted.jpg](media/menubar/doublequoted.jpg) **double quotes**,
-  ![media/menubar/code.jpg](media/menubar/code.jpg) **code**, ![media/menubar/link.jpg](media/menubar/link.jpg) **link**, ![media/menubar/citation.jpg](media/menubar/citation.jpg) **citation**, and ![media/menubar/math.jpg](media/menubar/math.jpg) **math** toggle the corresponding
-  inline mark. Active marks are highlighted. A mark button applies to the
-  selection or affects text typed at the cursor, depending on the selection.
+- ![media/menubar/clear-marks.jpg](media/menubar/clear-marks.jpg) **Clear all
+  marks/styles** removes all marks from the selection.
 
-- ![media/menubar/lowercase.jpg](media/menubar/lowercase.jpg) **Lower case**, ![media/menubar/uppercase.jpg](media/menubar/uppercase.jpg) **upper case**, and ![media/menubar/uppercase-first.jpg](media/menubar/uppercase-first.jpg) **Uppercase first** transform the
-  selected text. These commands are repeatable.
+- Pandoc inlines: ![media/menubar/emphasis.jpg](media/menubar/emphasis.jpg)
+  **Emph**, ![media/menubar/strong.jpg](media/menubar/strong.jpg) **Strong**,
+  ![media/menubar/underline.jpg](media/menubar/underline.jpg) **Underline**,
+  ![media/menubar/strikeout.jpg](media/menubar/strikeout.jpg) **Strikeout**,
+  ![media/menubar/superscript.jpg](media/menubar/superscript.jpg)
+  **Superscript**, ![media/menubar/subscript.jpg](media/menubar/subscript.jpg)
+  **Subscript**, ![media/menubar/smallcaps.jpg](media/menubar/smallcaps.jpg)
+  **SmallCaps**,
+  ![media/menubar/singlequoted.jpg](media/menubar/singlequoted.jpg) **Single
+  quotes** (Pandoc Quoted of SingleQuote type),
+  ![media/menubar/doublequoted.jpg](media/menubar/doublequoted.jpg) **Double
+  quotes** (Pandoc Quoted of DoubleQuote type),
+  ![media/menubar/code.jpg](media/menubar/code.jpg) **Code**,
+  ![media/menubar/link.jpg](media/menubar/link.jpg) **Link**,
+  ![media/menubar/citation.jpg](media/menubar/citation.jpg) **Citation**, and
+  ![media/menubar/math.jpg](media/menubar/math.jpg) **Math**. Marks active on
+  the current selection are highlighted. A mark button applies to the selection
+  or affects text typed at the cursor.
+
+- ![media/menubar/lowercase.jpg](media/menubar/lowercase.jpg) **Lower case**,
+  ![media/menubar/uppercase.jpg](media/menubar/uppercase.jpg) **Upper case**,
+  and ![media/menubar/uppercase-first.jpg](media/menubar/uppercase-first.jpg)
+  **Uppercase first** transform the capitalization of the selected text.
 
 ### Raw inline and block content
 
-![media/menubar/raw-inline.jpg](media/menubar/raw-inline.jpg) **Raw inline** opens a popup with tabs for the configured formats and their
-sample raw contents. With a selection, the **all** tab can convert selected
-RawInlines to text or make the selection a RawInline of a chosen format.
-Format tabs insert a configured sample. Frequently used samples are ordered
-first when sorting is enabled.
+![media/menubar/raw-inline.jpg](media/menubar/raw-inline.jpg) **Raw inline**
+opens a popup with tabs for the configured formats and their sample raw
+contents. With a selection, the **all** tab can convert selected RawInlines to
+text or make the selection a RawInline of a chosen format. Format tabs insert a
+configured sample. Frequently used samples are ordered first.
 
-![media/menubar/raw-block.jpg](media/menubar/raw-block.jpg) **Raw block** opens a similar popup. Its **all** tab can convert selected
-RawBlocks to text or turn the selection into a RawBlock of a chosen format.
-Other tabs insert configured samples. The popup closes after inserting a
-sample.
+![media/menubar/raw-block.jpg](media/menubar/raw-block.jpg) **Raw block** opens
+a similar popup. Its **all** tab can convert selected RawBlocks to text or turn
+the selection into a RawBlock of a chosen format. Other tabs insert configured
+samples. The popup closes after inserting a sample.
 
 ### ![media/menubar/index.jpg](media/menubar/index.jpg) Index references
 
-The index buttons insert a reference to each configured document index. The
-button title identifies the index; active references are highlighted and an
-invalid insertion is disabled.
+The index buttons insert a reference to each configured document index.
 
 ### ![media/menubar/search.jpg](media/menubar/search.jpg) Search and whole-document transformations
 
-![media/menubar/search.jpg](media/menubar/search.jpg) **Search and replace** opens the search-and-replace dialog. It remains open
-until its close control is used and supports the document search and replace
-operations.
+![media/menubar/search.jpg](media/menubar/search.jpg) **Search and replace**
+opens the search-and-replace dialog. It remains open until its close control is
+used and supports the document search and replace operations.
 
-![media/menubar/transform.jpg](media/menubar/transform.jpg) **Whole-document transformation** opens a menu of configured Pandoc-filter
-transformations. Each item shows its configured name and description. Choosing
-one starts the transformation. If a transformation is already running,
-clicking the main button opens its progress dialog instead. That dialog shows
-the log and failure state and provides **Cancel transformation**; closing it
-does not silently mark a failed transformation as successful.
+![media/menubar/transform.jpg](media/menubar/transform.jpg) **Whole-document
+transformation** opens a menu of configured Pandoc-filter transformations. Each
+item shows its configured name and description. Choosing one starts the
+transformation. If a transformation is already running, clicking the main button
+opens its progress dialog instead. That dialog shows the log and failure state
+and lets you cancel a transformation.
 
 ### ![media/menubar/markdown.jpg](media/menubar/markdown.jpg) Markdown editor
 
-![media/menubar/markdown.jpg](media/menubar/markdown.jpg) **Edit this document as Markdown** opens a full-screen CodeMirror dialog. The
-document is converted to Markdown when the dialog opens. Edit the Markdown
-directly, then choose **ok** to convert it back to the editor document or
-**cancel** to discard the edits. The dialog cannot be dismissed with Escape;
-use one of its buttons.
+![media/menubar/markdown.jpg](media/menubar/markdown.jpg) **Edit this document
+as Markdown** opens a full-screen CodeMirror dialog. The document is converted
+to Markdown when the dialog opens. Edit the Markdown directly, then choose
+**ok** to convert it back to the editor document or **cancel** to discard the
+edits. The dialog cannot be dismissed with Escape; use one of its buttons.
+**Since the markdown conversion is not 1:1, you may loose some information!**,
+especially with tables's classes and attributes.
 
 ### ![media/menubar/unicode.jpg](media/menubar/unicode.jpg) Unicode character table
 
-![media/menubar/unicode.jpg](media/menubar/unicode.jpg) **Insert Unicode character** opens the character dialog. Choose a Unicode
-block or category, or type at least three characters in **search** to filter
-the available characters. The upper table shows stored/search results and the
-lower area shows the current selection. Click a character to insert it at the
-cursor.
+![media/menubar/unicode.jpg](media/menubar/unicode.jpg) **Insert Unicode
+character** opens the character dialog. Choose a Unicode block or category, or
+type at least three characters in **search** to filter the available characters.
+The upper table shows stored/search results and the lower area shows the current
+selection. Click a character to insert it at the cursor.
 
 The lower area can be displayed as a table or list with the view toggle. The
 close button (or Escape) closes the dialog without inserting anything.
@@ -296,11 +319,11 @@ available. Its label is the current project name or configuration name. The
 arrow lists the other configurations; selecting one reloads the document with
 that configuration.
 
-The configuration selector does not itself edit configuration settings; use
-the project menu's **Edit configuration** entry for that.
+The configuration selector does not itself edit configuration settings; use the
+project menu's **Edit configuration** entry for that.
 
-The editor key may be shown at the far right when enabled by the GUI
-configuration. The breadcrumb below the rows shows the current node and mark
-context; clicking its edit control opens the attributes editor for the
-selected node or mark. The attributes editor provides tabs for applicable
-attributes and **Change**/**Cancel** actions.
+## The breadcrumb row
+
+The breadcrumb below the menubar rows shows the current node and mark context;
+clicking its edit control opens the attributes editor for the selected node or
+mark. The attributes editor provides tabs for applicable attributes and classes.
