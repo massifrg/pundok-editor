@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { Editor } from '@tiptap/vue-3';
 import { isAbsolute, resolve } from 'path-browserify';
 import type { OutputConverter, ProjectComponent, PundokEditorProject } from '../common';
@@ -15,6 +16,7 @@ const props = defineProps<{
   editor?: Editor;
   renderingTargets?: readonly RenderingTarget[];
 }>();
+const { t } = useI18n();
 const emit = defineEmits<{
   render: [converter: OutputConverter, path?: string];
   'stop-rendering': [converterName: string, path?: string];
@@ -123,7 +125,7 @@ const menuItems = computed(() => {
 
 const dropdownTitle = computed(() => {
   const target = defaultTarget.value;
-  if (!target) return 'render...';
+  if (!target) return t('renderings.render');
   return labelFor(
     target.converter,
     resultFileFor(target.converter, target.path || currentPath.value, project.value),
@@ -143,7 +145,10 @@ const renderingProcesses = computed(() =>
       feedback: [...target.feedback],
       label: converter
         ? labelFor(converter, resultFile)
-        : `render ${resultFile} with ${target.converterName}`,
+        : t('renderings.renderResultWith', {
+            resultFile,
+            name: target.converterName,
+          }),
     };
   }),
 );
@@ -209,7 +214,10 @@ function resultFileFor(
 }
 
 function labelFor(converter: OutputConverter, resultFile: string): string {
-  return `render ${resultFile} with ${converter.name}`;
+  return t('renderings.renderResultWith', {
+    resultFile,
+    name: converter.name,
+  });
 }
 
 function isRendering(target: RenderTarget): boolean {
@@ -267,14 +275,14 @@ function stopRendering(converterName: string, path?: string): void {
       size="sm"
       color="grey-5"
       dropdown-icon="menu_down"
-      title="render..."
+      :title="t('renderings.render')"
     >
     <q-list dense>
       <q-item clickable v-close-popup @click="renderingDialog = true">
         <q-item-section avatar>
           <q-icon name="document_render" />
         </q-item-section>
-        <q-item-section>Current and recent renderings</q-item-section>
+        <q-item-section>{{ t('renderings.currentAndRecent') }}</q-item-section>
       </q-item>
       <q-separator />
       <template v-for="(item, index) in menuItems" :key="`${item.converter.name}:${item.path || ''}:${item.resultFile}`">
@@ -295,7 +303,7 @@ function stopRendering(converterName: string, path?: string): void {
           </q-item-section>
           <q-item-section>
             {{ item.hasAncestors
-              ? `render with ${item.converter.name}`
+              ? t('renderings.renderWith', { name: item.converter.name })
               : labelFor(item.converter, item.resultFile) }}
           </q-item-section>
           <q-item-section v-if="item.hasAncestors" side>

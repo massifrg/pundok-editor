@@ -840,6 +840,14 @@
     "connect": "Collega progetto",
     "clone": "Clona progetto remoto"
   },
+  "renderings": {
+    "render": "crea...",
+    "currentAndRecent": "Creazioni correnti e recenti",
+    "renderWith": "crea con {name}",
+    "renderResultWith": "crea {resultFile} con {name}",
+    "stop": "Interrompi creazione",
+    "close": "Chiudi"
+  },
   "gitChangesDialog": {
     "title": "Gestisci modifiche e commit",
     "notManaged": "Questo progetto non è gestito da Git.",

@@ -841,6 +841,14 @@
     "connect": "Connect project",
     "clone": "Clone remote project"
   },
+  "renderings": {
+    "render": "render...",
+    "currentAndRecent": "Current and recent renderings",
+    "renderWith": "render with {name}",
+    "renderResultWith": "render {resultFile} with {name}",
+    "stop": "Stop rendering",
+    "close": "Close"
+  },
   "gitChangesDialog": {
     "title": "Manage changes and commits",
     "notManaged": "This project is not managed by Git.",

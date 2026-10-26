@@ -3,6 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { Codemirror } from 'vue-codemirror';
+import { useI18n } from 'vue-i18n';
 
 const TAIL_SCROLL_INTERVAL_MS = 1000 / 3;
 
@@ -17,6 +18,7 @@ const props = defineProps<{
   visible: boolean;
   processes: readonly RenderingProcess[];
 }>();
+const { t } = useI18n();
 const emit = defineEmits<{
   close: [];
   stop: [converterName: string, path?: string];
@@ -123,7 +125,7 @@ function close(): void {
   <q-dialog :model-value="visible" @hide="close">
     <q-card style="width: 60rem; max-width: 90vw">
       <q-card-section class="text-h6">
-        Current and recent renderings
+        {{ t('renderings.currentAndRecent') }}
       </q-card-section>
       <q-list dense>
         <template v-for="process in processes" :key="processKey(process)">
@@ -145,7 +147,7 @@ function close(): void {
                   dense
                   round
                   icon="cancel"
-                  title="Stop rendering"
+                  :title="t('renderings.stop')"
                   @click.stop="emit('stop', process.converterName, process.path)"
                 />
                 <q-btn
@@ -173,7 +175,7 @@ function close(): void {
         </template>
       </q-list>
       <q-card-actions align="right">
-        <q-btn label="Close" color="primary" @click="close" />
+        <q-btn :label="t('renderings.close')" color="primary" @click="close" />
       </q-card-actions>
     </q-card>
   </q-dialog>
