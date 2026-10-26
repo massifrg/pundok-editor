@@ -20,7 +20,8 @@
     <q-drawer v-if="isMainEditor" show-if-above behavior="desktop" bordered :v-model="leftDrawerState === 'normal'"
       side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="24"
       :width="leftDrawerWidth" :breakpoint="500">
-      <PdfViewer :backend="backend" class="pdf-viewer" />
+      <PdfViewer :backend="backend" class="pdf-viewer" @rendering-started="renderingStarted"
+        @rendering-finished="renderingFinished" />
       <div class="q-mini-drawer-only absolute" style="top: 150px; right: 3px">
         <q-btn dense round unelevated color="secondary" icon="chevron_right" @click="maximizePdfViewer" />
       </div>
@@ -1355,6 +1356,23 @@ export default {
             target.path !== renderingTarget.path,
         );
       }
+    },
+    renderingStarted(converterName: string, path: string) {
+      if (this.renderingTargets.some(
+        (target) => target.converterName === converterName && target.path === path,
+      ))
+        return
+      this.renderingTargets.push({
+        converterName,
+        path,
+        feedback: [],
+      })
+    },
+    renderingFinished(converterName: string, path: string) {
+      this.renderingTargets = this.renderingTargets.filter(
+        (target) =>
+          target.converterName !== converterName || target.path !== path,
+      )
     },
     async stopRendering(converterName: string, path?: string) {
       if (!path) return;

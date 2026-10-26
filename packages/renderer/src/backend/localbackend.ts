@@ -457,7 +457,7 @@ export class LocalBackend implements Backend {
   }
 
   async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    window.ipc.renderAgain(hash, editorKey);
+    await window.ipc.renderAgain(hash, editorKey);
   }
 
   stopRendering(converterName: string, path: string): Promise<boolean> {

@@ -263,6 +263,10 @@ export default {
       contentHash: undefined as string | undefined,
       isRendering: false,
       regeneratingHash: undefined as string | undefined,
+      regeneratingTarget: undefined as {
+        converterName: string,
+        path: string,
+      } | undefined,
       whenRendered: [] as WhenRendered,
       div: undefined as HTMLDivElement | undefined,
       scrollTopPerc: 0,
@@ -330,11 +334,15 @@ export default {
           documentHash,
         } = setup
         const hash = documentHash || filename
+        const finishedTarget =
+          this.regeneratingHash === hash ? this.regeneratingTarget : undefined
         this.isUpdated = this.documentHash !== hash
         this.documentHash = hash
         this.rememberExportJob(hash)
-        // if (this.regeneratingHash === hash)
         this.regeneratingHash = undefined
+        this.regeneratingTarget = undefined
+        if (finishedTarget)
+          this.$emit('rendering-finished', finishedTarget.converterName, finishedTarget.path)
         this.projectAsJson = projectAsJson
         if (page) this.page = page
         await this.loadPdf({ filename, content })
@@ -417,9 +425,36 @@ export default {
       if (!h || !this.editorKey || !this.backend) return
       this.regeneratingHash = h
       try {
+        const job = this.exportJobs[h] || await this.backend.getRenderingJob(h)
+        if (!job) {
+          this.regeneratingHash = undefined
+          return
+        }
+        this.regeneratingTarget = {
+          converterName: job.converter.name,
+          path: job.path,
+        }
+        this.$emit('rendering-started', job.converter.name, job.path)
         await this.backend.renderAgain(h, this.editorKey)
+        if (this.regeneratingHash === h && this.regeneratingTarget) {
+          this.$emit(
+            'rendering-finished',
+            this.regeneratingTarget.converterName,
+            this.regeneratingTarget.path,
+          )
+          this.regeneratingHash = undefined
+          this.regeneratingTarget = undefined
+        }
       } catch (err) {
+        if (this.regeneratingTarget) {
+          this.$emit(
+            'rendering-finished',
+            this.regeneratingTarget.converterName,
+            this.regeneratingTarget.path,
+          )
+        }
         if (this.regeneratingHash === h) this.regeneratingHash = undefined
+        this.regeneratingTarget = undefined
         this.$q.notify({
           message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRegenerate'),
           color: 'negative',
