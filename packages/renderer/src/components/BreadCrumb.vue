@@ -11,7 +11,7 @@
               : ['figure', 'blockquote'].includes(crumb.name)
                 ? 'figure_unwrap'
                 : 'close'"
-            size="xs"
+            :size="isCompactRemoveIcon(crumb) ? '0.75rem' : 'xs'"
             role="button"
             tabindex="0"
             :aria-label="$t(crumb.mark ? 'actions.removeMark' : 'actions.removeContainer')"
@@ -103,6 +103,9 @@ export default {
     },
     isUnwrappable(crumb: LabeledNodeOrMark) {
       return !crumb.mark && ['div', 'figure', 'blockquote'].includes(crumb.name)
+    },
+    isCompactRemoveIcon(crumb: LabeledNodeOrMark) {
+      return ['span', 'div', 'figure', 'blockquote'].includes(crumb.name)
     },
     removeMark(crumb: LabeledNodeOrMark) {
       const action = actionsForNodeOrMark(this.editor.state, crumb)
