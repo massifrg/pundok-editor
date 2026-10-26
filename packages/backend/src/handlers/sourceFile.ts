@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { delimiter, isAbsolute, resolve } from 'node:path';
+import { SYNCTEX_CONTEXT_REQUIRED } from '../../../common/src';
 import type {
   EditorKeyType,
   PundokEditorProject,
@@ -44,11 +45,24 @@ export async function getSourceLocation(
     throw new Error(`No synctex file found for "${outputFile}"`);
 
   const environment = await extendedEnvironment(directories);
-  const pdfInfo = await runExternalProgram(
-    'mtxrun',
-    ['--script', 'pdf', '--info', '--detail', outputFile],
-    { env: environment },
-  ).result;
+  let pdfInfo;
+  try {
+    pdfInfo = await runExternalProgram(
+      'mtxrun',
+      ['--script', 'pdf', '--info', '--detail', outputFile],
+      { env: environment },
+    ).result;
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'error' in error
+          ? String(error.error)
+          : String(error);
+    if (message.includes('ENOENT'))
+      throw new Error(SYNCTEX_CONTEXT_REQUIRED);
+    throw error;
+  }
   if (pdfInfo.exitCode !== 0) {
     const message = `Error getting information about "${outputFile}": ${pdfInfo.error}`;
     feedback.report({ type: 'progress', source: 'err', message, level: 1 }, editorKey);
@@ -106,8 +120,8 @@ function pageDimensions(
     const [, first, last, width, height] = match;
     if (page >= Number.parseInt(first, 10) && page <= Number.parseInt(last, 10))
       return {
-        width: Number.parseFloat(height),
-        height: Number.parseFloat(width),
+        width: Number.parseFloat(width),
+        height: Number.parseFloat(height),
       };
   }
 }

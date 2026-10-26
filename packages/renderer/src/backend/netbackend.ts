@@ -32,6 +32,7 @@ import type {
   GitCommitOptions,
   IpcMainToRendererChannel,
   ServerMessage,
+  PdfPageCount,
 } from '../common';
 import { handleEditorEvent } from './editorEventHandlers';
 
@@ -189,6 +190,10 @@ export class NetBackend implements Backend {
 
   queryDatabase(query: Query): Promise<QueryResult[]> {
     return this.request('query', { query });
+  }
+
+  getPdfPageCount(filename: string): Promise<PdfPageCount> {
+    return this.request('pdf-page-count', { filename });
   }
 
   setValue(key: string, value?: unknown): Promise<void> {

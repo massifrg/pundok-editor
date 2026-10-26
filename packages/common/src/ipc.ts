@@ -43,6 +43,7 @@ export type IpcRendererToMainChannel =
   | 'editor-ready'
   | 'load-configuration'
   | 'file-contents'
+  | 'pdf-page-count'
   | 'find-resource-files'
   | 'new-project'
   | 'get-project'
@@ -148,6 +149,10 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'r2m',
     description:
       'the renderer asks main to send the contents of a file (i.e. a CSS file)',
+  },
+  'pdf-page-count': {
+    dir: 'r2m',
+    description: 'the renderer asks main for the number of pages in a PDF',
   },
   'find-resource-files': {
     dir: 'r2m',

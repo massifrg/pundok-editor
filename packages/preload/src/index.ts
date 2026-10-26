@@ -36,6 +36,7 @@ import {
   QueryResult,
   ResourceFile,
   SaveResponse,
+  PdfPageCount,
   SynctexInfo,
 } from './common';
 
@@ -77,6 +78,8 @@ export interface Ipc {
     filename: string,
     options?: Partial<FindResourceOptions>,
   ) => Promise<string>;
+
+  pdfPageCount: (filename: string) => Promise<PdfPageCount>;
 
   findResourceFiles: (
     filenameRegex: string,
@@ -201,6 +204,8 @@ contextBridge.exposeInMainWorld('ipc', {
     ipcRenderer.invoke('load-configuration', name),
   fileContents: (filename: string, options?: Partial<FindResourceOptions>) =>
     ipcRenderer.invoke('file-contents', filename, options),
+  pdfPageCount: (filename: string) =>
+    ipcRenderer.invoke('pdf-page-count', filename),
   findResourceFiles: (
     filenameRegex: string,
     regexFlags?: string,

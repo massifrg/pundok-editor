@@ -181,6 +181,12 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/pdf-page-count',
+    asyncHandler((req) =>
+      backend.getPdfPageCount(username(req), req.body?.filename),
+    ),
+  );
+  router.post(
     '/find-resource-files',
     asyncHandler((req) =>
       backend.findResourceFiles(

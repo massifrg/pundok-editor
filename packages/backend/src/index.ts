@@ -6,6 +6,7 @@ export * from './resourceManager';
 export * from './rendererHub';
 export * from './feedback';
 export * from './runExternal';
+export * from './pdf';
 export * from './renderingProcess';
 export * from './gitRepositories';
 export * from './importExport';

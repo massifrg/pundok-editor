@@ -13,12 +13,18 @@ import {
 import {
   EditAttributesActionProps,
   EditorKeyType,
+  NODE_NAME_DEFINITION_TERM,
+  NODE_NAME_HEADING,
   NODE_NAME_IMAGE,
   NODE_NAME_INDEX_REF,
   NODE_NAME_INDEX_TERM,
+  NODE_NAME_LINE,
+  NODE_NAME_METADATA,
   NODE_NAME_PARAGRAPH,
+  NODE_NAME_PLAIN,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
+  NODE_NAME_SHORT_CAPTION,
   SetAlternativeActionProps,
   SK
 } from '../../common';
@@ -35,8 +41,6 @@ import {
   updateDocState
 } from '../helpers';
 import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
-import Paragraph from '@tiptap/extension-paragraph';
-import { DefinitionTerm, Heading, Line, Metadata, Plain, ShortCaption } from '../nodes';
 import { nudgeNumericValue, nudgeNumericValueAtIndex } from '../helpers/nudgeNumericValue';
 
 let keyCounter = 1;
@@ -290,11 +294,12 @@ export const PundokEditorUtilsExtension =
           const doc = state.doc
           doc.descendants((node, pos) => {
             const tn = node.type.name
-            if (tn === Metadata.name) return false
-            if (tn === Paragraph.name || tn === Plain.name
-              || tn === Heading.name || tn === Line.name
-              || tn === ShortCaption.name || tn === DefinitionTerm.name) {
+            if (tn === NODE_NAME_METADATA) return false
+            if (tn === NODE_NAME_PARAGRAPH || tn === NODE_NAME_PLAIN
+              || tn === NODE_NAME_HEADING || tn === NODE_NAME_LINE
+              || tn === NODE_NAME_SHORT_CAPTION || tn === NODE_NAME_DEFINITION_TERM) {
               count++
+              // console.log(`${count}: ${node.textContent}`)
               if (count === i) {
                 found = true
                 foundPos = pos

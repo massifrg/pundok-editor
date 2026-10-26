@@ -51,6 +51,7 @@ import {
   ConfigQueryOptions,
   ConfigurationUpdateOptions,
   BackendValueKey,
+  PdfPageCount,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -368,6 +369,10 @@ export class LocalBackend implements Backend {
       return getHardcodedCustomCss();
     }
     return window.ipc.fileContents(filename, options);
+  }
+
+  getPdfPageCount(filename: string): Promise<PdfPageCount> {
+    return window.ipc.pdfPageCount(filename);
   }
 
   async findResourceFiles(

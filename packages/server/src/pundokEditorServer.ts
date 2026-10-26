@@ -64,6 +64,7 @@ import {
   expandCommandArgs,
   openDocument,
   saveDocument,
+  getPdfPageCount as countPdfPages,
   renderingProcessKey,
   stopRenderingProcess,
   transformationProcessKey,
@@ -481,6 +482,10 @@ export class PundokEditorServer {
         'image-cache',
       ),
     );
+  }
+
+  async getPdfPageCount(user: string, path: string) {
+    return countPdfPages(this.userPath(user, path));
   }
 
   async queryDatabase(user: string, query: Query): Promise<QueryResult[]> {

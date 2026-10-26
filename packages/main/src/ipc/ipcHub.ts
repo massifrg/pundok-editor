@@ -28,6 +28,7 @@ import {
   createProject,
   createFolder,
   getFileContents,
+  getPdfPageCount,
   findResourceFilesWithProvenance,
   editorReady,
   getProject,
@@ -209,6 +210,9 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('file-contents', (_event, filename, options) =>
       getFileContents(backendDirectories(), filename, options),
+    );
+    ipcMain.handle('pdf-page-count', (_event, filename) =>
+      getPdfPageCount(filename),
     );
     ipcMain.handle(
       'find-resource-files',

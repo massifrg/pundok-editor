@@ -15,6 +15,8 @@ export * from './feedback';
 export * from './folders';
 export * from './icons';
 export * from './imageFormats';
+export * from './imageCache';
+export * from './pdf';
 export * from './ipc';
 export * from './pandoc';
 export * from './pandocExtensions';

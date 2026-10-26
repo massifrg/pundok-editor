@@ -23,6 +23,7 @@ import type {
   ConfigQueryOptions,
   ConfigurationUpdateOptions,
   BackendValueKey,
+  PdfPageCount,
   DocRepository,
   CloneGitProjectOptions,
   ClonedGitProject,
@@ -169,6 +170,8 @@ export interface Backend {
     filename: string,
     options?: Partial<FindResourceOptions>,
   ): Promise<string>;
+
+  getPdfPageCount(filename: string): Promise<PdfPageCount>;
 
   /**
    * Retrieves resource filenames matching a regular expression.

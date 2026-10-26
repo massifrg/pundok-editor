@@ -9,9 +9,10 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { extname, join } from 'node:path';
+import { IMAGE_CACHE_MAX_AGE_MS } from '../../common/src';
 import { runExternalProgram } from '../../backend/src';
 
-export const IMAGE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+export { IMAGE_CACHE_MAX_AGE_MS };
 
 const MIME_TYPES: Record<string, string> = {
   '.gif': 'image/gif',

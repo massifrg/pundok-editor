@@ -202,11 +202,6 @@ const defaultPdf = 'data:application/pdf;base64,' +
   'ZXIKPDwgL1NpemUgMjEKICAgL1Jvb3QgMjAgMCBSCiAgIC9JbmZvIDE5IDAgUgo+PgpzdGFydHhy' +
   'ZWYKMTA2MjMKJSVFT0YK'
 
-import VuePdfEmbed from 'vue-pdf-embed'
-
-// optional styles
-import 'vue-pdf-embed/dist/styles/annotationLayer.css'
-import 'vue-pdf-embed/dist/styles/textLayer.css'
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
@@ -214,17 +209,13 @@ import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import {
   EditorKeyType,
   RenderingJob,
+  SYNCTEX_CONTEXT_REQUIRED,
   SetupViewerActionProps,
   SynctexInfo,
   ViewerSetup
 } from '../common';
-import { debounce, isString, throttle } from 'lodash-es';
+import { isString, throttle } from 'lodash-es';
 import { PromptDialog } from './dialogs'
-
-interface LoadingProgress {
-  loaded: number,
-  total: number
-}
 
 type WhenRendered = (() => void)[]
 
@@ -258,19 +249,17 @@ async function createHash(message: string, algo = 'SHA-1'): Promise<string> {
 export default {
   components: {
     PromptDialog,
-    VuePdfEmbed,
   },
   props: ['backend'],
   data() {
     return {
       filename: undefined as string | undefined,
       projectAsJson: undefined as string | undefined,
-      pdfSource: undefined as string | undefined,
-      debouncedPage: 1,
       page: 1,
       maxPages: 1,
       magnify: 1,
       width: baseWidth,
+      displayedImageSource: undefined as string | undefined,
       contentHash: undefined as string | undefined,
       isRendering: false,
       regeneratingHash: undefined as string | undefined,
@@ -303,6 +292,13 @@ export default {
     isRegeneratingPdf(): boolean {
       return !!this.regeneratingHash
     },
+    imageSource(): string | undefined {
+      if (!this.filename) return undefined
+      const version = encodeURIComponent(this.documentHash || '')
+      if (window.ipc)
+        return `img://${this.filename}?page=${this.page - 1}&version=${version}`
+      return `/backend/image?path=${encodeURIComponent(this.filename)}&page=${this.page - 1}&version=${version}`
+    },
   },
   watch: {
     lastAction(action: EditorAction) {
@@ -319,12 +315,6 @@ export default {
     this.$watch('magnify', throttle((magnify: number) => {
       this.width = baseWidth * magnify
     }, 500))
-    this.$watch('page', debounce((page: number) => {
-      this.debouncedPage = page
-    }, 200))
-  },
-  mounted() {
-    this.loadDefaultPdf()
   },
   methods: {
     async setupViewer(setup?: ViewerSetup) {
@@ -346,12 +336,13 @@ export default {
         // if (this.regeneratingHash === hash)
         this.regeneratingHash = undefined
         this.projectAsJson = projectAsJson
+        if (page) this.page = page
         await this.loadPdf({ filename, content })
       }
     },
     async rememberExportJob(hash: string) {
       if (hash) {
-        const job = await this.backend?.getExportJob(hash)
+        const job = await this.backend?.getRenderingJob(hash)
         if (job) {
           this.exportJobs[hash] = job
         }
@@ -362,54 +353,99 @@ export default {
         const { filename, content } = pdf
         let pdfContent: string | undefined = undefined
         if (filename) {
+          if (this.filename !== filename)
+            this.displayedImageSource = undefined
           this.filename = filename
-          pdfContent = 'data:application/pdf;base64,' +
-            await this.backend?.getFileContents(filename, { base64: true })
+          this.isRendering = true
+          this.maxPages = 1
+          this.contentHash = await createHash(filename)
+          void this.updatePageCount(filename)
         }
-        else if (content)
+        else if (content) {
           pdfContent = content
+          this.$q.notify({
+            message: this.$t('pdfViewer.previewRequiresFilePath'),
+            color: 'warning',
+            icon: 'message_warning',
+          })
+        }
         if (pdfContent) {
           const contentHash = await createHash(pdfContent)
           if (contentHash !== this.contentHash) {
-            this.pdfSource = pdfContent
             this.contentHash = contentHash
             this.isRendering = true
           }
         }
       } catch (err) {
-        alert(err)
+        this.isRendering = false
+        this.$q.notify({
+          message: err instanceof Error
+            ? err.message
+            : this.$t('pdfViewer.unableInspectPagesImageMagick'),
+          color: 'warning',
+          icon: 'message_warning',
+        })
       }
     },
-    regeneratePdf(hash?: string) {
+    async updatePageCount(filename: string) {
+      try {
+        const result = await this.backend?.getPdfPageCount(filename)
+        if (this.filename === filename && result) {
+          this.maxPages = result.pageCount
+          this.page = Math.min(this.page, result.pageCount)
+          if (result.usedImageMagick) {
+            this.$q.notify({
+              message: this.$t('pdfViewer.mtxrunFallback'),
+              color: 'warning',
+              icon: 'message_warning',
+            })
+          }
+        }
+      } catch (err) {
+        if (this.filename !== filename) return
+        this.$q.notify({
+          message: err instanceof Error
+            ? err.message
+            : this.$t('pdfViewer.unableInspectPagesImageMagick'),
+          color: 'warning',
+          icon: 'message_warning',
+        })
+      }
+    },
+    async regeneratePdf(hash?: string) {
       const h = hash || this.documentHash
-      // console.log(`document hash: ${h}`)
-      if (h) {
-        this.regeneratingHash = h
-        this.backend.exportAgain(h, this.editorKey)
+      if (!h || !this.editorKey || !this.backend) return
+      this.regeneratingHash = h
+      try {
+        await this.backend.renderAgain(h, this.editorKey)
+      } catch (err) {
+        if (this.regeneratingHash === h) this.regeneratingHash = undefined
+        this.$q.notify({
+          message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRegenerate'),
+          color: 'negative',
+          icon: 'message_warning',
+        })
       }
     },
     loadDefaultPdf() {
       this.loadPdf({ content: defaultPdf })
     },
-    loadingProgress(progress: LoadingProgress) {
-      // console.log(progress)
-      const { loaded, total } = progress
-      if (!this.isRendering && loaded === total) this.isRendering = true
-    },
-    rendered() {
+    imageLoaded(e: Event) {
+      const image = e.currentTarget as HTMLImageElement
+      const source = image.getAttribute('src')
+      if (source !== this.imageSource) return
+      this.displayedImageSource = source
       this.isRendering = false
       const whenRenderedCallback = this.whenRendered.pop()
       if (whenRenderedCallback) whenRenderedCallback()
     },
-    handleFailure(e: object) {
-      console.log(e)
-    },
-    pdfLoaded(loaded: Record<string, any>) {
-      const numPages: number | undefined = loaded?._pdfInfo?.numPages
-      if (numPages) {
-        this.maxPages = numPages
-        this.page = this.page > this.maxPages ? 1 : this.page
-      }
+    imageLoadFailed() {
+      this.isRendering = false
+      this.$q.notify({
+        message: this.$t('pdfViewer.unableRasterizeImageMagick'),
+        color: 'warning',
+        icon: 'message_warning',
+      })
     },
     setPage(p: number | string) {
       const page = isString(p) ? parseInt(p) : p
@@ -435,11 +471,12 @@ export default {
       const page_max = this.maxPages
       const p = parseInt(sp)
       return (p >= page_min && p <= page_max)
-        || `page must be between ${page_min} and ${page_max}`
+        || this.$t('pdfViewer.pageRange', { min: page_min, max: page_max })
     },
     setMagnify(magnify: number) {
       if (magnify !== this.magnify && magnify > 0.05 && magnify < 2000) {
         this.magnify = magnify
+        this.width = baseWidth * magnify
         this.isRendering = true
       }
     },
@@ -452,45 +489,57 @@ export default {
     resetScale() {
       this.magnify = 1
     },
-    clicked(e: PointerEvent) {
-      // console.log(e)
-      let target = e.target
-      let div: HTMLElement | null = target as HTMLElement
-      while (div && div.tagName !== 'DIV') div = div.parentElement
-      if (div) {
-        const bounding = div.getBoundingClientRect()
-        const x = e.clientX - bounding.x
-        const y = e.clientY - bounding.y
-        const { clientWidth: w, clientHeight: h } = div! // || { clientWidth: x, clientHeight: y }
-        const rx = x / w
-        const ry = y / h
-        // console.log(`${x},${y}/${w},${h}   ${rx.toFixed(2)},${ry.toFixed(2)}`)
-        if (e.ctrlKey && this.filename) {
-          this.backend?.gotoSource(this.editorKey, {
+    coordinatesOnRasterImage(e: MouseEvent, image: HTMLImageElement) {
+      const { left, top, width, height } = image.getBoundingClientRect()
+      return {
+        rx: Math.min(1, Math.max(0, (e.clientX - left) / width)),
+        ry: Math.min(1, Math.max(0, (e.clientY - top) / height)),
+      }
+    },
+    async doubleClicked(e: MouseEvent) {
+      if (!(e.target instanceof HTMLImageElement)) return
+      const { rx, ry } = this.coordinatesOnRasterImage(e, e.target)
+      if (this.filename) {
+        try {
+          await this.backend?.gotoSource(this.editorKey, {
             outputFile: toRaw(this.filename),
             page: toRaw(this.page),
             rx,
             ry,
             projectAsJson: toRaw(this.projectAsJson)
           } as SynctexInfo)
+        } catch (err) {
+          const message = err instanceof Error ? err.message : undefined
+          this.$q.notify({
+            message: message === SYNCTEX_CONTEXT_REQUIRED
+              ? this.$t('pdfViewer.synctexRequiresContext')
+              : message || this.$t('pdfViewer.unableOpenSource'),
+            color: 'warning',
+            icon: 'message_warning',
+          })
         }
       }
     },
     mouseWheel(e: WheelEvent) {
-      const rendering = this.isRendering
-      // console.log(`${e.deltaY}, ${e.clientX}`)
-      if (e.deltaY < 0) {
-        if (e.ctrlKey && !rendering)
-          this.increaseScale()
-        else
-          this.prevPage()
-      } else if (e.deltaY > 0) {
-        if (e.ctrlKey && !rendering)
-          this.decreaseScale()
-        else
-          this.nextPage()
-      }
       e.preventDefault()
+      e.stopPropagation()
+      if (!e.deltaY) return
+      if (!e.ctrlKey) {
+        if (e.deltaY < 0) this.prevPage()
+        else this.nextPage()
+        return
+      }
+
+      const container = e.currentTarget as HTMLDivElement
+      const bounds = container.getBoundingClientRect()
+      const x = e.clientX - bounds.left + container.scrollLeft
+      const y = e.clientY - bounds.top + container.scrollTop
+      const oldWidth = this.width
+      const factor = e.deltaY < 0 ? magnifyFactor : 1 / magnifyFactor
+      this.setMagnify(this.magnify * factor)
+      const scale = this.width / oldWidth
+      container.scrollLeft = x * scale - (e.clientX - bounds.left)
+      container.scrollTop = y * scale - (e.clientY - bounds.top)
     },
     pageWheel(e: WheelEvent) {
       if (e.deltaY < 0) {
@@ -545,14 +594,19 @@ export default {
       const bookmark = this.bookmarks[index]
       if (bookmark) {
         const { page, magnify, scrollLeftPerc, scrollTopPerc } = bookmark
-        this.page = page
-        this.magnify = magnify
-        const div = this.div
-        if (div) {
-          this.whenRendered.push(() => {
+        const restoreScroll = () => {
+          const div = this.div
+          if (div) {
             div.scrollLeft = scrollLeftPerc * div.scrollWidth
             div.scrollTop = scrollTopPerc * div.scrollHeight
-          })
+          }
+        }
+        this.whenRendered.push(restoreScroll)
+        this.page = page
+        this.magnify = magnify
+        if (this.imageSource === this.displayedImageSource) {
+          this.whenRendered.pop()
+          setTimeout(restoreScroll, 550)
         }
       }
     },
@@ -576,8 +630,17 @@ export default {
       this.showBookmarkNameDialog = false
       this.currentBookmarkIndex = -1
     },
-    showAgain(hash: string) {
-      this.backend.showAgain(hash, this.editorKey)
+    async showAgain(hash: string) {
+      if (!this.backend || !this.editorKey) return
+      try {
+        await this.backend.showAgain(hash, this.editorKey)
+      } catch (err) {
+        this.$q.notify({
+          message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRecallRendering'),
+          color: 'negative',
+          icon: 'message_warning',
+        })
+      }
     }
   }
 }
@@ -590,31 +653,31 @@ export default {
       <q-btn label="default pdf" @click="loadDefaultPdf" />
       <q-btn label="load pdf" @click="loadPdf({ filename: 'setup-en.pdf' })" />
       -->
-      <q-btn size="sm" icon='page_first' title="go to the first page" :disabled="page <= 1" @click="firstPage" />
-      <q-btn size="sm" icon='page_left' title="go to the previous page" :disabled="page <= 1" @click="prevPage" />
+      <q-btn size="sm" icon='page_first' :title="$t('pdfViewer.firstPage')" :disabled="page <= 1" @click="firstPage" />
+      <q-btn size="sm" icon='page_left' :title="$t('pdfViewer.previousPage')" :disabled="page <= 1" @click="prevPage" />
       <q-chip :label="page" size="md" @wheel="pageWheel" clickable @click="showPageDialog = true" />
-      <PromptDialog :visible="showPageDialog" label="go to page" :start-value="page.toString()" :validate="validatePage"
+      <PromptDialog :visible="showPageDialog" :label="$t('pdfViewer.goToPage')" :start-value="page.toString()" :validate="validatePage"
         @set-value="setPage" @close-dialog="showPageDialog = false" />
-      <q-btn size="sm" icon='page_right' title="go to the next page" :disabled="page >= maxPages" @click="nextPage" />
-      <q-btn size="sm" icon='page_last' title="go to the last page" :disabled="page >= maxPages" @click="lastPage" />
-      <q-btn size="sm" icon="zoom_out" :disabled="magnify < 0.11" title="zoom out" @click="decreaseScale" />
+      <q-btn size="sm" icon='page_right' :title="$t('pdfViewer.nextPage')" :disabled="page >= maxPages" @click="nextPage" />
+      <q-btn size="sm" icon='page_last' :title="$t('pdfViewer.lastPage')" :disabled="page >= maxPages" @click="lastPage" />
+      <q-btn size="sm" icon="zoom_out" :disabled="magnify < 0.11" :title="$t('pdfViewer.zoomOut')" @click="decreaseScale" />
       <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblClick="resetScale" />
-      <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" title="zoom in" @click="increaseScale" />
-      <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" title="add bookmark" @click="setBookmark()" />
-      <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="bookmark_add" title="add bookmark"
+      <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" :title="$t('pdfViewer.zoomIn')" @click="increaseScale" />
+      <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')" @click="setBookmark()" />
+      <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
         @click="setBookmark()">
         <q-list>
           <q-item v-for="(bookmark, i) in bookmarks" clickable v-close-popup :label="bookmark.label"
             @click="recallBookmark(i)">
-            <q-item-section side title="edit bookmark"><q-icon name="bookmark_edit" color="primary"
+            <q-item-section side :title="$t('pdfViewer.editBookmark')"><q-icon name="bookmark_edit" color="primary"
                 @click="editBookmark(i)" /></q-item-section>
-            <q-item-section title="remove bookmark"><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
-            <q-item-section side title="remove bookmark"><q-icon name="bookmark_remove" color="primary"
+            <q-item-section :title="$t('pdfViewer.removeBookmark')"><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
+            <q-item-section side :title="$t('pdfViewer.removeBookmark')"><q-icon name="bookmark_remove" color="primary"
                 @click="removeBookmark(i)" /></q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>
-      <q-btn-dropdown>
+      <q-btn-dropdown :title="$t('pdfViewer.showRenderings')">
         <q-list>
           <q-item v-for="[h, j] in Object.entries(exportJobs)" :disable="h === documentHash" clickable v-close-popup
             :title="h" @click="showAgain(h)">
@@ -624,12 +687,12 @@ export default {
           </q-item>
         </q-list>
       </q-btn-dropdown>
-      <PromptDialog :visible="showBookmarkNameDialog" label="rename bookmark"
+      <PromptDialog :visible="showBookmarkNameDialog" :label="$t('pdfViewer.renameBookmark')"
         :start-value="bookmarks[currentBookmarkIndex]?.label" @set-value="setBookmarkLabel"
         @close-dialog="showBookmarkNameDialog = false" />
       <q-space />
       <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'reload'" :disable="isRegeneratingPdf"
-        @click="regeneratePdf()">
+        :title="$t('pdfViewer.reload')" @click="regeneratePdf()">
         <q-circular-progress v-if="isRegeneratingPdf" indeterminate round size="1rem" />
       </q-btn>
       <q-space />
@@ -637,25 +700,25 @@ export default {
         color="light-blue" class="q-mx-md q-my-xs q-pa-xs" />
     </q-card-actions>
     <q-card-section>
-      <div class="vue-pdf-embed-container q-pa-md" @scroll="scrolled">
-        <VuePdfEmbed annotation-layer text-layer :scale="1" :page="debouncedPage" :width="width" :source="pdfSource"
-          @loaded="pdfLoaded" @progress="loadingProgress" @loading-failed="handleFailure" @rendered="rendered"
-          @rendering-failed="handleFailure" @click="clicked" @wheel="mouseWheel" />
+      <div class="pdf-image-container q-pa-md" @scroll="scrolled" @wheel.stop.prevent="mouseWheel">
+        <img v-if="displayedImageSource" class="pdf-image" :src="displayedImageSource"
+          :style="{ width: `${width}px` }" :alt="$t('pdfViewer.pageImage')" @dblclick="doubleClicked"
+          />
+        <img v-if="imageSource && imageSource !== displayedImageSource" class="pdf-image-preload"
+          :src="imageSource" alt="" @load="imageLoaded" @error="imageLoadFailed" />
       </div>
     </q-card-section>
   </q-card>
 </template>
 
 <style lang="scss">
-// @import 'pdfjs-dist/web/pdf_viewer.css';
-
 /** The next one is necessary to prevent the PdfViewer from staying on top even when minified */
 .lazy-component-wrapper {
   position: relative !important;
   z-index: auto !important;
 }
 
-.vue-pdf-embed-container {
+.pdf-image-container {
   overflow: scroll;
   width: 100%;
   max-height: 88vh;
@@ -663,14 +726,18 @@ export default {
   box-shadow: 0 2px 8px 4px rgba(0, 0, 0, 0.1);
 }
 
-.vue-pdf-embed {
-  // margin: auto;
-  max-width: 480px;
+.pdf-image {
+  display: block;
+  margin-bottom: 8px;
+  margin-right: 8px;
+  box-shadow: 0 2px 8px 4px rgba(0, 255, 0, 0.2);
+}
 
-  &>div canvas {
-    margin-bottom: 8px;
-    margin-right: 8px;
-    box-shadow: 0 2px 8px 4px rgba(0, 255, 0, 0.2);
-  }
+.pdf-image-preload {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 </style>
