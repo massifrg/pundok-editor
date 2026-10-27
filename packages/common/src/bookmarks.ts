@@ -1,6 +1,6 @@
 import { splitFolderAndDoc } from "./folders";
 
-export type PundokBookmarkType = 'document' | 'project';
+export type PundokBookmarkType = 'document' | 'project' | 'rendering';
 
 export interface DocumentBookmark {
   type: 'document';
@@ -15,10 +15,30 @@ export interface ProjectBookmark {
   url: string;
 }
 
+export interface RenderingBookmark {
+  type: 'rendering';
+  url: string;
+  documentPath: string;
+  converterName: string;
+  configurationName?: string;
+  pageBookmarks?: RenderingPageBookmark[];
+}
+
+export interface RenderingPageBookmark {
+  label: string;
+  page: number;
+  magnify: number;
+  scrollTopPerc: number;
+  scrollLeftPerc: number;
+}
+
 /**
- * A document or a project recently opened.
+ * A document, project, or rendering recently opened.
  */
-export type PundokBookmark = DocumentBookmark | ProjectBookmark;
+export type PundokBookmark =
+  | DocumentBookmark
+  | ProjectBookmark
+  | RenderingBookmark;
 
 interface BookmarkLabel {
   label: string,
@@ -28,6 +48,14 @@ interface BookmarkLabel {
 
 export function bookmarkLabel(b: PundokBookmark): BookmarkLabel {
   const { type, url } = b
+  if (type === 'rendering') {
+    const path = url && decodeURIComponent(url.replace(/^file:\/\//, '')) || ''
+    return {
+      label: b.converterName,
+      sublabel: path,
+      tooltip: url,
+    }
+  }
   const isProject = type === 'project'
   const { name } = b as ProjectBookmark
   const { id, configurationName } = b as DocumentBookmark

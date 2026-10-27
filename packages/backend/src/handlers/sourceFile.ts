@@ -9,6 +9,7 @@ import type {
 import type { FeedbackSink } from '../feedback';
 import { isReadableFile, type BackendDirectories } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
+import { computeProjectFromDocFile } from './project';
 
 export interface SourceLocation {
   path: string;
@@ -21,7 +22,7 @@ export async function getSourceLocation(
   editorKey: EditorKeyType,
   info: SynctexInfo,
 ): Promise<SourceLocation | undefined> {
-  const { outputFile, page, rx, ry, projectAsJson } = info;
+  const { outputFile, page, rx, ry, projectAsJson, sourceDocumentPath } = info;
   feedback.report(
     {
       type: 'progress',
@@ -95,9 +96,16 @@ export async function getSourceLocation(
   const match = /filename='(.*?)'.*?linenumber='(\d+)'/.exec(sourceInfo.output);
   if (!match) return undefined;
   const [, filename, line] = match;
-  const project = projectAsJson
+  let project = projectAsJson
     ? (JSON.parse(projectAsJson) as PundokEditorProject)
     : undefined;
+  if (!project && sourceDocumentPath) {
+    try {
+      project = await computeProjectFromDocFile(directories, sourceDocumentPath);
+    } catch {
+      project = undefined;
+    }
+  }
   return {
     path:
       !isAbsolute(filename) && project?.path

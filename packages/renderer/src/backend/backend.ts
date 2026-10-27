@@ -14,6 +14,7 @@ import type {
   PandocFilterTransform,
   SynctexInfo,
   RenderingJob,
+  RenderingBookmark,
   GetProjectOptions,
   FolderContents,
   PundokBookmarkType,
@@ -101,6 +102,7 @@ export interface Backend {
    * @param bookmarkType
    */
   getBookmarks(bookmarkType?: PundokBookmarkType): Promise<PundokBookmark[]>;
+  updateBookmarks(bookmarks: PundokBookmark[]): Promise<boolean>;
 
   /**
    * Retrieves a document from the backend.
@@ -231,7 +233,7 @@ export interface Backend {
 
   gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void>;
 
-  renderAgain(hash: string, editorKey: EditorKeyType): Promise<void>;
+  renderAgain(bookmark: RenderingBookmark, editorKey: EditorKeyType): Promise<void>;
 
   stopRendering(converterName: string, path: string): Promise<boolean>;
   stopTransformation(editorKey: EditorKeyType): Promise<boolean>;

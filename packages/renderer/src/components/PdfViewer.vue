@@ -208,7 +208,8 @@ import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import {
   EditorKeyType,
-  RenderingJob,
+  RenderingBookmark,
+  RenderingPageBookmark,
   SYNCTEX_CONTEXT_REQUIRED,
   SetupViewerActionProps,
   SynctexInfo,
@@ -224,13 +225,7 @@ interface PdfContent {
   content?: string,
 }
 
-interface ViewerBookmark {
-  label: string,
-  page: number,
-  magnify: number,
-  scrollTopPerc: number,
-  scrollLeftPerc: number
-}
+interface ViewerBookmark extends RenderingPageBookmark {}
 
 const baseWidth = 500
 const magnifyFactor = 1.1
@@ -262,7 +257,7 @@ export default {
       displayedImageSource: undefined as string | undefined,
       contentHash: undefined as string | undefined,
       isRendering: false,
-      regeneratingHash: undefined as string | undefined,
+      regeneratingUrl: undefined as string | undefined,
       regeneratingTarget: undefined as {
         converterName: string,
         path: string,
@@ -276,7 +271,7 @@ export default {
       isUpdated: false,
       documentHash: undefined as string | undefined,
       imageVersion: 0,
-      renderingJobs: {} as Record<string, RenderingJob>,
+      renderingJobs: {} as Record<string, RenderingBookmark>,
       editorKey: undefined as EditorKeyType | undefined,
       showPageDialog: false,
       showBookmarkNameDialog: false,
@@ -295,7 +290,7 @@ export default {
       return []
     },
     isRegeneratingPdf(): boolean {
-      return !!this.regeneratingHash
+      return !!this.regeneratingUrl
     },
     imageSource(): string | undefined {
       if (!this.filename) return undefined
@@ -323,7 +318,18 @@ export default {
       this.width = baseWidth * magnify
     }, 500))
   },
+  mounted() {
+    void this.loadRenderingJobs()
+  },
   methods: {
+    async loadRenderingJobs() {
+      const bookmarks = await this.backend?.getBookmarks('rendering') || []
+      for (const bookmark of bookmarks as RenderingBookmark[]) {
+        this.renderingJobs[bookmark.url] = bookmark
+        if (bookmark.pageBookmarks)
+          this.documentBookmarks[bookmark.url] = bookmark.pageBookmarks
+      }
+    },
     async setupViewer(setup?: ViewerSetup) {
       if (setup) {
         const {
@@ -338,12 +344,20 @@ export default {
         } = setup
         const hash = documentHash || filename
         this.imageVersion += 1
+        const rendering = Object.values(this.renderingJobs).find(
+          (item) => this.renderingPath(item.url) === filename,
+        )
         const finishedTarget =
-          this.regeneratingHash === hash ? this.regeneratingTarget : undefined
+          this.regeneratingUrl &&
+            this.renderingPath(this.regeneratingUrl) === filename
+            ? this.regeneratingTarget
+            : undefined
         this.isUpdated = this.documentHash !== hash
         this.documentHash = hash
-        this.rememberExportJob(hash)
-        this.regeneratingHash = undefined
+        if (rendering?.pageBookmarks)
+          this.documentBookmarks[hash] = rendering.pageBookmarks
+        this.rememberExportJob(hash, filename)
+        this.regeneratingUrl = undefined
         this.regeneratingTarget = undefined
         if (finishedTarget)
           this.$emit('rendering-finished', finishedTarget.converterName, finishedTarget.path)
@@ -352,11 +366,21 @@ export default {
         await this.loadPdf({ filename, content })
       }
     },
-    async rememberExportJob(hash: string) {
+    async rememberExportJob(hash: string, resultPath?: string) {
       if (hash) {
         const job = await this.backend?.getRenderingJob(hash)
         if (job) {
-          this.renderingJobs[hash] = job
+          const current = Object.values(this.renderingJobs).find(
+            (item) => this.renderingPath(item.url) === resultPath,
+          )
+          this.renderingJobs[resultPath || job.path] = {
+            type: 'rendering',
+            url: resultPath || job.path,
+            documentPath: job.path,
+            converterName: job.converter.name,
+            configurationName: job.configurationName,
+            pageBookmarks: current?.pageBookmarks,
+          }
         }
       }
     },
@@ -424,29 +448,26 @@ export default {
         })
       }
     },
-    async regeneratePdf(hash?: string) {
-      const h = hash || this.documentHash
-      if (!h || !this.editorKey || !this.backend) return
-      this.regeneratingHash = h
+    async regeneratePdf(bookmark?: RenderingBookmark) {
+      const rendering = bookmark || Object.values(this.renderingJobs).find(
+        (item) => this.renderingPath(item.url) === this.filename,
+      )
+      if (!rendering || !this.editorKey || !this.backend) return
+      this.regeneratingUrl = rendering.url
       try {
-        const job = this.renderingJobs[h] || await this.backend.getRenderingJob(h)
-        if (!job) {
-          this.regeneratingHash = undefined
-          return
-        }
         this.regeneratingTarget = {
-          converterName: job.converter.name,
-          path: job.path,
+          converterName: rendering.converterName,
+          path: rendering.documentPath,
         }
-        this.$emit('rendering-started', job.converter.name, job.path)
-        await this.backend.renderAgain(h, this.editorKey)
-        if (this.regeneratingHash === h && this.regeneratingTarget) {
+        this.$emit('rendering-started', rendering.converterName, rendering.documentPath)
+        await this.backend.renderAgain(rendering, this.editorKey)
+        if (this.regeneratingUrl === rendering.url && this.regeneratingTarget) {
           this.$emit(
             'rendering-finished',
             this.regeneratingTarget.converterName,
             this.regeneratingTarget.path,
           )
-          this.regeneratingHash = undefined
+          this.regeneratingUrl = undefined
           this.regeneratingTarget = undefined
         }
       } catch (err) {
@@ -457,7 +478,7 @@ export default {
             this.regeneratingTarget.path,
           )
         }
-        if (this.regeneratingHash === h) this.regeneratingHash = undefined
+        if (this.regeneratingUrl === rendering.url) this.regeneratingUrl = undefined
         this.regeneratingTarget = undefined
         this.$q.notify({
           message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRegenerate'),
@@ -540,12 +561,16 @@ export default {
       const { rx, ry } = this.coordinatesOnRasterImage(e, e.target)
       if (this.filename) {
         try {
+          const rendering = Object.values(this.renderingJobs).find(
+            (item) => this.renderingPath(item.url) === this.filename,
+          )
           await this.backend?.gotoSource(this.editorKey, {
             outputFile: toRaw(this.filename),
             page: toRaw(this.page),
             rx,
             ry,
-            projectAsJson: toRaw(this.projectAsJson)
+            projectAsJson: toRaw(this.projectAsJson),
+            sourceDocumentPath: rendering?.documentPath,
           } as SynctexInfo)
         } catch (err) {
           const message = err instanceof Error ? err.message : undefined
@@ -612,6 +637,26 @@ export default {
       // console.log(bookmarks)
       if (key)
         this.documentBookmarks[key] = bookmarks
+      const rendering = Object.values(this.renderingJobs).find(
+        (item) => this.renderingPath(item.url) === this.filename,
+      )
+      if (rendering && this.backend)
+        void this.updateRenderingBookmark(rendering, bookmarks)
+    },
+    async updateRenderingBookmark(
+      rendering: RenderingBookmark,
+      bookmarks: ViewerBookmark[],
+    ) {
+      const updated: RenderingBookmark = {
+        ...toRaw(rendering),
+        pageBookmarks: bookmarks.map((bookmark) => ({ ...toRaw(bookmark) })),
+      }
+      try {
+        if (await this.backend?.updateBookmarks([updated]))
+          this.renderingJobs[rendering.url] = updated
+      } catch (err) {
+        console.error('Unable to save rendering page bookmarks', err)
+      }
     },
     setBookmark(label?: string) {
       const page = this.page
@@ -669,10 +714,16 @@ export default {
       this.showBookmarkNameDialog = false
       this.currentBookmarkIndex = -1
     },
-    async showAgain(hash: string) {
-      if (!this.backend || !this.editorKey) return
+    renderingPath(url: string) {
+      return decodeURIComponent(url.replace(/^file:\/\//, ''))
+    },
+    async showAgain(bookmark: RenderingBookmark) {
       try {
-        await this.backend.showAgain(hash, this.editorKey)
+        await this.setupViewer({
+          name: this.renderingPath(bookmark.url),
+          content: '',
+          documentHash: bookmark.url,
+        })
       } catch (err) {
         this.$q.notify({
           message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRecallRendering'),
@@ -724,10 +775,11 @@ export default {
       </q-btn-dropdown>
       <q-btn-dropdown :title="$t('pdfViewer.showRenderings')">
         <q-list>
-          <q-item v-for="[h, j] in Object.entries(renderingJobs)" :disable="h === documentHash" clickable v-close-popup
-            :title="h" @click="showAgain(h)">
+          <q-item v-for="j in Object.values(renderingJobs)"
+            :disable="renderingPath(j.url) === filename" clickable v-close-popup
+            :title="j.url" @click="showAgain(j)">
             <q-item-section>
-              <q-item-label>{{ j.path }}</q-item-label>
+              <q-item-label>{{ j.url }}</q-item-label>
             </q-item-section>
           </q-item>
         </q-list>

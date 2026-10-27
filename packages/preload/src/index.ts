@@ -31,6 +31,7 @@ import {
   PandocFormatExtension,
   PundokBookmark,
   PundokBookmarkType,
+  RenderingBookmark,
   PundokEditorConfigInit,
   PundokEditorProject,
   QueryResult,
@@ -61,6 +62,7 @@ export interface Ipc {
   getBookmarks: (
     bookmarkType?: PundokBookmarkType,
   ) => Promise<PundokBookmark[]>;
+  updateBookmarks: (bookmarks: PundokBookmark[]) => Promise<boolean>;
 
   getValue: (key: BackendValueKey) => Promise<DocRepository[]>;
 
@@ -113,7 +115,7 @@ export interface Ipc {
 
   showRenderedAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>;
 
-  renderAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>;
+  renderAgain: (bookmark: RenderingBookmark, editorKey: EditorKeyType) => Promise<void>;
 
   stopRendering: (converterName: string, path: string) => Promise<boolean>;
   stopTransformation: (editorKey: EditorKeyType) => Promise<boolean>;
@@ -195,6 +197,8 @@ contextBridge.exposeInMainWorld('ipc', {
   saveDocument: (doc: string) => ipcRenderer.invoke('save-document', doc),
   getBookmarks: (bookmarkType?: PundokBookmarkType) =>
     ipcRenderer.invoke('get-bookmarks', bookmarkType),
+  updateBookmarks: (bookmarks: PundokBookmark[]) =>
+    ipcRenderer.invoke('update-bookmarks', bookmarks),
   getValue: (key: BackendValueKey) => ipcRenderer.invoke('get-value', key),
   availableConfigurations: (options?: ConfigQueryOptions) =>
     ipcRenderer.invoke('available-configurations', options),
@@ -236,8 +240,8 @@ contextBridge.exposeInMainWorld('ipc', {
     ipcRenderer.invoke('get-source-file', editorKey, info),
   showRenderedAgain: (hash: string, editorKey: EditorKeyType) =>
     ipcRenderer.invoke('show-rendered-again', hash, editorKey),
-  renderAgain: (hash: string, editorKey: EditorKeyType) =>
-    ipcRenderer.invoke('render-again', hash, editorKey),
+  renderAgain: (bookmark: RenderingBookmark, editorKey: EditorKeyType) =>
+    ipcRenderer.invoke('render-again', bookmark, editorKey),
   stopRendering: (converterName: string, path: string) =>
     ipcRenderer.invoke('stop-rendering', converterName, path),
   stopTransformation: (editorKey: EditorKeyType) =>

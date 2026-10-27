@@ -15,6 +15,7 @@ import type {
   PandocFilterTransform,
   SynctexInfo,
   RenderingJob,
+  RenderingBookmark,
   GetProjectOptions,
   FolderContents,
   PundokBookmarkType,
@@ -128,6 +129,10 @@ export class NetBackend implements Backend {
     return this.request('get-bookmarks', { bookmarkType });
   }
 
+  updateBookmarks(bookmarks: PundokBookmark[]): Promise<boolean> {
+    return this.request('update-bookmarks', { bookmarks });
+  }
+
   open(context: DocumentContext): Promise<CxDocument> {
     return this.request('open-document', { context });
   }
@@ -222,8 +227,8 @@ export class NetBackend implements Backend {
     return this.request('get-source-file', { editorKey, info });
   }
 
-  renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    return this.request('render-again', { hash, editorKey });
+  renderAgain(bookmark: RenderingBookmark, editorKey: EditorKeyType): Promise<void> {
+    return this.request('render-again', { bookmark, editorKey });
   }
 
   stopRendering(converterName: string, path: string): Promise<boolean> {

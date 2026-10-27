@@ -35,6 +35,7 @@ import {
   PandocFilterTransform,
   SynctexInfo,
   RenderingJob,
+  RenderingBookmark,
   BackendFeedbackActionProps,
   BackendSetProjectActionProps,
   BackendSetConfigNameActionProps,
@@ -286,6 +287,10 @@ export class LocalBackend implements Backend {
     return window.ipc.getBookmarks(bookmarkType);
   }
 
+  updateBookmarks(bookmarks: PundokBookmark[]): Promise<boolean> {
+    return window.ipc.updateBookmarks(bookmarks);
+  }
+
   async open(context: DocumentContext): Promise<CxDocument> {
     try {
       return window.ipc.openDocument(JSON.stringify(context));
@@ -456,8 +461,8 @@ export class LocalBackend implements Backend {
     window.ipc.showRenderedAgain(hash, editorKey);
   }
 
-  async renderAgain(hash: string, editorKey: EditorKeyType): Promise<void> {
-    await window.ipc.renderAgain(hash, editorKey);
+  async renderAgain(bookmark: RenderingBookmark, editorKey: EditorKeyType): Promise<void> {
+    await window.ipc.renderAgain(bookmark, editorKey);
   }
 
   stopRendering(converterName: string, path: string): Promise<boolean> {

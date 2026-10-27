@@ -73,4 +73,41 @@ describe('updateBookmarks', () => {
       'document contents',
     );
   });
+
+  it('removes rendering bookmarks whose result files no longer exist', async () => {
+    const resultPath = join(userDataDir, 'result.pdf');
+    await writeFile(resultPath, 'pdf');
+    await writeFile(
+      join(userDataDir, BOOKMARKS_FILENAME),
+      JSON.stringify([
+        {
+          type: 'rendering',
+          url: pathToFileURL(resultPath).href,
+          documentPath: join(userDataDir, 'source.md'),
+          pageBookmarks: [{
+            label: 'Introduction',
+            page: 2,
+            magnify: 1.5,
+            scrollTopPerc: 0.25,
+            scrollLeftPerc: 0.1,
+          }],
+        },
+        {
+          type: 'rendering',
+          url: pathToFileURL(join(userDataDir, 'missing.pdf')).href,
+          documentPath: join(userDataDir, 'source.md'),
+        },
+      ]),
+    );
+
+    await expect(getBookmarks(directories, 'rendering')).resolves.toEqual([
+      expect.objectContaining({
+        documentPath: join(userDataDir, 'source.md'),
+        pageBookmarks: [expect.objectContaining({ page: 2 })],
+      }),
+    ]);
+    expect(
+      JSON.parse(await readFile(join(userDataDir, BOOKMARKS_FILENAME), 'utf8')),
+    ).toHaveLength(1);
+  });
 });

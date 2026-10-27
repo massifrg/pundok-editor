@@ -3,48 +3,31 @@ import { IpcMainInvokeEvent } from "electron";
 import { stringify } from "../utils";
 import {
   desktopRenderingJobStore,
-  exportDocument,
   feedbackSink,
-  getRenderingJobWithHash,
+  renderAgain,
 } from "../backend";
-import { EditorKeyType, CxDocument, DocumentFormat } from "../common";
+import { EditorKeyType, RenderingBookmark } from "../common";
 import { backendDirectories } from "../resourcesManager";
 
 export const renderAgainHandler =
   (hub: IpcHub) =>
     async (
       e: IpcMainInvokeEvent,
-      documentHash: string,
+      bookmark: RenderingBookmark,
       editorKey: EditorKeyType,
     ): Promise<void> => {
-      const job = getRenderingJobWithHash(documentHash)
-      if (job) {
-        const { path, converter, configurationName, project } = job
-        const documentFormat: DocumentFormat = {
-          ftype: 'output-converter',
-          ...converter
-        }
-        const sdoc: CxDocument = {
-          path,
-          documentFormat,
-          configurationName,
-          content: '',
-          project,
+      try {
+        await renderAgain(
+          backendDirectories(),
+          hub,
+          feedbackSink(hub),
+          desktopRenderingJobStore(),
+          bookmark,
           editorKey,
-        }
-        try {
-          await exportDocument(
-            backendDirectories(),
-            hub,
-            feedbackSink(hub),
-            desktopRenderingJobStore(),
-            sdoc,
-            true,
-          )
-        } catch (error) {
-          const msg = stringify(error)
-          console.log(msg)
-          return Promise.reject(msg)
-        }
+        )
+      } catch (error) {
+        const msg = stringify(error)
+        console.log(msg)
+        return Promise.reject(msg)
       }
     }

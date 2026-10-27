@@ -125,6 +125,12 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/update-bookmarks',
+    asyncHandler((req) =>
+      backend.updateBookmarks(username(req), req.body?.bookmarks || []),
+    ),
+  );
+  router.post(
     '/get-value',
     asyncHandler((req) => backend.getValue(username(req), req.body?.key)),
   );
@@ -238,7 +244,7 @@ export function createBackendRouter(
   router.post(
     '/render-again',
     asyncHandler((req) =>
-      backend.renderAgain(username(req), req.body?.hash, req.body?.editorKey),
+      backend.renderAgain(username(req), req.body?.bookmark, req.body?.editorKey),
     ),
   );
   router.post(

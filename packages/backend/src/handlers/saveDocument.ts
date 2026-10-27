@@ -6,6 +6,7 @@ import {
   type CxDocument,
   type ExternalProgramResult,
   type SaveResponse,
+  type RenderingBookmark,
   type ServerMessageForViewer,
   type ServerMessageSetProject,
 } from '../../../common/src';
@@ -183,6 +184,16 @@ export async function exportDocument(
       commandLine: result.commandLine,
       cwd,
     };
+    if (savedPath) {
+      const renderingBookmark: RenderingBookmark = {
+        type: 'rendering',
+        url: toFileUrl(savedPath),
+        documentPath: sourceFile,
+        converterName: converter!.name,
+        configurationName: doc.project ? undefined : doc.configurationName,
+      };
+      await updateBookmarks(directories, [renderingBookmark]);
+    }
     if (resultFile && converter?.openResult === 'editor') {
       const viewer: ServerMessageForViewer = {
         type: 'viewer',

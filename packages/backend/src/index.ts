@@ -25,6 +25,7 @@ export * from './handlers/inclusionTree';
 export * from './handlers/query';
 export * from './handlers/transformJson';
 export * from './handlers/showAgain';
+export * from './handlers/renderAgain';
 export * from './handlers/sourceFile';
 export * from './handlers/openDocument';
 export * from './handlers/saveDocument';

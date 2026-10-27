@@ -6,4 +6,5 @@ export interface SynctexInfo {
   rx: number,
   ry: number,
   projectAsJson?: string,
+  sourceDocumentPath?: string,
 }

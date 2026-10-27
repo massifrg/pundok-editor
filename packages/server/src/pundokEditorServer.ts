@@ -17,6 +17,7 @@ import type {
   FolderContents,
   PundokBookmarkType,
   PundokBookmark,
+  RenderingBookmark,
   PandocFeatureName,
   PandocFeatureOptions,
   ConfigQueryOptions,
@@ -45,6 +46,7 @@ import {
   getAvailableConfigurationSummaries,
   getBackendDebugInfo,
   getBookmarks,
+  updateBookmarks as persistBookmarks,
   getFileContents,
   findResourceFilesWithProvenance,
   getFolderContents,
@@ -58,6 +60,7 @@ import {
   feedbackSink,
   getSourceLocation,
   showAgain,
+  renderAgain as renderRenderingAgain,
   createFolder,
   createProject,
   editorReady,
@@ -316,6 +319,13 @@ export class PundokEditorServer {
     return getBookmarks(this.directoriesForUser(user), bookmarkType);
   }
 
+  async updateBookmarks(
+    user: string,
+    bookmarks: PundokBookmark[],
+  ): Promise<boolean> {
+    return persistBookmarks(this.directoriesForUser(user), bookmarks);
+  }
+
   async open(user: string, context: DocumentContext): Promise<CxDocument> {
     return openDocument(
       this.directoriesForUser(user),
@@ -545,11 +555,18 @@ export class PundokEditorServer {
   }
 
   async renderAgain(
-    _user: string,
-    hash: string,
+    user: string,
+    bookmark: RenderingBookmark,
     editorKey: EditorKeyType,
   ): Promise<void> {
-    throw new Error('Method not implemented.');
+    return renderRenderingAgain(
+      this.directoriesForUser(user),
+      this.rendererHub(user),
+      feedbackSink(this.rendererHub(user)),
+      this.renderingJobsForUser(user),
+      bookmark,
+      editorKey,
+    );
   }
 
   async getRenderingJob(
@@ -764,6 +781,9 @@ export class PundokEditorServer {
     return {
       ...info,
       outputFile: this.userPath(username, info.outputFile),
+      sourceDocumentPath: info.sourceDocumentPath
+        ? this.userPath(username, info.sourceDocumentPath)
+        : undefined,
       projectAsJson: project ? JSON.stringify(project) : undefined,
     };
   }

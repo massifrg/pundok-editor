@@ -20,6 +20,7 @@ import {
   getAvailableConfigurationSummaries,
   getBackendDebugInfo,
   getBookmarks,
+  updateBookmarks,
   getValue,
   getPandocFeature,
   getRenderingJobWithHash,
@@ -198,6 +199,9 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('get-bookmarks', (_event, bookmarkType) =>
       getBookmarks(backendDirectories(), bookmarkType),
+    );
+    ipcMain.handle('update-bookmarks', (_event, bookmarks) =>
+      updateBookmarks(backendDirectories(), bookmarks),
     );
     ipcMain.handle('get-value', (_event, key) =>
       getValue(backendDirectories(), key),
