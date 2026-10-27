@@ -754,7 +754,7 @@ export default {
         @click="lastPage" />
       <q-btn size="sm" icon="zoom_out" :disabled="magnify < 0.11" :title="$t('pdfViewer.zoomOut')"
         @click="decreaseScale" />
-      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblClick="resetScale" />
+      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblclick="resetScale" />
       <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" :title="$t('pdfViewer.zoomIn')"
         @click="increaseScale" />
       <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
