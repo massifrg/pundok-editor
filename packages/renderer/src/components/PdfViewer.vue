@@ -275,7 +275,8 @@ export default {
       currentBookmarkIndex: -1,
       isUpdated: false,
       documentHash: undefined as string | undefined,
-      exportJobs: {} as Record<string, RenderingJob>,
+      imageVersion: 0,
+      renderingJobs: {} as Record<string, RenderingJob>,
       editorKey: undefined as EditorKeyType | undefined,
       showPageDialog: false,
       showBookmarkNameDialog: false,
@@ -298,7 +299,9 @@ export default {
     },
     imageSource(): string | undefined {
       if (!this.filename) return undefined
-      const version = encodeURIComponent(this.documentHash || '')
+      const version = encodeURIComponent(
+        `${this.documentHash || ''}-${this.imageVersion}`,
+      )
       if (window.ipc)
         return `img://${this.filename}?page=${this.page - 1}&version=${version}`
       return `/backend/image?path=${encodeURIComponent(this.filename)}&page=${this.page - 1}&version=${version}`
@@ -334,6 +337,7 @@ export default {
           documentHash,
         } = setup
         const hash = documentHash || filename
+        this.imageVersion += 1
         const finishedTarget =
           this.regeneratingHash === hash ? this.regeneratingTarget : undefined
         this.isUpdated = this.documentHash !== hash
@@ -352,7 +356,7 @@ export default {
       if (hash) {
         const job = await this.backend?.getRenderingJob(hash)
         if (job) {
-          this.exportJobs[hash] = job
+          this.renderingJobs[hash] = job
         }
       }
     },
@@ -425,7 +429,7 @@ export default {
       if (!h || !this.editorKey || !this.backend) return
       this.regeneratingHash = h
       try {
-        const job = this.exportJobs[h] || await this.backend.getRenderingJob(h)
+        const job = this.renderingJobs[h] || await this.backend.getRenderingJob(h)
         if (!job) {
           this.regeneratingHash = undefined
           return
@@ -690,23 +694,29 @@ export default {
       -->
       <q-btn size="sm" icon='page_first' :title="$t('pdfViewer.firstPage')" :disabled="page <= 1" @click="firstPage" />
       <q-btn size="sm" icon='page_left' :title="$t('pdfViewer.previousPage')" :disabled="page <= 1" @click="prevPage" />
-      <q-chip :label="page" size="md" @wheel="pageWheel" clickable @click="showPageDialog = true" />
-      <PromptDialog :visible="showPageDialog" :label="$t('pdfViewer.goToPage')" :start-value="page.toString()" :validate="validatePage"
-        @set-value="setPage" @close-dialog="showPageDialog = false" />
-      <q-btn size="sm" icon='page_right' :title="$t('pdfViewer.nextPage')" :disabled="page >= maxPages" @click="nextPage" />
-      <q-btn size="sm" icon='page_last' :title="$t('pdfViewer.lastPage')" :disabled="page >= maxPages" @click="lastPage" />
-      <q-btn size="sm" icon="zoom_out" :disabled="magnify < 0.11" :title="$t('pdfViewer.zoomOut')" @click="decreaseScale" />
+      <q-chip :label="`${page}/${maxPages}`" size="md" @wheel="pageWheel" clickable @click="showPageDialog = true" />
+      <PromptDialog :visible="showPageDialog" :label="$t('pdfViewer.goToPage')" :start-value="page.toString()"
+        :validate="validatePage" @set-value="setPage" @close-dialog="showPageDialog = false" />
+      <q-btn size="sm" icon='page_right' :title="$t('pdfViewer.nextPage')" :disabled="page >= maxPages"
+        @click="nextPage" />
+      <q-btn size="sm" icon='page_last' :title="$t('pdfViewer.lastPage')" :disabled="page >= maxPages"
+        @click="lastPage" />
+      <q-btn size="sm" icon="zoom_out" :disabled="magnify < 0.11" :title="$t('pdfViewer.zoomOut')"
+        @click="decreaseScale" />
       <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblClick="resetScale" />
-      <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" :title="$t('pdfViewer.zoomIn')" @click="increaseScale" />
-      <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')" @click="setBookmark()" />
-      <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
-        @click="setBookmark()">
+      <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" :title="$t('pdfViewer.zoomIn')"
+        @click="increaseScale" />
+      <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
+        @click="setBookmark()" />
+      <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="bookmark_add"
+        :title="$t('pdfViewer.addBookmark')" @click="setBookmark()">
         <q-list>
           <q-item v-for="(bookmark, i) in bookmarks" clickable v-close-popup :label="bookmark.label"
             @click="recallBookmark(i)">
             <q-item-section side :title="$t('pdfViewer.editBookmark')"><q-icon name="bookmark_edit" color="primary"
                 @click="editBookmark(i)" /></q-item-section>
-            <q-item-section :title="$t('pdfViewer.removeBookmark')"><q-item-label>{{ bookmark.label }}</q-item-label></q-item-section>
+            <q-item-section :title="$t('pdfViewer.removeBookmark')"><q-item-label>{{ bookmark.label
+                }}</q-item-label></q-item-section>
             <q-item-section side :title="$t('pdfViewer.removeBookmark')"><q-icon name="bookmark_remove" color="primary"
                 @click="removeBookmark(i)" /></q-item-section>
           </q-item>
@@ -714,7 +724,7 @@ export default {
       </q-btn-dropdown>
       <q-btn-dropdown :title="$t('pdfViewer.showRenderings')">
         <q-list>
-          <q-item v-for="[h, j] in Object.entries(exportJobs)" :disable="h === documentHash" clickable v-close-popup
+          <q-item v-for="[h, j] in Object.entries(renderingJobs)" :disable="h === documentHash" clickable v-close-popup
             :title="h" @click="showAgain(h)">
             <q-item-section>
               <q-item-label>{{ j.path }}</q-item-label>
@@ -736,11 +746,10 @@ export default {
     </q-card-actions>
     <q-card-section>
       <div class="pdf-image-container q-pa-md" @scroll="scrolled" @wheel.stop.prevent="mouseWheel">
-        <img v-if="displayedImageSource" class="pdf-image" :src="displayedImageSource"
-          :style="{ width: `${width}px` }" :alt="$t('pdfViewer.pageImage')" @dblclick="doubleClicked"
-          />
-        <img v-if="imageSource && imageSource !== displayedImageSource" class="pdf-image-preload"
-          :src="imageSource" alt="" @load="imageLoaded" @error="imageLoadFailed" />
+        <img v-if="displayedImageSource" class="pdf-image" :src="displayedImageSource" :style="{ width: `${width}px` }"
+          :alt="$t('pdfViewer.pageImage')" @dblclick="doubleClicked" />
+        <img v-if="imageSource && imageSource !== displayedImageSource" class="pdf-image-preload" :src="imageSource"
+          alt="" @load="imageLoaded" @error="imageLoadFailed" />
       </div>
     </q-card-section>
   </q-card>
