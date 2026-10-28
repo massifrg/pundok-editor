@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import {
+  access,
   mkdir,
   readFile,
   readdir,
@@ -8,11 +9,27 @@ import {
   unlink,
   writeFile,
 } from 'node:fs/promises';
+import { constants as fsConstants } from 'node:fs';
 import { extname, join } from 'node:path';
 import { IMAGE_CACHE_MAX_AGE_MS } from '../../common/src';
 import { runExternalProgram } from '../../backend/src';
 
 export { IMAGE_CACHE_MAX_AGE_MS };
+
+export class PdfImageError extends Error {
+  constructor(
+    readonly kind: 'unreadable' | 'rasterization',
+    cause?: unknown,
+  ) {
+    super(
+      kind === 'unreadable'
+        ? 'Unable to read the PDF file'
+        : 'Unable to rasterize the PDF',
+      { cause },
+    );
+    this.name = 'PdfImageError';
+  }
+}
 
 const MIME_TYPES: Record<string, string> = {
   '.gif': 'image/gif',
@@ -29,12 +46,18 @@ export async function loadImage(
   cacheDirectory?: string,
 ): Promise<{ body: Buffer; contentType: string }> {
   if (extname(path).toLowerCase() === '.pdf') {
-    return {
-      body: cacheDirectory
-        ? await loadCachedPdfImage(path, page, cacheDirectory)
-        : await pdfToJpeg(path, page),
-      contentType: 'image/jpeg',
-    };
+    try {
+      await access(path, fsConstants.R_OK);
+      return {
+        body: cacheDirectory
+          ? await loadCachedPdfImage(path, page, cacheDirectory)
+          : await pdfToJpeg(path, page),
+        contentType: 'image/jpeg',
+      };
+    } catch (error) {
+      if (error instanceof PdfImageError) throw error;
+      throw new PdfImageError('unreadable', error);
+    }
   }
 
   const contentType = MIME_TYPES[extname(path).toLowerCase()];
@@ -110,8 +133,18 @@ async function pdfToJpeg(path: string, page?: string): Promise<Buffer> {
       if (source === 'out') chunks.push(chunk as Buffer);
     },
   );
-  const { exitCode, error } = await result;
-  if (exitCode !== 0) throw new Error(error || 'Unable to rasterize PDF image');
+  let externalResult;
+  try {
+    externalResult = await result;
+  } catch (error) {
+    throw new PdfImageError('rasterization', error);
+  }
+  const { exitCode, error } = externalResult;
+  if (exitCode !== 0)
+    throw new PdfImageError(
+      'unreadable',
+      new Error(error || 'Unable to read PDF image'),
+    );
   return Buffer.concat(chunks);
 }
 

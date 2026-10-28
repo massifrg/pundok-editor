@@ -49,6 +49,12 @@ describe('loadImage', () => {
     ).rejects.toThrow('Unsupported image format');
   });
 
+  it('reports a missing PDF as unreadable rather than a rasterization failure', async () => {
+    await expect(
+      loadImage(join(userDirectory, 'missing.pdf'), '0'),
+    ).rejects.toMatchObject({ kind: 'unreadable' });
+  });
+
   it('uses a cached PDF page until its source PDF changes', async () => {
     const pdf = join(userDirectory, 'image.pdf');
     const cacheDirectory = join(userDirectory, '.pundok-editor', 'image-cache');

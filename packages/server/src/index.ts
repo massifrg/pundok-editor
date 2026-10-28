@@ -5,6 +5,7 @@ import { createBackendDirectories } from '../../backend/src';
 import { AuthenticationError, JwtAuthentication } from './auth';
 import { EditorEventHub } from './editorEventHub';
 import { PundokEditorServer } from './pundokEditorServer';
+import { PdfImageError } from './image';
 import { createBackendRouter } from './routes';
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -68,6 +69,13 @@ async function startServer() {
     ) => {
       if (error instanceof AuthenticationError) {
         res.status(error.status).json({ error: error.message });
+        return;
+      }
+      if (error instanceof PdfImageError) {
+        res.status(error.kind === 'unreadable' ? 404 : 422).json({
+          error: error.message,
+          kind: error.kind,
+        });
         return;
       }
       console.error(error);

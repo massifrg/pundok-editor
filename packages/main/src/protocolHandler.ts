@@ -1,7 +1,8 @@
 import { WebContentsView } from "electron";
 import { createHash, randomUUID } from 'crypto';
 import { existsSync } from "fs";
-import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "fs/promises";
+import { access, mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "fs/promises";
+import { constants as fsConstants } from "fs";
 import { join, parse, resolve } from 'path';
 import { runExternalProgram } from "./runExternal";
 import { fileURLToPath } from "url";
@@ -36,15 +37,39 @@ export function handleImagesFor(view: WebContentsView) {
           blobType = 'image/jpeg'
           break
       }
-      const imageBuffer = loader
-        ? await loadCachedPdfImage(filepath, url.searchParams.get('page'), loader)
-        : await readFile(filepath);
-      // @ts-ignore
-      const blob = new Blob([imageBuffer], { type: blobType })
-      return new Response(blob, {
-        status: 200,
-        headers: { 'Content-Type': blob.type }
-      });
+      try {
+        if (loader) await access(filepath, fsConstants.R_OK);
+        const imageBuffer = loader
+          ? await loadCachedPdfImage(filepath, url.searchParams.get('page'), loader)
+          : await readFile(filepath);
+        // @ts-ignore
+        const blob = new Blob([imageBuffer], { type: blobType })
+        return new Response(blob, {
+          status: 200,
+          headers: { 'Content-Type': blob.type }
+        });
+      } catch (error) {
+        const accessError =
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          ['EACCES', 'ENOENT', 'EPERM'].includes(String(error.code));
+        const missingRasterizer =
+          loader && String(error).includes('ENOENT');
+        const kind = missingRasterizer ? 'rasterization' : 'unreadable';
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: loader && !missingRasterizer &&
+            (accessError || !existsSync(filepath) || !String(error).includes('ENOENT'))
+            ? 404
+            : loader
+              ? 422
+              : 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Pundok-Image-Error': kind,
+          },
+        });
+      }
     }
 
     async function loadCachedPdfImage(
@@ -91,7 +116,19 @@ export function handleImagesFor(view: WebContentsView) {
           }),
       );
     }
-    return new Response(null, { status: 404 })
+    return new Response(
+      JSON.stringify({
+        error: 'Unable to read the PDF file',
+        kind: 'unreadable',
+      }),
+      {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Pundok-Image-Error': 'unreadable',
+        },
+      },
+    )
   })
 }
 

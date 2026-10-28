@@ -602,10 +602,23 @@ export default {
       const whenRenderedCallback = this.whenRendered.pop()
       if (whenRenderedCallback) whenRenderedCallback()
     },
-    imageLoadFailed() {
+    async imageLoadFailed(e: Event) {
       this.isRendering = false
+      let message = this.$t('pdfViewer.unableRasterizeImageMagick')
+      const image = e.currentTarget as HTMLImageElement
+      const source = image.currentSrc || image.getAttribute('src')
+      try {
+        if (!source) throw new Error('The failed image has no source')
+        const response = await fetch(source)
+        const error = await response.json().catch(() => undefined)
+        if (error?.kind === 'unreadable' ||
+          response.headers.get('X-Pundok-Image-Error') === 'unreadable')
+          message = this.$t('pdfViewer.unableReadPdf')
+      } catch {
+        // The image protocol may reject failed requests without a response.
+      }
       this.$q.notify({
-        message: this.$t('pdfViewer.unableRasterizeImageMagick'),
+        message,
         color: 'warning',
         icon: 'message_warning',
       })

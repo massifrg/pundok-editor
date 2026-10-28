@@ -78,7 +78,7 @@ import {
 import { realpath } from 'node:fs/promises';
 import { isAbsolute, parse as parsePath, relative, resolve } from 'node:path';
 import { EditorEventHub } from './editorEventHub';
-import { loadImage } from './image';
+import { loadImage, PdfImageError } from './image';
 
 /**
  * A stub implementation of {@link Backend}, meant to run on a server
@@ -483,15 +483,21 @@ export class PundokEditorServer {
     path: string,
     page?: string,
   ): Promise<{ body: Buffer; contentType: string }> {
-    return loadImage(
-      await this.existingUserPath(user, path),
-      page,
-      resolve(
-        this.directoriesForUser(user).userDataDir,
-        '.pundok-editor',
-        'image-cache',
-      ),
-    );
+    try {
+      return await loadImage(
+        await this.existingUserPath(user, path),
+        page,
+        resolve(
+          this.directoriesForUser(user).userDataDir,
+          '.pundok-editor',
+          'image-cache',
+        ),
+      );
+    } catch (error) {
+      if (path.toLowerCase().endsWith('.pdf') && !(error instanceof PdfImageError))
+        throw new PdfImageError('unreadable', error);
+      throw error;
+    }
   }
 
   async getPdfPageCount(user: string, path: string) {
