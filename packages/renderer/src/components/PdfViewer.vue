@@ -301,7 +301,13 @@ export default {
     currentRendering(): RenderingBookmark | undefined {
       if (!this.filename) return undefined
       return Object.values(this.renderingJobs).find(
-        (item) => this.renderingPath(item.url) === this.filename,
+        (item) => this.isPdfRendering(item) &&
+          this.renderingPath(item.url) === this.filename,
+      )
+    },
+    renderingBookmarks(): RenderingBookmark[] {
+      return Object.values(this.renderingJobs).filter((item) =>
+        this.isPdfRendering(item),
       )
     },
     pageLayoutOptions() {
@@ -397,6 +403,7 @@ export default {
     async loadRenderingJobs() {
       const bookmarks = await this.backend?.getBookmarks('rendering') || []
       for (const bookmark of bookmarks as RenderingBookmark[]) {
+        if (!this.isPdfRendering(bookmark)) continue
         this.renderingJobs[bookmark.url] = bookmark
         if (bookmark.pageBookmarks)
           this.documentBookmarks[bookmark.url] = bookmark.pageBookmarks
@@ -417,7 +424,8 @@ export default {
         const hash = documentHash || filename
         this.imageVersion += 1
         const rendering = Object.values(this.renderingJobs).find(
-          (item) => this.renderingPath(item.url) === filename,
+          (item) => this.isPdfRendering(item) &&
+            this.renderingPath(item.url) === filename,
         )
         const finishedTarget =
           this.regeneratingUrl &&
@@ -442,12 +450,18 @@ export default {
       if (hash) {
         const job = await this.backend?.getRenderingJob(hash)
         if (job) {
+          const renderingPath = resultPath || job.path
+          if (!job.converter.longRendering ||
+            job.converter.extension !== 'pdf' ||
+            !this.isPdfPath(renderingPath))
+            return
           const current = Object.values(this.renderingJobs).find(
-            (item) => this.renderingPath(item.url) === resultPath,
+            (item) => this.isPdfRendering(item) &&
+              this.renderingPath(item.url) === renderingPath,
           )
-          this.renderingJobs[resultPath || job.path] = {
+          this.renderingJobs[renderingPath] = {
             type: 'rendering',
-            url: resultPath || job.path,
+            url: renderingPath,
             documentPath: job.path,
             converterName: job.converter.name,
             configurationName: job.configurationName,
@@ -716,7 +730,8 @@ export default {
       if (this.filename) {
         try {
           const rendering = Object.values(this.renderingJobs).find(
-            (item) => this.renderingPath(item.url) === this.filename,
+            (item) => this.isPdfRendering(item) &&
+              this.renderingPath(item.url) === this.filename,
           )
           await this.backend?.gotoSource(this.editorKey, {
             outputFile: toRaw(this.filename),
@@ -792,7 +807,8 @@ export default {
       if (key)
         this.documentBookmarks[key] = bookmarks
       const rendering = Object.values(this.renderingJobs).find(
-        (item) => this.renderingPath(item.url) === this.filename,
+        (item) => this.isPdfRendering(item) &&
+          this.renderingPath(item.url) === this.filename,
       )
       if (rendering && this.backend)
         void this.updateRenderingBookmark(rendering, bookmarks)
@@ -871,6 +887,12 @@ export default {
     renderingPath(url: string) {
       return decodeURIComponent(url.replace(/^file:\/\//, ''))
     },
+    isPdfPath(path: string) {
+      return path.toLowerCase().endsWith('.pdf')
+    },
+    isPdfRendering(bookmark: RenderingBookmark) {
+      return this.isPdfPath(this.renderingPath(bookmark.url))
+    },
     async showAgain(bookmark: RenderingBookmark) {
       try {
         await this.setupViewer({
@@ -935,7 +957,7 @@ export default {
       </q-btn-dropdown>
       <q-btn-dropdown :title="$t('pdfViewer.showRenderings')">
         <q-list>
-          <q-item v-for="j in Object.values(renderingJobs)"
+          <q-item v-for="j in renderingBookmarks"
             :disable="renderingPath(j.url) === filename" clickable v-close-popup
             :title="j.url" @click="showAgain(j)">
             <q-item-section>

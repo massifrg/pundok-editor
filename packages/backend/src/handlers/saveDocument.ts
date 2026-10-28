@@ -4,6 +4,7 @@ import {
   DEFAULT_DOCUMENT_FORMAT,
   documentFormatToOutputConverter,
   type CxDocument,
+  type DocumentBookmark,
   type ExternalProgramResult,
   type SaveResponse,
   type RenderingBookmark,
@@ -79,9 +80,9 @@ export async function exportDocument(
   const cwd = localizePath(doc.project?.path || parse(sourceFile).dir);
   let resultFile = converter?.resultFile
     ? expandCommandArgs([converter.resultFile], {
-        path: sourceFile,
-        project: doc.project,
-      })[0]
+      path: sourceFile,
+      project: doc.project,
+    })[0]
     : undefined;
   if (resultFile && !isAbsolute(resultFile)) resultFile = resolve(cwd, resultFile);
   const resourcesPaths = validResourcePaths(
@@ -185,14 +186,22 @@ export async function exportDocument(
       cwd,
     };
     if (savedPath) {
-      const renderingBookmark: RenderingBookmark = {
-        type: 'rendering',
-        url: toFileUrl(savedPath),
-        documentPath: sourceFile,
-        converterName: converter!.name,
-        configurationName: doc.project ? undefined : doc.configurationName,
-      };
-      await updateBookmarks(directories, [renderingBookmark]);
+      const bookmark: RenderingBookmark | DocumentBookmark =
+        converter?.longRendering === true && converter.extension === 'pdf'
+          ? {
+            type: 'rendering',
+            url: toFileUrl(savedPath),
+            documentPath: sourceFile,
+            converterName: converter.name,
+            configurationName: doc.project ? undefined : doc.configurationName,
+          }
+          : {
+            type: 'document',
+            id: doc.id,
+            url: toFileUrl(savedPath),
+            configurationName: doc.project ? undefined : doc.configurationName,
+          };
+      await updateBookmarks(directories, [bookmark]);
     }
     if (resultFile && converter?.openResult === 'editor') {
       const viewer: ServerMessageForViewer = {
