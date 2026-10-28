@@ -817,6 +817,10 @@ export default {
     </q-card-actions>
     <q-card-section>
       <div class="pdf-image-container q-pa-md" @scroll="scrolled" @wheel.stop.prevent="mouseWheel">
+        <div v-if="isRendering" class="pdf-image-loading">
+          <q-circular-progress indeterminate rounded size="3rem" color="light-blue"
+            track-color="grey-4" />
+        </div>
         <img v-if="displayedImageSource" class="pdf-image" :src="displayedImageSource" :style="{ width: `${width}px` }"
           :alt="$t('pdfViewer.pageImage')" @dblclick="doubleClicked" />
         <img v-if="imageSource && imageSource !== displayedImageSource" class="pdf-image-preload" :src="imageSource"
@@ -834,11 +838,23 @@ export default {
 }
 
 .pdf-image-container {
+  position: relative;
   overflow: scroll;
   width: 100%;
   max-height: 88vh;
   margin-bottom: 4px;
   box-shadow: 0 2px 8px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-image-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
 }
 
 .pdf-image {
