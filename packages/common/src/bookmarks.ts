@@ -30,6 +30,8 @@ export interface RenderingPageBookmark {
   magnify: number;
   scrollTopPerc: number;
   scrollLeftPerc: number;
+  twoPageSpread?: boolean;
+  firstPageOnRight?: boolean;
 }
 
 /**

@@ -560,6 +560,8 @@ export default {
             magnify: bookmark.magnify,
             scrollTopPerc: bookmark.scrollTopPerc,
             scrollLeftPerc: bookmark.scrollLeftPerc,
+            twoPageSpread: bookmark.twoPageSpread,
+            firstPageOnRight: bookmark.firstPageOnRight,
           })),
         }
         await this.backend.renderAgain(renderingPayload, this.editorKey)
@@ -838,6 +840,8 @@ export default {
           magnify: this.magnify,
           scrollLeftPerc: this.scrollLeftPerc,
           scrollTopPerc: this.scrollTopPerc,
+          twoPageSpread: this.twoPageSpread,
+          firstPageOnRight: this.firstPageOnRight,
         }
       ])
     },
@@ -847,7 +851,14 @@ export default {
     recallBookmark(index: number) {
       const bookmark = this.bookmarks[index]
       if (bookmark) {
-        const { page, magnify, scrollLeftPerc, scrollTopPerc } = bookmark
+        const {
+          page,
+          magnify,
+          scrollLeftPerc,
+          scrollTopPerc,
+          twoPageSpread,
+          firstPageOnRight,
+        } = bookmark
         const restoreScroll = () => {
           const div = this.div
           if (div) {
@@ -855,6 +866,8 @@ export default {
             div.scrollTop = scrollTopPerc * div.scrollHeight
           }
         }
+        this.firstPageOnRight = firstPageOnRight ?? true
+        this.displayLayoutChanged(twoPageSpread ?? false)
         this.whenRendered.push(restoreScroll)
         this.page = page
         this.magnify = magnify

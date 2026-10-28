@@ -42,6 +42,11 @@ export default {
       value: this.startValue
     }
   },
+  watch: {
+    startValue(value: string) {
+      this.value = value
+    },
+  },
   methods: {
     onCancelClick() {
       this.hide()
