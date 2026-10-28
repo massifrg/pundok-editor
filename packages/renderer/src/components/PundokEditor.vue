@@ -29,11 +29,12 @@
         <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
       </div>
       <div class="q-mini-drawer-hide absolute" style="top: 210px; right: -17px">
-        <q-btn dense round unelevated color="secondary" icon="arrow_left_right" @mousedown="startSettingLeftDrawerWidth"
-          @mousemove="changeLeftDrawerWidth" @mouseup="stopSettingLeftDrawerWidth"
-          @mouseleave="stopSettingLeftDrawerWidth" />
+        <q-btn dense round unelevated color="secondary" icon="arrow_left_right"
+          @mousedown="startSettingLeftDrawerWidth" />
       </div>
     </q-drawer>
+    <div v-if="leftDrawerPreviewWidth !== undefined" class="drawer-width-preview"
+      :style="{ left: `${leftDrawerPreviewWidth}px` }" />
     <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
       :mini="rightDrawerState === 'mini'" @mouseenter="rightDrawerState = 'normal'"
       @mouseleave="rightDrawerState = 'mini'" mini-to-overlay :mini-width="60" :width="240" :breakpoint="500"
@@ -327,6 +328,7 @@ export default {
       leftDrawerWidth: 640,
       leftDrawerHandleStart: undefined as number | undefined,
       prevLeftDrawerWidth: 640,
+      leftDrawerPreviewWidth: undefined as number | undefined,
       rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
       visibleSearchAndReplaceDialog: false,
@@ -685,6 +687,8 @@ export default {
   beforeUnmount() {
     if (this.askToSaveChanges) this.setClosePending();
     if (this.editor) this.editor.destroy();
+    document.removeEventListener('mousemove', this.changeLeftDrawerWidth);
+    document.removeEventListener('mouseup', this.stopSettingLeftDrawerWidth);
   },
 
   methods: {
@@ -1802,20 +1806,30 @@ export default {
       this.leftDrawerState = 'mini';
     },
     startSettingLeftDrawerWidth(e: MouseEvent) {
+      if (e.button !== 0) return;
+      e.preventDefault();
       this.leftDrawerHandleStart = e.clientX;
       this.prevLeftDrawerWidth = this.leftDrawerWidth;
+      this.leftDrawerPreviewWidth = this.leftDrawerWidth;
+      document.addEventListener('mousemove', this.changeLeftDrawerWidth);
+      document.addEventListener('mouseup', this.stopSettingLeftDrawerWidth);
     },
     changeLeftDrawerWidth(e: MouseEvent) {
-      if (this.leftDrawerHandleStart) {
+      if (this.leftDrawerHandleStart !== undefined) {
         const w =
           this.prevLeftDrawerWidth + e.clientX - this.leftDrawerHandleStart;
         if (w >= 16 && w <= 1024) {
-          this.leftDrawerWidth = w;
+          this.leftDrawerPreviewWidth = w;
         }
       }
     },
-    stopSettingLeftDrawerWidth(e: MouseEvent) {
+    stopSettingLeftDrawerWidth() {
+      if (this.leftDrawerPreviewWidth !== undefined)
+        this.leftDrawerWidth = this.leftDrawerPreviewWidth;
       this.leftDrawerHandleStart = undefined;
+      this.leftDrawerPreviewWidth = undefined;
+      document.removeEventListener('mousemove', this.changeLeftDrawerWidth);
+      document.removeEventListener('mouseup', this.stopSettingLeftDrawerWidth);
     },
   },
 } as Component;
@@ -1875,5 +1889,15 @@ export default {
   border: 5px solid transparent;
   border-bottom-width: 0;
   border-top-color: white;
+}
+
+.drawer-width-preview {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 9999;
+  width: 2px;
+  background: var(--q-primary);
+  pointer-events: none;
 }
 </style>
