@@ -5,7 +5,9 @@ import type {
 } from '../../../common/src';
 import { getConfigurationInit } from '../resourceManager';
 import { exportDocument } from './saveDocument';
-import { computeProjectFromDocFile } from './project';
+import { computeProjectFromFile, projectFileNameInDirectory } from './project';
+import { isReadableFile } from '../resourceManager';
+import { dirname, parse } from 'node:path';
 import type { BackendDirectories } from '../resourceManager';
 import type { FeedbackSink } from '../feedback';
 import type { RendererHub } from '../rendererHub';
@@ -19,12 +21,7 @@ export async function renderAgain(
   bookmark: RenderingBookmark,
   editorKey: EditorKeyType,
 ): Promise<void> {
-  let project;
-  try {
-    project = await computeProjectFromDocFile(directories, bookmark.documentPath);
-  } catch {
-    project = undefined;
-  }
+  const project = await findProject(directories, bookmark.documentPath);
   const configuration = project?.computedConfig ||
     await getConfigurationInit(directories, bookmark.configurationName);
   const converter = configuration?.outputConverters?.find(
@@ -51,4 +48,19 @@ export async function renderAgain(
     document,
     true,
   );
+}
+
+async function findProject(
+  directories: BackendDirectories,
+  documentPath: string,
+) {
+  let directory = dirname(documentPath);
+  while (true) {
+    const projectFile = projectFileNameInDirectory(directory);
+    if (isReadableFile(projectFile))
+      return computeProjectFromFile(directories, projectFile);
+    const parent = parse(directory).dir;
+    if (parent === directory) return undefined;
+    directory = parent;
+  }
 }

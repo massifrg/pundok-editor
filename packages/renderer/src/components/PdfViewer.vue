@@ -292,6 +292,12 @@ export default {
     isRegeneratingPdf(): boolean {
       return !!this.regeneratingUrl
     },
+    currentRendering(): RenderingBookmark | undefined {
+      if (!this.filename) return undefined
+      return Object.values(this.renderingJobs).find(
+        (item) => this.renderingPath(item.url) === this.filename,
+      )
+    },
     imageSource(): string | undefined {
       if (!this.filename) return undefined
       const version = encodeURIComponent(
@@ -356,7 +362,7 @@ export default {
         this.documentHash = hash
         if (rendering?.pageBookmarks)
           this.documentBookmarks[hash] = rendering.pageBookmarks
-        this.rememberExportJob(hash, filename)
+        await this.rememberExportJob(hash, filename)
         this.regeneratingUrl = undefined
         this.regeneratingTarget = undefined
         if (finishedTarget)
@@ -449,9 +455,7 @@ export default {
       }
     },
     async regeneratePdf(bookmark?: RenderingBookmark) {
-      const rendering = bookmark || Object.values(this.renderingJobs).find(
-        (item) => this.renderingPath(item.url) === this.filename,
-      )
+      const rendering = bookmark || this.currentRendering
       if (!rendering || !this.editorKey || !this.backend) return
       this.regeneratingUrl = rendering.url
       try {
@@ -460,7 +464,21 @@ export default {
           path: rendering.documentPath,
         }
         this.$emit('rendering-started', rendering.converterName, rendering.documentPath)
-        await this.backend.renderAgain(rendering, this.editorKey)
+        const renderingPayload: RenderingBookmark = {
+          type: 'rendering',
+          url: rendering.url,
+          documentPath: rendering.documentPath,
+          converterName: rendering.converterName,
+          configurationName: rendering.configurationName,
+          pageBookmarks: rendering.pageBookmarks?.map((bookmark) => ({
+            label: bookmark.label,
+            page: bookmark.page,
+            magnify: bookmark.magnify,
+            scrollTopPerc: bookmark.scrollTopPerc,
+            scrollLeftPerc: bookmark.scrollLeftPerc,
+          })),
+        }
+        await this.backend.renderAgain(renderingPayload, this.editorKey)
         if (this.regeneratingUrl === rendering.url && this.regeneratingTarget) {
           this.$emit(
             'rendering-finished',
@@ -788,7 +806,8 @@ export default {
         :start-value="bookmarks[currentBookmarkIndex]?.label" @set-value="setBookmarkLabel"
         @close-dialog="showBookmarkNameDialog = false" />
       <q-space />
-      <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'reload'" :disable="isRegeneratingPdf"
+      <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'reload'"
+        :disable="isRegeneratingPdf || !currentRendering"
         :title="$t('pdfViewer.reload')" @click="regeneratePdf()">
         <q-circular-progress v-if="isRegeneratingPdf" indeterminate round size="1rem" />
       </q-btn>
