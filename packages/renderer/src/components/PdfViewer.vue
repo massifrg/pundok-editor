@@ -255,6 +255,11 @@ export default {
       magnify: 1,
       width: baseWidth,
       displayedImageSource: undefined as string | undefined,
+      displayedPages: [] as { page: number, source: string }[],
+      preloadedImages: {} as Record<number, string>,
+      pageAspectRatio: 1.414,
+      twoPageSpread: false,
+      firstPageOnRight: false,
       contentHash: undefined as string | undefined,
       isRendering: false,
       regeneratingUrl: undefined as string | undefined,
@@ -299,13 +304,49 @@ export default {
       )
     },
     imageSource(): string | undefined {
-      if (!this.filename) return undefined
+      return this.imageSources[0]?.source
+    },
+    pagesToDisplay(): number {
+      const viewportHeight = this.div?.clientHeight || 700
+      const pageHeight = this.width * this.pageAspectRatio
+      const rows = Math.max(1, Math.ceil(viewportHeight / pageHeight))
+      const pagesPerRow = this.twoPageSpread ? 2 : 1
+      const pages = this.twoPageSpread && this.page === 1 && this.firstPageOnRight
+        ? 1 + Math.max(0, rows - 1) * pagesPerRow
+        : rows * pagesPerRow
+      return Math.min(
+        this.maxPages - this.page + 1,
+        pages,
+      )
+    },
+    firstPageRightActive(): boolean {
+      return this.twoPageSpread && this.firstPageOnRight &&
+        this.displayedPages.some((item) => item.page === 1)
+    },
+    imageSources(): { page: number, source: string }[] {
+      const filename = this.filename
+      if (!filename) return []
       const version = encodeURIComponent(
         `${this.documentHash || ''}-${this.imageVersion}`,
       )
-      if (window.ipc)
-        return `img://${this.filename}?page=${this.page - 1}&version=${version}`
-      return `/backend/image?path=${encodeURIComponent(this.filename)}&page=${this.page - 1}&version=${version}`
+      const pages = Array.from(
+        { length: Math.min(this.pagesToDisplay, this.maxPages - this.page + 1) },
+        (_, index) => this.page + index,
+      )
+      return pages.map((page) => ({
+        page,
+        source: window.ipc
+          ? `img://${filename}?page=${page - 1}&version=${version}`
+          : `/backend/image?path=${encodeURIComponent(filename)}&page=${page - 1}&version=${version}`,
+      }))
+    },
+    pendingImageSources(): { page: number, source: string }[] {
+      return this.imageSources.filter(
+        (requested) => !this.displayedPages.some(
+          (displayed) => displayed.page === requested.page &&
+            displayed.source === requested.source,
+        ),
+      )
     },
   },
   watch: {
@@ -325,6 +366,10 @@ export default {
     }, 500))
   },
   mounted() {
+    const container = this.$el instanceof HTMLElement
+      ? this.$el.querySelector<HTMLDivElement>('.pdf-image-container')
+      : undefined
+    this.div = container || undefined
     void this.loadRenderingJobs()
   },
   methods: {
@@ -395,8 +440,11 @@ export default {
         const { filename, content } = pdf
         let pdfContent: string | undefined = undefined
         if (filename) {
-          if (this.filename !== filename)
+          if (this.filename !== filename) {
             this.displayedImageSource = undefined
+            this.displayedPages = []
+            this.preloadedImages = {}
+          }
           this.filename = filename
           this.isRendering = true
           this.maxPages = 1
@@ -435,6 +483,7 @@ export default {
         if (this.filename === filename && result) {
           this.maxPages = result.pageCount
           this.page = Math.min(this.page, result.pageCount)
+          this.$nextTick(() => this.updateDisplayedPages())
           if (result.usedImageMagick) {
             this.$q.notify({
               message: this.$t('pdfViewer.mtxrunFallback'),
@@ -511,8 +560,23 @@ export default {
     imageLoaded(e: Event) {
       const image = e.currentTarget as HTMLImageElement
       const source = image.getAttribute('src')
-      if (source !== this.imageSource) return
-      this.displayedImageSource = source
+      const page = Number(image.dataset.page)
+      const requested = this.imageSources.find((item) => item.page === page)
+      if (!source || !requested || source !== requested.source) return
+      if (image.naturalWidth)
+        this.pageAspectRatio = image.naturalHeight / image.naturalWidth
+      this.preloadedImages[page] = source
+      this.updateDisplayedPages()
+    },
+    updateDisplayedPages() {
+      if (!this.imageSources.length || !this.imageSources.every(
+        (item) => this.preloadedImages[item.page] === item.source,
+      )) return
+      this.displayedPages = this.imageSources.map((item) => ({
+        page: item.page,
+        source: item.source,
+      }))
+      this.displayedImageSource = this.displayedPages[0]?.source
       this.isRendering = false
       const whenRenderedCallback = this.whenRendered.pop()
       if (whenRenderedCallback) whenRenderedCallback()
@@ -530,6 +594,7 @@ export default {
       if (page !== this.page && page >= 1 && page <= this.maxPages) {
         this.page = Math.floor(page)
         this.isRendering = true
+        this.$nextTick(() => this.updateDisplayedPages())
       }
     },
     firstPage() {
@@ -556,7 +621,12 @@ export default {
         this.magnify = magnify
         this.width = baseWidth * magnify
         this.isRendering = true
+        this.$nextTick(() => this.updateDisplayedPages())
       }
+    },
+    displayLayoutChanged() {
+      this.isRendering = true
+      this.$nextTick(() => this.updateDisplayedPages())
     },
     decreaseScale() {
       this.setMagnify(this.magnify / magnifyFactor)
@@ -577,6 +647,7 @@ export default {
     async doubleClicked(e: MouseEvent) {
       if (!(e.target instanceof HTMLImageElement)) return
       const { rx, ry } = this.coordinatesOnRasterImage(e, e.target)
+      const clickedPage = Number(e.target.dataset.page)
       if (this.filename) {
         try {
           const rendering = Object.values(this.renderingJobs).find(
@@ -584,7 +655,7 @@ export default {
           )
           await this.backend?.gotoSource(this.editorKey, {
             outputFile: toRaw(this.filename),
-            page: toRaw(this.page),
+            page: clickedPage || toRaw(this.page),
             rx,
             ry,
             projectAsJson: toRaw(this.projectAsJson),
@@ -706,7 +777,7 @@ export default {
         this.whenRendered.push(restoreScroll)
         this.page = page
         this.magnify = magnify
-        if (this.imageSource === this.displayedImageSource) {
+        if (this.displayedPages.some((item) => item.page === this.page)) {
           this.whenRendered.pop()
           setTimeout(restoreScroll, 550)
         }
@@ -775,6 +846,10 @@ export default {
       <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblclick="resetScale" />
       <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" :title="$t('pdfViewer.zoomIn')"
         @click="increaseScale" />
+      <q-checkbox v-model="twoPageSpread" dense :label="$t('pdfViewer.twoPageSpread')"
+        @update:model-value="displayLayoutChanged" />
+      <q-checkbox v-if="twoPageSpread" v-model="firstPageOnRight" dense
+        :label="$t('pdfViewer.firstPageOnRight')" @update:model-value="displayLayoutChanged" />
       <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
         @click="setBookmark()" />
       <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="bookmark_add"
@@ -816,15 +891,21 @@ export default {
         color="light-blue" class="q-mx-md q-my-xs q-pa-xs" />
     </q-card-actions>
     <q-card-section>
-      <div class="pdf-image-container q-pa-md" @scroll="scrolled" @wheel.stop.prevent="mouseWheel">
+      <div class="pdf-image-container q-pa-md"
+        :class="{ 'pdf-spread': twoPageSpread, 'pdf-first-page-right': firstPageRightActive }"
+        @scroll="scrolled" @wheel.stop.prevent="mouseWheel">
         <div v-if="isRendering" class="pdf-image-loading">
           <q-circular-progress indeterminate rounded size="3rem" color="light-blue"
             track-color="grey-4" />
         </div>
-        <img v-if="displayedImageSource" class="pdf-image" :src="displayedImageSource" :style="{ width: `${width}px` }"
+        <div v-if="firstPageRightActive" class="pdf-spread-placeholder"
+          :style="{ width: `${width}px` }" />
+        <img v-for="displayed in displayedPages" :key="displayed.page" class="pdf-image"
+          :src="displayed.source" :data-page="displayed.page" :style="{ width: `${width}px` }"
           :alt="$t('pdfViewer.pageImage')" @dblclick="doubleClicked" />
-        <img v-if="imageSource && imageSource !== displayedImageSource" class="pdf-image-preload" :src="imageSource"
-          alt="" @load="imageLoaded" @error="imageLoadFailed" />
+        <img v-for="requested in pendingImageSources"
+          :key="`preload-${requested.page}`" class="pdf-image-preload" :src="requested.source"
+          :data-page="requested.page" alt="" @load="imageLoaded" @error="imageLoadFailed" />
       </div>
     </q-card-section>
   </q-card>
@@ -844,6 +925,18 @@ export default {
   max-height: 88vh;
   margin-bottom: 4px;
   box-shadow: 0 2px 8px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-image-container.pdf-spread {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  align-content: start;
+  column-gap: 8px;
+}
+
+.pdf-spread-placeholder {
+  display: block;
+  height: 1px;
 }
 
 .pdf-image-loading {

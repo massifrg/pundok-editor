@@ -855,7 +855,9 @@
     "renameBookmark": "rename bookmark",
     "showRenderings": "show renderings",
     "reload": "reload PDF",
-    "pageImage": "PDF page"
+    "pageImage": "PDF page",
+    "twoPageSpread": "show two-page spread",
+    "firstPageOnRight": "put first page on the right"
   },
   "projectMenu": {
     "title": "Manage project",

@@ -854,7 +854,9 @@
     "renameBookmark": "rinomina segnalibro",
     "showRenderings": "mostra le creazioni",
     "reload": "ricarica PDF",
-    "pageImage": "pagina PDF"
+    "pageImage": "pagina PDF",
+    "twoPageSpread": "mostra pagine affiancate",
+    "firstPageOnRight": "metti la prima pagina a destra"
   },
   "projectMenu": {
     "title": "Gestisci progetto",
