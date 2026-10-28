@@ -259,7 +259,8 @@ export default {
       preloadedImages: {} as Record<number, string>,
       pageAspectRatio: 1.414,
       twoPageSpread: false,
-      firstPageOnRight: false,
+      firstPageOnRight: true,
+      justEnteredTwoPageSpread: false,
       contentHash: undefined as string | undefined,
       isRendering: false,
       regeneratingUrl: undefined as string | undefined,
@@ -302,6 +303,26 @@ export default {
       return Object.values(this.renderingJobs).find(
         (item) => this.renderingPath(item.url) === this.filename,
       )
+    },
+    pageLayoutOptions() {
+      return [
+        {
+          value: false,
+          icon: 'pdf_one_page',
+          title: this.$t('pdfViewer.onePageColumn'),
+          attrs: { 'data-layout': 'one-column' },
+        },
+        {
+          value: true,
+          title: this.twoPageSpread
+            ? this.$t(this.firstPageOnRight
+              ? 'pdfViewer.twoPageSpreadFirstPageRight'
+              : 'pdfViewer.twoPageSpreadFirstPageLeft')
+            : this.$t('pdfViewer.twoPageSpread'),
+          attrs: { 'data-layout': 'two-page-spread' },
+          slot: 'twoPageSpread',
+        },
+      ]
     },
     imageSource(): string | undefined {
       return this.imageSources[0]?.source
@@ -624,9 +645,40 @@ export default {
         this.$nextTick(() => this.updateDisplayedPages())
       }
     },
-    displayLayoutChanged() {
+    fitLayoutToViewer(twoPageSpread: boolean) {
+      const div = this.div
+      if (!div) return
+      const style = getComputedStyle(div)
+      const horizontalPadding =
+        parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+      const spreadGap = twoPageSpread ? 8 : 0
+      const pagesPerRow = twoPageSpread ? 2 : 1
+      const availableWidth = div.clientWidth - horizontalPadding - spreadGap
+      const pageWidth = Math.max(1, availableWidth / pagesPerRow)
+      this.magnify = pageWidth / baseWidth
+      this.width = pageWidth
+      div.scrollLeft = 0
+      div.scrollTop = 0
+    },
+    displayLayoutChanged(value?: boolean) {
+      const layoutChanged = value !== undefined && value !== this.twoPageSpread
+      if (value !== undefined) {
+        this.twoPageSpread = value
+        this.justEnteredTwoPageSpread = value
+      }
+      if (layoutChanged) this.fitLayoutToViewer(this.twoPageSpread)
       this.isRendering = true
       this.$nextTick(() => this.updateDisplayedPages())
+    },
+    layoutButtonClicked(e: MouseEvent) {
+      const target = (e.target as HTMLElement).closest('[data-layout="two-page-spread"]')
+      if (!target || !this.twoPageSpread) return
+      if (this.justEnteredTwoPageSpread) {
+        this.justEnteredTwoPageSpread = false
+        return
+      }
+      this.firstPageOnRight = !this.firstPageOnRight
+      this.displayLayoutChanged()
     },
     decreaseScale() {
       this.setMagnify(this.magnify / magnifyFactor)
@@ -846,10 +898,12 @@ export default {
       <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblclick="resetScale" />
       <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" :title="$t('pdfViewer.zoomIn')"
         @click="increaseScale" />
-      <q-checkbox v-model="twoPageSpread" dense :label="$t('pdfViewer.twoPageSpread')"
-        @update:model-value="displayLayoutChanged" />
-      <q-checkbox v-if="twoPageSpread" v-model="firstPageOnRight" dense
-        :label="$t('pdfViewer.firstPageOnRight')" @update:model-value="displayLayoutChanged" />
+      <q-btn-toggle :model-value="twoPageSpread" dense :options="pageLayoutOptions"
+        @update:model-value="displayLayoutChanged" @click="layoutButtonClicked">
+        <template #twoPageSpread>
+          <q-icon name="pdf_two_pages" :class="{ 'pdf-two-pages-left': twoPageSpread && !firstPageOnRight }" />
+        </template>
+      </q-btn-toggle>
       <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
         @click="setBookmark()" />
       <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="bookmark_add"
@@ -937,6 +991,10 @@ export default {
 .pdf-spread-placeholder {
   display: block;
   height: 1px;
+}
+
+.pdf-two-pages-left {
+  transform: scaleX(-1);
 }
 
 .pdf-image-loading {

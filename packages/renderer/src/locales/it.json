@@ -855,7 +855,10 @@
     "showRenderings": "mostra le creazioni",
     "reload": "ricarica PDF",
     "pageImage": "pagina PDF",
+    "onePageColumn": "mostra le pagine in una colonna",
     "twoPageSpread": "mostra pagine affiancate",
+    "twoPageSpreadFirstPageRight": "pagine affiancate, prima pagina a destra (clicca per mettere la prima pagina a sinistra)",
+    "twoPageSpreadFirstPageLeft": "pagine affiancate, prima pagina a sinistra (clicca per mettere la prima pagina a destra)",
     "firstPageOnRight": "metti la prima pagina a destra"
   },
   "projectMenu": {

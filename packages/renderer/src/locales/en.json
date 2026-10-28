@@ -856,7 +856,10 @@
     "showRenderings": "show renderings",
     "reload": "reload PDF",
     "pageImage": "PDF page",
+    "onePageColumn": "show pages in one column",
     "twoPageSpread": "show two-page spread",
+    "twoPageSpreadFirstPageRight": "two pages spread, first page on the right (click for first page on the left)",
+    "twoPageSpreadFirstPageLeft": "two pages spread, first page on the left (click for first page on the right)",
     "firstPageOnRight": "put first page on the right"
   },
   "projectMenu": {
