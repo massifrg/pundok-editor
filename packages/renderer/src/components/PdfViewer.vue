@@ -225,7 +225,7 @@ interface PdfContent {
   content?: string,
 }
 
-interface ViewerBookmark extends RenderingPageBookmark {}
+interface ViewerBookmark extends RenderingPageBookmark { }
 
 const baseWidth = 500
 const magnifyFactor = 1.1
@@ -281,6 +281,11 @@ export default {
       div: undefined as HTMLDivElement | undefined,
       scrollTopPerc: 0,
       scrollLeftPerc: 0,
+      dragStartX: 0,
+      dragStartY: 0,
+      dragStartScrollLeft: 0,
+      dragStartScrollTop: 0,
+      dragging: false,
       documentBookmarks: {} as Record<string, ViewerBookmark[]>,
       currentBookmarkIndex: -1,
       isUpdated: false,
@@ -789,6 +794,29 @@ export default {
       const page = Number(image.dataset.page)
       if (page >= 1 && page <= this.maxPages) this.page = page
     },
+    dragStarted(e: MouseEvent) {
+      if (e.button !== 0) return
+      const container = e.currentTarget as HTMLDivElement
+      this.dragStartX = e.clientX
+      this.dragStartY = e.clientY
+      this.dragStartScrollLeft = container.scrollLeft
+      this.dragStartScrollTop = container.scrollTop
+      this.dragging = false
+    },
+    dragMoved(e: MouseEvent) {
+      if (e.buttons !== 1) return
+      const container = e.currentTarget as HTMLDivElement
+      const dx = e.clientX - this.dragStartX
+      const dy = e.clientY - this.dragStartY
+      if (!this.dragging && Math.max(Math.abs(dx), Math.abs(dy)) < 3) return
+      this.dragging = true
+      e.preventDefault()
+      container.scrollLeft = this.dragStartScrollLeft - dx
+      container.scrollTop = this.dragStartScrollTop - dy
+    },
+    dragEnded() {
+      this.dragging = false
+    },
     mouseWheel(e: WheelEvent) {
       e.preventDefault()
       e.stopPropagation()
@@ -1047,7 +1075,7 @@ export default {
             <q-item-section side :title="$t('pdfViewer.editBookmark')"><q-icon name="bookmark_edit" color="primary"
                 @click="editBookmark(i)" /></q-item-section>
             <q-item-section :title="$t('pdfViewer.removeBookmark')"><q-item-label>{{ bookmark.label
-                }}</q-item-label></q-item-section>
+            }}</q-item-label></q-item-section>
             <q-item-section side :title="$t('pdfViewer.removeBookmark')"><q-icon name="bookmark_remove" color="primary"
                 @click="removeBookmark(i)" /></q-item-section>
           </q-item>
@@ -1055,8 +1083,7 @@ export default {
       </q-btn-dropdown>
       <q-btn-dropdown :title="$t('pdfViewer.showRenderings')">
         <q-list>
-          <q-item v-for="j in renderingBookmarks"
-            :disable="renderingPath(j.url) === filename" clickable v-close-popup
+          <q-item v-for="j in renderingBookmarks" :disable="renderingPath(j.url) === filename" clickable v-close-popup
             :title="j.url" @click="showAgain(j)">
             <q-item-section>
               <q-item-label>{{ j.url }}</q-item-label>
@@ -1069,8 +1096,7 @@ export default {
         @close-dialog="showBookmarkNameDialog = false" />
       <q-space />
       <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'reload'"
-        :disable="isRegeneratingPdf || !currentRendering"
-        :title="$t('pdfViewer.reload')" @click="regeneratePdf()">
+        :disable="isRegeneratingPdf || !currentRendering" :title="$t('pdfViewer.reload')" @click="regeneratePdf()">
         <q-circular-progress v-if="isRegeneratingPdf" indeterminate round size="1rem" />
       </q-btn>
       <q-space />
@@ -1079,20 +1105,18 @@ export default {
     </q-card-actions>
     <q-card-section>
       <div class="pdf-image-container q-pa-md"
-        :class="{ 'pdf-spread': twoPageSpread, 'pdf-first-page-right': firstPageRightActive }"
-        @scroll="scrolled" @wheel.stop.prevent="mouseWheel">
+        :class="{ 'pdf-spread': twoPageSpread, 'pdf-first-page-right': firstPageRightActive, 'pdf-dragging': dragging }"
+        @scroll="scrolled" @wheel.stop.prevent="mouseWheel" @mousedown="dragStarted" @mousemove="dragMoved"
+        @mouseup="dragEnded" @mouseleave="dragEnded">
         <div v-if="isRendering" class="pdf-image-loading">
-          <q-circular-progress indeterminate rounded size="3rem" color="light-blue"
-            track-color="grey-4" />
+          <q-circular-progress indeterminate rounded size="3rem" color="light-blue" track-color="grey-4" />
         </div>
-        <div v-if="firstPageRightActive" class="pdf-spread-placeholder"
-          :style="{ width: `${width}px` }" />
-        <img v-for="displayed in displayedPages" :key="displayed.page" class="pdf-image"
-          :src="displayed.source" :data-page="displayed.page" :style="{ width: `${width}px` }"
-          :alt="$t('pdfViewer.pageImage')" @click="pageClicked" @dblclick="doubleClicked" />
-        <img v-for="requested in pendingImageSources"
-          :key="`preload-${requested.page}`" class="pdf-image-preload" :src="requested.source"
-          :data-page="requested.page" alt="" @load="imageLoaded" @error="imageLoadFailed" />
+        <div v-if="firstPageRightActive" class="pdf-spread-placeholder" :style="{ width: `${width}px` }" />
+        <img v-for="displayed in displayedPages" :key="displayed.page" class="pdf-image" :src="displayed.source"
+          :data-page="displayed.page" :style="{ width: `${width}px` }" :alt="$t('pdfViewer.pageImage')"
+          @click="pageClicked" @dblclick="doubleClicked" @dragstart.prevent />
+        <img v-for="requested in pendingImageSources" :key="`preload-${requested.page}`" class="pdf-image-preload"
+          :src="requested.source" :data-page="requested.page" alt="" @load="imageLoaded" @error="imageLoadFailed" />
       </div>
     </q-card-section>
   </q-card>
@@ -1112,6 +1136,12 @@ export default {
   max-height: 88vh;
   margin-bottom: 4px;
   box-shadow: 0 2px 8px 4px rgba(0, 0, 0, 0.1);
+  cursor: crosshair;
+  user-select: none;
+}
+
+.pdf-image-container.pdf-dragging {
+  cursor: grabbing;
 }
 
 .pdf-image-container.pdf-spread {
