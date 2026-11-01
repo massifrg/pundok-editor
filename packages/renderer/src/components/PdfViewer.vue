@@ -1112,7 +1112,8 @@ export default {
           <q-circular-progress indeterminate rounded size="3rem" color="light-blue" track-color="grey-4" />
         </div>
         <div v-if="firstPageRightActive" class="pdf-spread-placeholder" :style="{ width: `${width}px` }" />
-        <img v-for="displayed in displayedPages" :key="displayed.page" class="pdf-image" :src="displayed.source"
+        <img v-for="displayed in displayedPages" :key="displayed.page"
+          :class="{ 'pdf-image': true, 'pdf-current-page': displayed.page === page }" :src="displayed.source"
           :data-page="displayed.page" :style="{ width: `${width}px` }" :alt="$t('pdfViewer.pageImage')"
           @click="pageClicked" @dblclick="doubleClicked" @dragstart.prevent />
         <img v-for="requested in pendingImageSources" :key="`preload-${requested.page}`" class="pdf-image-preload"
@@ -1176,6 +1177,10 @@ export default {
   margin-bottom: 8px;
   margin-right: 8px;
   box-shadow: 0 2px 8px 4px rgba(0, 255, 0, 0.2);
+}
+
+.pdf-image.pdf-current-page {
+  box-shadow: 0 2px 8px 4px rgba(0, 7, 134, 0.35);
 }
 
 .pdf-image-preload {
