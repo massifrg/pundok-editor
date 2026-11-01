@@ -232,6 +232,14 @@ const magnifyFactor = 1.1
 // const minMagnify = 0.05
 // const maxMagnify = 20
 
+function firstPageInSpread(page: number, twoPageSpread: boolean, firstPageOnRight: boolean) {
+  if (!twoPageSpread || page === 1) return page
+  const pageIsRight = firstPageOnRight
+    ? page % 2 === 1
+    : page % 2 === 0
+  return pageIsRight ? page - 1 : page
+}
+
 async function createHash(message: string, algo = 'SHA-1'): Promise<string> {
   return Array.from(
     new Uint8Array(
@@ -251,6 +259,7 @@ export default {
       filename: undefined as string | undefined,
       projectAsJson: undefined as string | undefined,
       page: 1,
+      viewPage: 1,
       maxPages: 1,
       magnify: 1,
       width: baseWidth,
@@ -333,16 +342,22 @@ export default {
     imageSource(): string | undefined {
       return this.imageSources[0]?.source
     },
+    firstPageInView(): number {
+      return firstPageInSpread(this.page, this.twoPageSpread, this.firstPageOnRight)
+    },
+    displayedPageInView(): number {
+      return firstPageInSpread(this.viewPage, this.twoPageSpread, this.firstPageOnRight)
+    },
     pagesToDisplay(): number {
       const viewportHeight = this.div?.clientHeight || 700
       const pageHeight = this.width * this.pageAspectRatio
       const rows = Math.max(1, Math.ceil(viewportHeight / pageHeight))
       const pagesPerRow = this.twoPageSpread ? 2 : 1
-      const pages = this.twoPageSpread && this.page === 1 && this.firstPageOnRight
+      const pages = this.twoPageSpread && this.displayedPageInView === 1 && this.firstPageOnRight
         ? 1 + Math.max(0, rows - 1) * pagesPerRow
         : rows * pagesPerRow
       return Math.min(
-        this.maxPages - this.page + 1,
+        this.maxPages - this.displayedPageInView + 1,
         pages,
       )
     },
@@ -357,8 +372,8 @@ export default {
         `${this.documentHash || ''}-${this.imageVersion}`,
       )
       const pages = Array.from(
-        { length: Math.min(this.pagesToDisplay, this.maxPages - this.page + 1) },
-        (_, index) => this.page + index,
+        { length: Math.min(this.pagesToDisplay, this.maxPages - this.displayedPageInView + 1) },
+        (_, index) => this.displayedPageInView + index,
       )
       return pages.map((page) => ({
         page,
@@ -442,7 +457,10 @@ export default {
         if (finishedTarget)
           this.$emit('rendering-finished', finishedTarget.converterName, finishedTarget.path)
         this.projectAsJson = projectAsJson
-        if (page) this.page = page
+        if (page) {
+          this.page = page
+          this.viewPage = page
+        }
         await this.loadPdf({ filename, content })
       }
     },
@@ -642,9 +660,18 @@ export default {
     setPage(p: number | string) {
       const page = isString(p) ? parseInt(p) : p
       if (page !== this.page && page >= 1 && page <= this.maxPages) {
-        this.page = Math.floor(page)
-        this.isRendering = true
-        this.$nextTick(() => this.updateDisplayedPages())
+        const previousPageInView = this.firstPageInView
+        const nextPage = Math.floor(page)
+        this.page = nextPage
+        if (previousPageInView !== firstPageInSpread(
+          nextPage,
+          this.twoPageSpread,
+          this.firstPageOnRight,
+        )) {
+          this.viewPage = nextPage
+          this.isRendering = true
+          this.$nextTick(() => this.updateDisplayedPages())
+        }
       }
     },
     firstPage() {
@@ -696,6 +723,7 @@ export default {
         this.justEnteredTwoPageSpread = value
       }
       if (layoutChanged) this.fitLayoutToViewer(this.twoPageSpread)
+      this.viewPage = this.page
       this.isRendering = true
       this.$nextTick(() => this.updateDisplayedPages())
     },
@@ -755,26 +783,69 @@ export default {
         }
       }
     },
+    pageClicked(e: MouseEvent) {
+      const image = e.currentTarget
+      if (!(image instanceof HTMLImageElement)) return
+      const page = Number(image.dataset.page)
+      if (page >= 1 && page <= this.maxPages) this.page = page
+    },
     mouseWheel(e: WheelEvent) {
       e.preventDefault()
       e.stopPropagation()
-      if (!e.deltaY) return
-      if (!e.ctrlKey) {
-        if (e.deltaY < 0) this.prevPage()
-        else this.nextPage()
+      const container = e.currentTarget as HTMLDivElement
+      if (e.ctrlKey && e.deltaY) {
+        const bounds = container.getBoundingClientRect()
+        const x = e.clientX - bounds.left + container.scrollLeft
+        const y = e.clientY - bounds.top + container.scrollTop
+        const oldWidth = this.width
+        const factor = e.deltaY < 0 ? magnifyFactor : 1 / magnifyFactor
+        this.setMagnify(this.magnify * factor)
+        const scale = this.width / oldWidth
+        container.scrollLeft = x * scale - (e.clientX - bounds.left)
+        container.scrollTop = y * scale - (e.clientY - bounds.top)
         return
       }
 
-      const container = e.currentTarget as HTMLDivElement
+      const delta = e.shiftKey ? (e.deltaY || e.deltaX) : e.deltaY
+      if (!delta) return
+      const horizontal = e.shiftKey
+      const position = horizontal ? container.scrollLeft : container.scrollTop
+      const maximum = Math.max(0, horizontal
+        ? container.scrollWidth - container.clientWidth
+        : container.scrollHeight - container.clientHeight)
       const bounds = container.getBoundingClientRect()
-      const x = e.clientX - bounds.left + container.scrollLeft
-      const y = e.clientY - bounds.top + container.scrollTop
-      const oldWidth = this.width
-      const factor = e.deltaY < 0 ? magnifyFactor : 1 / magnifyFactor
-      this.setMagnify(this.magnify * factor)
-      const scale = this.width / oldWidth
-      container.scrollLeft = x * scale - (e.clientX - bounds.left)
-      container.scrollTop = y * scale - (e.clientY - bounds.top)
+      const currentImage = !horizontal
+        ? Array.from(container.querySelectorAll<HTMLImageElement>('.pdf-image'))
+          .find((image) => Number(image.dataset.page) === this.page)
+        : undefined
+      const currentImageBounds = currentImage?.getBoundingClientRect()
+      const atPageTop = currentImageBounds
+        ? currentImageBounds.top >= bounds.top - 1
+        : false
+      const atPageBottom = currentImageBounds
+        ? currentImageBounds.bottom <= bounds.bottom + 1
+        : false
+      const atEdge = delta < 0
+        ? position <= 1 || atPageTop
+        : position >= maximum - 1 || atPageBottom
+      if (atEdge) {
+        if (!horizontal) {
+          if (delta < 0) this.prevPage()
+          else this.nextPage()
+        }
+        return
+      }
+      const nextPosition = Math.min(maximum, Math.max(0, position + delta))
+      if (nextPosition !== position) {
+        if (horizontal) container.scrollLeft = nextPosition
+        else container.scrollTop = nextPosition
+        return
+      }
+
+      if (!horizontal) {
+        if (delta < 0) this.prevPage()
+        else this.nextPage()
+      }
     },
     pageWheel(e: WheelEvent) {
       if (e.deltaY < 0) {
@@ -798,8 +869,21 @@ export default {
         const { scrollLeft, scrollTop, scrollWidth, scrollHeight } = div
         // console.log(`${(scrollLeft * 100 / scrollWidth).toFixed(0)},${(scrollTop * 100 / scrollHeight).toFixed(0)}`)
         this.div = div
-        this.scrollLeftPerc = scrollLeft / scrollWidth
-        this.scrollTopPerc = scrollTop / scrollHeight
+        this.scrollLeftPerc = scrollLeft / Math.max(1, scrollWidth - div.clientWidth)
+        this.scrollTopPerc = scrollTop / Math.max(1, scrollHeight - div.clientHeight)
+        const bounds = div.getBoundingClientRect()
+        const images = Array.from(div.querySelectorAll<HTMLImageElement>('.pdf-image'))
+        const visibleImages = images.filter((image) => {
+          const imageBounds = image.getBoundingClientRect()
+          return imageBounds.bottom > bounds.top && imageBounds.top < bounds.bottom
+        })
+        const completedImages = visibleImages.filter(
+          (image) => image.getBoundingClientRect().bottom <= bounds.bottom + 1,
+        )
+        const completedImage = completedImages[completedImages.length - 1]
+        const currentImage = completedImage || visibleImages[0]
+        const page = Number(currentImage?.dataset.page)
+        if (page >= 1 && page <= this.maxPages) this.page = page
       }
     },
     setBookmarks(bookmarks: ViewerBookmark[]) {
@@ -862,14 +946,15 @@ export default {
         const restoreScroll = () => {
           const div = this.div
           if (div) {
-            div.scrollLeft = scrollLeftPerc * div.scrollWidth
-            div.scrollTop = scrollTopPerc * div.scrollHeight
+            div.scrollLeft = scrollLeftPerc * Math.max(0, div.scrollWidth - div.clientWidth)
+            div.scrollTop = scrollTopPerc * Math.max(0, div.scrollHeight - div.clientHeight)
           }
         }
         this.firstPageOnRight = firstPageOnRight ?? true
+        this.page = page
+        this.viewPage = page
         this.displayLayoutChanged(twoPageSpread ?? false)
         this.whenRendered.push(restoreScroll)
-        this.page = page
         this.magnify = magnify
         if (this.displayedPages.some((item) => item.page === this.page)) {
           this.whenRendered.pop()
@@ -1004,7 +1089,7 @@ export default {
           :style="{ width: `${width}px` }" />
         <img v-for="displayed in displayedPages" :key="displayed.page" class="pdf-image"
           :src="displayed.source" :data-page="displayed.page" :style="{ width: `${width}px` }"
-          :alt="$t('pdfViewer.pageImage')" @dblclick="doubleClicked" />
+          :alt="$t('pdfViewer.pageImage')" @click="pageClicked" @dblclick="doubleClicked" />
         <img v-for="requested in pendingImageSources"
           :key="`preload-${requested.page}`" class="pdf-image-preload" :src="requested.source"
           :data-page="requested.page" alt="" @load="imageLoaded" @error="imageLoadFailed" />
