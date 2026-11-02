@@ -39,7 +39,8 @@ export class GitRepositoryManager {
   constructor(private readonly directories: BackendDirectories) {}
 
   defaultBranchName(): string {
-    return userInfo().username || 'user';
+    const username = userInfo().username;
+    return isValidBranch(username) ? username : 'user';
   }
 
   async status(path: string): Promise<GitProjectStatus> {
@@ -269,7 +270,8 @@ export class GitRepositoryManager {
       options.password,
     );
     const branch =
-      options.branch || options.user || userInfo().username || 'user';
+      options.branch ||
+      (isValidBranch(options.user) ? options.user : this.defaultBranchName());
     validateBranch(branch);
     const projectPath = resolve(
       options.destination || this.directories.userDataDir,
@@ -683,13 +685,17 @@ function validateCredentials(
 }
 
 function validateBranch(branch: string): void {
-  if (
-    !branch ||
-    branch.startsWith('-') ||
-    branch.includes('..') ||
-    /[\s~^:?*[\\]/.test(branch)
-  )
+  if (!isValidBranch(branch))
     throw new Error(`Invalid Git branch: "${branch}"`);
+}
+
+function isValidBranch(branch: string): boolean {
+  return Boolean(
+    branch &&
+      !branch.startsWith('-') &&
+      !branch.includes('..') &&
+      !/[\s~^:?*[\\]/.test(branch),
+  );
 }
 
 function validateRemoteBranch(branch: string, remote: string): void {
