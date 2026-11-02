@@ -2,6 +2,13 @@
   "Hide": "Nascondi",
   "Show": "Mostra",
   "absent": "assente",
+  "startup": {
+    "missingSoftware": {
+      "title": "Software mancante",
+      "message": "I seguenti software richiesti o consigliati non sono disponibili: {programs}",
+      "available": "Software disponibili:"
+    }
+  },
   "actions": {
     "addAttribute": "aggiungi un attributo",
     "addClass": "assegna una classe",

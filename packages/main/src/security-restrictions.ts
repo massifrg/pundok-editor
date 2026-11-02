@@ -32,6 +32,10 @@ const ALLOWED_ORIGINS_AND_PERMISSIONS = new Map<string, Set<Permission>>(
  */
 const ALLOWED_EXTERNAL_ORIGINS = new Set<`https://${string}`>([
   'https://github.com',
+  'https://pandoc.org',
+  'https://git-scm.com',
+  'https://imagemagick.org',
+  'https://wiki.contextgarden.net',
 ]);
 
 app.on('web-contents-created', (_, contents) => {

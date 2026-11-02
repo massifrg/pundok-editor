@@ -43,6 +43,7 @@
     "test:renderer": "vitest run -r packages/renderer --passWithNoTests",
     "dev": "npm run watch:renderer",
     "watch": "node scripts/watch.js",
+    "watch:missing-software": "cross-env VITE_CHECK_REQUIRED_PROGRAMS=true VITE_MISSING_PROGRAMS=git,context npm run watch",
     "watch:renderer": "cd ./packages/renderer && vite",
     "watch:server": "cd ./packages/server && vite build --watch",
     "start:server": "node packages/server/dist/index.mjs",

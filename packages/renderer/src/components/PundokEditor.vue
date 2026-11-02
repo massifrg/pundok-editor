@@ -55,7 +55,7 @@
           @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
         </ConfigurationsDialog>
         <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
-          @close-show-message-dialog="message = null" :show-check-updates="message?.type === 'warning'" :icon="message?.source === 'git-no-updates' ? 'message_info' : undefined
+          @close-show-message-dialog="message = null" :show-check-updates="message?.source === 'git-no-updates'" :icon="message?.source === 'git-no-updates' ? 'message_info' : undefined
             " :color="message?.source === 'git-no-updates' ? 'secondary' : undefined
               " @check-updates="openGitUpdates" />
         <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
@@ -163,6 +163,7 @@ import {
   getDefaultWorkingFormat,
   getDefaultCopyFormat,
 } from '../common';
+
 import { setWindowTitle as setRendererWindowTitle } from '../backend/windowTitle';
 import { useActions, useBackend, useProjectCache } from '../stores';
 import ContextMenu from './ContextMenu.vue';
@@ -219,6 +220,28 @@ import {
   showSaveCopyDialog,
   showSaveDocumentDialog,
 } from './helpers';
+
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[character]!,
+  );
+}
+
+function softwareLink(software: { name: string; url: string }): string {
+  return `<a href="${escapeHtml(
+    software.url,
+  )}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+    software.name,
+  )}</a>`;
+}
 
 const EMPTY_DOCUMENT =
   '{"pandoc-api-version":[1,22,2,1],"meta":{},"blocks":[{"t":"Para","c":[]}]}';
@@ -633,7 +656,34 @@ export default {
               });
             } else {
               if (type !== 'progress') {
-                this.message = feedback;
+                this.message =
+                  feedback.source === 'missing-software'
+                    ? {
+                        ...feedback,
+                        message: [
+                          this.$t('startup.missingSoftware.message', {
+                            programs:
+                              feedback.software?.missing
+                                .map(softwareLink)
+                                .join(', ') || escapeHtml(feedback.message),
+                          }),
+                          feedback.software?.available.length
+                            ? `<br><br><strong>${this.$t(
+                                'startup.missingSoftware.available',
+                              )}</strong><ul>${feedback.software.available
+                                .map(
+                                  (software) =>
+                                    `<li>${softwareLink(
+                                      software,
+                                    )}: ${escapeHtml(
+                                      software.version || '',
+                                    )}</li>`,
+                                )
+                                .join('')}</ul>`
+                            : '',
+                        ].join(''),
+                      }
+                    : feedback;
               }
             }
             // console.log(message);

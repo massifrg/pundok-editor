@@ -2,6 +2,13 @@
   "Hide": "Hide",
   "Show": "Show",
   "absent": "absent",
+  "startup": {
+    "missingSoftware": {
+      "title": "Missing software",
+      "message": "The following required or recommended software is not available: {programs}",
+      "available": "Available software:"
+    }
+  },
   "actions": {
     "addAttribute": "add an attribute",
     "addClass": "add a class",

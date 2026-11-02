@@ -7,6 +7,7 @@ import {
   type DocumentContext,
   documentFormatToOutputConverter,
   EditorKeyType,
+  type FeedbackMessage,
   IPC_CHANNELS,
   type PundokEditorProject,
   ServerMessage,
@@ -85,6 +86,7 @@ export class IpcHub implements RendererHub {
   // readonly fileManager: FileManager = new FileManager();
   mainEditorKey: EditorKeyType | undefined = undefined;
   pendingDocumentOpen: DocumentOpening | undefined = undefined;
+  private readonly pendingFeedback: FeedbackMessage[] = [];
 
   constructor(
     readonly baseWindow: BaseWindow,
@@ -103,6 +105,25 @@ export class IpcHub implements RendererHub {
 
   setMainEditorKey(editorKey: EditorKeyType) {
     this.mainEditorKey = editorKey;
+    for (const feedback of this.pendingFeedback)
+      this.send('feedback', {
+        type: 'feedback',
+        feedback,
+        editorKey,
+      });
+    this.pendingFeedback.length = 0;
+  }
+
+  queueFeedback(feedback: FeedbackMessage) {
+    if (this.mainEditorKey) {
+      this.send('feedback', {
+        type: 'feedback',
+        feedback,
+        editorKey: this.mainEditorKey,
+      });
+    } else {
+      this.pendingFeedback.push(feedback);
+    }
   }
 
   private inclusionTree(

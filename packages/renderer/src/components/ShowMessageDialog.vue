@@ -68,6 +68,8 @@ export default {
       return this.message.type as FeedbackMessageType;
     },
     messageTitle() {
+      if (this.message?.source === 'missing-software')
+        return this.$t('startup.missingSoftware.title');
       if (this.messageType === 'error') return 'Error';
       if (this.messageType === 'command-line') return 'Conversion command';
       if (this.messageType === 'success') return 'Success';

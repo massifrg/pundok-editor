@@ -4,6 +4,7 @@ import { restoreOrCreateWindow, WindowWithIpc } from './mainWindow';
 import { copyMissingStaticResourcesInUserDir } from './staticResources';
 import { parseCommandLineOpts } from './cli';
 import { getExtendedEnvironment } from './resourcesManager';
+import { checkRequiredPrograms } from './externalPrograms';
 
 /** A global variable of the main window with its Ipc */
 let mainWindowWithIpc: WindowWithIpc | undefined = undefined
@@ -59,10 +60,24 @@ app
     Object.assign(process.env, await getExtendedEnvironment());
   })
   .then(restoreOrCreateWindow)
-  .then(windowWithIpc => {
+  .then(async windowWithIpc => {
     if (windowWithIpc) {
       mainWindowWithIpc = windowWithIpc
       parseCommandLineOpts(windowWithIpc)
+      if (
+        import.meta.env.PROD ||
+        import.meta.env.VITE_CHECK_REQUIRED_PROGRAMS === 'true'
+      ) {
+        const softwareCheck = await checkRequiredPrograms()
+        if (softwareCheck.missing.length)
+          windowWithIpc.ipcHub.queueFeedback({
+            type: 'warning',
+            source: 'missing-software',
+            message: softwareCheck.missing.map(({ name }) => name).join(', '),
+            level: 1,
+            software: softwareCheck,
+          })
+      }
     }
   })
   .catch((e) => console.error('Failed create window:', e));
