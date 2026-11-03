@@ -149,6 +149,7 @@ export class GitRepositoryManager {
     if (!remote) throw new Error('This project has no Git remote');
     const credentials = await this.credentialsForRemote(path, remote);
     validateRemoteBranch(remoteBranch, remote);
+    await this.abortMergeIfInProgress(path, credentials);
     await this.runGit(
       [
         'merge',
@@ -605,6 +606,27 @@ export class GitRepositoryManager {
       },
     ).result;
     return result.exitCode === 0 ? result.output : '';
+  }
+
+  private async abortMergeIfInProgress(
+    path: string,
+    credentials: { user: string; password: string },
+  ): Promise<void> {
+    const mergeHead = await runExternalProgram(
+      'git',
+      ['rev-parse', '--verify', '-q', 'MERGE_HEAD'],
+      {
+        cwd: path,
+        env: gitEnvironment(credentials.user, credentials.password),
+      },
+    ).result;
+    if (mergeHead.exitCode === 0)
+      await this.runGit(
+        ['merge', '--abort'],
+        credentials.user,
+        credentials.password,
+        path,
+      );
   }
 }
 
