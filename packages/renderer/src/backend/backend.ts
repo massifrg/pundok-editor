@@ -270,6 +270,7 @@ export interface Backend {
   initGitProject(path: string): Promise<void>;
   stageGitProject(path: string, paths: string[]): Promise<void>;
   unstageGitProject(path: string, paths: string[]): Promise<void>;
+  discardGitProject(path: string, paths: string[]): Promise<void>;
   updateGitignore(path: string, paths: string[]): Promise<void>;
   commitGitProject(options: GitCommitOptions): Promise<void>;
 

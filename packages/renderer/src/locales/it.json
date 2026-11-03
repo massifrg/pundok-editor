@@ -905,6 +905,8 @@
     "addToGitignore": "Aggiungi a .gitignore",
     "removeFromGitignore": "Rimuovi da .gitignore",
     "updateGitignore": "Aggiorna .gitignore",
+    "deleteChanges": "Elimina modifiche",
+    "confirmDeleteChanges": "Sei sicuro di voler eliminare le modifiche ai file selezionati?",
     "branchesAndUpdates": "Rami e aggiornamenti",
     "changesAndCommits": "Modifiche e commit",
     "close": "Chiudi",

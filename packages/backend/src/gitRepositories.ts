@@ -197,6 +197,35 @@ export class GitRepositoryManager {
     await this.runGit(['restore', '--staged', '--', ...paths], '', '', path);
   }
 
+  async discard(path: string, paths: string[]): Promise<void> {
+    if (!paths.length) return;
+    const status = await this.runGit(
+      ['status', '--porcelain=v1', '-z'],
+      '',
+      '',
+      path,
+    );
+    const selected = new Set(paths);
+    const files = parseStatus(status.output).filter((file) =>
+      selected.has(file.path),
+    );
+    const tracked = files
+      .filter((file) => file.indexStatus !== '?')
+      .map((file) => file.path);
+    const untracked = files
+      .filter((file) => file.indexStatus === '?')
+      .map((file) => file.path);
+    if (tracked.length)
+      await this.runGit(
+        ['restore', '--source=HEAD', '--staged', '--worktree', '--', ...tracked],
+        '',
+        '',
+        path,
+      );
+    if (untracked.length)
+      await this.runGit(['clean', '-f', '--', ...untracked], '', '', path);
+  }
+
   async updateGitignore(path: string, paths: string[]): Promise<void> {
     if (!paths.length) return;
     const filename = join(path, '.gitignore');

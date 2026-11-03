@@ -291,6 +291,10 @@ export class NetBackend implements Backend {
     return this.request<void>('unstage-git-project', { path, paths });
   }
 
+  discardGitProject(path: string, paths: string[]): Promise<void> {
+    return this.request<void>('discard-git-project', { path, paths });
+  }
+
   updateGitignore(path: string, paths: string[]): Promise<void> {
     return this.request<void>('update-gitignore', { path, paths });
   }

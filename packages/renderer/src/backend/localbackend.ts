@@ -525,6 +525,10 @@ export class LocalBackend implements Backend {
     return window.ipc.unstageGitProject(path, paths);
   }
 
+  discardGitProject(path: string, paths: string[]) {
+    return window.ipc.discardGitProject(path, paths);
+  }
+
   updateGitignore(path: string, paths: string[]) {
     return window.ipc.updateGitignore(path, paths);
   }

@@ -47,6 +47,20 @@ describe('GitRepositoryManager', () => {
       ).rejects.toBeDefined();
     },
   );
+
+  it('discards selected tracked and untracked files', async () => {
+    const repository = await createConflictingRepository(root);
+    const manager = new GitRepositoryManager(createBackendDirectories(root));
+    await writeFile(join(repository, 'file.txt'), 'discarded\n');
+    await writeFile(join(repository, 'untracked.txt'), 'discarded\n');
+
+    await manager.discard(repository, ['file.txt', 'untracked.txt']);
+
+    expect(await readFile(join(repository, 'file.txt'), 'utf8')).toBe('ours\n');
+    await expect(
+      readFile(join(repository, 'untracked.txt'), 'utf8'),
+    ).rejects.toBeDefined();
+  });
 });
 
 async function createConflictingRepository(root: string): Promise<string> {

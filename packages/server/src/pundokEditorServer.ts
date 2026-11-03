@@ -258,6 +258,17 @@ export class PundokEditorServer {
     );
   }
 
+  async discardGitProject(
+    user: string,
+    path: string,
+    paths: string[],
+  ): Promise<void> {
+    return this.gitRepositoriesForUser(user).discard(
+      this.userPath(user, path),
+      paths,
+    );
+  }
+
   async updateGitignore(
     user: string,
     path: string,

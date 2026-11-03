@@ -166,7 +166,16 @@
           </section>
         </div>
       </q-card-section>
-      <q-card-actions align="right">
+      <q-card-actions>
+        <q-btn
+          v-if="status.managed"
+          :label="$t('gitChangesDialog.deleteChanges')"
+          color="negative"
+          :disable="!selectedChangePaths.length || bulkBusy"
+          :loading="discardBusy"
+          @click="discardDialogVisible = true"
+        />
+        <q-space />
         <q-btn
           v-if="status.managed"
           :label="$t('gitChangesDialog.branchesAndUpdates')"
@@ -192,6 +201,26 @@
           @click="updateGitignore"
         />
         <q-btn :label="$t('gitChangesDialog.close')" @click="$emit('close')" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="discardDialogVisible">
+    <q-card class="commit-card">
+      <q-card-section>
+        {{ $t('gitChangesDialog.confirmDeleteChanges') }}
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn
+          :label="$t('gitChangesDialog.cancel')"
+          :disable="discardBusy"
+          @click="discardDialogVisible = false"
+        />
+        <q-btn
+          color="negative"
+          :label="$t('gitChangesDialog.deleteChanges')"
+          :loading="discardBusy"
+          @click="discardSelected"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -241,8 +270,10 @@ export default {
       selectedStagedPaths: [] as string[],
       bulkBusy: false,
       bulkAction: '' as '' | 'stage' | 'unstage',
+      discardBusy: false,
       gitignorePaths: [] as string[],
       commitDialogVisible: false,
+      discardDialogVisible: false,
       message: '',
     };
   },
@@ -273,6 +304,14 @@ export default {
           this.selectedStagedPaths.includes(file.path),
         )
       );
+    },
+    selectedChangePaths(): string[] {
+      return [
+        ...new Set([
+          ...this.selectedUnstagedPaths,
+          ...this.selectedStagedPaths,
+        ]),
+      ];
     },
   },
   watch: {
@@ -383,6 +422,20 @@ export default {
       await this.backend.updateGitignore(this.projectPath, this.gitignorePaths);
       this.gitignorePaths = [];
       await this.refresh();
+    },
+    async discardSelected() {
+      if (!this.backend || !this.selectedChangePaths.length) return;
+      this.discardBusy = true;
+      try {
+        await this.backend.discardGitProject(
+          this.projectPath,
+          this.selectedChangePaths,
+        );
+        this.discardDialogVisible = false;
+        await this.refresh();
+      } finally {
+        this.discardBusy = false;
+      }
     },
     async commit() {
       if (!this.backend || !this.message.trim()) return;

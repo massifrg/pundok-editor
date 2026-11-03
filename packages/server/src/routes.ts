@@ -370,6 +370,12 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/discard-git-project',
+    asyncHandler((req) =>
+      backend.discardGitProject(username(req), req.body?.path, req.body?.paths),
+    ),
+  );
+  router.post(
     '/update-gitignore',
     asyncHandler((req) =>
       backend.updateGitignore(username(req), req.body?.path, req.body?.paths),
