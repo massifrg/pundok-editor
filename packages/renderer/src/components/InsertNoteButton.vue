@@ -5,7 +5,8 @@
       <q-item v-for="nt in noteTypes" :key="nt" density="compact" :value="nt" :title="`insert a new ${nt}`" dense
         @click="$emit('insertNote', nt)">
         <q-item-section>
-          <q-btn icon="note_add" :label="nt" :title="`insert a new ${nt}`" no-caps @click="$emit('insertNote', nt)" />
+          <q-btn icon="note_add" :label="nt" :title="`insert a new ${nt}`" no-caps
+            @click.stop="$emit('insertNote', nt)" />
         </q-item-section>
         <q-item-section side>
           <q-btn-group>
