@@ -2,7 +2,7 @@ import { app } from 'electron';
 import './security-restrictions';
 import { restoreOrCreateWindow, WindowWithIpc } from './mainWindow';
 import { copyMissingStaticResourcesInUserDir } from './staticResources';
-import { parseCommandLineOpts } from './cli';
+import { hasNewWindowOption, parseCommandLineOpts } from './cli';
 import { getExtendedEnvironment } from './resourcesManager';
 import { checkRequiredPrograms } from './externalPrograms';
 
@@ -19,9 +19,11 @@ interface SecondInstanceData extends Record<string, any> {
 /**
  * Prevent multiple instances
  */
-const isSingleInstance = app.requestSingleInstanceLock({
-  argv: JSON.stringify(process.argv)
-});
+const isSingleInstance =
+  hasNewWindowOption() ||
+  app.requestSingleInstanceLock({
+    argv: JSON.stringify(process.argv)
+  });
 if (!isSingleInstance) {
   app.quit();
   process.exit(0);

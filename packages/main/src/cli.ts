@@ -3,6 +3,11 @@ import { hideBin } from "yargs/helpers"
 import { WindowWithIpc } from "./mainWindow"
 import { isAbsolute, resolve } from "path"
 
+export function hasNewWindowOption(argv: string[] = process.argv) {
+  const args = hideBin(argv)
+  return args.includes("-w") || args.includes("--new-window")
+}
+
 export function parseCommandLineOpts(
   windowWithIpc: WindowWithIpc,
   argv?: string[],
@@ -20,6 +25,11 @@ export function parseCommandLineOpts(
       alias: 'line',
       describe: 'line (Para, Header, Plain, line of LineBlock) to move the selection to',
       type: 'number'
+    })
+    .option('w', {
+      alias: 'new-window',
+      describe: 'open the document in a new editor instance',
+      type: 'boolean'
     })
     .help()
     .parse()
