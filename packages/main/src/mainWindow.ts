@@ -1,5 +1,6 @@
 import type { MenuItemConstructorOptions } from 'electron';
-import { BaseWindow, BrowserWindow, Menu, WebContentsView } from 'electron';
+import { app, BaseWindow, BrowserWindow, Menu, WebContentsView } from 'electron';
+import { spawn } from 'child_process';
 import { dirname, join } from 'path';
 import { URL, fileURLToPath } from 'url';
 import { IpcHub } from './ipc/ipcHub';
@@ -292,6 +293,25 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
           label: 'Download configurations',
           click: async () => {
             await askAndSaveConfToFile();
+          },
+        },
+        {
+          type: 'separator',
+        },
+        {
+          label: 'Open new editor',
+          click: () => {
+            const args = import.meta.env.DEV
+              ? [app.getAppPath(), '-w']
+              : ['-w'];
+            const newEditor = spawn(process.execPath, args, {
+              detached: true,
+              stdio: 'ignore',
+            });
+            newEditor.on('error', (error) => {
+              console.error('Failed to open new editor:', error);
+            });
+            newEditor.unref();
           },
         },
         {
