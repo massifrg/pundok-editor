@@ -208,6 +208,8 @@ import { useActions } from '../stores'
 import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import {
   EditorKeyType,
+  isProjectDocumentOrDescendant,
+  ProjectComponent,
   RenderingBookmark,
   RenderingPageBookmark,
   SYNCTEX_CONTEXT_REQUIRED,
@@ -253,11 +255,14 @@ export default {
   components: {
     PromptDialog,
   },
-  props: ['backend'],
+  props: ['backend', 'savedDocumentPath', 'savedDocumentProjectPath', 'savedDocumentVersion'],
   data() {
     return {
       filename: undefined as string | undefined,
       projectAsJson: undefined as string | undefined,
+      projectPath: undefined as string | undefined,
+      projectStructure: undefined as ProjectComponent | undefined,
+      autoReload: false,
       page: 1,
       viewPage: 1,
       maxPages: 1,
@@ -397,6 +402,21 @@ export default {
     },
   },
   watch: {
+    savedDocumentVersion() {
+      const path = this.savedDocumentPath as string | undefined
+      const projectPath = this.savedDocumentProjectPath as string | undefined
+      if (!path || !this.autoReload || !this.currentRendering ||
+        !this.projectStructure) return
+      const { documentPath } = this.currentRendering
+      if (isProjectDocumentOrDescendant(
+        this.projectStructure,
+        documentPath,
+        path,
+        this.projectPath,
+        projectPath,
+      ))
+        void this.regeneratePdf()
+    },
     lastAction(action: EditorAction) {
       if (action.name == ACTION_SETUP_VIEWER.name) {
         console.log(`PDF viewer: setup action "${action.name}"`)
@@ -462,6 +482,13 @@ export default {
         if (finishedTarget)
           this.$emit('rendering-finished', finishedTarget.converterName, finishedTarget.path)
         this.projectAsJson = projectAsJson
+        this.projectStructure = undefined
+        this.projectPath = undefined
+        if (projectAsJson) {
+          const project = JSON.parse(projectAsJson)
+          this.projectPath = project.path
+          this.projectStructure = await this.backend?.getInclusionTree(project)
+        }
         if (page) {
           this.page = page
           this.viewPage = page
@@ -1095,10 +1122,18 @@ export default {
         :start-value="bookmarks[currentBookmarkIndex]?.label" @set-value="setBookmarkLabel"
         @close-dialog="showBookmarkNameDialog = false" />
       <q-space />
-      <q-btn size="sm" :icon="isRegeneratingPdf ? undefined : 'reload'"
-        :disable="isRegeneratingPdf || !currentRendering" :title="$t('pdfViewer.reload')" @click="regeneratePdf()">
-        <q-circular-progress v-if="isRegeneratingPdf" indeterminate round size="1rem" />
-      </q-btn>
+      <q-btn-dropdown split size="sm" :icon="isRegeneratingPdf ? undefined : 'reload'"
+        :loading="isRegeneratingPdf"
+        :disable="isRegeneratingPdf || !currentRendering" :title="$t('pdfViewer.reload')"
+        @click="regeneratePdf()">
+        <q-list>
+          <q-item tag="label" clickable>
+            <q-item-section>
+              <q-checkbox v-model="autoReload" :label="$t('pdfViewer.autoReload')" />
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-btn-dropdown>
       <q-space />
       <q-circular-progress :indeterminate="isRendering" :value="isRendering ? 100 : undefined" rounded size="1.4rem"
         color="light-blue" class="q-mx-md q-my-xs q-pa-xs" />

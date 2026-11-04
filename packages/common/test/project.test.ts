@@ -5,6 +5,7 @@ import {
   getNextProjectComponentAcrossContainers,
   getParentProjectComponent,
   getProjectComponentChildren,
+  isProjectDocumentOrDescendant,
   getPreviousProjectComponent,
   getPreviousProjectComponentAcrossContainers,
   type PundokEditorProject,
@@ -33,6 +34,33 @@ const structure: ProjectComponent = {
     { src: 'appendix.md' },
   ],
 };
+
+describe('project document ancestry', () => {
+  it('matches a project document and its descendants', () => {
+    const tree: ProjectComponent = {
+      src: 'book.md',
+      children: [{ src: 'chapters/one.md' }, { src: 'chapters/two.md' }],
+    };
+    expect(isProjectDocumentOrDescendant(tree, 'book.md', 'book.md', '/project', '/project')).toBe(true);
+    expect(isProjectDocumentOrDescendant(tree, 'book.md', 'chapters/two.md', '/project', '/project')).toBe(true);
+    expect(isProjectDocumentOrDescendant(tree, 'chapters/one.md', 'chapters/two.md', '/project', '/project')).toBe(false);
+    expect(isProjectDocumentOrDescendant(tree, 'book.md', 'chapters/two.md', '/project', '/other')).toBe(false);
+  });
+
+  it('matches equivalent absolute and project-relative sources', () => {
+    const tree: ProjectComponent = {
+      src: '/project/book.md',
+      children: [{ src: '/project/chapters/one.md' }],
+    };
+    expect(isProjectDocumentOrDescendant(
+      tree,
+      'book.md',
+      '/project/chapters/one.md',
+      '/project',
+      '/project',
+    )).toBe(true);
+  });
+});
 
 describe('project utilities', () => {
   it('returns the previous and next sibling in a nested children array', () => {

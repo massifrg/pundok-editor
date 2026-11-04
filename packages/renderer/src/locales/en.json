@@ -865,6 +865,7 @@
     "renameBookmark": "rename bookmark",
     "showRenderings": "show renderings",
     "reload": "reload PDF",
+    "autoReload": "automatically reload PDF after saving a source document",
     "pageImage": "PDF page",
     "onePageColumn": "show pages in one column",
     "twoPageSpread": "show two-page spread",

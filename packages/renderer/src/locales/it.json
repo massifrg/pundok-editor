@@ -864,6 +864,7 @@
     "renameBookmark": "rinomina segnalibro",
     "showRenderings": "mostra le creazioni",
     "reload": "ricarica PDF",
+    "autoReload": "ricarica automaticamente il PDF dopo aver salvato un documento sorgente",
     "pageImage": "pagina PDF",
     "onePageColumn": "mostra le pagine in una colonna",
     "twoPageSpread": "mostra pagine affiancate",

@@ -20,7 +20,10 @@
     <q-drawer v-if="isMainEditor" show-if-above behavior="desktop" bordered :v-model="leftDrawerState === 'normal'"
       side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="24"
       :width="leftDrawerWidth" :breakpoint="500">
-      <PdfViewer :backend="backend" class="pdf-viewer" @rendering-started="renderingStarted"
+      <PdfViewer :backend="backend" :saved-document-path="lastSavedDocumentPath"
+        :saved-document-project-path="lastSavedDocumentProjectPath"
+        :saved-document-version="lastSavedDocumentVersion" class="pdf-viewer"
+        @rendering-started="renderingStarted"
         @rendering-finished="renderingFinished" />
       <div class="q-mini-drawer-only absolute" style="top: 150px; right: 3px">
         <q-btn dense round unelevated color="secondary" icon="chevron_right" @click="maximizePdfViewer" />
@@ -385,6 +388,9 @@ export default {
       transformationLog: [] as string[],
       transformationFailed: false,
       transformationEditorKey: undefined as EditorKeyType | undefined,
+      lastSavedDocumentPath: undefined as string | undefined,
+      lastSavedDocumentProjectPath: undefined as string | undefined,
+      lastSavedDocumentVersion: 0,
     };
   },
 
@@ -1292,6 +1298,12 @@ export default {
                 (differentProject ? `, reloaded in project "${differentProject.name}"` : ''),
               icon: 'content_save_check',
             });
+            if (!isCopy && response.doc.path)
+              this.lastSavedDocumentPath = response.doc.path;
+            if (!isCopy && response.doc.path)
+              this.lastSavedDocumentProjectPath = response.doc.project?.path;
+            if (!isCopy && response.doc.path)
+              this.lastSavedDocumentVersion++;
           }
           if (response.doc && (response.doc.path || response.doc.id)) {
             return response;

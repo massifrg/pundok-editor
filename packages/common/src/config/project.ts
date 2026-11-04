@@ -137,6 +137,61 @@ export function getProjectComponentChildren(
   return undefined;
 }
 
+function sourceVariants(src: string, projectPath?: string): string[] {
+  const normalized = src
+    .replace(/^file:\/\//, '')
+    .replaceAll('\\', '/')
+    .replace(/^\.\/+/, '')
+    .replace(/\/+$/, '');
+  const variants = [normalized];
+  const project = projectPath
+    ?.replace(/^file:\/\//, '')
+    .replaceAll('\\', '/')
+    .replace(/\/+$/, '');
+  if (project && normalized.startsWith(`${project}/`))
+    variants.push(normalized.slice(project.length + 1));
+  return variants;
+}
+
+function sameProjectSource(
+  first: string | undefined,
+  second: string | undefined,
+  projectPath?: string,
+): boolean {
+  if (!first || !second) return false;
+  const secondVariants = sourceVariants(second, projectPath);
+  return sourceVariants(first, projectPath)
+    .some((source) => secondVariants.includes(source));
+}
+
+/**
+ * Returns whether a saved document is the given project component or one of
+ * its descendants.
+ */
+export function isProjectDocumentOrDescendant(
+  structure: ProjectComponent,
+  documentSrc: string,
+  savedSrc: string,
+  projectPath?: string,
+  savedProjectPath?: string,
+): boolean {
+  if (
+    !projectPath ||
+    !savedProjectPath ||
+    !sameProjectSource(projectPath, savedProjectPath)
+  )
+    return false;
+  const containsSource = (component: ProjectComponent): boolean =>
+    sameProjectSource(component.src, savedSrc, projectPath) ||
+    (component.children || []).some(containsSource);
+  const findDocument = (component: ProjectComponent): ProjectComponent | undefined =>
+    sameProjectSource(component.src, documentSrc, projectPath)
+      ? component
+      : (component.children || []).map(findDocument).find(Boolean);
+  const document = findDocument(structure);
+  return document ? containsSource(document) : false;
+}
+
 interface ProjectComponentLocation {
   container: ProjectComponent;
   index: number;
