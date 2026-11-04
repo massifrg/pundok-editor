@@ -310,9 +310,9 @@ export async function computeProjectConfiguration(
     const pruning = project.editorConfig.remove;
     if (pruning) computedConfig = getPrunedConfigInit(computedConfig, pruning);
   } catch (err) {
-    // console.log(err);
+    const reason = err instanceof Error ? err.message : String(err);
     return Promise.reject(
-      `can't compute configuration for project "${project.name}"`,
+      `can't compute configuration for project "${project.name}": ${reason}`,
     );
   }
   // console.log(computedConfig);

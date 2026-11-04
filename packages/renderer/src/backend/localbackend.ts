@@ -568,10 +568,8 @@ function getConfigurationFunction(ipc: any) {
       return Promise.resolve(getHardcodedEditorConfig());
     const notFound = `Configuration "${name}" not found`;
     if (ipc) {
-      const configInit: PundokEditorConfigInit = await ipc.invoke(
-        'load-configuration',
-        name,
-      );
+      const configInit: PundokEditorConfigInit | undefined =
+        await ipc.loadConfiguration(name);
       return configInit
         ? new PundokEditorConfig(configInit)
         : Promise.reject(notFound);
