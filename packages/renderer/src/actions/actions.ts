@@ -368,7 +368,6 @@ export const ACTION_REPLACE_AND_SELECT_NEXT: BaseEditorAction = {
 
 export const ACTION_REPEAT_CHANGE: BaseActionForNodeOrMark = {
   name: 'repeat-change',
-  label: 'repeat change',
   icon: 'repeat_command',
   tooltip: (editor, action) =>
     editor && currentRepeatableCommandTooltip(editor.state),
@@ -627,7 +626,6 @@ export const ACTION_SETUP_VIEWER: BaseEditorAction = {
 
 export const ACTION_EDIT_ATTRIBUTES: BaseActionForNodeOrMark = {
   name: 'edit-node-or-mark-attributes',
-  label: 'edit attributes...',
   icon: 'attributes_edit',
 };
 
@@ -652,7 +650,6 @@ export const ACTION_SET_META_MAP_TEXT: BaseActionForNodeOrMark = {
 
 export const UNWRAP_BLOCKS_ACTION: BaseActionForNodeOrMark = {
   name: 'unwrap-blocks',
-  label: 'unwrap the contents',
   icon: 'unwrap',
   canDo: (editor, action) =>
     !!action?.nodeOrMark?.pos &&
@@ -774,7 +771,7 @@ export function labelForAction(action: ActionCore, editor?: Editor, t?: (key: st
 export function tooltipForAction(
   action: ActionCore,
   editor?: Editor,
-  t?: (key: string) => string,
+  t?: (key: string, vars?: Record<string, any>) => string,
 ): string | undefined {
   return _tooltipForAction(action as any, editor, t)
 }

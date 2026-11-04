@@ -4,9 +4,9 @@ import { ACTION_DESCRIPTORS } from '../common'
 import { BaseAction } from './actions'
 
 export type ActionCore = {
-    label?: string | ((editor?: Editor, action?: any) => string | undefined)
+    label?: string | ((editor?: Editor, action?: any, t?: (key: string, vars?: Record<string, any>) => string) => string | undefined)
     labelParams?: Record<string, string>
-    tooltip?: string | ((editor?: Editor, action?: any) => string | undefined)
+    tooltip?: string | ((editor?: Editor, action?: any, t?: (key: string, vars?: Record<string, any>) => string) => string | undefined)
     tooltipParams?: Record<string, string>
     highlight?: boolean | ((editor?: Editor, action?: any) => boolean | undefined)
 }

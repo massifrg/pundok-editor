@@ -1,12 +1,12 @@
 <template>
   <q-menu :model-value="!!clickedNodeOrMark" touch-position context-menu @before-show="prepareContextMenuItems">
     <q-list dense>
-      <q-item v-for="hl in highlightedActions" :key="hl.name" clickable :title="tooltipForAction(hl)" v-close-popup
+      <q-item v-for="hl in highlightedActions" :key="hl.name" clickable :title="tooltipForContextAction(hl)" v-close-popup
         @click="setAction(hl)">
         <q-item-section side>
           <q-icon :name="hl.icon" />
         </q-item-section>
-        <q-item-section>{{ labelForAction(hl) }}</q-item-section>
+        <q-item-section>{{ labelForContextAction(hl) }}</q-item-section>
       </q-item>
       <q-item v-for="lnom in labeledWithActions" :key="lnom.key" clickable :class="classFor(lnom)">
         <q-item-section :class="classFor(lnom)" side>{{ lnom.node ? 'N' : 'M' }}</q-item-section>
@@ -104,13 +104,13 @@ export default {
       }
       // this.$forceUpdate()
     },
-    labelForAction(a: ActionCore) {
+    labelForContextAction(a: ActionCore) {
       // pass the Vue i18n `$t` translator if available
       // @ts-ignore
       const t = (this as any).$t ? (this as any).$t.bind(this) : undefined
       return labelForAction(a, this.editor, t)
     },
-    tooltipForAction(a: ActionCore) {
+    tooltipForContextAction(a: ActionCore) {
       // @ts-ignore
       const t = (this as any).$t ? (this as any).$t.bind(this) : undefined
       return tooltipForAction(a, this.editor, t)

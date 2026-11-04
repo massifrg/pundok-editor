@@ -29,33 +29,25 @@ export interface ActionsGroup extends BaseActionsGroup {
 
 const ACTION_GROUP_INSERT_BEFORE: BaseActionsGroup = {
   name: 'insert-before',
-  label: 'insert before...',
   icon: 'place_of_insertion',
   iconRight: 'block',
-  tooltip: 'insert an element before this one'
 };
 
 const ACTION_GROUP_INSERT_AFTER: BaseActionsGroup = {
   name: 'insert-after',
-  label: 'insert after...',
   icon: 'block',
   iconRight: 'place_of_insertion',
-  tooltip: 'insert an element after this one'
 };
 
 const ACTION_GROUP_CONVERT_BLOCK: BaseActionsGroup = {
   name: 'convert-block',
-  label: 'convert block...',
   icon: 'block_convert',
-  tooltip: 'convert this Block into a compatible one'
 };
 
 const ACTION_GROUP_MOVE_BLOCK: BaseActionsGroup = {
   name: 'move-block',
-  label: 'move block...',
   icon: 'place_of_insertion',
   iconRight: 'block_move',
-  tooltip: 'move this Block up, down, up & inside or down & inside'
 };
 
 export function insertBlockAction(
@@ -167,7 +159,6 @@ export function moveBlockActions(
     {
       editorKey,
       name: 'move-before-first-sibling',
-      label: 'move before any sibling',
       icon: 'arrow_top',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('start', pos),
@@ -176,7 +167,6 @@ export function moveBlockActions(
     {
       editorKey,
       name: 'move-before-previous-sibling',
-      label: 'move before previous sibling',
       icon: 'arrow_upward',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('up', pos),
@@ -185,7 +175,6 @@ export function moveBlockActions(
     {
       editorKey,
       name: 'move-after-next-sibling',
-      label: 'move after next sibling',
       icon: 'arrow_downward',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('down', pos),
@@ -194,7 +183,6 @@ export function moveBlockActions(
     {
       editorKey,
       name: 'move-after-last-sibling',
-      label: 'move after any sibling',
       icon: 'arrow_bottom',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('end', pos),
@@ -203,7 +191,6 @@ export function moveBlockActions(
     {
       editorKey,
       name: 'move-inside-prev-sibling',
-      label: 'move inside previous sibling',
       icon: 'arrow_top_right',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('up-inside', pos),
@@ -212,7 +199,6 @@ export function moveBlockActions(
     {
       editorKey,
       name: 'move-inside-next-sibling',
-      label: 'move inside next sibling',
       icon: 'arrow_bottom_right',
       group: moveGroup,
       canDo: (editor) => editor.can().moveChild('down-inside', pos),

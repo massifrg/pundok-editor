@@ -78,7 +78,6 @@ export function actionsForNodeOrMark(
     const selectNodeAction: ActionForNodeOrMark = {
       editorKey,
       name: 'select-node',
-      label: `select`,
       icon: 'select',
       canDo: (editor) => editor.can().setNodeSelection(pos),
       do: (editor) => editor.chain().setNodeSelection(pos).focus().run(),
@@ -90,7 +89,6 @@ export function actionsForNodeOrMark(
     const copyNodeAction: ActionForNodeOrMark = {
       editorKey,
       name: 'copy-node',
-      label: `copy`,
       icon: 'clipboard_copy',
       canDo: (editor) => editor.can().copyAsJson(nodeOrMark!.node),
       do: (editor) => editor.commands.copyAsJson(nodeOrMark!.node),
@@ -102,7 +100,6 @@ export function actionsForNodeOrMark(
     const deleteAction: ActionForNodeOrMark = {
       editorKey,
       name: 'delete-node',
-      label: `delete`,
       icon: 'delete',
       canDo: (editor) => editor.can().deleteNodeAtPos(pos, { ...node } as Node),
       do: (editor) => editor.commands.deleteNodeAtPos(pos, { ...node } as Node),
@@ -114,7 +111,6 @@ export function actionsForNodeOrMark(
     const duplicateAction: ActionForNodeOrMark = {
       editorKey,
       name: 'duplicate-node',
-      label: 'duplicate',
       icon: 'duplicate',
       canDo: (editor) => editor.can().duplicateNode(pos),
       do: (editor) => editor.commands.duplicateNode(pos),
@@ -130,7 +126,6 @@ export function actionsForNodeOrMark(
       const addPandocTableCaptionAction: ActionForNodeOrMark = {
         editorKey,
         name: 'add-table-caption',
-        label: `add table caption`,
         icon: 'caption_add',
         canDo: (editor) => editor.can().addTableCaption(),
         do: (editor) => editor.commands.addTableCaption(),
@@ -139,7 +134,6 @@ export function actionsForNodeOrMark(
       const addPandocTableHeadAction: ActionForNodeOrMark = {
         editorKey,
         name: 'add-table-head',
-        label: `add table head`,
         icon: 'table_head',
         canDo: (editor) => editor.can().addTableHead(),
         do: (editor) => editor.commands.addTableHead(),
@@ -148,7 +142,6 @@ export function actionsForNodeOrMark(
       const addPandocTableFootAction: ActionForNodeOrMark = {
         editorKey,
         name: 'add-table-foot',
-        label: `add table foot`,
         icon: 'table_foot',
         canDo: (editor) => editor.can().addTableFoot(),
         do: (editor) => editor.commands.addTableFoot(),
@@ -166,7 +159,6 @@ export function actionsForNodeOrMark(
       const prependPandocTableBodyAction: ActionForNodeOrMark = {
         editorKey,
         name: 'prepend-table-body',
-        label: 'new table body before this',
         icon: 'table_row_add_before',
         canDo: (editor) => editor.can().addTableBodyBefore(),
         do: (editor) => editor.commands.addTableBodyBefore(),
@@ -175,7 +167,6 @@ export function actionsForNodeOrMark(
       const appendPandocTableBodyAction: ActionForNodeOrMark = {
         editorKey,
         name: 'append-table-body',
-        label: 'new table body after this',
         icon: 'table_row_add_after',
         canDo: (editor) => editor.can().addTableBodyAfter(),
         do: (editor) => editor.commands.addTableBodyAfter(),
@@ -184,7 +175,6 @@ export function actionsForNodeOrMark(
       const decreasePandocTableBodyHeadRowsAction: ActionForNodeOrMark = {
         editorKey,
         name: 'decrease-table-body-header-rows',
-        label: "decrease body's header rows",
         icon: 'table_row',
         iconRight: 'arrow_upward',
         canDo: (editor) => editor.can().decreaseTableBodyHeaderRows(),
@@ -194,7 +184,6 @@ export function actionsForNodeOrMark(
       const increasePandocTableBodyHeadRowsAction: ActionForNodeOrMark = {
         editorKey,
         name: 'increase-table-body-header-rows',
-        label: "increase body's header rows",
         icon: 'table_row',
         iconRight: 'arrow_downward',
         canDo: (editor) => editor.can().increaseTableBodyHeaderRows(),
@@ -204,7 +193,6 @@ export function actionsForNodeOrMark(
       const decreasePandocTableBodyHeadColsAction: ActionForNodeOrMark = {
         editorKey,
         name: 'decrease-table-body-header-columns',
-        label: "decrease body's header columns",
         icon: 'table_column',
         iconRight: 'arrow_left',
         canDo: (editor) => editor.can().decreaseTableBodyHeaderColumns(),
@@ -214,7 +202,6 @@ export function actionsForNodeOrMark(
       const increasePandocTableBodyHeadColsAction: ActionForNodeOrMark = {
         editorKey,
         name: 'increase-table-body-header-columns',
-        label: "increase body's header columns",
         icon: 'table_column',
         iconRight: 'arrow_right',
         canDo: (editor) => editor.can().increaseTableBodyHeaderColumns(),
@@ -286,7 +273,6 @@ export function actionsForNodeOrMark(
       actions.push({
         editorKey,
         name: 'propagate-index-name',
-        label: 'propagate index name to index terms',
         icon: 'index_propagate_name',
         canDo: (editor) => editor.can().propagateIndexNameToTerms(),
         do: (editor) => editor.commands.propagateIndexNameToTerms(),
@@ -390,7 +376,6 @@ export function actionsForNodeOrMark(
     const selectMarkRangeAction: ActionForNodeOrMark = {
       editorKey,
       name: 'select-mark-range',
-      label: `select`,
       icon: 'select',
       canDo: (editor) => editor.can().setTextSelectionRange(from, to),
       do: (editor) =>
