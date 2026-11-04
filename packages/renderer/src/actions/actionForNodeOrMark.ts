@@ -42,6 +42,7 @@ import {
   moveBlockActions
 } from './actionGroup';
 import { setActionCommand } from './actionCommands';
+import { getDocState } from '../schema/helpers';
 
 export function actionsForNodeOrMark(
   state: EditorState,
@@ -315,6 +316,7 @@ export function actionsForNodeOrMark(
         context: {
           id,
           path,
+          project: getDocState(state)?.project,
           inputConverter: {
             type: 'pandoc',
             format,
@@ -332,6 +334,43 @@ export function actionsForNodeOrMark(
           props,
           editorKey
         })
+        if (path) {
+          const newEditorProps = {
+            ...props,
+            context: {
+              ...(props as DocumentOpenActionProps).context,
+              inNewEditor: true,
+            },
+          } as DocumentOpenActionProps
+          actions.push({
+            ...ACTION_DOCUMENT_OPEN,
+            label: (_, action, t) => {
+              const actionPath = (action?.props as DocumentOpenActionProps)?.context?.path
+              return t
+                ? t('actions.openDocumentInNewEditor', { path: actionPath })
+                : `open document "${actionPath}" in a new editor`
+            },
+            canDo: () => true,
+            do: () => {
+              if (window.ipc) {
+                void window.ipc.openDocument(
+                  JSON.stringify(newEditorProps.context),
+                ).catch(console.error)
+              }
+              else {
+                const url = new URL(window.location.href)
+                url.searchParams.set(
+                  'document',
+                  JSON.stringify(newEditorProps.context),
+                )
+                window.open(url.toString(), '_blank', 'noopener,noreferrer')
+              }
+              return true
+            },
+            props: newEditorProps,
+            editorKey
+          })
+        }
       }
     }
 

@@ -119,6 +119,7 @@ export type LabelForAction =
   | ((
     editor?: Editor,
     action?: BaseAction,
+    t?: (key: string, vars?: Record<string, any>) => string,
   ) => string | undefined);
 
 export type TooltipForAction =
@@ -126,6 +127,7 @@ export type TooltipForAction =
   | ((
     editor?: Editor,
     action?: BaseAction,
+    t?: (key: string, vars?: Record<string, any>) => string,
   ) => string | undefined);
 
 export type HighlightForAction =
@@ -249,19 +251,26 @@ export const ACTION_NEW_DOCUMENT: BaseEditorAction = {
 
 export const ACTION_DOCUMENT_OPEN: BaseEditorAction = {
   name: 'open-document',
-  label: (_, action) => {
+  label: (_, action, t) => {
+    console.log(`ACTION_DOCUMENT_OPEN: t is ${!!t}`)
     const path = (action?.props as DocumentOpenActionProps)?.context?.path
     const suffix = path ? ` "${path}"` : ''
-    return `open document${suffix}`
+    return t
+      ? t('actions.openDocument', { suffix })
+      : `open document${suffix}`
   },
-  tooltip: (_, action) => {
+  tooltip: (_, action, t) => {
     const props = action?.props as DocumentOpenActionProps
     const path = props?.context?.path
     const atLine = props?.atLine
-    let text = 'open document'
-    text = path ? `${text} "${path}"` : ''
-    text = atLine ? `${text} at line (paragraph) ${atLine}` : ''
-    return text
+    const pathText = path ? ` "${path}"` : ''
+    const atLineText = atLine ? ` at line (paragraph) ${atLine}` : ''
+    return t
+      ? t('actions.openDocumentTooltip', {
+        path: pathText,
+        atLine: atLineText,
+      })
+      : `open document${pathText}${atLineText}`
   },
   highlight: (_, action) => !!(action?.props as DocumentOpenActionProps)?.context?.path,
   icon: 'document_open',

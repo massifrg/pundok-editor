@@ -730,6 +730,14 @@ export default {
         const docState = getDocState((this.editor as Editor).state);
         backend.editorReady(docState?.editorKey);
       }
+      const documentToOpen = new URLSearchParams(window.location.search).get('document');
+      if (documentToOpen) {
+        try {
+          await this.openDocument(JSON.parse(documentToOpen) as DocumentContext);
+        } catch (error) {
+          console.error('Failed to open document from URL:', error);
+        }
+      }
     }
     window.addEventListener('beforeunload', this.onClose);
   },

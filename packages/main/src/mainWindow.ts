@@ -22,6 +22,21 @@ let showPdfView = false;
 let pdfViewRelWidth = 0.6; // 0.35;
 let resizeEditorView: (options?: { refreshDevTools?: boolean }) => void;
 
+export function openNewEditor(path?: string) {
+  const args = import.meta.env.DEV
+    ? [app.getAppPath(), '-w']
+    : ['-w'];
+  if (path) args.push(path);
+  const newEditor = spawn(process.execPath, args, {
+    detached: true,
+    stdio: 'ignore',
+  });
+  newEditor.on('error', (error) => {
+    console.error('Failed to open new editor:', error);
+  });
+  newEditor.unref();
+}
+
 export interface WindowWithIpc {
   window: BaseWindow,
   ipcHub: IpcHub
@@ -301,17 +316,7 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
         {
           label: 'Open new editor',
           click: () => {
-            const args = import.meta.env.DEV
-              ? [app.getAppPath(), '-w']
-              : ['-w'];
-            const newEditor = spawn(process.execPath, args, {
-              detached: true,
-              stdio: 'ignore',
-            });
-            newEditor.on('error', (error) => {
-              console.error('Failed to open new editor:', error);
-            });
-            newEditor.unref();
+            openNewEditor();
           },
         },
         {

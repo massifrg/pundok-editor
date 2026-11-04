@@ -20,6 +20,8 @@ export interface DocumentContext {
   project?: PundokEditorProject;
   /** An array of paths for pandoc's --resource-path option */
   resourcePath?: string[];
+  /** Open the document in a separate editor instance or browser tab. */
+  inNewEditor?: boolean;
 }
 
 /**

@@ -39,7 +39,7 @@ export function labelForAction(
     } else if (isString(label))
         return label
     else if (typeof label === 'function')
-        return label(editor, action)
+        return label(editor, action, t)
     else
         return name
 }
@@ -58,7 +58,7 @@ export function tooltipForAction(
     } else if (isString(tooltip))
         return tooltip
     else if (typeof tooltip === 'function')
-        return tooltip(editor, action)
+        return tooltip(editor, action, t)
     else
         return name
 }

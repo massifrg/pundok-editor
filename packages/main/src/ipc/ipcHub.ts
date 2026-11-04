@@ -1,5 +1,6 @@
 import type { BaseWindow, WebContentsView } from 'electron';
 import { spawnSync } from 'node:child_process';
+import { isAbsolute, resolve } from 'node:path';
 import { ipcMain, shell } from 'electron';
 import {
   CommandToRenderer,
@@ -56,7 +57,7 @@ import {
 import { backendDirectories } from '../resourcesManager';
 import { renderAgainHandler } from './renderAgainHandler';
 import { getFolderContentsHandler } from './getFolderContentsHandler';
-import { refreshMainMenu } from '../mainWindow';
+import { openNewEditor, refreshMainMenu } from '../mainWindow';
 import { setValueHandler } from './setValueHandler';
 
 /** An object describing a document's opening */
@@ -151,16 +152,29 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('get-folder-contents', getFolderContentsHandler(this));
     ipcMain.handle('create-folder', (_event, path) => createFolder(path));
-    ipcMain.handle('open-document', async (_event, serializedContext) => {
-      const context = JSON.parse(serializedContext) as DocumentContext;
-      const document = await openDocument(
-        backendDirectories(),
-        feedbackSink(this),
-        { ...context, editorKey: context.editorKey || this.mainEditorKey },
-      );
-      refreshMainMenu(this);
-      return document;
-    });
+    ipcMain.handle(
+      'open-document',
+      async (_event, serializedContext) => {
+        const context = JSON.parse(serializedContext) as DocumentContext;
+        if (context.inNewEditor) {
+          if (!context.path)
+            throw new Error('You must provide a valid file path');
+          const path =
+            !isAbsolute(context.path) && context.project?.path
+              ? resolve(context.project.path, context.path)
+              : context.path;
+          openNewEditor(path);
+          return undefined;
+        }
+        const document = await openDocument(
+          backendDirectories(),
+          feedbackSink(this),
+          { ...context, editorKey: context.editorKey || this.mainEditorKey },
+        );
+        refreshMainMenu(this);
+        return document;
+      },
+    );
     ipcMain.handle('save-document', async (_event, serializedDocument) => {
       const document = JSON.parse(serializedDocument) as CxDocument;
       const response = await saveDocument(
