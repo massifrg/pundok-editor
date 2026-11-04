@@ -356,7 +356,10 @@ export default {
       return firstPageInSpread(this.page, this.twoPageSpread, this.firstPageOnRight)
     },
     displayedPageInView(): number {
-      return firstPageInSpread(this.viewPage, this.twoPageSpread, this.firstPageOnRight)
+      return Math.min(
+        firstPageInSpread(this.viewPage, this.twoPageSpread, this.firstPageOnRight),
+        this.maxPages,
+      )
     },
     pagesToDisplay(): number {
       const viewportHeight = this.div?.clientHeight || 700
@@ -568,6 +571,7 @@ export default {
         if (this.filename === filename && result) {
           this.maxPages = result.pageCount
           this.page = Math.min(this.page, result.pageCount)
+          this.viewPage = Math.min(this.viewPage, result.pageCount)
           this.$nextTick(() => this.updateDisplayedPages())
           if (result.usedImageMagick) {
             this.$q.notify({
@@ -1074,7 +1078,8 @@ export default {
       -->
       <q-btn size="sm" icon='page_first' :title="$t('pdfViewer.firstPage')" :disabled="page <= 1" @click="firstPage" />
       <q-btn size="sm" icon='page_left' :title="$t('pdfViewer.previousPage')" :disabled="page <= 1" @click="prevPage" />
-      <q-chip :label="`${page}/${maxPages}`" size="md" @wheel="pageWheel" clickable @click="showPageDialog = true" />
+      <q-chip :label="`${page}/${maxPages}`" size="md" @wheel="pageWheel" clickable
+        @click.stop="showPageDialog = true" />
       <PromptDialog :visible="showPageDialog" :label="$t('pdfViewer.goToPage')" :start-value="page.toString()"
         :validate="validatePage" @set-value="setPage" @close-dialog="showPageDialog = false" />
       <q-btn size="sm" icon='page_right' :title="$t('pdfViewer.nextPage')" :disabled="page >= maxPages"

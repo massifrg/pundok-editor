@@ -1,9 +1,9 @@
 <template>
-  <q-dialog :model-value="visible">
+  <q-dialog :model-value="visible" @hide="$emit('close-dialog')">
     <q-card>
       <q-card-section>
         <q-input v-model="value" :label="label" :default="startValue" :rules="[validate as ValidationRule]"
-          no-error-icon @keyup="onKeypress"></q-input>
+          autofocus no-error-icon @focus="selectInput" @keyup="onKeypress"></q-input>
       </q-card-section>
       <q-card-actions align="right">
         <q-btn :disable="validate && !validate(value)" color="primary" label="OK" @click="onOkClick" />
@@ -14,6 +14,8 @@
 </template>
 
 <script lang="ts">
+import { ValidationRule } from 'quasar';
+
 
 export default {
   props: {
@@ -58,6 +60,10 @@ export default {
         return false
       }
     },
+    selectInput(e: Event) {
+      const input = e.target
+      if (input instanceof HTMLInputElement) input.select()
+    },
     onOkClick() {
       const validate = this.validate
       if (!validate || (validate && this.validate(this.value) === true)) {
@@ -65,10 +71,7 @@ export default {
         this.hide()
       }
     },
-    onDialogHide() {
-    },
     hide() {
-      this.onDialogHide()
       this.$emit('close-dialog')
     }
   }
