@@ -53,8 +53,8 @@ export function tooltipForAction(
     if (!tooltip) {
         const descriptor = ACTION_DESCRIPTORS[name]
         return (t && descriptor?.tooltipKey)
-            ? t(descriptor.tooltipKey, action.tooltipParams || action.labelParams) || name
-            : name
+            && t(descriptor.tooltipKey, action.tooltipParams || action.labelParams)
+            || undefined
     } else if (isString(tooltip))
         return tooltip
     else if (typeof tooltip === 'function')
