@@ -1242,7 +1242,7 @@ export default {
               caption: 'SAVE ERROR',
               message: JSON.stringify(response.error),
               icon: 'content_save_alert',
-            });
+            }, 'bottom');
             return Promise.reject(errmsg);
           } else {
             const path = response.doc.path;
@@ -1297,7 +1297,7 @@ export default {
               message: `saved as ${response.doc.path || response.doc.id}` +
                 (differentProject ? `, reloaded in project "${differentProject.name}"` : ''),
               icon: 'content_save_check',
-            });
+            }, 'bottom');
             if (!isCopy && response.doc.path)
               this.lastSavedDocumentPath = response.doc.path;
             if (!isCopy && response.doc.path)
@@ -1318,7 +1318,7 @@ export default {
           caption: 'SAVE ERROR',
           message,
           icon: 'content_save_alert',
-        });
+        }, 'bottom');
         console.log(message);
         return Promise.reject(errmsg);
       }
@@ -1574,13 +1574,16 @@ export default {
         noteStyles: docState?.configuration?.noteStyles,
       });
     },
-    showResultMessage(props: ResultMessageActionProps) {
+    showResultMessage(
+      props: ResultMessageActionProps,
+      position: 'top' | 'bottom' = 'top',
+    ) {
       const { success, message, caption, icon } = props;
       this.$q.notify({
         message,
         caption,
         icon,
-        position: 'top',
+        position,
         color: success ? 'positive' : 'negative',
         timeout: success ? 2000 : 5000,
       });
