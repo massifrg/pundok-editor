@@ -410,7 +410,7 @@ export function setIndexRefCommand(optIndex?: Index | string): Command {
     const { from, to, empty } = state.selection;
     const marks = state.doc.resolve(from).marks();
     if (empty) {
-      if (!index.onlyEmpty === true) return false;
+      if (!(index.onlyEmpty || index.allowEmpty)) return false;
       if (dispatch) {
         const refClass = index.refClass || DEFAULT_INDEX_REF_CLASS;
         const indexRef = indexRefType.create(
