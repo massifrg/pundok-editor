@@ -110,6 +110,7 @@ import { Editor, EditorContent, NodeWithPos } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorState } from '@tiptap/pm/state';
 import { isString } from 'lodash-es';
+import { resolve } from 'path-browserify';
 import { mapState } from 'pinia';
 import {
   editorKeyFromState,
@@ -1027,6 +1028,23 @@ export default {
           } as DocumentDialogProps);
         }
       } else {
+        const currentDocumentPath =
+          docState?.workingFolder && docState.documentName
+            ? resolve(docState.workingFolder, docState.documentName)
+            : undefined;
+        if (
+          editorKey &&
+          atLine !== undefined &&
+          currentDocumentPath &&
+          resolve(context.path) === currentDocumentPath
+        ) {
+          const action = ACTION_DOCUMENT_GO_TO_LINE;
+          if (atLine) action.label += ` ${atLine}`;
+          setActionCommand(editorKey, action, {
+            atLine,
+          } as GoToLineActionProps);
+          return;
+        }
         this.documentLoading = true;
         try {
           const configurationName =
