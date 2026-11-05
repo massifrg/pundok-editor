@@ -14,7 +14,7 @@ import { editorKeyFromState, getDocState } from '../schema';
 import ToolbarButton from './ToolbarButton.vue';
 
 export default {
-  props: ['editor', 'textColor'],
+  props: ['editor', 'textColor', 'disabled'],
   data() {
     return {
       isCompact: true,
@@ -52,13 +52,16 @@ export default {
         this.saveCopy()
     },
     save() {
-      if (this.editorKey) setActionCommand(this.editorKey, ACTION_DOCUMENT_SAVE, {})
+      if (!this.disabled && this.editorKey)
+        setActionCommand(this.editorKey, ACTION_DOCUMENT_SAVE, {})
     },
     saveAs() {
-      if (this.editorKey) setActionCommand(this.editorKey, ACTION_DOCUMENT_SAVE_AS, {})
+      if (!this.disabled && this.editorKey)
+        setActionCommand(this.editorKey, ACTION_DOCUMENT_SAVE_AS, {})
     },
     saveCopy() {
-      if (this.editorKey) setActionCommand(this.editorKey, ACTION_DOCUMENT_SAVE_COPY, {})
+      if (!this.disabled && this.editorKey)
+        setActionCommand(this.editorKey, ACTION_DOCUMENT_SAVE_COPY, {})
     }
   }
 }
@@ -67,12 +70,12 @@ export default {
 <template>
   <q-btn-group class="toolbar-button">
     <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="document_save" :title="$t('save')"
-      text-color="textColor" @click="save">
+      text-color="textColor" :disabled="disabled" @click="save">
     </ToolbarButton>
     <ToolbarButton v-if="!isCompact" class="q-px-xs" size="sm" icon="document_save_as" :title="$t('saveAs')"
-      :text-color="textColor" @click="saveAs" />
+      :text-color="textColor" :disabled="disabled" @click="saveAs" />
     <q-btn-dropdown class="toolbar-button" :title="dropDownTitle()" split dense dropdown-icon="menu_down"
-      @click="dropDownClick()" elevation="3" size="xs" color="grey-5" auto-close>
+      :disable="disabled" @click="dropDownClick()" elevation="3" size="xs" color="grey-5" auto-close>
       <template v-slot:label>
         <div :class="`row, items-center no-wrap text-${textColor}`">
           <q-icon :name="dropDownIcon()" :text-color="textColor" size="xs" />

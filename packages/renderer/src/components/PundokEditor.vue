@@ -4,7 +4,8 @@
       <q-toolbar class="text-white q-pa-none">
         <q-toolbar-title>
           <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
-            :saved-changes="savedChanges" :saved-changes-as-copy="savedChangesAsCopy" @new-document="newDocument"
+            :saved-changes="savedChanges" :saved-changes-as-copy="savedChangesAsCopy"
+            :document-loading="documentLoading" @new-document="newDocument"
             @open-document="openDocument()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
@@ -86,7 +87,12 @@
           :editor="editor as Editor" :project-path="docState()?.project?.path || ''" :project="docState()?.project"
           @close="gitRepositoryMode = undefined" @done="gitRepositoryDone" />
         <ContextMenu :editor="editor" />
-        <editor-content class="pundok-editor" :editor="editor as Editor" />
+        <div class="editor-loading-container">
+          <editor-content class="pundok-editor" :editor="editor as Editor" />
+          <q-inner-loading :showing="documentLoading">
+            <q-circular-progress indeterminate rounded size="3rem" color="primary" />
+          </q-inner-loading>
+        </div>
       </q-page>
     </q-page-container>
   </q-layout>
@@ -391,6 +397,7 @@ export default {
       lastSavedDocumentPath: undefined as string | undefined,
       lastSavedDocumentProjectPath: undefined as string | undefined,
       lastSavedDocumentVersion: 0,
+      documentLoading: false,
     };
   },
 
@@ -501,6 +508,7 @@ export default {
             }
             break;
           case ACTION_DOCUMENT_SAVE.name:
+            if (this.documentLoading) break;
             if (
               this.visibleProjectStructureDialog &&
               this.projectStructureEditorKey
@@ -509,6 +517,7 @@ export default {
             else this.save(props as DocumentSaveActionProps);
             break;
           case ACTION_DOCUMENT_SAVE_AS.name:
+            if (this.documentLoading) break;
             if (
               this.visibleProjectStructureDialog &&
               this.projectStructureEditorKey
@@ -521,6 +530,7 @@ export default {
               });
             break;
           case ACTION_DOCUMENT_SAVE_COPY.name:
+            if (this.documentLoading) break;
             if (
               this.visibleProjectStructureDialog &&
               this.projectStructureEditorKey
@@ -1014,6 +1024,7 @@ export default {
           } as DocumentDialogProps);
         }
       } else {
+        this.documentLoading = true;
         try {
           const configurationName =
             context?.configurationName ||
@@ -1047,6 +1058,9 @@ export default {
           }
         } catch (err) {
           console.log(err);
+        } finally {
+          if (!this.pending || this.pending.type !== 'loading')
+            this.documentLoading = false;
         }
       }
     },
@@ -1064,10 +1078,12 @@ export default {
       ignoreUnsaved?: boolean,
       atLine?: number,
     ): Promise<void> {
-      if (!ignoreUnsaved && this.askToSaveChanges) {
-        this.setPendingBeforeLoadDoc({ doc });
-        return Promise.reject('operation pending...');
-      }
+      this.documentLoading = true;
+      try {
+        if (!ignoreUnsaved && this.askToSaveChanges) {
+          this.setPendingBeforeLoadDoc({ doc });
+          return Promise.reject('operation pending...');
+        }
       // ex TODO: remove history
       this.editor?.destroy();
       await this.newEditor();
@@ -1108,11 +1124,16 @@ export default {
       const action = ACTION_DOCUMENT_GO_TO_LINE;
       if (atLine) action.label += ` ${atLine}`;
       setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps);
+      } finally {
+        if (!this.pending || this.pending.type !== 'loading')
+          this.documentLoading = false;
+      }
     },
     beforeSaving() {
       this.editor?.commands.fixPandocTables();
     },
     async save(props?: DocumentSaveActionProps) {
+      if (this.documentLoading) return;
       const { dontAskCopyPath, isCopy, isSaveAs } = props || {};
       this.beforeSaving();
       const jsonDoc = this.getDocAsJsonString();
@@ -1835,6 +1856,7 @@ export default {
     },
     cancelPending(pending: PendingOperation) {
       this.$emit('pending-canceled', pending);
+      if (pending.type === 'loading') this.documentLoading = false;
       switch (pending.type) {
         case 'new':
         case 'loading':
@@ -1917,6 +1939,11 @@ export default {
   position: fixed;
   top: var(--menubar-height);
   left: 0;
+}
+
+.editor-loading-container {
+  position: relative;
+  height: 100%;
 }
 
 // .editor-panel {

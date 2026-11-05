@@ -6,7 +6,7 @@
 
       <OpenButton v-if="gui.openButton" :editor="editor" />
 
-      <SaveButton :editor="editor" :text-color="savedColor" />
+      <SaveButton :editor="editor" :text-color="savedColor" :disabled="documentLoading" />
 
       <OutputRenderersButton v-if="gui.renderButton" :editor="editor" :rendering-targets="renderingTargets"
         @render="renderOutput" @stop-rendering="stopRendering" />
@@ -447,6 +447,7 @@ export default {
     'currentNodesWithPos',
     'savedChanges',
     'savedChangesAsCopy',
+    'documentLoading',
     'renderingTargets',
     'transformationLog',
     'transformationFailed',
