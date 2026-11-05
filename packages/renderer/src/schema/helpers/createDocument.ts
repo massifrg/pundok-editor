@@ -9,6 +9,7 @@ import type { CommandProps } from '@tiptap/vue-3';
 
 export interface CreateDocumentOptions extends PandocJsonParserOptions {
   emitUpdate?: boolean
+  addToHistory?: boolean
 }
 
 export function createDocumentNodeFromJson(

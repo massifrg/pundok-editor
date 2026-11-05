@@ -479,7 +479,14 @@ const setPandocContentCommand = (
 ): Command => (state, dispatch) => {
   const node = createDocumentNodeFromJson(json, state.schema, options);
   if (!node) return false;
-  if (dispatch) dispatch(state.tr.replaceWith(0, state.doc.content.size, node).setMeta('preventUpdate', !options?.emitUpdate));
+  if (dispatch) {
+    const transaction = state.tr
+      .replaceWith(0, state.doc.content.size, node)
+      .setMeta('preventUpdate', !options?.emitUpdate);
+    if (options?.addToHistory !== undefined)
+      transaction.setMeta('addToHistory', options.addToHistory);
+    dispatch(transaction);
+  }
   return true;
 };
 

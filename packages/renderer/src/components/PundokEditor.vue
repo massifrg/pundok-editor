@@ -864,12 +864,13 @@ export default {
      * @param content The pandoc JSON representing the document.
      * @param isNew `true` when the content is not coming from a saved document.
      */
-    setContent(content: string, isNew?: boolean) {
+    setContent(content: string, isNew?: boolean, addToHistory?: boolean) {
       // console.log(`SET CONTENT: ${content}`)
       const editor = this.editor;
       const configuration = this.docState()?.configuration;
       const createOptions: CreateDocumentOptions = {
         emitUpdate: true,
+        addToHistory,
         indices: configuration?.indices,
         noteStyles: configuration?.noteStyles,
       };
@@ -1117,7 +1118,7 @@ export default {
       }
 
       await this.setWindowTitleFromDoc(doc);
-      this.setContent(doc.content, false);
+      this.setContent(doc.content, false, false);
       this.detectDocumentIndices();
       this.setDocumentAsNativelySaved();
       this.$emit('document-loaded', doc, this.editor);
