@@ -5,7 +5,8 @@
         <q-toolbar-title>
           <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
             :saved-changes="savedChanges" :saved-changes-as-copy="savedChangesAsCopy"
-            :document-loading="documentLoading" @new-document="newDocument"
+            :document-loading="documentLoading" :document-menu-refresh-key="documentMenuRefreshKey"
+            @new-document="newDocument"
             @open-document="openDocument()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
@@ -398,6 +399,7 @@ export default {
       lastSavedDocumentProjectPath: undefined as string | undefined,
       lastSavedDocumentVersion: 0,
       documentLoading: false,
+      documentMenuRefreshKey: 0,
     };
   },
 
@@ -1121,6 +1123,7 @@ export default {
       this.setContent(doc.content, false, false);
       this.detectDocumentIndices();
       this.setDocumentAsNativelySaved();
+      this.documentMenuRefreshKey++;
       this.$emit('document-loaded', doc, this.editor);
       const action = ACTION_DOCUMENT_GO_TO_LINE;
       if (atLine) action.label += ` ${atLine}`;
@@ -1326,6 +1329,7 @@ export default {
               this.lastSavedDocumentProjectPath = response.doc.project?.path;
             if (!isCopy && response.doc.path)
               this.lastSavedDocumentVersion++;
+            this.documentMenuRefreshKey++;
           }
           if (response.doc && (response.doc.path || response.doc.id)) {
             return response;

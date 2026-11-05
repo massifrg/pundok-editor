@@ -104,7 +104,7 @@ export async function handleEditorEvent(
       return;
     }
     case 'document': {
-      const { editorKey, command, path, configurationName, atLine } =
+      const { editorKey, command, path, configurationName, atLine, project } =
         message as ServerMessageCommand;
       let props: Record<string, unknown> = {};
       let baseAction: BaseEditorAction;
@@ -112,7 +112,7 @@ export async function handleEditorEvent(
         case 'open':
           baseAction = ACTION_DOCUMENT_OPEN;
           props = {
-            context: { path, configurationName } as DocumentContext,
+            context: { path, configurationName, project } as DocumentContext,
             atLine,
           } as DocumentOpenActionProps;
           break;

@@ -187,7 +187,7 @@ export class LocalBackend implements Backend {
       );
 
       addListener('document', (e: any, commandMsg: ServerMessageCommand) => {
-        const { editorKey, command, path, configurationName, atLine } =
+        const { editorKey, command, path, configurationName, atLine, project } =
           commandMsg;
         let props: Record<string, any> = {};
         let baseAction: BaseEditorAction;
@@ -198,6 +198,7 @@ export class LocalBackend implements Backend {
               context: {
                 path,
                 configurationName,
+                project,
               } as DocumentContext,
               atLine,
             } as DocumentOpenActionProps;

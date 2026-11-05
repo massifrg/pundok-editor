@@ -370,6 +370,7 @@ export type CommandToRenderer =
 export interface ServerMessageCommand extends ServerMessage {
   type: 'command';
   command: CommandToRenderer;
+  project?: PundokEditorProject;
 }
 
 /** A message from Main to the document (pre)viewer. */

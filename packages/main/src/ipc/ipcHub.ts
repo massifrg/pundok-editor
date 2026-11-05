@@ -68,6 +68,8 @@ export interface DocumentOpening {
   configurationName?: string;
   /** After opening, go to line (paragraph)... */
   atLine?: number;
+  /** The project containing the document, when known */
+  project?: PundokEditorProject;
   /** If there's no mainEditorKey yet, open when it's set (otherwise cancel the open document operation) */
   whenEditorReady?: boolean;
 }
@@ -291,6 +293,7 @@ export class IpcHub implements RendererHub {
         this.fireEventOpenDocument({
           path: source.path,
           atLine: source.line,
+          project: source.project,
         });
     });
     ipcMain.handle('show-rendered-again', (_event, hash, editorKey) =>
@@ -384,6 +387,7 @@ export class IpcHub implements RendererHub {
         path,
         configurationName,
         atLine,
+        project: docToOpen?.project,
       });
       this.pendingDocumentOpen = undefined;
     } else if (docToOpen?.whenEditorReady) this.pendingDocumentOpen = docToOpen;

@@ -14,6 +14,7 @@ import { computeProjectFromDocFile } from './project';
 export interface SourceLocation {
   path: string;
   line: number;
+  project?: PundokEditorProject;
 }
 
 export async function getSourceLocation(
@@ -112,6 +113,7 @@ export async function getSourceLocation(
         ? resolve(project.path, filename)
         : filename,
     line: Number.parseInt(line, 10),
+    project,
   };
 }
 

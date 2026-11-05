@@ -4,11 +4,12 @@
       <NewDocumentButton v-if="gui.newDocument" @new-document="newDocument" />
       <span v-if="gui.newDocument" class="button-separator" />
 
-      <OpenButton v-if="gui.openButton" :editor="editor" />
+      <OpenButton v-if="gui.openButton" :key="documentMenuRefreshKey" :editor="editor" />
 
       <SaveButton :editor="editor" :text-color="savedColor" :disabled="documentLoading" />
 
-      <OutputRenderersButton v-if="gui.renderButton" :editor="editor" :rendering-targets="renderingTargets"
+      <OutputRenderersButton v-if="gui.renderButton" :key="documentMenuRefreshKey" :editor="editor"
+        :rendering-targets="renderingTargets"
         @render="renderOutput" @stop-rendering="stopRendering" />
       <span v-if="gui.renderButton" class="button-separator" />
 
@@ -448,6 +449,7 @@ export default {
     'savedChanges',
     'savedChangesAsCopy',
     'documentLoading',
+    'documentMenuRefreshKey',
     'renderingTargets',
     'transformationLog',
     'transformationFailed',

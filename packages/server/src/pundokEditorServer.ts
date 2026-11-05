@@ -568,6 +568,7 @@ export class PundokEditorServer {
         editorKey,
         path: this.userPath(user, source.path),
         atLine: source.line,
+        project: source.project,
       });
   }
 

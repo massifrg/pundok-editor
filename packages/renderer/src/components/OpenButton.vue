@@ -77,6 +77,9 @@ export default {
   beforeUnmount() {
     this.editor?.off('transaction', this.refreshDocState);
   },
+  mounted() {
+    void this.loadBookmarks();
+  },
   computed: {
     ...mapState(useBackend, ['backend']),
     editorKey() {
