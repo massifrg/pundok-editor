@@ -103,7 +103,7 @@ setupQuasarIcons();
 </script>
 
 <script lang="ts">
-import { Component, defineAsyncComponent, toRaw } from 'vue';
+import { Component, defineAsyncComponent, markRaw, toRaw } from 'vue';
 import { Editor, EditorContent, NodeWithPos } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorState } from '@tiptap/pm/state';
@@ -853,8 +853,8 @@ export default {
       });
       if (editor) {
         const oldDocState = this.docState();
-        // @ts-ignore
-        this.editor = editor;
+        // The next one is because we can't write: this.editor = editor
+        this.$data.editor = markRaw(editor);
         if (process?.env?.NODE_ENV === 'development') {
           const { applyDevTools } = await import('prosemirror-dev-toolkit');
           if (applyDevTools) applyDevTools(editor.view);
@@ -984,6 +984,7 @@ export default {
         await this.newEditor();
         this.editor?.commands.updateDocState({
           configuration: prevDocState?.configuration,
+          documentName: null,
           workingFolder: prevDocState?.workingFolder,
           workingFormat:
             getDefaultWorkingFormat(this.configuration) ||
@@ -996,6 +997,14 @@ export default {
         this.setMainEditorKey();
         this.setContent(content || EMPTY_DOCUMENT, isNew);
         this.setDocumentAsNativelySaved();
+        const activeConfigurationName = this.configuration?.name;
+        await this.setWindowTitle(
+          activeConfigurationName
+            ? this.$t('document.newTitleWithConfig', {
+              name: activeConfigurationName,
+            })
+            : 'new document',
+        );
       } catch (err) {
         console.log(err);
       }

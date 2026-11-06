@@ -668,6 +668,7 @@
     "append": "append document",
     "newEmpty": "new empty document",
     "newEmptyWithConfig": "new empty document with configuration",
+    "newTitleWithConfig": "new document - configuration {name}",
     "open": "open document",
     "openNextProjectDocument": "open next document in project structure",
     "openParentProjectDocument": "open the container document (book, part, chapter, section...)",

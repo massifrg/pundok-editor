@@ -667,6 +667,7 @@
     "append": "accoda documento",
     "newEmpty": "nuovo documento vuoto",
     "newEmptyWithConfig": "nuovo documento con la configurazione",
+    "newTitleWithConfig": "nuovo documento - configurazione {name}",
     "open": "apri documento",
     "openNextProjectDocument": "apri il documento successivo nella struttura del progetto",
     "openParentProjectDocument": "apri il documento contenitore (libro, parte, capitolo, sezione...)",
