@@ -361,7 +361,13 @@ import AutomationsEditor from './confeditors/AutomationsEditor.vue';
 import AutoDelimitersEditor from './confeditors/AutoDelimitersEditor.vue';
 import PandocFormatExtensionsEditor from './confeditors/PandocFormatExtensionsEditor.vue';
 import MainFormatsEditor from './confeditors/MainFormatsEditor.vue';
-import { showOpenDocumentDialog } from './helpers';
+import {
+  filePathBaseName,
+  filePathDirName,
+  filePathWithChild,
+  filePathsEqual,
+  showOpenDocumentDialog,
+} from './helpers';
 import { useBackend } from '../stores';
 
 type EditorConfigField = {
@@ -1032,7 +1038,9 @@ export default {
     selectRootDocument() {
       if (!this.editor || !this.project) return;
       const rootPath = this.project.rootDocument
-        ? parsePath(`${this.project.path}/${this.project.rootDocument}`)
+        ? parsePath(
+            filePathWithChild(this.project.path, this.project.rootDocument),
+          )
         : undefined;
       showOpenDocumentDialog({
         editor: this.editor,
@@ -1043,9 +1051,8 @@ export default {
         },
         callback: ({ path }) => {
           if (!path) return;
-          const { dir, base } = parsePath(path);
-          if (dir === this.project?.path) {
-            this.rootDocument = base;
+          if (filePathsEqual(filePathDirName(path), this.project?.path || '')) {
+            this.rootDocument = filePathBaseName(path);
           } else {
             this.$q.notify({
               type: 'negative',

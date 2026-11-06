@@ -93,7 +93,13 @@ import {
   PundokEditorConfigInit,
   PundokEditorProject,
 } from '../common';
-import { showOpenDocumentDialog, showSelectFolderDialog } from './helpers';
+import {
+  filePathBaseName,
+  filePathDirName,
+  filePathsEqual,
+  showOpenDocumentDialog,
+  showSelectFolderDialog,
+} from './helpers';
 import { getEditorDocState } from '../schema';
 import { defineAsyncComponent } from 'vue';
 const ProjectConfigEditorDialog = defineAsyncComponent(
@@ -194,9 +200,8 @@ export default {
         },
         callback: ({ path }) => {
           if (path) {
-            const { dir, base } = parsePath(path);
-            if (dir === this.path) {
-              this.rootDocument = base;
+            if (filePathsEqual(filePathDirName(path), this.path || '')) {
+              this.rootDocument = filePathBaseName(path);
             } else {
               this.$q.notify({
                 message:
