@@ -417,10 +417,10 @@ export function findResourceFiles(
   ) as PundokEditorProject | undefined;
   const resourceDirectories = [
     ...(baseResourcePaths && kind
-      ? [
-          ...validResourceSubpaths(baseResourcePaths, kind),
-          ...baseResourcePaths,
-        ]
+      ? baseResourcePaths.flatMap((base) => [
+          base,
+          ...validResourceSubpaths([base], kind),
+        ])
       : []),
     ...validResourcePaths(
       directories,

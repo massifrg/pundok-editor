@@ -18,6 +18,8 @@ import {
   type PandocVariables,
   type PundokEditorProject,
   type ScriptOutputConverter,
+  isCustomInputFormat,
+  isCustomOutputFormat,
   pandocFilterName,
   pandocFilterToCliOptions,
   pandocOptionsToCliOptions,
@@ -90,13 +92,13 @@ export async function importWithPandoc(
     );
   }
 
-  if (format.toLowerCase().endsWith('.lua')) {
+  if (isCustomInputFormat(format)) {
     customReader = true;
     const reader = findResourceFile(directories, format, {
       kind: 'reader',
       configurationName,
       project,
-      baseResourcePaths: resourcePath || [],
+      baseResourcePaths: [cwd, ...(resourcePath || [])],
     });
     if (!reader)
       throw new Error(
@@ -201,7 +203,10 @@ export function exportWithPandoc(
     ([name]) => name === 'reference-doc',
   )?.[1];
   const findOptions: Partial<FindResourceFileOptions> = {
-    baseResourcePaths: resourcesPaths || [],
+    baseResourcePaths: [
+      parsePath(doc.path || resultFile || '').dir,
+      ...(resourcesPaths || []),
+    ],
     kind: 'writer',
     project,
     configurationName,
@@ -238,7 +243,7 @@ export function exportWithPandoc(
 
   // when the output format ends with ".lua", it's a custom writer and not a format
   // so look for the custom writer lua file in resource files
-  if (outputFormat.endsWith('.lua'))
+  if (isCustomOutputFormat(outputFormat))
     outputFormat =
       findResourceFile(directories, outputFormat, {
         ...findOptions,
@@ -303,7 +308,8 @@ export async function exportWithScript(
   if (!converter) throw new Error('no output converter specified');
   let { command, commandArgs } = converter;
   if (!command) throw new Error('this converter has no command to run');
-  const commandCwd = exportOptions.cwd || parsePath(exportOptions.sourceFile || '').dir;
+  const commandCwd =
+    exportOptions.cwd || parsePath(exportOptions.sourceFile || '').dir;
   if (!isAbsolute(command)) command = resolve(commandCwd, command);
   return exportWithExternalProgram(
     command,

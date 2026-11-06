@@ -63,6 +63,25 @@ describe('resource file lookup', () => {
     expect(findResourceFile(directories, literalFilename)).toBe(literalFile);
   });
 
+  it('resolves a simple resource name from the document directory before project resources', async () => {
+    const documentDirectory = join(root, 'documents');
+    const documentReader = join(documentDirectory, 'reader.lua');
+    const projectReader = join(project, 'reader.lua');
+    await mkdir(documentDirectory);
+    await Promise.all([
+      writeFile(documentReader, ''),
+      writeFile(projectReader, ''),
+    ]);
+
+    expect(
+      findResourceFile(directories, 'reader.lua', {
+        kind: 'reader',
+        project: { path: project },
+        baseResourcePaths: [documentDirectory],
+      }),
+    ).toBe(documentReader);
+  });
+
   it('returns only Lua files that define a custom writer', async () => {
     const writers = join(userData, 'writers');
     const writer = join(writers, 'writer.lua');

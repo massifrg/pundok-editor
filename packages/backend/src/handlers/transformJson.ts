@@ -1,5 +1,10 @@
 import { extname, isAbsolute, parse } from 'node:path';
-import type { CxDocument, PandocFilterTransform } from '../../../common/src';
+import {
+  isCustomInputFormat,
+  isCustomOutputFormat,
+  type CxDocument,
+  type PandocFilterTransform,
+} from '../../../common/src';
 import {
   pandocFilterName,
   pandocFilterToCliOptions,
@@ -72,6 +77,23 @@ export async function transformWithPandoc(
 
   const context = { configurationName, project };
   const documentPath = sources?.[0];
+  const resourceBasePaths = documentPath ? [parse(documentPath).dir] : [];
+  if (isCustomInputFormat(fromFormat)) {
+    const reader = findResourceFile(directories, fromFormat, {
+      ...context,
+      kind: 'reader',
+      baseResourcePaths: resourceBasePaths,
+    });
+    if (reader) args[1] = reader;
+  }
+  if (isCustomOutputFormat(toFormat)) {
+    const writer = findResourceFile(directories, toFormat, {
+      ...context,
+      kind: 'writer',
+      baseResourcePaths: resourceBasePaths,
+    });
+    if (writer) args[3] = writer;
+  }
   const cwd =
     project?.path || (documentPath && parse(documentPath).dir) || process.cwd();
   args.push(
