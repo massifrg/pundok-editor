@@ -9,7 +9,7 @@ import {
   type SaveResponse,
   type RenderingBookmark,
   type ServerMessageForViewer,
-  type ServerMessageSetProject,
+  type StoreOptions,
 } from '../../../common/src';
 import { updateBookmarks } from '../bookmarks';
 import { type RenderingJobStore } from '../documentHash';
@@ -32,6 +32,7 @@ export async function saveDocument(
   feedback: FeedbackSink,
   renderingJobs: RenderingJobStore,
   doc: CxDocument,
+  storeOptions: StoreOptions = {},
 ): Promise<SaveResponse> {
   try {
     const converter = documentFormatToOutputConverter(doc.documentFormat);
@@ -42,6 +43,7 @@ export async function saveDocument(
         feedback,
         renderingJobs,
         doc,
+        storeOptions,
       );
     if (!doc.content)
       return {
@@ -49,7 +51,12 @@ export async function saveDocument(
         error: 'you provided no content to save',
         message: 'you provided no content to save',
       };
-    const response = await savePandocJsonDocument(directories, events, doc);
+    const response = await savePandocJsonDocument(
+      directories,
+      events,
+      doc,
+      storeOptions,
+    );
     await updateBookmarks(directories, [
       {
         type: 'document',
@@ -72,7 +79,7 @@ export async function exportDocument(
   feedback: FeedbackSink,
   renderingJobs: RenderingJobStore,
   doc: CxDocument,
-  isRendering = false,
+  storeOptions: StoreOptions = {},
 ): Promise<SaveResponse> {
   if (!doc.path) throw new Error('You must provide a document (file) name!');
   const converter = documentFormatToOutputConverter(doc.documentFormat);
@@ -97,7 +104,7 @@ export async function exportDocument(
     configurationName: doc.configurationName,
     project: doc.project,
   });
-  const operationName = isRendering ? 'rendering' : 'storage';
+  const operationName = storeOptions.isRendering ? 'rendering' : 'storage';
 
   try {
     let result: ExternalProgramResult;
@@ -108,7 +115,7 @@ export async function exportDocument(
           resourcesPaths,
           sourceFile,
           resultFile: resultFile || doc.path,
-          processKey: isRendering
+          processKey: storeOptions.isRendering
             ? renderingProcessKey(converter!.name, sourceFile)
             : undefined,
           callback: (source, chunk) =>
@@ -121,7 +128,7 @@ export async function exportDocument(
           cwd,
           resourcesPaths,
           resultFile: resultFile || doc.path,
-          processKey: isRendering
+          processKey: storeOptions.isRendering
             ? renderingProcessKey(converter!.name, sourceFile)
             : undefined,
         });
@@ -157,14 +164,9 @@ export async function exportDocument(
 
     let project = doc.project;
     const savedPath = resultFile || doc.path;
-    if (!isRendering) {
+    if (!storeOptions.isCopy && !storeOptions.isRendering) {
       try {
-        project = await computeProjectFromDocFile(directories, savedPath);
-        events.send('set-project', {
-          type: 'project',
-          project,
-          editorKey: doc.editorKey,
-        });
+        project = await computeProjectFromDocFile(directories, doc.path);
       } catch {
         // Saving a document outside a project is valid.
       }
@@ -238,20 +240,17 @@ async function savePandocJsonDocument(
   directories: BackendDirectories,
   events: RendererHub,
   doc: CxDocument,
+  storeOptions: StoreOptions,
 ): Promise<SaveResponse> {
   if (!doc.path) throw new Error('You must provide a document (file) name to save!');
   await writeFile(doc.path, doc.content);
   let project = doc.project;
-  try {
-    project = await computeProjectFromDocFile(directories, doc.path);
-    const message: ServerMessageSetProject = {
-      type: 'project',
-      project,
-      editorKey: doc.editorKey,
-    };
-    events.send('set-project', message);
-  } catch {
-    // Saving a standalone document is valid.
+  if (!storeOptions.isCopy && !storeOptions.isRendering) {
+    try {
+      project = await computeProjectFromDocFile(directories, doc.path);
+    } catch {
+      // Saving a standalone document is valid.
+    }
   }
   return {
     message: 'document saved',

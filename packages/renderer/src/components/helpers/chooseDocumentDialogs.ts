@@ -12,6 +12,7 @@ export interface DocumentDialogOptions {
   startFolder?: string
   startFilename?: string
   startFormat?: DocumentFormat
+  warnIfExists?: boolean
 }
 
 export type DocumentDialogCallback = (payload: DocumentContext | CxDocument) => void

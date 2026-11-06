@@ -9,6 +9,7 @@ import {
   PundokEditorConfig,
   type SaveResponse,
   type CxDocument,
+  type StoreOptions,
   getHardcodedCustomCss,
   getHardcodedEditorConfig,
   HARDCODED_CONFIG_NAME,
@@ -300,7 +301,7 @@ export class LocalBackend implements Backend {
     }
   }
 
-  save(doc: CxDocument): Promise<SaveResponse> {
+  save(doc: CxDocument, storeOptions?: StoreOptions): Promise<SaveResponse> {
     let preview: Partial<PreviewOptions> | undefined = undefined;
     const { documentFormat } = doc;
     const outputConverter = documentFormatToOutputConverter(documentFormat);
@@ -311,7 +312,7 @@ export class LocalBackend implements Backend {
       };
     const ipc = window.ipc;
     if (ipc) {
-      return ipc.saveDocument(JSON.stringify(doc));
+      return ipc.saveDocument(JSON.stringify(doc), storeOptions);
     } else {
       throw new Error('Method not implemented.');
     }

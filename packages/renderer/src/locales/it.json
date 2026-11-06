@@ -709,6 +709,10 @@
       },
       "unrecognized": "non riconosciuto"
     },
+    "overwrite": {
+      "title": "Sovrascrivere il documento esistente?",
+      "message": "Il documento \"{document}\" esiste già. Vuoi sostituirlo?"
+    },
     "labels": {
       "document": "documento",
       "documentName": "nome del documento",

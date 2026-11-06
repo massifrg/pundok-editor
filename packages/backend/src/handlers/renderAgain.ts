@@ -46,7 +46,7 @@ export async function renderAgain(
     feedback,
     renderingJobs,
     document,
-    true,
+    { isRendering: true },
   );
 }
 

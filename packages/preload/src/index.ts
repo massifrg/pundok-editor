@@ -37,6 +37,7 @@ import {
   QueryResult,
   ResourceFile,
   SaveResponse,
+  StoreOptions,
   PdfPageCount,
   SynctexInfo,
 } from './common';
@@ -57,7 +58,10 @@ export interface Ipc {
 
   openDocument: (context: string) => Promise<CxDocument>;
 
-  saveDocument: (doc: string) => Promise<SaveResponse>;
+  saveDocument: (
+    doc: string,
+    storeOptions?: StoreOptions,
+  ) => Promise<SaveResponse>;
 
   getBookmarks: (
     bookmarkType?: PundokBookmarkType,
@@ -195,7 +199,8 @@ contextBridge.exposeInMainWorld('ipc', {
   createFolder: (path: string) => ipcRenderer.invoke('create-folder', path),
   openDocument: (context: string) =>
     ipcRenderer.invoke('open-document', context),
-  saveDocument: (doc: string) => ipcRenderer.invoke('save-document', doc),
+  saveDocument: (doc: string, storeOptions?: StoreOptions) =>
+    ipcRenderer.invoke('save-document', doc, storeOptions),
   getBookmarks: (bookmarkType?: PundokBookmarkType) =>
     ipcRenderer.invoke('get-bookmarks', bookmarkType),
   updateBookmarks: (bookmarks: PundokBookmark[]) =>

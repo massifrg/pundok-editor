@@ -1227,6 +1227,7 @@ export default {
                 asOutputFormat(workingFormat, configuration) ||
                 DEFAULT_COPY_DOCUMENT_FORMAT,
               startFilename,
+              warnIfExists: true,
             },
             callback: (context) => {
               const { editorKey, documentFormat, path } = context;
@@ -1265,6 +1266,7 @@ export default {
               startFolder: isSaveAs ? workingFolder : workingFolder,
               startFormat,
               startFilename,
+              warnIfExists: !!isSaveAs,
             },
             callback: (context) => {
               const { editorKey, documentFormat, path } = context;
@@ -1302,7 +1304,7 @@ export default {
             project,
             configurationName: project ? undefined : configuration?.name,
             resourcePath,
-          });
+          }, { isCopy });
           if (response.error) {
             const errmsg = this.showResultMessage({
               success: false,

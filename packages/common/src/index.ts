@@ -29,6 +29,7 @@ export * from './readers';
 export * from './renderingJob';
 export * from './resources';
 export * from './saveResponse';
+export * from './storeOptions';
 export * from './shortcuts';
 export * from './synctex';
 export * from './version';

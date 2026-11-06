@@ -26,6 +26,7 @@ import {
   PundokEditorProject,
   documentFormatsFromFilename,
   DocumentContext,
+  EditorKeyType,
   documentFormatIcon,
   FolderContents,
   splitFolderAndDoc,
@@ -722,26 +723,43 @@ export default {
       const editorKey = editorKeyFromState(this.editor?.state)
       const path = this.targetPath
       if (editorKey && path) {
-        if (this.mode == 'folder') {
-          console.log(`folder selected, path=${path}, editorKey=${editorKey}`)
-          this.$emit('ok', {
-            editorKey,
-            path,
-            configurationName: this.tempProject ? undefined : this.tempConfigurationName,
-            project: this.tempProject,
-          } as DocumentContext)
-        } else {
-          const documentFormat = toRaw(this.format)
-          console.log(`document selected, path=${path}, editorKey=${editorKey}, format=${documentFormat.name}`)
-          this.$emit('ok', {
-            editorKey,
-            id: toRaw(this.selectedDocument),
-            path,
-            documentFormat,
-            configurationName: this.tempProject ? undefined : this.tempConfigurationName,
-            project: this.tempProject,
-          } as DocumentContext)
+        const existingDocument = this.options.warnIfExists &&
+          this.documents.some(document => document.name === this.filename)
+        if (existingDocument) {
+          this.$q.dialog({
+            title: this.$t('fileDialog.overwrite.title'),
+            message: this.$t('fileDialog.overwrite.message', {
+              document: this.filename,
+            }),
+            cancel: true,
+            persistent: true,
+          }).onOk(() => this.emitSelectedDocument(editorKey, path))
+          return
         }
+        this.emitSelectedDocument(editorKey, path)
+      }
+      this.closeDialog()
+    },
+    emitSelectedDocument(editorKey: EditorKeyType, path: string) {
+      if (this.mode == 'folder') {
+        console.log(`folder selected, path=${path}, editorKey=${editorKey}`)
+        this.$emit('ok', {
+          editorKey,
+          path,
+          configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+          project: this.tempProject,
+        } as DocumentContext)
+      } else {
+        const documentFormat = toRaw(this.format)
+        console.log(`document selected, path=${path}, editorKey=${editorKey}, format=${documentFormat.name}`)
+        this.$emit('ok', {
+          editorKey,
+          id: toRaw(this.selectedDocument),
+          path,
+          documentFormat,
+          configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+          project: this.tempProject,
+        } as DocumentContext)
       }
       this.closeDialog()
     },

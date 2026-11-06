@@ -710,6 +710,10 @@
       },
       "unrecognized": "unrecognized"
     },
+    "overwrite": {
+      "title": "Overwrite existing document?",
+      "message": "The document \"{document}\" already exists. Do you want to replace it?"
+    },
     "labels": {
       "document": "document",
       "documentName": "document name",

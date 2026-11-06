@@ -32,6 +32,7 @@ import type {
   GitMergeCheck,
   GitMergeStrategy,
   GitRemoteBranch,
+  StoreOptions,
 } from './common';
 import {
   getHardcodedEditorConfig,
@@ -345,13 +346,18 @@ export class PundokEditorServer {
     );
   }
 
-  async save(user: string, doc: CxDocument): Promise<SaveResponse> {
+  async save(
+    user: string,
+    doc: CxDocument,
+    storeOptions?: StoreOptions,
+  ): Promise<SaveResponse> {
     return saveDocument(
       this.directoriesForUser(user),
       this.rendererHub(user),
       feedbackSink(this.rendererHub(user)),
       this.renderingJobsForUser(user),
       this.documentForUser(user, doc) as CxDocument,
+      storeOptions,
     );
   }
 

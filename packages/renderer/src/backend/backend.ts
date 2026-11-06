@@ -34,6 +34,7 @@ import type {
   GitMergeCheck,
   GitMergeStrategy,
   GitCommitOptions,
+  StoreOptions,
 } from '../common';
 import type Electron from 'electron';
 import { LocalBackend } from './localbackend';
@@ -114,7 +115,7 @@ export interface Backend {
    * Stores a document in the backend.
    * @param doc The document to be stored.
    */
-  save(doc: CxDocument): Promise<SaveResponse>;
+  save(doc: CxDocument, storeOptions?: StoreOptions): Promise<SaveResponse>;
 
   /**
    * Retrieves the project of a document from the backend.

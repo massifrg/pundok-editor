@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   DEFAULT_DOCUMENT_FORMAT,
   DEFAULT_PROJECT_FILENAME,
-  type ServerMessage,
 } from '../../packages/common/src';
 import { computeProjectFromDocFile } from '../../packages/backend/src/handlers/project';
 import { RenderingJobStore } from '../../packages/backend/src/documentHash';
@@ -47,9 +46,8 @@ describe('saveDocument', () => {
       computeProjectFromDocFile(directories, filename),
     ).resolves.toMatchObject({ name: 'Project' });
 
-    const messages: ServerMessage[] = [];
     const events: RendererHub = {
-      send: (_channel, message) => messages.push(message),
+      send: () => undefined,
     };
     const response = await saveDocument(
       directories,
@@ -69,11 +67,42 @@ describe('saveDocument', () => {
       },
     );
     expect(response.doc.project?.name).toBe('Project');
-    expect(messages).toHaveLength(1);
-    expect(messages[0]).toMatchObject({
-      type: 'project',
-      project: { name: 'Project', path: projectDirectory },
-    });
     await expect(readFile(filename, 'utf8')).resolves.toBe('{}');
+  });
+
+  it('does not replace the source project when saving a copy', async () => {
+    const projectDirectory = join(root, 'copy');
+    const filename = join(projectDirectory, 'document.json');
+    await mkdir(projectDirectory);
+    await writeFile(
+      join(projectDirectory, DEFAULT_PROJECT_FILENAME),
+      JSON.stringify({
+        name: 'Destination project',
+        rootDocument: 'document.json',
+        editorConfig: {},
+      }),
+    );
+
+    const events: RendererHub = { send: () => undefined };
+    const response = await saveDocument(
+      directories,
+      events,
+      { report: () => undefined },
+      new RenderingJobStore(),
+      {
+        path: filename,
+        content: '{}',
+        documentFormat: { ...DEFAULT_DOCUMENT_FORMAT, ftype: 'guess' },
+        project: {
+          name: 'Source project',
+          path: root,
+          rootDocument: 'source.json',
+          editorConfig: {},
+        },
+      },
+      { isCopy: true },
+    );
+
+    expect(response.doc.project?.name).toBe('Source project');
   });
 });

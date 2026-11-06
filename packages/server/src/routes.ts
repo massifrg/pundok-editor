@@ -140,7 +140,9 @@ export function createBackendRouter(
   );
   router.post(
     '/save-document',
-    asyncHandler((req) => backend.save(username(req), req.body?.doc)),
+    asyncHandler((req) =>
+      backend.save(username(req), req.body?.doc, req.body?.storeOptions),
+    ),
   );
   router.post(
     '/get-project',

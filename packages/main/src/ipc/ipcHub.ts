@@ -15,6 +15,7 @@ import {
   ServerMessageCommand,
   IpcMainToRendererChannel,
   ServerMessageSetProject,
+  type StoreOptions,
 } from '../common';
 import type { RendererHub } from '../backend';
 // import FileManager from '../fileManager';
@@ -177,30 +178,34 @@ export class IpcHub implements RendererHub {
         return document;
       },
     );
-    ipcMain.handle('save-document', async (_event, serializedDocument) => {
-      const document = JSON.parse(serializedDocument) as CxDocument;
-      const response = await saveDocument(
-        backendDirectories(),
-        this,
-        feedbackSink(this),
-        desktopRenderingJobStore(),
-        document,
-      );
-      const converter = documentFormatToOutputConverter(
-        document.documentFormat,
-      );
-      if (
-        !response.error &&
-        response.resultFile &&
-        converter?.openResult === 'os'
-      ) {
-        shell.openPath(response.resultFile).then((error) => {
-          if (error)
-            errorFeedback(feedbackSink(this), error, document.editorKey);
-        });
-      }
-      return response;
-    });
+    ipcMain.handle(
+      'save-document',
+      async (_event, serializedDocument, storeOptions?: StoreOptions) => {
+        const document = JSON.parse(serializedDocument) as CxDocument;
+        const response = await saveDocument(
+          backendDirectories(),
+          this,
+          feedbackSink(this),
+          desktopRenderingJobStore(),
+          document,
+          storeOptions,
+        );
+        const converter = documentFormatToOutputConverter(
+          document.documentFormat,
+        );
+        if (
+          !response.error &&
+          response.resultFile &&
+          converter?.openResult === 'os'
+        ) {
+          shell.openPath(response.resultFile).then((error) => {
+            if (error)
+              errorFeedback(feedbackSink(this), error, document.editorKey);
+          });
+        }
+        return response;
+      },
+    );
     ipcMain.handle(
       'stop-rendering',
       (_event, converterName: string, path: string) => {

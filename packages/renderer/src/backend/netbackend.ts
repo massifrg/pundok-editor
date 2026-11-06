@@ -4,6 +4,7 @@ import type {
   PundokEditorConfig,
   SaveResponse,
   CxDocument,
+  StoreOptions,
   Query,
   QueryResult,
   ResourceFile,
@@ -137,8 +138,8 @@ export class NetBackend implements Backend {
     return this.request('open-document', { context });
   }
 
-  save(doc: CxDocument): Promise<SaveResponse> {
-    return this.request('save-document', { doc });
+  save(doc: CxDocument, storeOptions?: StoreOptions): Promise<SaveResponse> {
+    return this.request('save-document', { doc, storeOptions });
   }
 
   getProject(
