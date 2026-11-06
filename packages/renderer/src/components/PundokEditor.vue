@@ -6,8 +6,8 @@
           <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
             :saved-changes="savedChanges" :saved-changes-as-copy="savedChangesAsCopy"
             :document-loading="documentLoading" :document-menu-refresh-key="documentMenuRefreshKey"
-            @new-document="newDocument"
-            @open-document="openDocument()" @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+            @new-document="newDocument" @open-document="openDocument()"
+            @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
             @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
             @show-configurations-dialog="visibleConfigurationDialog = true"
             @show-configuration-editor="visibleConfigurationEditor = true"
@@ -23,10 +23,8 @@
       side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="24"
       :width="leftDrawerWidth" :breakpoint="500">
       <PdfViewer :backend="backend" :saved-document-path="lastSavedDocumentPath"
-        :saved-document-project-path="lastSavedDocumentProjectPath"
-        :saved-document-version="lastSavedDocumentVersion" class="pdf-viewer"
-        @rendering-started="renderingStarted"
-        @rendering-finished="renderingFinished" />
+        :saved-document-project-path="lastSavedDocumentProjectPath" :saved-document-version="lastSavedDocumentVersion"
+        class="pdf-viewer" @rendering-started="renderingStarted" @rendering-finished="renderingFinished" />
       <div class="q-mini-drawer-only absolute" style="top: 150px; right: 3px">
         <q-btn dense round unelevated color="secondary" icon="chevron_right" @click="maximizePdfViewer" />
       </div>
@@ -696,30 +694,30 @@ export default {
                 this.message =
                   feedback.source === 'missing-software'
                     ? {
-                        ...feedback,
-                        message: [
-                          this.$t('startup.missingSoftware.message', {
-                            programs:
-                              feedback.software?.missing
-                                .map(softwareLink)
-                                .join(', ') || escapeHtml(feedback.message),
-                          }),
-                          feedback.software?.available.length
-                            ? `<br><br><strong>${this.$t(
-                                'startup.missingSoftware.available',
-                              )}</strong><ul>${feedback.software.available
-                                .map(
-                                  (software) =>
-                                    `<li>${softwareLink(
-                                      software,
-                                    )}: ${escapeHtml(
-                                      software.version || '',
-                                    )}</li>`,
-                                )
-                                .join('')}</ul>`
-                            : '',
-                        ].join(''),
-                      }
+                      ...feedback,
+                      message: [
+                        this.$t('startup.missingSoftware.message', {
+                          programs:
+                            feedback.software?.missing
+                              .map(softwareLink)
+                              .join(', ') || escapeHtml(feedback.message),
+                        }),
+                        feedback.software?.available.length
+                          ? `<br><br><strong>${this.$t(
+                            'startup.missingSoftware.available',
+                          )}</strong><ul>${feedback.software.available
+                            .map(
+                              (software) =>
+                                `<li>${softwareLink(
+                                  software,
+                                )}: ${escapeHtml(
+                                  software.version || '',
+                                )}</li>`,
+                            )
+                            .join('')}</ul>`
+                          : '',
+                      ].join(''),
+                    }
                     : feedback;
               }
             }
@@ -854,11 +852,10 @@ export default {
         },
       });
       if (editor) {
-        // @ts-ignore
         const oldDocState = this.docState();
         // @ts-ignore
         this.editor = editor;
-        if (process.env.NODE_ENV === 'development') {
+        if (process?.env?.NODE_ENV === 'development') {
           const { applyDevTools } = await import('prosemirror-dev-toolkit');
           if (applyDevTools) applyDevTools(editor.view);
         }
@@ -1123,47 +1120,47 @@ export default {
           this.setPendingBeforeLoadDoc({ doc });
           return Promise.reject('operation pending...');
         }
-      // ex TODO: remove history
-      this.editor?.destroy();
-      await this.newEditor();
-      const editorKey = this.editorKey();
-      doc.editorKey = editorKey;
-      this.setMainEditorKey();
-      console.log(`created new editor for doc:`);
-      console.log(doc);
+        // ex TODO: remove history
+        this.editor?.destroy();
+        await this.newEditor();
+        const editorKey = this.editorKey();
+        doc.editorKey = editorKey;
+        this.setMainEditorKey();
+        console.log(`created new editor for doc:`);
+        console.log(doc);
 
-      const { folder, document } = splitFolderAndDoc(doc.path!);
-      this.updateEditorDocState({
-        documentName: document,
-        resourcePath: doc.resourcePath,
-        workingFolder: folder,
-        workingFormat: doc.documentFormat,
-      });
+        const { folder, document } = splitFolderAndDoc(doc.path!);
+        this.updateEditorDocState({
+          documentName: document,
+          resourcePath: doc.resourcePath,
+          workingFolder: folder,
+          workingFormat: doc.documentFormat,
+        });
 
-      // set project or configuration
-      if (doc.project) {
-        await this.setProject(doc.project);
-        void this.loadProjectStructure(doc.project);
-      } else {
-        this.updateEditorDocState({ projectStructure: null });
-      }
-      if (!doc.project && doc.configurationName) {
-        try {
-          await this.setConfiguration(doc.configurationName);
-        } catch (err) {
-          this.setConfiguration('default');
+        // set project or configuration
+        if (doc.project) {
+          await this.setProject(doc.project);
+          void this.loadProjectStructure(doc.project);
+        } else {
+          this.updateEditorDocState({ projectStructure: null });
         }
-      }
+        if (!doc.project && doc.configurationName) {
+          try {
+            await this.setConfiguration(doc.configurationName);
+          } catch (err) {
+            this.setConfiguration('default');
+          }
+        }
 
-      await this.setWindowTitleFromDoc(doc);
-      this.setContent(doc.content, false, false);
-      this.detectDocumentIndices();
-      this.setDocumentAsNativelySaved();
-      this.documentMenuRefreshKey++;
-      this.$emit('document-loaded', doc, this.editor);
-      const action = ACTION_DOCUMENT_GO_TO_LINE;
-      if (atLine) action.label += ` ${atLine}`;
-      setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps);
+        await this.setWindowTitleFromDoc(doc);
+        this.setContent(doc.content, false, false);
+        this.detectDocumentIndices();
+        this.setDocumentAsNativelySaved();
+        this.documentMenuRefreshKey++;
+        this.$emit('document-loaded', doc, this.editor);
+        const action = ACTION_DOCUMENT_GO_TO_LINE;
+        if (atLine) action.label += ` ${atLine}`;
+        setActionCommand(editorKey!, action, { atLine } as GoToLineActionProps);
       } finally {
         if (!this.pending || this.pending.type !== 'loading')
           this.documentLoading = false;
