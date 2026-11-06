@@ -230,6 +230,7 @@ import {
   showOpenDocumentDialog,
   showSaveCopyDialog,
   showSaveDocumentDialog,
+  documentIncludeSpecs,
 } from './helpers';
 
 function escapeHtml(value: string): string {
@@ -461,9 +462,26 @@ export default {
             this.setClosePending();
             break;
           case ACTION_BACKEND_SET_PROJECT.name:
-            this.setProject({
-              ...(props as BackendSetProjectActionProps)?.project,
-            });
+            {
+              const project = {
+                ...(props as BackendSetProjectActionProps)?.project,
+              };
+              const docState = this.docState();
+              const currentProject = docState?.project;
+              const projectChanged =
+                currentProject?.name !== project.name ||
+                currentProject?.path !== project.path;
+              const inclusionChanged =
+                documentIncludeSpecs(this.editor?.state.doc) !==
+                documentIncludeSpecs(docState?.savedDoc);
+              if (projectChanged) {
+                void this.setProject(project).then(() =>
+                  this.loadProjectStructure(project),
+                );
+              } else if (inclusionChanged) {
+                void this.loadProjectStructure(project);
+              }
+            }
             break;
           case ACTION_GET_PROJECT.name:
             this.reloadProject(props as GetProjectOptions);
@@ -1309,7 +1327,7 @@ export default {
               }
               this.editor?.commands.updateDocState(update);
             }
-            // this.setDocumentAsNativelySaved();
+            if (!isCopy) this.setDocumentAsNativelySaved();
             if (!isCopy && response.doc.path) {
               await this.setWindowTitleFromDoc(response.doc);
             }
@@ -1716,8 +1734,10 @@ export default {
         console.log(`STRUCTURE: ${JSON.stringify(structure)}`);
         if (
           JSON.stringify(this.docState()?.project) === JSON.stringify(project)
-        )
+        ) {
           this.updateEditorDocState({ projectStructure: structure || null });
+          this.documentMenuRefreshKey++;
+        }
       } catch (error) {
         console.error('Unable to load project structure', error);
       }
