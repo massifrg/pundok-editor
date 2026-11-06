@@ -6,7 +6,7 @@ import {
   statSync,
 } from 'node:fs';
 import { readdir } from 'node:fs/promises';
-import { dirname, relative, resolve } from 'node:path';
+import { delimiter, dirname, parse, relative, resolve } from 'node:path';
 import {
   type Automation,
   type ConfigQueryOptions,
@@ -20,6 +20,8 @@ import {
   type ResourceFileProvenance,
   type ResourceType,
   RESOURCE_SUBPATHS,
+  isCustomInputFormat,
+  isCustomOutputFormat,
 } from '../../common/src';
 import { migrateLegacyPandocOptions } from './legacyPandocOptions';
 
@@ -88,9 +90,9 @@ export async function allConfigurations(
     : [];
   const localConfigs = !options?.onlyGlobal
     ? await configurationFilesInDirectory(
-      directories.localConfigurationsDir,
-      true,
-    )
+        directories.localConfigurationsDir,
+        true,
+      )
     : [];
   return [...localConfigs, ...globalConfigs];
 }
@@ -192,11 +194,11 @@ export function migrateConfigurationPandocOptions<
     automations: config.automations?.map((automation) =>
       automation.type === 'pandoc-filter'
         ? {
-          ...migratePandocFilterParameters(automation),
-          pandocOptions: migratePandocOptions(
-            (automation as PandocFilterTransform).pandocOptions,
-          ),
-        }
+            ...migratePandocFilterParameters(automation),
+            pandocOptions: migratePandocOptions(
+              (automation as PandocFilterTransform).pandocOptions,
+            ),
+          }
         : automation,
     ),
   } as T;
@@ -212,12 +214,8 @@ function migrateOutputConverter(
     standalone?: boolean;
     pandocTemplate?: string;
   };
-  const {
-    referenceFile,
-    standalone,
-    pandocTemplate,
-    ...withoutLegacyFields
-  } = legacy;
+  const { referenceFile, standalone, pandocTemplate, ...withoutLegacyFields } =
+    legacy;
   const pandocOptions = migratePandocOptions(converter.pandocOptions) || [];
   const existingNames = new Set(pandocOptions.map(([name]) => name));
 
@@ -248,19 +246,19 @@ function migratePandocFilterParameters(
   const firstFilterWithParameters =
     typeof firstFilter === 'string'
       ? {
-        name: firstFilter,
-        ...(variables && { variables }),
-        ...(metadata && { metadata }),
-      }
+          name: firstFilter,
+          ...(variables && { variables }),
+          ...(metadata && { metadata }),
+        }
       : {
-        ...firstFilter,
-        ...(variables && {
-          variables: { ...variables, ...firstFilter.variables },
-        }),
-        ...(metadata && {
-          metadata: { ...metadata, ...firstFilter.metadata },
-        }),
-      };
+          ...firstFilter,
+          ...(variables && {
+            variables: { ...variables, ...firstFilter.variables },
+          }),
+          ...(metadata && {
+            metadata: { ...metadata, ...firstFilter.metadata },
+          }),
+        };
   const {
     variables: _variables,
     metadata: _metadata,
@@ -335,6 +333,75 @@ export function validResourcePaths(
   return paths;
 }
 
+export function pandocResourcePath(
+  directories: BackendDirectories | undefined,
+  cwd: string,
+  documentPath?: string,
+  project?: PundokEditorProject,
+  configurationName?: string,
+  additionalPaths: string[] = [],
+  quotePaths = false,
+  resourceTypes: ResourceType[] = [],
+): string {
+  const subpaths = (base: string) =>
+    resourceTypes.flatMap((kind) =>
+      (RESOURCE_SUBPATHS[kind] || []).map((subdir) => resolve(base, subdir)),
+    );
+  const projectPaths = project?.path
+    ? [project.path, ...subpaths(project.path)]
+    : [];
+  const configurationPaths = project?.path
+    ? [...(project.configurations || [])]
+        .reverse()
+        .flatMap((name) => configurationPathsFor(name))
+    : configurationName
+      ? configurationPathsFor(configurationName)
+      : [];
+  const paths = [
+    cwd,
+    documentPath ? parse(documentPath).dir : undefined,
+    ...projectPaths,
+    ...configurationPaths,
+    ...additionalPaths,
+  ];
+
+  return [
+    ...new Set(
+      paths
+        .filter((path): path is string => !!path)
+        .map((path) => resolve(path)),
+    ),
+  ]
+    .map((path) => (quotePaths ? `"${path}"` : path))
+    .join(delimiter);
+
+  function configurationPathsFor(name: string): string[] {
+    if (!directories) return [];
+    return [directories.localConfigurationsDir, directories.configurationsDir]
+      .map((base) => resolve(base, name))
+      .flatMap((path) => [path, ...subpaths(path)]);
+  }
+}
+
+export function pandocResourceTypes(
+  options: readonly string[],
+  inputFormat?: string,
+  outputFormat?: string,
+): ResourceType[] {
+  const types = new Set<ResourceType>();
+  if (
+    options.some((option) => /^(-F|-L|--filter|--lua-filter)(=|$)/.test(option))
+  )
+    types.add('filter');
+  if (inputFormat && isCustomInputFormat(inputFormat)) types.add('reader');
+  if (outputFormat && isCustomOutputFormat(outputFormat)) types.add('writer');
+  if (options.some((option) => /^(--template)(=|$)/.test(option)))
+    types.add('template');
+  if (options.some((option) => /^(--reference-doc)(=|$)/.test(option)))
+    types.add('referenceDoc');
+  return [...types];
+}
+
 export interface FindResourceFileOptions extends FindResourceOptions {
   baseResourcePaths: string[];
 }
@@ -351,9 +418,9 @@ export function findResourceFiles(
   const resourceDirectories = [
     ...(baseResourcePaths && kind
       ? [
-        ...validResourceSubpaths(baseResourcePaths, kind),
-        ...baseResourcePaths,
-      ]
+          ...validResourceSubpaths(baseResourcePaths, kind),
+          ...baseResourcePaths,
+        ]
       : []),
     ...validResourcePaths(
       directories,

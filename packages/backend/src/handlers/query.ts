@@ -14,6 +14,8 @@ import {
   findResourceFile,
   findResourceFiles,
   isReadableFile,
+  pandocResourcePath,
+  pandocResourceTypes,
   type BackendDirectories,
 } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
@@ -158,6 +160,16 @@ async function runWriterOnMasterFile(
       '-L',
       filter,
       `--data-dir=${path}`,
+      `--resource-path=${pandocResourcePath(
+        directories,
+        path,
+        source,
+        project,
+        undefined,
+        [],
+        false,
+        pandocResourceTypes(['-L'], undefined, 'indices2json.lua'),
+      )}`,
       '--',
       source,
     ],

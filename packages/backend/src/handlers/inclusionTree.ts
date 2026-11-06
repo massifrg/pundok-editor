@@ -4,6 +4,8 @@ import { localizePath } from '../filesystem';
 import {
   findResourceFile,
   isReadableFile,
+  pandocResourcePath,
+  pandocResourceTypes,
   type BackendDirectories,
 } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
@@ -39,6 +41,16 @@ export async function getInclusionTree(
       '-L',
       filter,
       `--data-dir=${path}`,
+      `--resource-path=${pandocResourcePath(
+        directories,
+        path,
+        source,
+        project,
+        undefined,
+        [],
+        false,
+        pandocResourceTypes(['-L'], undefined, 'inclusion-tree.lua'),
+      )}`,
       '--',
       source,
     ],

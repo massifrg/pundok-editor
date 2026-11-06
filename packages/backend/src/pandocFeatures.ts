@@ -10,16 +10,22 @@ import {
   type PundokEditorConfigInit,
 } from '../../common/src';
 import { runExternalProgram } from './runExternal';
+import { pandocResourcePath } from './resourceManager';
 
 async function runPandocForFeatureList(args: string[]): Promise<string[]> {
-  const { result } = runExternalProgram('pandoc', args);
+  const cwd = process.cwd();
+  const { result } = runExternalProgram(
+    'pandoc',
+    [...args, `--resource-path=${pandocResourcePath(undefined, cwd)}`],
+    { cwd },
+  );
   const { error, exitCode, output } = await result;
   if (error) {
     return Promise.reject(
       `Command "pandoc ${args.join(' ')}" exited with code ${exitCode}: ${error}`,
     );
   }
-  console.log(output)
+  console.log(output);
   return output.split(/\s*[\r\n]+\s*/m).filter((feature) => feature.length > 0);
 }
 

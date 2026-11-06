@@ -1,4 +1,4 @@
-import { extname, isAbsolute } from 'node:path';
+import { extname, isAbsolute, parse } from 'node:path';
 import type { CxDocument, PandocFilterTransform } from '../../../common/src';
 import {
   pandocFilterName,
@@ -8,6 +8,8 @@ import {
 import {
   findResourceFile,
   isReadableFile,
+  pandocResourcePath,
+  pandocResourceTypes,
   type BackendDirectories,
 } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
@@ -69,6 +71,25 @@ export async function transformWithPandoc(
     );
 
   const context = { configurationName, project };
+  const documentPath = sources?.[0];
+  const cwd =
+    project?.path || (documentPath && parse(documentPath).dir) || process.cwd();
+  args.push(
+    `--resource-path=${pandocResourcePath(
+      directories,
+      cwd,
+      documentPath,
+      project,
+      configurationName,
+      [],
+      false,
+      pandocResourceTypes(
+        [...otherArgs, ...(transform.filters?.length ? ['-L'] : [])],
+        fromFormat,
+        toFormat,
+      ),
+    )}`,
+  );
   if (project?.path) args.push(`--data-dir=${project.path}`);
 
   for (const [name, value] of Object.entries(transform.variables || {})) {
@@ -113,7 +134,7 @@ export async function transformWithPandoc(
   const { result } = runExternalProgram(
     'pandoc',
     args,
-    { cwd: project?.path },
+    { cwd },
     (source, chunk) => {
       if (feedback && source !== 'end')
         progressFeedback(

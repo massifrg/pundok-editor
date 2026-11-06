@@ -1,6 +1,5 @@
 import {
   delimiter as pathDelimiter,
-  format as formatPath,
   isAbsolute,
   parse as parsePath,
   resolve,
@@ -30,6 +29,8 @@ import {
   isReadableFile,
   type BackendDirectories,
   type FindResourceFileOptions,
+  pandocResourcePath,
+  pandocResourceTypes,
   validResourcePaths,
 } from './resourceManager';
 import {
@@ -56,6 +57,9 @@ export async function importWithPandoc(
   const { documentFormat, configurationName, path, project, resourcePath } =
     context;
   if (!path) throw new Error("You must provide the document's (file) name");
+  const cwd = parsePath(path).dir;
+  const filterResourcePaths: string[] = [];
+  let customReader = false;
 
   let pandocOpts = [...DEFAULT_IMPORT_PANDOC_OPTIONS];
   const inputConverter = documentFormatToInputConverter(documentFormat);
@@ -67,7 +71,6 @@ export async function importWithPandoc(
     );
 
   if (configurationName) {
-    const resourceDirs: string[] = [];
     pandocOpts = pandocOpts.map((option) =>
       option.replace(
         /^(-L|--lua-filter)\s+(.*?)\s*$/,
@@ -79,40 +82,60 @@ export async function importWithPandoc(
           });
           if (!filter) return option;
           const directory = parsePath(filter).dir;
-          if (!resourceDirs.includes(directory))
-            resourceDirs.push(`"${directory}"`);
+          if (!filterResourcePaths.includes(directory))
+            filterResourcePaths.push(directory);
           return `${flag} "${filter}"`;
         },
       ),
     );
-    if (resourceDirs.length)
-      pandocOpts.push(`--resource-path=${resourceDirs.join(pathDelimiter)}`);
   }
 
   if (format.toLowerCase().endsWith('.lua')) {
-    const customReader = findResourceFile(directories, format, {
+    customReader = true;
+    const reader = findResourceFile(directories, format, {
       kind: 'reader',
       configurationName,
       project,
       baseResourcePaths: resourcePath || [],
     });
-    if (!customReader)
+    if (!reader)
       throw new Error(
         `Can't find the "${format}" custom reader in document, project or configurations directories!`,
       );
-    const readerDir = parsePath(customReader).dir;
-    const resources = [...(resourcePath || []), readerDir]
-      .map(encloseInDblQuotes)
-      .join(pathDelimiter);
+    const readerDir = parsePath(reader).dir;
+    const resources = pandocResourcePath(
+      directories,
+      cwd,
+      path,
+      project,
+      configurationName,
+      [...filterResourcePaths, ...(resourcePath || []), readerDir],
+      true,
+      pandocResourceTypes(pandocOpts, format),
+    );
     pandocOpts.push(`--resource-path=${resources}`);
     pandocOpts.push(`--data-dir=${readerDir}`);
-    format = encloseInDblQuotes(customReader);
+    format = encloseInDblQuotes(reader);
   }
+  if (!customReader)
+    pandocOpts.push(
+      `--resource-path=${pandocResourcePath(
+        directories,
+        cwd,
+        path,
+        project,
+        configurationName,
+        [...filterResourcePaths, ...(resourcePath || [])],
+        true,
+        pandocResourceTypes(pandocOpts, format),
+      )}`,
+    );
 
   const args = ['-f', format, '-t', 'json', ...pandocOpts, '--', `"${path}"`];
   const commandLine = `pandoc ${args.join(' ')}`;
   try {
-    return await runExternalProgram('pandoc', args, { shell: true }).result;
+    return await runExternalProgram('pandoc', args, { shell: true, cwd })
+      .result;
   } catch (error) {
     return externalProgramError(error, commandLine);
   }
@@ -184,6 +207,27 @@ export function exportWithPandoc(
     configurationName,
   };
   let pandocOpts: string[] = [];
+  const cwd =
+    exportOptions.cwd ||
+    parsePath(doc.path || resultFile || '').dir ||
+    process.cwd();
+  const requiredResourcePaths = pandocResourcePath(
+    directories,
+    cwd,
+    doc.path,
+    project,
+    configurationName,
+    [...(resourcesPaths || [])],
+    true,
+    pandocResourceTypes(
+      [
+        ...pandocOptionsToCliOptions(pandocOptions || []),
+        ...(converter.filters?.length ? ['-L'] : []),
+      ],
+      undefined,
+      format,
+    ),
+  );
   const dataDir =
     resourcesPaths?.[0] ||
     validResourcePaths(directories, undefined, project, configurationName)[0];
@@ -216,12 +260,7 @@ export function exportWithPandoc(
     );
   }
 
-  if (resourcesPaths?.length)
-    pandocOpts.push(
-      `--resource-path=${resourcesPaths
-        .map((resource) => encloseInDblQuotes(formatPath(parsePath(resource))))
-        .join(pathDelimiter)}`,
-    );
+  pandocOpts.push(`--resource-path=${requiredResourcePaths}`);
   if (standalone) {
     if (typeof pandocTemplate === 'string') {
       const template =
@@ -310,6 +349,18 @@ export async function runWriterOnMasterFile(
   for (const [name, value] of Object.entries(options?.metadata || {})) {
     args.push('-M', `${name}=${JSON.stringify(value)}`);
   }
+  args.push(
+    `--resource-path=${pandocResourcePath(
+      directories,
+      path,
+      source,
+      project,
+      undefined,
+      [],
+      true,
+      pandocResourceTypes(['-L'], undefined, writerFilename),
+    )}`,
+  );
   const result = await runPandocOnFile(source, args);
   if (result.exitCode !== 0) throw new Error(result.error);
   return result.output;

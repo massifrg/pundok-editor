@@ -1,10 +1,12 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   findResourceFile,
   findResourceFiles,
+  pandocResourcePath,
+  pandocResourceTypes,
   type BackendDirectories,
 } from '../../packages/backend/src/resourceManager';
 
@@ -148,5 +150,108 @@ describe('resource file lookup', () => {
     ).toEqual(
       expect.arrayContaining([strictFilter, italianFilter, typedFilter]),
     );
+  });
+
+  it('orders Pandoc resource subpaths after each project and inherited configuration', () => {
+    const cwd = join(root, 'cwd');
+    const document = join(project, 'documents', 'document.md');
+    const inheritedProject = {
+      path: project,
+      configurations: ['base', 'common'],
+    };
+    const resourcePath = pandocResourcePath(
+      directories,
+      cwd,
+      document,
+      inheritedProject,
+      undefined,
+      [],
+      false,
+      pandocResourceTypes(
+        ['-L', '--template=custom.html'],
+        'custom.lua',
+        'custom-writer.lua',
+      ),
+    );
+    const projectPaths = [
+      project,
+      join(project, 'filters'),
+      join(project, 'lua'),
+      join(project, 'readers'),
+      join(project, 'writers'),
+      join(project, 'templates'),
+    ];
+    const configurationPaths = ['common', 'base'].flatMap((name) =>
+      [
+        directories.localConfigurationsDir,
+        directories.configurationsDir,
+      ].flatMap((base) => [
+        join(base, name),
+        join(base, name, 'filters'),
+        join(base, name, 'lua'),
+        join(base, name, 'readers'),
+        join(base, name, 'writers'),
+        join(base, name, 'templates'),
+      ]),
+    );
+
+    expect(resourcePath.split(delimiter)).toEqual([
+      cwd,
+      join(project, 'documents'),
+      ...projectPaths,
+      ...configurationPaths,
+    ]);
+  });
+
+  it('adds only subpaths for options used by Pandoc', () => {
+    const cwd = join(root, 'cwd');
+    const document = join(project, 'documents', 'document.md');
+    expect(
+      pandocResourceTypes(['--template=custom.html', '--reference-doc=x.docx']),
+    ).toEqual(['template', 'referenceDoc']);
+    expect(pandocResourceTypes([], 'markdown', 'html')).toEqual([]);
+    expect(
+      pandocResourceTypes(['-F', 'filter.lua'], 'reader.lua', 'writer.lua'),
+    ).toEqual(['filter', 'reader', 'writer']);
+
+    const configResourcePath = pandocResourcePath(
+      directories,
+      cwd,
+      document,
+      undefined,
+      'named',
+      [],
+      false,
+      ['filter'],
+    );
+    expect(configResourcePath.split(delimiter)).toEqual([
+      cwd,
+      join(project, 'documents'),
+      join(directories.localConfigurationsDir, 'named'),
+      join(directories.localConfigurationsDir, 'named', 'filters'),
+      join(directories.localConfigurationsDir, 'named', 'lua'),
+      join(directories.configurationsDir, 'named'),
+      join(directories.configurationsDir, 'named', 'filters'),
+      join(directories.configurationsDir, 'named', 'lua'),
+    ]);
+  });
+
+  it('removes duplicate paths from the computed resource path', () => {
+    const shared = join(root, 'shared');
+    const resourcePath = pandocResourcePath(
+      directories,
+      shared,
+      join(shared, 'document.md'),
+      { path: shared, configurations: [] },
+      undefined,
+      [`${shared}/`, join(shared, 'templates')],
+      false,
+      ['template', 'referenceDoc'],
+    );
+
+    expect(resourcePath.split(delimiter)).toEqual([
+      shared,
+      join(shared, 'templates'),
+    ]);
   });
 });

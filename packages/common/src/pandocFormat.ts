@@ -527,6 +527,14 @@ export function isOutputFormat(format: string): boolean {
   return pandocFormatsDefs[format].output === true;
 }
 
+export function isCustomInputFormat(format: string): boolean {
+  return pandocFormatsDefs[format]?.input !== true;
+}
+
+export function isCustomOutputFormat(format: string): boolean {
+  return pandocFormatsDefs[format]?.output !== true;
+}
+
 export function getPandocFormatDescriptions(
   input_names: string[],
   output_names: string[],
