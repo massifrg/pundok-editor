@@ -13,21 +13,21 @@ import {
   getDefaultWorkingFormat,
   getDefaultCopyFormat,
   getHardcodedEditorConfig,
-} from '../common';
-import { type DocStateUpdate, CreateDocumentOptions } from '../schema';
-import { Pandoc } from '../schema/nodes/Pandoc';
+} from '../../common';
+import { type DocStateUpdate, CreateDocumentOptions } from '../../schema';
+import { Pandoc } from '../../schema/nodes/Pandoc';
 import {
   ACTION_DOCUMENT_GO_TO_LINE,
   ACTION_DOCUMENT_OPEN,
   setActionCommand,
-} from '../actions';
+} from '../../actions';
 import {
   type PendingOperation,
   type PendingOperationExtraValue,
   type DocumentDialogProps,
   showOpenDocumentDialog,
-} from './helpers';
-import { t } from '../i18n';
+} from '../helpers';
+import { t } from '../../i18n';
 
 export interface DocumentLifecycleHost {
   [key: string]: any;

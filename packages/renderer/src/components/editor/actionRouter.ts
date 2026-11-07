@@ -1,5 +1,5 @@
 import type { Editor } from '@tiptap/vue-3';
-import { editorKeyFromState } from '../schema';
+import { editorKeyFromState } from '../../schema';
 import {
   type BackendSetProjectActionProps,
   type BackendSetConfigNameActionProps,
@@ -18,7 +18,7 @@ import {
   type SetDocumentFormatActionProps,
   type PandocFilterTransform,
   type GetProjectOptions,
-} from '../common';
+} from '../../common';
 import {
   ACTION_EDIT_ATTRIBUTES,
   ACTION_EDIT_META_MAP_TEXT,
@@ -55,9 +55,9 @@ import {
   type EditorAction,
   type UpdateDocStateActionProps,
   actionSetMetaMapText,
-} from '../actions';
-import { documentIncludeSpecs } from './helpers';
-import { useActions } from '../stores';
+} from '../../actions';
+import { documentIncludeSpecs } from '../helpers';
+import { useActions } from '../../stores';
 
 export interface ActionRouterHost {
   [key: string]: any;

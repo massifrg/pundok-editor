@@ -1,49 +1,54 @@
 <template>
   <q-layout view="LHH LpR LFf" :container="!mainEditor" :style="`height: ${height}`" class="shadow-2 rounded-borders">
-    <q-header>
-      <q-toolbar class="text-white q-pa-none">
-        <q-toolbar-title>
-          <Menubar :editor="editor" :current-nodes-with-pos="currentNodesWithPos" :gui-props="guiProps"
-            :saved-changes="savedChanges" :saved-changes-as-copy="savedChangesAsCopy"
-            :document-loading="documentLoading" :document-menu-refresh-key="documentMenuRefreshKey"
-            @new-document="newDocument" @open-document="openDocument()"
-            @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
-            @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
-            @show-configurations-dialog="visibleConfigurationDialog = true"
-            @show-configuration-editor="visibleConfigurationEditor = true"
-            @manage-git-project="visibleGitChanges = true" @check-git-updates="visibleGitUpdates = true"
-            @share-git-project="showGitRepository('publish')" @connect-git-project="showGitRepository('connect')"
-            @clone-git-project="showGitRepository('clone')" @reload-with-configuration="reloadWithConfiguration"
-            @render-output="renderOutput" @stop-rendering="stopRendering" :rendering-targets="renderingTargets"
-            :transformation-log="transformationLog" :transformation-failed="transformationFailed" />
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-    <q-drawer v-if="isMainEditor" show-if-above behavior="desktop" bordered :v-model="leftDrawerState === 'normal'"
-      side="left" :mini="leftDrawerState === 'mini'" @click.capture="maximizePdfViewer" :mini-width="24"
-      :width="leftDrawerWidth" :breakpoint="500">
-      <PdfViewer :backend="backend" :saved-document-path="lastSavedDocumentPath"
-        :saved-document-project-path="lastSavedDocumentProjectPath" :saved-document-version="lastSavedDocumentVersion"
-        class="pdf-viewer" @rendering-started="renderingStarted" @rendering-finished="renderingFinished" />
-      <div class="q-mini-drawer-only absolute" style="top: 150px; right: 3px">
-        <q-btn dense round unelevated color="secondary" icon="chevron_right" @click="maximizePdfViewer" />
-      </div>
-      <div class="q-mini-drawer-hide absolute" style="top: 150px; right: -17px">
-        <q-btn dense round unelevated color="secondary" icon="chevron_left" @click="minimizePdfViewer" />
-      </div>
-      <div class="q-mini-drawer-hide absolute" style="top: 210px; right: -17px">
-        <q-btn dense round unelevated color="secondary" icon="arrow_left_right"
-          @mousedown="startSettingLeftDrawerWidth" />
-      </div>
-    </q-drawer>
-    <div v-if="leftDrawerPreviewWidth !== undefined" class="drawer-width-preview"
-      :style="{ left: `${leftDrawerPreviewWidth}px` }" />
-    <q-drawer show-if-above behavior="desktop" bordered :v-model="rightDrawerState === 'normal'" side="right"
-      :mini="rightDrawerState === 'mini'" @mouseenter="rightDrawerState = 'normal'"
-      @mouseleave="rightDrawerState = 'mini'" mini-to-overlay :mini-width="60" :width="240" :breakpoint="500"
-      :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
-      <CustomStylesPanel :editor="editor" :panel-state="rightDrawerState" :current-blocks="currentNodesWithPos" />
-    </q-drawer>
+    <PundokEditorHeader
+      :editor="editor"
+      :current-nodes-with-pos="currentNodesWithPos"
+      :gui-props="guiProps"
+      :saved-changes="savedChanges"
+      :saved-changes-as-copy="savedChangesAsCopy"
+      :document-loading="documentLoading"
+      :document-menu-refresh-key="documentMenuRefreshKey"
+      :rendering-targets="renderingTargets"
+      :transformation-log="transformationLog"
+      :transformation-failed="transformationFailed"
+      @new-document="newDocument"
+      @open-document="openDocument()"
+      @toggle-search-and-replace-dialog="toggleSearchAndReplaceDialog()"
+      @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
+      @show-configurations-dialog="visibleConfigurationDialog = true"
+      @show-configuration-editor="visibleConfigurationEditor = true"
+      @manage-git-project="visibleGitChanges = true"
+      @check-git-updates="visibleGitUpdates = true"
+      @share-git-project="showGitRepository('publish')"
+      @connect-git-project="showGitRepository('connect')"
+      @clone-git-project="showGitRepository('clone')"
+      @reload-with-configuration="reloadWithConfiguration"
+      @render-output="renderOutput"
+      @stop-rendering="stopRendering"
+    />
+    <PundokEditorPdfDrawer
+      :is-main-editor="isMainEditor"
+      :backend="backend"
+      :left-drawer-state="leftDrawerState"
+      :left-drawer-width="leftDrawerWidth"
+      :left-drawer-preview-width="leftDrawerPreviewWidth"
+      :last-saved-document-path="lastSavedDocumentPath"
+      :last-saved-document-project-path="lastSavedDocumentProjectPath"
+      :last-saved-document-version="lastSavedDocumentVersion"
+      @maximize="maximizePdfViewer"
+      @minimize="minimizePdfViewer"
+      @resize-start="startSettingLeftDrawerWidth"
+      @rendering-started="renderingStarted"
+      @rendering-finished="renderingFinished"
+    />
+    <PundokEditorStylesDrawer
+      :editor="editor"
+      :panel-state="rightDrawerState"
+      :current-blocks="currentNodesWithPos"
+      :dark="$q.dark.isActive"
+      @mouseenter="rightDrawerState = 'normal'"
+      @mouseleave="rightDrawerState = 'mini'"
+    />
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
@@ -160,11 +165,13 @@ import { setWindowTitle as setRendererWindowTitle } from '../backend/windowTitle
 import { useActions, useBackend, useProjectCache } from '../stores';
 import ContextMenu from './ContextMenu.vue';
 import InputTextDialog from './InputTextDialog.vue';
-import Menubar from './Menubar.vue';
 import NewProjectDialog from './NewProjectDialog.vue';
 import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue';
 import PendingOperationDialog from './PendingOperationDialog.vue';
 import ShowMessageDialog from './ShowMessageDialog.vue';
+import PundokEditorHeader from './editor/PundokEditorHeader.vue';
+import PundokEditorPdfDrawer from './editor/PundokEditorPdfDrawer.vue';
+import PundokEditorStylesDrawer from './editor/PundokEditorStylesDrawer.vue';
 import {
   EditorAction,
   ACTION_DOCUMENT_SAVE,
@@ -172,9 +179,25 @@ import {
   ACTION_DOCUMENT_SAVE_COPY,
 } from '../actions';
 import { useQuasar } from 'quasar';
-import { routeLastAction } from './actionRouter';
-import { newEditor, setContent, setPendingBeforeNewDoc, setPendingBeforeLoadDoc, newDocument, reloadDocumentWithConfiguration, openDocument, setDocumentAsNativelySaved, loadDocument } from './documentLifecycle';
+import { routeLastAction } from './editor/actionRouter';
+import { newEditor, setContent, setPendingBeforeNewDoc, setPendingBeforeLoadDoc, newDocument, reloadDocumentWithConfiguration, openDocument, setDocumentAsNativelySaved, loadDocument } from './editor/documentLifecycle';
 import { t } from '../i18n';
+import {
+  addCssStylesheets as addCssStylesheetsState,
+  changeLeftDrawerWidth as changeLeftDrawerWidthState,
+  closeAttributesEditor as closeAttributesEditorState,
+  closeInputTextDialog as closeInputTextDialogState,
+  editNodeOrMarkAttributes as editNodeOrMarkAttributesState,
+  hideSearchAndReplaceDialog as hideSearchAndReplaceDialogState,
+  maximizePdfViewer as maximizePdfViewerState,
+  minimizePdfViewer as minimizePdfViewerState,
+  removeCssStylesheets as removeCssStylesheetsState,
+  showInputTextDialog as showInputTextDialogState,
+  showSearchAndReplaceDialog as showSearchAndReplaceDialogState,
+  startSettingLeftDrawerWidth as startSettingLeftDrawerWidthState,
+  stopSettingLeftDrawerWidth as stopSettingLeftDrawerWidthState,
+  toggleSearchAndReplaceDialog as toggleSearchAndReplaceDialogState,
+} from './editor/uiStateHelpers';
 import {
   PendingOperation,
   PendingOperationExtraValue,
@@ -196,10 +219,6 @@ const COMPLAIN_IF_SAVED_ONLY_AS_COPY_TOGGLE: PendingOperationExtraValue = {
   default: true,
 };
 
-function cssfilename2id(cssfilename: string) {
-  return cssfilename ? cssfilename.replace(/[^_0-9A-Za-z]+/g, '-') : '';
-}
-
 const AttributesEditor = defineAsyncComponent(
   () => import('./AttributesEditor.vue'),
 );
@@ -216,7 +235,9 @@ const SearchAndReplace = defineAsyncComponent(
 export default {
   components: {
     EditorContent,
-    Menubar,
+    PundokEditorHeader,
+    PundokEditorPdfDrawer,
+    PundokEditorStylesDrawer,
     ContextMenu,
     ShowMessageDialog,
     ConfigurationsDialog,
@@ -930,39 +951,10 @@ export default {
       }
     },
     removeCssStylesheets(oldCsss: string[]) {
-      oldCsss?.forEach((cssfn) => {
-        const id = cssfilename2id(cssfn);
-        const style = document.querySelector(`style#${id}`);
-        if (style) {
-          style.parentNode?.removeChild(style);
-        } else {
-          console.log(`can't remove <style> element with id="${id}"`);
-        }
-      });
+      return removeCssStylesheetsState(this, oldCsss);
     },
     addCssStylesheets(newCsss: string[]) {
-      newCsss?.forEach(async (cssfilename) => {
-        const docState = this.docState();
-        if (docState) {
-          console.log(`loading CSS from "${cssfilename}"`);
-          const { configuration, project } = docState;
-          try {
-            const data = await this.backend?.getFileContents(cssfilename, {
-              kind: 'css',
-              configurationName: configuration?.name,
-              project: JSON.stringify({ ...project }),
-            });
-            if (data) {
-              const style = document.createElement('style');
-              style.setAttribute('id', cssfilename2id(cssfilename));
-              style.innerHTML = data;
-              document.head.appendChild(style);
-            }
-          } catch (err) {
-            console.log(`can't load "${cssfilename}": ${err}`);
-          }
-        }
-      });
+      return addCssStylesheetsState(this, newCsss);
     },
     detectDocumentIndices() {
       this.editor?.commands.detectDocumentIndices();
@@ -1138,56 +1130,30 @@ export default {
     },
     // methods for search and replace
     showSearchAndReplaceDialog() {
-      this.visibleSearchAndReplaceDialog = true;
+      return showSearchAndReplaceDialogState(this);
     },
     hideSearchAndReplaceDialog() {
-      this.visibleSearchAndReplaceDialog = false;
+      return hideSearchAndReplaceDialogState(this);
     },
     toggleSearchAndReplaceDialog() {
-      this.visibleSearchAndReplaceDialog = !this.visibleSearchAndReplaceDialog;
+      return toggleSearchAndReplaceDialogState(this);
     },
     // methods for attributes editing
     editNodeOrMarkAttributes(
       nodeOrMark: SelectedNodeOrMark,
       props?: EditAttributesActionProps,
     ) {
-      if (nodeOrMark) {
-        let { tab, action } = props || {};
-        const node = nodeOrMark.node;
-        if (!tab && node) {
-          switch (node.type.name) {
-            case NODE_NAME_INDEX_TERM:
-              if ((node.attrs.id || '').length === 0) tab = 'id';
-              break;
-            default:
-          }
-        }
-        this.startAttributesTab = tab;
-        this.onAttributesEditorShow = action;
-        this.nodeOrMarkToEdit = nodeOrMark;
-      }
+      return editNodeOrMarkAttributesState(this, nodeOrMark, props);
     },
     closeAttributesEditor() {
-      this.nodeOrMarkToEdit = undefined;
+      return closeAttributesEditorState(this);
     },
     // methods for direct input of text
-    showInputTextDialog(
-      label: string,
-      startValue?: string,
-      callback?: (text: string) => void,
-    ) {
-      this.inputTextDialogLabel = label;
-      this.inputTextDialogStartValue = startValue || '';
-      this.inputTextDialogCallback = callback;
-      this.visibleInputTextDialog = true;
+    showInputTextDialog(label: string, startValue?: string, callback?: (text: string) => void) {
+      return showInputTextDialogState(this, label, startValue, callback);
     },
     closeInputTextDialog(text: string | null | undefined, oldText?: string) {
-      const callback = this.inputTextDialogCallback;
-      if (callback && text) callback(text, oldText);
-      this.visibleInputTextDialog = false;
-      this.inputTextDialogLabel = DEFAULT_INPUT_TEXT_DIALOG_LABEL;
-      this.inputTextDialogStartValue = DEFAULT_INPUT_TEXT_DIALOG_START_VALUE;
-      this.inputTextDialogCallback = undefined;
+      return closeInputTextDialogState(this, text, oldText);
     },
     closeProjectStructureDialog() {
       this.visibleProjectStructureDialog = false;
@@ -1278,36 +1244,19 @@ export default {
       this.reloadDocumentWithConfiguration(configurationName);
     },
     maximizePdfViewer() {
-      this.leftDrawerState = 'normal';
+      return maximizePdfViewerState(this);
     },
     minimizePdfViewer() {
-      this.leftDrawerState = 'mini';
+      return minimizePdfViewerState(this);
     },
     startSettingLeftDrawerWidth(e: MouseEvent) {
-      if (e.button !== 0) return;
-      e.preventDefault();
-      this.leftDrawerHandleStart = e.clientX;
-      this.prevLeftDrawerWidth = this.leftDrawerWidth;
-      this.leftDrawerPreviewWidth = this.leftDrawerWidth;
-      document.addEventListener('mousemove', this.changeLeftDrawerWidth);
-      document.addEventListener('mouseup', this.stopSettingLeftDrawerWidth);
+      return startSettingLeftDrawerWidthState(this, e);
     },
     changeLeftDrawerWidth(e: MouseEvent) {
-      if (this.leftDrawerHandleStart !== undefined) {
-        const w =
-          this.prevLeftDrawerWidth + e.clientX - this.leftDrawerHandleStart;
-        if (w >= 16 && w <= 1024) {
-          this.leftDrawerPreviewWidth = w;
-        }
-      }
+      return changeLeftDrawerWidthState(this, e);
     },
     stopSettingLeftDrawerWidth() {
-      if (this.leftDrawerPreviewWidth !== undefined)
-        this.leftDrawerWidth = this.leftDrawerPreviewWidth;
-      this.leftDrawerHandleStart = undefined;
-      this.leftDrawerPreviewWidth = undefined;
-      document.removeEventListener('mousemove', this.changeLeftDrawerWidth);
-      document.removeEventListener('mouseup', this.stopSettingLeftDrawerWidth);
+      return stopSettingLeftDrawerWidthState(this);
     },
   },
 } as Component;
