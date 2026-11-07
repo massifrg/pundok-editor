@@ -53,7 +53,8 @@
       <q-page>
         <!-- style="padding-top: 112px" -->
         <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
-          @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @update-value="pendingValueUpdate" />
+          @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @pending-save="savePending"
+          @update-value="pendingValueUpdate" />
         <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
           @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
         <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
@@ -266,6 +267,7 @@ export default {
     'document-loaded',
     'pending-canceled',
     'pending-confirmed',
+    'pending-save',
   ],
 
   data() {
@@ -652,6 +654,24 @@ export default {
           break;
       }
       this.pending = undefined;
+    },
+    async savePending(pending: PendingOperation) {
+      const afterSave = () => {
+        if (this.pending !== pending) return;
+        this.pending = undefined;
+        switch (pending.type) {
+          case 'loading':
+            if (pending.doc) this.loadDocument(pending.doc as CxDocument, true);
+            break;
+          case 'new':
+            this.newDocument(pending.configurationName, pending.content, true);
+            break;
+          case 'closing':
+            if (this.isMainEditor) window.close();
+            break;
+        }
+      };
+      await this.save({ afterSave });
     },
     pendingValueUpdate(name: string, value: PendingOperationExtraValueValue) {
       console.log(`pending-update-value, ${name}=${value}`);

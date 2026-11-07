@@ -13,6 +13,7 @@
       </q-card-section>
       <q-card-actions align="right">
         <q-btn flat :label="cancelLabel" :color="cancelColor" @click="canceled()" />
+        <q-btn flat label="save before proceeding" color="positive" @click="save()" />
         <q-btn flat :label="confirmLabel" :color="confirmColor" @click="confirmed()" />
       </q-card-actions>
     </q-card>
@@ -30,7 +31,7 @@ import { PendingOperationExtraValue } from './helpers/pending';
 
 export default {
   props: ['modelValue', 'pendingOperation'],
-  emits: ['pending-canceled', 'pending-confirmed', 'update-value'],
+  emits: ['pending-canceled', 'pending-confirmed', 'pending-save', 'update-value'],
   data() {
     return {
       values: [] as any[],
@@ -69,6 +70,9 @@ export default {
     },
     confirmed() {
       this.$emit('pending-confirmed', this.pendingOperation)
+    },
+    save() {
+      this.$emit('pending-save', this.pendingOperation)
     },
     updateExtraValue(index: number) {
       const extraValue = this.extraValues[index]

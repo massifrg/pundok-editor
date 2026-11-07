@@ -28,7 +28,7 @@ export async function save(
   props?: DocumentSaveActionProps,
 ): Promise<SaveResponse | undefined> {
   if (host.documentLoading) return;
-  const { dontAskCopyPath, isCopy, isSaveAs } = props || {};
+  const { dontAskCopyPath, isCopy, isSaveAs, afterSave } = props || {};
   beforeSaving(host);
   const jsonDoc = host.getDocAsJsonString();
   const docState = host.docState();
@@ -104,6 +104,7 @@ export async function save(
             setActionCommand(context.editorKey!, ACTION_DOCUMENT_SAVE, {
               path: context.path,
               documentFormat: context.documentFormat,
+              afterSave,
             } as DocumentSaveActionProps);
           }
         },
@@ -196,6 +197,7 @@ export async function save(
       host.lastSavedDocumentVersion++;
     }
     host.documentMenuRefreshKey++;
+    afterSave?.();
     return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);
