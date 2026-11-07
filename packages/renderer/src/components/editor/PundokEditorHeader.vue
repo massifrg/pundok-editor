@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import type { NodeWithPos } from '@tiptap/vue-3';
 import type { EditorGUIPropsClass } from '../../schema';
+import type { RenderingTarget } from '../helpers';
 import Menubar from '../Menubar.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -35,11 +36,7 @@ defineProps<{
   savedChangesAsCopy: boolean;
   documentLoading: boolean;
   documentMenuRefreshKey: number;
-  renderingTargets: {
-    converterName: string;
-    path?: string;
-    feedback: string[];
-  }[];
+  renderingTargets: RenderingTarget[];
   transformationLog: string[];
   transformationFailed: boolean;
 }>();

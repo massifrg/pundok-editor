@@ -1,11 +1,13 @@
 export type PendingOperationType = 'closing' | 'loading' | 'new';
 
+export type PendingOperationExtraValueValue = boolean;
+
 export interface PendingOperationExtraValue {
   name: string;
   label: string;
   color?: string;
-  values: any[];
-  default?: any;
+  values: PendingOperationExtraValueValue[];
+  default?: PendingOperationExtraValueValue;
 }
 
 export interface PendingOperation extends Record<string, any> {

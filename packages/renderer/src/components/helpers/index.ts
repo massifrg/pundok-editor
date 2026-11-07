@@ -6,5 +6,6 @@ export * from './documentIncludes';
 export * from './filePath';
 export * from './pending';
 export * from './quasarIcons';
+export * from './rendering';
 export * from './showDocStateDialog';
 export * from './svg';

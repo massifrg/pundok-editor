@@ -102,11 +102,6 @@
   </q-layout>
 </template>
 
-<script setup lang="ts">
-import { setupQuasarIcons } from './helpers';
-setupQuasarIcons();
-</script>
-
 <script lang="ts">
 import { Component, defineAsyncComponent } from 'vue';
 import { Editor, EditorContent, NodeWithPos } from '@tiptap/vue-3';
@@ -143,13 +138,17 @@ import {
   GetProjectOptions,
   DocumentSaveActionProps,
   CxDocument,
-  splitFolderAndDoc,
-  getDefaultWorkingFormat,
-  getDefaultCopyFormat,
 } from '../common';
 
 import { setWindowTitle as setRendererWindowTitle } from '../backend/windowTitle';
-import { useActions, useBackend, useProjectCache } from '../stores';
+import { useActions, useBackend } from '../stores';
+import {
+  setupQuasarIcons,
+  PendingOperation,
+  PendingOperationExtraValue,
+  PendingOperationExtraValueValue,
+  RenderingTarget,
+} from './helpers';
 import ContextMenu from './ContextMenu.vue';
 import InputTextDialog from './InputTextDialog.vue';
 import NewProjectDialog from './NewProjectDialog.vue';
@@ -159,12 +158,7 @@ import ShowMessageDialog from './ShowMessageDialog.vue';
 import PundokEditorHeader from './editor/PundokEditorHeader.vue';
 import PundokEditorPdfDrawer from './editor/PundokEditorPdfDrawer.vue';
 import PundokEditorStylesDrawer from './editor/PundokEditorStylesDrawer.vue';
-import {
-  EditorAction,
-  ACTION_DOCUMENT_SAVE,
-  setActionCommand,
-  ACTION_DOCUMENT_SAVE_COPY,
-} from '../actions';
+import { EditorAction } from '../actions';
 import { useQuasar } from 'quasar';
 import { routeLastAction } from './editor/actionRouter';
 import { newEditor, setContent, setPendingBeforeNewDoc, setPendingBeforeLoadDoc, newDocument, reloadDocumentWithConfiguration, openDocument, setDocumentAsNativelySaved, loadDocument } from './editor/documentLifecycle';
@@ -186,10 +180,6 @@ import {
   stopSettingLeftDrawerWidth as stopSettingLeftDrawerWidthState,
   toggleSearchAndReplaceDialog as toggleSearchAndReplaceDialogState,
 } from './editor/uiStateHelpers';
-import {
-  PendingOperation,
-  PendingOperationExtraValue,
-} from './helpers';
 
 const DEFAULT_INPUT_TEXT_DIALOG_LABEL = 'text';
 const DEFAULT_INPUT_TEXT_DIALOG_START_VALUE = '';
@@ -320,11 +310,7 @@ export default {
       $q: useQuasar(),
       jsonSpace: DEFAULT_JSON_SPACE as string | number | undefined,
       splitterModel: 1,
-      renderingTargets: [] as {
-        converterName: string;
-        path?: string;
-        feedback: string[];
-      }[],
+      renderingTargets: [] as RenderingTarget[],
       transformationLog: [] as string[],
       transformationFailed: false,
       transformationEditorKey: undefined as EditorKeyType | undefined,
@@ -377,6 +363,7 @@ export default {
   },
 
   async mounted() {
+    setupQuasarIcons(this.$q);
     const backend = useBackend().backend;
     if (backend) {
       const configuration = await backend.configuration();
@@ -666,7 +653,7 @@ export default {
       }
       this.pending = undefined;
     },
-    pendingValueUpdate(name: string, value: any) {
+    pendingValueUpdate(name: string, value: PendingOperationExtraValueValue) {
       console.log(`pending-update-value, ${name}=${value}`);
       if (name === 'complainIfJustExported')
         this.complainIfJustExported = value;

@@ -1,4 +1,4 @@
-import { useQuasar } from 'quasar';
+import { useQuasar, type QVueGlobals } from 'quasar';
 import {
   mdiAlertCircle,
   mdiArrowDown,
@@ -661,8 +661,11 @@ export const icons: Record<string, string> = {
   [NODE_NAME_META_BOOL]: mdiCheckboxMarkedCircle,
 };
 
-export function setupQuasarIcons() {
-  const $q = useQuasar();
+export function setupQuasarIcons(quasar?: QVueGlobals) {
+  const $q = quasar ?? useQuasar();
+  if ($q === undefined) {
+    return;
+  }
   $q.iconSet.colorPicker.spectrum = mdiPaletteOutline;
   $q.iconSet.colorPicker.tune = mdiTuneVariant;
   $q.iconSet.colorPicker.palette = mdiPaletteSwatchOutline;

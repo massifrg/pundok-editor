@@ -7,6 +7,7 @@ import type { OutputConverter, ProjectComponent, PundokEditorProject } from '../
 import { getParentProjectComponent } from '../common';
 import { getDocState, getEditorConfiguration } from '../schema';
 import { expandCommandArgs } from './helpers/expandCommandArgs';
+import type { RenderingTarget } from './helpers';
 
 const CurrentRenderingsDialog = defineAsyncComponent(
   () => import('./CurrentRenderingsDialog.vue'),
@@ -29,12 +30,6 @@ const renderingDialog = ref(false);
 interface RenderTarget {
   converter: OutputConverter;
   path?: string;
-}
-
-interface RenderingTarget {
-  converterName: string;
-  path?: string;
-  feedback: readonly string[];
 }
 
 const docState = computed(() => getDocState(props.editor?.state));
