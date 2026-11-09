@@ -1000,7 +1000,8 @@ export class PandocJsonExporter {
               break;
             case 'note':
               addedChunks = [this.nodeToNote(child)];
-              extendCurrentRanges = true;
+              // commenting the next line prevents an Inline that ends before a Note to extend to the note
+              // extendCurrentRanges = true;
               break;
             case 'indexRef':
               addedChunks = [this.nodeToIndexRef(child)];
@@ -1039,8 +1040,8 @@ export class PandocJsonExporter {
         chunks = chunks.concat(addedChunks);
         if (extendCurrentRanges) {
           // Structural/zero-width nodes stay inside any flat mark ending at
-          // this boundary, allowing its Pandoc parent to span breaks, notes,
-          // and markers.
+          // this boundary, allowing its Pandoc parent to span breaks and
+          // markers.
           markIndices = markIndices.concat(
             marksRanges
               .filter(([mi, _, mstop]) => mstop === start)

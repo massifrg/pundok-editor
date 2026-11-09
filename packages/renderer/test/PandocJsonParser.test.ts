@@ -491,6 +491,104 @@ describe('PandocJsonParser', () => {
     ]);
   });
 
+  it('does not extend a Span to an immediately following Note', () => {
+    const doc = pandocJsonToPMNode({
+      'pandoc-api-version': [1, 23],
+      meta: {},
+      blocks: [
+        {
+          t: 'Para',
+          c: [
+            {
+              t: 'Span',
+              c: [
+                ['', [], [['custom-style', 'Emphasis']]],
+                [{ t: 'Str', c: 'before' }],
+              ],
+            },
+            {
+              t: 'Note',
+              c: [{ t: 'Para', c: [{ t: 'Str', c: 'note' }] }],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(
+      JSON.parse(nodeToPandocJsonString(doc, { apiVersion: [1, 23] })).blocks,
+    ).toEqual([
+      {
+        t: 'Para',
+        c: [
+          {
+            t: 'Span',
+            c: [
+              ['', [], [['custom-style', 'Emphasis']]],
+              [{ t: 'Str', c: 'before' }],
+            ],
+          },
+          {
+            t: 'Note',
+            c: [{ t: 'Para', c: [{ t: 'Str', c: 'note' }] }],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('keeps a Note inside a Span when the Span contains it', () => {
+    const doc = pandocJsonToPMNode({
+      'pandoc-api-version': [1, 23],
+      meta: {},
+      blocks: [
+        {
+          t: 'Para',
+          c: [
+            {
+              t: 'Span',
+              c: [
+                ['', [], [['custom-style', 'Emphasis']]],
+                [
+                  { t: 'Str', c: 'before' },
+                  {
+                    t: 'Note',
+                    c: [{ t: 'Para', c: [{ t: 'Str', c: 'note' }] }],
+                  },
+                  { t: 'Str', c: 'after' },
+                ],
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(
+      JSON.parse(nodeToPandocJsonString(doc, { apiVersion: [1, 23] })).blocks,
+    ).toEqual([
+      {
+        t: 'Para',
+        c: [
+          {
+            t: 'Span',
+            c: [
+              ['', [], [['custom-style', 'Emphasis']]],
+              [
+                { t: 'Str', c: 'before' },
+                {
+                  t: 'Note',
+                  c: [{ t: 'Para', c: [{ t: 'Str', c: 'note' }] }],
+                },
+                { t: 'Str', c: 'after' },
+              ],
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+
   it('parses metadata values and preserves metadata keys', () => {
     const doc = pandocJsonToPMNode({
       'pandoc-api-version': [1, 23],
