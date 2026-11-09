@@ -881,6 +881,7 @@
   "projectMenu": {
     "title": "Manage project",
     "editConfiguration": "Edit project configuration",
+    "initializeGit": "Put project under Git versioning",
     "manageChanges": "Manage changes and commits",
     "checkUpdates": "Check updates...",
     "share": "Share project",

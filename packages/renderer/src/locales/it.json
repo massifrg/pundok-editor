@@ -880,6 +880,7 @@
   "projectMenu": {
     "title": "Gestisci progetto",
     "editConfiguration": "Modifica configurazione del progetto",
+    "initializeGit": "Metti il progetto sotto versionamento Git",
     "manageChanges": "Gestisci modifiche e commit",
     "checkUpdates": "Controlla aggiornamenti...",
     "share": "Condividi progetto",

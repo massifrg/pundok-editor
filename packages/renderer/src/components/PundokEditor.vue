@@ -22,6 +22,7 @@
       @edit-node-or-mark-attributes="editNodeOrMarkAttributes"
       @show-configurations-dialog="visibleConfigurationDialog = true"
       @show-configuration-editor="visibleConfigurationEditor = true"
+      @initialize-git-project="initializeGitProject"
       @manage-git-project="visibleGitChanges = true"
       @check-git-updates="visibleGitUpdates = true"
       @share-git-project="showGitRepository('publish')"
@@ -479,6 +480,20 @@ export default {
   methods: {
     showGitRepository(mode: 'clone' | 'publish' | 'connect') {
       this.gitRepositoryMode = mode;
+    },
+    async initializeGitProject() {
+      const projectPath = this.docState()?.project?.path;
+      if (!projectPath || !this.backend) return;
+      try {
+        await this.backend.initGitProject(projectPath);
+        this.visibleGitChanges = true;
+      } catch (error) {
+        this.$q.notify({
+          message: error instanceof Error ? error.message : String(error),
+          color: 'negative',
+          icon: 'message_warning',
+        });
+      }
     },
     gitRepositoryDone(result: { path?: string }) {
       if (result.path)
