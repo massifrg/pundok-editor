@@ -280,8 +280,17 @@ div.note-content {
 }
 
 div.note-content div.note-text {
+  font-family: initial;
   font-size: 16pt;
   font-style: normal;
   font-weight: normal;
+  font-variant: normal;
+  font-stretch: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-transform: none;
+  white-space: normal;
+  text-align: initial;
 }
 </style>
