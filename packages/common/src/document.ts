@@ -1,6 +1,6 @@
 import { PundokEditorProject } from './config';
 import { DocumentFormat } from './documentFormat';
-import { EditorKeyType } from "./editorKey";
+import { EditorKeyType } from './editorKey';
 
 /**
  * An interface for the environment of a document.
@@ -22,6 +22,8 @@ export interface DocumentContext {
   resourcePath?: string[];
   /** Open the document in a separate editor instance or browser tab. */
   inNewEditor?: boolean;
+  /** Skip startup software and project Git update checks while opening. */
+  noCheck?: boolean;
 }
 
 /**
@@ -33,5 +35,7 @@ export interface CxDocument extends DocumentContext {
 }
 
 export function documentNameToId(name?: string): string | undefined {
-  return name && name.replace(/([.][0-9a-z_-]{1,5})*[.].*?$/i, '') || undefined
+  return (
+    (name && name.replace(/([.][0-9a-z_-]{1,5})*[.].*?$/i, '')) || undefined
+  );
 }

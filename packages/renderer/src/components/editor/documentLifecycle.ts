@@ -342,7 +342,7 @@ export async function loadDocument(
 
     // set project or configuration
     if (doc.project) {
-      await host.setProject(doc.project);
+      await host.setProject(doc.project, doc.noCheck);
       void host.loadProjectStructure(doc.project);
     } else {
       host.updateEditorDocState({ projectStructure: null });

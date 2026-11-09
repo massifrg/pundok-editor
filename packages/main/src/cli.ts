@@ -1,50 +1,62 @@
-import yargs from "yargs"
-import { hideBin } from "yargs/helpers"
-import { WindowWithIpc } from "./mainWindow"
-import { isAbsolute, resolve } from "path"
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import { WindowWithIpc } from './mainWindow';
+import { isAbsolute, resolve } from 'path';
 
 export function hasNewWindowOption(argv: string[] = process.argv) {
-  const args = hideBin(argv)
-  return args.includes("-w") || args.includes("--new-window")
+  const args = hideBin(argv);
+  return args.includes('-w') || args.includes('--new-window');
+}
+
+export function hasNoCheckOption(argv: string[] = process.argv) {
+  const args = hideBin(argv);
+  return args.includes('-n') || args.includes('--no-check');
 }
 
 export function parseCommandLineOpts(
   windowWithIpc: WindowWithIpc,
   argv?: string[],
-  pwd?: string
+  pwd?: string,
 ) {
   const parsed = yargs(hideBin(argv || process.argv))
-    .scriptName("pundok-editor")
+    .scriptName('pundok-editor')
     .usage('$0 filename')
     .option('c', {
       alias: 'config',
       describe: 'name of the configuration to use for the document',
-      type: 'string'
+      type: 'string',
     })
     .option('l', {
       alias: 'line',
-      describe: 'line (Para, Header, Plain, line of LineBlock) to move the selection to',
-      type: 'number'
+      describe:
+        'line (Para, Header, Plain, line of LineBlock) to move the selection to',
+      type: 'number',
     })
     .option('w', {
       alias: 'new-window',
       describe: 'open the document in a new editor instance',
-      type: 'boolean'
+      type: 'boolean',
+    })
+    .option('n', {
+      alias: 'no-check',
+      describe: 'skip missing software and project Git update checks',
+      type: 'boolean',
     })
     .help()
-    .parse()
+    .parse();
   //@ts-ignore
-  const { _: filenames, config, line } = parsed
-  let filename = filenames && filenames[0]
+  const { _: filenames, config, line, noCheck } = parsed;
+  let filename = filenames && filenames[0];
   if (filename) {
     if (!isAbsolute(filename))
-      filename = resolve(pwd || process.cwd(), filename)
-    const ipcHub = windowWithIpc.ipcHub
+      filename = resolve(pwd || process.cwd(), filename);
+    const ipcHub = windowWithIpc.ipcHub;
     ipcHub.fireEventOpenDocument({
       path: filename,
       configurationName: config,
       atLine: line,
-      whenEditorReady: true
-    })
+      noCheck,
+      whenEditorReady: true,
+    });
   }
 }

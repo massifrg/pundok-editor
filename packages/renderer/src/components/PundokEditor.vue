@@ -1,5 +1,10 @@
 <template>
-  <q-layout view="LHH LpR LFf" :container="!mainEditor" :style="`height: ${height}`" class="shadow-2 rounded-borders">
+  <q-layout
+    view="LHH LpR LFf"
+    :container="!mainEditor"
+    :style="`height: ${height}`"
+    class="shadow-2 rounded-borders"
+  >
     <PundokEditorHeader
       :editor="editor"
       :current-nodes-with-pos="currentNodesWithPos"
@@ -52,50 +57,114 @@
     <q-page-container>
       <q-page>
         <!-- style="padding-top: 112px" -->
-        <PendingOperationDialog :model-value="pending && !savedChanges" :pending-operation="pending"
-          @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @pending-save="savePending"
-          @update-value="pendingValueUpdate" />
-        <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
-          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
-        <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
-          :on-attributes-editor-show="onAttributesEditorShow" @closeAttributesEditor="closeAttributesEditor()">
+        <PendingOperationDialog
+          :model-value="pending && !savedChanges"
+          :pending-operation="pending"
+          @pending-canceled="cancelPending"
+          @pending-confirmed="confirmPending"
+          @pending-save="savePending"
+          @update-value="pendingValueUpdate"
+        />
+        <SearchAndReplace
+          :editor="editor"
+          :visible="visibleSearchAndReplaceDialog"
+          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()"
+        />
+        <AttributesEditor
+          :editor="editor"
+          :selected-node-or-mark="nodeOrMarkToEdit"
+          :start-tab="startAttributesTab"
+          :on-attributes-editor-show="onAttributesEditorShow"
+          @closeAttributesEditor="closeAttributesEditor()"
+        >
         </AttributesEditor>
-        <ConfigurationsDialog :editor="editor" :visible="visibleConfigurationDialog"
-          @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
+        <ConfigurationsDialog
+          :editor="editor"
+          :visible="visibleConfigurationDialog"
+          @set-configuration="setConfiguration"
+          @close-configurations-dialog="visibleConfigurationDialog = false"
+        >
         </ConfigurationsDialog>
-        <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
-          @close-show-message-dialog="message = null" :show-check-updates="message?.source === 'git-no-updates'" :icon="message?.source === 'git-no-updates' ? 'message_info' : undefined
-            " :color="message?.source === 'git-no-updates' ? 'secondary' : undefined
-              " @check-updates="openGitUpdates" />
-        <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
-          :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
-        <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
-          :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
-          @new-editor="newSubEditor" />
-        <ProjectConfigEditorDialog :visible="visibleConfigurationEditor" :editor="editor"
-          :configuration="docState()?.project?.editorConfig || {}" :project="docState()?.project"
-          :project-configurations="docState()?.project?.configurations || []" @save="saveProject"
-          @close="visibleConfigurationEditor = false" />
-        <NewProjectDialog :editor="editor" :visible="visibleNewProjectDialog"
-          @close="visibleNewProjectDialog = false" />
-        <GitChangesDialog :visible="visibleGitChanges" :project-path="docState()?.project?.path || ''"
-          @close="visibleGitChanges = false" @open-updates="
+        <ShowMessageDialog
+          :editor="editor"
+          :visible="!!message"
+          :message="message"
+          @close-show-message-dialog="message = null"
+          :show-check-updates="message?.source === 'git-no-updates'"
+          :icon="
+            message?.source === 'git-no-updates' ? 'message_info' : undefined
+          "
+          :color="
+            message?.source === 'git-no-updates' ? 'secondary' : undefined
+          "
+          @check-updates="openGitUpdates"
+        />
+        <InputTextDialog
+          :editor="editor"
+          :visible="visibleInputTextDialog"
+          :label="inputTextDialogLabel"
+          :start-value="inputTextDialogStartValue"
+          @close-dialog="closeInputTextDialog"
+        />
+        <ProjectStructureDialog
+          :main-editor="editor"
+          :visible="visibleProjectStructureDialog"
+          :project="docState()?.project"
+          @close-project-structure-dialog="closeProjectStructureDialog"
+          @new-editor="newSubEditor"
+        />
+        <ProjectConfigEditorDialog
+          :visible="visibleConfigurationEditor"
+          :editor="editor"
+          :configuration="docState()?.project?.editorConfig || {}"
+          :project="docState()?.project"
+          :project-configurations="docState()?.project?.configurations || []"
+          @save="saveProject"
+          @close="visibleConfigurationEditor = false"
+        />
+        <NewProjectDialog
+          :editor="editor"
+          :visible="visibleNewProjectDialog"
+          @close="visibleNewProjectDialog = false"
+        />
+        <GitChangesDialog
+          :visible="visibleGitChanges"
+          :project-path="docState()?.project?.path || ''"
+          @close="visibleGitChanges = false"
+          @open-updates="
             visibleGitChanges = false;
-          visibleGitUpdates = true;
-          " />
-        <GitUpdatesDialog :visible="visibleGitUpdates" :project-path="docState()?.project?.path || ''"
-          @close="visibleGitUpdates = false" @open-changes="
+            visibleGitUpdates = true;
+          "
+        />
+        <GitUpdatesDialog
+          :visible="visibleGitUpdates"
+          :project-path="docState()?.project?.path || ''"
+          @close="visibleGitUpdates = false"
+          @open-changes="
             visibleGitUpdates = false;
-          visibleGitChanges = true;
-          " @reload-project="reloadProjectAfterGitMerge" />
-        <GitRepositoryDialog :visible="!!gitRepositoryMode" :mode="gitRepositoryMode || 'clone'"
-          :editor="editor as Editor" :project-path="docState()?.project?.path || ''" :project="docState()?.project"
-          @close="gitRepositoryMode = undefined" @done="gitRepositoryDone" />
+            visibleGitChanges = true;
+          "
+          @reload-project="reloadProjectAfterGitMerge"
+        />
+        <GitRepositoryDialog
+          :visible="!!gitRepositoryMode"
+          :mode="gitRepositoryMode || 'clone'"
+          :editor="editor as Editor"
+          :project-path="docState()?.project?.path || ''"
+          :project="docState()?.project"
+          @close="gitRepositoryMode = undefined"
+          @done="gitRepositoryDone"
+        />
         <ContextMenu :editor="editor" />
         <div class="editor-loading-container">
           <editor-content class="pundok-editor" :editor="editor as Editor" />
           <q-inner-loading :showing="documentLoading">
-            <q-circular-progress indeterminate rounded size="3rem" color="primary" />
+            <q-circular-progress
+              indeterminate
+              rounded
+              size="3rem"
+              color="primary"
+            />
           </q-inner-loading>
         </div>
       </q-page>
@@ -162,7 +231,17 @@ import PundokEditorStylesDrawer from './editor/PundokEditorStylesDrawer.vue';
 import { EditorAction } from '../actions';
 import { useQuasar } from 'quasar';
 import { routeLastAction } from './editor/actionRouter';
-import { newEditor, setContent, setPendingBeforeNewDoc, setPendingBeforeLoadDoc, newDocument, reloadDocumentWithConfiguration, openDocument, setDocumentAsNativelySaved, loadDocument } from './editor/documentLifecycle';
+import {
+  newEditor,
+  setContent,
+  setPendingBeforeNewDoc,
+  setPendingBeforeLoadDoc,
+  newDocument,
+  reloadDocumentWithConfiguration,
+  openDocument,
+  setDocumentAsNativelySaved,
+  loadDocument,
+} from './editor/documentLifecycle';
 import * as documentPersistence from './editor/documentPersistence';
 import * as projectManagement from './editor/projectManagement';
 import {
@@ -374,10 +453,14 @@ export default {
         const docState = getDocState((this.editor as Editor).state);
         backend.editorReady(docState?.editorKey);
       }
-      const documentToOpen = new URLSearchParams(window.location.search).get('document');
+      const documentToOpen = new URLSearchParams(window.location.search).get(
+        'document',
+      );
       if (documentToOpen) {
         try {
-          await this.openDocument(JSON.parse(documentToOpen) as DocumentContext);
+          await this.openDocument(
+            JSON.parse(documentToOpen) as DocumentContext,
+          );
         } catch (error) {
           console.error('Failed to open document from URL:', error);
         }
@@ -462,7 +545,10 @@ export default {
      * Set and show a dialog to save the current unsaved contents before creating a new document.
      * @param options
      */
-    setPendingBeforeNewDoc(options: { configurationName?: string; content?: string }) {
+    setPendingBeforeNewDoc(options: {
+      configurationName?: string;
+      content?: string;
+    }) {
       return setPendingBeforeNewDoc(this, options);
     },
     /**
@@ -478,7 +564,11 @@ export default {
      * @param content The document's contents.
      * @param ignoreUnsaved If `true` discard the eventual current unsaved contents.
      */
-    async newDocument(configurationName?: string, content?: string, ignoreUnsaved?: boolean) {
+    async newDocument(
+      configurationName?: string,
+      content?: string,
+      ignoreUnsaved?: boolean,
+    ) {
       return newDocument(this, configurationName, content, ignoreUnsaved);
     },
     /**
@@ -499,21 +589,52 @@ export default {
     setDocumentAsNativelySaved() {
       return setDocumentAsNativelySaved(this);
     },
-    async loadDocument(doc: CxDocument, ignoreUnsaved?: boolean, atLine?: number) {
+    async loadDocument(
+      doc: CxDocument,
+      ignoreUnsaved?: boolean,
+      atLine?: number,
+    ) {
       return loadDocument(this, doc, ignoreUnsaved, atLine);
     },
-    beforeSaving() { return documentPersistence.beforeSaving(this); },
-    save(props?: DocumentSaveActionProps) { return documentPersistence.save(this, props); },
-    exportDoc(converter: OutputConverter, storedDoc?: Partial<CxDocument>, preserveEditor = false) {
-      return documentPersistence.exportDoc(this, converter, storedDoc, preserveEditor);
+    beforeSaving() {
+      return documentPersistence.beforeSaving(this);
     },
-    renderOutput(converter: OutputConverter, path?: string) { return documentPersistence.renderOutput(this, converter, path); },
-    renderingStarted(converterName: string, path: string) { return documentPersistence.renderingStarted(this, converterName, path); },
-    renderingFinished(converterName: string, path: string) { return documentPersistence.renderingFinished(this, converterName, path); },
-    stopRendering(converterName: string, path?: string) { return documentPersistence.stopRendering(this, converterName, path); },
-    importDoc(converter: InputConverter) { return documentPersistence.importDoc(this, converter); },
-    setOperationInProgress(value: boolean) { useActions().setRemoteWorkInProgress(value); },
-    transformDocument(transform: PandocFilterTransform) { return documentPersistence.transformDocument(this, transform); },
+    save(props?: DocumentSaveActionProps) {
+      return documentPersistence.save(this, props);
+    },
+    exportDoc(
+      converter: OutputConverter,
+      storedDoc?: Partial<CxDocument>,
+      preserveEditor = false,
+    ) {
+      return documentPersistence.exportDoc(
+        this,
+        converter,
+        storedDoc,
+        preserveEditor,
+      );
+    },
+    renderOutput(converter: OutputConverter, path?: string) {
+      return documentPersistence.renderOutput(this, converter, path);
+    },
+    renderingStarted(converterName: string, path: string) {
+      return documentPersistence.renderingStarted(this, converterName, path);
+    },
+    renderingFinished(converterName: string, path: string) {
+      return documentPersistence.renderingFinished(this, converterName, path);
+    },
+    stopRendering(converterName: string, path?: string) {
+      return documentPersistence.stopRendering(this, converterName, path);
+    },
+    importDoc(converter: InputConverter) {
+      return documentPersistence.importDoc(this, converter);
+    },
+    setOperationInProgress(value: boolean) {
+      useActions().setRemoteWorkInProgress(value);
+    },
+    transformDocument(transform: PandocFilterTransform) {
+      return documentPersistence.transformDocument(this, transform);
+    },
     removeCssStylesheets(oldCsss: string[]) {
       return removeCssStylesheetsState(this, oldCsss);
     },
@@ -558,12 +679,24 @@ export default {
       const title = doc.path || doc.id || 'new document';
       await this.setWindowTitle(title);
     },
-    setProject(project: PundokEditorProject) { return projectManagement.setProject(this, project); },
-    checkGitUpdates(project: PundokEditorProject) { return projectManagement.checkGitUpdates(this, project); },
-    openGitUpdates() { return projectManagement.openGitUpdates(this); },
-    reloadProjectAfterGitMerge() { return projectManagement.reloadProjectAfterGitMerge(this); },
-    loadProjectStructure(project: PundokEditorProject) { return projectManagement.loadProjectStructure(this, project); },
-    reloadProject(options: GetProjectOptions) { return projectManagement.reloadProject(this, options); },
+    setProject(project: PundokEditorProject, noCheck?: boolean) {
+      return projectManagement.setProject(this, project, noCheck);
+    },
+    checkGitUpdates(project: PundokEditorProject) {
+      return projectManagement.checkGitUpdates(this, project);
+    },
+    openGitUpdates() {
+      return projectManagement.openGitUpdates(this);
+    },
+    reloadProjectAfterGitMerge() {
+      return projectManagement.reloadProjectAfterGitMerge(this);
+    },
+    loadProjectStructure(project: PundokEditorProject) {
+      return projectManagement.loadProjectStructure(this, project);
+    },
+    reloadProject(options: GetProjectOptions) {
+      return projectManagement.reloadProject(this, options);
+    },
     setConfiguration(nameOrConfig?: string | PundokEditorConfig) {
       return projectManagement.setConfiguration(this, nameOrConfig);
     },
@@ -588,7 +721,11 @@ export default {
       return closeAttributesEditorState(this);
     },
     // methods for direct input of text
-    showInputTextDialog(label: string, startValue?: string, callback?: (text: string) => void) {
+    showInputTextDialog(
+      label: string,
+      startValue?: string,
+      callback?: (text: string) => void,
+    ) {
       return showInputTextDialogState(this, label, startValue, callback);
     },
     closeInputTextDialog(text: string | null | undefined, oldText?: string) {
@@ -597,7 +734,9 @@ export default {
     closeProjectStructureDialog() {
       this.visibleProjectStructureDialog = false;
     },
-    saveProject(project: PundokEditorProject) { return projectManagement.saveProject(this, project); },
+    saveProject(project: PundokEditorProject) {
+      return projectManagement.saveProject(this, project);
+    },
     onClose(event: Event) {
       if (this.askToSaveChanges) {
         this.setClosePending();

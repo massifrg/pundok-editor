@@ -2,18 +2,22 @@ import { app } from 'electron';
 import './security-restrictions';
 import { restoreOrCreateWindow, WindowWithIpc } from './mainWindow';
 import { copyMissingStaticResourcesInUserDir } from './staticResources';
-import { hasNewWindowOption, parseCommandLineOpts } from './cli';
+import {
+  hasNewWindowOption,
+  hasNoCheckOption,
+  parseCommandLineOpts,
+} from './cli';
 import { getExtendedEnvironment } from './resourcesManager';
 import { checkRequiredPrograms } from './externalPrograms';
 
 /** A global variable of the main window with its Ipc */
-let mainWindowWithIpc: WindowWithIpc | undefined = undefined
+let mainWindowWithIpc: WindowWithIpc | undefined = undefined;
 
 // An interface to put process.argv of a second instance into
 // the additional data of the callback to prevent chrome from
 // intersparsing options among arguments passed to the second instance.
 interface SecondInstanceData extends Record<string, any> {
-  argv: string // a JSON.stringified version of process.argv
+  argv: string; // a JSON.stringified version of process.argv
 }
 
 /**
@@ -22,17 +26,17 @@ interface SecondInstanceData extends Record<string, any> {
 const isSingleInstance =
   hasNewWindowOption() ||
   app.requestSingleInstanceLock({
-    argv: JSON.stringify(process.argv)
+    argv: JSON.stringify(process.argv),
   });
 if (!isSingleInstance) {
   app.quit();
   process.exit(0);
 }
 app.on('second-instance', (event, argv, pwd, data) => {
-  const sid = data as SecondInstanceData
-  const args = sid?.argv && JSON.parse(sid.argv) || argv
-  if (mainWindowWithIpc) parseCommandLineOpts(mainWindowWithIpc, args, pwd)
-})
+  const sid = data as SecondInstanceData;
+  const args = (sid?.argv && JSON.parse(sid.argv)) || argv;
+  if (mainWindowWithIpc) parseCommandLineOpts(mainWindowWithIpc, args, pwd);
+});
 
 /**
  * Disable Hardware Acceleration for more power-save
@@ -62,15 +66,16 @@ app
     Object.assign(process.env, await getExtendedEnvironment());
   })
   .then(restoreOrCreateWindow)
-  .then(async windowWithIpc => {
+  .then(async (windowWithIpc) => {
     if (windowWithIpc) {
-      mainWindowWithIpc = windowWithIpc
-      parseCommandLineOpts(windowWithIpc)
+      mainWindowWithIpc = windowWithIpc;
+      parseCommandLineOpts(windowWithIpc);
       if (
         import.meta.env.PROD ||
         import.meta.env.VITE_CHECK_REQUIRED_PROGRAMS === 'true'
       ) {
-        const softwareCheck = await checkRequiredPrograms()
+        if (hasNoCheckOption()) return;
+        const softwareCheck = await checkRequiredPrograms();
         if (softwareCheck.missing.length)
           windowWithIpc.ipcHub.queueFeedback({
             type: 'warning',
@@ -78,7 +83,7 @@ app
             message: softwareCheck.missing.map(({ name }) => name).join(', '),
             level: 1,
             software: softwareCheck,
-          })
+          });
       }
     }
   })

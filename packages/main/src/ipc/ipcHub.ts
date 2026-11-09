@@ -73,6 +73,8 @@ export interface DocumentOpening {
   project?: PundokEditorProject;
   /** If there's no mainEditorKey yet, open when it's set (otherwise cancel the open document operation) */
   whenEditorReady?: boolean;
+  /** Skip startup software and project Git update checks while opening. */
+  noCheck?: boolean;
 }
 
 /**
@@ -387,11 +389,12 @@ export class IpcHub implements RendererHub {
 
   fireEventOpenDocument(docToOpen?: DocumentOpening) {
     if (this.mainEditorKey) {
-      const { path, configurationName, atLine } = docToOpen || {};
+      const { path, configurationName, atLine, noCheck } = docToOpen || {};
       this.fireEventInRenderer('document', 'open', {
         path,
         configurationName,
         atLine,
+        noCheck,
         project: docToOpen?.project,
       });
       this.pendingDocumentOpen = undefined;

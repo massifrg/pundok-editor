@@ -1,5 +1,11 @@
 import type { MenuItemConstructorOptions } from 'electron';
-import { app, BaseWindow, BrowserWindow, Menu, WebContentsView } from 'electron';
+import {
+  app,
+  BaseWindow,
+  BrowserWindow,
+  Menu,
+  WebContentsView,
+} from 'electron';
 import { spawn } from 'child_process';
 import { dirname, join } from 'path';
 import { URL, fileURLToPath } from 'url';
@@ -24,8 +30,8 @@ let resizeEditorView: (options?: { refreshDevTools?: boolean }) => void;
 
 export function openNewEditor(path?: string) {
   const args = import.meta.env.DEV
-    ? [app.getAppPath(), '-w']
-    : ['-w'];
+    ? [app.getAppPath(), '-w', '-n']
+    : ['-w', '-n'];
   if (path) args.push(path);
   const newEditor = spawn(process.execPath, args, {
     detached: true,
@@ -38,8 +44,8 @@ export function openNewEditor(path?: string) {
 }
 
 export interface WindowWithIpc {
-  window: BaseWindow,
-  ipcHub: IpcHub
+  window: BaseWindow;
+  ipcHub: IpcHub;
 }
 
 async function createWindow(): Promise<WindowWithIpc> {
@@ -72,7 +78,7 @@ async function createWindow(): Promise<WindowWithIpc> {
     },
   });
 
-  handleImagesFor(editorView)
+  handleImagesFor(editorView);
   baseWindow.contentView.addChildView(editorView);
   editorView.setBounds({ x: 0, y: 0, width: 600, height: 600 });
 
@@ -125,22 +131,22 @@ async function createWindow(): Promise<WindowWithIpc> {
   refreshMainMenu(ipcHub);
 
   // add listeners to intercept dev-tools open/close
-  editorView.webContents.on("devtools-opened", () => {
-    console.log("DevTools opened");
-    showDeveloperTools = true
-    refreshMainMenu(ipcHub)
+  editorView.webContents.on('devtools-opened', () => {
+    console.log('DevTools opened');
+    showDeveloperTools = true;
+    refreshMainMenu(ipcHub);
   });
 
-  editorView.webContents.on("devtools-closed", () => {
-    console.log("DevTools closed");
-    showDeveloperTools = false
-    refreshMainMenu(ipcHub)
+  editorView.webContents.on('devtools-closed', () => {
+    console.log('DevTools closed');
+    showDeveloperTools = false;
+    refreshMainMenu(ipcHub);
   });
 
   // await loadEditor(browserWindow);
   await loadEditor(editorView);
 
-  return { window: baseWindow, ipcHub }
+  return { window: baseWindow, ipcHub };
 }
 
 async function loadEditor(win: BrowserWindow | WebContentsView) {
@@ -153,9 +159,9 @@ async function loadEditor(win: BrowserWindow | WebContentsView) {
     import.meta.env.DEV && import.meta.env.VITE_DEV_SERVER_URL !== undefined
       ? import.meta.env.VITE_DEV_SERVER_URL
       : new URL(
-        '../renderer/dist/index.html',
-        'file://' + __dirname,
-      ).toString();
+          '../renderer/dist/index.html',
+          'file://' + __dirname,
+        ).toString();
 
   await win.webContents.loadURL(pageUrl);
 }
@@ -167,12 +173,12 @@ export async function restoreOrCreateWindow(): Promise<WindowWithIpc> {
   checkAndCreateAppDataDir();
 
   let window = BaseWindow.getAllWindows().find((w) => !w.isDestroyed());
-  let ipcHub: IpcHub | undefined = undefined
+  let ipcHub: IpcHub | undefined = undefined;
 
   if (window === undefined) {
     const wwipc = await createWindow();
-    window = wwipc.window
-    ipcHub = wwipc.ipcHub
+    window = wwipc.window;
+    ipcHub = wwipc.ipcHub;
   }
 
   window.show();
@@ -182,7 +188,7 @@ export async function restoreOrCreateWindow(): Promise<WindowWithIpc> {
   }
 
   window.focus();
-  return { window, ipcHub: ipcHub! }
+  return { window, ipcHub: ipcHub! };
 }
 
 export async function refreshMainMenu(ipcHub: IpcHub) {
@@ -190,7 +196,7 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
   const recentDocsMenu = bookmarks
     .filter((b) => b.type === 'document')
     .map((b) => {
-      const { label, sublabel, tooltip } = bookmarkLabel(b)
+      const { label, sublabel, tooltip } = bookmarkLabel(b);
       return {
         label,
         sublabel,
@@ -198,15 +204,15 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
         click: () => {
           ipcHub.fireEventOpenDocument({
             path: b.url,
-            configurationName: b.configurationName
+            configurationName: b.configurationName,
           });
         },
-      }
+      };
     });
   const recentProjectsMenu = bookmarks
     .filter((b) => b.type === 'project')
     .map((b) => {
-      const { label, sublabel, tooltip } = bookmarkLabel(b)
+      const { label, sublabel, tooltip } = bookmarkLabel(b);
       return {
         label,
         sublabel,
@@ -214,7 +220,7 @@ export async function refreshMainMenu(ipcHub: IpcHub) {
         click: () => {
           ipcHub.fireEventOpenDocument({ path: b.url });
         },
-      }
+      };
     });
   const recentMenu = [
     {
