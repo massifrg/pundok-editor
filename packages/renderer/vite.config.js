@@ -73,6 +73,7 @@ export default defineConfig({
   define: {
     'process.env': JSON.stringify(process.env),
     'process.platform': JSON.stringify(process.platform),
+    'process.cwd': '() => "/"',
   },
   build: {
     sourcemap: true,
