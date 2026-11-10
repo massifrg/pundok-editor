@@ -318,6 +318,35 @@ const ProjectStructureDialog: Component = {
       this.expanded = path.slice(0, -1).map((node: QTreeNode) => node.label);
       this.$nextTick(this.scrollSelectedTreeNode);
     },
+    syncTreeToDocument(doc: LoadedDocument) {
+      const project = getEditorProject(this.mainEditor);
+      const documentPath = doc.path && normalizedSource(doc.path);
+      const candidates = documentPath
+        ? [
+            documentPath,
+            project?.path && normalizedSource(relative(project.path, doc.path!)),
+          ].filter((candidate): candidate is string => !!candidate)
+        : [];
+      const path = this.findTreePath((node: QTreeNode & LoadedDocument) => {
+        if (node.src && candidates.length > 0) {
+          const source = normalizedSource(node.src);
+          if (
+            candidates.includes(source) ||
+            (!!project?.path &&
+              candidates.includes(
+                normalizedSource(resolve(project.path, node.src)),
+              ))
+          )
+            return true;
+        }
+        return !!doc.id && node.id === doc.id;
+      });
+      if (!path) return;
+
+      this.selected = path[path.length - 1].label;
+      this.expanded = path.slice(0, -1).map((node: QTreeNode) => node.label);
+      this.$nextTick(this.scrollSelectedTreeNode);
+    },
     scrollSelectedTreeNode() {
       const tree = this.$refs.tree as { $el?: HTMLElement } | undefined;
       const selectedNode = tree?.$el?.querySelector(
@@ -360,6 +389,7 @@ const ProjectStructureDialog: Component = {
         path: doc.path,
       };
       this.subEditor = editor;
+      this.syncTreeToDocument(this.loaded);
     },
     setShowMode(showMode: ShowMode) {
       this.showMode = showMode;
