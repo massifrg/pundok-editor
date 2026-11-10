@@ -49,6 +49,7 @@
     "copyNode": "copy",
     "deleteNode": "delete",
     "duplicateNode": "duplicate",
+    "seeInPdf": "see in PDF",
     "addTableCaption": "add table caption",
     "addTableHead": "add table head",
     "addTableFoot": "add table foot",

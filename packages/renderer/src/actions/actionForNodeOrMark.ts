@@ -366,9 +366,8 @@ export function actionsForNodeOrMark(
     if (lineNodeTypes.has(nodeTypeName!)) {
       actions.push({
         editorKey,
-        name: 'synchronize-pdf',
-        label: 'synchronize with PDF',
-        icon: 'refresh',
+        name: 'see-in-pdf',
+        icon: 'see_in_pdf',
         highlight: true,
         canDo: (editor) =>
           documentLineAt(editor.state, nodeOrMark) !== undefined &&

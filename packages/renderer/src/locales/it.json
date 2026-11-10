@@ -49,6 +49,7 @@
     "copyNode": "copia",
     "deleteNode": "cancella",
     "duplicateNode": "duplica",
+    "seeInPdf": "visualizza nel PDF",
     "addTableCaption": "aggiungi didascalia alla tabella",
     "addTableHead": "aggiungi intestazione alla tabella",
     "addTableFoot": "aggiungi piè di tabella",

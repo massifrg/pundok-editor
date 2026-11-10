@@ -16,7 +16,7 @@
         </q-item-section>
         <q-menu v-if="hasSubmenuActions(lnom)" anchor="top end" self="top start">
           <NodeOrMarkContextMenu :editor="editor" :node-or-mark="lnom"
-            :exclude-action-names="['synchronize-pdf']" />
+            :exclude-action-names="['see-in-pdf']" />
         </q-menu>
       </q-item>
     </q-list>
@@ -76,9 +76,9 @@ export default {
         .filter(a => isHighlightedAction(a, this.editor))
       const synchronize = this.labeledWithActions
         .flatMap(lnom => this.actionsFor(lnom))
-        .find(a => a.name === 'synchronize-pdf')
+        .find(a => a.name === 'see-in-pdf')
       return [
-        ...highlighted.filter(a => a.name !== 'synchronize-pdf'),
+        ...highlighted.filter(a => a.name !== 'see-in-pdf'),
         ...(synchronize ? [synchronize] : []),
       ]
     },
@@ -98,7 +98,7 @@ export default {
         .filter(a => onlyHighlighted ? isHighlightedAction(a, editor) : true)
     },
     hasSubmenuActions(labeled: LabeledNodeOrMark) {
-      return this.actionsFor(labeled).some(a => a.name !== 'synchronize-pdf')
+      return this.actionsFor(labeled).some(a => a.name !== 'see-in-pdf')
     },
     prepareContextMenuItems(ev: Event) {
       // console.log(ev)

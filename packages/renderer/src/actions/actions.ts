@@ -74,7 +74,7 @@ export type ActionName =
   | 'copy-node'
   | 'delete-node'
   | 'duplicate-node'
-  | 'synchronize-pdf'
+  | 'see-in-pdf'
   | 'add-table-caption'
   | 'add-table-head'
   | 'add-table-foot'

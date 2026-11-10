@@ -42,6 +42,7 @@ export const ACTION_DESCRIPTORS: Readonly<Record<string, ActionDescriptor>> = {
     'copy-node': { name: 'copy-node', labelKey: 'actions.copyNode', icon: 'clipboard_copy' },
     'delete-node': { name: 'delete-node', labelKey: 'actions.deleteNode', icon: 'delete' },
     'duplicate-node': { name: 'duplicate-node', labelKey: 'actions.duplicateNode', icon: 'duplicate' },
+    'see-in-pdf': { name: 'see-in-pdf', labelKey: 'actions.seeInPdf', icon: 'see_in_pdf' },
     'add-table-caption': { name: 'add-table-caption', labelKey: 'actions.addTableCaption', icon: 'caption_add' },
     'add-table-head': { name: 'add-table-head', labelKey: 'actions.addTableHead', icon: 'table_head' },
     'add-table-foot': { name: 'add-table-foot', labelKey: 'actions.addTableFoot', icon: 'table_foot' },
