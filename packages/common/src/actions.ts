@@ -58,6 +58,10 @@ export interface DocumentOpenActionProps extends ActionProps {
   atLine?: number
 }
 
+export interface DocumentInsertActionProps extends DocumentOpenActionProps {
+  withResult: 'append' | 'prepend' | 'insert'
+}
+
 export interface DocumentSaveActionProps extends ActionProps {
   /** The complete path of the document to be saved (folder and filename). */
   path?: string,

@@ -132,8 +132,9 @@ export interface ElementsSelection extends Automation {
 /** What to do with the result of a document transformation. */
 export type WhatToDoWithResult =
   | 'replace' // replace the whole document (default)
-  | 'append' // append to the document
-  | 'prepend'; // prepend to the blocks of the document
+  | 'append'  // append to the document
+  | 'prepend' // prepend to the blocks of the document
+  | 'insert'  // insert the blocks of the document replacing a Div or Span with a certain id
 
 export type PandocVariables = Record<string, any>;
 export type PandocMetadata = Record<string, boolean | number | string>;

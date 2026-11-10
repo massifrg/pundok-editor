@@ -1,14 +1,14 @@
 import { getMarksBetween } from '@tiptap/vue-3';
 import { Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { EditorView } from '@tiptap/pm/view';
-import { NodeSelection, Plugin } from '@tiptap/pm/state';
+import { Command, NodeSelection, Plugin, TextSelection } from '@tiptap/pm/state';
 import { Extension } from '@tiptap/core';
 import {
   ACTION_SET_ALTERNATIVE,
   ACTION_UPDATE_DOC_STATE,
   setActionCommand,
   setActionEditAttributes,
-  UpdateDocStateActionProps
+  UpdateDocStateActionProps,
 } from '../../actions';
 import {
   EditAttributesActionProps,
@@ -25,8 +25,9 @@ import {
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
   NODE_NAME_SHORT_CAPTION,
+  MARK_NAME_SPAN,
   SetAlternativeActionProps,
-  SK
+  SK,
 } from '../../common';
 import {
   DocState,
@@ -38,10 +39,15 @@ import {
   innerNodeDepth,
   META_UPDATE_DOC_STATE,
   SelectedNodeOrMark,
-  updateDocState
+  updateDocState,
 } from '../helpers';
 import { pundokEditorUtilsPluginKey } from './PundokEditorUtilsPluginKey';
-import { nudgeNumericValue, nudgeNumericValueAtIndex } from '../helpers/nudgeNumericValue';
+import {
+  nudgeNumericValue,
+  nudgeNumericValueAtIndex,
+} from '../helpers/nudgeNumericValue';
+import { asTiptapCommand } from '../helpers';
+import { INSERTION_POINT_ID } from '../../components/editor/findInsertionPoint';
 
 let keyCounter = 1;
 
@@ -50,9 +56,8 @@ function newEditorKey(): EditorKeyType {
 }
 
 function areSameDoc(doc1?: ProsemirrorNode, doc2?: ProsemirrorNode) {
-  if (!doc1 || !doc2)
-    return false
-  return doc1.eq(doc2)
+  if (!doc1 || !doc2) return false;
+  return doc1.eq(doc2);
 }
 
 declare module '@tiptap/core' {
@@ -62,16 +67,14 @@ declare module '@tiptap/core' {
       toggleSwapBlocks: (value?: boolean) => ReturnType;
       editAttributes: (props?: EditAttributesActionProps) => ReturnType;
       gotoDocLine: (i: number) => ReturnType;
-      nudgeNumericValue: (
-        sign: 1 | -1,
-        x?: number,
-        y?: number,
-      ) => ReturnType;
+      nudgeNumericValue: (sign: 1 | -1, x?: number, y?: number) => ReturnType;
+      putPlaceholder: () => ReturnType;
+      removePlaceholder: () => ReturnType;
     };
   }
 }
 
-export interface PundokEditorUtilsOptions { }
+export interface PundokEditorUtilsOptions {}
 
 export const PundokEditorUtilsExtension =
   Extension.create<PundokEditorUtilsOptions>({
@@ -105,7 +108,10 @@ export const PundokEditorUtilsExtension =
                 updatedDocState.unsavedChangesAsCopy;
               if (tr.docChanged) {
                 // check if the document is equal to the saved one
-                const sameDoc = areSameDoc(updatedDocState.savedDoc, newState.doc)
+                const sameDoc = areSameDoc(
+                  updatedDocState.savedDoc,
+                  newState.doc,
+                );
                 if (!alreadyFullyUnsaved || sameDoc) {
                   updatedDocState = updateDocState(updatedDocState, {
                     unsavedChanges: !sameDoc,
@@ -117,8 +123,8 @@ export const PundokEditorUtilsExtension =
                 setActionCommand(
                   updatedDocState.editorKey,
                   ACTION_UPDATE_DOC_STATE,
-                  { docState: updatedDocState } as UpdateDocStateActionProps
-                )
+                  { docState: updatedDocState } as UpdateDocStateActionProps,
+                );
               }
               return updatedDocState;
             },
@@ -161,7 +167,7 @@ export const PundokEditorUtilsExtension =
                     },
                     { tab: 'idref' },
                   );
-                  return true
+                  return true;
                 case NODE_NAME_IMAGE:
                   setActionEditAttributes(
                     editorKey,
@@ -181,16 +187,26 @@ export const PundokEditorUtilsExtension =
             handleDOMEvents: {
               wheel: (view, event) => {
                 if (event.altKey) {
-                  const sign = (event.deltaY !== 0) && (event.deltaY < 0 ? 1 : -1)
-                  if (sign && this.editor.can().nudgeNumericValue(sign, event.clientX, event.clientY)) {
-                    this.editor.commands.nudgeNumericValue(sign, event.clientX, event.clientY)
-                    event.preventDefault()
-                    return true
+                  const sign =
+                    event.deltaY !== 0 && (event.deltaY < 0 ? 1 : -1);
+                  if (
+                    sign &&
+                    this.editor
+                      .can()
+                      .nudgeNumericValue(sign, event.clientX, event.clientY)
+                  ) {
+                    this.editor.commands.nudgeNumericValue(
+                      sign,
+                      event.clientX,
+                      event.clientY,
+                    );
+                    event.preventDefault();
+                    return true;
                   }
                 }
-                return false
-              }
-            }
+                return false;
+              },
+            },
           },
         }),
       ];
@@ -198,186 +214,215 @@ export const PundokEditorUtilsExtension =
 
     addCommands() {
       return {
+        putPlaceholder: () => asTiptapCommand(putPlaceholderCommand),
+        removePlaceholder: () => asTiptapCommand(removePlaceholderCommand),
         updateDocState:
           (update: Partial<DocStateUpdate>) =>
-            ({ dispatch, tr }) => {
-              // set a property to null if you want to reset it
-              if (dispatch) dispatch(tr.setMeta(META_UPDATE_DOC_STATE, update));
-              return true;
-            },
-        toggleSwapBlocks: (value?: boolean) => ({ dispatch, state, tr }) => {
-          const docState = pundokEditorUtilsPluginKey.getState(state)
-          const currentlyActive = docState.guiProps?.swapBlocksActive
-          if (value === undefined && currentlyActive === undefined) return false
-          const swapBlocksActive = value === undefined ? !currentlyActive : value
-          if (dispatch) {
-            dispatch(tr.setMeta(META_UPDATE_DOC_STATE, {
-              guiProps: { swapBlocksActive } as Partial<EditorGUIProps>,
-            }))
-          }
-          return true
-        },
+          ({ dispatch, tr }) => {
+            // set a property to null if you want to reset it
+            if (dispatch) dispatch(tr.setMeta(META_UPDATE_DOC_STATE, update));
+            return true;
+          },
+        toggleSwapBlocks:
+          (value?: boolean) =>
+          ({ dispatch, state, tr }) => {
+            const docState = pundokEditorUtilsPluginKey.getState(state);
+            const currentlyActive = docState.guiProps?.swapBlocksActive;
+            if (value === undefined && currentlyActive === undefined)
+              return false;
+            const swapBlocksActive =
+              value === undefined ? !currentlyActive : value;
+            if (dispatch) {
+              dispatch(
+                tr.setMeta(META_UPDATE_DOC_STATE, {
+                  guiProps: { swapBlocksActive } as Partial<EditorGUIProps>,
+                }),
+              );
+            }
+            return true;
+          },
         editAttributes:
           (props) =>
-            ({ dispatch, editor, state }) => {
-              const sel = state.selection;
-              const selectNode = props?.selectNode || (() => true)
-              let nodeOrMark: SelectedNodeOrMark | undefined = undefined;
-              if (sel instanceof NodeSelection) {
-                const node = (sel as NodeSelection).node;
-                const attrs = editableAttrsForNodeOrMark(node);
-                if (selectNode(node) && attrs.length > 0) {
-                  nodeOrMark = {
-                    name: node.type.name,
-                    node,
-                    pos: sel.from,
-                    from: sel.from,
-                    to: sel.from + node.nodeSize,
-                  };
-                }
+          ({ dispatch, editor, state }) => {
+            const sel = state.selection;
+            const selectNode = props?.selectNode || (() => true);
+            let nodeOrMark: SelectedNodeOrMark | undefined = undefined;
+            if (sel instanceof NodeSelection) {
+              const node = (sel as NodeSelection).node;
+              const attrs = editableAttrsForNodeOrMark(node);
+              if (selectNode(node) && attrs.length > 0) {
+                nodeOrMark = {
+                  name: node.type.name,
+                  node,
+                  pos: sel.from,
+                  from: sel.from,
+                  to: sel.from + node.nodeSize,
+                };
+              }
+            } else {
+              const markRange = getMarksBetween(
+                sel.from,
+                sel.to,
+                state.doc,
+              ).find((mr) => editableAttrsForNodeOrMark(mr.mark).length > 0);
+              if (markRange) {
+                nodeOrMark = {
+                  name: markRange.mark.type.name,
+                  mark: markRange.mark,
+                  pos: markRange.from,
+                  from: markRange.from,
+                  to: markRange.to,
+                };
               } else {
-                const markRange = getMarksBetween(
-                  sel.from,
-                  sel.to,
-                  state.doc,
-                ).find((mr) => editableAttrsForNodeOrMark(mr.mark).length > 0);
-                if (markRange) {
-                  nodeOrMark = {
-                    name: markRange.mark.type.name,
-                    mark: markRange.mark,
-                    pos: markRange.from,
-                    from: markRange.from,
-                    to: markRange.to,
-                  };
-                } else {
-                  const $from = sel.$from;
-                  let depth = $from.depth;
-                  while (depth > 0) {
-                    let node = $from.node(depth);
-                    if (editableAttrsForNodeOrMark(node).length > 0) {
-                      if (
-                        selectNode(node) &&
-                        !isParagraphOfIndexTerm(node, $from.node(depth - 1))
-                      ) {
-                        const start = sel.$from.start(depth) - 1;
-                        nodeOrMark = {
-                          name: node.type.name,
-                          node: node,
-                          pos:
-                            state.doc.nodeAt(start - 1) === node
-                              ? start - 1
-                              : start,
-                          from: start,
-                          to: $from.end(depth),
-                        };
-                        break;
-                      }
+                const $from = sel.$from;
+                let depth = $from.depth;
+                while (depth > 0) {
+                  let node = $from.node(depth);
+                  if (editableAttrsForNodeOrMark(node).length > 0) {
+                    if (
+                      selectNode(node) &&
+                      !isParagraphOfIndexTerm(node, $from.node(depth - 1))
+                    ) {
+                      const start = sel.$from.start(depth) - 1;
+                      nodeOrMark = {
+                        name: node.type.name,
+                        node: node,
+                        pos:
+                          state.doc.nodeAt(start - 1) === node
+                            ? start - 1
+                            : start,
+                        from: start,
+                        to: $from.end(depth),
+                      };
+                      break;
                     }
-                    depth--;
                   }
+                  depth--;
                 }
               }
-              if (nodeOrMark) {
-                // console.log(nodeOrMark)
-                if (dispatch)
-                  setActionEditAttributes(editor.state, nodeOrMark, props);
+            }
+            if (nodeOrMark) {
+              // console.log(nodeOrMark)
+              if (dispatch)
+                setActionEditAttributes(editor.state, nodeOrMark, props);
+              return true;
+            }
+            return false;
+          },
+        gotoDocLine:
+          (i: number) =>
+          ({ dispatch, state, tr }) => {
+            if (!i) return false;
+            let count: number = 0;
+            let found = false;
+            let foundPos = 0;
+            let foundNode: ProsemirrorNode | null = null;
+            const doc = state.doc;
+            doc.descendants((node, pos) => {
+              const tn = node.type.name;
+              if (tn === NODE_NAME_METADATA) return false;
+              if (
+                tn === NODE_NAME_PARAGRAPH ||
+                tn === NODE_NAME_PLAIN ||
+                tn === NODE_NAME_HEADING ||
+                tn === NODE_NAME_LINE ||
+                tn === NODE_NAME_SHORT_CAPTION ||
+                tn === NODE_NAME_DEFINITION_TERM
+              ) {
+                count++;
+                // console.log(`${count}: ${node.textContent}`)
+                if (count === i) {
+                  found = true;
+                  foundPos = pos;
+                  foundNode = node;
+                }
+              }
+              return !found;
+            });
+            if (!found) return false;
+            if (dispatch) {
+              dispatch(tr.setSelection(NodeSelection.create(doc, foundPos)));
+            }
+            return true;
+          },
+        nudgeNumericValue:
+          (sign, x, y) =>
+          ({ dispatch, state, tr, view }) => {
+            const { selection } = state;
+            /** RawInline */
+            let node: ProsemirrorNode | null = null;
+            let index: number | undefined = undefined;
+            let node_start: number | undefined = undefined;
+            if (
+              selection instanceof NodeSelection &&
+              selection.node.type.name === NODE_NAME_RAW_INLINE
+            ) {
+              node = selection.node;
+              node_start = selection.from + 1;
+            } else if (x && y) {
+              const pac = view.posAtCoords({ left: x, top: y });
+              if (pac) {
+                const { pos, inside } = pac;
+                // console.log(`pos=${pos}, inside=${inside}`)
+                // console.log(state.doc.resolve(pos))
+                node = state.doc.nodeAt(inside);
+                index = pos - inside;
+                node_start = inside + 1;
+              }
+            }
+            if (node && node.type.name === NODE_NAME_RAW_INLINE && node_start) {
+              const text = node.attrs.text;
+              const modified = nudgeNumericValue(text, sign);
+              if (modified) {
+                if (dispatch) {
+                  dispatch(
+                    tr.setNodeAttribute(node_start - 1, 'text', modified),
+                  );
+                }
                 return true;
               }
               return false;
-            },
-        gotoDocLine: (i: number) => ({ dispatch, state, tr }) => {
-          if (!i) return false;
-          let count: number = 0
-          let found = false
-          let foundPos = 0
-          let foundNode: ProsemirrorNode | null = null
-          const doc = state.doc
-          doc.descendants((node, pos) => {
-            const tn = node.type.name
-            if (tn === NODE_NAME_METADATA) return false
-            if (tn === NODE_NAME_PARAGRAPH || tn === NODE_NAME_PLAIN
-              || tn === NODE_NAME_HEADING || tn === NODE_NAME_LINE
-              || tn === NODE_NAME_SHORT_CAPTION || tn === NODE_NAME_DEFINITION_TERM) {
-              count++
-              // console.log(`${count}: ${node.textContent}`)
-              if (count === i) {
-                found = true
-                foundPos = pos
-                foundNode = node
+            }
+            /** RawBlock */
+            if (!node && selection.empty) {
+              const { $from, from } = selection;
+              const inner = innerNodeDepth(
+                $from,
+                (n) => n.type.name === NODE_NAME_RAW_BLOCK,
+              );
+              if (!inner) return false;
+              node_start = $from.start(inner);
+              index = from - node_start;
+              node = $from.node(inner);
+            } else if (node?.type.name !== NODE_NAME_RAW_BLOCK) {
+              return false;
+            }
+            if (node && node_start && index) {
+              const modified = nudgeNumericValueAtIndex(
+                node.textContent,
+                index,
+                sign,
+              );
+              if (modified) {
+                if (dispatch) {
+                  const { start, end, value } = modified;
+                  dispatch(
+                    tr.insertText(value, node_start + start, node_start + end),
+                  );
+                }
+                return true;
               }
             }
-            return !found
-          })
-          if (!found) return false
-          if (dispatch) {
-            dispatch(tr.setSelection(NodeSelection.create(doc, foundPos)))
-          }
-          return true
-        },
-        nudgeNumericValue: (sign, x, y) => ({ dispatch, state, tr, view }) => {
-          const { selection } = state
-          /** RawInline */
-          let node: ProsemirrorNode | null = null
-          let index: number | undefined = undefined
-          let node_start: number | undefined = undefined
-          if (selection instanceof NodeSelection
-            && selection.node.type.name === NODE_NAME_RAW_INLINE) {
-            node = selection.node
-            node_start = selection.from + 1
-          } else if (x && y) {
-            const pac = view.posAtCoords({ left: x, top: y })
-            if (pac) {
-              const { pos, inside } = pac
-              // console.log(`pos=${pos}, inside=${inside}`)
-              // console.log(state.doc.resolve(pos))
-              node = state.doc.nodeAt(inside)
-              index = pos - inside
-              node_start = inside + 1
-            }
-          }
-          if (node && node.type.name === NODE_NAME_RAW_INLINE && node_start) {
-            const text = node.attrs.text
-            const modified = nudgeNumericValue(text, sign)
-            if (modified) {
-              if (dispatch) {
-                dispatch(tr.setNodeAttribute(node_start - 1, "text", modified))
-              }
-              return true
-            }
-            return false
-          }
-          /** RawBlock */
-          if (!node && selection.empty) {
-            const { $from, from } = selection
-            const inner = innerNodeDepth($from, (n => n.type.name === NODE_NAME_RAW_BLOCK))
-            if (!inner) return false
-            node_start = $from.start(inner)
-            index = from - node_start
-            node = $from.node(inner)
-          } else if (node?.type.name !== NODE_NAME_RAW_BLOCK) {
-            return false
-          }
-          if (node && node_start && index) {
-            const modified = nudgeNumericValueAtIndex(node.textContent, index, sign)
-            if (modified) {
-              if (dispatch) {
-                const { start, end, value } = modified
-                dispatch(tr.insertText(value, node_start + start, node_start + end))
-              }
-              return true
-            }
-          }
-          return false
-        }
+            return false;
+          },
       };
     },
 
     addKeyboardShortcuts() {
-      const altCmd = (n: number) => setActionCommand(
-        this.editor.state,
-        ACTION_SET_ALTERNATIVE,
-        { alternative: n } as SetAlternativeActionProps
-      )
+      const altCmd = (n: number) =>
+        setActionCommand(this.editor.state, ACTION_SET_ALTERNATIVE, {
+          alternative: n,
+        } as SetAlternativeActionProps);
       return {
         [SK.EDIT_ATTRIBUTES]: () => this.editor.commands.editAttributes(),
         [SK.SET_ALTERNATIVE_0]: () => altCmd(0),
@@ -394,10 +439,70 @@ export const PundokEditorUtilsExtension =
     },
   });
 
+const putPlaceholderCommand: Command = (state, dispatch) => {
+  const { to } = state.selection;
+  const $to = state.doc.resolve(to);
+  const insideParagraph = $to.node($to.depth);
+  if (
+    insideParagraph.type.name !== NODE_NAME_PARAGRAPH &&
+    insideParagraph.type.name !== NODE_NAME_PLAIN
+  ) {
+    return false;
+  }
+
+  const spanMark = state.schema.marks[MARK_NAME_SPAN];
+  if (!spanMark) return false;
+
+  if (dispatch) {
+    dispatch(
+      state.tr.replaceWith(
+        to,
+        to,
+        state.schema.text('\uFFFC', [
+          spanMark.create({ id: INSERTION_POINT_ID }),
+        ]),
+      ),
+    );
+  }
+  return true;
+};
+
+const removePlaceholderCommand: Command = (state, dispatch) => {
+  const spanMark = state.schema.marks[MARK_NAME_SPAN];
+  if (!spanMark) return false;
+
+  const ranges: Array<[number, number]> = [];
+  state.doc.descendants((node, pos) => {
+    if (!node.isText) return;
+    const placeholderMark = node.marks.find(
+      (mark) => mark.type === spanMark && mark.attrs.id === INSERTION_POINT_ID,
+    );
+    if (placeholderMark) ranges.push([pos, pos + node.nodeSize]);
+  });
+
+  if (ranges.length > 0 && dispatch) {
+    const lastPlaceholderPos = ranges[ranges.length - 1][0];
+    let transaction = state.tr;
+    for (const [from, to] of ranges.reverse()) {
+      transaction = transaction.delete(from, to);
+    }
+    transaction = transaction.setSelection(
+      TextSelection.create(
+        transaction.doc,
+        transaction.mapping.map(lastPlaceholderPos, -1),
+      ),
+    );
+    dispatch(transaction);
+  }
+  return ranges.length > 0;
+};
+
 function isParagraphOfIndexTerm(
   node: ProsemirrorNode,
   parent: ProsemirrorNode,
 ): boolean {
-  return parent?.type.name === NODE_NAME_INDEX_TERM
-    && node?.type.name === NODE_NAME_PARAGRAPH
+  return (
+    parent?.type.name === NODE_NAME_INDEX_TERM &&
+    node?.type.name === NODE_NAME_PARAGRAPH
+  );
 }

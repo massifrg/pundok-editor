@@ -7,6 +7,7 @@ import {
   type SetContentActionProps,
   type BackendSetContentWithProjectActionProps,
   type DocumentOpenActionProps,
+  type DocumentInsertActionProps,
   type TransformDocumentActionProps,
   type NewEmptyDocumentActionProps,
   type NewDocumentActionProps,
@@ -48,7 +49,7 @@ import {
   ACTION_PROJECT_NEW,
   ACTION_GET_PROJECT,
   ACTION_UPDATE_DOC_STATE,
-  ACTION_DOCUMENT_INCLUDE,
+  ACTION_DOCUMENT_INSERT,
   ACTION_SET_DOCUMENT_FORMAT,
   ACTION_DOCUMENT_SAVE_COPY,
   type ActionForNodeOrMark,
@@ -67,7 +68,7 @@ function escapeHtml(value: string): string {
     /[&<>"']/g,
     (character) =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[
-        character
+      character
       ]!,
   );
 }
@@ -279,17 +280,18 @@ export function routeLastAction(
           props as NewDocumentActionProps;
         host.newDocument(configName, content);
         break;
-      case ACTION_DOCUMENT_INCLUDE.name:
+      case ACTION_DOCUMENT_INSERT.name:
         {
-          const ctx = (props as DocumentOpenActionProps).context;
+          const { context: ctx, withResult = 'append' } =
+            props as Partial<DocumentInsertActionProps>;
           if (ctx) {
             const { path, documentFormat } = ctx;
             if (path) {
               const appendTransform: PandocFilterTransform = {
                 type: 'pandoc-filter',
                 filters: [],
-                name: 'include-document',
-                withResult: 'append',
+                name: 'insert-document',
+                withResult,
                 fromFormat: documentFormat?.name || 'json',
                 toFormat: 'json',
                 sources: [path],
@@ -328,28 +330,28 @@ export function routeLastAction(
             host.message =
               feedback.source === 'missing-software'
                 ? {
-                    ...feedback,
-                    message: [
-                      host.$t('startup.missingSoftware.message', {
-                        programs:
-                          feedback.software?.missing
-                            .map(softwareLink)
-                            .join(', ') || escapeHtml(feedback.message),
-                      }),
-                      feedback.software?.available.length
-                        ? `<br><br><strong>${host.$t(
-                            'startup.missingSoftware.available',
-                          )}</strong><ul>${feedback.software.available
-                            .map(
-                              (software) =>
-                                `<li>${softwareLink(software)}: ${escapeHtml(
-                                  software.version || '',
-                                )}</li>`,
-                            )
-                            .join('')}</ul>`
-                        : '',
-                    ].join(''),
-                  }
+                  ...feedback,
+                  message: [
+                    host.$t('startup.missingSoftware.message', {
+                      programs:
+                        feedback.software?.missing
+                          .map(softwareLink)
+                          .join(', ') || escapeHtml(feedback.message),
+                    }),
+                    feedback.software?.available.length
+                      ? `<br><br><strong>${host.$t(
+                        'startup.missingSoftware.available',
+                      )}</strong><ul>${feedback.software.available
+                        .map(
+                          (software) =>
+                            `<li>${softwareLink(software)}: ${escapeHtml(
+                              software.version || '',
+                            )}</li>`,
+                        )
+                        .join('')}</ul>`
+                      : '',
+                  ].join(''),
+                }
                 : feedback;
           }
         }

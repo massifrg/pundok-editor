@@ -665,6 +665,9 @@
   "disabled": "non attivo",
   "document": {
     "append": "accoda documento",
+    "prepend": "anteponi documento",
+    "insert": "inserisci documento",
+    "insertOptions": "scegli come inserire un documento",
     "newEmpty": "nuovo documento vuoto",
     "newEmptyWithConfig": "nuovo documento con la configurazione",
     "newTitleWithConfig": "nuovo documento - configurazione {name}",
@@ -726,7 +729,7 @@
       "showHidden": "mostra gli elementi nascosti:"
     },
     "prompt": {
-      "include": "Includi documento:",
+      "insert": "Inserisci documento:",
       "import": "Importa documento:",
       "open": "Apri documento:",
       "openDocument": "Apri documento",

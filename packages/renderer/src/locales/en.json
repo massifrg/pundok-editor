@@ -666,6 +666,9 @@
   "disabled": "disabled",
   "document": {
     "append": "append document",
+    "prepend": "prepend document",
+    "insert": "insert document",
+    "insertOptions": "choose how to insert a document",
     "newEmpty": "new empty document",
     "newEmptyWithConfig": "new empty document with configuration",
     "newTitleWithConfig": "new document - configuration {name}",
@@ -727,7 +730,7 @@
       "showHidden": "show hidden:"
     },
     "prompt": {
-      "include": "Include document:",
+      "insert": "Insert document:",
       "import": "Import document:",
       "open": "Open document:",
       "openDocument": "Open document",

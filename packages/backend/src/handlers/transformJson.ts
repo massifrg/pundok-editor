@@ -70,7 +70,7 @@ export async function transformWithPandoc(
   );
   const args = ['-f', fromFormat, '-t', toFormat, ...otherArgs];
   console.log(args);
-  if (!transform.filters?.length && fromFormat === toFormat)
+  if (!transform.filters?.length && fromFormat === toFormat && !sources?.length)
     throw new Error(
       'You must provide Pandoc filters to transform a document without changing its format',
     );

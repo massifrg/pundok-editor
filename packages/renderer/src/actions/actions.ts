@@ -39,7 +39,7 @@ export type ActionName =
   | 'render-document'
   | 'new-project'
   | 'get-project'
-  | 'include-document'
+  | 'insert-document'
   | 'import-document'
   | 'export-document'
   | 'transform-document'
@@ -297,9 +297,9 @@ export const ACTION_DOCUMENT_RENDER: BaseEditorAction = {
   icon: 'document_render',
 };
 
-export const ACTION_DOCUMENT_INCLUDE: BaseEditorAction = {
-  name: 'include-document',
-  label: 'include a document in the current one',
+export const ACTION_DOCUMENT_INSERT: BaseEditorAction = {
+  name: 'insert-document',
+  label: 'insert a document in the current one',
 };
 
 export const ACTION_DOCUMENT_IMPORT: BaseEditorAction = {

@@ -1,5 +1,14 @@
 import { toRaw } from 'vue';
-import type { OutputConverter, InputConverter, CxDocument, DocumentFormat, PandocFilterTransform, SaveResponse, DocumentSaveActionProps, PundokEditorProject } from '../../common';
+import type {
+  OutputConverter,
+  InputConverter,
+  CxDocument,
+  DocumentFormat,
+  PandocFilterTransform,
+  SaveResponse,
+  DocumentSaveActionProps,
+  PundokEditorProject,
+} from '../../common';
 import {
   DEFAULT_COPY_DOCUMENT_FORMAT,
   DEFAULT_DOCUMENT_FORMAT,
@@ -11,9 +20,19 @@ import {
   outputConverterToDocumentFormat,
   splitFolderAndDoc,
 } from '../../common';
-import { ACTION_DOCUMENT_SAVE, ACTION_DOCUMENT_SAVE_COPY, setActionCommand } from '../../actions';
+import {
+  ACTION_DOCUMENT_SAVE,
+  ACTION_DOCUMENT_SAVE_COPY,
+  setActionCommand,
+} from '../../actions';
 import { useActions } from '../../stores';
-import { type DocumentDialogProps, showSaveCopyDialog, showSaveDocumentDialog } from '../helpers';
+import {
+  type DocumentDialogProps,
+  showSaveCopyDialog,
+  showSaveDocumentDialog,
+} from '../helpers';
+import { findInsertionPoint } from './findInsertionPoint';
+export { findInsertionPoint };
 
 export interface DocumentPersistenceHost {
   [key: string]: any;
@@ -32,8 +51,13 @@ export async function save(
   beforeSaving(host);
   const jsonDoc = host.getDocAsJsonString();
   const docState = host.docState();
-  const { documentName, copyFolder, workingFolder, configuration, workingFormat } =
-    docState || {};
+  const {
+    documentName,
+    copyFolder,
+    workingFolder,
+    configuration,
+    workingFormat,
+  } = docState || {};
   let path = props?.path;
   if (!path) {
     const folder = isCopy ? copyFolder : workingFolder;
@@ -51,7 +75,8 @@ export async function save(
     (isSave && !documentFormat)
   ) {
     if (isCopy) {
-      const { documentName, copyFolder, copyFormat, workingFolder } = docState || {};
+      const { documentName, copyFolder, copyFormat, workingFolder } =
+        docState || {};
       const startFilename =
         documentName && copyFormat
           ? changeFileExtensionToFormat(documentName, copyFormat)
@@ -81,10 +106,13 @@ export async function save(
         },
       } as DocumentDialogProps);
     } else {
-      const { configuration, documentName, workingFolder, workingFormat } = docState || {};
+      const { configuration, documentName, workingFolder, workingFormat } =
+        docState || {};
       const format = isSaveAs
         ? workingFormat || getDefaultWorkingFormat(configuration)
-        : documentFormat || getDefaultWorkingFormat(configuration) || DEFAULT_DOCUMENT_FORMAT;
+        : documentFormat ||
+        getDefaultWorkingFormat(configuration) ||
+        DEFAULT_DOCUMENT_FORMAT;
       const startFormat = asOutputFormat(format, configuration);
       const startFilename =
         documentName && startFormat
@@ -93,7 +121,11 @@ export async function save(
       showSaveDocumentDialog({
         editor: host.editor,
         options: {
-          prompt: host.$t(isSaveAs ? 'fileDialog.prompt.save' : 'fileDialog.prompt.saveCurrent'),
+          prompt: host.$t(
+            isSaveAs
+              ? 'fileDialog.prompt.save'
+              : 'fileDialog.prompt.saveCurrent',
+          ),
           startFolder: workingFolder,
           startFormat,
           startFilename,
@@ -115,12 +147,13 @@ export async function save(
   try {
     documentFormat = toRaw(
       documentFormat ||
-        (isCopy
-          ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
-          : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT),
+      (isCopy
+        ? docState?.copyFormat || DEFAULT_COPY_DOCUMENT_FORMAT
+        : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT),
     );
     if (!host.backend) return Promise.reject('no backend found');
-    const { configuration, documentName, project, resourcePath } = docState || {};
+    const { configuration, documentName, project, resourcePath } =
+      docState || {};
     const response = await host.backend.save(
       {
         editorKey: host.editorKey(),
@@ -150,23 +183,29 @@ export async function save(
     if (response.doc.path) {
       const { folder, document } = splitFolderAndDoc(response.doc.path);
       const update = isCopy
-        ? { copyFolder: folder, copyFormat: documentFormat, unsavedChangesAsCopy: false }
+        ? {
+          copyFolder: folder,
+          copyFormat: documentFormat,
+          unsavedChangesAsCopy: false,
+        }
         : {
-            documentName: document,
-            workingFolder: folder,
-            workingFormat: documentFormat,
-            unsavedChanges: false,
-          };
+          documentName: document,
+          workingFolder: folder,
+          workingFormat: documentFormat,
+          unsavedChanges: false,
+        };
       host.editor?.commands.updateDocState(update);
     }
     if (!isCopy) host.setDocumentAsNativelySaved();
-    if (!isCopy && response.doc.path) await host.setWindowTitleFromDoc(response.doc);
+    if (!isCopy && response.doc.path)
+      await host.setWindowTitleFromDoc(response.doc);
     let differentProject: PundokEditorProject | undefined;
     if (
       !isCopy &&
       response.doc.path &&
       ((!isSaveAs && !project) ||
-        (isSaveAs && splitFolderAndDoc(response.doc.path).folder !== workingFolder))
+        (isSaveAs &&
+          splitFolderAndDoc(response.doc.path).folder !== workingFolder))
     ) {
       differentProject = await host.backend.getProject({
         path: response.doc.path,
@@ -186,7 +225,9 @@ export async function save(
         caption: 'SAVE SUCCESS',
         message:
           `saved as ${response.doc.path || response.doc.id}` +
-          (differentProject ? `, reloaded in project "${differentProject.name}"` : ''),
+          (differentProject
+            ? `, reloaded in project "${differentProject.name}"`
+            : ''),
         icon: 'content_save_check',
       },
       'bottom',
@@ -202,7 +243,12 @@ export async function save(
   } catch (err) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);
     const errmsg = host.showResultMessage(
-      { success: false, caption: 'SAVE ERROR', message, icon: 'content_save_alert' },
+      {
+        success: false,
+        caption: 'SAVE ERROR',
+        message,
+        icon: 'content_save_alert',
+      },
       'bottom',
     );
     console.log(message);
@@ -220,7 +266,9 @@ export async function exportDoc(
   if (!host.backend) return Promise.reject('no backend found');
   const docState = host.docState();
   if (!docState) return Promise.reject('no document state');
-  const documentFormat = outputConverterToDocumentFormat(toRaw(converter) as OutputConverter);
+  const documentFormat = outputConverterToDocumentFormat(
+    toRaw(converter) as OutputConverter,
+  );
   host.setOperationInProgress(true);
   try {
     const response = await host.backend.save({
@@ -234,12 +282,15 @@ export async function exportDoc(
       content: jsonDoc,
       project: docState.project,
       documentFormat,
-      configurationName: storedDoc?.configurationName || docState.configuration?.name,
+      configurationName:
+        storedDoc?.configurationName || docState.configuration?.name,
       resourcePath: docState.resourcePath,
     });
     if (!preserveEditor) await host.setWindowTitleFromDoc(response.doc);
-    if (response.error) return Promise.reject(`ERROR, ${response.message}: ${response.error}`);
-    if (!preserveEditor) host.updateEditorDocState({ unsavedChangesAsCopy: false });
+    if (response.error)
+      return Promise.reject(`ERROR, ${response.message}: ${response.error}`);
+    if (!preserveEditor)
+      host.updateEditorDocState({ unsavedChangesAsCopy: false });
     return response;
   } finally {
     setTimeout(() => host.setOperationInProgress(false), 3000);
@@ -257,42 +308,81 @@ export async function renderOutput(
       ? `${docState.workingFolder}/${docState.documentName}`
       : undefined;
   const renderingPath = path || currentPath;
-  const renderingTarget = { converterName: converter.name, path: renderingPath, feedback: [] as string[] };
-  if (host.renderingTargets.some((target: typeof renderingTarget) =>
-    target.converterName === renderingTarget.converterName && target.path === renderingTarget.path)) return;
+  const renderingTarget = {
+    converterName: converter.name,
+    path: renderingPath,
+    feedback: [] as string[],
+  };
+  if (
+    host.renderingTargets.some(
+      (target: typeof renderingTarget) =>
+        target.converterName === renderingTarget.converterName &&
+        target.path === renderingTarget.path,
+    )
+  )
+    return;
   host.renderingTargets.push(renderingTarget);
   try {
     let source: Partial<CxDocument> | undefined;
     if (renderingPath && renderingPath !== currentPath) {
-      source = await host.backend?.open({ path: renderingPath, project: docState?.project });
+      source = await host.backend?.open({
+        path: renderingPath,
+        project: docState?.project,
+      });
     }
     await exportDoc(host, converter, source, true);
   } finally {
     host.renderingTargets = host.renderingTargets.filter(
       (target: typeof renderingTarget) =>
-        target.converterName !== renderingTarget.converterName || target.path !== renderingTarget.path,
+        target.converterName !== renderingTarget.converterName ||
+        target.path !== renderingTarget.path,
     );
   }
 }
 
-export function renderingStarted(host: DocumentPersistenceHost, converterName: string, path: string): void {
-  if (host.renderingTargets.some((target: any) => target.converterName === converterName && target.path === path)) return;
+export function renderingStarted(
+  host: DocumentPersistenceHost,
+  converterName: string,
+  path: string,
+): void {
+  if (
+    host.renderingTargets.some(
+      (target: any) =>
+        target.converterName === converterName && target.path === path,
+    )
+  )
+    return;
   host.renderingTargets.push({ converterName, path, feedback: [] });
 }
 
-export function renderingFinished(host: DocumentPersistenceHost, converterName: string, path: string): void {
+export function renderingFinished(
+  host: DocumentPersistenceHost,
+  converterName: string,
+  path: string,
+): void {
   host.renderingTargets = host.renderingTargets.filter(
-    (target: any) => target.converterName !== converterName || target.path !== path,
+    (target: any) =>
+      target.converterName !== converterName || target.path !== path,
   );
 }
 
-export async function stopRendering(host: DocumentPersistenceHost, converterName: string, path?: string): Promise<void> {
+export async function stopRendering(
+  host: DocumentPersistenceHost,
+  converterName: string,
+  path?: string,
+): Promise<void> {
   if (path) await host.backend?.stopRendering(converterName, path);
 }
 
-export async function importDoc(host: DocumentPersistenceHost, converter: InputConverter): Promise<void> {
+export async function importDoc(
+  host: DocumentPersistenceHost,
+  converter: InputConverter,
+): Promise<void> {
   const docState = host.docState();
-  const documentFormat: DocumentFormat = { ftype: 'input-converter', ...toRaw(converter) };
+  const documentFormat: DocumentFormat = {
+    ftype: 'input-converter',
+    ...toRaw(converter),
+  };
   const doc = await host.backend?.open({
     editorKey: docState?.editorKey,
     configurationName: docState?.configuration?.name,
@@ -302,7 +392,10 @@ export async function importDoc(host: DocumentPersistenceHost, converter: InputC
   if (doc) host.loadDocument(doc);
 }
 
-export function setOperationInProgress(host: DocumentPersistenceHost, value: boolean): void {
+export function setOperationInProgress(
+  host: DocumentPersistenceHost,
+  value: boolean,
+): void {
   useActions().setRemoteWorkInProgress(value);
 }
 
@@ -329,22 +422,51 @@ export async function transformDocument(
       { ...transform },
     );
     if (transformed) {
-      if (whatToDo === 'replace' && transformed.replace(/[\r\n]+$/, '') !== json) {
+      if (
+        whatToDo === 'replace' &&
+        transformed.replace(/[\r\n]+$/, '') !== json
+      ) {
         host.setContent(transformed, false);
       } else {
         const doc = JSON.parse(json || host.getDocAsJsonString());
-        const transformedBlocks = JSON.parse(transformed);
-        doc.blocks =
-          whatToDo === 'append'
-            ? doc.blocks.concat(transformedBlocks.blocks || [])
-            : (transformedBlocks.blocks || []).concat(doc.blocks);
-        host.setContent(JSON.stringify(doc), false);
+        const transformedDoc = JSON.parse(transformed);
+        const insertedBlocks = transformedDoc.blocks || []
+        const insertionPoint = whatToDo === 'insert' && findInsertionPoint(doc);
+        if (insertionPoint) {
+          let { blocks, blockIndex, spanIndex } = insertionPoint;
+          const block = blocks[blockIndex]
+          const { t, c } = block
+          const before = c.slice(0, spanIndex)
+          const after = c.slice(spanIndex + 1)
+          blocks = [
+            ...blocks.slice(0, blockIndex),
+            ...(before.length > 0 ? [{ t, c: before }] : []),
+            ...insertedBlocks,
+            ...(after.length > 0 ? [{ t, c: after }] : []),
+            ...blocks.slice(blockIndex + 1),
+          ]
+          doc.blocks = blocks
+          host.setContent(JSON.stringify(doc), false)
+        } else if (whatToDo === 'insert') {
+          host.editor?.commands.removePlaceholder();
+        } else {
+          doc.blocks =
+            whatToDo === 'append'
+              ? doc.blocks.concat(insertedBlocks) // append
+              : insertedBlocks.concat(doc.blocks); // prepend
+          host.setContent(JSON.stringify(doc), false);
+        }
       }
+    } else if (whatToDo === 'insert') {
+      host.editor?.commands.removePlaceholder();
     }
   } catch (err) {
+    if (whatToDo === 'insert') host.editor?.commands.removePlaceholder();
     host.transformationFailed = true;
     const errorMessage = err instanceof Error ? err.message : String(err);
-    host.transformationLog.push(host.$t('transformationDialog.failed', { error: errorMessage }));
+    host.transformationLog.push(
+      host.$t('transformationDialog.failed', { error: errorMessage }),
+    );
     host.$q.notify({
       type: 'negative',
       message: errorMessage,

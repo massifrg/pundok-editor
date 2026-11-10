@@ -39,7 +39,7 @@ import { editorKeyFromState, getEditorConfiguration, getEditorDocState } from '.
 import { useBackend } from '../../stores';
 import { uniq } from 'lodash-es';
 
-export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'include' | 'folder' | 'image'
+export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'insert' | 'folder' | 'image'
 
 const FILE_TABLE_TYPEAHEAD_RESET_DELAY_MS = 2000
 
@@ -287,8 +287,8 @@ export default {
           case 'import':
             prompt = this.$t('fileDialog.prompt.import')
             break
-          case 'include':
-            prompt = this.$t('fileDialog.prompt.include')
+          case 'insert':
+            prompt = this.$t('fileDialog.prompt.insert')
             break
           case 'open':
           default:
@@ -877,7 +877,7 @@ export default {
             <q-item v-for="db in docBookmarks" clickable @click="gotoUrl(db.url, db.configurationName)">
               <q-item-section>
                 <q-item-label :title="db.url">{{ splitFolderAndDoc(decodeURIComponent(db.url)).document
-                  }}</q-item-label>
+                }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
