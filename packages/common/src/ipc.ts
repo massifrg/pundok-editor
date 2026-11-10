@@ -53,6 +53,7 @@ export type IpcRendererToMainChannel =
   | 'set-value'
   | 'query'
   | 'get-source-file'
+  | 'get-pdf-location'
   | 'show-rendered-again'
   | 'render-again'
   | 'stop-rendering'
@@ -234,6 +235,11 @@ export const IPC_CHANNELS: Record<IpcChannel, IpcChannelDescription> = {
     dir: 'r2m',
     description:
       'open the source file corresponding to a point in a page of a result (PDF) file',
+  },
+  'get-pdf-location': {
+    dir: 'r2m',
+    description:
+      'find the page and box corresponding to a source file line in a result (PDF) file',
   },
   'update-config': {
     dir: 'r2m',

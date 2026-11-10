@@ -13,6 +13,7 @@ import type {
   CxDocument,
   PandocFilterTransform,
   SynctexInfo,
+  PdfLocation,
   RenderingJob,
   RenderingBookmark,
   GetProjectOptions,
@@ -233,6 +234,13 @@ export interface Backend {
   ): Promise<string>;
 
   gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void>;
+  getPdfLocation(
+    editorKey: EditorKeyType,
+    sourceFile: string,
+    line: number,
+    bookmarks: RenderingBookmark[],
+    project?: PundokEditorProject,
+  ): Promise<PdfLocation | undefined>;
 
   renderAgain(bookmark: RenderingBookmark, editorKey: EditorKeyType): Promise<void>;
 

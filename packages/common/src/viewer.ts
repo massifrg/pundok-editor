@@ -1,3 +1,5 @@
+import type { PdfPageRectangle, PdfRectangle } from './synctex';
+
 /**
  * An interface to keep track of what the user is focusing on in the viewer
  * between successive renderings of the same document.
@@ -22,6 +24,12 @@ export interface ViewerSetup {
    * the file name of the source file and its eventual project.
    */
   documentHash?: string;
+  /** A PDF rectangle to center and fit after the target page is loaded. */
+  focusRect?: PdfRectangle;
+  /** All page-specific PDF rectangles to highlight and fit after loading. */
+  focusRects?: PdfPageRectangle[];
+  /** The target PDF page height in points, used to scale PDF coordinates. */
+  focusPageHeight?: number;
 }
 
 /**

@@ -1,20 +1,171 @@
 import { readFile } from 'node:fs/promises';
-import { delimiter, isAbsolute, resolve } from 'node:path';
+import { delimiter, isAbsolute, relative, resolve } from 'node:path';
 import { SYNCTEX_CONTEXT_REQUIRED } from '../../../common/src';
 import type {
   EditorKeyType,
   PundokEditorProject,
+  PdfLocation,
+  PdfPageRectangle,
+  RenderingBookmark,
   SynctexInfo,
 } from '../../../common/src';
 import type { FeedbackSink } from '../feedback';
 import { isReadableFile, type BackendDirectories } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
 import { computeProjectFromDocFile } from './project';
+import { localizePath } from '../filesystem';
 
 export interface SourceLocation {
   path: string;
   line: number;
   project?: PundokEditorProject;
+}
+
+export async function getPdfLocation(
+  directories: BackendDirectories,
+  feedback: FeedbackSink,
+  editorKey: EditorKeyType,
+  sourceFile: string,
+  line: number,
+  bookmarks: RenderingBookmark[],
+  project?: PundokEditorProject,
+): Promise<PdfLocation | undefined> {
+  const environment = await extendedEnvironment(directories);
+  const synctexLine = line + 1;
+  const synctexSourceFile = normalizeSynctexPath(
+    project?.path && isAbsolute(sourceFile)
+      ? relative(project.path, sourceFile)
+      : sourceFile,
+  );
+  for (const bookmark of bookmarks) {
+    const outputFile = localizePath(bookmark.url);
+    const synctexFile = outputFile.replace(/[.]pdf$/, '.synctex');
+    feedback.report(
+      {
+        type: 'progress',
+        source: 'err',
+        message: `Looking for PDF location of "${sourceFile}", line ${synctexLine}, in "${outputFile}"`,
+        level: 1,
+      },
+      editorKey,
+    );
+    if (!isReadableFile(synctexFile)) continue;
+
+    let findResult;
+    try {
+      findResult = await runExternalProgram(
+        'mtxrun',
+        [
+          '--script',
+          'synctex',
+          '--find',
+          `--file=${synctexSourceFile}`,
+          `--line=${synctexLine}`,
+          synctexFile,
+        ],
+        { env: environment },
+      ).result;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'error' in error
+            ? String(error.error)
+            : String(error);
+      if (message.includes('ENOENT'))
+        throw new Error(SYNCTEX_CONTEXT_REQUIRED);
+      throw error;
+    }
+    if (findResult.exitCode !== 0) continue;
+
+    const findMatch = /page\s*=\s*(\d+)/.exec(
+      `${findResult.output}\n${findResult.error}`,
+    );
+    if (!findMatch) continue;
+    const findPage = Number.parseInt(findMatch[1], 10);
+
+    const pdfInfo = await runExternalProgram(
+      'mtxrun',
+      ['--script', 'pdf', '--info', '--detail', outputFile],
+      { env: environment },
+    ).result;
+    const pageDimensionsByPage = (page: number) =>
+      pdfInfo.exitCode === 0 ? pageDimensions(pdfInfo.output, page) : undefined;
+    let listResult;
+    try {
+      listResult = await runExternalProgram(
+        'mtxrun',
+        [
+          '--script',
+          'synctex',
+          '--list',
+          synctexFile,
+        ],
+        { env: environment },
+      ).result;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'error' in error
+            ? String(error.error)
+            : String(error);
+      if (message.includes('ENOENT'))
+        throw new Error(SYNCTEX_CONTEXT_REQUIRED);
+      throw error;
+    }
+    if (listResult.exitCode !== 0) return undefined;
+
+    const rectangles: PdfPageRectangle[] = [];
+    let pageNumber: number | undefined;
+    for (const outputLine of `${listResult.output}\n${listResult.error}`.split(
+      /[\r\n]+/,
+    )) {
+      const pageMatch = /begin page:\s*(\d+)/.exec(outputLine);
+      if (pageMatch) {
+        pageNumber = Number.parseInt(pageMatch[1], 10);
+        continue;
+      }
+      if (pageNumber === undefined || pageNumber < findPage) continue;
+
+      const boxMatch =
+        /\[\s*(-?[0-9.]+)\s+(-?[0-9.]+)\s+(-?[0-9.]+)\s+(-?[0-9.]+)\s*\]\s*:\s*(\d+)\s*:\s*(.*?)\s*$/.exec(
+          outputLine,
+        );
+      if (!boxMatch) continue;
+      const [, llx, lly, urx, ury, lineNumber, listedSourceFile] = boxMatch;
+      if (Number.parseInt(lineNumber, 10) !== synctexLine)
+        continue;
+      if (normalizeSynctexPath(listedSourceFile) !== synctexSourceFile)
+        continue;
+
+      const lowerY = Number.parseFloat(lly);
+      const upperY = Number.parseFloat(ury);
+      const yShift = (upperY - lowerY) / 2;
+      rectangles.push({
+        llx: Number.parseFloat(llx),
+        lly: lowerY - yShift,
+        urx: Number.parseFloat(urx),
+        ury: upperY - yShift,
+        page: pageNumber,
+        pageHeight: pageDimensionsByPage(pageNumber)?.height,
+      });
+    }
+
+    if (rectangles.length === 0) return undefined;
+    const first = rectangles[0];
+    return {
+      ...first,
+      bookmark,
+      page: first.page,
+      pageHeight: first.pageHeight,
+      rectangles,
+    };
+  }
+}
+
+function normalizeSynctexPath(path: string): string {
+  return path.trim().replaceAll('\\', '/').replace(/^\.\/+/, '');
 }
 
 export async function getSourceLocation(

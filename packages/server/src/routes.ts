@@ -125,6 +125,19 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/get-pdf-location',
+    asyncHandler((req) =>
+      backend.getPdfLocation(
+        username(req),
+        req.body?.editorKey,
+        req.body?.sourceFile,
+        req.body?.line,
+        req.body?.bookmarks || [],
+        req.body?.project,
+      ),
+    ),
+  );
+  router.post(
     '/update-bookmarks',
     asyncHandler((req) =>
       backend.updateBookmarks(username(req), req.body?.bookmarks || []),

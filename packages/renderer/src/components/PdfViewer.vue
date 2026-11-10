@@ -212,6 +212,7 @@ import {
   ProjectComponent,
   RenderingBookmark,
   RenderingPageBookmark,
+  PdfPageRectangle,
   SYNCTEX_CONTEXT_REQUIRED,
   SetupViewerActionProps,
   SynctexInfo,
@@ -300,6 +301,10 @@ export default {
       editorKey: undefined as EditorKeyType | undefined,
       showPageDialog: false,
       showBookmarkNameDialog: false,
+      focusRects: [] as PdfPageRectangle[],
+      focusPageHeight: undefined as number | undefined,
+      pdfHighlightRects: [] as PdfPageRectangle[],
+      pdfHighlightStyles: [] as Record<string, string>[],
     }
   },
   computed: {
@@ -385,7 +390,18 @@ export default {
         `${this.documentHash || ''}-${this.imageVersion}`,
       )
       const pages = Array.from(
-        { length: Math.min(this.pagesToDisplay, this.maxPages - this.displayedPageInView + 1) },
+        {
+          length: Math.min(
+            Math.max(
+              this.pagesToDisplay,
+              this.focusRects.length > 0
+                ? Math.max(...this.focusRects.map((rect) => rect.page)) -
+                    this.displayedPageInView + 1
+                : 0,
+            ),
+            this.maxPages - this.displayedPageInView + 1,
+          ),
+        },
         (_, index) => this.displayedPageInView + index,
       )
       return pages.map((page) => ({
@@ -463,6 +479,9 @@ export default {
           centerY,
           projectAsJson,
           documentHash,
+          focusRect,
+          focusRects,
+          focusPageHeight,
         } = setup
         const hash = documentHash || filename
         this.imageVersion += 1
@@ -477,6 +496,14 @@ export default {
             : undefined
         this.isUpdated = this.documentHash !== hash
         this.documentHash = hash
+        this.focusRects = focusRects || (
+          focusRect && page
+            ? [{ ...focusRect, page, pageHeight: focusPageHeight }]
+            : []
+        )
+        this.focusPageHeight = focusPageHeight
+        this.pdfHighlightRects = this.focusRects
+        this.pdfHighlightStyles = []
         if (rendering?.pageBookmarks)
           this.documentBookmarks[hash] = rendering.pageBookmarks
         await this.rememberExportJob(hash, filename)
@@ -492,6 +519,8 @@ export default {
           this.projectPath = project.path
           this.projectStructure = await this.backend?.getInclusionTree(project)
         }
+        if (this.focusRects.length > 0)
+          this.whenRendered.push(() => this.focusOnRects())
         if (page) {
           this.page = page
           this.viewPage = page
@@ -669,8 +698,94 @@ export default {
       }))
       this.displayedImageSource = this.displayedPages[0]?.source
       this.isRendering = false
-      const whenRenderedCallback = this.whenRendered.pop()
-      if (whenRenderedCallback) whenRenderedCallback()
+      this.$nextTick(() => {
+        this.updatePdfHighlight()
+        const whenRenderedCallback = this.whenRendered.pop()
+        if (whenRenderedCallback) whenRenderedCallback()
+      })
+    },
+    pdfRectangleBounds(rect: PdfPageRectangle):
+      { left: number, top: number, right: number, bottom: number } | undefined {
+      const div = this.div
+      const image = div?.querySelector<HTMLImageElement>(
+        `.pdf-image[data-page="${rect.page}"]`,
+      )
+      if (!div || !image?.naturalWidth || !image.naturalHeight) return undefined
+
+      const pointsToPixels = 150 / 72
+      const imageBounds = image.getBoundingClientRect()
+      const scale = imageBounds.width / image.naturalWidth
+      const pageHeight =
+        rect.pageHeight ||
+        this.focusPageHeight ||
+        image.naturalHeight / pointsToPixels
+      const verticalScale = imageBounds.height / pageHeight
+      return {
+        left: image.offsetLeft + rect.llx * pointsToPixels * scale,
+        top: image.offsetTop + rect.lly * verticalScale,
+        right: image.offsetLeft + rect.urx * pointsToPixels * scale,
+        bottom: image.offsetTop + rect.ury * verticalScale,
+      }
+    },
+    updatePdfHighlight() {
+      this.pdfHighlightStyles = this.pdfHighlightRects
+        .map((rect) => this.pdfRectangleBounds(rect))
+        .filter((bounds): bounds is NonNullable<typeof bounds> => !!bounds)
+        .map((bounds) => ({
+          left: `${bounds.left}px`,
+          top: `${bounds.top}px`,
+          width: `${bounds.right - bounds.left}px`,
+          height: `${bounds.bottom - bounds.top}px`,
+        }))
+    },
+    focusOnRects() {
+      const div = this.div
+      if (!div) return
+
+      const bounds = this.focusRects
+        .map((rect) => this.pdfRectangleBounds(rect))
+        .filter((item): item is NonNullable<typeof item> => !!item)
+      if (bounds.length === 0) return
+      const left = Math.min(...bounds.map((item) => item.left))
+      const top = Math.min(...bounds.map((item) => item.top))
+      const right = Math.max(...bounds.map((item) => item.right))
+      const bottom = Math.max(...bounds.map((item) => item.bottom))
+      const rectWidth = right - left
+      const rectHeight = bottom - top
+      const viewportWidth = Math.max(1, div.clientWidth - 32)
+      const viewportHeight = Math.max(1, div.clientHeight - 32)
+      const zoom = Math.min(
+        viewportWidth / Math.max(1, rectWidth),
+        viewportHeight / Math.max(1, rectHeight),
+      ) * 0.8
+      const magnify = Math.max(0.05, Math.min(2000, this.magnify * zoom))
+      this.setMagnify(magnify)
+      this.$nextTick(() => this.scrollToFocusRects())
+    },
+    scrollToFocusRects() {
+      const div = this.div
+      if (!div) return
+      const bounds = this.focusRects
+        .map((rect) => this.pdfRectangleBounds(rect))
+        .filter((item): item is NonNullable<typeof item> => !!item)
+      if (bounds.length === 0) return
+      const centerX =
+        (Math.min(...bounds.map((item) => item.left)) +
+          Math.max(...bounds.map((item) => item.right))) / 2
+      const centerY =
+        (Math.min(...bounds.map((item) => item.top)) +
+          Math.max(...bounds.map((item) => item.bottom))) / 2
+      const top = centerY - div.clientHeight / 2
+      const left = centerX - div.clientWidth / 2
+      div.scrollTop = Math.max(
+        0,
+        Math.min(top, div.scrollHeight - div.clientHeight),
+      )
+      div.scrollLeft = Math.max(
+        0,
+        Math.min(left, div.scrollWidth - div.clientWidth),
+      )
+      this.updatePdfHighlight()
     },
     async imageLoadFailed(e: Event) {
       this.isRendering = false
@@ -1158,6 +1273,8 @@ export default {
           @click="pageClicked" @dblclick="doubleClicked" @dragstart.prevent />
         <img v-for="requested in pendingImageSources" :key="`preload-${requested.page}`" class="pdf-image-preload"
           :src="requested.source" :data-page="requested.page" alt="" @load="imageLoaded" @error="imageLoadFailed" />
+        <div v-for="(style, index) in pdfHighlightStyles" :key="`pdf-highlight-${index}`"
+          class="pdf-location-highlight" :style="style" />
       </div>
     </q-card-section>
   </q-card>
@@ -1179,6 +1296,13 @@ export default {
   box-shadow: 0 2px 8px 4px rgba(0, 0, 0, 0.1);
   cursor: crosshair;
   user-select: none;
+}
+
+.pdf-location-highlight {
+  position: absolute;
+  z-index: 1;
+  background: rgba(255, 235, 59, 0.3);
+  pointer-events: none;
 }
 
 .pdf-image-container.pdf-dragging {

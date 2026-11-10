@@ -15,6 +15,7 @@ import type {
   DocumentContext,
   PandocFilterTransform,
   SynctexInfo,
+  PdfLocation,
   RenderingJob,
   RenderingBookmark,
   GetProjectOptions,
@@ -226,6 +227,22 @@ export class NetBackend implements Backend {
 
   gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void> {
     return this.request('get-source-file', { editorKey, info });
+  }
+
+  getPdfLocation(
+    editorKey: EditorKeyType,
+    sourceFile: string,
+    line: number,
+    bookmarks: RenderingBookmark[],
+    project?: PundokEditorProject,
+  ): Promise<PdfLocation | undefined> {
+    return this.request('get-pdf-location', {
+      editorKey,
+      sourceFile,
+      line,
+      bookmarks,
+      project,
+    });
   }
 
   renderAgain(bookmark: RenderingBookmark, editorKey: EditorKeyType): Promise<void> {

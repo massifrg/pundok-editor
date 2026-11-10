@@ -12,6 +12,7 @@ import type {
   DocumentContext,
   PandocFilterTransform,
   SynctexInfo,
+  PdfLocation,
   RenderingJob,
   GetProjectOptions,
   FolderContents,
@@ -60,6 +61,7 @@ import {
   transformWithPandoc,
   feedbackSink,
   getSourceLocation,
+  getPdfLocation,
   showAgain,
   renderAgain as renderRenderingAgain,
   createFolder,
@@ -576,6 +578,36 @@ export class PundokEditorServer {
         atLine: source.line,
         project: source.project,
       });
+  }
+
+  async getPdfLocation(
+    user: string,
+    editorKey: EditorKeyType,
+    sourceFile: string,
+    line: number,
+    bookmarks: RenderingBookmark[],
+    project?: PundokEditorProject,
+  ): Promise<PdfLocation | undefined> {
+    const backendBookmarks = bookmarks.map((bookmark) => ({
+      ...bookmark,
+      url: this.userPath(user, bookmark.url),
+      documentPath: this.userPath(user, bookmark.documentPath),
+    }));
+    const location = await getPdfLocation(
+      this.directoriesForUser(user),
+      feedbackSink(this.rendererHub(user)),
+      editorKey,
+      this.userPath(user, sourceFile),
+      line,
+      backendBookmarks,
+      project ? this.projectForUser(user, project) : undefined,
+    );
+    if (!location) return undefined;
+    const index = backendBookmarks.indexOf(location.bookmark);
+    return {
+      ...location,
+      bookmark: bookmarks[index] || location.bookmark,
+    };
   }
 
   async renderAgain(

@@ -35,6 +35,7 @@ import {
   ServerMessage,
   PandocFilterTransform,
   SynctexInfo,
+  PdfLocation,
   RenderingJob,
   RenderingBookmark,
   BackendFeedbackActionProps,
@@ -457,6 +458,22 @@ export class LocalBackend implements Backend {
 
   async gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void> {
     window.ipc.getSourceFile(editorKey, info);
+  }
+
+  getPdfLocation(
+    editorKey: EditorKeyType,
+    sourceFile: string,
+    line: number,
+    bookmarks: RenderingBookmark[],
+    project?: PundokEditorProject,
+  ): Promise<PdfLocation | undefined> {
+    return window.ipc.getPdfLocation(
+      editorKey,
+      sourceFile,
+      line,
+      bookmarks,
+      project,
+    );
   }
 
   async showAgain(hash: string, editorKey: EditorKeyType): Promise<void> {

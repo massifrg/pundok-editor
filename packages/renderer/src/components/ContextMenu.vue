@@ -14,8 +14,9 @@
         <q-item-section :class="classFor(lnom)" side>
           <q-icon name="arrow_right" />
         </q-item-section>
-        <q-menu v-if="actionsFor(lnom).length > 0" anchor="top end" self="top start">
-          <NodeOrMarkContextMenu :editor="editor" :node-or-mark="lnom" />
+        <q-menu v-if="hasSubmenuActions(lnom)" anchor="top end" self="top start">
+          <NodeOrMarkContextMenu :editor="editor" :node-or-mark="lnom"
+            :exclude-action-names="['synchronize-pdf']" />
         </q-menu>
       </q-item>
     </q-list>
@@ -71,8 +72,15 @@ export default {
       return this.labeled.filter(l => this.actionsFor(l).length > 0)
     },
     highlightedActions() {
-      return flatten(this.labeledWithActions.map(lwa => this.actionsFor(lwa)))
+      const highlighted = flatten(this.labeledWithActions.map(lwa => this.actionsFor(lwa)))
         .filter(a => isHighlightedAction(a, this.editor))
+      const synchronize = this.labeledWithActions
+        .flatMap(lnom => this.actionsFor(lnom))
+        .find(a => a.name === 'synchronize-pdf')
+      return [
+        ...highlighted.filter(a => a.name !== 'synchronize-pdf'),
+        ...(synchronize ? [synchronize] : []),
+      ]
     },
   },
   components: {
@@ -88,6 +96,9 @@ export default {
       return actionsForNodeOrMark(editor.state, labeled)
         .filter(a => canExecuteEditorAction(editor, a))
         .filter(a => onlyHighlighted ? isHighlightedAction(a, editor) : true)
+    },
+    hasSubmenuActions(labeled: LabeledNodeOrMark) {
+      return this.actionsFor(labeled).some(a => a.name !== 'synchronize-pdf')
     },
     prepareContextMenuItems(ev: Event) {
       // console.log(ev)

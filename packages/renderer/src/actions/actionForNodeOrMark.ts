@@ -13,14 +13,22 @@ import { nodesWithTemplate, compatibleNodes, SelectedNodeOrMark } from '../schem
 import {
   DocumentContext,
   DocumentOpenActionProps,
+  EditorKeyType,
   emptyIdentifier,
   InputConverter,
   NODE_NAME_INDEX_DIV,
   NODE_NAME_INDEX_TERM,
   NODE_NAME_PANDOC_TABLE,
+  NODE_NAME_PARAGRAPH,
+  NODE_NAME_PLAIN,
+  NODE_NAME_HEADING,
+  NODE_NAME_LINE,
+  NODE_NAME_SHORT_CAPTION,
+  NODE_NAME_DEFINITION_TERM,
   NODE_NAME_TABLE_BODY,
   NODE_NAME_TABLE_CELL,
   NODE_NAME_TABLE_HEADER,
+  RenderingBookmark,
   pandocFormatsFromExtension,
 } from '../common';
 import { toRaw } from 'vue';
@@ -41,8 +49,94 @@ import {
   insertBlockAction,
   moveBlockActions
 } from './actionGroup';
-import { setActionCommand } from './actionCommands';
+import { setActionCommand, setActionSetupViewer, setActionShowResultMessage } from './actionCommands';
 import { getDocState } from '../schema/helpers';
+import { useBackend } from '../stores';
+import { resolve } from 'path-browserify';
+
+const lineNodeTypes = new Set([
+  NODE_NAME_PARAGRAPH,
+  NODE_NAME_PLAIN,
+  NODE_NAME_HEADING,
+  NODE_NAME_LINE,
+  NODE_NAME_SHORT_CAPTION,
+  NODE_NAME_DEFINITION_TERM,
+]);
+
+function documentLineAt(
+  state: EditorState,
+  nodeOrMark: SelectedNodeOrMark,
+): number | undefined {
+  let line = 0;
+  let found: number | undefined;
+  state.doc.descendants((node, pos) => {
+    if (node.type.name === 'metadata') return false;
+    if (lineNodeTypes.has(node.type.name)) {
+      if (pos === nodeOrMark.pos) {
+        found = line;
+        return false;
+      }
+      line++;
+    }
+    return true;
+  });
+  return found;
+}
+
+function sourcePathForState(state: EditorState): string | undefined {
+  const docState = getDocState(state);
+  return docState?.workingFolder && docState.documentName
+    ? resolve(docState.workingFolder, docState.documentName)
+    : undefined;
+}
+
+async function synchronizePdf(
+  editor: EditorState,
+  nodeOrMark: SelectedNodeOrMark,
+  editorKey: EditorKeyType,
+): Promise<void> {
+  const line = documentLineAt(editor, nodeOrMark);
+  const sourceFile = sourcePathForState(editor);
+  const backend = useBackend().backend;
+  if (line === undefined || !sourceFile || !backend) return;
+
+  const bookmarks = (await backend.getBookmarks('rendering')) as RenderingBookmark[];
+  const location = await backend.getPdfLocation(
+    editorKey,
+    sourceFile,
+    line,
+    bookmarks,
+    getDocState(editor)?.project,
+  );
+  if (!location) {
+    setActionShowResultMessage(editor, {
+      success: false,
+      message: `No PDF location found for line ${line}`,
+      caption: 'PDF synchronization',
+      icon: 'refresh',
+    });
+    return;
+  }
+
+  const docState = getDocState(editor);
+  setActionSetupViewer(editor, {
+    name: decodeURIComponent(location.bookmark.url.replace(/^file:\/\//, '')),
+    content: '',
+    page: location.page,
+    focusPageHeight: location.pageHeight,
+    focusRects: location.rectangles,
+    documentHash: location.bookmark.url,
+    focusRect: {
+      llx: location.llx,
+      lly: location.lly,
+      urx: location.urx,
+      ury: location.ury,
+    },
+    projectAsJson: docState?.project
+      ? JSON.stringify(docState.project)
+      : undefined,
+  });
+}
 
 export function actionsForNodeOrMark(
   state: EditorState,
@@ -269,6 +363,31 @@ export function actionsForNodeOrMark(
       });
     }
 
+    if (lineNodeTypes.has(nodeTypeName!)) {
+      actions.push({
+        editorKey,
+        name: 'synchronize-pdf',
+        label: 'synchronize with PDF',
+        icon: 'refresh',
+        highlight: true,
+        canDo: (editor) =>
+          documentLineAt(editor.state, nodeOrMark) !== undefined &&
+          !!sourcePathForState(editor.state),
+        do: (editor) => {
+          void synchronizePdf(editor.state, nodeOrMark, editorKey).catch((error) => {
+            setActionShowResultMessage(editor.state, {
+              success: false,
+              message: error instanceof Error ? error.message : String(error),
+              caption: 'PDF synchronization',
+              icon: 'refresh',
+            });
+          });
+          return true;
+        },
+        nodeOrMark,
+      });
+    }
+
     if (nodeTypeName === NODE_NAME_INDEX_DIV) {
       actions.push({
         editorKey,
@@ -283,6 +402,7 @@ export function actionsForNodeOrMark(
         editorKey,
         nodeOrMark,
       })
+
     } else if (nodeTypeName === NODE_NAME_INDEX_TERM) {
       actions.push({
         ...ACTION_AUTO_SET_INDEX_TERM_ID,

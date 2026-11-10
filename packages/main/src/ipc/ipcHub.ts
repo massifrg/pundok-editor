@@ -43,6 +43,7 @@ import {
   showAgain,
   feedbackSink,
   getSourceLocation,
+  getPdfLocation,
   desktopRenderingJobStore,
   openDocument,
   saveDocument,
@@ -303,6 +304,19 @@ export class IpcHub implements RendererHub {
           project: source.project,
         });
     });
+    ipcMain.handle(
+      'get-pdf-location',
+      (_event, editorKey, sourceFile, line, bookmarks, project) =>
+        getPdfLocation(
+          backendDirectories(),
+          feedbackSink(this),
+          editorKey,
+          sourceFile,
+          line,
+          bookmarks,
+          project,
+        ),
+    );
     ipcMain.handle('show-rendered-again', (_event, hash, editorKey) =>
       showAgain(this, getRenderingJobWithHash(hash), hash, editorKey),
     );

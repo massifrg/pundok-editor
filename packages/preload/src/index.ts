@@ -40,6 +40,7 @@ import {
   StoreOptions,
   PdfPageCount,
   SynctexInfo,
+  PdfLocation,
 } from './common';
 
 export interface Ipc {
@@ -116,6 +117,13 @@ export interface Ipc {
   query: (query: string) => Promise<QueryResult[]>;
 
   getSourceFile: (editorKey: EditorKeyType, info: SynctexInfo) => Promise<void>;
+  getPdfLocation: (
+    editorKey: EditorKeyType,
+    sourceFile: string,
+    line: number,
+    bookmarks: RenderingBookmark[],
+    project?: PundokEditorProject,
+  ) => Promise<PdfLocation | undefined>;
 
   showRenderedAgain: (hash: string, editorKey: EditorKeyType) => Promise<void>;
 
@@ -244,6 +252,20 @@ contextBridge.exposeInMainWorld('ipc', {
   query: (query: string) => ipcRenderer.invoke('query', query),
   getSourceFile: (editorKey: EditorKeyType, info: SynctexInfo) =>
     ipcRenderer.invoke('get-source-file', editorKey, info),
+  getPdfLocation: (
+    editorKey: EditorKeyType,
+    sourceFile: string,
+    line: number,
+    bookmarks: RenderingBookmark[],
+    project?: PundokEditorProject,
+  ) => ipcRenderer.invoke(
+    'get-pdf-location',
+    editorKey,
+    sourceFile,
+    line,
+    bookmarks,
+    project,
+  ),
   showRenderedAgain: (hash: string, editorKey: EditorKeyType) =>
     ipcRenderer.invoke('show-rendered-again', hash, editorKey),
   renderAgain: (bookmark: RenderingBookmark, editorKey: EditorKeyType) =>

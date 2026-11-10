@@ -42,7 +42,7 @@ const BASE_GROUP_NAME = '_'
 
 export default {
   components: { ActionsMenu },
-  props: ['editor', 'nodeOrMark', 'groupName'],
+  props: ['editor', 'nodeOrMark', 'groupName', 'excludeActionNames'],
   data() {
     return {
       visible: true,
@@ -54,7 +54,9 @@ export default {
       const aog: Record<string, ActionForNodeOrMark[]> = {}
       const editor = this.editor
       if (!editor) return {}
-      actionsForNodeOrMark(editor.state, this.nodeOrMark).forEach(a => {
+      actionsForNodeOrMark(editor.state, this.nodeOrMark)
+        .filter(a => !(this.excludeActionNames || []).includes(a.name))
+        .forEach(a => {
         const groupname = a?.group?.name || BASE_GROUP_NAME
         aog[groupname] = aog[groupname] || []
         if (canExecuteEditorAction(editor, a))
