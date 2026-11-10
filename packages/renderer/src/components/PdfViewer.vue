@@ -537,13 +537,17 @@ export default {
             job.converter.extension !== 'pdf' ||
             !this.isPdfPath(renderingPath))
             return
-          const current = Object.values(this.renderingJobs).find(
-            (item) => this.isPdfRendering(item) &&
+          const currentEntries = Object.entries(this.renderingJobs).filter(
+            ([, item]) => this.isPdfRendering(item) &&
               this.renderingPath(item.url) === renderingPath,
           )
-          this.renderingJobs[renderingPath] = {
+          const current = currentEntries[0]?.[1]
+          for (const [key] of currentEntries)
+            delete this.renderingJobs[key]
+          const url = current?.url || renderingPath
+          this.renderingJobs[url] = {
             type: 'rendering',
-            url: renderingPath,
+            url,
             documentPath: job.path,
             converterName: job.converter.name,
             configurationName: job.configurationName,
