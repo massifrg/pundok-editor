@@ -389,20 +389,14 @@ export default {
       const version = encodeURIComponent(
         `${this.documentHash || ''}-${this.imageVersion}`,
       )
+      const firstPage = this.focusRects.length === 0
+        ? this.displayedPageInView
+        : firstPageInSpread(this.page, this.twoPageSpread, this.firstPageOnRight)
       const pages = Array.from(
         {
-          length: Math.min(
-            Math.max(
-              this.pagesToDisplay,
-              this.focusRects.length > 0
-                ? Math.max(...this.focusRects.map((rect) => rect.page)) -
-                    this.displayedPageInView + 1
-                : 0,
-            ),
-            this.maxPages - this.displayedPageInView + 1,
-          ),
+          length: Math.min(this.pagesToDisplay, this.maxPages - firstPage + 1),
         },
-        (_, index) => this.displayedPageInView + index,
+        (_, index) => firstPage + index,
       )
       return pages.map((page) => ({
         page,
@@ -568,7 +562,7 @@ export default {
           }
           this.filename = filename
           this.isRendering = true
-          this.maxPages = 1
+          this.maxPages = Math.max(1, this.page, this.viewPage)
           this.contentHash = await createHash(filename)
           void this.updatePageCount(filename)
         }
