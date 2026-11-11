@@ -63,6 +63,7 @@ export async function saveDocument(
         id: doc.id,
         url: toFileUrl(doc.path!),
         configurationName: doc.project ? undefined : doc.configurationName,
+        projectName: doc.project?.name,
       },
     ]);
     return response;
@@ -202,6 +203,7 @@ export async function exportDocument(
             id: doc.id,
             url: toFileUrl(savedPath),
             configurationName: doc.project ? undefined : doc.configurationName,
+            projectName: project?.name,
           };
       await updateBookmarks(directories, [bookmark]);
     }

@@ -155,6 +155,7 @@ function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
       type: 'document',
       url: toUnixPath(doc.path),
       configurationName: doc.project ? undefined : doc.configurationName,
+      projectName: doc.project?.name,
     });
   if (doc.project?.rootDocument)
     bookmarks.push({

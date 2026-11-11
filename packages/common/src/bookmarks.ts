@@ -7,6 +7,7 @@ export interface DocumentBookmark {
   id?: string;
   url: string;
   configurationName?: string;
+  projectName?: string;
 }
 
 export interface ProjectBookmark {
@@ -60,10 +61,11 @@ export function bookmarkLabel(b: PundokBookmark): BookmarkLabel {
   }
   const isProject = type === 'project'
   const { name } = b as ProjectBookmark
-  const { id, configurationName } = b as DocumentBookmark
+  const { id, projectName, configurationName } = b as DocumentBookmark
   const path = url && decodeURIComponent(url.replace(/^file:\/\//, '')) || ''
   const { document } = splitFolderAndDoc(path)
-  const suffix = configurationName && ` [${configurationName}]` || ''
+  const suffixName = projectName || configurationName
+  const suffix = suffixName && ` [${suffixName}]` || ''
   const label = isProject ? name : (id || document || path) + suffix
   const sublabel = path
   const tooltip = url
