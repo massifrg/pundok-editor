@@ -74,7 +74,7 @@ export interface DocumentSaveActionProps extends ActionProps {
   /** When `true`, don't ask for the copy name and format. */
   dontAskCopyPath?: boolean,
   /** Called after the document is successfully saved in the renderer. */
-  afterSave?: () => void,
+  afterSave?: () => void | Promise<void>,
 }
 
 export interface ImportDocumentActionProps extends ActionProps {

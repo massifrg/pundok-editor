@@ -321,6 +321,7 @@ export async function loadDocument(
   try {
     if (!ignoreUnsaved && host.askToSaveChanges) {
       host.setPendingBeforeLoadDoc({ doc });
+      host.documentLoading = false;
       return Promise.reject('operation pending...');
     }
     // ex TODO: remove history

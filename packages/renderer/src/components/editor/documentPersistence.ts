@@ -238,7 +238,7 @@ export async function save(
       host.lastSavedDocumentVersion++;
     }
     host.documentMenuRefreshKey++;
-    afterSave?.();
+    await afterSave?.();
     return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);
