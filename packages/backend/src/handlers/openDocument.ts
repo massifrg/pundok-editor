@@ -148,7 +148,7 @@ async function openWithFormat(
   return doc;
 }
 
-function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
+export function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
   const bookmarks: PundokBookmark[] = [];
   if (doc.path)
     bookmarks.push({
@@ -157,12 +157,14 @@ function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
       configurationName: doc.project ? undefined : doc.configurationName,
       projectName: doc.project?.name,
     });
-  if (doc.project?.rootDocument)
+  if (doc.project && doc.path)
     bookmarks.push({
       type: 'project',
       name: doc.project.name,
       url: `file://${toUnixPath(
-        resolve(doc.project.path, doc.project.rootDocument),
+        doc.project.rootDocument
+          ? resolve(doc.project.path, doc.project.rootDocument)
+          : doc.path,
       )}`,
     });
   return bookmarks;

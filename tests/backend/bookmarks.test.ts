@@ -110,4 +110,38 @@ describe('updateBookmarks', () => {
       JSON.parse(await readFile(join(userDataDir, BOOKMARKS_FILENAME), 'utf8')),
     ).toHaveLength(1);
   });
+
+  it('replaces an older bookmark for the same project', async () => {
+    const bookmarksPath = join(userDataDir, BOOKMARKS_FILENAME);
+    await writeFile(
+      bookmarksPath,
+      JSON.stringify([
+        {
+          type: 'project',
+          name: 'Notes',
+          url: pathToFileURL(join(userDataDir, 'notes', 'first.md')).href,
+        },
+      ]),
+    );
+
+    await expect(
+      updateBookmarks(directories, [
+        {
+          type: 'project',
+          name: 'Notes',
+          url: join(userDataDir, 'notes', 'second.md'),
+        },
+      ]),
+    ).resolves.toBe(true);
+
+    await expect(
+      getBookmarks(directories, 'project'),
+    ).resolves.toEqual([
+      {
+        type: 'project',
+        name: 'Notes',
+        url: pathToFileURL(join(userDataDir, 'notes', 'second.md')).href,
+      },
+    ]);
+  });
 });

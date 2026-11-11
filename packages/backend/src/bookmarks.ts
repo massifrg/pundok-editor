@@ -1,5 +1,5 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
-import { isAbsolute, resolve } from 'node:path';
+import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { PundokBookmark, PundokBookmarkType } from '../../common/src';
 import type { BackendDirectories } from './resourceManager';
@@ -108,12 +108,29 @@ function addBookmark(
         current.url === normalizedBookmark.url
       )
         return false;
+      if (
+        current.type === 'project' &&
+        normalizedBookmark.type === 'project' &&
+        current.name === normalizedBookmark.name &&
+        projectBookmarkPath(current) === projectBookmarkPath(normalizedBookmark)
+      )
+        return false;
       if (current.type === 'document') return documents-- > 0;
       if (current.type === 'project') return projects-- > 0;
       if (current.type === 'rendering') return renderings-- > 0;
       return true;
     }),
   ];
+}
+
+function projectBookmarkPath(
+  bookmark: Extract<PundokBookmark, { type: 'project' }>,
+): string {
+  try {
+    return dirname(fileURLToPath(bookmark.url));
+  } catch {
+    return bookmark.url;
+  }
 }
 
 function normalizeBookmarkUrl(url: string): string {
