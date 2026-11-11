@@ -73,6 +73,8 @@ export interface DocumentSaveActionProps extends ActionProps {
   isCopy?: boolean,
   /** When `true`, don't ask for the copy name and format. */
   dontAskCopyPath?: boolean,
+  /** When `true`, the save-as path has already been selected. */
+  dontAskSaveAsPath?: boolean,
   /** Called after the document is successfully saved in the renderer. */
   afterSave?: () => void | Promise<void>,
 }

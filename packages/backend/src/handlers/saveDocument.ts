@@ -170,6 +170,7 @@ export async function exportDocument(
         project = await computeProjectFromDocFile(directories, doc.path);
       } catch {
         // Saving a document outside a project is valid.
+        project = undefined;
       }
     }
 
@@ -252,6 +253,7 @@ async function savePandocJsonDocument(
       project = await computeProjectFromDocFile(directories, doc.path);
     } catch {
       // Saving a standalone document is valid.
+      project = undefined;
     }
   }
   return {

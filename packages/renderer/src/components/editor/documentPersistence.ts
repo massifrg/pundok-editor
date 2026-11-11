@@ -47,7 +47,13 @@ export async function save(
   props?: DocumentSaveActionProps,
 ): Promise<SaveResponse | undefined> {
   if (host.documentLoading) return;
-  const { dontAskCopyPath, isCopy, isSaveAs, afterSave } = props || {};
+  const {
+    dontAskCopyPath,
+    dontAskSaveAsPath,
+    isCopy,
+    isSaveAs,
+    afterSave,
+  } = props || {};
   beforeSaving(host);
   const jsonDoc = host.getDocAsJsonString();
   const docState = host.docState();
@@ -70,7 +76,7 @@ export async function save(
   );
   if (
     !path ||
-    isSaveAs ||
+    (isSaveAs && !dontAskSaveAsPath) ||
     (isCopy && !dontAskCopyPath) ||
     (isSave && !documentFormat)
   ) {
@@ -136,6 +142,8 @@ export async function save(
             setActionCommand(context.editorKey!, ACTION_DOCUMENT_SAVE, {
               path: context.path,
               documentFormat: context.documentFormat,
+              isSaveAs,
+              dontAskSaveAsPath: true,
               afterSave,
             } as DocumentSaveActionProps);
           }
@@ -201,23 +209,19 @@ export async function save(
     if (!isCopy && response.doc.path)
       await host.setWindowTitleFromDoc(response.doc);
     let differentProject: PundokEditorProject | undefined;
-    if (
-      !isCopy &&
-      response.doc.path &&
-      ((!isSaveAs && !project) ||
-        (isSaveAs &&
-          splitFolderAndDoc(response.doc.path).folder !== workingFolder))
-    ) {
+    if (!isCopy && response.doc.path && (isSaveAs || !project)) {
       differentProject = await host.backend.getProject({
         path: response.doc.path,
         computeConfig: true,
       });
-      if (differentProject) {
-        await host.openDocument({
+      if (differentProject || isSaveAs) {
+        const savedDocument = await host.backend.open({
           path: response.doc.path,
-          documentFormat: response.doc.documentFormat,
+          configurationName: differentProject ? undefined : configuration?.name,
           project: differentProject,
+          editorKey: host.editorKey(),
         });
+        await host.loadDocument(savedDocument);
       }
     }
     host.showResultMessage(

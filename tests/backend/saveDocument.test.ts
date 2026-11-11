@@ -105,4 +105,33 @@ describe('saveDocument', () => {
 
     expect(response.doc.project?.name).toBe('Source project');
   });
+
+  it('clears the project when saving outside a project', async () => {
+    const sourceDirectory = join(root, 'source');
+    const destinationDirectory = join(root, 'destination');
+    const filename = join(destinationDirectory, 'document.json');
+    await mkdir(sourceDirectory);
+    await mkdir(destinationDirectory);
+
+    const events: RendererHub = { send: () => undefined };
+    const response = await saveDocument(
+      directories,
+      events,
+      { report: () => undefined },
+      new RenderingJobStore(),
+      {
+        path: filename,
+        content: '{}',
+        documentFormat: { ...DEFAULT_DOCUMENT_FORMAT, ftype: 'guess' },
+        project: {
+          name: 'Source project',
+          path: sourceDirectory,
+          rootDocument: 'source.json',
+          editorConfig: {},
+        },
+      },
+    );
+
+    expect(response.doc.project).toBeUndefined();
+  });
 });
