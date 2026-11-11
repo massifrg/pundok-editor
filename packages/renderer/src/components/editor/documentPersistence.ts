@@ -157,7 +157,8 @@ export async function save(
     const response = await host.backend.save(
       {
         editorKey: host.editorKey(),
-        id: documentNameToId(documentName),
+        // id: documentNameToId(documentName),
+        // id: documentName,
         path,
         content: jsonDoc,
         documentFormat,
