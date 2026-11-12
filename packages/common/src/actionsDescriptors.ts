@@ -56,6 +56,7 @@ export const ACTION_DESCRIPTORS: Readonly<Record<string, ActionDescriptor>> = {
     'insert-before': { name: 'insert-before', labelKey: 'actions.insertBefore', tooltipKey: 'actions.insertBeforeTooltip' },
     'insert-after': { name: 'insert-after', labelKey: 'actions.insertAfter', tooltipKey: 'actions.insertAfterTooltip' },
     'convert-block': { name: 'convert-block', labelKey: 'actions.convertBlock', tooltipKey: 'actions.convertBlockTooltip' },
+    'convert-block-action': { name: 'convert-block-action', labelKey: 'actions.convertBlockAction', tooltipKey: 'actions.convertBlockActionTooltip' },
     'move-block': { name: 'move-block', labelKey: 'actions.moveBlock', tooltipKey: 'actions.moveBlockTooltip' },
     'insert-block-before': { name: 'insert-block-before', labelKey: 'actions.insertBlockBefore', tooltipKey: 'actions.insertBlockBeforeTooltip' },
     'insert-block-after': { name: 'insert-block-after', labelKey: 'actions.insertBlockAfter', tooltipKey: 'actions.insertBlockAfterTooltip' },

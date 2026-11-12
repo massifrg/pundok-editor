@@ -64,6 +64,7 @@
     "insertAfter": "inserisci dopo...",
     "convertBlock": "converti blocco...",
     "convertBlockAction": "converti {from} in {to}",
+    "convertBlockActionTooltip": "converti il blocco {from} corrente in un blocco {to}",
     "moveBlock": "sposta blocco...",
     "insertBeforeTooltip": "inserisci un elemento prima di questo",
     "insertAfterTooltip": "inserisci un elemento dopo questo",

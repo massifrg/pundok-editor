@@ -42,6 +42,21 @@ describe('actions helpers', () => {
         expect(translated).toBe('translated:actions.addMark')
     })
 
+    it('translates conversion action labels and tooltips with the target block name', () => {
+        const action: any = {
+            name: 'convert-block-action',
+            labelParams: { from: 'Paragraph', to: 'Block Quote' },
+            tooltipParams: { from: 'Paragraph', to: 'Block Quote' },
+        }
+        const translate = (key: string, vars?: Record<string, string>) =>
+            `${key}:${vars?.from}->${vars?.to}`
+
+        expect(labelForAction(action, undefined, translate))
+            .toBe('actions.convertBlockAction:Paragraph->Block Quote')
+        expect(tooltipForAction(action, undefined, translate))
+            .toBe('actions.convertBlockActionTooltip:Paragraph->Block Quote')
+    })
+
     it('tooltipForAction returns static and dynamic tooltips', () => {
         const staticAction: any = { tooltip: 'tip' }
         expect(tooltipForAction(staticAction)).toBe('tip')

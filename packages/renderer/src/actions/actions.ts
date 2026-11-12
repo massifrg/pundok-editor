@@ -105,6 +105,7 @@ export type ActionName =
   | 'insert-block-before'
   | 'insert-block-after'
   | 'convert-block'
+  | 'convert-block-action'
   | 'move-before-first-sibling'
   | 'move-before-previous-sibling'
   | 'move-before-next-sibling'

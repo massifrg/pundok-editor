@@ -132,8 +132,7 @@ export function convertBlockAction(
   const convertGroup = { ...ACTION_GROUP_CONVERT_BLOCK, editorKey } as ActionsGroup;
   return {
     editorKey,
-    // name: `convert-${fromTypeName}-to-${toTypeName}` as ActionName,
-    name: 'convert-block',
+    name: 'convert-block-action',
     labelParams: {
       from: nodeOrMarkToPandocName(
         fromTypeName,
