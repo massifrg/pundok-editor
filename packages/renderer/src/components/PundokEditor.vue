@@ -182,9 +182,6 @@ const AttributesEditor = defineAsyncComponent(
 const ConfigurationsDialog = defineAsyncComponent(
   () => import('./ConfigurationsDialog.vue'),
 );
-const CustomStylesPanel = defineAsyncComponent(
-  () => import('./CustomStylesPanel.vue'),
-);
 const SearchAndReplace = defineAsyncComponent(
   () => import('./SearchAndReplace.vue'),
 );
@@ -201,7 +198,6 @@ export default {
     InputTextDialog,
     SearchAndReplace,
     AttributesEditor,
-    CustomStylesPanel,
     NodeOrMarkContextMenu,
     PendingOperationDialog,
     NewProjectDialog,
@@ -220,7 +216,6 @@ export default {
     GitRepositoryDialog: defineAsyncComponent(
       () => import('./GitRepositoryDialog.vue'),
     ),
-    PdfViewer: defineAsyncComponent(() => import('./PdfViewer.vue')),
   },
 
   props: {

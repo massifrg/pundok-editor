@@ -23,8 +23,12 @@
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue';
 import type { NodeWithPos } from '@tiptap/vue-3';
-import CustomStylesPanel from '../CustomStylesPanel.vue';
+
+const CustomStylesPanel = defineAsyncComponent(
+  () => import('../CustomStylesPanel.vue'),
+);
 
 defineProps<{
   editor?: any;

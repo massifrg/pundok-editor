@@ -60,8 +60,10 @@
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue';
 import type { Backend } from '../../backend/backend';
-import PdfViewer from '../PdfViewer.vue';
+
+const PdfViewer = defineAsyncComponent(() => import('../PdfViewer.vue'));
 
 defineProps<{
   isMainEditor: boolean;
