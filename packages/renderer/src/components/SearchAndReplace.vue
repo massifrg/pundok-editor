@@ -172,11 +172,11 @@ import {
 } from '../schema';
 import {
   AddableMark,
-  addableMarkToMark,
   baseAddableMarks,
   customStylesToAddableMarks,
   searchMarkSpecToAddableMarks,
 } from './helpers/addableMark';
+import { rangeHasAddableMark } from './helpers/searchMarkFilter';
 import ActionsOnReplaceDropdown from './ActionsOnReplaceDropdown.vue';
 import IndicesButtons from './IndicesButtons.vue';
 import MarksPaletteDropdown from './MarksPaletteDropdown.vue';
@@ -418,14 +418,12 @@ export default {
       return (state, result) => {
         const { doc, schema } = state
         const { from, to } = result
-        let i, mark
+        let i
         for (i = 0; i < positive.length; i++) {
-          mark = addableMarkToMark(schema, positive[i])
-          if (!mark || !doc.rangeHasMark(from, to, mark)) return false
+          if (!rangeHasAddableMark(schema, doc, from, to, positive[i])) return false
         }
         for (i = 0; i < negative.length; i++) {
-          const mark = addableMarkToMark(schema, negative[i])
-          if (mark && doc.rangeHasMark(from, to, mark)) return false
+          if (rangeHasAddableMark(schema, doc, from, to, negative[i])) return false
         }
         return true
       }
