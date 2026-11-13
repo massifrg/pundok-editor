@@ -4,204 +4,6 @@ setupQuasarIcons()
 </script>
 
 <script lang="ts">
-const defaultPdf = 'data:application/pdf;base64,' +
-  'JVBERi0xLjUKJbXtrvsKNCAwIG9iago8PCAvTGVuZ3RoIDUgMCBSCiAgIC9GaWx0ZXIgL0ZsYXRl' +
-  'RGVjb2RlCj4+CnN0cmVhbQp4nH1STW9TMRC8+1fssT3E3V1/rC2hHioKUiUkCu+GeqhIUhES2qZB' +
-  '/H3Gfm3yogj8ni177J0dz1qI8c0EQ4niS6mWI33fuGcHzNfQGiYloxltH+jinunhxWlmL8FIVXxV' +
-  'JUvt3y5o6dhr4loQlUBmjaekWFnpy0eKPtEfx3SDvnLf7rDJNHeRPtEzSVczjtCgJXhtKYrPprQh' +
-  'texrTqRlRNakFYQ6PYItlemRr3SLu9ygr9xpCkvepikCHwFrCmKQjxRRvbwiCUYFaha0qzcVAjOC' +
-  'm0At67+NgI//dUmxCZtO5AbOx9dt6iqkoHax5236pRwBRyFruup+oHrIyvkw2Rfn1KSqPVbNvFXr' +
-  'LoF0v26WlFdLQr//phcGluyR0SRUxvXJwdsU0gTptvW8sOhqcC0azcL4Tg9Lqz6r1BRIUsS0Fq40' +
-  'bNzFcsazpn1YurOn37/mjz9ni/mP3eP2fFi5aD2+1pHusBQws0rB44+KR2ZJszS+s8/vP9Bu8bKj' +
-  'Ft/ZZWR/x8xy+Qa+pVwv2rnrwd26v4hfsI4KZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCiAgIDQw' +
-  'OAplbmRvYmoKMyAwIG9iago8PAogICAvRXh0R1N0YXRlIDw8CiAgICAgIC9hMCA8PCAvQ0EgMSAv' +
-  'Y2EgMSA+PgogICA+PgogICAvRm9udCA8PAogICAgICAvZi0wLTAgNiAwIFIKICAgICAgL2YtMC0x' +
-  'IDcgMCBSCiAgID4+Cj4+CmVuZG9iagoyIDAgb2JqCjw8IC9UeXBlIC9QYWdlICUgMQogICAvUGFy' +
-  'ZW50IDEgMCBSCiAgIC9NZWRpYUJveCBbIDAgMCA1OTUuMjc1NTkxIDg0MS44ODk3NjQgXQogICAv' +
-  'Q29udGVudHMgNCAwIFIKICAgL0dyb3VwIDw8CiAgICAgIC9UeXBlIC9Hcm91cAogICAgICAvUyAv' +
-  'VHJhbnNwYXJlbmN5CiAgICAgIC9JIHRydWUKICAgICAgL0NTIC9EZXZpY2VSR0IKICAgPj4KICAg' +
-  'L1Jlc291cmNlcyAzIDAgUgo+PgplbmRvYmoKOCAwIG9iago8PCAvTGVuZ3RoIDkgMCBSCiAgIC9G' +
-  'aWx0ZXIgL0ZsYXRlRGVjb2RlCiAgIC9MZW5ndGgxIDc1NzYKPj4Kc3RyZWFtCnic7Vl9bFvXdT/3' +
-  'vsdHSiIpUvySTFt65NOXxSdZNiX5S5ZpUhQlS7Ip2Yr5/CVSoi3HkmM7TlKlWVKnqdtEaeKs6YAg' +
-  'aYoALdABS4FLuW7dbkD9T7vMwYD+kW3Y6m1tgQzBkD+CoQuyYZZ2znukLDt2tgHbfyNB3XPPOfee' +
-  'c37n3HMfKWAAUA2XQQJ19lzhwq8zb38HoOpjAH509qkn1AE5HANwDgMw/fSFuXMzW2peAHA9AeB2' +
-  'zi08ffqNH5zZhzu8i2sSZ04Vik3i+0iHLyOv7wwynNfsb+L8Bs6bz5x7YlFzy3+D89s4H144P1sA' +
-  'yH8AsLEZ52PnCosX+Kee3+P8As7VC4+fupDN1P4c56+hfRtwOInjv/Fb6K0dOhJtqCVxkOaAM8aP' +
-  'AOdsWkaKHQSwKzYZ1SSvTQnF4t6ItyXijZxkb628wXpX3ue37vTFeRHXc5ha9fBuHoUAaDD/47oq' +
-  'bpPZ2KhoyOYSm+xMlqEgKRzg0jjYbKwAjF0cR0vn+YFwIgKSdG7cUlLYg3SMRCgUZNC4MaiFNK+n' +
-  '1m23QYAFHK5gjG0LBvyKFm1t04LBQEDzxkPxvr5QVLEH/MH4tr6+3p5Wdnj26aeLAxMhhcu5Yadc' +
-  'f2DrZIrvy23d25Th0aWXX3p1S5O3x3dbcoxo3fuPn/TOzved6D/+GMIEB1c/5QFeDz4Yuy4xiVeC' +
-  '8tlkzvm5cfQdCgy9ngcMJVTh4pxEVhQMA3Ahywe+qK/Zq7g2xJhXa9MU8rvXG/f60dFeLw8Mu+QN' +
-  'x3sKM8aXjDSvv/NRpqPtxGk2vfKDy8WTLATkzxSC3YA4+yB73UNZqviDSEFBtpkYS4yxeUb+gCyf' +
-  'GzdFNrZOYiS8DGrdLmeVHRPsYz6lDKVX8/ZoUYVGE0h2JD9zZNEYzGVctg3HefTEmZXvsSPPF0+u' +
-  '/DOvH+nYbOZ+O2JUxz/D3Efhjyj3sm0t92h7YS2fl8bXlcJFBGxUbEalyH1KCNz8unogRdS5K+Zc' +
-  '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' +
-  'FKU2Yv3McRmYnHhx9nBFQK+Ef0n5snJWKbKcPCYP8h6l1Vbl7rjBVq8I+RV8Dhq8ZisqMDiIEP0n' +
-  'dK5/MQplbmRzdHJlYW0KZW5kb2JqCjkgMCBvYmoKICAgNDIzMwplbmRvYmoKMTAgMCBvYmoKPDwg' +
-  'L0xlbmd0aCAxMSAwIFIKICAgL0ZpbHRlciAvRmxhdGVEZWNvZGUKPj4Kc3RyZWFtCnicXZFNa8Mw' +
-  'DIbv/hU6doeSNM0HhRAY3SWHfbBsPyCx5dawOMZxD/n3k63SwQ6JHlt6X2QpO/cvvTUBsg+/yAED' +
-  'aGOVx3W5eYkw4cVYcShAGRnup/SX8+hERuJhWwPOvdWLaFvIPim5Br/B7lktEz4JAMjevUJv7AV2' +
-  '3+eBr4abcz84ow2Qi64DhZrsXkf3Ns4IWRLve0V5E7Y9yf4qvjaHUKTzgVuSi8LVjRL9aC8o2jzv' +
-  'oNW6E2jVv9yhYcmk5XX0om1iaZ5TIK6YK+IaE1MgLpnLyJpZR56YJ+JCJaZA9+xTJ58T8yn6s08T' +
-  'fZqCuSCuuIcq9lByTRlrypq5jv5cU6Q+j6w9Rn/J/jI99v6q+Oy4n8c85c17GmVaYpphnJ6x+Niz' +
-  'W1xUpe8XBbGWAQplbmRzdHJlYW0KZW5kb2JqCjExIDAgb2JqCiAgIDMwMwplbmRvYmoKMTIgMCBv' +
-  'YmoKPDwgL1R5cGUgL0ZvbnREZXNjcmlwdG9yCiAgIC9Gb250TmFtZSAvRFpFSFRTK05vdG9TYW5z' +
-  'LVJlZ3VsYXIKICAgL0ZvbnRGYW1pbHkgKE5vdG8gU2FucykKICAgL0ZsYWdzIDMyCiAgIC9Gb250' +
-  'QkJveCBbIC02MjEgLTM4OSAyODAwIDEwNjcgXQogICAvSXRhbGljQW5nbGUgMAogICAvQXNjZW50' +
-  'IDEwNjkKICAgL0Rlc2NlbnQgLTI5MwogICAvQ2FwSGVpZ2h0IDEwNjcKICAgL1N0ZW1WIDgwCiAg' +
-  'IC9TdGVtSCA4MAogICAvRm9udEZpbGUyIDggMCBSCj4+CmVuZG9iago2IDAgb2JqCjw8IC9UeXBl' +
-  'IC9Gb250CiAgIC9TdWJ0eXBlIC9UcnVlVHlwZQogICAvQmFzZUZvbnQgL0RaRUhUUytOb3RvU2Fu' +
-  'cy1SZWd1bGFyCiAgIC9GaXJzdENoYXIgMzIKICAgL0xhc3RDaGFyIDExNwogICAvRm9udERlc2Ny' +
-  'aXB0b3IgMTIgMCBSCiAgIC9FbmNvZGluZyAvV2luQW5zaUVuY29kaW5nCiAgIC9XaWR0aHMgWyAy' +
-  'NjAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMzIyIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAg' +
-  'MCAwIDAgMCAwIDAgMCAwIDAgNzMwIDAgNTE5IDAgMCAwIDAgMCAwIDAgMCAwIDYwNSAwIDAgMCAw' +
-  'IDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDYxNSA1NjQgMCAwIDAgMjU4IDAgNTM0IDI1' +
-  'OCAwIDYxOCA2MDUgNjE1IDAgNDEzIDQ3OSAzNjEgNjE4IF0KICAgIC9Ub1VuaWNvZGUgMTAgMCBS' +
-  'Cj4+CmVuZG9iagoxMyAwIG9iago8PCAvTGVuZ3RoIDE0IDAgUgogICAvRmlsdGVyIC9GbGF0ZURl' +
-  'Y29kZQogICAvTGVuZ3RoMSA0OTUyCj4+CnN0cmVhbQp4nK1YTXAcxRV+PTs7q5+VtJJ2JZnxT6/H' +
-  'EkY7Kxv/YWxhr2e0Eka2Wcs2zNjG3pVWtgE7iJ8QAflxMASzhDhV5EAlOXAgtxx6pFAxqVRFp1Ri' +
-  'LjmQU0gVJBcfqBSHhCJVsZXvzaxkyX+pVLFT2v76va+733v9+vVoSRBRI52nGKUmXnxB7tLNHJE2' +
-  'TSTsU1Onz41vaL5AFHufqDV5+uxLp157/7eXMOLn0H9yZrJSXaPe/yVRu4Js2xkIkrOJH6J/Ff11' +
-  'Z869MJ1I0hWijiT6qbPPTFQwF7gdK9FPn6tMT2lXU/9EfyP6cuq5yanSSNvv0C9h/jhpdALtv7Ur' +
-  'sC5B/YV7wYppFDtNmhDa46Rp4qQOJB4lShhxHbRYe9zozm1uz7b3ZtuzJ8TPrr8rtl7/SLtybdtm' +
-  'rUo0P09t8K9Fu0Z9mB/jKCY8tILl4gLk3XS80NYq9FhbQovrhqB4bN+oWlXyCibpeqxCsdjZ/Rri' +
-  'Fj9J8fi5/STE0+KAWViB5fV4TH/yFp1faOzs7W1vTxktK3PCasez9YGtW7Zt3tTVnejrs9Yamcxm' +
-  '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' +
-  '4VLr5mHJRodLMhbZ0ISqPUt00HqJTiG5f/OdGr39MVzVTVGPkop67xeufPJpyq7M4qduohopFgLh' +
-  'c1kppkLV8wtTkXDICmVuZHN0cmVhbQplbmRvYmoKMTYgMCBvYmoKICAgMjIzCmVuZG9iagoxNyAw' +
-  'IG9iago8PCAvVHlwZSAvRm9udERlc2NyaXB0b3IKICAgL0ZvbnROYW1lIC9EWldCRUsrTm90b1Nh' +
-  'bnMtUmVndWxhcgogICAvRm9udEZhbWlseSAoTm90byBTYW5zKQogICAvRmxhZ3MgNAogICAvRm9u' +
-  'dEJCb3ggWyAtNjIxIC0zODkgMjgwMCAxMDY3IF0KICAgL0l0YWxpY0FuZ2xlIDAKICAgL0FzY2Vu' +
-  'dCAxMDY5CiAgIC9EZXNjZW50IC0yOTMKICAgL0NhcEhlaWdodCAxMDY3CiAgIC9TdGVtViA4MAog' +
-  'ICAvU3RlbUggODAKICAgL0ZvbnRGaWxlMiAxMyAwIFIKPj4KZW5kb2JqCjE4IDAgb2JqCjw8IC9U' +
-  'eXBlIC9Gb250CiAgIC9TdWJ0eXBlIC9DSURGb250VHlwZTIKICAgL0Jhc2VGb250IC9EWldCRUsr' +
-  'Tm90b1NhbnMtUmVndWxhcgogICAvQ0lEU3lzdGVtSW5mbwogICA8PCAvUmVnaXN0cnkgKEFkb2Jl' +
-  'KQogICAgICAvT3JkZXJpbmcgKElkZW50aXR5KQogICAgICAvU3VwcGxlbWVudCAwCiAgID4+CiAg' +
-  'IC9Gb250RGVzY3JpcHRvciAxNyAwIFIKICAgL1cgWzAgWyA2MDAgNjAyIF1dCj4+CmVuZG9iago3' +
-  'IDAgb2JqCjw8IC9UeXBlIC9Gb250CiAgIC9TdWJ0eXBlIC9UeXBlMAogICAvQmFzZUZvbnQgL0Ra' +
-  'V0JFSytOb3RvU2Fucy1SZWd1bGFyCiAgIC9FbmNvZGluZyAvSWRlbnRpdHktSAogICAvRGVzY2Vu' +
-  'ZGFudEZvbnRzIFsgMTggMCBSXQogICAvVG9Vbmljb2RlIDE1IDAgUgo+PgplbmRvYmoKMSAwIG9i' +
-  'ago8PCAvVHlwZSAvUGFnZXMKICAgL0tpZHMgWyAyIDAgUiBdCiAgIC9Db3VudCAxCj4+CmVuZG9i' +
-  'agoxOSAwIG9iago8PCAvUHJvZHVjZXIgKGNhaXJvIDEuMTYuMCAoaHR0cHM6Ly9jYWlyb2dyYXBo' +
-  'aWNzLm9yZykpCiAgIC9UaXRsZSAoUGFuZG9jIExvZ28pCiAgIC9DcmVhdG9yIDxGRUZGMDA0OTAw' +
-  'NkUwMDZCMDA3MzAwNjMwMDYxMDA3MDAwNjUwMDIwMDAzMTAwMkUwMDMyMDAyRTAwMzIwMDIwMDAy' +
-  'ODAwNjgwMDc0MDA3NDAwNzAwMDczMDAzQTAwMkYwMDJGMDA2OTAwNkUwMDZCMDA3MzAwNjMwMDYx' +
-  'MDA3MDAwNjUwMDJFMDA2RjAwNzIwMDY3MDAyOT4KICAgL0NyZWF0aW9uRGF0ZSAoRDoyMDI0MDkx' +
-  'ODE0MjUzOCswMicwMCkKPj4KZW5kb2JqCjIwIDAgb2JqCjw8IC9UeXBlIC9DYXRhbG9nCiAgIC9Q' +
-  'YWdlcyAxIDAgUgo+PgplbmRvYmoKeHJlZgowIDIxCjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAx' +
-  'MDE5NyAwMDAwMCBuIAowMDAwMDAwNjUwIDAwMDAwIG4gCjAwMDAwMDA1MjIgMDAwMDAgbiAKMDAw' +
-  'MDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwNTAwIDAwMDAwIG4gCjAwMDAwMDU5MTIgMDAwMDAgbiAK' +
-  'MDAwMDAxMDAzMSAwMDAwMCBuIAowMDAwMDAwODgyIDAwMDAwIG4gCjAwMDAwMDUyMDkgMDAwMDAg' +
-  'biAKMDAwMDAwNTIzMiAwMDAwMCBuIAowMDAwMDA1NjE0IDAwMDAwIG4gCjAwMDAwMDU2MzcgMDAw' +
-  'MDAgbiAKMDAwMDAwNjMzOCAwMDAwMCBuIAowMDAwMDA5MTY2IDAwMDAwIG4gCjAwMDAwMDkxOTAg' +
-  'MDAwMDAgbiAKMDAwMDAwOTQ5MiAwMDAwMCBuIAowMDAwMDA5NTE1IDAwMDAwIG4gCjAwMDAwMDk3' +
-  'OTAgMDAwMDAgbiAKMDAwMDAxMDI2MiAwMDAwMCBuIAowMDAwMDEwNTcwIDAwMDAwIG4gCnRyYWls' +
-  'ZXIKPDwgL1NpemUgMjEKICAgL1Jvb3QgMjAgMCBSCiAgIC9JbmZvIDE5IDAgUgo+PgpzdGFydHhy' +
-  'ZWYKMTA2MjMKJSVFT0YK'
-
 import { toRaw } from 'vue';
 import { mapState } from 'pinia';
 import { useActions } from '../stores'
@@ -232,8 +34,6 @@ interface ViewerBookmark extends RenderingPageBookmark { }
 
 const baseWidth = 500
 const magnifyFactor = 1.1
-const lensMagnificationFactor = 2
-const lensDiameter = 180
 // const minMagnify = 0.05
 // const maxMagnify = 20
 
@@ -302,12 +102,14 @@ export default {
       renderingJobs: {} as Record<string, RenderingBookmark>,
       editorKey: undefined as EditorKeyType | undefined,
       showPageDialog: false,
+      showZoomDialog: false,
       showBookmarkNameDialog: false,
       focusRects: [] as PdfPageRectangle[],
       focusPageHeight: undefined as number | undefined,
       pdfHighlightRects: [] as PdfPageRectangle[],
       pdfHighlightStyles: [] as Record<string, string>[],
-      lensDiameter,
+      lensSize: 1,
+      lensMagnificationFactor: 2,
       lensCtrlDown: false,
       lensVisible: false,
       lensLeft: 0,
@@ -345,6 +147,21 @@ export default {
       return Object.values(this.renderingJobs).filter((item) =>
         this.isPdfRendering(item),
       )
+    },
+    renderingDocumentName(): string {
+      const bookmark = this.currentRendering
+      if (!bookmark) return ''
+      const path = this.renderingPath(bookmark.url)
+      return path.split(/[\\/]/).pop() || path
+    },
+    renderingReloadTitle(): string {
+      const bookmark = this.currentRendering
+      return bookmark
+        ? this.$t('pdfViewer.rerender', { path: bookmark.url })
+        : this.$t('pdfViewer.reload')
+    },
+    lensDiameter(): number {
+      return 150 + (this.lensSize - 1) * 50
     },
     pageLayoutOptions() {
       return [
@@ -502,16 +319,16 @@ export default {
       const bounds = image.getBoundingClientRect()
       const imageX = clientX - bounds.left
       const imageY = clientY - bounds.top
-      const scaledWidth = bounds.width * lensMagnificationFactor
-      const scaledHeight = bounds.height * lensMagnificationFactor
+      const scaledWidth = bounds.width * this.lensMagnificationFactor
+      const scaledHeight = bounds.height * this.lensMagnificationFactor
       const containerBounds = this.div.getBoundingClientRect()
-      this.lensLeft = clientX - containerBounds.left + this.div.scrollLeft - lensDiameter / 2
-      this.lensTop = clientY - containerBounds.top + this.div.scrollTop - lensDiameter / 2
+      this.lensLeft = clientX - containerBounds.left + this.div.scrollLeft - this.lensDiameter / 2
+      this.lensTop = clientY - containerBounds.top + this.div.scrollTop - this.lensDiameter / 2
       this.lensSource = image.currentSrc || image.src
       this.lensBackgroundSize = `${scaledWidth}px ${scaledHeight}px`
       this.lensBackgroundPosition =
-        `${lensDiameter / 2 - imageX * lensMagnificationFactor}px ` +
-        `${lensDiameter / 2 - imageY * lensMagnificationFactor}px`
+        `${this.lensDiameter / 2 - imageX * this.lensMagnificationFactor}px ` +
+        `${this.lensDiameter / 2 - imageY * this.lensMagnificationFactor}px`
       this.lensVisible = true
     },
     lensMouseMoved(e: MouseEvent) {
@@ -749,9 +566,6 @@ export default {
         })
       }
     },
-    loadDefaultPdf() {
-      this.loadPdf({ content: defaultPdf })
-    },
     imageLoaded(e: Event) {
       const image = e.currentTarget as HTMLImageElement
       const source = image.getAttribute('src')
@@ -779,8 +593,7 @@ export default {
         if (whenRenderedCallback) whenRenderedCallback()
       })
     },
-    pdfRectangleBounds(rect: PdfPageRectangle):
-      { left: number, top: number, right: number, bottom: number } | undefined {
+    pdfRectangleBounds(rect: PdfPageRectangle): { left: number, top: number, right: number, bottom: number } | undefined {
       const div = this.div
       const image = div?.querySelector<HTMLImageElement>(
         `.pdf-image[data-page="${rect.page}"]`,
@@ -906,8 +719,16 @@ export default {
     prevPage() {
       this.setPage(this.page - 1)
     },
+    previousPageClicked(e: Event) {
+      if (e instanceof MouseEvent && e.shiftKey) this.firstPage()
+      else this.prevPage()
+    },
     nextPage() {
       this.setPage(this.page + 1)
+    },
+    nextPageClicked(e: Event) {
+      if (e instanceof MouseEvent && e.shiftKey) this.lastPage()
+      else this.nextPage()
     },
     lastPage() {
       this.setPage(this.maxPages)
@@ -918,6 +739,18 @@ export default {
       const p = parseInt(sp)
       return (p >= page_min && p <= page_max)
         || this.$t('pdfViewer.pageRange', { min: page_min, max: page_max })
+    },
+    setZoom(sp: string) {
+      const zoom = parseFloat(sp)
+      if (!Number.isNaN(zoom))
+        this.setMagnify(zoom / 100)
+    },
+    validateZoom(sp: string) {
+      const zoom_min = 5
+      const zoom_max = 199999
+      const zoom = parseFloat(sp)
+      return (zoom >= zoom_min && zoom <= zoom_max)
+        || this.$t('pdfViewer.zoomRange', { min: zoom_min, max: zoom_max })
     },
     setMagnify(magnify: number) {
       if (magnify !== this.magnify && magnify > 0.05 && magnify < 2000) {
@@ -971,6 +804,18 @@ export default {
     },
     resetScale() {
       this.magnify = 1
+    },
+    decreaseLensSize() {
+      this.lensSize = Math.max(1, this.lensSize - 1)
+    },
+    increaseLensSize() {
+      this.lensSize = Math.min(10, this.lensSize + 1)
+    },
+    decreaseLensMagnification() {
+      this.lensMagnificationFactor = Math.max(2, this.lensMagnificationFactor - 0.1)
+    },
+    increaseLensMagnification() {
+      this.lensMagnificationFactor = Math.min(5, this.lensMagnificationFactor + 0.1)
     },
     coordinatesOnRasterImage(e: MouseEvent, image: HTMLImageElement) {
       const { left, top, width, height } = image.getBoundingClientRect()
@@ -1262,31 +1107,25 @@ export default {
 <template>
   <q-card class="lazy-component-wrapper" @wheel="(e: Event) => { e.preventDefault() }">
     <q-card-actions>
-      <!--
-      <q-btn label="default pdf" @click="loadDefaultPdf" />
-      <q-btn label="load pdf" @click="loadPdf({ filename: 'setup-en.pdf' })" />
-      -->
-      <q-btn size="sm" icon='page_first' :title="$t('pdfViewer.firstPage')" :disabled="page <= 1" @click="firstPage" />
-      <q-btn size="sm" icon='page_left' :title="$t('pdfViewer.previousPage')" :disabled="page <= 1" @click="prevPage" />
+      <q-btn size="sm" icon='page_left' :title="$t('pdfViewer.previousPage')" :disabled="page <= 1"
+        @click="previousPageClicked" />
       <q-chip :label="`${page}/${maxPages}`" size="md" @wheel="pageWheel" clickable
         @click.stop="showPageDialog = true" />
       <PromptDialog :visible="showPageDialog" :label="$t('pdfViewer.goToPage')" :start-value="page.toString()"
         :validate="validatePage" @set-value="setPage" @close-dialog="showPageDialog = false" />
       <q-btn size="sm" icon='page_right' :title="$t('pdfViewer.nextPage')" :disabled="page >= maxPages"
-        @click="nextPage" />
-      <q-btn size="sm" icon='page_last' :title="$t('pdfViewer.lastPage')" :disabled="page >= maxPages"
-        @click="lastPage" />
-      <q-btn size="sm" icon="zoom_out" :disabled="magnify < 0.11" :title="$t('pdfViewer.zoomOut')"
-        @click="decreaseScale" />
-      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" @wheel="zoomWheel" @dblclick="resetScale" />
-      <q-btn size="sm" icon="zoom_in" :disabled="magnify > 9.9" :title="$t('pdfViewer.zoomIn')"
-        @click="increaseScale" />
+        @click="nextPageClicked" />
+      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" clickable :title="$t('pdfViewer.setZoom')"
+        @wheel="zoomWheel" @click.stop="showZoomDialog = true" />
+      <PromptDialog :visible="showZoomDialog" :label="$t('pdfViewer.setZoom')" :start-value="(magnify * 100).toFixed(0)"
+        :validate="validateZoom" @set-value="setZoom" @close-dialog="showZoomDialog = false" />
       <q-btn-toggle :model-value="twoPageSpread" dense :options="pageLayoutOptions"
         @update:model-value="displayLayoutChanged" @click="layoutButtonClicked">
         <template #twoPageSpread>
           <q-icon name="pdf_two_pages" :class="{ 'pdf-two-pages-left': twoPageSpread && !firstPageOnRight }" />
         </template>
       </q-btn-toggle>
+      <q-space />
       <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
         @click="setBookmark()" />
       <q-btn-dropdown v-if="bookmarks.length > 0" size="sm" split icon="bookmark_add"
@@ -1297,19 +1136,9 @@ export default {
             <q-item-section side :title="$t('pdfViewer.editBookmark')"><q-icon name="bookmark_edit" color="primary"
                 @click="editBookmark(i)" /></q-item-section>
             <q-item-section :title="$t('pdfViewer.removeBookmark')"><q-item-label>{{ bookmark.label
-            }}</q-item-label></q-item-section>
+                }}</q-item-label></q-item-section>
             <q-item-section side :title="$t('pdfViewer.removeBookmark')"><q-icon name="bookmark_remove" color="primary"
                 @click="removeBookmark(i)" /></q-item-section>
-          </q-item>
-        </q-list>
-      </q-btn-dropdown>
-      <q-btn-dropdown :title="$t('pdfViewer.showRenderings')">
-        <q-list>
-          <q-item v-for="j in renderingBookmarks" :disable="renderingPath(j.url) === filename" clickable v-close-popup
-            :title="j.url" @click="showAgain(j)">
-            <q-item-section>
-              <q-item-label>{{ j.url }}</q-item-label>
-            </q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>
@@ -1317,27 +1146,69 @@ export default {
         :start-value="bookmarks[currentBookmarkIndex]?.label" @set-value="setBookmarkLabel"
         @close-dialog="showBookmarkNameDialog = false" />
       <q-space />
-      <q-btn-dropdown split size="sm" :icon="isRegeneratingPdf ? undefined : 'reload'"
-        :loading="isRegeneratingPdf"
-        :disable="isRegeneratingPdf || !currentRendering" :title="$t('pdfViewer.reload')"
-        @click="regeneratePdf()">
+      <q-btn-dropdown split size="sm" icon="reload" :label="renderingDocumentName" :loading="isRegeneratingPdf"
+        :disable="isRegeneratingPdf || renderingBookmarks.length === 0"
+        :disable-main-btn="isRegeneratingPdf || !currentRendering" :title="renderingReloadTitle" no-caps
+        @click="regeneratePdf(currentRendering)">
         <q-list>
-          <q-item tag="label" clickable>
+          <q-item v-for="bookmark in renderingBookmarks" :disable="renderingPath(bookmark.url) === filename" clickable
+            v-close-popup :title="$t('pdfViewer.reloadBookmark', { url: bookmark.url })" @click="showAgain(bookmark)">
             <q-item-section>
-              <q-checkbox v-model="autoReload" :label="$t('pdfViewer.autoReload')" />
+              <q-item-label>{{ bookmark.url }}</q-item-label>
             </q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>
-      <q-space />
       <q-circular-progress :indeterminate="isRendering" :value="isRendering ? 100 : undefined" rounded size="1.4rem"
         color="light-blue" class="q-mx-md q-my-xs q-pa-xs" />
+      <q-btn icon="menu" :title="$t('pdfViewer.menu')">
+        <q-menu>
+          <q-list>
+            <q-item tag="label" clickable>
+              <q-item-section>
+                <q-checkbox v-model="autoReload" :label="$t('pdfViewer.autoReload')"
+                  :title="$t('pdfViewer.autoReloadTooltip')" />
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item>
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('pdfViewer.lensSize', { size: lensSize }) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-btn dense flat round size="sm" icon="remove" :disable="lensSize <= 1"
+                  @click.stop="decreaseLensSize" />
+              </q-item-section>
+              <q-item-section side>
+                <q-btn dense flat round size="sm" icon="add" :disable="lensSize >= 10" @click.stop="increaseLensSize" />
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('pdfViewer.lensMagnification', { factor: lensMagnificationFactor.toFixed(1) }) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-btn dense flat round size="sm" icon="remove" :disable="lensMagnificationFactor <= 2"
+                  @click.stop="decreaseLensMagnification" />
+              </q-item-section>
+              <q-item-section side>
+                <q-btn dense flat round size="sm" icon="add" :disable="lensMagnificationFactor >= 5"
+                  @click.stop="increaseLensMagnification" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
     </q-card-actions>
     <q-card-section>
       <div class="pdf-image-container q-pa-md"
         :class="{ 'pdf-spread': twoPageSpread, 'pdf-first-page-right': firstPageRightActive, 'pdf-dragging': dragging }"
-        @scroll="scrolled" @wheel.stop.prevent="mouseWheel" @mousedown="dragStarted"
-        @mouseup="dragEnded" @mouseleave="mouseLeft" @mousemove="mouseMoved">
+        @scroll="scrolled" @wheel.stop.prevent="mouseWheel" @mousedown="dragStarted" @mouseup="dragEnded"
+        @mouseleave="mouseLeft" @mousemove="mouseMoved">
         <div v-if="isRendering" class="pdf-image-loading">
           <q-circular-progress indeterminate rounded size="3rem" color="light-blue" track-color="grey-4" />
         </div>
@@ -1348,8 +1219,8 @@ export default {
           @click="pageClicked" @dblclick="doubleClicked" @dragstart.prevent />
         <img v-for="requested in pendingImageSources" :key="`preload-${requested.page}`" class="pdf-image-preload"
           :src="requested.source" :data-page="requested.page" alt="" @load="imageLoaded" @error="imageLoadFailed" />
-        <div v-for="(style, index) in pdfHighlightStyles" :key="`pdf-highlight-${index}`"
-          class="pdf-location-highlight" :style="style" />
+        <div v-for="(style, index) in pdfHighlightStyles" :key="`pdf-highlight-${index}`" class="pdf-location-highlight"
+          :style="style" />
         <div v-if="lensVisible && lensSource" class="pdf-lens" :style="{
           left: `${lensLeft}px`,
           top: `${lensTop}px`,
