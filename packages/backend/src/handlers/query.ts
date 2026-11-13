@@ -18,7 +18,7 @@ import {
   pandocResourceTypes,
   type BackendDirectories,
 } from '../resourceManager';
-import { runExternalProgram } from '../runExternal';
+import { runPandocProgram } from '../runExternal';
 import { isObject } from 'lodash';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';
@@ -150,8 +150,7 @@ async function runWriterOnMasterFile(
   });
   if (!writer || !filter) return undefined;
 
-  const { result } = runExternalProgram(
-    'pandoc',
+  const { result } = await runPandocProgram(
     [
       '-f',
       'json',

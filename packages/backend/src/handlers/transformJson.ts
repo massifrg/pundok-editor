@@ -17,7 +17,7 @@ import {
   pandocResourceTypes,
   type BackendDirectories,
 } from '../resourceManager';
-import { runExternalProgram } from '../runExternal';
+import { runPandocProgram } from '../runExternal';
 import { transformationProcessKey } from '../renderingProcess';
 import { progressFeedback, type FeedbackSink } from '../feedback';
 import { isEmpty } from 'lodash';
@@ -153,8 +153,7 @@ export async function transformWithPandoc(
   }
   console.log(args);
 
-  const { result } = runExternalProgram(
-    'pandoc',
+  const { result } = await runPandocProgram(
     args,
     { cwd },
     (source, chunk) => {

@@ -9,13 +9,12 @@ import {
   type PundokEditorConfig,
   type PundokEditorConfigInit,
 } from '../../common/src';
-import { runExternalProgram } from './runExternal';
+import { runPandocProgram } from './runExternal';
 import { pandocResourcePath } from './resourceManager';
 
 async function runPandocForFeatureList(args: string[]): Promise<string[]> {
   const cwd = process.cwd();
-  const { result } = runExternalProgram(
-    'pandoc',
+  const { result } = await runPandocProgram(
     [...args, `--resource-path=${pandocResourcePath(undefined, cwd)}`],
     { cwd },
   );

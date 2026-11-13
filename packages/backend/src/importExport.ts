@@ -38,6 +38,7 @@ import {
 import {
   externalProgramError,
   runExternalProgram,
+  runPandocProgram,
   type ProgressCallback,
 } from './runExternal';
 
@@ -136,8 +137,9 @@ export async function importWithPandoc(
   const args = ['-f', format, '-t', 'json', ...pandocOpts, '--', `"${path}"`];
   const commandLine = `pandoc ${args.join(' ')}`;
   try {
-    return await runExternalProgram('pandoc', args, { shell: true, cwd })
-      .result;
+    return await (
+      await runPandocProgram(args, { shell: true, cwd })
+    ).result;
   } catch (error) {
     return externalProgramError(error, commandLine);
   }
@@ -379,10 +381,12 @@ async function runPandocOnFile(
   const args = [...options, '--', `"${path}"`];
   const commandLine = `pandoc ${args.join(' ')}`;
   try {
-    return await runExternalProgram('pandoc', args, {
-      shell: true,
-      cwd: parsePath(path).dir,
-    }).result;
+    return await (
+      await runPandocProgram(args, {
+        shell: true,
+        cwd: parsePath(path).dir,
+      })
+    ).result;
   } catch (error) {
     return externalProgramError(error, commandLine, parsePath(path).dir);
   }

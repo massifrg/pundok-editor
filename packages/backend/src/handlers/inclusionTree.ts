@@ -8,7 +8,7 @@ import {
   pandocResourceTypes,
   type BackendDirectories,
 } from '../resourceManager';
-import { runExternalProgram } from '../runExternal';
+import { runPandocProgram } from '../runExternal';
 
 const INCLUDE_DOC_FILTER = 'include-doc.lua';
 const INCLUSION_TREE_WRITER = 'inclusion-tree.lua';
@@ -31,8 +31,7 @@ export async function getInclusionTree(
     project,
   });
   if (!writer || !filter) return undefined;
-  const { result } = runExternalProgram(
-    'pandoc',
+  const { result } = await runPandocProgram(
     [
       '-f',
       'json',

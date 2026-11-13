@@ -18,10 +18,7 @@ export type ExternalProgramEnvironment = NodeJS.ProcessEnv & {
   additionalPath?: string;
 };
 
-export type ExternalProgramOptions = Omit<
-  SpawnOptionsWithoutStdio,
-  'env'
-> & {
+export type ExternalProgramOptions = Omit<SpawnOptionsWithoutStdio, 'env'> & {
   env?: ExternalProgramEnvironment;
 };
 
@@ -37,6 +34,48 @@ export interface ExternalProgramRegistration {
 export interface ExternalProgram {
   childProcess: ChildProcessWithoutNullStreams;
   result: Promise<ExternalProgramResult>;
+}
+
+let pandocVersionPromise: Promise<[number, number] | undefined> | undefined;
+
+export async function runPandocProgram(
+  args: string[],
+  options?: ExternalProgramOptions,
+  callback?: ProgressCallback,
+  input?: string,
+  registration?: ExternalProgramRegistration,
+): Promise<ExternalProgram> {
+  pandocVersionPromise ??= runExternalProgram('pandoc', ['--version'])
+    .result.then((versionResult) => {
+      const match = /pandoc\s+(\d+)\.(\d+)/i.exec(
+        `${versionResult.output}\n${versionResult.error}`,
+      );
+      return match
+        ? ([Number(match[1]), Number(match[2])] as [number, number])
+        : undefined;
+    })
+    .catch(() => undefined);
+  const pandocVersion = await pandocVersionPromise;
+
+  const resourcePath = args
+    .find((arg) => arg.startsWith('--resource-path='))
+    ?.slice('--resource-path='.length)
+    .replaceAll('"', '');
+  const env =
+    resourcePath &&
+    pandocVersion &&
+    (pandocVersion[0] > 3 || (pandocVersion[0] === 3 && pandocVersion[1] >= 14))
+      ? { ...(options?.env || {}), PANDOC_DATA_DIRS: resourcePath }
+      : options?.env;
+
+  return runExternalProgram(
+    'pandoc',
+    args,
+    { ...options, ...(env && { env }) },
+    callback,
+    input,
+    registration,
+  );
 }
 
 export function externalProgramError(
@@ -72,7 +111,8 @@ export function runExternalProgram(
     args,
     registration?.key ? { ...spawnOptions, detached: true } : spawnOptions,
   );
-  if (registration?.key) registerRenderingProcess(registration.key, childProcess);
+  if (registration?.key)
+    registerRenderingProcess(registration.key, childProcess);
   childProcess.stdout.on('data', (chunk) => {
     if (callback) callback('out', chunk);
     output.push(chunk.toString());
