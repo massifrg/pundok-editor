@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "@app/electron-versions": "file:packages/electron-versions",
+    "@eslint/js": "^10.0.1",
     "@intlify/unplugin-vue-i18n": "^11.2.8",
     "@npmcli/map-workspaces": "^6.0.0",
     "@quasar/app-vite": "^3.10.3",
