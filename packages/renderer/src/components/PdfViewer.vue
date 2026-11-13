@@ -32,6 +32,8 @@ interface PdfContent {
 
 interface ViewerBookmark extends RenderingPageBookmark { }
 
+const DEFAULT_LENS_SIZE = 4
+const DEFAULT_LENS_MAGNIFICATION_FACTOR = 2
 const baseWidth = 500
 const magnifyFactor = 1.1
 // const minMagnify = 0.05
@@ -108,8 +110,8 @@ export default {
       focusPageHeight: undefined as number | undefined,
       pdfHighlightRects: [] as PdfPageRectangle[],
       pdfHighlightStyles: [] as Record<string, string>[],
-      lensSize: 1,
-      lensMagnificationFactor: 2,
+      lensSize: DEFAULT_LENS_SIZE,
+      lensMagnificationFactor: DEFAULT_LENS_MAGNIFICATION_FACTOR,
       lensCtrlDown: false,
       lensVisible: false,
       lensLeft: 0,
@@ -1136,7 +1138,7 @@ export default {
             <q-item-section side :title="$t('pdfViewer.editBookmark')"><q-icon name="bookmark_edit" color="primary"
                 @click="editBookmark(i)" /></q-item-section>
             <q-item-section :title="$t('pdfViewer.removeBookmark')"><q-item-label>{{ bookmark.label
-                }}</q-item-label></q-item-section>
+            }}</q-item-label></q-item-section>
             <q-item-section side :title="$t('pdfViewer.removeBookmark')"><q-icon name="bookmark_remove" color="primary"
                 @click="removeBookmark(i)" /></q-item-section>
           </q-item>
