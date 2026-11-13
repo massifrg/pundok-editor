@@ -232,6 +232,8 @@ interface ViewerBookmark extends RenderingPageBookmark { }
 
 const baseWidth = 500
 const magnifyFactor = 1.1
+const lensMagnificationFactor = 2
+const lensDiameter = 180
 // const minMagnify = 0.05
 // const maxMagnify = 20
 
@@ -305,6 +307,16 @@ export default {
       focusPageHeight: undefined as number | undefined,
       pdfHighlightRects: [] as PdfPageRectangle[],
       pdfHighlightStyles: [] as Record<string, string>[],
+      lensDiameter,
+      lensCtrlDown: false,
+      lensVisible: false,
+      lensLeft: 0,
+      lensTop: 0,
+      lensSource: undefined as string | undefined,
+      lensBackgroundSize: '',
+      lensBackgroundPosition: '',
+      lastMouseX: undefined as number | undefined,
+      lastMouseY: undefined as number | undefined,
     }
   },
   computed: {
@@ -450,9 +462,74 @@ export default {
       ? this.$el.querySelector<HTMLDivElement>('.pdf-image-container')
       : undefined
     this.div = container || undefined
+    window.addEventListener('keydown', this.lensKeyDown)
+    window.addEventListener('keyup', this.lensKeyUp)
     void this.loadRenderingJobs()
   },
+  beforeUnmount() {
+    window.removeEventListener('keydown', this.lensKeyDown)
+    window.removeEventListener('keyup', this.lensKeyUp)
+  },
   methods: {
+    lensKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Control' || this.lensCtrlDown) return
+      this.lensCtrlDown = true
+      if (this.lastMouseX !== undefined && this.lastMouseY !== undefined)
+        this.updateLens(this.lastMouseX, this.lastMouseY)
+    },
+    lensKeyUp(e: KeyboardEvent) {
+      if (e.key !== 'Control') return
+      this.lensCtrlDown = false
+      this.lensVisible = false
+    },
+    updateLens(clientX: number, clientY: number) {
+      this.lastMouseX = clientX
+      this.lastMouseY = clientY
+      if (!this.lensCtrlDown || !this.div) {
+        this.lensVisible = false
+        return
+      }
+      const image = Array.from(this.div.querySelectorAll<HTMLImageElement>('.pdf-image'))
+        .find((candidate) => {
+          const bounds = candidate.getBoundingClientRect()
+          return clientX >= bounds.left && clientX <= bounds.right &&
+            clientY >= bounds.top && clientY <= bounds.bottom
+        })
+      if (!image) {
+        this.lensVisible = false
+        return
+      }
+      const bounds = image.getBoundingClientRect()
+      const imageX = clientX - bounds.left
+      const imageY = clientY - bounds.top
+      const scaledWidth = bounds.width * lensMagnificationFactor
+      const scaledHeight = bounds.height * lensMagnificationFactor
+      const containerBounds = this.div.getBoundingClientRect()
+      this.lensLeft = clientX - containerBounds.left + this.div.scrollLeft - lensDiameter / 2
+      this.lensTop = clientY - containerBounds.top + this.div.scrollTop - lensDiameter / 2
+      this.lensSource = image.currentSrc || image.src
+      this.lensBackgroundSize = `${scaledWidth}px ${scaledHeight}px`
+      this.lensBackgroundPosition =
+        `${lensDiameter / 2 - imageX * lensMagnificationFactor}px ` +
+        `${lensDiameter / 2 - imageY * lensMagnificationFactor}px`
+      this.lensVisible = true
+    },
+    lensMouseMoved(e: MouseEvent) {
+      this.updateLens(e.clientX, e.clientY)
+    },
+    lensMouseLeft() {
+      this.lastMouseX = undefined
+      this.lastMouseY = undefined
+      this.lensVisible = false
+    },
+    mouseMoved(e: MouseEvent) {
+      this.dragMoved(e)
+      this.lensMouseMoved(e)
+    },
+    mouseLeft() {
+      this.dragEnded()
+      this.lensMouseLeft()
+    },
     async loadRenderingJobs() {
       const bookmarks = await this.backend?.getBookmarks('rendering') || []
       for (const bookmark of bookmarks as RenderingBookmark[]) {
@@ -1259,8 +1336,8 @@ export default {
     <q-card-section>
       <div class="pdf-image-container q-pa-md"
         :class="{ 'pdf-spread': twoPageSpread, 'pdf-first-page-right': firstPageRightActive, 'pdf-dragging': dragging }"
-        @scroll="scrolled" @wheel.stop.prevent="mouseWheel" @mousedown="dragStarted" @mousemove="dragMoved"
-        @mouseup="dragEnded" @mouseleave="dragEnded">
+        @scroll="scrolled" @wheel.stop.prevent="mouseWheel" @mousedown="dragStarted"
+        @mouseup="dragEnded" @mouseleave="mouseLeft" @mousemove="mouseMoved">
         <div v-if="isRendering" class="pdf-image-loading">
           <q-circular-progress indeterminate rounded size="3rem" color="light-blue" track-color="grey-4" />
         </div>
@@ -1273,6 +1350,15 @@ export default {
           :src="requested.source" :data-page="requested.page" alt="" @load="imageLoaded" @error="imageLoadFailed" />
         <div v-for="(style, index) in pdfHighlightStyles" :key="`pdf-highlight-${index}`"
           class="pdf-location-highlight" :style="style" />
+        <div v-if="lensVisible && lensSource" class="pdf-lens" :style="{
+          left: `${lensLeft}px`,
+          top: `${lensTop}px`,
+          width: `${lensDiameter}px`,
+          height: `${lensDiameter}px`,
+          backgroundImage: `url('${lensSource}')`,
+          backgroundSize: lensBackgroundSize,
+          backgroundPosition: lensBackgroundPosition,
+        }" />
       </div>
     </q-card-section>
   </q-card>
@@ -1300,6 +1386,16 @@ export default {
   position: absolute;
   z-index: 1;
   background: rgba(255, 235, 59, 0.3);
+  pointer-events: none;
+}
+
+.pdf-lens {
+  position: absolute;
+  z-index: 2;
+  border: 2px solid rgba(0, 0, 0, 0.65);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  background-repeat: no-repeat;
   pointer-events: none;
 }
 
