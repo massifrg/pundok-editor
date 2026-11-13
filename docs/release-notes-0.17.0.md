@@ -34,6 +34,12 @@ This release includes the changes made since version 0.16.0.
   currently shown in the PDF viewer.
 - Improved PDF page loading, rasterization, scrolling, dragging, zoom reset,
   page counts, current-page handling, and refresh behavior.
+- The PDF viewer toolbar was reorganized with clearer page navigation, zoom,
+  reload, bookmark, and menu controls. Zoom can be entered directly, and the
+  viewer validates the allowed zoom range.
+- Added a configurable magnifying lens to the PDF viewer. Hold `Ctrl` while
+  moving over a page to inspect it at higher magnification; lens size and
+  magnification can be adjusted from the viewer menu.
 
 ### PDF preview with ConTeXt+SyncTeX support
 
@@ -65,9 +71,18 @@ This release includes the changes made since version 0.16.0.
 - Pandoc custom reader and writer paths are completed correctly, and the
   resource path now includes resources from the whole project and its
   configurations.
+- Pandoc 3.14 and newer now receive the computed resources' path through
+  `PANDOC_DATA_DIRS`, improving filters, transformations, imports, exports,
+  queries, and inclusion-tree operations.
+- The PDF viewer and custom styles panel are loaded asynchronously to reduce the
+  initial editor load.
 
 ## Fixes
 
+- Added a distinct **convert block action** for converting the current block
+  directly to a selected target type.
+- Fixed search-and-replace filters for custom and other marks, including marks
+  with additional attributes.
 - Fixed note insertion, inline endings before notes, note styling, and indexing
   with an empty selection.
 - Fixed URI decoding for bookmarks and prevented non-PDF files from being
