@@ -38,6 +38,10 @@
           @close-show-message-dialog="message = null" :show-check-updates="message?.source === 'git-no-updates'" :icon="message?.source === 'git-no-updates' ? 'message_info' : undefined
             " :color="message?.source === 'git-no-updates' ? 'secondary' : undefined
             " @check-updates="openGitUpdates" />
+        <KeyboardShortcutsDialog
+          :visible="visibleKeyboardShortcutsDialog"
+          @close="visibleKeyboardShortcutsDialog = false"
+        />
         <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
           :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
         <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
@@ -127,6 +131,7 @@ import NewProjectDialog from './NewProjectDialog.vue';
 import NodeOrMarkContextMenu from './NodeOrMarkContextMenu.vue';
 import PendingOperationDialog from './PendingOperationDialog.vue';
 import ShowMessageDialog from './ShowMessageDialog.vue';
+import KeyboardShortcutsDialog from './KeyboardShortcutsDialog.vue';
 import PundokEditorHeader from './editor/PundokEditorHeader.vue';
 import PundokEditorPdfDrawer from './editor/PundokEditorPdfDrawer.vue';
 import PundokEditorStylesDrawer from './editor/PundokEditorStylesDrawer.vue';
@@ -194,6 +199,7 @@ export default {
     PundokEditorStylesDrawer,
     ContextMenu,
     ShowMessageDialog,
+    KeyboardShortcutsDialog,
     ConfigurationsDialog,
     InputTextDialog,
     SearchAndReplace,
@@ -273,6 +279,7 @@ export default {
       visibleNewProjectDialog: false,
       visibleGitChanges: false,
       visibleGitUpdates: false,
+      visibleKeyboardShortcutsDialog: false,
       gitRepositoryMode: undefined as
         'clone' | 'publish' | 'connect' | undefined,
       swapBlocksWasActive: this.guiProps.swapBlocksActive,
@@ -364,6 +371,7 @@ export default {
       }
     }
     window.addEventListener('beforeunload', this.onClose);
+    window.addEventListener('keydown', this.onKeydown);
   },
 
   beforeUnmount() {
@@ -371,9 +379,16 @@ export default {
     if (this.editor) this.editor.destroy();
     document.removeEventListener('mousemove', this.changeLeftDrawerWidth);
     document.removeEventListener('mouseup', this.stopSettingLeftDrawerWidth);
+    window.removeEventListener('keydown', this.onKeydown);
   },
 
   methods: {
+    onKeydown(event: KeyboardEvent) {
+      if (event.key !== 'F1') return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.visibleKeyboardShortcutsDialog = true;
+    },
     showGitRepository(mode: 'clone' | 'publish' | 'connect') {
       this.gitRepositoryMode = mode;
     },
