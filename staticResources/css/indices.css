@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .pundok-editor {
   --base-index-bg: #e7d49d;
   --shade-index-bg-1: #d6c288;
@@ -58,6 +59,12 @@
   position: relative;
   padding-top: 1.5rem;
 }
+.pundok-editor div.index div.index-term[data-start-letter]::before {
+  font-weight: bold;
+  font-size: 120%;
+  border-bottom: 0.1rem solid black;
+  content: "― " attr(data-start-letter) " ―";
+}
 .pundok-editor div.index div.index-term[id]::before {
   content: 'id: "' attr(id) '"';
   position: absolute;
@@ -66,8 +73,14 @@
   left: 0;
   top: 0; /* tweak to align with first line */
 }
-.pundok-editor div.index div.index-term[id]::before[data-sort-key] {
+.pundok-editor div.index div.index-term[id][data-sort-key]::before {
   content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
+}
+.pundok-editor div.index div.index-term[id][data-sort-key][data-start-letter]::before {
+  content: "― " attr(data-start-letter) ' ― id "' attr(id) '", sorted @' attr(data-sort-key);
+}
+.pundok-editor div.index div.index-term[id][data-start-letter]::before {
+  content: "― " attr(data-start-letter) ' ― id: "' attr(id) '"';
 }
 .pundok-editor div.index span.index-ref {
   border-bottom: 3px solid #dc7200;

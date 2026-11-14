@@ -99,6 +99,13 @@ $color-term-border: #de9d56;
         padding-top: 1.5rem;
       }
 
+      &[data-start-letter]::before {
+        font-weight: bold;
+        font-size: 120%;
+        border-bottom: 0.1rem solid black;
+        content: '― ' attr(data-start-letter) ' ―';
+      }
+
       &[id]::before {
         content: 'id: "' attr(id) '"';
         position: absolute;
@@ -106,9 +113,16 @@ $color-term-border: #de9d56;
         padding: 0.1rem 0.1rem;
         left: 0;
         top: 0; /* tweak to align with first line */
-        &[data-sort-key] {
-          content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
-        }
+      }
+      &[id][data-sort-key]::before {
+        content: 'id "' attr(id) '", sorted @' attr(data-sort-key);
+      }
+      &[id][data-sort-key][data-start-letter]::before {
+        content: '― ' attr(data-start-letter) ' ― id "' attr(id) '", sorted @'
+          attr(data-sort-key);
+      }
+      &[id][data-start-letter]::before {
+        content: '― ' attr(data-start-letter) ' ― id: "' attr(id) '"';
       }
     }
 
