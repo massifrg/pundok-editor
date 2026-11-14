@@ -45,14 +45,24 @@ export const SHORTCUT_KEYS: Record<string, ShortcutKey> = {
       'replace the selection and then select the next item (in search and replace)',
   },
 
-  INCREMENT: {
+  INCREMENT_ONE: {
     shortcut: 'Alt-+',
     description: 'increment a value',
   },
 
-  DECREMENT: {
+  DECREMENT_ONE: {
     shortcut: 'Alt--',
     description: 'decrement a value',
+  },
+
+  INCREMENT_TEN: {
+    shortcut: 'Shift-Alt-+',
+    description: 'increment a value more',
+  },
+
+  DECREMENT_TEN: {
+    shortcut: 'Shift-Alt--',
+    description: 'decrement a value more',
   },
 
   SET_LINEBREAK: {

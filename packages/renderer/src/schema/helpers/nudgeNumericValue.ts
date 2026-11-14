@@ -3,7 +3,7 @@ const KNOWN_UNITS = ["mm", "pt", "%"]
 function incrementValue(
   value: string,
   decimals_part: string,
-  sign: 1 | -1,
+  sign: 1 | -1 | 10 | -10,
   increment?: number
 ): string {
   const numeric_value = parseFloat(value)
@@ -16,7 +16,7 @@ function incrementValue(
   return (numeric_value + sign * inc).toFixed(decimals)
 }
 
-export function nudgeNumericValue(s: string, sign: 1 | -1, increment?: number, units?: string[]) {
+export function nudgeNumericValue(s: string, sign: 1 | -1 | 10 | -10, increment?: number, units?: string[]) {
   let modified = s.replace(/^[+-]?\d+([.]\d+)?$/, (v, dec) => incrementValue(v, dec, sign, increment))
   if (s === modified) {
     const units_re = (units || KNOWN_UNITS).join('|')
@@ -26,13 +26,15 @@ export function nudgeNumericValue(s: string, sign: 1 | -1, increment?: number, u
       return incremented ? incremented + unit : match
     })
   }
+  if (s === modified)
+    modified = s.replace(/[+-]?\d+([.]\d+)?/, (v, dec) => incrementValue(v, dec, sign, increment))
   return s != modified ? modified : undefined
 }
 
 export function nudgeNumericValueAtIndex(
   s: string,
   index: number,
-  sign: 1 | -1,
+  sign: 1 | -1 | 10 | -10,
   increment?: number
 ): { start: number, end: number, value: string } | undefined {
   let start = -1

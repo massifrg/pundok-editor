@@ -160,8 +160,10 @@ export const RawBlock = Node.create<RawBlockOptions>({
       },
 
       [SK.CONVERT_TO_RAWBLOCK]: () => this.editor.commands.convertToRawBlock(),
-      [SK.INCREMENT]: () => this.editor.commands.nudgeNumericValue(1),
-      [SK.DECREMENT]: () => this.editor.commands.nudgeNumericValue(-1),
+      [SK.INCREMENT_ONE]: () => this.editor.commands.nudgeNumericValue(1),
+      [SK.DECREMENT_ONE]: () => this.editor.commands.nudgeNumericValue(-1),
+      [SK.INCREMENT_TEN]: () => this.editor.commands.nudgeNumericValue(10),
+      [SK.DECREMENT_TEN]: () => this.editor.commands.nudgeNumericValue(-10),
     };
   },
 
