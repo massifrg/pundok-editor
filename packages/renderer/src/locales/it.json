@@ -214,6 +214,10 @@
   },
   "attributesEditor": {
     "attribute": "attributo \"{name}\"",
+    "everyWord": "ogni parola",
+    "exactText": "testo esatto",
+    "first2Words": "prime 2 parole",
+    "first3Words": "prime 3 parole",
     "button": {
       "cancel": "Annulla",
       "change": "Cambia"
@@ -257,6 +261,12 @@
     },
     "resetAllAttributes": "ripristina tutti gli attributi",
     "resetAttribute": "ripristina {name}",
+    "recordsPerPage": "record per pagina",
+    "selectedSources": "fonti selezionate: {sources}",
+    "sourceDocumentTooltip": "cerca tra i termini dell'indice definiti in questo documento (anche nei metadati)",
+    "sourceJsonTooltip": "cerca nel file JSON {filename}",
+    "sourceProjectTooltip": "cerca tra i termini dell'indice definiti in questo progetto",
+    "sources": "fonti",
     "start": {
       "description": "primo numero dell'elenco"
     },

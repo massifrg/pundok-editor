@@ -215,6 +215,10 @@
   },
   "attributesEditor": {
     "attribute": "attribute \"{name}\"",
+    "everyWord": "every word",
+    "exactText": "exact text",
+    "first2Words": "first 2 words",
+    "first3Words": "first 3 words",
     "button": {
       "cancel": "Cancel",
       "change": "Change"
@@ -258,6 +262,12 @@
     },
     "resetAllAttributes": "reset all attributes",
     "resetAttribute": "reset {name}",
+    "recordsPerPage": "records per page",
+    "selectedSources": "selected sources: {sources}",
+    "sourceDocumentTooltip": "search among the index terms defined in this document (in metadata too)",
+    "sourceJsonTooltip": "search in {filename} JSON file",
+    "sourceProjectTooltip": "search among the index terms defined in this project",
+    "sources": "sources",
     "start": {
       "description": "list start number"
     },

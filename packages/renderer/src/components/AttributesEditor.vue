@@ -764,7 +764,7 @@ export default {
     indexSources(): IndexSource[] {
       return [{
         type: 'json-file',
-        filename: (this.indexNameAttr() || 'index') + '.json'
+        filename: `${this.indexName || DEFAULT_INDEX_NAME}.json`
       }]
     },
     changeSearchTextVariant(variant: SearchTextVariant) {

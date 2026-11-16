@@ -16,7 +16,7 @@
         color="primary"
         size="sm"
         auto-close
-        :label="optionVariant"
+        :label="searchTextVariantLabel(optionVariant)"
       >
         <q-list>
           <q-item
@@ -25,7 +25,7 @@
             clickable
             @click="setVariant(variant)"
           >
-            <q-item-section>{{ variant }}</q-item-section>
+            <q-item-section>{{ searchTextVariantLabel(variant) }}</q-item-section>
           </q-item>
         </q-list>
       </q-btn-dropdown>
@@ -88,6 +88,7 @@
     :rows="results"
     :columns="columns"
     :loading="pendingSearch"
+    :rows-per-page-label="String($t('attributesEditor.recordsPerPage'))"
     row-key="id"
   >
     <template v-slot:loading>
@@ -258,7 +259,9 @@ export default {
       );
     },
     labelEveryWord() {
-      return this.optionEveryWord ? 'every word' : 'exact text';
+      return this.optionEveryWord
+        ? String(this.$t('attributesEditor.everyWord'))
+        : String(this.$t('attributesEditor.exactText'));
     },
     titleEveryWord() {
       return this.optionEveryWord
@@ -295,9 +298,7 @@ export default {
   methods: {
     sourceLabel(source?: IndexSource): string {
       if (!source) {
-        return this.selectedSources.length > 1
-          ? `${this.selectedSources.length} sources`
-          : this.sourceLabel(this.selectedSources[0]);
+        return String(this.$t('attributesEditor.sources'));
       }
       const sourceType = source.type;
       switch (sourceType) {
@@ -311,6 +312,15 @@ export default {
         default:
           return sourceType;
       }
+    },
+    searchTextVariantLabel(variant: SearchTextVariant): string {
+      return String(
+        this.$t(
+          variant === 'first-2-words'
+            ? 'attributesEditor.first2Words'
+            : 'attributesEditor.first3Words',
+        ),
+      );
     },
     sourceIcon(source?: IndexSource) {
       const sourceType = (source || this.currentSources[0]).type;
@@ -330,17 +340,25 @@ export default {
         const selected = this.selectedSources.map((selectedSource) => {
           return this.sourceLabel(selectedSource);
         });
-        return `selected sources: ${selected.join(', ')}`;
+        return String(
+          this.$t('attributesEditor.selectedSources', {
+            sources: selected.join(', '),
+          }),
+        );
       }
       const sourceType = (source || this.currentSources[0]).type;
       switch (sourceType) {
         case 'document':
-          return 'search among the index terms defined in this document (in metadata too)';
+          return String(this.$t('attributesEditor.sourceDocumentTooltip'));
         case 'project':
-          return 'search among the index terms defined in this project';
+          return String(this.$t('attributesEditor.sourceProjectTooltip'));
         case 'json-file':
           const s = (source || this.currentSources[0]) as IndexSourceJsonFile;
-          return `search in an external "${this.sourceLabel(s) || 'index'}" JSON file with { "id": "...", "text": "..." }`;
+          return String(
+            this.$t('attributesEditor.sourceJsonTooltip', {
+              filename: `indices/${s.filename}`,
+            }),
+          );
         default:
           return undefined;
       }
