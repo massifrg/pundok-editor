@@ -336,7 +336,7 @@ export function attrsForConversionTo(
 }
 
 function removeClass(classes: string[], className: string): string[] {
-  return classes.filter((c) => c === className);
+  return classes.filter((c) => c !== className);
 }
 
 function setClass(classes: string[], className: string): string[] {
