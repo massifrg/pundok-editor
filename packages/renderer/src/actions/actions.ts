@@ -527,7 +527,6 @@ export interface SearchIndexTermActionProps {
 
 export const ACTION_AUTO_SET_INDEX_TERM_ID: BaseActionForNodeOrMark = {
   name: 'auto-set-index-term-id',
-  label: 'search and set the id of the index term automatically',
   icon: 'index_auto_id',
   canDo: (editor, action) => editor.can().setIndexTermAutoId(
     (action?.props as SearchIndexTermActionProps)?.searchTextVariant),
@@ -540,7 +539,6 @@ export const ACTION_AUTO_SET_INDEX_TERM_ID: BaseActionForNodeOrMark = {
 
 export const ACTION_AUTO_SET_INDEX_TERMS_IDS: BaseActionForNodeOrMark = {
   name: 'auto-set-index-terms-ids',
-  label: 'search and set the ids of the index terms automatically',
   icon: 'index_auto_id',
   canDo: (editor, action) => editor.can().setIndexTermsAutoIds(
     (action?.props as SearchIndexTermActionProps)?.searchTextVariant),

@@ -8,6 +8,7 @@ import {
     fillAvailableAction,
     executeEditorAction
 } from '../src/actions/helpers'
+import { ACTION_DESCRIPTORS } from '../../common/src/actionsDescriptors'
 
 type Bookmark = { pos: number }
 
@@ -40,6 +41,14 @@ describe('actions helpers', () => {
         const descriptor: any = { name: 'add-mark', labelKey: 'actions.addMark' }
         const translated = labelForAction(descriptor, undefined, (key: string) => `translated:${key}`)
         expect(translated).toBe('translated:actions.addMark')
+    })
+
+    it.each([
+        ['auto-set-index-term-id', 'actions.autoSetIndexTermId'],
+        ['auto-set-index-terms-ids', 'actions.autoSetIndexTermsIds'],
+    ])('translates index-term ID action labels', (action, key) => {
+        expect(labelForAction(ACTION_DESCRIPTORS[action], undefined, (translationKey: string) => `translated:${translationKey}`))
+            .toBe(`translated:${key}`)
     })
 
     it('translates conversion action labels and tooltips with the target block name', () => {
