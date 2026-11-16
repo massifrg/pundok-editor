@@ -142,6 +142,12 @@ export const SHORTCUT_KEYS: Record<string, ShortcutKey> = {
       "open the attributes' editor of the inner Mark or Node having attributes",
   },
 
+  EDIT_CUSTOM_STYLE: {
+    shortcut: 'Alt-s',
+    description:
+      "open the attributes' editor to change the custom style",
+  },
+
   INCLUDE_DOC: {
     shortcut: 'Alt-i',
     description: 'mark a Div as a document-inclusion Div',

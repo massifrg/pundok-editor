@@ -28,6 +28,7 @@ import {
   MARK_NAME_SPAN,
   SetAlternativeActionProps,
   SK,
+  isCustomizableWithStyle,
 } from '../../common';
 import {
   DocState,
@@ -264,7 +265,11 @@ export const PundokEditorUtilsExtension =
                   sel.from,
                   sel.to,
                   state.doc,
-                ).find((mr) => editableAttrsForNodeOrMark(mr.mark).length > 0);
+                ).find(
+                  (mr) =>
+                    editableAttrsForNodeOrMark(mr.mark).length > 0 &&
+                    (!props?.selectMark || props.selectMark(mr.mark)),
+                );
                 if (markRange) {
                   nodeOrMark = {
                     name: markRange.mark.type.name,
@@ -281,7 +286,10 @@ export const PundokEditorUtilsExtension =
                     if (editableAttrsForNodeOrMark(node).length > 0) {
                       if (
                         selectNode(node) &&
-                        !isParagraphOfIndexTerm(node, $from.node(depth - 1))
+                        (props?.allowParagraphOfIndexTerm ||
+                          !isParagraphOfIndexTerm(node, $from.node(depth - 1))) &&
+                        !(props?.skipParagraph &&
+                          node.type.name === NODE_NAME_PARAGRAPH)
                       ) {
                         const start = sel.$from.start(depth) - 1;
                         nodeOrMark = {
@@ -424,7 +432,15 @@ export const PundokEditorUtilsExtension =
           alternative: n,
         } as SetAlternativeActionProps);
       return {
-        [SK.EDIT_ATTRIBUTES]: () => this.editor.commands.editAttributes(),
+        [SK.EDIT_ATTRIBUTES]: () =>
+          this.editor.commands.editAttributes({ skipParagraph: true }),
+        [SK.EDIT_CUSTOM_STYLE]: () =>
+          this.editor.commands.editAttributes({
+            allowParagraphOfIndexTerm: true,
+            selectMark: (mark) => isCustomizableWithStyle(mark),
+            selectNode: (node) => isCustomizableWithStyle(node),
+            tab: 'customStyle',
+          }),
         [SK.SET_ALTERNATIVE_0]: () => altCmd(0),
         [SK.SET_ALTERNATIVE_1]: () => altCmd(1),
         [SK.SET_ALTERNATIVE_2]: () => altCmd(2),

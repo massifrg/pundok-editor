@@ -7,7 +7,7 @@ import {
 } from './config';
 import { DocumentContext, CxDocument } from './document';
 import { FeedbackMessage } from "./feedback"
-import { Attrs, Node as ProsemirrorNode } from "@tiptap/pm/model"
+import { Attrs, Mark as ProsemirrorMark, Node as ProsemirrorNode } from "@tiptap/pm/model"
 import { ViewerSetup } from './viewer';
 import { DocumentFormat } from './documentFormat';
 
@@ -125,6 +125,9 @@ export interface EditAttributesActionProps extends ActionProps {
   tab?: string,
   action?: ActionNameWithProps,
   selectNode?: (node: ProsemirrorNode) => boolean,
+  selectMark?: (mark: ProsemirrorMark) => boolean,
+  skipParagraph?: boolean,
+  allowParagraphOfIndexTerm?: boolean,
 }
 
 export interface MetaMapTextActionProps extends ActionProps {
