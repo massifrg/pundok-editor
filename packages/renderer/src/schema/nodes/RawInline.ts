@@ -2,7 +2,7 @@ import { mergeAttributes, Node } from '@tiptap/core';
 import { DEFAULT_RAW_INLINE_FORMAT, NODE_NAME_RAW_INLINE, SK } from '../../common';
 import { Mark, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { Command, NodeSelection } from '@tiptap/pm/state';
-import { getEditorConfiguration, marksEnding, marksStarting, textNode } from '../helpers';
+import { getDocState, marksEnding, marksStarting, textNode } from '../helpers';
 import { intersection } from 'lodash-es';
 import { asTiptapCommand } from '../helpers';
 
@@ -126,8 +126,11 @@ export function insertRawInlineCommand(rawformat?: string, rawtext?: string | st
     const raw2: string | undefined = isarray ? rawtext[1] : undefined;
     const doc = state.doc;
     if (dispatch) {
-      const config = getEditorConfiguration(state);
-      const format = rawformat || config?.defaultRawFormat || DEFAULT_RAW_INLINE_FORMAT;
+      const docState = getDocState(state);
+      const format = rawformat
+        || docState?.project?.computedConfig?.defaultRawFormat
+        || docState?.configuration?.defaultRawFormat
+        || DEFAULT_RAW_INLINE_FORMAT;
 
       // the first RawInline to be inserted
       let rawInline1: ProsemirrorNode | null;

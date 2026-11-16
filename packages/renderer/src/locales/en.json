@@ -38,7 +38,7 @@
       "TOGGLE_FIGURE": "create a Figure around the current selection or paragraph",
       "TOGGLE_PLAIN": "convert a Para into a Plain and vice versa",
       "BREAK_PLAIN": "start a new paragraph",
-      "CONVERT_TO_RAWBLOCK": "convert a CodeBlock into a RawBlock and vice versa",
+      "CONVERT_TO_RAWBLOCK": "convert the current block into a RawBlock",
       "TOGGLE_RAWINLINE": "convert the current selection into a RawInline",
       "TOGGLE_LINK": "mark the current selection as a Link",
       "INSERT_ANCHOR": "insert an anchor",

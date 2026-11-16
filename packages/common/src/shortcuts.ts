@@ -102,7 +102,7 @@ export const SHORTCUT_KEYS: Record<string, ShortcutKey> = {
 
   CONVERT_TO_RAWBLOCK: {
     shortcut: 'Alt-Shift-w',
-    description: 'convert a CodeBlock into a RawBlock and vice versa',
+    description: 'convert the current block into a RawBlock',
   },
 
   TOGGLE_RAWINLINE: {

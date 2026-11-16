@@ -11,13 +11,14 @@ import {
   NODE_NAME_CODE_BLOCK,
   NODE_NAME_PANDOC_TABLE,
   NODE_NAME_PARAGRAPH,
+  NODE_NAME_PLAIN,
   NODE_NAME_RAW_BLOCK,
   NODE_NAME_RAW_INLINE,
   SK
 } from '../../common';
-import { getEditorConfiguration } from '..';
 import {
   depthOfInnerNodeType,
+  getDocState,
   innerBlockDepth,
   textNode,
 } from '../helpers';
@@ -277,7 +278,8 @@ const insertRawBlockCommand = (
     const insertPos2 = insertPos1 + selectedNode.nodeSize;
     if (dispatch) {
       // console.log(selectedNode);
-      const config = getEditorConfiguration(state);
+      const docState = getDocState(state);
+      const config = docState?.project?.computedConfig || docState?.configuration
       const format =
         rawformat ||
         config?.defaultRawFormat ||
@@ -301,7 +303,8 @@ const insertRawBlockCommand = (
   // console.log(`depth1: ${depth1}, depth2: ${depth2}`);
   if (depth1 < 0 || depth2 < 0) return false;
   if (dispatch) {
-    const config = getEditorConfiguration(state);
+    const docState = getDocState(state);
+    const config = docState?.project?.computedConfig || docState?.configuration
     const depth = Math.min(depth1, depth2);
     const pos1 = $from.start(depth) - 1;
     const pos2 = $to.start(depth) + $to.node(depth).nodeSize - 1;
@@ -377,22 +380,27 @@ const convertToRawBlockCommand = (defaultFormat: string | undefined, format?: st
     const { empty, $from } = state.selection;
     if (!empty) return false;
     const depth = depthOfInnerNodeType($from, [
-      NODE_NAME_RAW_BLOCK,
+      // NODE_NAME_RAW_BLOCK,
       NODE_NAME_CODE_BLOCK,
+      NODE_NAME_PARAGRAPH,
+      NODE_NAME_PLAIN,
     ]);
     if (!depth) return false;
     if (dispatch) {
       const node = $from.node(depth);
-      const config = getEditorConfiguration(state);
+      // const nodeTypeName = node.type.name
+      const docState = getDocState(state);
+      const config = docState?.project?.computedConfig || docState?.configuration
       const currentFormat =
         node.attrs?.format ||
         node.attrs?.kv?.format ||
         config?.defaultRawFormat ||
         defaultFormat ||
         DEFAULT_RAW_BLOCK_FORMAT;
-      const rawBlock = state.schema.nodes[NODE_NAME_RAW_BLOCK].create(
+      const schema = state.schema
+      const rawBlock = schema.nodes[NODE_NAME_RAW_BLOCK].create(
         { format: format || currentFormat },
-        node.content,
+        schema.text(node.textContent),
       );
       const sel = NodeSelection.create(state.doc, $from.before(depth));
       dispatch(state.tr.setSelection(sel).replaceSelectionWith(rawBlock));
