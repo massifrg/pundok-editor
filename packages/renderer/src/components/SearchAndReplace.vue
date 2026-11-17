@@ -61,8 +61,13 @@
       <q-card-section v-if="showFields">
         <q-card-section horizontal>
           <q-input autofocus class="search-and-replace-textfield q-mx-xs" :model-value="searchInput"
-            :label="searchLabel" stack-label @update:model-value="updateSearchInput" @keypress="keypressed"
-            @keyup="keyup">
+            :label="searchLabel" stack-label :error="invalidSearchInput"
+            :error-message="invalidSearchInput ? (cssMode ? $t('search.invalidCssSelector') : $t('search.invalidRegex')) : undefined"
+            @update:model-value="updateSearchInput" @keypress="keypressed" @keyup="keyup">
+            <template v-if="invalidSearchInput" #error>
+              <q-icon name="alert_circle" size="xs" class="q-mr-xs" />
+              {{ cssMode ? $t('search.invalidCssSelector') : $t('search.invalidRegex') }}
+            </template>
             <template #append>
               <q-btn-dropdown v-if="searchHistory.length" flat dense round icon="load_predefined"
                 :title="$t('search.loadSearchHistory')">
@@ -205,7 +210,9 @@ import {
   SelectedNodeOrMark,
   getEditorProject,
   getMatchHighlights,
-  nodeOrMarkToPandocName
+  nodeOrMarkToPandocName,
+  validCssSelector,
+  validRegExp
 } from '../schema/helpers';
 import { mapState } from 'pinia';
 import { useActions, useBackend } from '../stores';
@@ -427,6 +434,12 @@ export default {
         return total > 0 && `${which}${total}` || '0'
       }
       return ''
+    },
+    invalidSearchInput(): boolean {
+      if (!this.searchInput) return false
+      return this.cssMode
+        ? !validCssSelector(this.searchInput)
+        : this.optionRegex && !validRegExp(this.searchInput)
     },
     replacementProgressLabel() {
       const progress = this.replaceProgress

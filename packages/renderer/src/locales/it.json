@@ -928,6 +928,8 @@
       "noFilter": "nessun filtro"
     },
     "filterByStyles": "filtra in base agli stili",
+    "invalidCssSelector": "selettore CSS non valido",
+    "invalidRegex": "espressione regolare non valida",
     "label": {
       "cssSelector": "selettore(i) CSS",
       "foundCount": "nessuna occorrenza di \"{what}\" trovata | trovata 1 occorrenza di \"{what}\" | trovate {count} occorrenze di \"{what}\"",

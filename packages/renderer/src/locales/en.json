@@ -929,6 +929,8 @@
       "noFilter": "no filter"
     },
     "filterByStyles": "filter searched text styles",
+    "invalidCssSelector": "invalid CSS selector",
+    "invalidRegex": "invalid regular expression",
     "label": {
       "cssSelector": "CSS selector(s)",
       "foundCount": "no occurrencies of \"{what}\" found | found 1 occurrency of \"{what}\" | found {count} occurrencies of \"{what}\"",

@@ -73,6 +73,16 @@ export interface CssSelectOptions {
   sort: boolean;
 }
 
+export function validCssSelector(selector: string): boolean {
+  if (!selector) return true
+  try {
+    parse(selector)
+    return true
+  } catch {
+    return false
+  }
+}
+
 interface NodeRef {
   node: Node;
   pos: number;

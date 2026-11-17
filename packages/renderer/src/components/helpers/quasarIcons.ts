@@ -323,6 +323,7 @@ export const icons: Record<string, string> = {
   add_document: mdiFileDocumentPlus,
   add_action: mdiPlus,
   alert_circle: mdiAlertCircle,
+  error: mdiAlertCircle,
   align_default: mdiFormatColumns,
   align_left: mdiFormatAlignLeft,
   align_center: mdiFormatAlignCenter,

@@ -3,6 +3,7 @@ import { EditorState } from '@tiptap/pm/state';
 import type { AddableMark } from '../src/components/helpers/addableMark';
 import { rangeHasAddableMark } from '../src/components/helpers/searchMarkFilter';
 import { schema } from '../src/schema/helpers/PandocSchema';
+import { validCssSelector } from '../src/schema/helpers/cssSelection';
 import { SearchQuery } from '../src/schema/helpers/query';
 
 const customStyle = (name: string): AddableMark => ({
@@ -39,5 +40,15 @@ describe('search and replace mark filters', () => {
     });
 
     expect(query.findNext(state)?.from).toBe(10);
+  });
+});
+
+describe('CSS selector validation', () => {
+  it('accepts selectors that parse successfully', () => {
+    expect(validCssSelector('paragraph > emph')).toBe(true);
+  });
+
+  it('rejects selectors that do not compile', () => {
+    expect(validCssSelector('paragraph > [')).toBe(false);
   });
 });
