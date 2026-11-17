@@ -139,6 +139,22 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog :model-value="!!replaceProgress" persistent>
+    <q-card style="min-width: 24rem">
+      <q-card-section>
+        <div>{{ replacementProgressLabel }}</div>
+        <q-linear-progress v-if="replaceProgress && !replaceProgress.finished" class="q-mt-md"
+          :value="replaceProgress.current / replaceProgress.total" />
+      </q-card-section>
+      <q-card-actions align="right">
+        <template v-if="replaceProgress && !replaceProgress.finished">
+          <q-btn flat :label="$t('search.cancelReplacement')" @click="cancelReplacement" />
+          <q-btn flat :label="$t('search.stopReplacement')" color="primary" @click="stopReplacement" />
+        </template>
+        <q-btn v-else flat :label="$t('search.replacementOk')" color="positive" @click="finishReplacement" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
@@ -213,6 +229,8 @@ type DialogPosition = "top" | "bottom" | "standard" | "right" | "left" | undefin
 type NodeOrMarkToLabel = (doc: ProsemirrorNode, nom: SelectedNodeOrMark | undefined, key: string) => string | undefined
 const SELECTED_LABEL_MAX_LENGTH = 64
 export const SEARCH_HISTORY_LIMIT = 20
+const REPLACE_ALL_PROGRESS_THRESHOLD = 20
+const waitForUi = () => new Promise<void>(resolve => setTimeout(resolve, 0))
 
 type SearchHistoryEntry = {
   type: 'text' | 'css'
@@ -297,6 +315,14 @@ export default {
       actionsOnReplace: [] as ActionNameWithProps[],
       searchHistory: [] as SearchHistoryEntry[],
       suppressHistoryRecording: false,
+      replaceProgress: undefined as {
+        current: number
+        total: number
+        finished: boolean
+        stopped: boolean
+      } | undefined,
+      replaceCancelRequested: false,
+      replaceStopRequested: false,
     };
   },
   computed: {
@@ -401,6 +427,19 @@ export default {
         return total > 0 && `${which}${total}` || '0'
       }
       return ''
+    },
+    replacementProgressLabel() {
+      const progress = this.replaceProgress
+      if (!progress) return ''
+      if (!progress.finished) {
+        return this.$t('search.replacingItem', {
+          current: progress.current + 1,
+          total: progress.total
+        })
+      }
+      return progress.stopped
+        ? this.$t('search.replacementStopped', { current: progress.current, total: progress.total })
+        : this.$t('search.replacementFinished', { total: progress.total })
     },
     expandIcon() {
       return this.showFields ? 'collapse_vertical' : 'expand_vertical'
@@ -716,6 +755,11 @@ export default {
       this.nextFound(true)
     },
     replaceAll() {
+      const total = this.foundCount
+      if (total > REPLACE_ALL_PROGRESS_THRESHOLD) {
+        void this.replaceAllWithProgress(total)
+        return
+      }
       // if it's just a text replacement without actions, call replaceAll(), because it's faster
       if (!this.cssMode && this.actionsOnReplace.length === 0) {
         this.editor.chain().replaceAll().focus().run()
@@ -734,6 +778,59 @@ export default {
         }
         this.editor.commands.focus()
       }
+    },
+    async replaceAllWithProgress(total: number) {
+      this.replaceProgress = {
+        current: 0,
+        total,
+        finished: false,
+        stopped: false,
+      }
+      this.replaceCancelRequested = false
+      this.replaceStopRequested = false
+      await this.$nextTick()
+      await waitForUi()
+
+      if (this.foundIndex < 0 && !this.nextFound()) {
+        this.replaceProgress.finished = true
+        this.replaceProgress.stopped = true
+        return
+      }
+
+      const startPos = this.editor.state.selection.$anchor.pos
+      let pos = startPos
+      let cycledAround = false
+      while (this.replaceProgress.current < total) {
+        if (this.replaceCancelRequested || this.replaceStopRequested) break
+
+        this.replaceSelected()
+        this.replaceProgress.current++
+        await this.$nextTick()
+        await waitForUi()
+
+        if (this.replaceProgress.current >= total || this.replaceCancelRequested || this.replaceStopRequested)
+          break
+        if (!this.nextFound()) break
+
+        pos = this.editor.state.selection.$anchor.pos
+        if (!cycledAround) cycledAround = pos <= startPos
+        if (cycledAround && pos >= startPos) break
+      }
+
+      this.replaceProgress.stopped = this.replaceCancelRequested || this.replaceStopRequested
+      this.replaceProgress.finished = true
+      this.editor.commands.focus()
+      await this.$nextTick()
+      if (this.replaceCancelRequested) this.replaceProgress = undefined
+    },
+    cancelReplacement() {
+      this.replaceCancelRequested = true
+    },
+    stopReplacement() {
+      this.replaceStopRequested = true
+    },
+    finishReplacement() {
+      this.replaceProgress = undefined
     },
     baseMarksAndCustomStyles(selected?: string[]): AddableMark[] {
       const editor = this.editor
