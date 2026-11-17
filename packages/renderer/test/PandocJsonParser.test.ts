@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
 
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import testsuite from '../../../tests/testsuite.json';
 import {
   PandocJsonParser,
   PandocJsonParserError,
@@ -14,10 +13,6 @@ import {
 import { nodeToPandocJsonString } from '../src/schema/helpers/PandocJsonExporter';
 import { createDocumentNodeFromJson } from '../src/schema/helpers/createDocument';
 import { schema } from '../src/schema/helpers/PandocSchema';
-
-const testsuite = JSON.parse(
-  readFileSync(resolve(process.cwd(), 'tests/testsuite.json'), 'utf8'),
-);
 
 function testsuiteCopy() {
   return JSON.parse(JSON.stringify(testsuite));
