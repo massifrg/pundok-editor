@@ -220,6 +220,7 @@ import {
   ACTION_GET_PROJECT,
   ACTION_LOWERCASE,
   ACTION_REPLACE_AND_SELECT_NEXT,
+  ACTION_SHOW_SEARCH_DIALOG,
   ACTION_SELECT_NEXT,
   ACTION_SELECT_PREV,
   ACTION_UPPERCASE,
@@ -483,7 +484,7 @@ export default {
   },
   watch: {
     visible(visible: boolean) {
-      if (!visible || !this.editor) return
+      if (!visible || !this.editor || this.cssMode) return
 
       const { from, to } = this.editor.state.selection
       if (from === to) return
@@ -515,7 +516,9 @@ export default {
       this.startSearch()
     },
     lastAction(action) {
-      if (action.name === ACTION_SELECT_PREV.name)
+      if (action.name === ACTION_SHOW_SEARCH_DIALOG.name)
+        this.optionSearchOnly = action.props?.searchOnly ?? true
+      else if (action.name === ACTION_SELECT_PREV.name)
         this.prevFound()
       else if (action.name === ACTION_SELECT_NEXT.name)
         this.nextFound()

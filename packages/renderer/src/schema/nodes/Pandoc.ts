@@ -468,6 +468,10 @@ export const Pandoc = Document.extend<PandocOptions>({
       [SK.SHOW_SEARCH_DIALOG]: () => {
         setActionShowSearchDialog(this.editor.state)
         return true
+      },
+      [SK.SHOW_REPLACE_DIALOG]: () => {
+        setActionShowSearchDialog(this.editor.state, false)
+        return true
       }
     }
   }

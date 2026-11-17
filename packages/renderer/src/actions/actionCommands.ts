@@ -131,10 +131,15 @@ export function setActionShowResultMessage(
 
 export function setActionShowSearchDialog(
   stateOrKey: EditorState | EditorKeyType,
+  searchOnly = true,
 ) {
   const editorKey = editorKeyFrom(stateOrKey);
   if (editorKey)
-    useActions().setAction({ ...ACTION_SHOW_SEARCH_DIALOG, editorKey });
+    useActions().setAction({
+      ...ACTION_SHOW_SEARCH_DIALOG,
+      editorKey,
+      props: { searchOnly },
+    });
 }
 
 export function setActionEditAttributes(

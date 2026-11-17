@@ -155,6 +155,11 @@ export const SHORTCUT_KEYS: Record<string, ShortcutKey> = {
 
   SHOW_SEARCH_DIALOG: {
     shortcut: 'Mod-f',
+    description: 'open the search dialog',
+  },
+
+  SHOW_REPLACE_DIALOG: {
+    shortcut: 'Mod-h',
     description: 'open the search and replace dialog',
   },
 
