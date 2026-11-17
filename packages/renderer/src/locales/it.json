@@ -6,6 +6,7 @@
     "title": "Scorciatoie da tastiera",
     "shortcut": "Scorciatoia",
     "meaning": "Significato",
+    "search": "Filtra scorciatoie",
     "close": "Chiudi",
     "keys": {
       "Alt": "Alt",
@@ -48,7 +49,8 @@
       "EDIT_ATTRIBUTES": "apri l'editor degli attributi del Mark o Node più interno",
       "EDIT_CUSTOM_STYLE": "apri l'editor degli attributi per modificare lo stile personalizzato",
       "INCLUDE_DOC": "assegna a un Div il ruolo di inclusione di un documento",
-      "SHOW_SEARCH_DIALOG": "apri il dialogo di ricerca e sostituzione",
+      "SHOW_SEARCH_DIALOG": "apri il dialogo di ricerca",
+      "SHOW_REPLACE_DIALOG": "apri il dialogo di ricerca e sostituzione",
       "DUPLICATE_NODE": "duplica il nodo corrente o selezionato",
       "UNWRAP_NODE": "rimuovi il contenitore del nodo corrente o selezionato",
       "SET_ALTERNATIVE_0": "seleziona l'alternativa 0 in un contesto specifico",

@@ -6,6 +6,7 @@
     "title": "Keyboard shortcuts",
     "shortcut": "Shortcut",
     "meaning": "Meaning",
+    "search": "Filter shortcuts",
     "close": "Close",
     "keys": {
       "Alt": "Alt",
@@ -48,7 +49,8 @@
       "EDIT_ATTRIBUTES": "open the attributes' editor of the inner Mark or Node",
       "EDIT_CUSTOM_STYLE": "open the attributes' editor to change the custom style",
       "INCLUDE_DOC": "mark a Div as a document-inclusion Div",
-      "SHOW_SEARCH_DIALOG": "open the search and replace dialog",
+      "SHOW_SEARCH_DIALOG": "open the search dialog",
+      "SHOW_REPLACE_DIALOG": "open the search and replace dialog",
       "DUPLICATE_NODE": "duplicate the current node",
       "UNWRAP_NODE": "unwrap the current or selected node",
       "SET_ALTERNATIVE_0": "select the \\\"alternative 0\\\" in a particular context.",
