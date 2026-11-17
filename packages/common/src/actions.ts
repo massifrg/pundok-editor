@@ -127,7 +127,6 @@ export interface EditAttributesActionProps extends ActionProps {
   selectNode?: (node: ProsemirrorNode) => boolean,
   selectMark?: (mark: ProsemirrorMark) => boolean,
   skipParagraph?: boolean,
-  allowParagraphOfIndexTerm?: boolean,
 }
 
 export interface MetaMapTextActionProps extends ActionProps {

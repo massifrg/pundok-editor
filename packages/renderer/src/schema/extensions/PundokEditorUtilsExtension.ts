@@ -17,7 +17,6 @@ import {
   NODE_NAME_HEADING,
   NODE_NAME_IMAGE,
   NODE_NAME_INDEX_REF,
-  NODE_NAME_INDEX_TERM,
   NODE_NAME_LINE,
   NODE_NAME_METADATA,
   NODE_NAME_PARAGRAPH,
@@ -286,8 +285,6 @@ export const PundokEditorUtilsExtension =
                     if (editableAttrsForNodeOrMark(node).length > 0) {
                       if (
                         selectNode(node) &&
-                        (props?.allowParagraphOfIndexTerm ||
-                          !isParagraphOfIndexTerm(node, $from.node(depth - 1))) &&
                         !(props?.skipParagraph &&
                           node.type.name === NODE_NAME_PARAGRAPH)
                       ) {
@@ -436,7 +433,6 @@ export const PundokEditorUtilsExtension =
           this.editor.commands.editAttributes({ skipParagraph: true }),
         [SK.EDIT_CUSTOM_STYLE]: () =>
           this.editor.commands.editAttributes({
-            allowParagraphOfIndexTerm: true,
             selectMark: (mark) => isCustomizableWithStyle(mark),
             selectNode: (node) => isCustomizableWithStyle(node),
             tab: 'customStyle',
@@ -512,13 +508,3 @@ const removePlaceholderCommand: Command = (state, dispatch) => {
   }
   return ranges.length > 0;
 };
-
-function isParagraphOfIndexTerm(
-  node: ProsemirrorNode,
-  parent: ProsemirrorNode,
-): boolean {
-  return (
-    parent?.type.name === NODE_NAME_INDEX_TERM &&
-    node?.type.name === NODE_NAME_PARAGRAPH
-  );
-}
