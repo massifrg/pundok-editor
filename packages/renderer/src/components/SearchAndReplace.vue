@@ -810,6 +810,7 @@ export default {
         return
       }
 
+      const initialDoc = this.editor.state.doc
       const startPos = this.editor.state.selection.$anchor.pos
       let pos = startPos
       let cycledAround = false
@@ -830,6 +831,14 @@ export default {
         if (cycledAround && pos >= startPos) break
       }
 
+      if (this.replaceCancelRequested) {
+        const { state, view } = this.editor
+        view.dispatch(
+          state.tr
+            .replaceWith(0, state.doc.content.size, initialDoc.content)
+            .setMeta('addToHistory', false)
+        )
+      }
       this.replaceProgress.stopped = this.replaceCancelRequested || this.replaceStopRequested
       this.replaceProgress.finished = true
       this.editor.commands.focus()
