@@ -317,6 +317,7 @@ export default {
   data() {
     return {
       tab: this.startTab || '',
+      lastTabs: {} as Record<string, string>,
       originalAttrs: {} as Record<string, any>,
       attrs: {} as Record<string, any>,
       originalTextContent: undefined as string | undefined,
@@ -500,14 +501,15 @@ export default {
       this.setTab()
     },
     hide() {
+      this.rememberTab()
       this.tab = undefined
     },
     translated(tabName: string) {
       return tfb(`attributesEditor.tab.${tabName}`, tabName)
     },
     setTab(_tab?: string) {
-      const tab = _tab || this.startTab || this.tab
       const node = this.nodeOrMark
+      const tab = _tab || this.startTab || (node && this.lastTabs[node.type.name]) || this.tab
       if (!isEmpty(tab)) {
         this.tab = tab
       } else if (node && node.type.name === NODE_NAME_INDEX_REF) {
@@ -520,6 +522,12 @@ export default {
         index = index >= 0 ? index : (tabs?.length || 1) - 1
         this.tab = tabs[index]
         console.log(`TAB=${this.tab}, index=${index}`)
+      }
+    },
+    rememberTab() {
+      const node = this.nodeOrMark
+      if (node && this.tab) {
+        this.lastTabs[node.type.name] = this.tab
       }
     },
     rawFormats(): { name: string, description: string, icon: string }[] {
@@ -706,9 +714,11 @@ export default {
           if (indexRef) this.editor?.commands.propagateIdref(indexRef)
         }
       }
+      this.rememberTab();
       this.$emit('closeAttributesEditor');
     },
     doCancel() {
+      this.rememberTab();
       this.$emit('closeAttributesEditor');
     },
     keyup(e: KeyboardEvent) {
