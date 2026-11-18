@@ -32,7 +32,13 @@
                 <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
                   <q-tree ref="tree" v-show="!isLoadingStructure" :nodes="docTree" node-key="label" dense
                     v-model:expanded="expanded" :selected="selected" :selected-color="selectedColor" default-expand-all
-                    @update:selected="updateSelected" @dblclick.stop="openInMainEditor" />
+                    @update:selected="updateSelected" @dblclick.stop="openInMainEditor">
+                    <template v-slot:default-header="prop">
+                      <q-icon v-if="prop.node.icon" class="q-tree__icon q-mr-sm" :name="prop.node.icon" />
+                      <div>{{ prop.node.label }}</div>
+                      <q-tooltip v-if="prop.node.title" class="text-body1">{{ prop.node.title }}</q-tooltip>
+                    </template>
+                  </q-tree>
                 </transition>
               </q-card-section>
             </q-card>
@@ -110,7 +116,7 @@ function docToTreeNode(
   doc: ProjectComponent,
   loaded: LoadedDocument,
 ): QTreeNode & LoadedDocument {
-  const { format, id, sha1, src } = doc;
+  const { format, id, sha1, src, title } = doc;
   const id_or_src = id || src || 'unknown';
   const format_suffix = format ? ` [${format}]` : '';
   const label = `${id_or_src}${format_suffix}`;
@@ -122,7 +128,15 @@ function docToTreeNode(
     icon = 'document_question';
   }
   const selectable = !!sha1;
-  const treeNode: QTreeNode = { label, id, src, format, icon, selectable };
+  const treeNode: QTreeNode = {
+    label,
+    id,
+    src,
+    title,
+    format,
+    icon,
+    selectable,
+  };
   if (doc.children)
     treeNode.children = doc.children.map((c) => docToTreeNode(c, loaded));
   return treeNode;
