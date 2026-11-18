@@ -170,7 +170,8 @@ export function routeLastAction(
         if (host.documentLoading) break;
         if (
           host.visibleProjectStructureDialog &&
-          host.projectStructureEditorKey
+          host.projectStructureEditorKey &&
+          !host.projectStructureEditorMinimized
         )
           setActionCommand(host.projectStructureEditorKey, action, props);
         else host.save(props as DocumentSaveActionProps);
@@ -179,7 +180,8 @@ export function routeLastAction(
         if (host.documentLoading) break;
         if (
           host.visibleProjectStructureDialog &&
-          host.projectStructureEditorKey
+          host.projectStructureEditorKey &&
+          !host.projectStructureEditorMinimized
         )
           setActionCommand(host.projectStructureEditorKey, action, props);
         else
@@ -192,7 +194,8 @@ export function routeLastAction(
         if (host.documentLoading) break;
         if (
           host.visibleProjectStructureDialog &&
-          host.projectStructureEditorKey
+          host.projectStructureEditorKey &&
+          !host.projectStructureEditorMinimized
         )
           setActionCommand(host.projectStructureEditorKey, action, props);
         else

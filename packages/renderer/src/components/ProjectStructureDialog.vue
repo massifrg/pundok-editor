@@ -153,7 +153,11 @@ type ShowMode = 'normal' | 'maximized' | 'minimized';
 
 const ProjectStructureDialog: Component = {
   props: ['mainEditor', 'project', 'visible'],
-  emits: ['close-project-structure-dialog', 'new-editor'],
+  emits: [
+    'close-project-structure-dialog',
+    'new-editor',
+    'editor-minimized',
+  ],
   components: {
     // see https://vuejs.org/guide/components/async.html#async-components
     PundokEditor: defineAsyncComponent(() => import('./PundokEditor.vue')),
@@ -218,6 +222,7 @@ const ProjectStructureDialog: Component = {
       this.reloadStructure();
     },
     visible(visible: boolean) {
+      this.$emit('editor-minimized', visible && this.minimized);
       if (visible) this.$nextTick(this.syncTreeToCurrentDocument);
     },
     expanded(e) {
@@ -407,6 +412,8 @@ const ProjectStructureDialog: Component = {
     },
     setShowMode(showMode: ShowMode) {
       this.showMode = showMode;
+      this.$emit('editor-minimized', this.minimized);
+      if (this.minimized) this.mainEditor?.commands.focus();
     },
     closeDialog(force?: boolean) {
       const subEditor = this.subEditor;
@@ -419,6 +426,7 @@ const ProjectStructureDialog: Component = {
       } else {
         this.selected = null;
         this.loaded = undefined;
+        this.$emit('editor-minimized', false);
         this.$emit('close-project-structure-dialog');
       }
     },

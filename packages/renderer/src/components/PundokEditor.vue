@@ -47,7 +47,8 @@
           :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
         <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
           :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
-          @new-editor="newSubEditor" />
+          @new-editor="newSubEditor"
+          @editor-minimized="projectStructureEditorMinimized = $event" />
         <ProjectConfigEditorDialog :visible="visibleConfigurationEditor" :editor="editor"
           :configuration="docState()?.project?.editorConfig || {}" :project="docState()?.project"
           :project-configurations="docState()?.project?.configurations || []" @save="saveProject"
@@ -276,6 +277,7 @@ export default {
       searchAndReplaceSearchOnly: undefined as boolean | undefined,
       visibleInputTextDialog: false,
       visibleProjectStructureDialog: false,
+      projectStructureEditorMinimized: false,
       visibleConfigurationEditor: false,
       projectStructureEditorKey: undefined as EditorKeyType | undefined,
       visibleNewProjectDialog: false,
