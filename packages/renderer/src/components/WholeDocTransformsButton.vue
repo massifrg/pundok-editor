@@ -16,6 +16,7 @@
   </q-btn-group>
   <TransformationDialog :visible="dialogVisible" :active="remoteWorkInProgress"
     :failed="transformationFailed"
+    :transformation-name="transformationName"
     :log="transformationLog" @close="dialogVisible = false" @stop="stopTransformation" />
 </template>
 
@@ -28,7 +29,11 @@ setupQuasarIcons()
 import { mapState } from 'pinia';
 import { useActions, useBackend } from '../stores';
 import { ACTION_DOCUMENT_TRANSFORM, setActionCommand } from '../actions';
-import { getPandocFilterTransforms, PandocFilterTransform, TransformDocumentActionProps } from '../common';
+import { getPandocFilterTransforms } from '../common';
+import type {
+  PandocFilterTransform,
+  TransformDocumentActionProps,
+} from '../common';
 import { editorKeyFromState, getEditorConfiguration } from '../schema';
 import TransformationDialog from './TransformationDialog.vue';
 
@@ -48,7 +53,21 @@ export default {
   data() {
     return {
       dialogVisible: false,
+      transformationName: undefined as string | undefined,
+      hideDialogTimer: undefined as ReturnType<typeof setTimeout> | undefined,
     }
+  },
+  watch: {
+    remoteWorkInProgress(active: boolean) {
+      if (active || this.transformationFailed || !this.dialogVisible) return;
+      this.hideDialogTimer = setTimeout(() => {
+        this.dialogVisible = false;
+        this.hideDialogTimer = undefined;
+      }, 1000);
+    },
+  },
+  beforeUnmount() {
+    if (this.hideDialogTimer) clearTimeout(this.hideDialogTimer);
   },
   methods: {
     mainClicked() {
@@ -59,14 +78,19 @@ export default {
       }
     },
     transformWith(transform: PandocFilterTransform) {
-      setActionCommand(this.editor.state, ACTION_DOCUMENT_TRANSFORM,
-        { transform } as TransformDocumentActionProps)
+      if (this.hideDialogTimer) clearTimeout(this.hideDialogTimer);
+      this.hideDialogTimer = undefined;
+      this.dialogVisible = true;
+      this.transformationName = transform.name;
+      setActionCommand(this.editor.state, ACTION_DOCUMENT_TRANSFORM, {
+        transform,
+      } as TransformDocumentActionProps);
     },
     async stopTransformation() {
       const editorKey = editorKeyFromState(this.editor?.state);
       if (!editorKey) return;
       await this.backend?.stopTransformation(editorKey);
-    }
+    },
   }
 }
 </script>

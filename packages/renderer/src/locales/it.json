@@ -324,7 +324,7 @@
   "close": "chiudi",
   "transformationDialog": {
     "title": "Trasformazione dell'intero documento",
-    "inProgress": "Trasformazione in corso",
+    "inProgress": "Trasformazione \"{name}\" in corso...",
     "finished": "Trasformazione terminata",
     "failedState": "Trasformazione fallita",
     "cancel": "Annulla trasformazione",

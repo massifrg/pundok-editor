@@ -4,9 +4,10 @@ withDefaults(
     visible: boolean;
     active: boolean;
     failed: boolean;
+    transformationName?: string;
     log?: readonly string[];
   }>(),
-  { log: () => [] },
+  { transformationName: '', log: () => [] },
 );
 
 const emit = defineEmits<{
@@ -23,7 +24,9 @@ const emit = defineEmits<{
       </q-card-section>
       <q-card-section>
         <q-circular-progress v-if="active" indeterminate size="1em" class="q-mr-sm" />
-        <span v-if="active">{{ $t('transformationDialog.inProgress') }}</span>
+        <span v-if="active">{{
+          $t('transformationDialog.inProgress', { name: transformationName })
+        }}</span>
         <span v-else-if="failed">{{ $t('transformationDialog.failedState') }}</span>
         <span v-else>{{ $t('transformationDialog.finished') }}</span>
       </q-card-section>
@@ -37,8 +40,15 @@ const emit = defineEmits<{
           color="negative"
           @click="emit('stop')"
         />
-        <q-btn :label="$t('close')" color="primary" @click="emit('close')" />
+        <q-btn v-if="failed" :label="$t('close')" color="primary" @click="emit('close')" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
+
+<style scoped>
+.transformation-log {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+</style>

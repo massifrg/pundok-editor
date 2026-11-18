@@ -325,7 +325,7 @@
   "close": "close",
   "transformationDialog": {
     "title": "Whole-document transformation",
-    "inProgress": "Transformation in progress",
+    "inProgress": "Transformation \"{name}\" in progress...",
     "finished": "Transformation finished",
     "failedState": "Transformation failed",
     "cancel": "Cancel transformation",

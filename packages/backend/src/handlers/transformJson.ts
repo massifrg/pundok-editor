@@ -157,7 +157,7 @@ export async function transformWithPandoc(
     args,
     { cwd },
     (source, chunk) => {
-      if (feedback && source !== 'end')
+      if (feedback && source === 'err')
         progressFeedback(
           feedback,
           source,

@@ -415,7 +415,9 @@ export async function transformDocument(
   host.transformationEditorKey = docState?.editorKey;
   host.transformationLog = [host.$t('transformationDialog.started')];
   host.transformationFailed = false;
+  const wasEditable = host.editor?.isEditable ?? true;
   try {
+    host.editor?.setEditable(false);
     setOperationInProgress(host, true);
     const transformed = await host.backend?.transformPandocJson(
       {
@@ -478,6 +480,7 @@ export async function transformDocument(
       caption: host.$t('transformationDialog.failedState'),
     });
   } finally {
+    host.editor?.setEditable(wasEditable);
     setOperationInProgress(host, false);
     host.transformationLog.push(host.$t('transformationDialog.completed'));
     host.transformationEditorKey = undefined;
