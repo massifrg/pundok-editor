@@ -16,6 +16,7 @@ import { type RenderingJobStore } from '../documentHash';
 import {
   errorFeedback,
   progressFeedback,
+  warningFeedback,
   type FeedbackSink,
 } from '../feedback';
 import { expandCommandArgs } from '../expandCommandArgs';
@@ -54,6 +55,7 @@ export async function saveDocument(
     const response = await savePandocJsonDocument(
       directories,
       events,
+      feedback,
       doc,
       storeOptions,
     );
@@ -167,7 +169,11 @@ export async function exportDocument(
     const savedPath = resultFile || doc.path;
     if (!storeOptions.isCopy && !storeOptions.isRendering) {
       try {
-        project = await computeProjectFromDocFile(directories, doc.path);
+        project = await computeProjectFromDocFile(
+          directories,
+          doc.path,
+          (message) => warningFeedback(feedback, message, doc.editorKey),
+        );
       } catch {
         // Saving a document outside a project is valid.
         project = undefined;
@@ -242,6 +248,7 @@ export async function exportDocument(
 async function savePandocJsonDocument(
   directories: BackendDirectories,
   events: RendererHub,
+  feedback: FeedbackSink,
   doc: CxDocument,
   storeOptions: StoreOptions,
 ): Promise<SaveResponse> {
@@ -250,7 +257,11 @@ async function savePandocJsonDocument(
   let project = doc.project;
   if (!storeOptions.isCopy && !storeOptions.isRendering) {
     try {
-      project = await computeProjectFromDocFile(directories, doc.path);
+      project = await computeProjectFromDocFile(
+        directories,
+        doc.path,
+        (message) => warningFeedback(feedback, message, doc.editorKey),
+      );
     } catch {
       // Saving a standalone document is valid.
       project = undefined;

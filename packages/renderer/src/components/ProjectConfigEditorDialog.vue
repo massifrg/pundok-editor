@@ -902,6 +902,7 @@ export default {
         const project = await computeProjectConfiguration(
           projectWithoutPruning,
           (configurationName) => this.backend!.configuration(configurationName),
+          (message) => this.$q.notify({ type: 'warning', message }),
         );
         this.displayConfiguration = project.computedConfig;
       } catch (error) {

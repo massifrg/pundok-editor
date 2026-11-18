@@ -3,6 +3,7 @@ import type {
   PundokEditorProject,
   GetProjectOptions,
 } from '../../common';
+import { computeProjectConfiguration } from '../../common';
 import { isString } from 'lodash-es';
 import { useProjectCache } from '../../stores';
 
@@ -106,11 +107,18 @@ export async function reloadProject(
 ): Promise<void> {
   const project = await host.backend?.getProject({
     ...options,
-    computeConfig: true,
+    computeConfig: false,
   });
   if (project) {
-    await setProject(host, project);
-    await loadProjectStructure(host, project);
+    const configuredProject = await computeProjectConfiguration(
+      project,
+      (configurationName) => host.backend!.configuration(configurationName),
+      (message) => {
+        host.message = { type: 'warning', message };
+      },
+    );
+    await setProject(host, configuredProject);
+    await loadProjectStructure(host, configuredProject);
   }
 }
 

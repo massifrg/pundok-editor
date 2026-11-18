@@ -9,7 +9,11 @@ import {
   type PundokBookmark,
 } from '../../../common/src';
 import { updateBookmarks } from '../bookmarks';
-import { errorFeedback, type FeedbackSink } from '../feedback';
+import {
+  errorFeedback,
+  warningFeedback,
+  type FeedbackSink,
+} from '../feedback';
 import { importWithPandoc } from '../importExport';
 import { pandocFeatures } from '../pandocFeatures';
 import { computeProjectFromDocFile } from './project';
@@ -141,7 +145,11 @@ async function openWithFormat(
     resourcePath,
   };
   try {
-    doc.project = await computeProjectFromDocFile(directories, path);
+    doc.project = await computeProjectFromDocFile(
+      directories,
+      path,
+      (message) => warningFeedback(feedback, message, editorKey),
+    );
   } catch {
     // A document need not belong to a project.
   }

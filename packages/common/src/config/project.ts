@@ -290,6 +290,7 @@ export async function computeProjectConfiguration(
   getConfiguration: (
     configurationName?: string,
   ) => Promise<PundokEditorConfig | undefined>,
+  warn: (message: string) => void = console.warn,
 ): Promise<PundokEditorProject> {
   let computedConfig: PundokEditorConfig = new PundokEditorConfig({
     name: project.name,
@@ -301,11 +302,18 @@ export async function computeProjectConfiguration(
   const inherited = project.configurations ? [...project.configurations] : [];
   try {
     while (inherited.length > 0) {
-      let configName = inherited.shift();
-      let inheritedConfig = await getConfiguration(configName);
-      if (!inheritedConfig)
-        return Promise.reject(`can't read configuration "${configName}"`);
-      computedConfig = computedConfig.addConfiguration(inheritedConfig);
+      const configName = inherited.shift();
+      try {
+        const inheritedConfig = await getConfiguration(configName);
+        if (!inheritedConfig)
+          throw new Error(`can't read configuration "${configName}"`);
+        computedConfig = computedConfig.addConfiguration(inheritedConfig);
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        warn(
+          `can't use inherited configuration "${configName}": ${reason}`,
+        );
+      }
     }
     const pruning = project.editorConfig.remove;
     if (pruning) computedConfig = getPrunedConfigInit(computedConfig, pruning);

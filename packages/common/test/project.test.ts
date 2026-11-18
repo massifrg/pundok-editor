@@ -292,6 +292,41 @@ describe('project utilities', () => {
       );
       expect(computedProject.computedConfig?.noteStyles).toHaveLength(2);
     });
+
+    it('warns and skips missing or invalid inherited configurations', async () => {
+      const validConfiguration = new PundokEditorConfig({
+        name: 'valid',
+        version: [1],
+        customClasses: [{ name: 'valid-class' }],
+      });
+      const warnings: string[] = [];
+      const project: PundokEditorProject = {
+        name: 'project',
+        path: '/projects/test',
+        rootDocument: 'index.md',
+        configurations: ['missing', 'invalid', 'valid'],
+        editorConfig: {},
+      };
+
+      const computedProject = await computeProjectConfiguration(
+        project,
+        async (configurationName) => {
+          if (configurationName === 'missing') return undefined;
+          if (configurationName === 'invalid')
+            throw new Error('invalid JSON');
+          return validConfiguration;
+        },
+        (message) => warnings.push(message),
+      );
+
+      expect(warnings).toEqual([
+        `can't use inherited configuration "missing": can't read configuration "missing"`,
+        `can't use inherited configuration "invalid": invalid JSON`,
+      ]);
+      expect(computedProject.computedConfig?.customClasses).toEqual([
+        { name: 'valid-class' },
+      ]);
+    });
   });
 
   it('returns undefined at the boundaries of a children array', () => {

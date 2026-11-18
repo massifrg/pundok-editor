@@ -136,6 +136,14 @@ export class LocalBackend implements Backend {
           project = await computeProjectConfiguration(
             project,
             getConfigurationFunction(window.ipc),
+            (warning) =>
+              actions.setAction({
+                ...ACTION_BACKEND_FEEDBACK,
+                editorKey: editorKey!,
+                props: {
+                  feedback: { type: 'warning', message: warning, level: 1 },
+                } as BackendFeedbackActionProps,
+              }),
           );
           console.log(project);
           const action: EditorAction = {
@@ -167,6 +175,18 @@ export class LocalBackend implements Backend {
             ? await computeProjectConfiguration(
                 project,
                 getConfigurationFunction(window.ipc),
+                (warning) =>
+                  actions.setAction({
+                    ...ACTION_BACKEND_FEEDBACK,
+                    editorKey: editorKey!,
+                    props: {
+                      feedback: {
+                        type: 'warning',
+                        message: warning,
+                        level: 1,
+                      },
+                    } as BackendFeedbackActionProps,
+                  }),
               )
             : undefined;
           const action: EditorAction = project_with_conf
