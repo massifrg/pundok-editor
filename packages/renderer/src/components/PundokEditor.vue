@@ -27,6 +27,7 @@
           @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @pending-save="savePending"
           @update-value="pendingValueUpdate" />
         <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
+          :search-only="searchAndReplaceSearchOnly"
           @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
         <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
           :on-attributes-editor-show="onAttributesEditorShow" @closeAttributesEditor="closeAttributesEditor()">
@@ -272,6 +273,7 @@ export default {
       rightDrawerState: 'mini' as 'normal' | 'mini',
       visibleConfigurationDialog: false,
       visibleSearchAndReplaceDialog: false,
+      searchAndReplaceSearchOnly: undefined as boolean | undefined,
       visibleInputTextDialog: false,
       visibleProjectStructureDialog: false,
       visibleConfigurationEditor: false,
@@ -340,9 +342,13 @@ export default {
         editor?.commands.toggleSwapBlocks(false);
       } else {
         editor?.commands.toggleSwapBlocks(this.swapBlocksWasActive);
+        this.searchAndReplaceSearchOnly = undefined;
       }
     },
     lastAction(action: EditorAction) {
+      if (action.name === 'show-search-dialog') {
+        this.searchAndReplaceSearchOnly = action.props?.searchOnly ?? true;
+      }
       routeLastAction(this, action);
     },
   },

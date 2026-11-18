@@ -285,7 +285,7 @@ export default {
     MarksPaletteDropdown,
     SaveConfigurationElementPopup,
   },
-  props: ['visible', 'editor', 'nodeOrMarkToLabel'],
+  props: ['visible', 'editor', 'nodeOrMarkToLabel', 'searchOnly'],
   emits: ['hideSearchAndReplaceDialog'],
   data() {
     return {
@@ -483,8 +483,14 @@ export default {
     }
   },
   watch: {
+    searchOnly(searchOnly: boolean | undefined) {
+      if (searchOnly !== undefined) this.optionSearchOnly = searchOnly
+    },
     visible(visible: boolean) {
-      if (!visible || !this.editor || this.cssMode) return
+      if (!visible || !this.editor) return
+
+      if (this.searchOnly !== undefined) this.optionSearchOnly = this.searchOnly
+      if (this.cssMode) return
 
       const { from, to } = this.editor.state.selection
       if (from === to) return
