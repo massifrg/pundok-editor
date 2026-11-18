@@ -319,8 +319,10 @@ export default {
       searchFilterSwitch: false,
       filterMarkPresence: [] as AddableMark[],
       filterMarkAbsence: [] as AddableMark[],
-      // actions to be performed on replaced text or selected with CSS
-      actionsOnReplace: [] as ActionNameWithProps[],
+      // actions to be performed on replaced text
+      textActionsOnReplace: [] as ActionNameWithProps[],
+      // actions to be performed on selected CSS elements
+      cssActionsOnReplace: [] as ActionNameWithProps[],
       searchHistory: [] as SearchHistoryEntry[],
       suppressHistoryRecording: false,
       replaceProgress: undefined as {
@@ -461,6 +463,17 @@ export default {
     expandTooltip() {
       const t = this.$t
       return t('show.lessOrMore', { what: this.showFields ? t('less') : t('more') })
+    },
+    actionsOnReplace: {
+      get(): ActionNameWithProps[] {
+        return this.cssMode ? this.cssActionsOnReplace : this.textActionsOnReplace
+      },
+      set(actions: ActionNameWithProps[]) {
+        if (this.cssMode)
+          this.cssActionsOnReplace = actions
+        else
+          this.textActionsOnReplace = actions
+      }
     },
     // a function to filter search results
     filterResult(): SearchResultFilter | undefined {
@@ -692,7 +705,10 @@ export default {
       this.searchFilterSwitch = entry.searchFilterSwitch
       this.filterMarkPresence = structuredClone(toRaw(entry.filterMarkPresence))
       this.filterMarkAbsence = structuredClone(toRaw(entry.filterMarkAbsence))
-      this.actionsOnReplace = structuredClone(toRaw(entry.actionsOnReplace))
+      if (entry.type === 'css')
+        this.cssActionsOnReplace = structuredClone(toRaw(entry.actionsOnReplace))
+      else
+        this.textActionsOnReplace = structuredClone(toRaw(entry.actionsOnReplace))
       if (this.cssMode !== (entry.type === 'css'))
         this.cssMode = entry.type === 'css'
       this.searchStarted = false
