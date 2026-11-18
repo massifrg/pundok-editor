@@ -52,6 +52,7 @@ async function createWindow(): Promise<WindowWithIpc> {
   const baseWindow = new BaseWindow({
     width: 800,
     height: 600,
+    icon: join(__dirname, '../../../buildResources/icons/64x64.png'),
     autoHideMenuBar: false,
     show: false, // Use 'ready-to-show' event to show window
     // webPreferences: {

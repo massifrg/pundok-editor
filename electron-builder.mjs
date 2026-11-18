@@ -15,6 +15,7 @@ export default /** @type import('electron-builder').Configuration */
   // generateUpdatesFilesForAllChannels: true,
   files: [
     'packages/**/dist/**',
+    'buildResources/icons/64x64.png',
     'LICENSE*',
     pkg.main,
     '!node_modules/@app/**',
