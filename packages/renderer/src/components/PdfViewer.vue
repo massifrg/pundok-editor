@@ -777,6 +777,27 @@ export default {
       div.scrollLeft = 0
       div.scrollTop = 0
     },
+    fitPageHeight() {
+      const div = this.div
+      if (!div) return
+      const style = getComputedStyle(div)
+      const verticalPadding =
+        parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
+      const pageHeight = Math.max(1, div.clientHeight - verticalPadding)
+      this.setMagnify(pageHeight / (baseWidth * this.pageAspectRatio))
+      div.scrollLeft = 0
+      div.scrollTop = 0
+    },
+    fitPageWidth() {
+      this.fitLayoutToViewer(this.twoPageSpread)
+      this.isRendering = true
+      this.$nextTick(() => this.updateDisplayedPages())
+    },
+    zoomChipClicked(e: Event) {
+      if (e instanceof MouseEvent && e.ctrlKey) this.fitPageHeight()
+      else if (e instanceof MouseEvent && e.shiftKey) this.fitPageWidth()
+      else this.showZoomDialog = true
+    },
     displayLayoutChanged(value?: boolean) {
       const layoutChanged = value !== undefined && value !== this.twoPageSpread
       if (value !== undefined) {
@@ -1117,16 +1138,39 @@ export default {
         :validate="validatePage" @set-value="setPage" @close-dialog="showPageDialog = false" />
       <q-btn size="sm" icon='page_right' :title="$t('pdfViewer.nextPage')" :disabled="page >= maxPages"
         @click="nextPageClicked" />
-      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" clickable :title="$t('pdfViewer.setZoom')"
-        @wheel="zoomWheel" @click.stop="showZoomDialog = true" />
+      <q-space />
+      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" clickable :title="$t('pdfViewer.zoomTooltip')"
+        @wheel="zoomWheel" @click.stop="zoomChipClicked" />
       <PromptDialog :visible="showZoomDialog" :label="$t('pdfViewer.setZoom')" :start-value="(magnify * 100).toFixed(0)"
         :validate="validateZoom" @set-value="setZoom" @close-dialog="showZoomDialog = false" />
-      <q-btn-toggle :model-value="twoPageSpread" dense :options="pageLayoutOptions"
-        @update:model-value="displayLayoutChanged" @click="layoutButtonClicked">
-        <template #twoPageSpread>
-          <q-icon name="pdf_two_pages" :class="{ 'pdf-two-pages-left': twoPageSpread && !firstPageOnRight }" />
-        </template>
-      </q-btn-toggle>
+      <q-btn size="sm" icon="magnify_scan" :title="$t('pdfViewer.pageLayout')">
+        <q-menu>
+          <q-list>
+            <q-item>
+              <q-item-section side>
+                <q-btn-toggle :model-value="twoPageSpread" dense :options="pageLayoutOptions"
+                  @update:model-value="displayLayoutChanged" @click="layoutButtonClicked">
+                  <template #twoPageSpread>
+                    <q-icon name="pdf_two_pages"
+                      :class="{ 'pdf-two-pages-left': twoPageSpread && !firstPageOnRight }" />
+                  </template>
+                </q-btn-toggle>
+              </q-item-section>
+              <q-item-section>
+                {{ $t('pdfViewer.pageLayoutMode') }}
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup @click="fitPageHeight">
+              <q-item-section avatar><q-icon name="fit_page_height" /></q-item-section>
+              <q-item-section>{{ $t('pdfViewer.fitPageHeight') }}</q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup @click="fitPageWidth">
+              <q-item-section avatar><q-icon name="fit_page_width" /></q-item-section>
+              <q-item-section>{{ $t('pdfViewer.fitPageWidth') }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
       <q-space />
       <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
         @click="setBookmark()" />
