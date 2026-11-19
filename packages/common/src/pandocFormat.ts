@@ -11,7 +11,7 @@ import { commonIcons } from './icons';
 
 export const DEFAULT_FORMAT = 'json';
 export const DEFAULT_COPY_FORMAT = 'markdown';
-export const DEFAULT_MAIN_FORMATS = ['json', 'markdown', 'docx'];
+export const DEFAULT_MAIN_FORMATS = ['json', 'markdown', 'xml', 'docx'];
 
 export interface PandocFormatExtension {
   name: string;
