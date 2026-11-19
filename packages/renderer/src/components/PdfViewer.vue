@@ -146,9 +146,9 @@ export default {
       )
     },
     renderingBookmarks(): RenderingBookmark[] {
-      return Object.values(this.renderingJobs).filter((item) =>
-        this.isPdfRendering(item),
-      )
+      return Object.values(this.renderingJobs)
+        .filter((item) => this.isPdfRendering(item))
+        .reverse()
     },
     renderingDocumentName(): string {
       const bookmark = this.currentRendering
