@@ -1,7 +1,7 @@
 import { Fragment } from '@tiptap/pm/model';
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { DEFAULT_NOTE_TYPE, NODE_NAME_NOTE, NODE_NAME_PARAGRAPH, SK } from '../../common';
+import { DEFAULT_NOTE_TYPE, NODE_NAME_NOTE, NODE_NAME_PARAGRAPH, NODE_NAME_PLAIN, SK } from '../../common';
 import { Component } from 'vue';
 import { depthOfInnerNodeType, getDocState, META_REFRESH_NOTES, notesPlugin } from '../helpers';
 import NoteView from '../../components/nodeviews/NoteView.vue';
@@ -104,7 +104,7 @@ export const Note = Node.create<NoteOptions>({
   }
 });
 
-const insertNoteCommand = (options: NoteOptions, note_type?: string, text?: string): Command => (state, dispatch) => {
+export const insertNoteCommand = (options: NoteOptions, note_type?: string, text?: string): Command => (state, dispatch) => {
   const schema = state.schema;
   const noteNodeType = schema.nodes[NODE_NAME_NOTE];
   if (!noteNodeType) return false;
@@ -116,9 +116,19 @@ const insertNoteCommand = (options: NoteOptions, note_type?: string, text?: stri
   if (selection.empty) {
     content = Fragment.from(schema.nodes[NODE_NAME_PARAGRAPH].createChecked(null, schema.text(text || options.placeHolderText(noteType))));
   } else {
-    const slice = selection.content();
-    content = slice.content;
-    if (!(content.childCount === 1 && slice.content.child(0).type.name === 'paragraph')) return wrapIn(noteNodeType)(state, dispatch);
+    const { $from, $to } = selection;
+    if ($from.sameParent($to) && $from.parent.isTextblock) {
+      content = Fragment.from(
+        schema.nodes[NODE_NAME_PARAGRAPH].createChecked(
+          $from.parent.attrs,
+          $from.parent.content.cut($from.parentOffset, $to.parentOffset),
+        ),
+      );
+    } else {
+      const slice = selection.content();
+      content = slice.content;
+      if (!(content.childCount === 1 && slice.content.child(0).type.name === 'paragraph')) return wrapIn(noteNodeType)(state, dispatch);
+    }
   }
   try {
     const newNote = noteNodeType.createChecked({ noteType, kv: { 'note-type': noteType } }, content);
@@ -132,13 +142,43 @@ const refreshNotesCommand: Command = (state, dispatch) => {
   return true;
 };
 
-const noteToTextCommand: Command = (state, dispatch) => {
+export const noteToTextCommand: Command = (state, dispatch) => {
   const { $from } = state.selection;
-  const d = depthOfInnerNodeType($from, [NODE_NAME_NOTE]);
-  if (!d) return false;
-  const pos = $from.start(d) - 1;
-  const note = state.doc.nodeAt(pos);
-  if (!note) return false;
-  if (dispatch) dispatch(state.tr.setSelection(new NodeSelection(state.doc.resolve(pos))).deleteSelection().split(pos).insert(pos, note.content));
+  let pos: number | undefined;
+  let note =
+    state.selection instanceof NodeSelection &&
+    state.selection.node.type.name === NODE_NAME_NOTE
+      ? state.selection.node
+      : undefined;
+
+  if (note) {
+    pos = state.selection.from;
+  } else {
+    const d = depthOfInnerNodeType($from, [NODE_NAME_NOTE]);
+    if (d === undefined) return false;
+    pos = $from.before(d);
+    note = state.doc.nodeAt(pos) ?? undefined;
+  }
+
+  if (!note || pos === undefined) return false;
+  if (dispatch) {
+    const tr = state.tr;
+    const content = note.childCount === 1 ? note.firstChild : undefined;
+    if (
+      content &&
+      (content.type.name === NODE_NAME_PARAGRAPH ||
+        content.type.name === NODE_NAME_PLAIN)
+    ) {
+      tr.replaceWith(pos, pos + note.nodeSize, content.content);
+    } else {
+      const $note = state.doc.resolve(pos);
+      const isLastInParent =
+        $note.index($note.depth) === $note.parent.childCount - 1;
+      tr.delete(pos, pos + note.nodeSize);
+      if (isLastInParent) tr.insert(pos, note.content);
+      else tr.split(pos).insert(pos, note.content);
+    }
+    dispatch(tr);
+  }
   return true;
 };

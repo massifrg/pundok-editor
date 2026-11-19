@@ -12,7 +12,8 @@
         <q-space />
         <q-btn icon="delete" title="delete note" size="sm" @click="deleteNode" />
         <q-space style="max-width: 3rem" />
-        <q-btn icon="note_to_text" title="unwrap/convert note to text" size="sm" :disabled="!editor?.can().noteToText()"
+        <q-btn icon="note_to_text" title="unwrap/convert note to text" size="sm"
+          :disabled="!canSelectNote()"
           @click="noteToText()" />
         <q-btn icon="refresh" title="refresh/fix note numbers" size="sm" @click="refreshNotes()" />
         <q-space style="max-width: 3rem" />
@@ -213,8 +214,14 @@ export default {
         if (note) this.noteNumber = note.noteNumber
       }
     },
+    canSelectNote() {
+      const pos = this.getPos()
+      return pos !== undefined && !!this.editor?.can().setNodeSelection(pos)
+    },
     noteToText() {
-      this.editor?.commands.noteToText()
+      const pos = this.getPos()
+      if (pos === undefined) return
+      this.editor?.chain().setNodeSelection(pos).noteToText().run()
     },
     refreshNotes() {
       this.editor?.commands.refreshNotes()
