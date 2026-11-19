@@ -66,6 +66,7 @@ export async function saveDocument(
         url: toFileUrl(doc.path!),
         configurationName: doc.project ? undefined : doc.configurationName,
         projectName: doc.project?.name,
+        timestamp: Date.now(),
       },
     ]);
     return response;
@@ -204,6 +205,7 @@ export async function exportDocument(
             documentPath: sourceFile,
             converterName: converter.name,
             configurationName: doc.project ? undefined : doc.configurationName,
+            timestamp: Date.now(),
           }
           : {
             type: 'document',

@@ -158,12 +158,14 @@ async function openWithFormat(
 
 export function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
   const bookmarks: PundokBookmark[] = [];
+  const timestamp = Date.now();
   if (doc.path)
     bookmarks.push({
       type: 'document',
       url: toUnixPath(doc.path),
       configurationName: doc.project ? undefined : doc.configurationName,
       projectName: doc.project?.name,
+      timestamp,
     });
   if (doc.project && doc.path)
     bookmarks.push({
@@ -174,6 +176,7 @@ export function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
           ? resolve(doc.project.path, doc.project.rootDocument)
           : doc.path,
       )}`,
+      timestamp,
     });
   return bookmarks;
 }

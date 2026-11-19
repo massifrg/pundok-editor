@@ -149,6 +149,7 @@ export default {
       return Object.values(this.renderingJobs)
         .filter((item) => this.isPdfRendering(item))
         .reverse()
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
     },
     renderingDocumentName(): string {
       const bookmark = this.currentRendering
@@ -442,6 +443,7 @@ export default {
             converterName: job.converter.name,
             configurationName: job.configurationName,
             pageBookmarks: current?.pageBookmarks,
+            timestamp: Date.now(),
           }
         }
       }

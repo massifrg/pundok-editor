@@ -8,12 +8,14 @@ export interface DocumentBookmark {
   url: string;
   configurationName?: string;
   projectName?: string;
+  timestamp?: number;
 }
 
 export interface ProjectBookmark {
   type: 'project';
   name: string;
   url: string;
+  timestamp?: number;
 }
 
 export interface RenderingBookmark {
@@ -22,6 +24,7 @@ export interface RenderingBookmark {
   documentPath: string;
   converterName: string;
   configurationName?: string;
+  timestamp?: number;
   pageBookmarks?: RenderingPageBookmark[];
 }
 

@@ -137,11 +137,12 @@ describe('updateBookmarks', () => {
     await expect(
       getBookmarks(directories, 'project'),
     ).resolves.toEqual([
-      {
+      expect.objectContaining({
         type: 'project',
         name: 'Notes',
         url: pathToFileURL(join(userDataDir, 'notes', 'second.md')).href,
-      },
+        timestamp: expect.any(Number),
+      }),
     ]);
   });
 });

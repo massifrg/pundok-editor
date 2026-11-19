@@ -93,6 +93,7 @@ function addBookmark(
   const normalizedBookmark = {
     ...bookmark,
     url: normalizeBookmarkUrl(bookmark.url),
+    timestamp: Date.now(),
   };
   let documents =
     MAX_RECENT_DOCS - (normalizedBookmark.type === 'document' ? 1 : 0);
