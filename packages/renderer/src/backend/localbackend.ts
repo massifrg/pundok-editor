@@ -403,6 +403,10 @@ export class LocalBackend implements Backend {
     return window.ipc.pdfPageCount(filename);
   }
 
+  listSynctexFile(filename: string): Promise<string> {
+    return window.ipc.synctexList(filename);
+  }
+
   async findResourceFiles(
     filenameRegex: RegExp,
     options?: Partial<FindResourceOptions>,

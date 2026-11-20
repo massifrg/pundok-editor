@@ -33,6 +33,7 @@ import {
   createFolder,
   getFileContents,
   getPdfPageCount,
+  listSynctexFile,
   findResourceFilesWithProvenance,
   editorReady,
   getProject,
@@ -262,6 +263,9 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('pdf-page-count', (_event, filename) =>
       getPdfPageCount(filename),
+    );
+    ipcMain.handle('synctex-list', (_event, filename) =>
+      listSynctexFile(filename),
     );
     ipcMain.handle(
       'find-resource-files',

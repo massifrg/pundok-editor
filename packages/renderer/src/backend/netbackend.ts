@@ -203,6 +203,10 @@ export class NetBackend implements Backend {
     return this.request('pdf-page-count', { filename });
   }
 
+  listSynctexFile(filename: string): Promise<string> {
+    return this.request('synctex-list', { filename });
+  }
+
   setValue(key: string, value?: unknown): Promise<void> {
     return this.request('set-value', { key, value });
   }

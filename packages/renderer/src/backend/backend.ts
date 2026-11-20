@@ -177,6 +177,8 @@ export interface Backend {
 
   getPdfPageCount(filename: string): Promise<PdfPageCount>;
 
+  listSynctexFile(filename: string): Promise<string>;
+
   /**
    * Retrieves resource filenames matching a regular expression.
    * @param filenameRegex The regular expression to match against filenames.
