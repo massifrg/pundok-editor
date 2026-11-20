@@ -1,6 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { delimiter, isAbsolute, relative, resolve } from 'node:path';
-import { SYNCTEX_CONTEXT_REQUIRED } from '../../../common/src';
+import {
+  SYNCTEX_CONTEXT_REQUIRED,
+  SYNCTEX_FILE_NOT_FOUND,
+} from '../../../common/src';
 import type {
   EditorKeyType,
   PundokEditorProject,
@@ -168,6 +171,19 @@ function normalizeSynctexPath(path: string): string {
   return path.trim().replaceAll('\\', '/').replace(/^\.\/+/, '');
 }
 
+function externalErrorMessage(error: unknown): string {
+  return error instanceof Error
+    ? error.message
+    : typeof error === 'object' && error !== null && 'error' in error
+      ? String(error.error)
+      : String(error);
+}
+
+function isMissingSynctexError(message: string): boolean {
+  return message.toLowerCase().includes('synctex') &&
+    /(not found|does not exist|no such file)/i.test(message);
+}
+
 export async function getSourceLocation(
   directories: BackendDirectories,
   feedback: FeedbackSink,
@@ -195,7 +211,7 @@ export async function getSourceLocation(
     editorKey,
   );
   if (!isReadableFile(synctexFile))
-    throw new Error(`No synctex file found for "${outputFile}"`);
+    throw new Error(SYNCTEX_FILE_NOT_FOUND);
 
   const environment = await extendedEnvironment(directories);
   let pdfInfo;
@@ -206,17 +222,16 @@ export async function getSourceLocation(
       { env: environment },
     ).result;
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : typeof error === 'object' && error !== null && 'error' in error
-          ? String(error.error)
-          : String(error);
+    const message = externalErrorMessage(error);
     if (message.includes('ENOENT'))
       throw new Error(SYNCTEX_CONTEXT_REQUIRED);
+    if (isMissingSynctexError(message))
+      throw new Error(SYNCTEX_FILE_NOT_FOUND);
     throw error;
   }
   if (pdfInfo.exitCode !== 0) {
+    if (isMissingSynctexError(pdfInfo.error))
+      throw new Error(SYNCTEX_FILE_NOT_FOUND);
     const message = `Error getting information about "${outputFile}": ${pdfInfo.error}`;
     feedback.report({ type: 'progress', source: 'err', message, level: 1 }, editorKey);
     throw new Error(message);
@@ -226,20 +241,32 @@ export async function getSourceLocation(
   if (!dimensions)
     throw new Error(`Error getting MediaBox of page ${page}`);
 
-  const sourceInfo = await runExternalProgram(
-    'mtxrun',
-    [
-      '--script',
-      'synctex',
-      '--goto',
-      `--page=${page}`,
-      `--x=${(dimensions.width * rx).toFixed()}`,
-      `--y=${(dimensions.height * ry).toFixed()}`,
-      synctexFile,
-    ],
-    { env: environment },
-  ).result;
+  let sourceInfo;
+  try {
+    sourceInfo = await runExternalProgram(
+      'mtxrun',
+      [
+        '--script',
+        'synctex',
+        '--goto',
+        `--page=${page}`,
+        `--x=${(dimensions.width * rx).toFixed()}`,
+        `--y=${(dimensions.height * ry).toFixed()}`,
+        synctexFile,
+      ],
+      { env: environment },
+    ).result;
+  } catch (error) {
+    const message = externalErrorMessage(error);
+    if (message.includes('ENOENT'))
+      throw new Error(SYNCTEX_CONTEXT_REQUIRED);
+    if (isMissingSynctexError(message))
+      throw new Error(SYNCTEX_FILE_NOT_FOUND);
+    throw error;
+  }
   if (sourceInfo.exitCode !== 0) {
+    if (isMissingSynctexError(sourceInfo.error))
+      throw new Error(SYNCTEX_FILE_NOT_FOUND);
     const message = `Error getting the source file for "${outputFile}", page ${page}: ${sourceInfo.error}`;
     feedback.report({ type: 'progress', source: 'err', message, level: 1 }, editorKey);
     throw new Error(message);

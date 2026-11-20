@@ -477,7 +477,7 @@ export class LocalBackend implements Backend {
   }
 
   async gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void> {
-    window.ipc.getSourceFile(editorKey, info);
+    return window.ipc.getSourceFile(editorKey, info);
   }
 
   getPdfLocation(

@@ -16,6 +16,7 @@ import {
   RenderingPageBookmark,
   PdfPageRectangle,
   SYNCTEX_CONTEXT_REQUIRED,
+  SYNCTEX_FILE_NOT_FOUND,
   SetupViewerActionProps,
   SynctexInfo,
   ViewerSetup
@@ -875,9 +876,12 @@ export default {
         } catch (err) {
           const message = err instanceof Error ? err.message : undefined
           this.$q.notify({
-            message: message === SYNCTEX_CONTEXT_REQUIRED
+            message: message?.includes(SYNCTEX_CONTEXT_REQUIRED)
               ? this.$t('pdfViewer.synctexRequiresContext')
-              : message || this.$t('pdfViewer.unableOpenSource'),
+              : message?.includes(SYNCTEX_FILE_NOT_FOUND) ||
+                  message?.includes('No synctex file found')
+                ? this.$t('pdfViewer.synctexFileNotFound')
+                : message || this.$t('pdfViewer.unableOpenSource'),
             color: 'warning',
             icon: 'message_warning',
           })

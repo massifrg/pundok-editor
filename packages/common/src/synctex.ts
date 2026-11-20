@@ -1,6 +1,7 @@
 import type { RenderingBookmark } from './bookmarks';
 
 export const SYNCTEX_CONTEXT_REQUIRED = 'synctex-context-required';
+export const SYNCTEX_FILE_NOT_FOUND = 'synctex-file-not-found';
 
 export interface SynctexInfo {
   outputFile: string,

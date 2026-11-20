@@ -973,6 +973,7 @@
     "unableRecallRendering": "Impossibile richiamare la creazione selezionata.",
     "unableOpenSource": "Impossibile aprire il file sorgente di questo PDF.",
     "synctexRequiresContext": "È necessario installare ConTeXt e generare il PDF con l'opzione --synctex per aprire i file sorgente dal PDF.",
+    "synctexFileNotFound": "La navigazione al sorgente non è disponibile perché questo PDF non contiene un file SyncTeX. Genera il PDF con SyncTeX abilitato e riprova.",
     "unableRasterizeImageMagick": "Impossibile rasterizzare il PDF. ImageMagick è installato?",
     "unableReadPdf": "Impossibile leggere il file PDF. Verifica che esista e sia leggibile.",
     "pageRange": "la pagina deve essere compresa tra {min} e {max}",

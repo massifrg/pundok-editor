@@ -974,6 +974,7 @@
     "unableRecallRendering": "Unable to recall the selected rendering.",
     "unableOpenSource": "Unable to open the source file for this PDF.",
     "synctexRequiresContext": "ConTeXt must be installed and the PDF must be generated with the --synctex option to open source files from the PDF.",
+    "synctexFileNotFound": "Source navigation is unavailable because this PDF has no SyncTeX file. Generate the PDF with SyncTeX enabled and try again.",
     "unableRasterizeImageMagick": "Unable to rasterize the PDF. Is ImageMagick installed?",
     "unableReadPdf": "Unable to read the PDF file. Check that it exists and is readable.",
     "pageRange": "page must be between {min} and {max}",
