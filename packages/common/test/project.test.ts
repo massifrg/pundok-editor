@@ -5,7 +5,9 @@ import {
   getNextProjectComponentAcrossContainers,
   getParentProjectComponent,
   getProjectComponentChildren,
+  isProjectComponentOrDescendant,
   isProjectDocumentOrDescendant,
+  projectSourceVariants,
   getPreviousProjectComponent,
   getPreviousProjectComponentAcrossContainers,
   type PundokEditorProject,
@@ -13,6 +15,8 @@ import {
 } from '../src/config/project';
 import {
   pageRangesFromSynctex,
+  projectComponentForSource,
+  widestPageRangeFromRanges,
   withPageRangesFromSynctex,
 } from '../src/config/pageRanges';
 import { PundokEditorConfig } from '../src/config/editorConfiguration';
@@ -64,6 +68,34 @@ describe('project document ancestry', () => {
       '/project',
     )).toBe(true);
   });
+
+  it('matches URL-encoded sources', () => {
+    const tree: ProjectComponent = {
+      src: '/project/My Book/book.md',
+      children: [{ src: '/project/My Book/chapters/one.md' }],
+    };
+    expect(isProjectDocumentOrDescendant(
+      tree,
+      'file:///project/My%20Book/book.md',
+      'file:///project/My%20Book/chapters/one.md',
+      'file:///project/My%20Book',
+      'file:///project/My%20Book',
+    )).toBe(true);
+  });
+
+  it('determines ancestry from component relationships', () => {
+    const article: ProjectComponent = { src: 'article.md' };
+    const tree: ProjectComponent = {
+      src: 'book.md',
+      children: [{ src: 'chapter.md', children: [article] }],
+    };
+    const container = tree.children?.[0];
+    const descendant = container?.children?.[0];
+    expect(container && descendant &&
+      isProjectComponentOrDescendant(container, descendant)).toBe(true);
+    expect(container && descendant &&
+      isProjectComponentOrDescendant(descendant, container)).toBe(false);
+  });
 });
 
 describe('project utilities', () => {
@@ -102,6 +134,36 @@ describe('project utilities', () => {
       pageRanges: [[1, 1]],
       children: [{ src: 'chapters/one.md', pageRanges: [[2, 2]] }],
     });
+  });
+
+  it('matches URL-encoded SyncTeX sources and keeps the first widest range', () => {
+    const synctex = [
+      'begin page: 10',
+      '[0 0 0 0]: 1: /project/My%20Book/book.md',
+      'begin page: 11',
+      '[0 0 0 0]: 2: /project/My%20Book/book.md',
+      'begin page: 20',
+      '[0 0 0 0]: 3: /project/My%20Book/book.md',
+      'begin page: 21',
+      '[0 0 0 0]: 4: /project/My%20Book/book.md',
+    ].join('\n');
+    const tree: ProjectComponent = {
+      src: '/project/My Book/book.md',
+    };
+
+    expect(withPageRangesFromSynctex(
+      tree,
+      synctex,
+      '/project/My%20Book',
+    ).pageRanges).toEqual([[10, 11], [20, 21]]);
+    expect(widestPageRangeFromRanges([[10, 11], [20, 20], [30, 31]])).toEqual([
+      10,
+      11,
+    ]);
+    expect([...projectSourceVariants(
+      'file:///project/My%20Book/book.md',
+      'file:///project/My%20Book',
+    )]).toEqual(['/project/My Book/book.md', 'book.md']);
   });
 
   it('returns the previous and next sibling in a nested children array', () => {

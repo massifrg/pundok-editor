@@ -1,4 +1,7 @@
-import type { ProjectComponent } from './project';
+import {
+  projectSourceVariants,
+  type ProjectComponent,
+} from './project';
 
 /**
  * Returns the ordered inclusive PDF page ranges where a source is referenced
@@ -21,7 +24,11 @@ export function pageRangesFromSynctex(
     if (page === undefined) continue;
     const sourceMatch = /\]\s*:\s*\d+\s*:\s*(.*?)\s*$/.exec(line);
     if (!sourceMatch) continue;
-    if (sourceVariants.has(normalizeProjectSource(sourceMatch[1], projectPath)))
+    const listedSourceVariants = projectSourceVariants(
+      sourceMatch[1],
+      projectPath,
+    );
+    if ([...sourceVariants].some((source) => listedSourceVariants.has(source)))
       pages.add(page);
   }
 
@@ -56,27 +63,44 @@ export function withPageRangesFromSynctex(
   };
 }
 
-function projectSourceVariants(source: string, projectPath?: string): Set<string> {
-  const normalized = normalizeProjectSource(source, projectPath);
-  const variants = new Set([normalized]);
-  const project = projectPath && normalizeProjectSource(projectPath);
-  if (project && normalized.startsWith(`${project}/`))
-    variants.add(normalized.slice(project.length + 1));
-  return variants;
+/**
+ * Finds a project component by source, accepting project-relative and
+ * absolute source paths.
+ */
+export function projectComponentForSource(
+  structure: ProjectComponent,
+  source: string,
+  projectPath?: string,
+): ProjectComponent | undefined {
+  const sourceVariants = projectSourceVariants(source, projectPath);
+  const find = (component: ProjectComponent): ProjectComponent | undefined => {
+    if (
+      component.src &&
+      [...sourceVariants].some((variant) =>
+        projectSourceVariants(component.src!, projectPath).has(variant),
+      )
+    )
+      return component;
+    for (const child of component.children || []) {
+      const found = find(child);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  return find(structure);
 }
 
-function normalizeProjectSource(source: string, projectPath?: string): string {
-  let normalized = source
-    .trim()
-    .replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
-    .replace(/^\.\/+/, '')
-    .replace(/\/+$/, '');
-  const project = projectPath
-    ?.replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
-    .replace(/\/+$/, '');
-  if (project && normalized.startsWith(`${project}/`))
-    normalized = normalized.slice(project.length + 1);
-  return normalized;
+/**
+ * Returns the widest page range from an ordered list of page ranges.
+ */
+export function widestPageRangeFromRanges(
+  pageRanges: [number, number][],
+): [number, number] | undefined {
+  return pageRanges.reduce<[number, number] | undefined>(
+    (widest, current) =>
+      !widest || current[1] - current[0] > widest[1] - widest[0]
+        ? current
+        : widest,
+    undefined,
+  );
 }

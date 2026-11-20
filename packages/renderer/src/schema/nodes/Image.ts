@@ -158,7 +158,16 @@ export const Image = Node.create<ImageOptions>({
 });
 
 function imageUrl(path: string, query: string): string {
-  if (window.ipc) return `img://${path}${query}`;
+  if (window.ipc) {
+    const url = new URL('img:///')
+    url.pathname = path
+      .replaceAll('\\', '/')
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/')
+    if (query) url.search = query
+    return url.href
+  }
   return `/backend/image?path=${encodeURIComponent(path)}${query.replace('?', '&')}`;
 }
 

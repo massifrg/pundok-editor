@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import type { ProjectComponent } from '../../common/src';
 import { withPageRangesFromSynctex } from '../../common/src';
+import { localizePath } from './filesystem';
+import { runExternalProgram } from './runExternal';
 
 /**
  * Populates project components with the PDF page ranges found in SyncTeX
@@ -28,4 +30,17 @@ export async function populatePageRangesFromSynctexFile(
     synctexOutput,
     projectPath,
   );
+}
+
+/**
+ * Returns the human-readable SyncTeX listing produced by mtxrun.
+ */
+export async function listSynctexFile(synctexFile: string): Promise<string> {
+  const result = await runExternalProgram(
+    'mtxrun',
+    ['--script', 'synctex', '--list', localizePath(synctexFile)],
+  ).result;
+  if (result.exitCode !== 0)
+    throw new Error(result.error || `Unable to list SyncTeX file: ${synctexFile}`);
+  return `${result.output}\n${result.error}`;
 }

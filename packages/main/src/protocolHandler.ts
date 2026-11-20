@@ -13,10 +13,9 @@ type BufferLoader = (filepath: string, params: Record<string, any>) => Promise<B
 
 export function handleImagesFor(view: WebContentsView) {
   view.webContents.session.protocol.handle('img', async (request) => {
-    const url_string = request.url;
-    const url = new URL(url_string)
+    const url = new URL(request.url)
     let loader: BufferLoader | undefined = undefined
-    const filepath = fileURLToPath(url_string.replace(/^img:\/\//, 'file://'))
+    const filepath = fileURLToPath(new URL(`file://${url.pathname}`))
     if (existsSync(filepath)) {
       const { ext } = parse(filepath)
       let blobType: string | undefined = undefined

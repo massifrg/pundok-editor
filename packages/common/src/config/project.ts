@@ -142,19 +142,39 @@ export function getProjectComponentChildren(
   return undefined;
 }
 
-function sourceVariants(src: string, projectPath?: string): string[] {
-  const normalized = src
-    .replace(/^file:\/\//, '')
+/**
+ * Returns normalized absolute and project-relative variants of a source.
+ */
+export function projectSourceVariants(
+  src: string,
+  projectPath?: string,
+): Set<string> {
+  let normalized = src.trim();
+  try {
+    if (/^file:\/\//i.test(normalized))
+      normalized = decodeURIComponent(new URL(normalized).pathname);
+    else normalized = decodeURIComponent(normalized);
+  } catch {
+    // Keep filesystem paths containing a literal or malformed percent sign.
+  }
+  normalized = normalized
     .replaceAll('\\', '/')
     .replace(/^\.\/+/, '')
     .replace(/\/+$/, '');
-  const variants = [normalized];
-  const project = projectPath
-    ?.replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
+  const variants = new Set([normalized]);
+  let project = projectPath?.trim();
+  try {
+    if (project && /^file:\/\//i.test(project))
+      project = decodeURIComponent(new URL(project).pathname);
+    else if (project) project = decodeURIComponent(project);
+  } catch {
+    // Keep filesystem paths containing a literal or malformed percent sign.
+  }
+  project = project
+    ?.replaceAll('\\', '/')
     .replace(/\/+$/, '');
   if (project && normalized.startsWith(`${project}/`))
-    variants.push(normalized.slice(project.length + 1));
+    variants.add(normalized.slice(project.length + 1));
   return variants;
 }
 
@@ -164,9 +184,9 @@ function sameProjectSource(
   projectPath?: string,
 ): boolean {
   if (!first || !second) return false;
-  const secondVariants = sourceVariants(second, projectPath);
-  return sourceVariants(first, projectPath)
-    .some((source) => secondVariants.includes(source));
+  const secondVariants = projectSourceVariants(second, projectPath);
+  return [...projectSourceVariants(first, projectPath)]
+    .some((source) => secondVariants.has(source));
 }
 
 /**
@@ -186,15 +206,34 @@ export function isProjectDocumentOrDescendant(
     !sameProjectSource(projectPath, savedProjectPath)
   )
     return false;
-  const containsSource = (component: ProjectComponent): boolean =>
-    sameProjectSource(component.src, savedSrc, projectPath) ||
-    (component.children || []).some(containsSource);
-  const findDocument = (component: ProjectComponent): ProjectComponent | undefined =>
-    sameProjectSource(component.src, documentSrc, projectPath)
+  const findComponent = (
+    component: ProjectComponent,
+    source: string,
+  ): ProjectComponent | undefined =>
+    sameProjectSource(component.src, source, projectPath)
       ? component
-      : (component.children || []).map(findDocument).find(Boolean);
-  const document = findDocument(structure);
-  return document ? containsSource(document) : false;
+      : (component.children || [])
+        .map((child) => findComponent(child, source))
+        .find(Boolean);
+  const document = findComponent(structure, documentSrc);
+  const saved = findComponent(structure, savedSrc);
+  return document && saved
+    ? isProjectComponentOrDescendant(document, saved)
+    : false;
+}
+
+/**
+ * Returns whether a project component is the given component or contains it
+ * in its children.
+ */
+export function isProjectComponentOrDescendant(
+  component: ProjectComponent,
+  descendant: ProjectComponent,
+): boolean {
+  return component === descendant ||
+    (component.children || []).some((child) =>
+      isProjectComponentOrDescendant(child, descendant),
+    );
 }
 
 interface ProjectComponentLocation {
