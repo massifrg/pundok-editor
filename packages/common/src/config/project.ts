@@ -1,9 +1,12 @@
-import {
+import type {
   PundokEditorConfigInit,
   PundokEditorProjectConfig,
 } from './editorConfigInit';
-import { getPrunedConfigInit, PundokEditorConfig } from './editorConfiguration';
-import { NamedAndDescribed } from '../types';
+import {
+  getPrunedConfigInit,
+  PundokEditorConfig,
+} from './editorConfiguration';
+import type { NamedAndDescribed } from '../types';
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 
@@ -30,6 +33,8 @@ interface AbstractProjectComponent {
   format?: string;
   /** the sha1 of the contents (it may be used to check updates) */
   sha1?: string;
+  /** ordered inclusive PDF page ranges where the component is referenced */
+  pageRanges?: [start: number, end: number][];
   /** components included by this component */
   children?: ProjectComponent[];
 }

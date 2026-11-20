@@ -1,5 +1,6 @@
 export * from './documentHash';
 export * from './bookmarks';
+export * from './pageRanges';
 export * from './expandCommandArgs';
 export * from './filesystem';
 export * from './resourceManager';
