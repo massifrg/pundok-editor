@@ -23,6 +23,7 @@ import {
 } from '../common';
 import { isString, throttle } from 'lodash-es';
 import { PromptDialog } from './dialogs'
+import { notifyTimeout } from './helpers'
 
 type WhenRendered = (() => void)[]
 
@@ -476,6 +477,7 @@ export default {
             message: this.$t('pdfViewer.previewRequiresFilePath'),
             color: 'warning',
             icon: 'message_warning',
+            timeout: notifyTimeout(this.$t('pdfViewer.previewRequiresFilePath')),
           })
         }
         if (pdfContent) {
@@ -487,12 +489,14 @@ export default {
         }
       } catch (err) {
         this.isRendering = false
+        const message = err instanceof Error
+          ? err.message
+          : this.$t('pdfViewer.unableInspectPagesImageMagick')
         this.$q.notify({
-          message: err instanceof Error
-            ? err.message
-            : this.$t('pdfViewer.unableInspectPagesImageMagick'),
+          message,
           color: 'warning',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         })
       }
     },
@@ -509,17 +513,20 @@ export default {
               message: this.$t('pdfViewer.mtxrunFallback'),
               color: 'warning',
               icon: 'message_warning',
+              timeout: notifyTimeout(this.$t('pdfViewer.mtxrunFallback')),
             })
           }
         }
       } catch (err) {
         if (this.filename !== filename) return
+        const message = err instanceof Error
+          ? err.message
+          : this.$t('pdfViewer.unableInspectPagesImageMagick')
         this.$q.notify({
-          message: err instanceof Error
-            ? err.message
-            : this.$t('pdfViewer.unableInspectPagesImageMagick'),
+          message,
           color: 'warning',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         })
       }
     },
@@ -569,10 +576,12 @@ export default {
         }
         if (this.regeneratingUrl === rendering.url) this.regeneratingUrl = undefined
         this.regeneratingTarget = undefined
+        const message = err instanceof Error ? err.message : this.$t('pdfViewer.unableRegenerate')
         this.$q.notify({
-          message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRegenerate'),
+          message,
           color: 'negative',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         })
       }
     },
@@ -704,6 +713,7 @@ export default {
         message,
         color: 'warning',
         icon: 'message_warning',
+        timeout: notifyTimeout(message),
       })
     },
     setPage(p: number | string) {
@@ -875,15 +885,17 @@ export default {
           } as SynctexInfo)
         } catch (err) {
           const message = err instanceof Error ? err.message : undefined
+          const notifyMessage = message?.includes(SYNCTEX_CONTEXT_REQUIRED)
+            ? this.$t('pdfViewer.synctexRequiresContext')
+            : message?.includes(SYNCTEX_FILE_NOT_FOUND) ||
+                message?.includes('No synctex file found')
+              ? this.$t('pdfViewer.synctexFileNotFound')
+              : message || this.$t('pdfViewer.unableOpenSource')
           this.$q.notify({
-            message: message?.includes(SYNCTEX_CONTEXT_REQUIRED)
-              ? this.$t('pdfViewer.synctexRequiresContext')
-              : message?.includes(SYNCTEX_FILE_NOT_FOUND) ||
-                  message?.includes('No synctex file found')
-                ? this.$t('pdfViewer.synctexFileNotFound')
-                : message || this.$t('pdfViewer.unableOpenSource'),
+            message: notifyMessage,
             color: 'warning',
             icon: 'message_warning',
+            timeout: notifyTimeout(notifyMessage),
           })
         }
       }
@@ -1127,10 +1139,12 @@ export default {
           documentHash: bookmark.url,
         })
       } catch (err) {
+        const message = err instanceof Error ? err.message : this.$t('pdfViewer.unableRecallRendering')
         this.$q.notify({
-          message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRecallRendering'),
+          message,
           color: 'negative',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         })
       }
     }

@@ -99,6 +99,7 @@ import {
   filePathsEqual,
   showOpenDocumentDialog,
   showSelectFolderDialog,
+  notifyTimeout,
 } from './helpers';
 import { getEditorDocState } from '../schema';
 import { defineAsyncComponent } from 'vue';
@@ -203,14 +204,15 @@ export default {
             if (filePathsEqual(filePathDirName(path), this.path || '')) {
               this.rootDocument = filePathBaseName(path);
             } else {
+              const message =
+                'the root document must be a file in the project folder'
               this.$q.notify({
-                message:
-                  'the root document must be a file in the project folder',
+                message,
                 caption: '',
                 icon: 'alert_circle',
                 position: 'top',
                 color: 'negative',
-                timeout: 3000,
+                timeout: notifyTimeout(message),
               });
             }
           }
@@ -230,13 +232,14 @@ export default {
       };
       try {
         await this.backend?.createProject(this.path!, project);
+        const message = `project "${this.name}" successfully created in ${this.path}`
         this.$q.notify({
-          message: `project "${this.name}" successfully created in ${this.path}`,
+          message,
           caption: '',
           icon: 'check',
           position: 'top',
           color: 'positive',
-          timeout: 2000,
+          timeout: notifyTimeout(message),
         });
       } catch (err) {
         console.log(err);

@@ -125,7 +125,7 @@ import { mdiEyeOff } from '@mdi/js';
 import { useQuasar } from 'quasar';
 import type { Editor } from '@tiptap/vue-3';
 import type { DocumentFormat, Index, IndexRefPlacement } from '../../common';
-import { extractSvgPathData, showSelectImageDialog } from '../helpers';
+import { extractSvgPathData, notifyTimeout, showSelectImageDialog } from '../helpers';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { useBackend } from '../../stores';
 
@@ -275,9 +275,11 @@ async function loadIconFile(path: string): Promise<void> {
     if (draft.value) draft.value.iconSvg = pathData;
   } catch (error) {
     console.error('Could not load SVG icon file.', error);
+    const message = t('configEditor.indices.invalidIconFile')
     $q.notify({
       type: 'negative',
-      message: t('configEditor.indices.invalidIconFile'),
+      message,
+      timeout: notifyTimeout(message),
     });
   }
 }

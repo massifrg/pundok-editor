@@ -57,7 +57,7 @@ import {
   type UpdateDocStateActionProps,
   actionSetMetaMapText,
 } from '../../actions';
-import { documentIncludeSpecs } from '../helpers';
+import { documentIncludeSpecs, notifyTimeout } from '../helpers';
 import { useActions } from '../../stores';
 
 export interface ActionRouterHost {
@@ -326,7 +326,7 @@ export function routeLastAction(
             icon: 'check',
             position: 'top',
             color: 'positive',
-            timeout: isSuccess ? 2000 : 5000,
+            timeout: notifyTimeout(message),
           });
         } else {
           if (type !== 'progress') {

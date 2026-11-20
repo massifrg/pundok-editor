@@ -37,6 +37,7 @@ import {
 } from '../../common';
 import { editorKeyFromState, getEditorConfiguration, getEditorDocState } from '../../schema';
 import { useBackend } from '../../stores';
+import { notifyTimeout } from '../helpers';
 import { uniq } from 'lodash-es';
 
 export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'insert' | 'folder' | 'image'
@@ -523,8 +524,9 @@ export default {
           this.tempConfigurationName = undefined
         }
       } catch (err) {
+        const message = this.$t('fileDialog.error.title')
         this.$q.notify({
-          message: this.$t('fileDialog.error.title'),
+          message,
           caption: this.$t('fileDialog.error.readFolder', {
             path,
             error: String(err),
@@ -532,7 +534,7 @@ export default {
           icon: 'folder_alert',
           position: 'top',
           color: 'negative',
-          timeout: 3000,
+          timeout: notifyTimeout(message),
         });
         console.log(err)
       }
@@ -642,8 +644,9 @@ export default {
         const gf = this.guessFormatFromPath(path)
         // console.log(`format should be ${gf?.format?.name}`)
         if (gf?.format) {
+          const message = this.$t('fileDialog.warning.title')
           this.$q.notify({
-            message: this.$t('fileDialog.warning.title'),
+            message,
             caption: this.$t('fileDialog.warning.formatChanged', {
               format: gf.format.name,
               path,
@@ -651,7 +654,7 @@ export default {
             icon: 'message_warning',
             position: 'top',
             color: 'warning',
-            timeout: 3000,
+            timeout: notifyTimeout(message),
           });
           this.format = gf?.format || this.format
         }

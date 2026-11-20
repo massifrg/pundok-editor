@@ -169,7 +169,7 @@ import PandocLuaResourceDialog, {
 import PandocOptionsEditor from './PandocOptionsEditor.vue';
 import type { Editor } from '@tiptap/vue-3';
 import type { DocumentFormat } from '../../common';
-import { extractSvgPathData, showSelectImageDialog } from '../helpers';
+import { extractSvgPathData, notifyTimeout, showSelectImageDialog } from '../helpers';
 import { nextCopyName } from '../helpers';
 import { useBackend } from '../../stores';
 
@@ -287,9 +287,11 @@ async function loadIconFile(path: string): Promise<void> {
     if (draft.value) draft.value.icon = icon;
   } catch (error) {
     console.error('Could not load SVG output converter icon.', error);
+    const message = t('configEditor.outputConverters.invalidIconFile')
     $q.notify({
       type: 'negative',
-      message: t('configEditor.outputConverters.invalidIconFile'),
+      message,
+      timeout: notifyTimeout(message),
     });
   }
 }

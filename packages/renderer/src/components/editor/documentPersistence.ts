@@ -28,6 +28,7 @@ import {
 import { useActions } from '../../stores';
 import {
   type DocumentDialogProps,
+  notifyTimeout,
   showSaveCopyDialog,
   showSaveDocumentDialog,
 } from '../helpers';
@@ -478,6 +479,7 @@ export async function transformDocument(
       type: 'negative',
       message: errorMessage,
       caption: host.$t('transformationDialog.failedState'),
+      timeout: notifyTimeout(errorMessage),
     });
   } finally {
     host.editor?.setEditable(wasEditable);

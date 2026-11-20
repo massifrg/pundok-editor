@@ -6,6 +6,7 @@ import type {
 import { computeProjectConfiguration } from '../../common';
 import { isString } from 'lodash-es';
 import { useProjectCache } from '../../stores';
+import { notifyTimeout } from '../helpers';
 
 export interface ProjectManagementHost {
   [key: string]: any;
@@ -163,6 +164,7 @@ export async function saveProject(
     host.$q.notify({
       type: 'negative',
       message: 'Unable to save project configuration',
+      timeout: notifyTimeout('Unable to save project configuration'),
     });
   }
 }

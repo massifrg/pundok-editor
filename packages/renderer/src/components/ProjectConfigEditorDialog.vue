@@ -367,6 +367,7 @@ import {
   filePathWithChild,
   filePathsEqual,
   showOpenDocumentDialog,
+  notifyTimeout,
 } from './helpers';
 import { useBackend } from '../stores';
 
@@ -902,7 +903,11 @@ export default {
         const project = await computeProjectConfiguration(
           projectWithoutPruning,
           (configurationName) => this.backend!.configuration(configurationName),
-          (message) => this.$q.notify({ type: 'warning', message }),
+          (message) => this.$q.notify({
+            type: 'warning',
+            message,
+            timeout: notifyTimeout(message),
+          }),
         );
         this.displayConfiguration = project.computedConfig;
       } catch (error) {
@@ -1055,11 +1060,13 @@ export default {
           if (filePathsEqual(filePathDirName(path), this.project?.path || '')) {
             this.rootDocument = filePathBaseName(path);
           } else {
+            const message = this.$t(
+              'configEditor.general.rootDocumentProjectFolder',
+            )
             this.$q.notify({
               type: 'negative',
-              message: this.$t(
-                'configEditor.general.rootDocumentProjectFolder',
-              ),
+              message,
+              timeout: notifyTimeout(message),
             });
           }
         },
