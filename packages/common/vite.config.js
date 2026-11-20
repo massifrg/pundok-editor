@@ -2,6 +2,19 @@ import vendors from '../../.electron-vendors.cache.json' with { type: 'json' };
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'node:url';
 
+if (!Map.groupBy) {
+  Map.groupBy = function (items, keyFor) {
+    const result = new Map();
+    for (const item of items) {
+      const key = keyFor(item);
+      const group = result.get(key);
+      if (group) group.push(item);
+      else result.set(key, [item]);
+    }
+    return result;
+  };
+}
+
 const { node } = vendors;
 
 const __filename = fileURLToPath(import.meta.url);

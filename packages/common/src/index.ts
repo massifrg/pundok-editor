@@ -6,6 +6,7 @@ export * from './capitalize';
 export * from './colors';
 export * from './config';
 export * from './document';
+export * from './documentPath';
 export * from './documentFormat';
 export * from './docRepositories';
 export * from './gitRepositories';

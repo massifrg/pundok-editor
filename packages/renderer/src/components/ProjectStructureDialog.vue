@@ -77,6 +77,7 @@ import {
   EditorKeyType,
   ProjectComponent,
   CxDocument,
+  normalizeDocumentPath,
 } from '../common';
 import { QTreeNode } from 'quasar';
 import { Component, defineAsyncComponent } from 'vue';
@@ -143,10 +144,7 @@ function docToTreeNode(
 }
 
 function normalizedSource(src: string): string {
-  return src
-    .replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
-    .replace(/^\.\/+/, '');
+  return normalizeDocumentPath(src).replace(/^\.\/+/, '');
 }
 
 type ShowMode = 'normal' | 'maximized' | 'minimized';

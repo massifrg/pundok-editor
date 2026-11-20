@@ -26,6 +26,7 @@ import type { RendererHub } from '../rendererHub';
 import { validResourcePaths, type BackendDirectories } from '../resourceManager';
 import { renderingProcessKey } from '../renderingProcess';
 import { computeProjectFromDocFile } from './project';
+import { documentPathToFileUrl } from '../../../common/src';
 
 export async function saveDocument(
   directories: BackendDirectories,
@@ -63,7 +64,7 @@ export async function saveDocument(
       {
         type: 'document',
         id: doc.id,
-        url: toFileUrl(doc.path!),
+        url: documentPathToFileUrl(doc.path!),
         configurationName: doc.project ? undefined : doc.configurationName,
         projectName: doc.project?.name,
         timestamp: Date.now(),
@@ -201,7 +202,7 @@ export async function exportDocument(
         converter?.longRendering === true && converter.extension === 'pdf'
           ? {
             type: 'rendering',
-            url: toFileUrl(savedPath),
+            url: documentPathToFileUrl(savedPath),
             documentPath: sourceFile,
             projectPath: project?.path,
             documentName: project?.path
@@ -214,7 +215,7 @@ export async function exportDocument(
           : {
             type: 'document',
             id: doc.id,
-            url: toFileUrl(savedPath),
+            url: documentPathToFileUrl(savedPath),
             configurationName: doc.project ? undefined : doc.configurationName,
             projectName: project?.name,
           };
@@ -287,10 +288,6 @@ async function savePandocJsonDocument(
     resultFile: doc.path,
     cwd: parse(doc.path).dir,
   };
-}
-
-function toFileUrl(path: string): string {
-  return `file://${path.replaceAll('\\', '/')}`;
 }
 
 function errorMessage(error: unknown): string {

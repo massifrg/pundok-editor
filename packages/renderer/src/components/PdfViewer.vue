@@ -23,7 +23,8 @@ import {
   SYNCTEX_FILE_NOT_FOUND,
   SetupViewerActionProps,
   SynctexInfo,
-  ViewerSetup
+  ViewerSetup,
+  normalizeDocumentPath
 } from '../common';
 import { isString, throttle } from 'lodash-es';
 import { PromptDialog } from './dialogs'
@@ -39,8 +40,7 @@ interface PdfContent {
 
 function imageSource(filename: string, page: number, version: string): string {
   const url = new URL('img:///')
-  url.pathname = filename
-    .replaceAll('\\', '/')
+  url.pathname = normalizeDocumentPath(filename)
     .split('/')
     .map(encodeURIComponent)
     .join('/')
@@ -50,8 +50,8 @@ function imageSource(filename: string, page: number, version: string): string {
 }
 
 function projectDocumentName(documentPath: string, projectPath?: string): string {
-  const document = documentPath.replaceAll('\\', '/')
-  const project = projectPath?.replaceAll('\\', '/').replace(/\/+$/, '')
+  const document = normalizeDocumentPath(documentPath)
+  const project = projectPath ? normalizeDocumentPath(projectPath) : undefined
   if (project && document.startsWith(`${project}/`))
     return document.slice(project.length + 1)
   return document.split('/').pop() || document

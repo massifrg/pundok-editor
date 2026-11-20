@@ -8,6 +8,7 @@ import type {
   Place,
 } from '../../../common/src';
 import { localizePath } from '../filesystem';
+import { documentPathToFileUrl } from '../../../common/src';
 
 export async function getFolderContents(
   path: string,
@@ -39,7 +40,7 @@ export async function getFolderContents(
     }),
   );
   return {
-    baseUrl: `file://${directory.replaceAll('\\', '/')}`,
+    baseUrl: documentPathToFileUrl(directory),
     folders,
     documents,
     places,

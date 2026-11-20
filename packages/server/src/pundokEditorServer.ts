@@ -41,6 +41,8 @@ import {
   HARDCODED_CONFIG_NAME,
   PundokEditorConfig,
   documentFormatToOutputConverter,
+  documentPathFromFileUrl,
+  normalizeDocumentPath,
 } from './common';
 import {
   ensureBackendDirectories,
@@ -469,7 +471,7 @@ export class PundokEditorServer {
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
     const directories = this.directoriesForUser(user);
-    const path = filename.replace(/^file:\/\//, '');
+    const path = documentPathFromFileUrl(filename);
     return getFileContents(
       directories,
       isAbsolute(path) ? path : filename,
@@ -774,7 +776,7 @@ export class PundokEditorServer {
   }
 
   private resourcePathForUser(username: string, resource: string): string {
-    const path = resource.replace(/^file:\/\//, '');
+    const path = documentPathFromFileUrl(resource);
     if (isAbsolute(path)) {
       const directories = this.directoriesForUser(username);
       const candidate = resolve(path);
@@ -854,7 +856,7 @@ export class PundokEditorServer {
 
   private userPath(username: string, path: string): string {
     const root = resolve(this.directoriesForUser(username).userDataDir);
-    const candidate = resolve(root, path.replace(/^file:\/\//, ''));
+    const candidate = resolve(root, normalizeDocumentPath(path));
     const relativePath = relative(root, candidate);
     if (
       relativePath === '..' ||

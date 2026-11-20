@@ -19,6 +19,7 @@ import {
   getDefaultWorkingFormat,
   outputConverterToDocumentFormat,
   splitFolderAndDoc,
+  joinDocumentPath,
 } from '../../common';
 import {
   ACTION_DOCUMENT_SAVE,
@@ -68,7 +69,7 @@ export async function save(
   let path = props?.path;
   if (!path) {
     const folder = isCopy ? copyFolder : workingFolder;
-    path = (folder && documentName && `${folder}/${documentName}`) || undefined;
+    path = (folder && documentName && joinDocumentPath(folder, documentName)) || undefined;
   }
   const isSave = !isSaveAs && !isCopy;
   let documentFormat = asOutputFormat(
@@ -283,7 +284,7 @@ export async function exportDoc(
       path:
         storedDoc?.path ||
         (docState.workingFolder && docState.documentName
-          ? `${docState.workingFolder}/${docState.documentName}`
+          ? joinDocumentPath(docState.workingFolder, docState.documentName)
           : undefined),
       content: jsonDoc,
       project: docState.project,
@@ -311,7 +312,7 @@ export async function renderOutput(
   const docState = host.docState();
   const currentPath =
     docState?.workingFolder && docState.documentName
-      ? `${docState.workingFolder}/${docState.documentName}`
+      ? joinDocumentPath(docState.workingFolder, docState.documentName)
       : undefined;
   const renderingPath = path || currentPath;
   const renderingTarget = {

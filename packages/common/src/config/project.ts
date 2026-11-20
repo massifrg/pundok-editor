@@ -7,6 +7,7 @@ import {
   PundokEditorConfig,
 } from './editorConfiguration';
 import type { NamedAndDescribed } from '../types';
+import { normalizeDocumentPath } from '../documentPath';
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 
@@ -149,30 +150,9 @@ export function projectSourceVariants(
   src: string,
   projectPath?: string,
 ): Set<string> {
-  let normalized = src.trim();
-  try {
-    if (/^file:\/\//i.test(normalized))
-      normalized = decodeURIComponent(new URL(normalized).pathname);
-    else normalized = decodeURIComponent(normalized);
-  } catch {
-    // Keep filesystem paths containing a literal or malformed percent sign.
-  }
-  normalized = normalized
-    .replaceAll('\\', '/')
-    .replace(/^\.\/+/, '')
-    .replace(/\/+$/, '');
+  let normalized = normalizeDocumentPath(src);
   const variants = new Set([normalized]);
-  let project = projectPath?.trim();
-  try {
-    if (project && /^file:\/\//i.test(project))
-      project = decodeURIComponent(new URL(project).pathname);
-    else if (project) project = decodeURIComponent(project);
-  } catch {
-    // Keep filesystem paths containing a literal or malformed percent sign.
-  }
-  project = project
-    ?.replaceAll('\\', '/')
-    .replace(/\/+$/, '');
+  const project = projectPath ? normalizeDocumentPath(projectPath) : undefined;
   if (project && normalized.startsWith(`${project}/`))
     variants.add(normalized.slice(project.length + 1));
   return variants;

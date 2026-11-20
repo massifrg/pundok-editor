@@ -13,6 +13,7 @@ import {
   getDefaultWorkingFormat,
   getDefaultCopyFormat,
   getHardcodedEditorConfig,
+  joinDocumentPath,
 } from '../../common';
 import { type DocStateUpdate, CreateDocumentOptions } from '../../schema';
 import { Pandoc } from '../../schema/nodes/Pandoc';
@@ -247,7 +248,7 @@ export async function openDocument(
   } else {
     const currentDocumentPath =
       docState?.workingFolder && docState.documentName
-        ? resolve(docState.workingFolder, docState.documentName)
+        ? joinDocumentPath(docState.workingFolder, docState.documentName)
         : undefined;
     if (
       editorKey &&

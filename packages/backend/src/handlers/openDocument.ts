@@ -20,6 +20,7 @@ import { computeProjectFromDocFile } from './project';
 import { isReadableFile, getConfigurationInit, type BackendDirectories } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
 import { localizePath } from '../filesystem';
+import { documentPathToFileUrl } from '../../../common/src';
 
 export async function openDocument(
   directories: BackendDirectories,
@@ -162,7 +163,7 @@ export function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
   if (doc.path)
     bookmarks.push({
       type: 'document',
-      url: toUnixPath(doc.path),
+      url: documentPathToFileUrl(doc.path),
       configurationName: doc.project ? undefined : doc.configurationName,
       projectName: doc.project?.name,
       timestamp,
@@ -171,16 +172,13 @@ export function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
     bookmarks.push({
       type: 'project',
       name: doc.project.name,
-      url: `file://${toUnixPath(
+      url: documentPathToFileUrl(
         doc.project.rootDocument
           ? resolve(doc.project.path, doc.project.rootDocument)
           : doc.path,
-      )}`,
+      ),
       timestamp,
     });
   return bookmarks;
 }
 
-function toUnixPath(path: string): string {
-  return path.replaceAll('\\', '/');
-}

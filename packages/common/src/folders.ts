@@ -1,3 +1,5 @@
+import { documentPathBaseName, documentPathDirName, normalizeDocumentPath } from './documentPath';
+
 export type Folder = {
   // baseUrl: string,
   name: string
@@ -26,10 +28,9 @@ export interface FolderContents {
 }
 
 export function splitFolderAndDoc(path: string) {
-  const folder = path.replace(/^file:\/\//, '').replaceAll('\\', '/').split('/')
-  const document = folder.pop()
+  const normalized = normalizeDocumentPath(path)
   return {
-    folder: folder.join('/'),
-    document
+    folder: documentPathDirName(normalized),
+    document: documentPathBaseName(normalized)
   }
 }

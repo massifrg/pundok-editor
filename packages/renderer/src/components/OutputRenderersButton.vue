@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import type { Editor } from '@tiptap/vue-3';
 import { isAbsolute, resolve } from 'path-browserify';
 import type { OutputConverter, ProjectComponent, PundokEditorProject } from '../common';
-import { getParentProjectComponent } from '../common';
+import { getParentProjectComponent, joinDocumentPath } from '../common';
 import { getDocState, getEditorConfiguration } from '../schema';
 import { expandCommandArgs } from './helpers/expandCommandArgs';
 import type { RenderingTarget } from './helpers';
@@ -157,7 +157,7 @@ watch(
 );
 
 function joinPath(base: string, name: string): string {
-  return `${base.replace(/[\\/]+$/, '')}/${name.replace(/^[\\/]+/, '')}`;
+  return joinDocumentPath(base, name);
 }
 
 function projectSourcePath(source: string, currentProject?: PundokEditorProject): string {

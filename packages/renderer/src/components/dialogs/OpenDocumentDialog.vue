@@ -34,6 +34,7 @@ import {
   documentFormatFromInputConverter,
   documentFormatFromOutputConverter,
   documentFormatFromPandocFormatDescription,
+  joinDocumentPath,
 } from '../../common';
 import { editorKeyFromState, getEditorConfiguration, getEditorDocState } from '../../schema';
 import { useBackend } from '../../stores';
@@ -268,11 +269,11 @@ export default {
     targetPath(): string | undefined {
       if (this.mode === 'folder')
         return this.currentFolder && this.selectedDocument
-          ? `${this.currentFolder}/${this.selectedDocument}`
+          ? joinDocumentPath(this.currentFolder, this.selectedDocument)
           : undefined
       else
         return this.currentFolder && this.filename
-          ? `${this.currentFolder}/${this.filename}`
+          ? joinDocumentPath(this.currentFolder, this.filename)
           : undefined
     },
     dialogPrompt() {
@@ -551,7 +552,7 @@ export default {
     },
     async createFolder(folder: string) {
       try {
-        const path = await this.backend?.createFolder(`${this.currentFolder}/${folder}`)
+        const path = await this.backend?.createFolder(joinDocumentPath(this.currentFolder, folder))
         if (path) {
           this.currentFolder = path
           this.getContents()
@@ -617,7 +618,7 @@ export default {
       } else if (row.isFolder) {
         this.currentFolder = row.name === '..'
           ? splitFolderAndDoc(this.currentFolder).folder
-          : this.currentFolder = `${this.currentFolder}/${row.name}`
+          : this.currentFolder = joinDocumentPath(this.currentFolder, row.name)
         this.getContents()
       }
     },

@@ -17,16 +17,14 @@ import {
   ProjectBookmark,
   PundokBookmark,
   type ProjectComponent,
+  normalizeDocumentPath,
 } from '../common';
 import { editorKeyFromState, getDocState, type DocState } from '../schema';
 import { useBackend } from '../stores';
 import { basename, isAbsolute, relative, resolve } from 'path-browserify';
 
 function normalizedProjectSource(src: string): string {
-  return src
-    .replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
-    .replace(/^\.\/+/, '');
+  return normalizeDocumentPath(src).replace(/^\.\/+/, '');
 }
 
 function findProjectSource(

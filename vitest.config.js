@@ -1,3 +1,16 @@
+if (!Map.groupBy) {
+  Map.groupBy = function (items, keyFor) {
+    const result = new Map();
+    for (const item of items) {
+      const key = keyFor(item);
+      const group = result.get(key);
+      if (group) group.push(item);
+      else result.set(key, [item]);
+    }
+    return result;
+  };
+}
+
 /**
  * Config for global end-to-end tests
  * placed in project root tests folder

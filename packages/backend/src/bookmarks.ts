@@ -1,7 +1,13 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import type { PundokBookmark, PundokBookmarkType } from '../../common/src';
+import {
+  documentLocation,
+  documentPathFromFileUrl,
+  documentPathToFileUrl,
+  normalizeDocumentPath,
+} from '../../common/src';
 import type { BackendDirectories } from './resourceManager';
 
 export const BOOKMARKS_FILENAME = 'bookmarks.json';
@@ -153,27 +159,11 @@ function projectBookmarkPath(
 }
 
 function normalizeBookmarkUrl(url: string): string {
-  if (isAbsolute(url)) return pathToFileURL(url).href;
-
-  if (url.startsWith('file://')) {
-    try {
-      return pathToFileURL(fileURLToPath(url)).href;
-    } catch {
-      try {
-        return pathToFileURL(decodeURIComponent(url.slice('file://'.length)))
-          .href;
-      } catch {
-        return url;
-      }
-    }
-  }
-
-  try {
-    const parsedUrl = new URL(url);
-    return parsedUrl.protocol === 'file:'
-      ? pathToFileURL(fileURLToPath(parsedUrl)).href
-      : url;
-  } catch {
-    return pathToFileURL(resolve(url)).href;
-  }
+  const location = documentLocation(url);
+  if (location.kind === 'url') return location.value;
+  const path = normalizeDocumentPath(
+    /^file:/i.test(url) ? documentPathFromFileUrl(url) : url,
+  );
+  if (isAbsolute(path)) return documentPathToFileUrl(path);
+  return documentPathToFileUrl(resolve(path));
 }
