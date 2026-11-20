@@ -146,10 +146,15 @@ export default {
       )
     },
     renderingBookmarks(): RenderingBookmark[] {
-      return Object.values(this.renderingJobs)
+      const bookmarks = Object.values(this.renderingJobs)
         .filter((item) => this.isPdfRendering(item))
+      const timestamped = bookmarks
+        .filter((item) => typeof item.timestamp === 'number')
+        .sort((a, b) => b.timestamp! - a.timestamp!)
+      const untimestamped = bookmarks
+        .filter((item) => typeof item.timestamp !== 'number')
         .reverse()
-        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      return [...timestamped, ...untimestamped]
     },
     renderingDocumentName(): string {
       const bookmark = this.currentRendering
