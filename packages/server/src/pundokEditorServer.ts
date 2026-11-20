@@ -71,6 +71,7 @@ import {
   openDocument,
   saveDocument,
   getPdfPageCount as countPdfPages,
+  listSynctexFile as listSynctex,
   renderingProcessKey,
   stopRenderingProcess,
   transformationProcessKey,
@@ -523,6 +524,10 @@ export class PundokEditorServer {
     return countPdfPages(this.userPath(user, path));
   }
 
+  async listSynctexFile(user: string, path: string) {
+    return listSynctex(this.userPath(user, path));
+  }
+
   async queryDatabase(user: string, query: Query): Promise<QueryResult[]> {
     return dispatchQuery(
       this.directoriesForUser(user),
@@ -588,10 +593,13 @@ export class PundokEditorServer {
     bookmarks: RenderingBookmark[],
     project?: PundokEditorProject,
   ): Promise<PdfLocation | undefined> {
-    const backendBookmarks = bookmarks.map((bookmark) => ({
+    const backendBookmarks: RenderingBookmark[] = bookmarks.map((bookmark) => ({
       ...bookmark,
       url: this.userPath(user, bookmark.url),
       documentPath: this.userPath(user, bookmark.documentPath),
+      projectPath: bookmark.projectPath
+        ? this.userPath(user, bookmark.projectPath)
+        : undefined,
     }));
     const location = await getPdfLocation(
       this.directoriesForUser(user),

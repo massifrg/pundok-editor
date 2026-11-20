@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { basename, isAbsolute, parse, resolve } from 'node:path';
+import { basename, isAbsolute, parse, relative, resolve } from 'node:path';
 import {
   DEFAULT_DOCUMENT_FORMAT,
   documentFormatToOutputConverter,
@@ -203,6 +203,10 @@ export async function exportDocument(
             type: 'rendering',
             url: toFileUrl(savedPath),
             documentPath: sourceFile,
+            projectPath: project?.path,
+            documentName: project?.path
+              ? relative(project.path, sourceFile).replaceAll('\\', '/')
+              : basename(sourceFile),
             converterName: converter.name,
             configurationName: doc.project ? undefined : doc.configurationName,
             timestamp: Date.now(),

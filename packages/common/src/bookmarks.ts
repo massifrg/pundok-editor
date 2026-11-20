@@ -22,6 +22,8 @@ export interface RenderingBookmark {
   type: 'rendering';
   url: string;
   documentPath: string;
+  projectPath?: string;
+  documentName?: string;
   converterName: string;
   configurationName?: string;
   timestamp?: number;
