@@ -14,9 +14,10 @@ export async function getBookmarks(
   type?: PundokBookmarkType,
 ): Promise<PundokBookmark[]> {
   const bookmarks = await readBookmarks(directories);
-  return type
+  const filteredBookmarks = type
     ? bookmarks.filter((bookmark) => bookmark.type === type)
     : bookmarks;
+  return sortBookmarksByTimestamp(filteredBookmarks);
 }
 
 export async function updateBookmarks(
@@ -122,6 +123,23 @@ function addBookmark(
       return true;
     }),
   ];
+}
+
+function sortBookmarksByTimestamp(
+  bookmarks: PundokBookmark[],
+): PundokBookmark[] {
+  return bookmarks
+    .map((bookmark, index) => ({ bookmark, index }))
+    .sort((a, b) => {
+      const timestampA = a.bookmark.timestamp;
+      const timestampB = b.bookmark.timestamp;
+      if (typeof timestampA !== 'number' && typeof timestampB !== 'number')
+        return a.index - b.index;
+      if (typeof timestampA !== 'number') return 1;
+      if (typeof timestampB !== 'number') return -1;
+      return timestampB - timestampA || a.index - b.index;
+    })
+    .map(({ bookmark }) => bookmark);
 }
 
 function projectBookmarkPath(

@@ -145,4 +145,39 @@ describe('updateBookmarks', () => {
       }),
     ]);
   });
+
+  it('returns bookmarks in descending timestamp order', async () => {
+    const bookmarksPath = join(userDataDir, BOOKMARKS_FILENAME);
+    await writeFile(
+      bookmarksPath,
+      JSON.stringify([
+        {
+          type: 'document',
+          url: pathToFileURL(join(userDataDir, 'old.md')).href,
+          timestamp: 100,
+        },
+        {
+          type: 'document',
+          url: pathToFileURL(join(userDataDir, 'new.md')).href,
+          timestamp: 300,
+        },
+        {
+          type: 'document',
+          url: pathToFileURL(join(userDataDir, 'legacy.md')).href,
+        },
+      ]),
+    );
+
+    await expect(getBookmarks(directories, 'document')).resolves.toEqual([
+      expect.objectContaining({
+        url: pathToFileURL(join(userDataDir, 'new.md')).href,
+      }),
+      expect.objectContaining({
+        url: pathToFileURL(join(userDataDir, 'old.md')).href,
+      }),
+      expect.objectContaining({
+        url: pathToFileURL(join(userDataDir, 'legacy.md')).href,
+      }),
+    ]);
+  });
 });
