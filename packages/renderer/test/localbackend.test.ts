@@ -22,4 +22,24 @@ describe('LocalBackend IPC values', () => {
     expect(plain).toEqual(project);
     expect(plain).not.toBe(project);
   });
+
+  it('removes proxies recursively from arrays and nested options', () => {
+    const options = reactive({
+      project: reactive({
+        path: 'C:/projects/book',
+        rootDocument: 'index.md',
+      }),
+      paths: reactive(['chapter.md', 'images/figure.png']),
+    });
+
+    const plain = plainIpcValue(options);
+    expect(() => structuredClone(plain)).not.toThrow();
+    expect(plain).toEqual(options);
+    expect(plain.paths).not.toBe(options.paths);
+    expect(plain.project).not.toBe(options.project);
+  });
+
+  it('preserves undefined scalar-like values', () => {
+    expect(plainIpcValue(undefined)).toBeUndefined();
+  });
 });
