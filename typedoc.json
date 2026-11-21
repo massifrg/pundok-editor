@@ -1,5 +1,10 @@
 {
   "out": "./docs/api",
+  "tsconfig": "./tsconfig.json",
+  "validation": {
+    "notExported": false
+  },
+  "treatWarningsAsErrors": true,
   "entryPoints": [
     "packages/common/src/index.ts",
     "packages/pandoc/src/index.ts",

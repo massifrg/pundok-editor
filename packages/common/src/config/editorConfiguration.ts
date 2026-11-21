@@ -453,7 +453,6 @@ function prunedFieldsFromConfig(
  * are removed and other ones are kept (the removal goes first).
  * @param c The initial configuration.
  * @param prune The values to be removed in specific fields of the configuration.
- * @param keep The values to be kept in specific fields of the configuration.
  * @returns A modified configuration.
  */
 export function getPrunedConfigInit(

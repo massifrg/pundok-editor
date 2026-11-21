@@ -14,7 +14,10 @@ import type {
 } from '../../../common/src';
 import type { FeedbackSink } from '../feedback';
 import { isReadableFile, type BackendDirectories } from '../resourceManager';
-import { runExternalProgram } from '../runExternal';
+import {
+  runExternalProgram,
+  type ExternalProgramEnvironment,
+} from '../runExternal';
 import { computeProjectFromDocFile } from './project';
 import { localizePath } from '../filesystem';
 
@@ -316,7 +319,7 @@ function pageDimensions(
 
 async function extendedEnvironment(
   directories: BackendDirectories,
-): Promise<Record<string, string | undefined>> {
+): Promise<ExternalProgramEnvironment> {
   let startup: { env?: Record<string, string> } = {};
   try {
     startup = JSON.parse(
@@ -326,7 +329,7 @@ async function extendedEnvironment(
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
 
-  const environment = { ...process.env };
+  const environment: ExternalProgramEnvironment = { ...process.env };
   for (const [name, value] of Object.entries(startup.env || {})) {
     environment[name] =
       name === 'PATH' && environment.PATH
