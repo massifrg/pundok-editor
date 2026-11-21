@@ -74,6 +74,7 @@ import {
 } from '../actions';
 import { useActions } from '../stores';
 import { handleEditorEvent } from './editorEventHandlers';
+import { plainIpcValue } from './ipcValue';
 
 type Listener = () => void;
 
@@ -346,7 +347,7 @@ export class LocalBackend implements Backend {
   async getProject(
     options: GetProjectOptions,
   ): Promise<PundokEditorProject | undefined> {
-    return window.ipc.getProject(options);
+    return window.ipc.getProject(plainIpcValue(options));
   }
 
   async createProject(
@@ -481,7 +482,7 @@ export class LocalBackend implements Backend {
   }
 
   async gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void> {
-    return window.ipc.getSourceFile(editorKey, info);
+    return window.ipc.getSourceFile(editorKey, plainIpcValue(info));
   }
 
   getPdfLocation(
@@ -495,8 +496,8 @@ export class LocalBackend implements Backend {
       editorKey,
       sourceFile,
       line,
-      bookmarks,
-      project,
+      plainIpcValue(bookmarks),
+      plainIpcValue(project),
     );
   }
 
@@ -505,7 +506,7 @@ export class LocalBackend implements Backend {
   }
 
   async renderAgain(bookmark: RenderingBookmark, editorKey: EditorKeyType): Promise<void> {
-    await window.ipc.renderAgain(bookmark, editorKey);
+    await window.ipc.renderAgain(plainIpcValue(bookmark), editorKey);
   }
 
   stopRendering(converterName: string, path: string): Promise<boolean> {
