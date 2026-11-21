@@ -2,9 +2,14 @@
 import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { Editor } from '@tiptap/vue-3';
-import { isAbsolute, resolve } from 'path-browserify';
 import type { OutputConverter, ProjectComponent, PundokEditorProject } from '../common';
-import { getParentProjectComponent, joinDocumentPath } from '../common';
+import {
+  getParentProjectComponent,
+  isDocumentPathAbsolute,
+  joinDocumentPath,
+  normalizeDocumentPath,
+  resolveDocumentPath,
+} from '../common';
 import { getDocState, getEditorConfiguration } from '../schema';
 import { expandCommandArgs } from './helpers/expandCommandArgs';
 import type { RenderingTarget } from './helpers';
@@ -72,8 +77,11 @@ function targetsFor(converter: OutputConverter): {
   path?: string;
   resultFile: string;
 }[] {
+  const currentTargets: { path?: string }[] = currentPath.value
+    ? [{ path: currentPath.value }]
+    : [{}];
   const candidates = [
-    ...(currentPath.value ? [{ path: currentPath.value }] : [{}]),
+    ...currentTargets,
     ...ancestorTargets.value,
   ].map(({ path }) => ({
     path,
@@ -161,14 +169,14 @@ function joinPath(base: string, name: string): string {
 }
 
 function projectSourcePath(source: string, currentProject?: PundokEditorProject): string {
-  const normalized = source.replace(/^file:\/\//, '');
-  return currentProject?.path && !isAbsolute(normalized)
-    ? resolve(currentProject.path, normalized)
+  const normalized = normalizeDocumentPath(source);
+  return currentProject?.path && !isDocumentPathAbsolute(normalized)
+    ? resolveDocumentPath(currentProject.path, normalized)
     : normalized;
 }
 
 function normalizedSource(source: string): string {
-  return source.replace(/^file:\/\//, '').replaceAll('\\', '/').replace(/^\.\/+/, '');
+  return normalizeDocumentPath(source).replace(/^\.\/+/, '');
 }
 
 function currentProjectSource(

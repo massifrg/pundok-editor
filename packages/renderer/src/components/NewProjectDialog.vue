@@ -87,11 +87,11 @@ setupQuasarIcons();
 import { mapState } from 'pinia';
 import { useBackend } from '../stores';
 import NameDescriptionEditor from './NameDescriptionEditor.vue';
-import { parse as parsePath } from 'path-browserify';
 import {
   ConfigurationSummary,
   PundokEditorConfigInit,
   PundokEditorProject,
+  documentPathDirName,
 } from '../common';
 import {
   filePathBaseName,
@@ -192,7 +192,7 @@ export default {
       });
     },
     async selectRootDocument() {
-      const startFolder = (this.path && parsePath(this.path).dir) || undefined;
+      const startFolder = (this.path && documentPathDirName(this.path)) || undefined;
       showOpenDocumentDialog({
         editor: this.editor,
         options: {

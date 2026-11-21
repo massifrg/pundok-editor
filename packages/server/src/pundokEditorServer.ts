@@ -42,7 +42,10 @@ import {
   PundokEditorConfig,
   documentFormatToOutputConverter,
   documentPathFromFileUrl,
+  isDocumentPathAbsolute,
   normalizeDocumentPath,
+  resolveDocumentContextPath,
+  resolveDocumentPath,
 } from './common';
 import {
   ensureBackendDirectories,
@@ -325,7 +328,9 @@ export class PundokEditorServer {
     user: string,
     context: Partial<DocumentContext>,
   ): Promise<FolderContents> {
-    const path = context.path || context.project?.path || '.';
+    const path = context.path
+      ? resolveDocumentContextPath(context.path, context.project?.path)
+      : context.project?.path || '.';
     return getFolderContents(this.userPath(user, path));
   }
 
@@ -725,19 +730,27 @@ export class PundokEditorServer {
     username: string,
     document: Partial<CxDocument>,
   ): Partial<CxDocument> {
-    this.validateOutputPath(username, document);
-    return {
+    const project = document.project
+      ? this.projectForUser(username, document.project)
+      : undefined;
+    const path = document.path
+      ? this.userPath(
+          username,
+          resolveDocumentContextPath(document.path, document.project?.path),
+        )
+      : undefined;
+    const localized = {
       ...document,
-      ...(document.path && { path: this.userPath(username, document.path) }),
+      ...(path && { path }),
       ...(document.resourcePath && {
         resourcePath: document.resourcePath.map((path) =>
           this.resourcePathForUser(username, path),
         ),
       }),
-      ...(document.project && {
-        project: this.projectForUser(username, document.project),
-      }),
+      ...(project && { project }),
     };
+    this.validateOutputPath(username, localized);
+    return localized;
   }
 
   private projectForUser(
@@ -745,13 +758,18 @@ export class PundokEditorServer {
     project: PundokEditorProject,
   ): PundokEditorProject {
     const path = this.userPath(username, project.path);
-    const rootDocument = project.rootDocument
-      ? this.userPath(username, resolve(path, project.rootDocument))
-      : undefined;
+    const rootDocument = normalizeDocumentPath(project.rootDocument);
+    if (rootDocument)
+      this.userPath(
+        username,
+        isDocumentPathAbsolute(rootDocument)
+          ? rootDocument
+          : resolveDocumentPath(path, rootDocument),
+      );
     return {
       ...project,
       path,
-      ...(rootDocument && { rootDocument }),
+      rootDocument,
     };
   }
 

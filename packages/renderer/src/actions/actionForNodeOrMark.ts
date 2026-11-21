@@ -52,7 +52,7 @@ import {
 import { setActionCommand, setActionSetupViewer, setActionShowResultMessage } from './actionCommands';
 import { getDocState } from '../schema/helpers';
 import { useBackend } from '../stores';
-import { resolve } from 'path-browserify';
+import { resolveDocumentPath } from '../common';
 
 const lineNodeTypes = new Set([
   NODE_NAME_PARAGRAPH,
@@ -86,7 +86,7 @@ function documentLineAt(
 function sourcePathForState(state: EditorState): string | undefined {
   const docState = getDocState(state);
   return docState?.workingFolder && docState.documentName
-    ? resolve(docState.workingFolder, docState.documentName)
+    ? resolveDocumentPath(docState.workingFolder, docState.documentName)
     : undefined;
 }
 

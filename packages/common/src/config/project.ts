@@ -7,7 +7,10 @@ import {
   PundokEditorConfig,
 } from './editorConfiguration';
 import type { NamedAndDescribed } from '../types';
-import { normalizeDocumentPath } from '../documentPath';
+import {
+  normalizeDocumentPath,
+  relativeDocumentPath,
+} from '../documentPath';
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 
@@ -150,11 +153,14 @@ export function projectSourceVariants(
   src: string,
   projectPath?: string,
 ): Set<string> {
-  let normalized = normalizeDocumentPath(src);
+  const normalized = normalizeDocumentPath(src).replace(/^\.\/+/, '');
   const variants = new Set([normalized]);
   const project = projectPath ? normalizeDocumentPath(projectPath) : undefined;
-  if (project && normalized.startsWith(`${project}/`))
-    variants.add(normalized.slice(project.length + 1));
+  if (project) {
+    const relative = relativeDocumentPath(project, normalized);
+    if (relative && relative !== '..' && !relative.startsWith('../'))
+      variants.add(relative);
+  }
   return variants;
 }
 

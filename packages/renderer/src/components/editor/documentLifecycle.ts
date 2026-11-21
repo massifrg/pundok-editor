@@ -1,6 +1,5 @@
 import { markRaw } from 'vue';
 import { Editor } from '@tiptap/vue-3';
-import { resolve } from 'path-browserify';
 import {
   type CxDocument,
   type DocumentContext,
@@ -14,6 +13,7 @@ import {
   getDefaultCopyFormat,
   getHardcodedEditorConfig,
   joinDocumentPath,
+  normalizeDocumentPath,
 } from '../../common';
 import { type DocStateUpdate, CreateDocumentOptions } from '../../schema';
 import { Pandoc } from '../../schema/nodes/Pandoc';
@@ -254,7 +254,7 @@ export async function openDocument(
       editorKey &&
       atLine !== undefined &&
       currentDocumentPath &&
-      resolve(context.path) === currentDocumentPath
+      normalizeDocumentPath(context.path) === currentDocumentPath
     ) {
       const action = ACTION_DOCUMENT_GO_TO_LINE;
       if (atLine) action.label += ` ${atLine}`;

@@ -14,25 +14,15 @@ function decodePath(value: string): string {
 }
 
 export function normalizeDocumentPath(path: string): string {
-  let normalized = path;
-  if (/^file:\/\/\//i.test(normalized)) {
-    normalized = normalized.slice('file://'.length);
-  } else if (/^file:\/\//i.test(normalized)) {
-    const authorityAndPath = normalized.slice('file://'.length);
-    if (/^[a-z]:/i.test(authorityAndPath))
-      normalized = authorityAndPath;
-    else
-      normalized = `//${authorityAndPath}`;
-  }
-
-  normalized = decodePath(normalized).replaceAll('\\', '/');
+  let normalized = /^file:/i.test(path) ? fileUrlPath(path) : decodePath(path);
+  normalized = normalized.replaceAll('\\', '/');
 
   if (/^[a-z]:/i.test(normalized))
-    normalized = normalized.replace(/^([a-z]):/i, (_, drive: string) =>
-      `${drive.toUpperCase()}:`,
+    normalized = normalized.replace(
+      /^([a-z]):/i,
+      (_, drive: string) => `${drive.toUpperCase()}:`,
     );
-  if (/^\/[a-z]:\//i.test(normalized))
-    normalized = normalized.slice(1);
+  if (/^\/[a-z]:\//i.test(normalized)) normalized = normalized.slice(1);
 
   normalized = normalized.replace(/\/+$/, '');
   if (/^[a-z]:$/i.test(normalized)) return normalized;
@@ -40,6 +30,24 @@ export function normalizeDocumentPath(path: string): string {
   if (normalized.startsWith('//'))
     return `//${normalized.replace(/^\/+/, '').replace(/\/+/g, '/').replace(/\/+$/, '')}`;
   return normalized.replace(/\/+/g, '/');
+}
+
+function fileUrlPath(url: string): string {
+  const value = url.replace(/^file:/i, '');
+  if (value.startsWith('//')) {
+    const withoutSlashes = value.slice(2);
+    if (withoutSlashes.startsWith('/')) {
+      const localPath = decodePath(withoutSlashes);
+      return /^[\\/][a-z]:/i.test(localPath) ? localPath.slice(1) : localPath;
+    }
+    const authorityAndPath = decodePath(withoutSlashes);
+    if (/^[a-z]:\//i.test(authorityAndPath)) return authorityAndPath;
+    if (authorityAndPath.startsWith('/')) return authorityAndPath;
+    if (/^localhost\//i.test(authorityAndPath))
+      return `/${authorityAndPath.slice('localhost/'.length)}`;
+    return `//${authorityAndPath}`;
+  }
+  return decodePath(value);
 }
 
 export function documentLocation(pathOrUrl: string): DocumentLocation {
@@ -55,22 +63,26 @@ export function documentLocation(pathOrUrl: string): DocumentLocation {
 
 export function documentPathToFileUrl(path: string): string {
   const normalized = normalizeDocumentPath(path);
-  if (/^[a-z]:\//i.test(normalized))
-    return `file:///${encodeURI(normalized).replaceAll('#', '%23').replaceAll('?', '%3F')}`;
-  if (normalized.startsWith('//'))
-    return `file://${encodeURI(normalized.slice(2)).replaceAll('#', '%23').replaceAll('?', '%3F')}`;
-  return `file://${encodeURI(normalized.startsWith('/') ? normalized : `/${normalized}`).replaceAll('#', '%23').replaceAll('?', '%3F')}`;
+  const encoded = normalized
+    .split('/')
+    .map((segment) =>
+      encodeURIComponent(segment)
+        .replaceAll('%3A', ':')
+        .replace(
+          /[!'()*]/g,
+          (character) =>
+            `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
+        ),
+    )
+    .join('/');
+  if (/^[a-z]:\//i.test(normalized)) return `file:///${encoded}`;
+  if (normalized.startsWith('//')) return `file://${encoded.slice(2)}`;
+  return `file://${encoded.startsWith('/') ? encoded : `/${encoded}`}`;
 }
 
 export function documentPathFromFileUrl(url: string): string {
   if (!/^file:/i.test(url)) return normalizeDocumentPath(url);
-  if (/^file:\/\/[^/]/i.test(url)) {
-    const authorityAndPath = url.replace(/^file:\/\/+/i, '');
-    if (/^[a-z]:/i.test(authorityAndPath))
-      return normalizeDocumentPath(authorityAndPath);
-    return normalizeDocumentPath(`//${authorityAndPath}`);
-  }
-  return normalizeDocumentPath(url.replace(/^file:\/\/\/?/i, '/'));
+  return normalizeDocumentPath(url);
 }
 
 export function documentPathBaseName(path: string): string {
@@ -84,18 +96,14 @@ export function documentPathDirName(path: string): string {
   const separator = normalized.lastIndexOf('/');
   if (separator < 0) return '';
   if (separator === 0) return '/';
-  if (/^\/\/[^/]+\/[^/]+$/.test(normalized))
-    return normalized;
+  if (/^\/\/[^/]+\/[^/]+$/.test(normalized)) return normalized;
   return normalized.slice(0, separator);
 }
 
 export function joinDocumentPath(base: string, child: string): string {
   const normalizedBase = normalizeDocumentPath(base);
   let normalizedChild = normalizeDocumentPath(child);
-  if (
-    normalizedChild.startsWith('/') ||
-    /^[a-z]:\//i.test(normalizedChild)
-  )
+  if (normalizedChild.startsWith('/') || /^[a-z]:\//i.test(normalizedChild))
     return normalizedChild;
   if (!normalizedBase) return normalizedChild;
   return normalizeDocumentPath(
@@ -103,27 +111,31 @@ export function joinDocumentPath(base: string, child: string): string {
   );
 }
 
+export function isDocumentPathAbsolute(path: string): boolean {
+  const normalized = normalizeDocumentPath(path);
+  return normalized.startsWith('/') || /^[a-z]:\//i.test(normalized);
+}
+
+export function documentPathRoot(path: string): string {
+  const normalized = normalizeDocumentPath(path);
+  if (/^[a-z]:\//i.test(normalized)) return `${normalized.slice(0, 2)}/`;
+  if (normalized.startsWith('//')) {
+    const segments = normalized.slice(2).split('/');
+    return segments.length >= 2
+      ? `//${segments.slice(0, 2).join('/')}/`
+      : `${normalized}/`;
+  }
+  return normalized.startsWith('/') ? '/' : '';
+}
+
 export function resolveDocumentPath(base: string, path: string): string {
   const normalizedBase = normalizeDocumentPath(base);
   const normalizedPath = normalizeDocumentPath(path);
-  if (
-    normalizedPath.startsWith('/') ||
-    /^[/]{2}/.test(normalizedPath) ||
-    /^[a-z]:\//i.test(normalizedPath)
-  )
-    return normalizedPath;
+  if (isDocumentPathAbsolute(normalizedPath)) return normalizedPath;
 
   const combined = joinDocumentPath(normalizedBase, normalizedPath);
-  const prefix = /^[a-z]:\//i.test(combined)
-    ? `${combined.slice(0, 3)}`
-    : combined.startsWith('//')
-      ? '//'
-      : combined.startsWith('/')
-        ? '/'
-        : '';
-  const remainder = prefix
-    ? combined.slice(prefix === '//' ? 2 : prefix.length)
-    : combined;
+  const root = documentPathRoot(combined);
+  const remainder = root ? combined.slice(root.length) : combined;
   const segments: string[] = [];
   for (const segment of remainder.split('/')) {
     if (!segment || segment === '.') continue;
@@ -133,16 +145,60 @@ export function resolveDocumentPath(base: string, path: string): string {
       segments.push(segment);
     }
   }
-  if (prefix === '//') return `//${segments.join('/')}`;
-  if (prefix === '/') return `/${segments.join('/')}`;
-  if (prefix) return `${prefix}${segments.join('/')}`;
+  if (root) return normalizeDocumentPath(`${root}${segments.join('/')}`);
   return segments.join('/');
+}
+
+export function resolveDocumentContextPath(
+  path: string,
+  projectPath?: string,
+): string {
+  const normalized = normalizeDocumentPath(path);
+  return projectPath && !isDocumentPathAbsolute(normalized)
+    ? resolveDocumentPath(projectPath, normalized)
+    : normalized;
+}
+
+export function relativeDocumentPath(from: string, to: string): string {
+  const normalizedFrom = normalizeDocumentPath(from);
+  const normalizedTo = normalizeDocumentPath(to);
+  const fromRoot = documentPathRoot(normalizedFrom);
+  const toRoot = documentPathRoot(normalizedTo);
+  const windows =
+    /^[a-z]:\//i.test(fromRoot) ||
+    /^[a-z]:\//i.test(toRoot) ||
+    fromRoot.startsWith('//') ||
+    toRoot.startsWith('//');
+  const sameRoot = windows
+    ? fromRoot.toLowerCase() === toRoot.toLowerCase()
+    : fromRoot === toRoot;
+  if (!sameRoot) return normalizedTo;
+
+  const fromParts = normalizedFrom
+    .slice(fromRoot.length)
+    .split('/')
+    .filter(Boolean);
+  const toParts = normalizedTo.slice(toRoot.length).split('/').filter(Boolean);
+  let common = 0;
+  while (
+    common < fromParts.length &&
+    common < toParts.length &&
+    (windows
+      ? fromParts[common].toLowerCase() === toParts[common].toLowerCase()
+      : fromParts[common] === toParts[common])
+  )
+    common++;
+  return [
+    ...fromParts.slice(common).map(() => '..'),
+    ...toParts.slice(common),
+  ].join('/');
 }
 
 export function documentPathsEqual(first: string, second: string): boolean {
   const normalizedFirst = normalizeDocumentPath(first);
   const normalizedSecond = normalizeDocumentPath(second);
-  const windows = /^[a-z]:\//i.test(normalizedFirst) ||
+  const windows =
+    /^[a-z]:\//i.test(normalizedFirst) ||
     /^[a-z]:\//i.test(normalizedSecond) ||
     normalizedFirst.startsWith('//') ||
     normalizedSecond.startsWith('//');

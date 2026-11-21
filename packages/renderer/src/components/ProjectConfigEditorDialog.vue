@@ -327,7 +327,6 @@ setupQuasarIcons();
 import type { PropType } from 'vue';
 import { mapState } from 'pinia';
 import type { Editor } from '@tiptap/vue-3';
-import { isAbsolute, parse as parsePath, relative } from 'path-browserify';
 import type {
   CustomAttribute,
   CustomClass,
@@ -343,7 +342,13 @@ import type {
   PundokEditorProject,
   ResourceFile,
 } from '../common';
-import { DEFAULT_MAIN_FORMATS, pandocFormatsDefs } from '../common';
+import {
+  DEFAULT_MAIN_FORMATS,
+  documentPathDirName,
+  isDocumentPathAbsolute,
+  pandocFormatsDefs,
+  relativeDocumentPath,
+} from '../common';
 import { computeProjectConfiguration } from '../common';
 import { serializeProject } from '../common';
 import ProjectConfigurationsEditor from './confeditors/ProjectConfigurationsEditor.vue';
@@ -1044,9 +1049,14 @@ export default {
     selectRootDocument() {
       if (!this.editor || !this.project) return;
       const rootPath = this.project.rootDocument
-        ? parsePath(
-            filePathWithChild(this.project.path, this.project.rootDocument),
-          )
+        ? {
+            dir: documentPathDirName(
+              filePathWithChild(this.project.path, this.project.rootDocument),
+            ),
+            base: filePathBaseName(
+              filePathWithChild(this.project.path, this.project.rootDocument),
+            ),
+          }
         : undefined;
       showOpenDocumentDialog({
         editor: this.editor,
@@ -1179,7 +1189,7 @@ export default {
     async chooseDocumentTemplate() {
       if (!this.editor || !this.project) return;
       let startFolder = this.values.documentTemplate
-        ? parsePath(this.values.documentTemplate).dir
+        ? documentPathDirName(this.values.documentTemplate)
         : this.project.path;
       if (!this.values.documentTemplate && this.backend) {
         const templatesFolder = `${this.project.path}/templates`;
@@ -1249,7 +1259,9 @@ export default {
       };
       if (this.project?.path && Array.isArray(editorConfig.customCss)) {
         editorConfig.customCss = editorConfig.customCss.map((path: string) =>
-          isAbsolute(path) ? relative(this.project!.path, path) : path,
+          isDocumentPathAbsolute(path)
+            ? relativeDocumentPath(this.project!.path, path)
+            : path,
         );
       }
       const remove: Record<string, unknown> = {

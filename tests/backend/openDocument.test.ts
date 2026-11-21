@@ -15,11 +15,13 @@ describe('bookmarksForDocument', () => {
       },
     } satisfies CxDocument);
 
-    expect(bookmarks).toContainEqual({
-      type: 'project',
-      name: 'Notes',
-      url: 'file:///projects/notes/notes.md',
-    });
+    expect(bookmarks).toContainEqual(
+      expect.objectContaining({
+        type: 'project',
+        name: 'Notes',
+        url: 'file:///projects/notes/notes.md',
+      }),
+    );
   });
 
   it('remembers a project with a root document using that document', () => {
@@ -34,10 +36,36 @@ describe('bookmarksForDocument', () => {
       },
     } satisfies CxDocument);
 
-    expect(bookmarks).toContainEqual({
-      type: 'project',
-      name: 'Notes',
-      url: 'file:///projects/notes/index.md',
-    });
+    expect(bookmarks).toContainEqual(
+      expect.objectContaining({
+        type: 'project',
+        name: 'Notes',
+        url: 'file:///projects/notes/index.md',
+      }),
+    );
+  });
+
+  it('creates portable Windows bookmark paths', () => {
+    const bookmarks = bookmarksForDocument({
+      path: 'C:\\Projects\\notes\\chapter.md',
+      content: '',
+      project: {
+        name: 'Notes',
+        path: 'C:\\Projects\\notes',
+        rootDocument: 'index.md',
+        editorConfig: {},
+      },
+    } satisfies CxDocument);
+
+    expect(bookmarks).toEqual([
+      expect.objectContaining({
+        type: 'document',
+        url: 'file:///C:/Projects/notes/chapter.md',
+      }),
+      expect.objectContaining({
+        type: 'project',
+        url: 'file:///C:/Projects/notes/index.md',
+      }),
+    ]);
   });
 });

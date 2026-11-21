@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { format, isAbsolute, parse, resolve } from 'node:path';
+import { format, parse } from 'node:path';
 import {
   documentFormatToInputConverter,
   type CxDocument,
@@ -19,8 +19,11 @@ import { pandocFeatures } from '../pandocFeatures';
 import { computeProjectFromDocFile } from './project';
 import { isReadableFile, getConfigurationInit, type BackendDirectories } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
-import { localizePath } from '../filesystem';
-import { documentPathToFileUrl } from '../../../common/src';
+import { localizeDocumentPath } from '../filesystem';
+import {
+  documentPathToFileUrl,
+  resolveDocumentPath,
+} from '../../../common/src';
 
 export async function openDocument(
   directories: BackendDirectories,
@@ -38,10 +41,7 @@ export async function openDocument(
 }
 
 function documentPath(context: DocumentContext): string {
-  const path = localizePath(context.path!);
-  return !isAbsolute(path) && context.project?.path
-    ? resolve(localizePath(context.project.path), path)
-    : path;
+  return localizeDocumentPath(context.path!, context.project?.path);
 }
 
 async function openWithGuessedFormat(
@@ -174,7 +174,7 @@ export function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
       name: doc.project.name,
       url: documentPathToFileUrl(
         doc.project.rootDocument
-          ? resolve(doc.project.path, doc.project.rootDocument)
+          ? resolveDocumentPath(doc.project.path, doc.project.rootDocument)
           : doc.path,
       ),
       timestamp,

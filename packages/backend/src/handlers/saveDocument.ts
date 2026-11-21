@@ -20,7 +20,7 @@ import {
   type FeedbackSink,
 } from '../feedback';
 import { expandCommandArgs } from '../expandCommandArgs';
-import { localizePath } from '../filesystem';
+import { localizeDocumentPath, localizePath } from '../filesystem';
 import { exportWithPandoc, exportWithScript } from '../importExport';
 import type { RendererHub } from '../rendererHub';
 import { validResourcePaths, type BackendDirectories } from '../resourceManager';
@@ -37,6 +37,12 @@ export async function saveDocument(
   storeOptions: StoreOptions = {},
 ): Promise<SaveResponse> {
   try {
+    if (doc.path) {
+      doc = {
+        ...doc,
+        path: localizeDocumentPath(doc.path, doc.project?.path),
+      };
+    }
     const converter = documentFormatToOutputConverter(doc.documentFormat);
     if (converter)
       return exportDocument(

@@ -287,7 +287,7 @@ import { mapState } from 'pinia';
 import { toRaw } from 'vue';
 import { ACTION_ADD_CLASS } from '../actions';
 import { showIncludeDocumentDialog } from './helpers';
-import { relative } from 'path-browserify';
+import { relativeDocumentPath } from '../common';
 import { tfb } from '../i18n'
 import { lowlight } from '../schema/helpers/lowlight';
 
@@ -615,7 +615,7 @@ export default {
               console.log(`project.path=${project?.path}, path=${path}`)
               let src
               try {
-                src = project?.path ? relative(project.path, path!) : path
+                src = project?.path ? relativeDocumentPath(project.path, path!) : path
               } catch (err) {
                 const projectPath = project?.path || ''
                 if (path.startsWith(projectPath))
