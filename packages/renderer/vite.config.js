@@ -48,6 +48,7 @@ export default defineConfig({
       template: { transformAssetUrls },
     }),
     quasar({
+      astAutoImport: false,
       sassVariables: resolve(
         dirname(fileURLToPath(import.meta.url)),
         './src/assets/css/quasar.variables.scss',
@@ -129,9 +130,9 @@ export default defineConfig({
       'prosemirror-view',
     ],
   },
-  // test: {
-  //   // environment: 'happy-dom',
-  // },
+  test: {
+    environment: 'happy-dom',
+  },
   // The next css section is from https://stackoverflow.com/questions/68147471/how-to-set-sassoptions-in-vite/78997875#78997875
   // to solve "Deprecation Warning: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0."
   css: {
