@@ -94,28 +94,44 @@ export default defineConfig({
     target: `chrome${getChromeVersion()}`,
     outDir: 'dist',
     assetsDir: '.',
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         editor: 'index.html',
       },
       external: [...builtinModules.flatMap((p) => [p, `node:${p}`])],
       output: {
-        manualChunks(id) {
-          if (id.includes('/node_modules/@codemirror/view/')) {
-            return 'codemirror-view';
-          }
-          if (id.includes('/node_modules/@codemirror/')) {
-            return 'codemirror';
-          }
-          if (id.includes('/node_modules/@lezer/')) {
-            return 'lezer';
-          }
-          if (
-            id.includes('/node_modules/highlight.js/') ||
-            id.includes('/node_modules/lowlight/')
-          ) {
-            return 'syntax-highlighting';
-          }
+        codeSplitting: {
+          groups: [
+            {
+              debugName: 'manual-vendor-groups',
+              name(id) {
+                const normalizedId = id.replaceAll('\\', '/');
+                if (normalizedId.includes('/node_modules/@codemirror/view/')) {
+                  return 'codemirror-view';
+                }
+                if (normalizedId.includes('/node_modules/@codemirror/')) {
+                  return 'codemirror';
+                }
+                if (normalizedId.includes('/node_modules/@lezer/')) {
+                  return 'lezer';
+                }
+                if (
+                  normalizedId.includes('/node_modules/highlight.js/') ||
+                  normalizedId.includes('/node_modules/lowlight/')
+                ) {
+                  return 'syntax-highlighting';
+                }
+                if (
+                  normalizedId.includes('/node_modules/@intlify/') ||
+                  normalizedId.includes('/node_modules/vue-i18n/')
+                ) {
+                  return 'i18n';
+                }
+                return null;
+              },
+              includeDependenciesRecursively: false,
+            },
+          ],
         },
       },
     },
