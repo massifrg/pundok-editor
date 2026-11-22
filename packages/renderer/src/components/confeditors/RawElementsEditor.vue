@@ -702,10 +702,6 @@ function sameRaw(left: InsertableRaw, right: InsertableRaw): boolean {
   );
 }
 
-function isInherited(group: RawGroup, index: number): boolean {
-  return index >= getRawList(group).length;
-}
-
 function provenanceFor(group: RawGroup, index: number): string | undefined {
   const entry = rawEntries(group).find(
     (candidate) => candidate.index === index,

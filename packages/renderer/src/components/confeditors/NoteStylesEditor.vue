@@ -23,7 +23,10 @@
       >
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
-            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(style.noteType) }">
+            <span
+              class="text-weight-bold"
+              :class="{ 'text-strike': isRemoved(style.noteType) }"
+            >
               {{ style.noteType }}
             </span>
             <q-badge v-if="style.default" class="q-ml-sm" color="primary">
@@ -35,11 +38,18 @@
             </span>
           </q-item-label>
           <q-item-label v-if="isInherited(style)" caption>
-            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(style.noteType) }) }}
+            {{
+              $t('configEditor.inheritedFrom', {
+                name: inheritedSource(style.noteType),
+              })
+            }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
-          <div v-if="isInherited(style)" class="row no-wrap items-center q-gutter-xs">
+          <div
+            v-if="isInherited(style)"
+            class="row no-wrap items-center q-gutter-xs"
+          >
             <q-btn
               dense
               flat
@@ -52,7 +62,9 @@
               :model-value="isRemoved(style.noteType)"
               color="primary"
               :icon="mdiEyeOff"
-              :title="$t('configEditor.removeInherited', { name: style.noteType })"
+              :title="
+                $t('configEditor.removeInherited', { name: style.noteType })
+              "
               @update:model-value="setRemoved(style.noteType, $event)"
             />
           </div>
@@ -235,6 +247,7 @@ import { useI18n } from 'vue-i18n';
 import type { MarkerConversion, NoteStyle } from '../../common';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { nextCopyName } from '../helpers/copyName';
+import { createInheritedItemHelpers } from '../helpers/inheritedItems';
 
 setupQuasarIcons();
 
@@ -257,6 +270,13 @@ const emit = defineEmits<{
   'update:modelValue': [value: NoteStyle[]];
   'update:removed': [value: string[]];
 }>();
+
+const { isRemoved, inheritedSource, inheritedBackground, setRemoved } =
+  createInheritedItemHelpers({
+    removed: () => props.removed,
+    provenance: () => props.provenance,
+    updateRemoved: (value) => emit('update:removed', value),
+  });
 
 const styles = ref<NoteStyle[]>([]);
 const draft = ref<NoteStyleDraft>();
@@ -284,10 +304,13 @@ const markerConversionOptions = [
 const allStyles = computed(() => {
   const inherited = props.inherited
     .filter(
-      (style) => !styles.value.some((local) => local.noteType === style.noteType),
+      (style) =>
+        !styles.value.some((local) => local.noteType === style.noteType),
     )
     .sort((first, second) =>
-      inheritedSource(first.noteType).localeCompare(inheritedSource(second.noteType)),
+      inheritedSource(first.noteType).localeCompare(
+        inheritedSource(second.noteType),
+      ),
     );
   return [...styles.value, ...inherited];
 });
@@ -372,29 +395,6 @@ function isInherited(style: NoteStyle): boolean {
     !styles.value.some((item) => item.noteType === style.noteType) &&
     props.inherited.some((item) => item.noteType === style.noteType)
   );
-}
-
-function isRemoved(noteType: string): boolean {
-  return (props.removed || []).includes(noteType);
-}
-
-function setRemoved(noteType: string, value: boolean | null): void {
-  const names = new Set(props.removed || []);
-  if (value) names.add(noteType);
-  else names.delete(noteType);
-  emit('update:removed', [...names]);
-}
-
-function inheritedSource(noteType: string): string {
-  return props.provenance?.[noteType] || '';
-}
-
-function inheritedBackground(noteType: string): string | undefined {
-  const source = inheritedSource(noteType);
-  if (!source) return undefined;
-  const sources = [...new Set(Object.values(props.provenance || {}))];
-  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
-  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
 }
 
 function markerSummary(style: NoteStyle): string {

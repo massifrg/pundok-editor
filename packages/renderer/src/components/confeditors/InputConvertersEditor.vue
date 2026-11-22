@@ -52,7 +52,13 @@
     </div>
 
     <q-dialog :model-value="!!draft" @hide="cancelEdit">
-      <q-card v-if="draft" flat bordered class="q-mt-md" style="width: 80vw; max-width: 80vw">
+      <q-card
+        v-if="draft"
+        flat
+        bordered
+        class="q-mt-md"
+        style="width: 80vw; max-width: 80vw"
+      >
         <q-card-section class="q-pb-sm">
           <div class="text-subtitle2">
             {{
@@ -107,21 +113,53 @@
             </div>
           </div>
           <div v-else-if="draft.type === 'script'" class="q-gutter-md">
-            <q-input v-model="draft.command" :label="$t('configEditor.inputConverters.command')" outlined dense />
-            <q-input :model-value="draft.commandArgs?.join(' ') || ''"
-              :label="$t('configEditor.inputConverters.commandArgs')" outlined dense
-              @update:model-value="updateCommandArgs" />
+            <q-input
+              v-model="draft.command"
+              :label="$t('configEditor.inputConverters.command')"
+              outlined
+              dense
+            />
+            <q-input
+              :model-value="draft.commandArgs?.join(' ') || ''"
+              :label="$t('configEditor.inputConverters.commandArgs')"
+              outlined
+              dense
+              @update:model-value="updateCommandArgs"
+            />
           </div>
-          <PandocFiltersEditor v-if="draft.type === 'pandoc'" :model-value="draft.filters || []"
-            :resource-options="resourceOptions" @update:model-value="draft.filters = $event" />
-          <PandocOptionsEditor v-if="draft.type === 'pandoc'" :model-value="draft.pandocOptions || []"
-            option-type="reader" :editor="editor" @update:model-value="draft.pandocOptions = $event" />
-          <PandocLuaResourceDialog v-if="draft.type === 'pandoc'" v-model="readerDialogOpen" resource-type="reader"
-            :resource-options="resourceOptions" @select="selectReader" />
+          <PandocFiltersEditor
+            v-if="draft.type === 'pandoc'"
+            :model-value="draft.filters || []"
+            :resource-options="resourceOptions"
+            @update:model-value="draft.filters = $event"
+          />
+          <PandocOptionsEditor
+            v-if="draft.type === 'pandoc'"
+            :model-value="draft.pandocOptions || []"
+            option-type="reader"
+            :editor="editor"
+            @update:model-value="draft.pandocOptions = $event"
+          />
+          <PandocLuaResourceDialog
+            v-if="draft.type === 'pandoc'"
+            v-model="readerDialogOpen"
+            resource-type="reader"
+            :resource-options="resourceOptions"
+            @select="selectReader"
+          />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat :label="$t('configEditor.buttons.cancel')" @click="cancelEdit" />
-          <q-btn color="primary" :label="$t('configEditor.buttons.apply')" :disable="!canApply" @click="applyEdit" />
+          <q-btn
+            flat
+            :label="$t('configEditor.buttons.cancel')"
+            @click="cancelEdit"
+          />
+          <q-btn
+            color="primary"
+            :label="$t('configEditor.buttons.apply')"
+            :disable="!canApply"
+            @click="applyEdit"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -147,6 +185,7 @@ import PandocLuaResourceDialog, {
 import PandocOptionsEditor from './PandocOptionsEditor.vue';
 import type { Editor } from '@tiptap/vue-3';
 import { nextCopyName } from '../helpers';
+import { createInheritedItemHelpers } from '../helpers/inheritedItems';
 
 type InputConverterDraft = Omit<
   BaseInputConverter,
@@ -181,6 +220,13 @@ const emit = defineEmits<{
   'update:removed': [value: string[]];
 }>();
 
+const { isRemoved, inheritedSource, inheritedBackground, setRemoved } =
+  createInheritedItemHelpers({
+    removed: () => props.removed,
+    provenance: () => props.provenance,
+    updateRemoved: (value) => emit('update:removed', value),
+  });
+
 const converters = ref<InputConverter[]>([]);
 const draft = ref<InputConverterDraft>();
 const editingIndex = ref<number>();
@@ -198,7 +244,9 @@ const converterTypeOptions: { label: string; value: InputConverterType }[] = [
 
 const allConverters = computed(() => {
   const inherited = props.inherited
-    .filter((item) => !converters.value.some((local) => local.name === item.name))
+    .filter(
+      (item) => !converters.value.some((local) => local.name === item.name),
+    )
     .sort((first, second) =>
       inheritedSource(first.name).localeCompare(inheritedSource(second.name)),
     );
@@ -233,29 +281,6 @@ watch(
     }
   },
 );
-
-function isRemoved(name: string): boolean {
-  return (props.removed || []).includes(name);
-}
-
-function setRemoved(name: string, value: boolean | null): void {
-  const names = new Set(props.removed || []);
-  if (value) names.add(name);
-  else names.delete(name);
-  emit('update:removed', [...names]);
-}
-
-function inheritedSource(name: string): string {
-  return props.provenance?.[name] || '';
-}
-
-function inheritedBackground(name: string): string | undefined {
-  const source = inheritedSource(name);
-  if (!source) return undefined;
-  const sources = [...new Set(Object.values(props.provenance || {}))];
-  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
-  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
-}
 
 function copyConverter(converter: InputConverter): InputConverter {
   switch (converter.type) {

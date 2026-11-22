@@ -4,6 +4,7 @@ export * from './color';
 export * from './copyName';
 export * from './documentIncludes';
 export * from './filePath';
+export * from './inheritedItems';
 export * from './pending';
 export * from './quasarIcons';
 export * from './rendering';

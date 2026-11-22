@@ -27,7 +27,11 @@
       >
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
-            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(style.name) }">{{ style.name }}</span>
+            <span
+              class="text-weight-bold"
+              :class="{ 'text-strike': isRemoved(style.name) }"
+              >{{ style.name }}</span
+            >
             <q-space />
             <span class="text-caption text-grey-7">{{
               appliesToLabel(style.appliesTo)
@@ -37,7 +41,11 @@
             style.description
           }}</q-item-label>
           <q-item-label v-if="isInherited(style)" caption>
-            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(style.name) }) }}
+            {{
+              $t('configEditor.inheritedFrom', {
+                name: inheritedSource(style.name),
+              })
+            }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
@@ -218,6 +226,7 @@ import {
 import { mdiEyeOff } from '@mdi/js';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
 import { nextCopyName } from '../helpers/copyName';
+import { createInheritedItemHelpers } from '../helpers/inheritedItems';
 import CssPropertiesEditor from './CssPropertiesEditor.vue';
 
 type CustomStyleDraft = CustomStyleDef;
@@ -257,14 +266,15 @@ export default {
   computed: {
     allStyles(): CustomStyleDef[] {
       const inherited = (this.inherited as CustomStyleDef[])
-        .filter((style) => !this.styles.some((local) => local.name === style.name))
+        .filter(
+          (style) => !this.styles.some((local) => local.name === style.name),
+        )
         .sort((first, second) =>
-          this.inheritedSource(first.name).localeCompare(this.inheritedSource(second.name)),
+          this.inheritedSource(first.name).localeCompare(
+            this.inheritedSource(second.name),
+          ),
         );
-      return [
-        ...this.styles,
-        ...inherited,
-      ];
+      return [...this.styles, ...inherited];
     },
     customizableElementOptions(): {
       label: string;
@@ -309,28 +319,15 @@ export default {
       },
     },
   },
-  setup() {
+  setup(props, { emit }) {
     setupQuasarIcons();
+    return createInheritedItemHelpers({
+      removed: () => props.removed as string[],
+      provenance: () => props.provenance as Record<string, string>,
+      updateRemoved: (value) => emit('update:removed', value),
+    });
   },
   methods: {
-    isRemoved(name: string): boolean {
-      return (this.removed as string[]).includes(name);
-    },
-    inheritedSource(name: string): string {
-      return (this.provenance as Record<string, string>)[name] || '';
-    },
-    inheritedBackground(name: string): string | undefined {
-      if (!this.inheritedSource(name)) return undefined;
-      const sources = [...new Set(Object.values(this.provenance as Record<string, string>))];
-      const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
-      return colors[Math.max(0, sources.indexOf(this.inheritedSource(name)) % colors.length)];
-    },
-    setRemoved(name: string, value: boolean | null) {
-      const names = new Set(this.removed as string[]);
-      if (value) names.add(name);
-      else names.delete(name);
-      this.$emit('update:removed', [...names]);
-    },
     copyStyle(style: CustomStyleDef): CustomStyleDef {
       const appliesTo = Array.isArray(style.appliesTo)
         ? style.appliesTo

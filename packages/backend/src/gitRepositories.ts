@@ -24,6 +24,7 @@ import {
   type GitRemoteBranch,
   type GitStatusEntry,
   isDocRepositories,
+  isRecord,
   type PundokEditorProject,
 } from '../../common/src';
 import { DOC_REPOSITORIES_FILENAME } from './handlers/value';
@@ -217,7 +218,14 @@ export class GitRepositoryManager {
       .map((file) => file.path);
     if (tracked.length)
       await this.runGit(
-        ['restore', '--source=HEAD', '--staged', '--worktree', '--', ...tracked],
+        [
+          'restore',
+          '--source=HEAD',
+          '--staged',
+          '--worktree',
+          '--',
+          ...tracked,
+        ],
         '',
         '',
         path,
@@ -792,10 +800,6 @@ function isDirectChild(parent: string, child: string): boolean {
     ) &&
     !pathRelativeToParent.includes(process.platform === 'win32' ? '\\' : '/')
   );
-}
-
-function isRecord(value: unknown): value is Record<string, any> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isNodeError(error: unknown, code: string): boolean {

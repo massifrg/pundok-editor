@@ -195,16 +195,6 @@ export interface ConfigurationSummary {
   isLocal: boolean;
 }
 
-function mergeTiptapOptions(
-  options1: Record<string, any>,
-  options2: Record<string, any>,
-): Record<string, any> {
-  return {
-    ...options1,
-    ...options2,
-  };
-}
-
 /**
  * The minimal usable version of pandoc-editor when merging two configurations.
  * It's the highest version.
@@ -333,7 +323,7 @@ export function enrichConfiguration(
       isLocal: base.isLocal || enriching.isLocal,
       description: base.description,
       // tiptap: {
-      //   options: mergeTiptapOptions(
+      //   options: {
       //     enriching.tiptap?.options || {},
       //     base.tiptap?.options || {},
       //   ),

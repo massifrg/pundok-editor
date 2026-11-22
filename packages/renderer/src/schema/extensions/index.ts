@@ -16,7 +16,6 @@ export * from './AutoDelimitersExtension';
 export { SectionHighlighterExtension } from './SectionHighlighterExtension';
 export * from './PundokEditorUtilsPluginKey';
 export * from './PundokEditorUtilsExtension';
-export * from './SearchAndReplaceExtension';
 export * from './TextTransformExtension';
 export * from './FixDocStructureExtension';
 export * from './IncludeDivExtension';

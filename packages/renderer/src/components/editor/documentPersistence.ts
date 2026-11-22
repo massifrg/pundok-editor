@@ -14,7 +14,6 @@ import {
   DEFAULT_DOCUMENT_FORMAT,
   asOutputFormat,
   changeFileExtensionToFormat,
-  documentNameToId,
   getDefaultCopyFormat,
   getDefaultWorkingFormat,
   outputConverterToDocumentFormat,
@@ -49,13 +48,8 @@ export async function save(
   props?: DocumentSaveActionProps,
 ): Promise<SaveResponse | undefined> {
   if (host.documentLoading) return;
-  const {
-    dontAskCopyPath,
-    dontAskSaveAsPath,
-    isCopy,
-    isSaveAs,
-    afterSave,
-  } = props || {};
+  const { dontAskCopyPath, dontAskSaveAsPath, isCopy, isSaveAs, afterSave } =
+    props || {};
   beforeSaving(host);
   const jsonDoc = host.getDocAsJsonString();
   const docState = host.docState();
@@ -69,7 +63,9 @@ export async function save(
   let path = props?.path;
   if (!path) {
     const folder = isCopy ? copyFolder : workingFolder;
-    path = (folder && documentName && joinDocumentPath(folder, documentName)) || undefined;
+    path =
+      (folder && documentName && joinDocumentPath(folder, documentName)) ||
+      undefined;
   }
   const isSave = !isSaveAs && !isCopy;
   let documentFormat = asOutputFormat(
@@ -162,13 +158,10 @@ export async function save(
         : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT),
     );
     if (!host.backend) return Promise.reject('no backend found');
-    const { configuration, documentName, project, resourcePath } =
-      docState || {};
+    const { configuration, project, resourcePath } = docState || {};
     const response = await host.backend.save(
       {
         editorKey: host.editorKey(),
-        // id: documentNameToId(documentName),
-        // id: documentName,
         path,
         content: jsonDoc,
         documentFormat,
@@ -439,23 +432,23 @@ export async function transformDocument(
       } else {
         const doc = JSON.parse(json || host.getDocAsJsonString());
         const transformedDoc = JSON.parse(transformed);
-        const insertedBlocks = transformedDoc.blocks || []
+        const insertedBlocks = transformedDoc.blocks || [];
         const insertionPoint = whatToDo === 'insert' && findInsertionPoint(doc);
         if (insertionPoint) {
           let { blocks, blockIndex, spanIndex } = insertionPoint;
-          const block = blocks[blockIndex]
-          const { t, c } = block
-          const before = c.slice(0, spanIndex)
-          const after = c.slice(spanIndex + 1)
+          const block = blocks[blockIndex];
+          const { t, c } = block;
+          const before = c.slice(0, spanIndex);
+          const after = c.slice(spanIndex + 1);
           blocks = [
             ...blocks.slice(0, blockIndex),
             ...(before.length > 0 ? [{ t, c: before }] : []),
             ...insertedBlocks,
             ...(after.length > 0 ? [{ t, c: after }] : []),
             ...blocks.slice(blockIndex + 1),
-          ]
-          doc.blocks = blocks
-          host.setContent(JSON.stringify(doc), false)
+          ];
+          doc.blocks = blocks;
+          host.setContent(JSON.stringify(doc), false);
         } else if (whatToDo === 'insert') {
           host.editor?.commands.removePlaceholder();
         } else {

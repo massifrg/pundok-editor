@@ -54,7 +54,13 @@
     </div>
 
     <q-dialog :model-value="!!draft" @hide="cancelEdit">
-      <q-card v-if="draft" flat bordered class="q-mt-md" style="width: 80vw; max-width: 80vw">
+      <q-card
+        v-if="draft"
+        flat
+        bordered
+        class="q-mt-md"
+        style="width: 80vw; max-width: 80vw"
+      >
         <q-card-section class="q-pb-sm">
           <div class="text-subtitle2">
             {{
@@ -127,21 +133,53 @@
             </div>
           </div>
           <div v-else-if="draft.type === 'script'" class="q-gutter-md">
-            <q-input v-model="draft.command" :label="$t('configEditor.outputConverters.command')" outlined dense />
-            <q-input :model-value="draft.commandArgs?.join(' ') || ''"
-              :label="$t('configEditor.outputConverters.commandArgs')" outlined dense
-              @update:model-value="updateCommandArgs" />
+            <q-input
+              v-model="draft.command"
+              :label="$t('configEditor.outputConverters.command')"
+              outlined
+              dense
+            />
+            <q-input
+              :model-value="draft.commandArgs?.join(' ') || ''"
+              :label="$t('configEditor.outputConverters.commandArgs')"
+              outlined
+              dense
+              @update:model-value="updateCommandArgs"
+            />
           </div>
-          <PandocFiltersEditor v-if="draft.type === 'pandoc'" :model-value="draft.filters || []"
-            :resource-options="resourceOptions" @update:model-value="draft.filters = $event" />
-          <PandocOptionsEditor v-if="draft.type === 'pandoc'" :model-value="draft.pandocOptions || []"
-            option-type="writer" :editor="editor" @update:model-value="draft.pandocOptions = $event" />
-          <PandocLuaResourceDialog v-if="draft.type === 'pandoc'" v-model="writerDialogOpen" resource-type="writer"
-            :resource-options="resourceOptions" @select="selectWriter" />
+          <PandocFiltersEditor
+            v-if="draft.type === 'pandoc'"
+            :model-value="draft.filters || []"
+            :resource-options="resourceOptions"
+            @update:model-value="draft.filters = $event"
+          />
+          <PandocOptionsEditor
+            v-if="draft.type === 'pandoc'"
+            :model-value="draft.pandocOptions || []"
+            option-type="writer"
+            :editor="editor"
+            @update:model-value="draft.pandocOptions = $event"
+          />
+          <PandocLuaResourceDialog
+            v-if="draft.type === 'pandoc'"
+            v-model="writerDialogOpen"
+            resource-type="writer"
+            :resource-options="resourceOptions"
+            @select="selectWriter"
+          />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat :label="$t('configEditor.buttons.cancel')" @click="cancelEdit" />
-          <q-btn color="primary" :label="$t('configEditor.buttons.apply')" :disable="!canApply" @click="applyEdit" />
+          <q-btn
+            flat
+            :label="$t('configEditor.buttons.cancel')"
+            @click="cancelEdit"
+          />
+          <q-btn
+            color="primary"
+            :label="$t('configEditor.buttons.apply')"
+            :disable="!canApply"
+            @click="applyEdit"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -169,8 +207,13 @@ import PandocLuaResourceDialog, {
 import PandocOptionsEditor from './PandocOptionsEditor.vue';
 import type { Editor } from '@tiptap/vue-3';
 import type { DocumentFormat } from '../../common';
-import { extractSvgPathData, notifyTimeout, showSelectImageDialog } from '../helpers';
+import {
+  extractSvgPathData,
+  notifyTimeout,
+  showSelectImageDialog,
+} from '../helpers';
 import { nextCopyName } from '../helpers';
+import { createInheritedItemHelpers } from '../helpers/inheritedItems';
 import { useBackend } from '../../stores';
 
 type OutputConverterDraft = Omit<
@@ -206,6 +249,13 @@ const emit = defineEmits<{
   'update:removed': [value: string[]];
 }>();
 
+const { isRemoved, inheritedSource, inheritedBackground, setRemoved } =
+  createInheritedItemHelpers({
+    removed: () => props.removed,
+    provenance: () => props.provenance,
+    updateRemoved: (value) => emit('update:removed', value),
+  });
+
 const converters = ref<OutputConverter[]>([]);
 const draft = ref<OutputConverterDraft>();
 const editingIndex = ref<number>();
@@ -226,7 +276,9 @@ const converterTypeOptions: { label: string; value: OutputConverterType }[] = [
 
 const allConverters = computed(() => {
   const inherited = (props.inherited || [])
-    .filter((item) => !converters.value.some((local) => local.name === item.name))
+    .filter(
+      (item) => !converters.value.some((local) => local.name === item.name),
+    )
     .sort((first, second) =>
       inheritedSource(first.name).localeCompare(inheritedSource(second.name)),
     );
@@ -283,40 +335,19 @@ function chooseIconFile(): void {
 
 async function loadIconFile(path: string): Promise<void> {
   try {
-    const icon = extractSvgPathData(await backend.backend!.getFileContents(path));
+    const icon = extractSvgPathData(
+      await backend.backend!.getFileContents(path),
+    );
     if (draft.value) draft.value.icon = icon;
   } catch (error) {
     console.error('Could not load SVG output converter icon.', error);
-    const message = t('configEditor.outputConverters.invalidIconFile')
+    const message = t('configEditor.outputConverters.invalidIconFile');
     $q.notify({
       type: 'negative',
       message,
       timeout: notifyTimeout(message),
     });
   }
-}
-
-function isRemoved(name: string): boolean {
-  return (props.removed || []).includes(name);
-}
-
-function setRemoved(name: string, value: boolean | null): void {
-  const names = new Set(props.removed || []);
-  if (value) names.add(name);
-  else names.delete(name);
-  emit('update:removed', [...names]);
-}
-
-function inheritedSource(name: string): string {
-  return props.provenance?.[name] || '';
-}
-
-function inheritedBackground(name: string): string | undefined {
-  const source = inheritedSource(name);
-  if (!source) return undefined;
-  const sources = [...new Set(Object.values(props.provenance || {}))];
-  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
-  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
 }
 
 function copyConverter(converter: OutputConverter): OutputConverter {

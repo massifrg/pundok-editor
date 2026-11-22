@@ -1,51 +1,63 @@
-import { WebContentsView } from "electron";
-import { createHash, randomUUID } from 'crypto';
-import { existsSync } from "fs";
-import { access, mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "fs/promises";
-import { constants as fsConstants } from "fs";
-import { join, parse, resolve } from 'path';
-import { runExternalProgram } from "./runExternal";
-import { fileURLToPath } from "url";
+import { WebContentsView } from 'electron';
+import { existsSync } from 'fs';
+import { access, readFile } from 'fs/promises';
+import { constants as fsConstants } from 'fs';
+import { parse, resolve } from 'path';
+import { runExternalProgram } from './runExternal';
+import { fileURLToPath } from 'url';
 import { IMAGE_CACHE_MAX_AGE_MS } from './common';
 import { userAppDataDir } from './resourcesManager';
+import { loadCachedPdfImage } from './backend';
 
-type BufferLoader = (filepath: string, params: Record<string, any>) => Promise<Buffer>
+type BufferLoader = (
+  filepath: string,
+  params: Record<string, any>,
+) => Promise<Buffer>;
 
 export function handleImagesFor(view: WebContentsView) {
   view.webContents.session.protocol.handle('img', async (request) => {
-    const url = new URL(request.url)
-    let loader: BufferLoader | undefined = undefined
-    const filepath = fileURLToPath(new URL(`file://${url.pathname}`))
+    const url = new URL(request.url);
+    let loader: BufferLoader | undefined = undefined;
+    const filepath = fileURLToPath(new URL(`file://${url.pathname}`));
     if (existsSync(filepath)) {
-      const { ext } = parse(filepath)
-      let blobType: string | undefined = undefined
+      const { ext } = parse(filepath);
+      let blobType: string | undefined = undefined;
       switch (ext.toLowerCase()) {
         case '.jpg':
         case '.jpeg':
-          blobType = 'image/jpeg'
-          break
+          blobType = 'image/jpeg';
+          break;
         case '.png':
-          blobType = 'image/png'
-          break
+          blobType = 'image/png';
+          break;
         case '.svg':
-          blobType = 'image/svg+xml'
-          break
+          blobType = 'image/svg+xml';
+          break;
         case '.pdf':
-          loader = pdfToImage
+          loader = pdfToImage;
           // blobType = 'image/png'
-          blobType = 'image/jpeg'
-          break
+          blobType = 'image/jpeg';
+          break;
       }
       try {
         if (loader) await access(filepath, fsConstants.R_OK);
+        const imagePage = loader
+          ? parseImagePage(url.searchParams.get('page'))
+          : 0;
         const imageBuffer = loader
-          ? await loadCachedPdfImage(filepath, url.searchParams.get('page'), loader)
+          ? await loadCachedPdfImage(
+              filepath,
+              imagePage,
+              resolve(userAppDataDir(), 'image-cache'),
+              IMAGE_CACHE_MAX_AGE_MS,
+              () => loader!(filepath, { page: String(imagePage) }),
+            )
           : await readFile(filepath);
         // @ts-ignore
-        const blob = new Blob([imageBuffer], { type: blobType })
+        const blob = new Blob([imageBuffer], { type: blobType });
         return new Response(blob, {
           status: 200,
-          headers: { 'Content-Type': blob.type }
+          headers: { 'Content-Type': blob.type },
         });
       } catch (error) {
         const accessError =
@@ -71,50 +83,6 @@ export function handleImagesFor(view: WebContentsView) {
       }
     }
 
-    async function loadCachedPdfImage(
-      filepath: string,
-      page: string | null,
-      render: BufferLoader,
-    ): Promise<Buffer> {
-      const imagePage = page === null ? 0 : Number.parseInt(page, 10);
-      if (!Number.isInteger(imagePage) || imagePage < 0)
-        throw new Error('Invalid PDF page');
-
-      const cacheDirectory = resolve(userAppDataDir(), 'image-cache');
-      await mkdir(cacheDirectory, { recursive: true });
-      await removeExpiredImages(cacheDirectory);
-      const cachedPath = join(
-        cacheDirectory,
-        `${createHash('sha256').update(filepath).digest('hex')}-${imagePage}.jpg`,
-      );
-      const [pdfInfo, cachedInfo] = await Promise.all([
-        stat(filepath),
-        stat(cachedPath).catch(() => undefined),
-      ]);
-      if (cachedInfo && pdfInfo.mtimeMs <= cachedInfo.mtimeMs)
-        return readFile(cachedPath);
-
-      const image = await render(filepath, { page: String(imagePage) });
-      const temporaryPath = `${cachedPath}.${randomUUID()}.tmp`;
-      await writeFile(temporaryPath, image);
-      await rename(temporaryPath, cachedPath);
-      return image;
-    }
-
-    async function removeExpiredImages(cacheDirectory: string): Promise<void> {
-      const oldestPermitted = Date.now() - IMAGE_CACHE_MAX_AGE_MS;
-      const entries = await readdir(cacheDirectory, { withFileTypes: true });
-      await Promise.all(
-        entries
-          .filter((entry) => entry.isFile() && entry.name.endsWith('.jpg'))
-          .map(async (entry) => {
-            const path = join(cacheDirectory, entry.name);
-            const info = await stat(path).catch(() => undefined);
-            if (info && info.mtimeMs < oldestPermitted)
-              await unlink(path).catch(() => undefined);
-          }),
-      );
-    }
     return new Response(
       JSON.stringify({
         error: 'Unable to read the PDF file',
@@ -127,8 +95,15 @@ export function handleImagesFor(view: WebContentsView) {
           'X-Pundok-Image-Error': 'unreadable',
         },
       },
-    )
-  })
+    );
+  });
+}
+
+function parseImagePage(page: string | null): number {
+  const imagePage = page === null ? 0 : Number.parseInt(page, 10);
+  if (!Number.isInteger(imagePage) || imagePage < 0)
+    throw new Error('Invalid PDF page');
+  return imagePage;
 }
 
 /**

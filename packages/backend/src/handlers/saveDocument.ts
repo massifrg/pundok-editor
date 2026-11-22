@@ -23,7 +23,10 @@ import { expandCommandArgs } from '../expandCommandArgs';
 import { localizeDocumentPath, localizePath } from '../filesystem';
 import { exportWithPandoc, exportWithScript } from '../importExport';
 import type { RendererHub } from '../rendererHub';
-import { validResourcePaths, type BackendDirectories } from '../resourceManager';
+import {
+  validResourcePaths,
+  type BackendDirectories,
+} from '../resourceManager';
 import { renderingProcessKey } from '../renderingProcess';
 import { computeProjectFromDocFile } from './project';
 import { documentPathToFileUrl } from '../../../common/src';
@@ -61,7 +64,6 @@ export async function saveDocument(
       };
     const response = await savePandocJsonDocument(
       directories,
-      events,
       feedback,
       doc,
       storeOptions,
@@ -155,7 +157,12 @@ export async function exportDocument(
       const message = `document ${operationName} failed with exitCode ${result.exitCode}`;
       errorFeedback(
         feedback,
-        [message, errorMessage(result.error), 'command line:', result.commandLine].join('\n'),
+        [
+          message,
+          errorMessage(result.error),
+          'command line:',
+          result.commandLine,
+        ].join('\n'),
         doc.editorKey,
       );
       return {
@@ -260,12 +267,12 @@ export async function exportDocument(
 
 async function savePandocJsonDocument(
   directories: BackendDirectories,
-  events: RendererHub,
   feedback: FeedbackSink,
   doc: CxDocument,
   storeOptions: StoreOptions,
 ): Promise<SaveResponse> {
-  if (!doc.path) throw new Error('You must provide a document (file) name to save!');
+  if (!doc.path)
+    throw new Error('You must provide a document (file) name to save!');
   await writeFile(doc.path, doc.content);
   let project = doc.project;
   if (!storeOptions.isCopy && !storeOptions.isRendering) {

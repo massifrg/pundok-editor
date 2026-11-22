@@ -44,7 +44,13 @@
     </div>
 
     <q-dialog :model-value="!!draft" @hide="cancelEdit">
-      <q-card v-if="draft" flat bordered class="q-pa-md" style="width: 80vw; max-width: 80vw">
+      <q-card
+        v-if="draft"
+        flat
+        bordered
+        class="q-pa-md"
+        style="width: 80vw; max-width: 80vw"
+      >
         <q-card-section>
           <div class="text-subtitle2">
             {{
@@ -58,35 +64,84 @@
         </q-card-section>
         <q-card-section class="q-gutter-md">
           <div class="row q-gutter-md">
-            <q-input v-model="draft.indexName" class="col" :label="$t('configEditor.indices.indexName')" outlined dense
-              :error="!!nameError" :error-message="nameError" />
-            <q-input v-model="draft.refClass" class="col" :label="$t('configEditor.indices.refClass')" outlined dense />
+            <q-input
+              v-model="draft.indexName"
+              class="col"
+              :label="$t('configEditor.indices.indexName')"
+              outlined
+              dense
+              :error="!!nameError"
+              :error-message="nameError"
+            />
+            <q-input
+              v-model="draft.refClass"
+              class="col"
+              :label="$t('configEditor.indices.refClass')"
+              outlined
+              dense
+            />
           </div>
           <div class="row items-center q-gutter-md">
-            <q-option-group v-model="draft.putIndexRef" :options="putIndexRefOptions" type="radio" inline dense
-              :label="$t('configEditor.indices.putIndexRef')" />
+            <q-option-group
+              v-model="draft.putIndexRef"
+              :options="putIndexRefOptions"
+              type="radio"
+              inline
+              dense
+              :label="$t('configEditor.indices.putIndexRef')"
+            />
             <q-space />
-            <q-card class="text-h5 bordered q-pa-sm" style="border-color: var(--q-primary)">
+            <q-card
+              class="text-h5 bordered q-pa-sm"
+              style="border-color: var(--q-primary)"
+            >
               <span>{{ $t('configEditor.indices.previewIntro') }}</span>
               <template v-if="draft.putIndexRef === 'before'">
-                <svg v-if="draft.iconSvg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
+                <svg
+                  v-if="draft.iconSvg"
+                  width="1em"
+                  height="1em"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
                   <path :d="draft.iconSvg" :fill="draft.color" />
                 </svg>
-                <span v-else :style="{ color: draft.color }">{{ draft.iconChar }}</span>
+                <span v-else :style="{ color: draft.color }">{{
+                  draft.iconChar
+                }}</span>
               </template>
               <span>{{ $t('configEditor.indices.previewTerm') }}</span>
               <template v-if="draft.putIndexRef === 'after'">
-                <svg v-if="draft.iconSvg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">
+                <svg
+                  v-if="draft.iconSvg"
+                  width="1em"
+                  height="1em"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
                   <path :d="draft.iconSvg" :fill="draft.color" />
                 </svg>
-                <span v-else :style="{ color: draft.color }">{{ draft.iconChar }}</span>
+                <span v-else :style="{ color: draft.color }">{{
+                  draft.iconChar
+                }}</span>
               </template>
               <span>{{ $t('configEditor.indices.previewOutro') }}</span>
             </q-card>
             <q-space />
-            <q-input v-model="draft.color" :label="$t('configEditor.indices.color')" outlined dense>
+            <q-input
+              v-model="draft.color"
+              :label="$t('configEditor.indices.color')"
+              outlined
+              dense
+            >
               <template #append>
-                <q-btn round flat dense icon="custom_style" :style="{ backgroundColor: draft.color }">
+                <q-btn
+                  round
+                  flat
+                  dense
+                  icon="custom_style"
+                  :style="{ backgroundColor: draft.color }"
+                >
                   <q-popup-proxy cover>
                     <q-color v-model="draft.color" />
                   </q-popup-proxy>
@@ -95,23 +150,62 @@
             </q-input>
           </div>
           <div class="row q-gutter-md">
-            <q-input v-model="draft.iconSvg" class="col" :label="$t('configEditor.indices.iconSvg')" outlined dense>
+            <q-input
+              v-model="draft.iconSvg"
+              class="col"
+              :label="$t('configEditor.indices.iconSvg')"
+              outlined
+              dense
+            >
               <template #append>
-                <q-btn flat round dense icon="image" :title="$t('configEditor.indices.chooseIconFile')"
-                  @click="chooseIconFile" />
+                <q-btn
+                  flat
+                  round
+                  dense
+                  icon="image"
+                  :title="$t('configEditor.indices.chooseIconFile')"
+                  @click="chooseIconFile"
+                />
               </template>
             </q-input>
-            <q-input v-model="draft.iconChar" class="col" :label="$t('configEditor.indices.iconChar')" outlined dense />
+            <q-input
+              v-model="draft.iconChar"
+              class="col"
+              :label="$t('configEditor.indices.iconChar')"
+              outlined
+              dense
+            />
           </div>
           <div class="row q-gutter-md">
-            <q-checkbox v-model="draft.allowRanges" class="col" :label="$t('configEditor.indices.allowRanges')" />
-            <q-checkbox v-model="draft.allowEmpty" class="col" :label="$t('configEditor.indices.allowEmpty')" />
-            <q-checkbox v-model="draft.onlyEmpty" class="col" :label="$t('configEditor.indices.onlyEmpty')" />
+            <q-checkbox
+              v-model="draft.allowRanges"
+              class="col"
+              :label="$t('configEditor.indices.allowRanges')"
+            />
+            <q-checkbox
+              v-model="draft.allowEmpty"
+              class="col"
+              :label="$t('configEditor.indices.allowEmpty')"
+            />
+            <q-checkbox
+              v-model="draft.onlyEmpty"
+              class="col"
+              :label="$t('configEditor.indices.onlyEmpty')"
+            />
           </div>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat :label="$t('configEditor.buttons.cancel')" @click="cancelEdit" />
-          <q-btn color="primary" :label="$t('configEditor.buttons.apply')" :disable="!canApply" @click="applyEdit" />
+          <q-btn
+            flat
+            :label="$t('configEditor.buttons.cancel')"
+            @click="cancelEdit"
+          />
+          <q-btn
+            color="primary"
+            :label="$t('configEditor.buttons.apply')"
+            :disable="!canApply"
+            @click="applyEdit"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -125,8 +219,13 @@ import { mdiEyeOff } from '@mdi/js';
 import { useQuasar } from 'quasar';
 import type { Editor } from '@tiptap/vue-3';
 import type { DocumentFormat, Index, IndexRefPlacement } from '../../common';
-import { extractSvgPathData, notifyTimeout, showSelectImageDialog } from '../helpers';
+import {
+  extractSvgPathData,
+  notifyTimeout,
+  showSelectImageDialog,
+} from '../helpers';
 import { setupQuasarIcons } from '../helpers/quasarIcons';
+import { createInheritedItemHelpers } from '../helpers/inheritedItems';
 import { useBackend } from '../../stores';
 
 setupQuasarIcons();
@@ -155,6 +254,12 @@ const emit = defineEmits<{
   'update:modelValue': [value: Index[]];
   'update:removed': [value: string[]];
 }>();
+const { isRemoved, inheritedSource, inheritedBackground, setRemoved } =
+  createInheritedItemHelpers({
+    removed: () => props.removed,
+    provenance: () => props.provenance,
+    updateRemoved: (value) => emit('update:removed', value),
+  });
 const { t } = useI18n();
 const $q = useQuasar();
 const backend = useBackend();
@@ -174,7 +279,9 @@ const allIndices = computed(() => {
         !indices.value.some((local) => local.indexName === index.indexName),
     )
     .sort((first, second) =>
-      inheritedSource(first.indexName).localeCompare(inheritedSource(second.indexName)),
+      inheritedSource(first.indexName).localeCompare(
+        inheritedSource(second.indexName),
+      ),
     );
   return [...indices.value, ...inherited];
 });
@@ -192,29 +299,6 @@ watch(
 
 function copyIndex(index: Index): Index {
   return { ...index };
-}
-
-function isRemoved(indexName: string): boolean {
-  return (props.removed || []).includes(indexName);
-}
-
-function setRemoved(indexName: string, value: boolean | null): void {
-  const names = new Set(props.removed || []);
-  if (value) names.add(indexName);
-  else names.delete(indexName);
-  emit('update:removed', [...names]);
-}
-
-function inheritedSource(indexName: string): string {
-  return props.provenance?.[indexName] || '';
-}
-
-function inheritedBackground(indexName: string): string | undefined {
-  const source = inheritedSource(indexName);
-  if (!source) return undefined;
-  const sources = [...new Set(Object.values(props.provenance || {}))];
-  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
-  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
 }
 
 function toDraft(index: Index): IndexDraft {
@@ -275,7 +359,7 @@ async function loadIconFile(path: string): Promise<void> {
     if (draft.value) draft.value.iconSvg = pathData;
   } catch (error) {
     console.error('Could not load SVG icon file.', error);
-    const message = t('configEditor.indices.invalidIconFile')
+    const message = t('configEditor.indices.invalidIconFile');
     $q.notify({
       type: 'negative',
       message,

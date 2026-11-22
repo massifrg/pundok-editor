@@ -10,6 +10,7 @@ export * from './runExternal';
 export * from './pdf';
 export * from './renderingProcess';
 export * from './gitRepositories';
+export * from './imageCache';
 export * from './importExport';
 export * from './pandocFeatures';
 export * from './handlers/pandocFeatures';

@@ -1,18 +1,11 @@
-import { createHash, randomUUID } from 'node:crypto';
-import {
-  access,
-  mkdir,
-  readFile,
-  readdir,
-  rename,
-  stat,
-  unlink,
-  writeFile,
-} from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
-import { extname, join } from 'node:path';
+import { extname } from 'node:path';
 import { IMAGE_CACHE_MAX_AGE_MS } from '../../common/src';
-import { runExternalProgram } from '../../backend/src';
+import {
+  loadCachedPdfImage as loadCachedPdfImageFile,
+  runExternalProgram,
+} from '../../backend/src';
 
 export { IMAGE_CACHE_MAX_AGE_MS };
 
@@ -74,39 +67,12 @@ export async function loadCachedPdfImage(
   renderPdf: PdfRenderer = pdfToJpeg,
 ): Promise<Buffer> {
   const imagePage = parsePage(page);
-  await mkdir(cacheDirectory, { recursive: true });
-  await removeExpiredImages(cacheDirectory);
-
-  const cachedPath = join(
+  return loadCachedPdfImageFile(
+    path,
+    imagePage,
     cacheDirectory,
-    `${createHash('sha256').update(path).digest('hex')}-${imagePage}.jpg`,
-  );
-  const [pdfInfo, cachedInfo] = await Promise.all([
-    stat(path),
-    stat(cachedPath).catch(() => undefined),
-  ]);
-  if (cachedInfo && pdfInfo.mtimeMs <= cachedInfo.mtimeMs)
-    return readFile(cachedPath);
-
-  const image = await renderPdf(path, page);
-  const temporaryPath = `${cachedPath}.${randomUUID()}.tmp`;
-  await writeFile(temporaryPath, image);
-  await rename(temporaryPath, cachedPath);
-  return image;
-}
-
-async function removeExpiredImages(cacheDirectory: string): Promise<void> {
-  const oldestPermitted = Date.now() - IMAGE_CACHE_MAX_AGE_MS;
-  const entries = await readdir(cacheDirectory, { withFileTypes: true });
-  await Promise.all(
-    entries
-      .filter((entry) => entry.isFile() && entry.name.endsWith('.jpg'))
-      .map(async (entry) => {
-        const path = join(cacheDirectory, entry.name);
-        const info = await stat(path).catch(() => undefined);
-        if (info && info.mtimeMs < oldestPermitted)
-          await unlink(path).catch(() => undefined);
-      }),
+    IMAGE_CACHE_MAX_AGE_MS,
+    () => renderPdf(path, page),
   );
 }
 
