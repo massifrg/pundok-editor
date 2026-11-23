@@ -833,6 +833,8 @@
       "hideFolders": "nascondi cartelle:",
       "project": "progetto",
       "recent": "Vai a un elemento recente:",
+      "otherConfiguration": "usa un'altra configurazione:",
+      "none": "nessuna",
       "showAllFormats": "mostra tutti i formati",
       "showEveryDocument": "mostra tutti i documenti:",
       "showHidden": "mostra gli elementi nascosti:"

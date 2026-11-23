@@ -834,6 +834,8 @@
       "hideFolders": "hide folders:",
       "project": "project",
       "recent": "Go to a recent:",
+      "otherConfiguration": "use another configuration:",
+      "none": "none",
       "showAllFormats": "show all formats",
       "showEveryDocument": "show all docs:",
       "showHidden": "show hidden:"

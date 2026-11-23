@@ -102,6 +102,7 @@ export async function save(
           if (context.path) {
             setActionCommand(context.editorKey!, ACTION_DOCUMENT_SAVE_COPY, {
               path: context.path,
+              configurationName: context.configurationName,
               documentFormat: context.documentFormat,
               isCopy: true,
               dontAskCopyPath: true,
@@ -139,6 +140,7 @@ export async function save(
           if (context.path) {
             setActionCommand(context.editorKey!, ACTION_DOCUMENT_SAVE, {
               path: context.path,
+              configurationName: context.configurationName,
               documentFormat: context.documentFormat,
               isSaveAs,
               dontAskSaveAsPath: true,
@@ -166,7 +168,8 @@ export async function save(
         content: jsonDoc,
         documentFormat,
         project,
-        configurationName: project ? undefined : configuration?.name,
+        configurationName:
+          props?.configurationName || (project ? undefined : configuration?.name),
         resourcePath,
       },
       { isCopy },
