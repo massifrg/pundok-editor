@@ -5,8 +5,11 @@ import type {
 } from '../../common';
 import { computeProjectConfiguration } from '../../common';
 import { isString } from 'lodash-es';
+import { nextTick } from 'vue';
 import { useProjectCache } from '../../stores';
 import { notifyTimeout } from '../helpers';
+
+const MESSAGE_DIALOG_CLOSE_DELAY = 300;
 
 export interface ProjectManagementHost {
   [key: string]: any;
@@ -75,7 +78,11 @@ const gitUpdateSnapshots = new Map<string, Map<string, number>>();
 
 export function openGitUpdates(host: ProjectManagementHost): void {
   host.message = null;
-  host.visibleGitUpdates = true;
+  void nextTick(() => {
+    setTimeout(() => {
+      host.visibleGitUpdates = true;
+    }, MESSAGE_DIALOG_CLOSE_DELAY);
+  });
 }
 
 export async function reloadProjectAfterGitMerge(
