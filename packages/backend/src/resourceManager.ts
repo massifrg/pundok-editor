@@ -298,22 +298,15 @@ export function validResourcePaths(
   let paths: string[] = [];
 
   if (project?.path) paths = paths.concat(findValidPaths(project.path));
-  if (!project?.path && configurationName) {
+  const configurationNames = [
+    ...(configurationName ? [configurationName] : []),
+    ...(project?.configurations || []).slice().reverse(),
+  ];
+  for (const configName of configurationNames) {
     paths = paths.concat(
-      findValidPaths(
-        resolve(directories.localConfigurationsDir, configurationName),
-      ),
-      findValidPaths(resolve(directories.configurationsDir, configurationName)),
+      findValidPaths(resolve(directories.localConfigurationsDir, configName)),
+      findValidPaths(resolve(directories.configurationsDir, configName)),
     );
-  }
-  if (project?.configurations) {
-    const inherited = [...project.configurations].reverse();
-    for (const configName of inherited) {
-      paths = paths.concat(
-        findValidPaths(resolve(directories.localConfigurationsDir, configName)),
-        findValidPaths(resolve(directories.configurationsDir, configName)),
-      );
-    }
   }
   paths = paths.concat(findValidPaths(directories.userDataDir));
   if (directories.staticResourcesDir) {
@@ -350,13 +343,10 @@ export function pandocResourcePath(
   const projectPaths = project?.path
     ? [project.path, ...subpaths(project.path)]
     : [];
-  const configurationPaths = project?.path
-    ? [...(project.configurations || [])]
-        .reverse()
-        .flatMap((name) => configurationPathsFor(name))
-    : configurationName
-      ? configurationPathsFor(configurationName)
-      : [];
+  const configurationPaths = [
+    ...(configurationName ? [configurationName] : []),
+    ...(project?.configurations || []).slice().reverse(),
+  ].flatMap((name) => configurationPathsFor(name));
   const paths = [
     cwd,
     documentPath ? parse(documentPath).dir : undefined,
