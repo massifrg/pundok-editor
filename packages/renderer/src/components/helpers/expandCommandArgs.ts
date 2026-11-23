@@ -1,5 +1,10 @@
-import { parse, sep } from 'path-browserify';
 import type { PundokEditorProject } from '../../common';
+import {
+  documentPathBaseName,
+  documentPathDirName,
+  documentPathRoot,
+  normalizeDocumentPath,
+} from '../../common';
 
 export function expandCommandArgs(
   args: string[],
@@ -8,14 +13,20 @@ export function expandCommandArgs(
   if (!env) return args;
   const values: Record<string, string> = {};
   if (env.path) {
-    const file = parse(env.path.replace(/^file:\/\//, ''));
+    const file = normalizeDocumentPath(env.path);
+    const base = documentPathBaseName(file);
+    const dot = base.lastIndexOf('.');
+    const name = dot <= 0 ? base : base.slice(0, dot);
+    const ext = dot <= 0 ? '' : base.slice(dot);
+    const dir = documentPathDirName(file);
+    const root = documentPathRoot(file);
     Object.assign(values, {
-      BASE: file.base,
-      DIR: file.dir,
-      EXT: file.ext,
-      NAME: file.name,
-      ROOT: file.root,
-      SEP: sep,
+      BASE: base,
+      DIR: dir,
+      EXT: ext,
+      NAME: name,
+      ROOT: root,
+      SEP: '/',
     });
   }
   if (env.project) {

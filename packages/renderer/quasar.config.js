@@ -7,10 +7,9 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
 import { defineConfig } from '#q-app/wrappers';
-import { resolve } from 'path';
 import { fileURLToPath } from 'node:url';
 
-export default defineConfig((ctx) => {
+export default defineConfig(() => {
   return {
     eslint: {
       // fix: true,
@@ -61,7 +60,7 @@ export default defineConfig((ctx) => {
         node: 'node22',
       },
 
-      extendViteConf(viteConf, { isServer, isClient }) {
+      extendViteConf() {
         // We return an Object which will get deeply merged into
         // the config, instead of directly tampering with viteConf
         return {

@@ -34,9 +34,12 @@ import {
   documentFormatFromInputConverter,
   documentFormatFromOutputConverter,
   documentFormatFromPandocFormatDescription,
+  joinDocumentPath,
+  ConfigurationSummary,
 } from '../../common';
 import { editorKeyFromState, getEditorConfiguration, getEditorDocState } from '../../schema';
 import { useBackend } from '../../stores';
+import { notifyTimeout } from '../helpers';
 import { uniq } from 'lodash-es';
 
 export type DocumentDialogMode = 'open' | 'save' | 'save-copy' | 'import' | 'insert' | 'folder' | 'image'
@@ -209,6 +212,12 @@ export default {
       tempProject: undefined as PundokEditorProject | undefined,
       /** A temporary configuration from a bookmarked document */
       tempConfigurationName: undefined as string | undefined,
+      /** A configuration used only for the current open/save operation */
+      otherConfigurationName: undefined as string | undefined,
+      /** The configurations available for temporary use */
+      availableConfigurationSummaries: [] as ConfigurationSummary[],
+      /** The selected temporary configuration */
+      otherConfiguration: undefined as PundokEditorConfigInit | undefined,
     }
   },
   computed: {
@@ -261,17 +270,20 @@ export default {
       const mode = this.mode as DocumentDialogMode
       return mode !== 'save' && mode !== 'save-copy'
     },
+    supportsOtherConfiguration() {
+      return this.mode === 'open' || this.mode === 'save' || this.mode === 'save-copy'
+    },
     /**
      * The path returned by this dialog on Ok
      */
     targetPath(): string | undefined {
       if (this.mode === 'folder')
         return this.currentFolder && this.selectedDocument
-          ? `${this.currentFolder}/${this.selectedDocument}`
+          ? joinDocumentPath(this.currentFolder, this.selectedDocument)
           : undefined
       else
         return this.currentFolder && this.filename
-          ? `${this.currentFolder}/${this.filename}`
+          ? joinDocumentPath(this.currentFolder, this.filename)
           : undefined
     },
     dialogPrompt() {
@@ -303,12 +315,20 @@ export default {
     tempConfiguration(): PundokEditorConfigInit | undefined {
       return this.tempProject ? this.tempProject.computedConfig : undefined
     },
+    otherConfigurations(): ConfigurationSummary[] {
+      const included = new Set(this.tempProject?.configurations || [])
+      return this.availableConfigurationSummaries.filter(config =>
+        !included.has(config.name))
+    },
     inputConverters(): InputConverter[] {
       const current = this.configuration?.inputConverters || []
       // read converters from the config of a project eventually present in the current folder
       const temp = (this.tempConfiguration?.inputConverters || [])
         .filter(t => !current.find(c => c.name === t.name))
-      return [...current, ...temp]
+      const available = [...current, ...temp]
+      const other = (this.otherConfiguration?.inputConverters || [])
+        .filter(t => !available.find(c => c.name === t.name))
+      return [...available, ...other]
     },
     outputConverters(): OutputConverter[] {
       const current = (this.configuration?.outputConverters || [])
@@ -316,7 +336,10 @@ export default {
       // read converters from the config of a project eventually present in the current folder
       const temp = (this.tempConfiguration?.outputConverters || [])
         .filter(t => !current.find(c => c.name === t.name))
-      return [...current, ...temp]
+      const available = [...current, ...temp]
+      const other = (this.otherConfiguration?.outputConverters || [])
+        .filter(oc => !oc.longRendering && !available.find(c => c.name === oc.name))
+      return [...available, ...other]
     },
     documentFormats(): DocumentFormat[] {
       if (this.mode === 'image') {
@@ -328,11 +351,11 @@ export default {
       let converters = this.isInputDialog
         ? this.inputConverters.map(ic => documentFormatFromInputConverter(ic, source))
         : this.outputConverters.map(oc => documentFormatFromOutputConverter(oc, source))
+      const otherMainFormats = this.otherConfiguration?.mainFormats || []
       let pandocFormats = this.pandocFormats
         .filter(f => this.isInputDialog ? f.input === true : f.output === true)
+        .filter(f => this.showAllFormats || (f.priority || 0) >= 1 || otherMainFormats.includes(f.name || ''))
         .map(f => documentFormatFromPandocFormatDescription(f))
-      if (!this.showAllFormats)
-        pandocFormats = pandocFormats.filter(f => ((f as PandocFormatDescription).priority || 0) >= 1)
       let formats = [...converters, ...pandocFormats]
       if (this.isInputDialog && formats[0].ftype !== 'guess')
         formats.unshift(guessFormat)
@@ -360,6 +383,8 @@ export default {
       const output_formats: string[] = await this.backend?.pandocFeature('output-formats') || []
       const format_descriptions = getPandocFormatDescriptions(input_formats, output_formats)
       this.pandocFormats = [...format_descriptions]
+      this.availableConfigurationSummaries =
+        await this.backend?.availableConfigurations() || []
       this.docBookmarks = (await this.backend?.getBookmarks('document') || []) as DocumentBookmark[]
       this.projectBookmarks = (await this.backend?.getBookmarks('project') || []) as ProjectBookmark[]
     }
@@ -384,15 +409,23 @@ export default {
     },
     tempProject(tp) {
       if (tp) this.tempConfigurationName = undefined
+      this.otherConfigurationName = undefined
+      this.otherConfiguration = undefined
     },
     tempConfiguration(tc) {
       console.log(`temporary configuration: ${tc?.name || 'none'}`)
     },
     tempConfigurationName(tcn) {
       console.log(`temporary configuration name: ${tcn || 'none'}`)
-    }
+    },
   },
   methods: {
+    async selectOtherConfiguration(name?: string) {
+      this.otherConfigurationName = name
+      this.otherConfiguration = name
+        ? await this.backend?.configuration(name)
+        : undefined
+    },
     handleFileTableKeydown(event: KeyboardEvent) {
       if (
         event.altKey ||
@@ -523,8 +556,9 @@ export default {
           this.tempConfigurationName = undefined
         }
       } catch (err) {
+        const message = this.$t('fileDialog.error.title')
         this.$q.notify({
-          message: this.$t('fileDialog.error.title'),
+          message,
           caption: this.$t('fileDialog.error.readFolder', {
             path,
             error: String(err),
@@ -532,7 +566,7 @@ export default {
           icon: 'folder_alert',
           position: 'top',
           color: 'negative',
-          timeout: 3000,
+          timeout: notifyTimeout(message),
         });
         console.log(err)
       }
@@ -549,7 +583,7 @@ export default {
     },
     async createFolder(folder: string) {
       try {
-        const path = await this.backend?.createFolder(`${this.currentFolder}/${folder}`)
+        const path = await this.backend?.createFolder(joinDocumentPath(this.currentFolder, folder))
         if (path) {
           this.currentFolder = path
           this.getContents()
@@ -615,7 +649,7 @@ export default {
       } else if (row.isFolder) {
         this.currentFolder = row.name === '..'
           ? splitFolderAndDoc(this.currentFolder).folder
-          : this.currentFolder = `${this.currentFolder}/${row.name}`
+          : this.currentFolder = joinDocumentPath(this.currentFolder, row.name)
         this.getContents()
       }
     },
@@ -642,8 +676,9 @@ export default {
         const gf = this.guessFormatFromPath(path)
         // console.log(`format should be ${gf?.format?.name}`)
         if (gf?.format) {
+          const message = this.$t('fileDialog.warning.title')
           this.$q.notify({
-            message: this.$t('fileDialog.warning.title'),
+            message,
             caption: this.$t('fileDialog.warning.formatChanged', {
               format: gf.format.name,
               path,
@@ -651,7 +686,7 @@ export default {
             icon: 'message_warning',
             position: 'top',
             color: 'warning',
-            timeout: 3000,
+            timeout: notifyTimeout(message),
           });
           this.format = gf?.format || this.format
         }
@@ -746,7 +781,7 @@ export default {
         this.$emit('ok', {
           editorKey,
           path,
-          configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+          configurationName: this.otherConfigurationName || this.tempConfigurationName,
           project: this.tempProject,
         } as DocumentContext)
       } else {
@@ -757,7 +792,7 @@ export default {
           id: toRaw(this.selectedDocument),
           path,
           documentFormat,
-          configurationName: this.tempProject ? undefined : this.tempConfigurationName,
+          configurationName: this.otherConfigurationName || this.tempConfigurationName,
           project: this.tempProject,
         } as DocumentContext)
       }
@@ -862,6 +897,30 @@ export default {
         <q-btn v-if="!isInputDialog" icon="folder_new" size="sm" color="primary"
           :title="$t('fileDialog.createFolder.title')" @click="askForFolderToCreate" />
         <q-space />
+        <template v-if="supportsOtherConfiguration">
+          <span class="q-pa-md">{{ $t('fileDialog.labels.otherConfiguration') }}</span>
+          <q-btn-dropdown
+            :label="otherConfigurationName || $t('fileDialog.labels.none')"
+            no-caps auto-close dense class="q-my-xs"
+          >
+            <q-list>
+              <q-item clickable dense @click="selectOtherConfiguration()">
+                <q-item-section>{{ $t('fileDialog.labels.none') }}</q-item-section>
+              </q-item>
+              <q-item
+                v-for="config in otherConfigurations"
+                :key="config.name"
+                clickable dense
+                @click="selectOtherConfiguration(config.name)"
+              >
+                <q-item-section>
+                  <q-item-label>{{ config.name }}</q-item-label>
+                  <q-item-label v-if="config.description" caption>{{ config.description }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </template>
         <span class="q-pa-md">{{ $t('fileDialog.labels.recent') }}</span>
         <q-space style="max-width: .1rem;" />
         <q-btn-dropdown :label="$t('fileDialog.labels.project')" no-caps auto-close dense class="q-my-xs">

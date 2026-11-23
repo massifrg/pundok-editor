@@ -38,6 +38,14 @@ export function errorFeedback(
   feedback.report({ type: 'error', message, level: 1 }, editorKey);
 }
 
+export function warningFeedback(
+  feedback: FeedbackSink,
+  message: string,
+  editorKey?: EditorKeyType,
+): void {
+  feedback.report({ type: 'warning', message, level: 1 }, editorKey);
+}
+
 export function commandLineFeedback(
   feedback: FeedbackSink,
   commandLine: string,

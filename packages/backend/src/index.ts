@@ -1,5 +1,6 @@
 export * from './documentHash';
 export * from './bookmarks';
+export * from './pageRanges';
 export * from './expandCommandArgs';
 export * from './filesystem';
 export * from './resourceManager';
@@ -9,6 +10,7 @@ export * from './runExternal';
 export * from './pdf';
 export * from './renderingProcess';
 export * from './gitRepositories';
+export * from './imageCache';
 export * from './importExport';
 export * from './pandocFeatures';
 export * from './handlers/pandocFeatures';

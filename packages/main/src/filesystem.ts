@@ -13,7 +13,7 @@ import * as EventEmitter from "events";
 import * as Stream from "stream";
 
 /**
- * Like {@link pathToFileURL}, but
+ * Like `pathToFileURL`, but
  * - it removes the starting "file://" when present
  * - in win32, it fixes the drive letter repetition: pathToFileURL('/C:/') === 'file:///C:/C:/'
  * @param _path 

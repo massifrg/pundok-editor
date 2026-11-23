@@ -12,6 +12,7 @@ import {
   type BackendValueKey,
   type DocRepository,
   isDocRepositories,
+  isRecord,
 } from './common';
 
 const scrypt = promisify(scryptCallback);
@@ -217,10 +218,6 @@ export class JwtAuthentication {
       if (expiry <= now) this.revokedTokens.delete(tokenId);
     }
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export async function hashPassword(password: string): Promise<string> {

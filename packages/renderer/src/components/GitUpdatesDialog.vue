@@ -197,16 +197,13 @@
 <script lang="ts">
 import { mapState } from 'pinia';
 import { nextTick } from 'vue';
-import { MergeView } from '@codemirror/merge';
-import { EditorState } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
-import { basicSetup } from 'codemirror';
 import { useBackend } from '../stores';
 import type {
   GitMergeConflict,
   GitProjectStatus,
   GitRemoteBranch,
 } from '../common';
+import type { MergeView } from '@codemirror/merge';
 
 type BranchState = GitRemoteBranch & {
   mergeable?: boolean;
@@ -315,18 +312,25 @@ export default {
     async showConflict(conflict: GitMergeConflict) {
       this.selectedConflict = conflict;
       await nextTick();
-      this.createMergeViews();
+      await this.createMergeViews();
     },
     setMergeContainer(element: unknown, path: string | undefined) {
       if (!path) return;
       if (element instanceof HTMLElement) this.mergeContainers[path] = element;
     },
-    createMergeViews() {
+    async createMergeViews() {
       const conflict = this.selectedConflict;
       if (!conflict) return;
       const parent = this.mergeContainers[conflict.path];
       this.destroyMergeViews();
       if (!parent) return;
+      const [{ MergeView }, { EditorState }, { EditorView }, { basicSetup }] =
+        await Promise.all([
+          import('@codemirror/merge'),
+          import('@codemirror/state'),
+          import('@codemirror/view'),
+          import('codemirror'),
+        ]);
       this.mergeViews[conflict.path] = new MergeView({
         parent,
         orientation: 'a-b',

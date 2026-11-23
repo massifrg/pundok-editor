@@ -32,7 +32,7 @@ if (!isSingleInstance) {
   app.quit();
   process.exit(0);
 }
-app.on('second-instance', (event, argv, pwd, data) => {
+app.on('second-instance', (_event, argv, pwd, data) => {
   const sid = data as SecondInstanceData;
   const args = (sid?.argv && JSON.parse(sid.argv)) || argv;
   if (mainWindowWithIpc) parseCommandLineOpts(mainWindowWithIpc, args, pwd);
@@ -130,7 +130,7 @@ app
   .whenReady()
   .then(() => copyMissingStaticResourcesInUserDir((msg) => console.log(msg)));
 
-app.on('before-quit', async (event) => {
+app.on('before-quit', async () => {
   // TODO: check if the document has unsaved changes
   // event.preventDefault()
 });

@@ -25,7 +25,11 @@
       >
         <q-item-section>
           <q-item-label class="row items-center no-wrap">
-            <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(customClass.name) }">{{ customClass.name }}</span>
+            <span
+              class="text-weight-bold"
+              :class="{ 'text-strike': isRemoved(customClass.name) }"
+              >{{ customClass.name }}</span
+            >
             <q-space />
             <span class="text-caption text-grey-7">{{
               appliesToLabel(customClass.appliesTo)
@@ -35,7 +39,11 @@
             {{ customClass.description }}
           </q-item-label>
           <q-item-label v-if="isInherited(customClass)" caption>
-            {{ $t('configEditor.inheritedFrom', { name: inheritedSource(customClass.name) }) }}
+            {{
+              $t('configEditor.inheritedFrom', {
+                name: inheritedSource(customClass.name),
+              })
+            }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
@@ -80,7 +88,9 @@
               :model-value="isRemoved(customClass.name)"
               color="primary"
               :icon="mdiEyeOff"
-              :title="$t('configEditor.removeInherited', { name: customClass.name })"
+              :title="
+                $t('configEditor.removeInherited', { name: customClass.name })
+              "
               @update:model-value="setRemoved(customClass.name, $event)"
             />
           </div>
@@ -174,6 +184,7 @@ import type { CustomAttribute, CustomClass } from '../../common';
 import { HasPandocAttr } from '../../common';
 import CustomAttributesEditor from './CustomAttributesEditor.vue';
 import { nextCopyName } from '../helpers/copyName';
+import { createInheritedItemHelpers } from '../helpers/inheritedItems';
 
 type ClassDraft = Omit<
   CustomClass,
@@ -194,6 +205,13 @@ const emit = defineEmits<{
   'update:modelValue': [value: CustomClass[]];
   'update:removed': [value: string[]];
 }>();
+
+const { isRemoved, inheritedSource, inheritedBackground, setRemoved } =
+  createInheritedItemHelpers({
+    removed: () => props.removed,
+    provenance: () => props.provenance,
+    updateRemoved: (value) => emit('update:removed', value),
+  });
 
 const classes = ref<CustomClass[]>([]);
 const draft = ref<ClassDraft>();
@@ -220,29 +238,6 @@ function isInherited(customClass: CustomClass): boolean {
     !classes.value.some(({ name }) => name === customClass.name) &&
     (props.inherited || []).some(({ name }) => name === customClass.name)
   );
-}
-
-function isRemoved(name: string): boolean {
-  return (props.removed || []).includes(name);
-}
-
-function inheritedSource(name: string): string {
-  return props.provenance?.[name] || '';
-}
-
-function inheritedBackground(name: string): string | undefined {
-  const source = inheritedSource(name);
-  if (!source) return undefined;
-  const sources = [...new Set(Object.values(props.provenance || {}))];
-  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
-  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
-}
-
-function setRemoved(name: string, value: boolean | null): void {
-  const names = new Set(props.removed || []);
-  if (value) names.add(name);
-  else names.delete(name);
-  emit('update:removed', [...names]);
 }
 
 function appliesToLabel(appliesTo: CustomClass['appliesTo']): string {

@@ -208,6 +208,12 @@ export function createBackendRouter(
     ),
   );
   router.post(
+    '/synctex-list',
+    asyncHandler((req) =>
+      backend.listSynctexFile(username(req), req.body?.filename),
+    ),
+  );
+  router.post(
     '/find-resource-files',
     asyncHandler((req) =>
       backend.findResourceFiles(

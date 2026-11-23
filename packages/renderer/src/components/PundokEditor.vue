@@ -126,6 +126,7 @@ import {
   PendingOperationExtraValue,
   PendingOperationExtraValueValue,
   RenderingTarget,
+  notifyTimeout,
 } from './helpers';
 import ContextMenu from './ContextMenu.vue';
 import InputTextDialog from './InputTextDialog.vue';
@@ -407,19 +408,24 @@ export default {
         await this.backend.initGitProject(projectPath);
         this.visibleGitChanges = true;
       } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
         this.$q.notify({
-          message: error instanceof Error ? error.message : String(error),
+          message,
           color: 'negative',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         });
       }
     },
     gitRepositoryDone(result: { path?: string }) {
-      if (result.path)
+      if (result.path) {
+        const message = `Project ready at ${result.path}`
         this.$q.notify({
-          message: `Project ready at ${result.path}`,
+          message,
           color: 'positive',
+          timeout: notifyTimeout(message),
         });
+      }
     },
     editorState(): EditorState | undefined {
       if (this.editor) return this.editor.view.state as EditorState;
@@ -598,7 +604,7 @@ export default {
         icon,
         position,
         color: success ? 'positive' : 'negative',
-        timeout: success ? 2000 : 5000,
+        timeout: notifyTimeout(message),
       });
       const resultMessage = `${message}: ${caption}`;
       console.log(resultMessage);

@@ -1,9 +1,4 @@
-import {
-  delimiter as pathDelimiter,
-  isAbsolute,
-  parse as parsePath,
-  resolve,
-} from 'node:path';
+import { isAbsolute, parse as parsePath, resolve } from 'node:path';
 import { isArray, isObject, isString } from 'lodash-es';
 import {
   type CxDocument,

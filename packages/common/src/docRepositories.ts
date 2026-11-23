@@ -1,3 +1,5 @@
+import { isRecord } from './types';
+
 export const BACKEND_VALUE_DOC_REPOSITORIES = 'doc-repositories';
 
 export type BackendValueKey = typeof BACKEND_VALUE_DOC_REPOSITORIES;
@@ -23,8 +25,4 @@ export function isDocRepositories(value: unknown): value is DocRepository[] {
         typeof repository.typeOptions.branch === 'string',
     )
   );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

@@ -65,6 +65,8 @@ export interface DocumentInsertActionProps extends DocumentOpenActionProps {
 export interface DocumentSaveActionProps extends ActionProps {
   /** The complete path of the document to be saved (folder and filename). */
   path?: string,
+  /** A temporary configuration to use for this save operation. */
+  configurationName?: string,
   /** The format in which the document must be saved. */
   documentFormat?: DocumentFormat,
   /** It's a "save as" operation. The document in the editor takes the new name and format. */

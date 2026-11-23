@@ -11,17 +11,25 @@ import { ACTION_SETUP_VIEWER, EditorAction } from '../actions';
 import {
   EditorKeyType,
   isProjectDocumentOrDescendant,
+  isProjectComponentOrDescendant,
+  projectComponentForSource,
+  widestPageRangeFromRanges,
   ProjectComponent,
+  PundokEditorProject,
   RenderingBookmark,
   RenderingPageBookmark,
   PdfPageRectangle,
   SYNCTEX_CONTEXT_REQUIRED,
+  SYNCTEX_FILE_NOT_FOUND,
   SetupViewerActionProps,
   SynctexInfo,
-  ViewerSetup
+  ViewerSetup,
+  normalizeDocumentPath
 } from '../common';
 import { isString, throttle } from 'lodash-es';
 import { PromptDialog } from './dialogs'
+import { notifyTimeout } from './helpers'
+import { pageRangesForRendering } from '../pageRangesCache';
 
 type WhenRendered = (() => void)[]
 
@@ -30,7 +38,30 @@ interface PdfContent {
   content?: string,
 }
 
+function imageSource(filename: string, page: number, version: string): string {
+  const url = new URL('img:///')
+  url.pathname = normalizeDocumentPath(filename)
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/')
+  url.searchParams.set('page', String(page))
+  url.searchParams.set('version', version)
+  return url.href
+}
+
+function projectDocumentName(documentPath: string, projectPath?: string): string {
+  const document = normalizeDocumentPath(documentPath)
+  const project = projectPath ? normalizeDocumentPath(projectPath) : undefined
+  if (project && document.startsWith(`${project}/`))
+    return document.slice(project.length + 1)
+  return document.split('/').pop() || document
+}
+
 interface ViewerBookmark extends RenderingPageBookmark { }
+
+interface PageTranslation {
+  page: number
+}
 
 const DEFAULT_LENS_SIZE = 4
 const DEFAULT_LENS_MAGNIFICATION_FACTOR = 2
@@ -67,9 +98,18 @@ export default {
       projectAsJson: undefined as string | undefined,
       projectPath: undefined as string | undefined,
       projectStructure: undefined as ProjectComponent | undefined,
+      project: undefined as PundokEditorProject | undefined,
       autoReload: false,
       page: 1,
       viewPage: 1,
+      pendingPage: undefined as {
+        filename: string,
+        page?: number,
+        pageRatio?: number,
+        previousPage: number,
+        previousMaxPages: number,
+      } | undefined,
+      pageCountLoadedFor: undefined as string | undefined,
       maxPages: 1,
       magnify: 1,
       width: baseWidth,
@@ -146,9 +186,15 @@ export default {
       )
     },
     renderingBookmarks(): RenderingBookmark[] {
-      return Object.values(this.renderingJobs).filter((item) =>
-        this.isPdfRendering(item),
-      )
+      const bookmarks = Object.values(this.renderingJobs)
+        .filter((item) => this.isPdfRendering(item))
+      const timestamped = bookmarks
+        .filter((item) => typeof item.timestamp === 'number')
+        .sort((a, b) => b.timestamp! - a.timestamp!)
+      const untimestamped = bookmarks
+        .filter((item) => typeof item.timestamp !== 'number')
+        .reverse()
+      return [...timestamped, ...untimestamped]
     },
     renderingDocumentName(): string {
       const bookmark = this.currentRendering
@@ -217,9 +263,7 @@ export default {
     imageSources(): { page: number, source: string }[] {
       const filename = this.filename
       if (!filename) return []
-      const version = encodeURIComponent(
-        `${this.documentHash || ''}-${this.imageVersion}`,
-      )
+      const version = `${this.documentHash || ''}-${this.imageVersion}`
       const firstPage = this.focusRects.length === 0
         ? this.displayedPageInView
         : firstPageInSpread(this.page, this.twoPageSpread, this.firstPageOnRight)
@@ -232,8 +276,8 @@ export default {
       return pages.map((page) => ({
         page,
         source: window.ipc
-          ? `img://${filename}?page=${page - 1}&version=${version}`
-          : `/backend/image?path=${encodeURIComponent(filename)}&page=${page - 1}&version=${version}`,
+          ? imageSource(filename, page - 1, version)
+          : `/backend/image?path=${encodeURIComponent(filename)}&page=${page - 1}&version=${encodeURIComponent(version)}`,
       }))
     },
     pendingImageSources(): { page: number, source: string }[] {
@@ -360,6 +404,9 @@ export default {
     },
     async setupViewer(setup?: ViewerSetup) {
       if (setup) {
+        const previousFilename = this.filename
+        const previousRendering = this.currentRendering
+        const previousPage = this.page
         const {
           name: filename,
           content,
@@ -374,6 +421,9 @@ export default {
           focusPageHeight,
         } = setup
         const hash = documentHash || filename
+        const setupProject = projectAsJson
+          ? JSON.parse(projectAsJson) as PundokEditorProject
+          : undefined
         this.imageVersion += 1
         const rendering = Object.values(this.renderingJobs).find(
           (item) => this.isPdfRendering(item) &&
@@ -396,7 +446,16 @@ export default {
         this.pdfHighlightStyles = []
         if (rendering?.pageBookmarks)
           this.documentBookmarks[hash] = rendering.pageBookmarks
-        await this.rememberExportJob(hash, filename)
+        await this.rememberExportJob(
+          hash,
+          filename,
+          setupProject?.path,
+          !!finishedTarget,
+        )
+        const nextRendering = Object.values(this.renderingJobs).find(
+          (item) => this.isPdfRendering(item) &&
+            this.renderingPath(item.url) === filename,
+        )
         this.regeneratingUrl = undefined
         this.regeneratingTarget = undefined
         if (finishedTarget)
@@ -404,10 +463,83 @@ export default {
         this.projectAsJson = projectAsJson
         this.projectStructure = undefined
         this.projectPath = undefined
+        this.project = undefined
+        this.pendingPage = undefined
         if (projectAsJson) {
-          const project = JSON.parse(projectAsJson)
+          const project = setupProject!
+          this.project = project
           this.projectPath = project.path
           this.projectStructure = await this.backend?.getInclusionTree(project)
+        } else if (
+          (nextRendering?.projectPath || nextRendering?.documentPath) &&
+          this.backend
+        ) {
+          try {
+            this.project = await this.backend.getProject({
+              path: nextRendering.projectPath || nextRendering.documentPath,
+            })
+            if (this.project) {
+              this.projectPath = this.project.path
+              this.projectStructure = await this.backend.getInclusionTree(this.project)
+            }
+          } catch (err) {
+            console.warn('Unable to determine the rendering project', err)
+          }
+        }
+        if (
+          previousFilename &&
+          previousFilename !== filename &&
+          previousRendering &&
+          nextRendering &&
+          previousRendering.projectPath &&
+          previousRendering.projectPath === nextRendering.projectPath &&
+          page === undefined &&
+          this.project &&
+          this.projectStructure
+        ) {
+          const project = toRaw(this.project) as PundokEditorProject
+          const structure = toRaw(this.projectStructure) as ProjectComponent
+          let adaptedPage: PageTranslation | undefined
+          try {
+            adaptedPage = await this.adaptPageForRenderingSwitch(
+              previousRendering,
+              nextRendering,
+              previousPage,
+              project,
+              structure,
+            )
+          } catch (err) {
+            console.warn('Unable to adapt the PDF viewer page', err)
+          }
+          if (adaptedPage) {
+            this.pendingPage = {
+              filename,
+              page: adaptedPage.page,
+              previousPage,
+              previousMaxPages: this.maxPages,
+            }
+          }
+        }
+        if (
+          !this.pendingPage &&
+          previousFilename &&
+          previousFilename !== filename &&
+          previousRendering &&
+          nextRendering &&
+          page === undefined &&
+          this.maxPages > 0
+        ) {
+          this.pendingPage = {
+            filename,
+            pageRatio: previousPage / this.maxPages,
+            previousPage,
+            previousMaxPages: this.maxPages,
+          }
+        }
+        const pendingPage = this.pendingPage
+        if (pendingPage?.filename === filename) {
+          this.page = 1
+          this.viewPage = 1
         }
         if (this.focusRects.length > 0)
           this.whenRendered.push(() => this.focusOnRects())
@@ -418,7 +550,99 @@ export default {
         await this.loadPdf({ filename, content })
       }
     },
-    async rememberExportJob(hash: string, resultPath?: string) {
+    async adaptPageForRenderingSwitch(
+      previousRendering: RenderingBookmark,
+      nextRendering: RenderingBookmark,
+      previousPage: number,
+      project: PundokEditorProject,
+      structure: ProjectComponent,
+    ): Promise<PageTranslation> {
+      if (!this.backend || !project.path)
+        return Promise.reject(new Error('PDF page translation context unavailable'))
+      if (
+        !previousRendering.projectPath ||
+        previousRendering.projectPath !== nextRendering.projectPath
+      )
+        return Promise.reject(new Error('Renderings do not belong to the same project'))
+      const previousDocumentName = previousRendering.documentName
+      const nextDocumentName = nextRendering.documentName
+      if (!previousDocumentName || !nextDocumentName)
+        return Promise.reject(new Error('Rendering document names are unavailable'))
+
+      const previousComponent = projectComponentForSource(
+        structure,
+        previousDocumentName,
+        project.path,
+      )
+      const nextComponent = projectComponentForSource(
+        structure,
+        nextDocumentName,
+        project.path,
+      )
+      if (!previousComponent || !nextComponent)
+        return Promise.reject(new Error('Rendering documents are not in the project structure'))
+
+      const previousContainsNext = isProjectComponentOrDescendant(
+        previousComponent,
+        nextComponent,
+      )
+      const nextContainsPrevious = isProjectComponentOrDescendant(
+        nextComponent,
+        previousComponent,
+      )
+      if (!previousContainsNext && !nextContainsPrevious)
+        return Promise.reject(new Error('Rendering documents have no ancestor relationship'))
+
+      const containerRendering = previousContainsNext
+        ? previousRendering
+        : nextRendering
+      const subdocumentRendering = previousContainsNext
+        ? nextRendering
+        : previousRendering
+      const subdocumentName = previousContainsNext
+        ? nextDocumentName
+        : previousDocumentName
+      const synctexFile = this.renderingPath(containerRendering.url)
+        .replace(/[.]pdf$/i, '.synctex')
+      try {
+        const cachedPageRanges = await pageRangesForRendering(
+          containerRendering,
+          synctexFile,
+          structure,
+          project.path,
+          (path) => this.backend!.listSynctexFile(path),
+        )
+        this.projectStructure = cachedPageRanges.structure
+        const subdocumentRanges =
+          cachedPageRanges.pageRangesForSource(subdocumentName)
+        const mainPageRange = widestPageRangeFromRanges(subdocumentRanges)
+        if (!mainPageRange)
+          return Promise.reject(new Error(
+            `No page range found for subdocument "${subdocumentName}"`,
+          ))
+        const subdocumentStart = mainPageRange[0]
+        const page = Math.max(
+          1,
+          previousContainsNext
+            ? previousPage - (subdocumentStart - 1)
+            : previousPage + (subdocumentStart - 1),
+        )
+        return {
+          page,
+        }
+      } catch (err) {
+        const message = err instanceof Error
+          ? err.message
+          : `Unable to read the container SyncTeX listing: ${String(err)}`
+        return Promise.reject(new Error(message))
+      }
+    },
+    async rememberExportJob(
+      hash: string,
+      resultPath?: string,
+      projectPath?: string,
+      refreshTimestamp = false,
+    ) {
       if (hash) {
         const job = await this.backend?.getRenderingJob(hash)
         if (job) {
@@ -435,13 +659,21 @@ export default {
           for (const [key] of currentEntries)
             delete this.renderingJobs[key]
           const url = current?.url || renderingPath
+          const bookmarkProjectPath =
+            projectPath || job.project?.path || current?.projectPath
           this.renderingJobs[url] = {
             type: 'rendering',
             url,
             documentPath: job.path,
+            projectPath: bookmarkProjectPath,
+            documentName: current?.documentName ||
+              projectDocumentName(job.path, bookmarkProjectPath),
             converterName: job.converter.name,
             configurationName: job.configurationName,
             pageBookmarks: current?.pageBookmarks,
+            timestamp: refreshTimestamp
+              ? Date.now()
+              : current?.timestamp || Date.now(),
           }
         }
       }
@@ -457,6 +689,7 @@ export default {
             this.preloadedImages = {}
           }
           this.filename = filename
+          this.pageCountLoadedFor = undefined
           this.isRendering = true
           this.maxPages = Math.max(1, this.page, this.viewPage)
           this.contentHash = await createHash(filename)
@@ -468,6 +701,7 @@ export default {
             message: this.$t('pdfViewer.previewRequiresFilePath'),
             color: 'warning',
             icon: 'message_warning',
+            timeout: notifyTimeout(this.$t('pdfViewer.previewRequiresFilePath')),
           })
         }
         if (pdfContent) {
@@ -479,12 +713,14 @@ export default {
         }
       } catch (err) {
         this.isRendering = false
+        const message = err instanceof Error
+          ? err.message
+          : this.$t('pdfViewer.unableInspectPagesImageMagick')
         this.$q.notify({
-          message: err instanceof Error
-            ? err.message
-            : this.$t('pdfViewer.unableInspectPagesImageMagick'),
+          message,
           color: 'warning',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         })
       }
     },
@@ -493,7 +729,27 @@ export default {
         const result = await this.backend?.getPdfPageCount(filename)
         if (this.filename === filename && result) {
           this.maxPages = result.pageCount
-          this.page = Math.min(this.page, result.pageCount)
+          this.pageCountLoadedFor = filename
+          const pendingPage = this.pendingPage
+          const applyBeforeLoading =
+            pendingPage?.filename === filename &&
+            (
+              pendingPage.pageRatio !== undefined ||
+              pendingPage.previousMaxPages > result.pageCount
+            )
+          if (applyBeforeLoading) {
+            const page = pendingPage.pageRatio === undefined
+              ? Math.min(pendingPage.page!, result.pageCount)
+              : Math.max(
+                1,
+                Math.floor(pendingPage.pageRatio * result.pageCount),
+              )
+            this.pendingPage = undefined
+            this.page = page
+            this.viewPage = page
+          } else {
+            this.page = Math.min(this.page, result.pageCount)
+          }
           this.viewPage = Math.min(this.viewPage, result.pageCount)
           this.$nextTick(() => this.updateDisplayedPages())
           if (result.usedImageMagick) {
@@ -501,17 +757,20 @@ export default {
               message: this.$t('pdfViewer.mtxrunFallback'),
               color: 'warning',
               icon: 'message_warning',
+              timeout: notifyTimeout(this.$t('pdfViewer.mtxrunFallback')),
             })
           }
         }
       } catch (err) {
         if (this.filename !== filename) return
+        const message = err instanceof Error
+          ? err.message
+          : this.$t('pdfViewer.unableInspectPagesImageMagick')
         this.$q.notify({
-          message: err instanceof Error
-            ? err.message
-            : this.$t('pdfViewer.unableInspectPagesImageMagick'),
+          message,
           color: 'warning',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         })
       }
     },
@@ -529,6 +788,8 @@ export default {
           type: 'rendering',
           url: rendering.url,
           documentPath: rendering.documentPath,
+          projectPath: rendering.projectPath,
+          documentName: rendering.documentName,
           converterName: rendering.converterName,
           configurationName: rendering.configurationName,
           pageBookmarks: rendering.pageBookmarks?.map((bookmark) => ({
@@ -561,10 +822,12 @@ export default {
         }
         if (this.regeneratingUrl === rendering.url) this.regeneratingUrl = undefined
         this.regeneratingTarget = undefined
+        const message = err instanceof Error ? err.message : this.$t('pdfViewer.unableRegenerate')
         this.$q.notify({
-          message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRegenerate'),
+          message,
           color: 'negative',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         })
       }
     },
@@ -589,6 +852,26 @@ export default {
       }))
       this.displayedImageSource = this.displayedPages[0]?.source
       this.isRendering = false
+      const pendingPage = this.pendingPage
+      if (
+        pendingPage &&
+        pendingPage.filename === this.filename &&
+        this.pageCountLoadedFor === this.filename
+      ) {
+        const targetPage = pendingPage.pageRatio === undefined
+          ? pendingPage.page!
+          : Math.max(
+            1,
+            Math.floor(pendingPage.pageRatio * this.maxPages),
+          )
+        this.pendingPage = undefined
+        const page = Math.min(targetPage, this.maxPages)
+        this.page = page
+        this.viewPage = page
+        this.isRendering = true
+        this.$nextTick(() => this.updateDisplayedPages())
+        return
+      }
       this.$nextTick(() => {
         this.updatePdfHighlight()
         const whenRenderedCallback = this.whenRendered.pop()
@@ -696,6 +979,7 @@ export default {
         message,
         color: 'warning',
         icon: 'message_warning',
+        timeout: notifyTimeout(message),
       })
     },
     setPage(p: number | string) {
@@ -777,6 +1061,27 @@ export default {
       div.scrollLeft = 0
       div.scrollTop = 0
     },
+    fitPageHeight() {
+      const div = this.div
+      if (!div) return
+      const style = getComputedStyle(div)
+      const verticalPadding =
+        parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
+      const pageHeight = Math.max(1, div.clientHeight - verticalPadding)
+      this.setMagnify(pageHeight / (baseWidth * this.pageAspectRatio))
+      div.scrollLeft = 0
+      div.scrollTop = 0
+    },
+    fitPageWidth() {
+      this.fitLayoutToViewer(this.twoPageSpread)
+      this.isRendering = true
+      this.$nextTick(() => this.updateDisplayedPages())
+    },
+    zoomChipClicked(e: Event) {
+      if (e instanceof MouseEvent && e.ctrlKey) this.fitPageHeight()
+      else if (e instanceof MouseEvent && e.shiftKey) this.fitPageWidth()
+      else this.showZoomDialog = true
+    },
     displayLayoutChanged(value?: boolean) {
       const layoutChanged = value !== undefined && value !== this.twoPageSpread
       if (value !== undefined) {
@@ -846,12 +1151,17 @@ export default {
           } as SynctexInfo)
         } catch (err) {
           const message = err instanceof Error ? err.message : undefined
+          const notifyMessage = message?.includes(SYNCTEX_CONTEXT_REQUIRED)
+            ? this.$t('pdfViewer.synctexRequiresContext')
+            : message?.includes(SYNCTEX_FILE_NOT_FOUND) ||
+              message?.includes('No synctex file found')
+              ? this.$t('pdfViewer.synctexFileNotFound')
+              : message || this.$t('pdfViewer.unableOpenSource')
           this.$q.notify({
-            message: message === SYNCTEX_CONTEXT_REQUIRED
-              ? this.$t('pdfViewer.synctexRequiresContext')
-              : message || this.$t('pdfViewer.unableOpenSource'),
+            message: notifyMessage,
             color: 'warning',
             icon: 'message_warning',
+            timeout: notifyTimeout(notifyMessage),
           })
         }
       }
@@ -1079,7 +1389,16 @@ export default {
       this.currentBookmarkIndex = -1
     },
     renderingPath(url: string) {
-      return decodeURIComponent(url.replace(/^file:\/\//, ''))
+      try {
+        const parsed = new URL(url)
+        if (parsed.protocol === 'file:') {
+          const path = decodeURIComponent(parsed.pathname)
+          return /^\/[A-Za-z]:\//.test(path) ? path.slice(1) : path
+        }
+      } catch {
+        // Rendering bookmarks may already contain a local filesystem path.
+      }
+      return url
     },
     isPdfPath(path: string) {
       return path.toLowerCase().endsWith('.pdf')
@@ -1095,10 +1414,12 @@ export default {
           documentHash: bookmark.url,
         })
       } catch (err) {
+        const message = err instanceof Error ? err.message : this.$t('pdfViewer.unableRecallRendering')
         this.$q.notify({
-          message: err instanceof Error ? err.message : this.$t('pdfViewer.unableRecallRendering'),
+          message,
           color: 'negative',
           icon: 'message_warning',
+          timeout: notifyTimeout(message),
         })
       }
     }
@@ -1117,16 +1438,39 @@ export default {
         :validate="validatePage" @set-value="setPage" @close-dialog="showPageDialog = false" />
       <q-btn size="sm" icon='page_right' :title="$t('pdfViewer.nextPage')" :disabled="page >= maxPages"
         @click="nextPageClicked" />
-      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" clickable :title="$t('pdfViewer.setZoom')"
-        @wheel="zoomWheel" @click.stop="showZoomDialog = true" />
+      <q-space />
+      <q-chip :label="(magnify * 100).toFixed(0) + '%'" size="md" clickable :title="$t('pdfViewer.zoomTooltip')"
+        @wheel="zoomWheel" @click.stop="zoomChipClicked" />
       <PromptDialog :visible="showZoomDialog" :label="$t('pdfViewer.setZoom')" :start-value="(magnify * 100).toFixed(0)"
         :validate="validateZoom" @set-value="setZoom" @close-dialog="showZoomDialog = false" />
-      <q-btn-toggle :model-value="twoPageSpread" dense :options="pageLayoutOptions"
-        @update:model-value="displayLayoutChanged" @click="layoutButtonClicked">
-        <template #twoPageSpread>
-          <q-icon name="pdf_two_pages" :class="{ 'pdf-two-pages-left': twoPageSpread && !firstPageOnRight }" />
-        </template>
-      </q-btn-toggle>
+      <q-btn size="sm" icon="magnify_scan" :title="$t('pdfViewer.pageLayout')">
+        <q-menu>
+          <q-list>
+            <q-item>
+              <q-item-section side>
+                <q-btn-toggle :model-value="twoPageSpread" dense :options="pageLayoutOptions"
+                  @update:model-value="displayLayoutChanged" @click="layoutButtonClicked">
+                  <template #twoPageSpread>
+                    <q-icon name="pdf_two_pages"
+                      :class="{ 'pdf-two-pages-left': twoPageSpread && !firstPageOnRight }" />
+                  </template>
+                </q-btn-toggle>
+              </q-item-section>
+              <q-item-section>
+                {{ $t('pdfViewer.pageLayoutMode') }}
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup @click="fitPageHeight">
+              <q-item-section avatar><q-icon name="fit_page_height" /></q-item-section>
+              <q-item-section>{{ $t('pdfViewer.fitPageHeight') }}</q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup @click="fitPageWidth">
+              <q-item-section avatar><q-icon name="fit_page_width" /></q-item-section>
+              <q-item-section>{{ $t('pdfViewer.fitPageWidth') }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
       <q-space />
       <q-btn v-if="bookmarks.length === 0" size="sm" icon="bookmark_add" :title="$t('pdfViewer.addBookmark')"
         @click="setBookmark()" />

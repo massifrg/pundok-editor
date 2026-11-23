@@ -171,7 +171,7 @@ export const areElementsCompatible = (
 
 /**
  * Like {@link areElementsCompatible}, but with types expressed
- * as a `string`, a {@link NodeType}, or a {@link MarkType}.
+ * as a `string`, a ProseMirror `NodeType`, or a `MarkType`.
  * @param t1
  * @param t2
  * @returns

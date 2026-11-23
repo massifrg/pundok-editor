@@ -53,24 +53,22 @@ import {
   Figure,
   ColSpec,
   Alignment,
-  toJsonString
+  toJsonString,
 } from '../../pandoc';
 import { schema } from './PandocSchema';
 import { flatten, isEqual, uniq } from 'lodash-es';
-import { TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT, textAlignToPandocAlignment } from './alignments';
+import {
+  TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT,
+  textAlignToPandocAlignment,
+} from './alignments';
 import { colAlignmentsFromSections, PmColSpec } from './colSpec';
 import {
   DEFAULT_INDEX_NAME,
   DEFAULT_INDEX_REF_CLASS,
   DEFAULT_NOTE_TYPE,
   INDEXED_TEXT_ATTR,
-  INDEX_CLASS,
   INDEX_NAME_ATTR,
-  INDEX_PUT_INDEX_REF_ATTR,
   INDEX_RANGE_ATTR,
-  INDEX_REF_CLASS_ATTR,
-  INDEX_SORT_KEY_ATTR,
-  INDEX_TERM_CLASS,
   Index,
   MARK_NAME_CITE,
   NODE_NAME_AUTO_DELIMITER,
@@ -149,20 +147,8 @@ function markRangesComparator(
   };
 }
 
-const MARK_INDEX = 0;
 const RANGE_START = 1;
 const RANGE_STOP = 2;
-
-const logMarkRanges = (
-  knownMarks: PmJsonMark[],
-  ranges: number[][],
-  title?: string,
-) => {
-  console.log(title || `MARK RANGES:`);
-  ranges.forEach(([mi, start, stop]) => {
-    console.log(`${knownMarks[mi].type}, ${start}, ${stop}`);
-  });
-};
 
 export interface PandocJsonExporterOptions {
   /** The API version number to be written in Pandoc JSON file. */
@@ -237,8 +223,10 @@ export function nodeContentToPandocInlines(
   options?: PandocJsonExporterOptions,
 ): Inline[] {
   const exporter = new PandocJsonExporter(schema, options);
-  const inlineContainer = exporter.nodeToPandocFragment(node) as InlineContainer
-  return inlineContainer.content || []
+  const inlineContainer = exporter.nodeToPandocFragment(
+    node,
+  ) as InlineContainer;
+  return inlineContainer.content || [];
 }
 
 export class PandocJsonExporter {
@@ -258,7 +246,7 @@ export class PandocJsonExporter {
     this.defaultNoteType =
       options?.noteStyles?.find((ns) => ns.default === true)?.noteType ||
       this.defaultNoteType;
-    console.log(`DEFAULT NOTE TYPE: ${this.defaultNoteType}`)
+    console.log(`DEFAULT NOTE TYPE: ${this.defaultNoteType}`);
     this.knownMarks.forEach((m, i) => {
       this.knownMarksDict[m.type] = [i];
     });
@@ -277,7 +265,7 @@ export class PandocJsonExporter {
       const content = nodeJson.content as PmJsonNode[];
       const metadata = content.filter((c) => c.type === 'metadata')[0];
       if (metadata)
-        pandoc = Pandoc.withMetadata(this.nodeToMetaMap(metadata).entries)
+        pandoc = Pandoc.withMetadata(this.nodeToMetaMap(metadata).entries);
       const blocks = content.filter((c) => c.type !== 'metadata');
       this.appendBlocks(pandoc, blocks);
     }
@@ -500,10 +488,12 @@ export class PandocJsonExporter {
     const align = textAlignToPandocAlignment(attrs.textAlign);
     const attr = this.attrFrom(node);
     const verticalAlign = node.attrs?.verticalAlign;
-    if (verticalAlign && verticalAlign !== TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT)
+    if (
+      verticalAlign &&
+      verticalAlign !== TABLE_CELL_DEFAULT_VERTICAL_ALIGNMENT
+    )
       attr.attributes['vertical-align'] = verticalAlign;
-    else
-      delete attr.attributes['vertical-align']
+    else delete attr.attributes['vertical-align'];
     const cell = new Cell(attr, align, attrs.rowspan, attrs.colspan, []);
     this.appendBlocks(cell, node.content);
     return cell;
@@ -532,7 +522,7 @@ export class PandocJsonExporter {
       (b) => this.nodeToPandocItem(b) as Block,
     );
     if (isPlainFootnote(node, this.defaultNoteType))
-      return new Note(noteContent)
+      return new Note(noteContent);
     const { id, classes, kv } = attrs;
     const noteSpan = new Span(
       Attr.from({
@@ -540,9 +530,9 @@ export class PandocJsonExporter {
         classes,
         attributes: { ...kv, [NOTE_TYPE_ATTRIBUTE]: noteType },
       }),
-      [new Note(noteContent)]
-    )
-    return noteSpan
+      [new Note(noteContent)],
+    );
+    return noteSpan;
 
     // OLD WAY
     // if (!isFootnoteWithoutAttr(node)) {
@@ -564,55 +554,29 @@ export class PandocJsonExporter {
   private nodeToFigure(node: PmJsonNode): Figure {
     const attr = this.attrFrom(node);
     let caption: Caption | undefined = undefined;
-    const contents: PmJsonNode[] = []
+    const contents: PmJsonNode[] = [];
     node.content?.forEach((c) => {
-      if (c.type === 'figureCaption')
-        caption = this.captionToPandocItem(c);
-      else
-        contents.push(c)
+      if (c.type === 'figureCaption') caption = this.captionToPandocItem(c);
+      else contents.push(c);
     });
     const figure = new Figure(attr, caption || Caption.empty(), []);
-    this.appendBlocks(figure, contents)
-    return figure
-  }
-
-  private nodeToIndexDiv(node: PmJsonNode): Div {
-    const attributes: Record<string, string> = {};
-    const { indexName, refClass, putIndexRef } = node.attrs || {};
-    if (indexName) attributes[INDEX_NAME_ATTR] = indexName;
-    if (refClass) attributes[INDEX_REF_CLASS_ATTR] = refClass;
-    if (putIndexRef) attributes[INDEX_PUT_INDEX_REF_ATTR] = putIndexRef;
-    const div = new Div(new Attr('', [INDEX_CLASS], attributes), []);
-    this.appendBlocks(div, node.content);
-    return div;
-  }
-
-  private nodeToIndexTerm(node: PmJsonNode): Div {
-    const attributes: Record<string, string> = {};
-    const { indexName, sortKey } = node.attrs || {};
-    if (indexName) attributes[INDEX_NAME_ATTR] = indexName;
-    if (sortKey) attributes[INDEX_SORT_KEY_ATTR] = sortKey;
-    const div = new Div(
-      new Attr(node.attrs?.id || '', [INDEX_TERM_CLASS], attributes),
-      [],
-    );
-    this.appendBlocks(div, node.content);
-    return div;
+    this.appendBlocks(figure, contents);
+    return figure;
   }
 
   private nodeToIndexRef(node: PmJsonNode): Span {
     const attrs = node.attrs || {};
     const kv = attrs.kv;
     const indexName = kv[INDEX_NAME_ATTR] || DEFAULT_INDEX_NAME;
-    const {
-      [INDEXED_TEXT_ATTR]: indexedText,
-      [INDEX_RANGE_ATTR]: indexRange,
-    } = kv;
-    const idref = attrs.idref || attrs.kv.idref
+    const { [INDEXED_TEXT_ATTR]: indexedText, [INDEX_RANGE_ATTR]: indexRange } =
+      kv;
+    const idref = attrs.idref || attrs.kv.idref;
     const classes = [this.indexRefClass(indexName)];
     if (indexRange === INDEX_RANGE_START) classes.push(INDEX_RANGE_START_CLASS);
     if (indexRange === INDEX_RANGE_STOP) classes.push(INDEX_RANGE_STOP_CLASS);
-    const attributes: Record<string, string> = idref ? { ...kv, idref } : { ...kv }
+    const attributes: Record<string, string> = idref
+      ? { ...kv, idref }
+      : { ...kv };
     if (indexName) attributes[INDEX_NAME_ATTR] = indexName;
     if (indexedText) attributes[INDEXED_TEXT_ATTR] = indexedText;
     return new Span(Attr.from({ id: '', classes, attributes }), []);
@@ -626,16 +590,18 @@ export class PandocJsonExporter {
   }
 
   private nodeToMetaMap(node: PmJsonNode): MetaMap {
-    const entries: MetaMapEntry[] = []
-    node.content?.forEach(mapEntry => {
+    const entries: MetaMapEntry[] = [];
+    node.content?.forEach((mapEntry) => {
       const key = mapEntry.attrs?.text || 'unknown';
       const value = mapEntry.content && mapEntry.content[0];
-      const pandocItem = key && value && this.nodeToPandocItem(value) as PandocItem
-      if (pandocItem)
-        entries.push(new MetaMapEntry(key, pandocItem))
+      const pandocItem =
+        key && value && (this.nodeToPandocItem(value) as PandocItem);
+      if (pandocItem) entries.push(new MetaMapEntry(key, pandocItem));
       else
-        console.log(`error converting MetaMapEntry, key=${JSON.stringify(key)}, value=${JSON.stringify(value)}`)
-    })
+        console.log(
+          `error converting MetaMapEntry, key=${JSON.stringify(key)}, value=${JSON.stringify(value)}`,
+        );
+    });
     return new MetaMap(entries);
   }
 
@@ -676,10 +642,6 @@ export class PandocJsonExporter {
         );
       case 'horizontalRule':
         return new HorizontalRule();
-      // case 'indexDiv':
-      //   return this.nodeToIndexDiv(node);
-      // case 'indexTerm':
-      //   return this.nodeToIndexTerm(node);
       case 'line':
         return this.inlineContentToInlines(node.content || []);
       case 'lineBlock':
@@ -729,7 +691,10 @@ export class PandocJsonExporter {
       content.forEach((child) => {
         if (child.type === NODE_NAME_PARAGRAPH && child.attrs?.customStyle) {
           const paraStyle = child.attrs?.customStyle;
-          if (paraStyle) console.log(`paraStyle=${paraStyle}, currentParaStyle=${JSON.stringify(currentParaStyle)}`)
+          if (paraStyle)
+            console.log(
+              `paraStyle=${paraStyle}, currentParaStyle=${JSON.stringify(currentParaStyle)}`,
+            );
           if (currentParaStyle !== paraStyle) {
             currentParaStyle = paraStyle;
             customStyleDiv = new Div(
@@ -767,7 +732,7 @@ export class PandocJsonExporter {
    * Compute the hash of a citation (TODO: currently always returns 0)
    */
   private citationHash() {
-    return 0
+    return 0;
   }
 
   private markToIndex(mark: PmJsonMark): number {
@@ -789,9 +754,9 @@ export class PandocJsonExporter {
     if (found) {
       newMark.pandoc = found.pandoc;
       if (found.type === MARK_NAME_CITE) {
-        const pundokCitations: PundokCitation[] = newMark.attrs?.citations || [];
-        if (pundokCitations.length > 0)
-          this.citationCount++
+        const pundokCitations: PundokCitation[] =
+          newMark.attrs?.citations || [];
+        if (pundokCitations.length > 0) this.citationCount++;
         const citations: Citation[] = pundokCitations.map((c) => {
           return Citation.from({
             id: c.citationId,
@@ -869,7 +834,6 @@ export class PandocJsonExporter {
       // only express properly nested parents. Split crossing ranges until
       // their ordering can be represented by a stack of containers.
       marksRanges.sort(comparator);
-      // logMarkRanges(knownMarks, marksRanges, "BEFORE UNTANGLE")
       const rangesCount = marksRanges.length;
       let intersectionFound = false;
       for (let i = 0; i < rangesCount; i++) {
@@ -892,7 +856,6 @@ export class PandocJsonExporter {
         }
         if (intersectionFound) untangleRanges();
       }
-      // logMarkRanges(knownMarks, marksRanges, 'UNTANGLED')
     };
 
     const processAccumulatedChunks = () => {
@@ -950,7 +913,6 @@ export class PandocJsonExporter {
         stack[0].content.forEach((inline) => {
           inlines.push(inline);
         });
-        // logMarkRanges(this.knownMarks, marksRanges, 'marks ranges')
         chunks = [];
         marksRanges = [];
       }
@@ -1070,11 +1032,7 @@ export class PandocJsonExporter {
             mstop === start ? [mi, mstart, stop] : [mi, mstart, mstop],
           );
         }
-        // logMarkRanges(knownMarks, marksRanges, 'STEP')
-        // console.log(`Inlines: ${inlines.map(i => (i as Record<string, any>).name).join()}`)
       });
-      // logMarkRanges(knownMarks, marksRanges, 'STEP')
-      // console.log(addedChunks)
     }
     // Finish converting the final flat-mark batch into the Pandoc inline tree.
     processAccumulatedChunks();
@@ -1112,9 +1070,14 @@ export function isPlainFootnote(
   if (!attrs) return true;
   const { noteType, id, classes, kv } = attrs;
   if (noteType && noteType !== defaultNoteType) return false;
-  const keys = Object.keys(kv || {})
-  console.log(`id=${JSON.stringify(id)}, classes=${JSON.stringify(classes)}, keys=${JSON.stringify(keys)}`)
-  return emptyIdentifier(id)
-    && (!classes || classes.length === 0)
-    && (keys.length === 0 || (keys.length === 1 && keys[0] === NOTE_TYPE_ATTRIBUTE))
+  const keys = Object.keys(kv || {});
+  console.log(
+    `id=${JSON.stringify(id)}, classes=${JSON.stringify(classes)}, keys=${JSON.stringify(keys)}`,
+  );
+  return (
+    emptyIdentifier(id) &&
+    (!classes || classes.length === 0) &&
+    (keys.length === 0 ||
+      (keys.length === 1 && keys[0] === NOTE_TYPE_ATTRIBUTE))
+  );
 }

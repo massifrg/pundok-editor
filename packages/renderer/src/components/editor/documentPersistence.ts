@@ -14,11 +14,11 @@ import {
   DEFAULT_DOCUMENT_FORMAT,
   asOutputFormat,
   changeFileExtensionToFormat,
-  documentNameToId,
   getDefaultCopyFormat,
   getDefaultWorkingFormat,
   outputConverterToDocumentFormat,
   splitFolderAndDoc,
+  joinDocumentPath,
 } from '../../common';
 import {
   ACTION_DOCUMENT_SAVE,
@@ -28,6 +28,7 @@ import {
 import { useActions } from '../../stores';
 import {
   type DocumentDialogProps,
+  notifyTimeout,
   showSaveCopyDialog,
   showSaveDocumentDialog,
 } from '../helpers';
@@ -47,13 +48,8 @@ export async function save(
   props?: DocumentSaveActionProps,
 ): Promise<SaveResponse | undefined> {
   if (host.documentLoading) return;
-  const {
-    dontAskCopyPath,
-    dontAskSaveAsPath,
-    isCopy,
-    isSaveAs,
-    afterSave,
-  } = props || {};
+  const { dontAskCopyPath, dontAskSaveAsPath, isCopy, isSaveAs, afterSave } =
+    props || {};
   beforeSaving(host);
   const jsonDoc = host.getDocAsJsonString();
   const docState = host.docState();
@@ -67,7 +63,9 @@ export async function save(
   let path = props?.path;
   if (!path) {
     const folder = isCopy ? copyFolder : workingFolder;
-    path = (folder && documentName && `${folder}/${documentName}`) || undefined;
+    path =
+      (folder && documentName && joinDocumentPath(folder, documentName)) ||
+      undefined;
   }
   const isSave = !isSaveAs && !isCopy;
   let documentFormat = asOutputFormat(
@@ -104,6 +102,7 @@ export async function save(
           if (context.path) {
             setActionCommand(context.editorKey!, ACTION_DOCUMENT_SAVE_COPY, {
               path: context.path,
+              configurationName: context.configurationName,
               documentFormat: context.documentFormat,
               isCopy: true,
               dontAskCopyPath: true,
@@ -141,6 +140,7 @@ export async function save(
           if (context.path) {
             setActionCommand(context.editorKey!, ACTION_DOCUMENT_SAVE, {
               path: context.path,
+              configurationName: context.configurationName,
               documentFormat: context.documentFormat,
               isSaveAs,
               dontAskSaveAsPath: true,
@@ -160,18 +160,16 @@ export async function save(
         : docState?.workingFormat || DEFAULT_DOCUMENT_FORMAT),
     );
     if (!host.backend) return Promise.reject('no backend found');
-    const { configuration, documentName, project, resourcePath } =
-      docState || {};
+    const { configuration, project, resourcePath } = docState || {};
     const response = await host.backend.save(
       {
         editorKey: host.editorKey(),
-        // id: documentNameToId(documentName),
-        // id: documentName,
         path,
         content: jsonDoc,
         documentFormat,
         project,
-        configurationName: project ? undefined : configuration?.name,
+        configurationName:
+          props?.configurationName || (project ? undefined : configuration?.name),
         resourcePath,
       },
       { isCopy },
@@ -282,7 +280,7 @@ export async function exportDoc(
       path:
         storedDoc?.path ||
         (docState.workingFolder && docState.documentName
-          ? `${docState.workingFolder}/${docState.documentName}`
+          ? joinDocumentPath(docState.workingFolder, docState.documentName)
           : undefined),
       content: jsonDoc,
       project: docState.project,
@@ -310,7 +308,7 @@ export async function renderOutput(
   const docState = host.docState();
   const currentPath =
     docState?.workingFolder && docState.documentName
-      ? `${docState.workingFolder}/${docState.documentName}`
+      ? joinDocumentPath(docState.workingFolder, docState.documentName)
       : undefined;
   const renderingPath = path || currentPath;
   const renderingTarget = {
@@ -437,23 +435,23 @@ export async function transformDocument(
       } else {
         const doc = JSON.parse(json || host.getDocAsJsonString());
         const transformedDoc = JSON.parse(transformed);
-        const insertedBlocks = transformedDoc.blocks || []
+        const insertedBlocks = transformedDoc.blocks || [];
         const insertionPoint = whatToDo === 'insert' && findInsertionPoint(doc);
         if (insertionPoint) {
           let { blocks, blockIndex, spanIndex } = insertionPoint;
-          const block = blocks[blockIndex]
-          const { t, c } = block
-          const before = c.slice(0, spanIndex)
-          const after = c.slice(spanIndex + 1)
+          const block = blocks[blockIndex];
+          const { t, c } = block;
+          const before = c.slice(0, spanIndex);
+          const after = c.slice(spanIndex + 1);
           blocks = [
             ...blocks.slice(0, blockIndex),
             ...(before.length > 0 ? [{ t, c: before }] : []),
             ...insertedBlocks,
             ...(after.length > 0 ? [{ t, c: after }] : []),
             ...blocks.slice(blockIndex + 1),
-          ]
-          doc.blocks = blocks
-          host.setContent(JSON.stringify(doc), false)
+          ];
+          doc.blocks = blocks;
+          host.setContent(JSON.stringify(doc), false);
         } else if (whatToDo === 'insert') {
           host.editor?.commands.removePlaceholder();
         } else {
@@ -478,6 +476,7 @@ export async function transformDocument(
       type: 'negative',
       message: errorMessage,
       caption: host.$t('transformationDialog.failedState'),
+      timeout: notifyTimeout(errorMessage),
     });
   } finally {
     host.editor?.setEditable(wasEditable);

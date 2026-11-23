@@ -1,13 +1,14 @@
 import { Editor } from '@tiptap/vue-3';
 import { Node as PmNode } from '@tiptap/pm/model';
 import { EditorState } from '@tiptap/pm/state';
-import { isAbsolute, relative as relativePath } from 'path-browserify';
 import {
   DocumentFormat,
   EditorKeyType,
   PundokEditorConfig,
   PundokEditorProject,
   ProjectComponent,
+  isDocumentPathAbsolute,
+  relativeDocumentPath,
 } from '../../common';
 import { getIndexingState, pundokEditorUtilsPluginKey } from '../extensions';
 import { EditorGUIProps, EditorGUIPropsClass } from './EditorGUIProps';
@@ -165,7 +166,9 @@ export function makePathRelativeToDoc(
   path: string,
 ): string {
   const basePath = docState?.workingFolder;
-  return basePath && isAbsolute(path) ? relativePath(basePath, path) : path;
+  return basePath && isDocumentPathAbsolute(path)
+    ? relativeDocumentPath(basePath, path)
+    : path;
 }
 
 export function getDocAsJsonString(

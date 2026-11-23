@@ -16,6 +16,7 @@ export * from './inputConverters';
 export * from './jsonStringify';
 export * from './notes';
 export * from './outputConverters';
+export * from './pageRanges';
 export * from './project';
 export * from './rawElements';
 export * from '../types';

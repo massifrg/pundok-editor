@@ -1,9 +1,16 @@
-import {
+import type {
   PundokEditorConfigInit,
   PundokEditorProjectConfig,
 } from './editorConfigInit';
-import { getPrunedConfigInit, PundokEditorConfig } from './editorConfiguration';
-import { NamedAndDescribed } from '../types';
+import {
+  getPrunedConfigInit,
+  PundokEditorConfig,
+} from './editorConfiguration';
+import type { NamedAndDescribed } from '../types';
+import {
+  normalizeDocumentPath,
+  relativeDocumentPath,
+} from '../documentPath';
 
 export const DEFAULT_PROJECT_FILENAME = 'pundok-project.json';
 
@@ -30,6 +37,8 @@ interface AbstractProjectComponent {
   format?: string;
   /** the sha1 of the contents (it may be used to check updates) */
   sha1?: string;
+  /** ordered inclusive PDF page ranges where the component is referenced */
+  pageRanges?: [start: number, end: number][];
   /** components included by this component */
   children?: ProjectComponent[];
 }
@@ -137,19 +146,21 @@ export function getProjectComponentChildren(
   return undefined;
 }
 
-function sourceVariants(src: string, projectPath?: string): string[] {
-  const normalized = src
-    .replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
-    .replace(/^\.\/+/, '')
-    .replace(/\/+$/, '');
-  const variants = [normalized];
-  const project = projectPath
-    ?.replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
-    .replace(/\/+$/, '');
-  if (project && normalized.startsWith(`${project}/`))
-    variants.push(normalized.slice(project.length + 1));
+/**
+ * Returns normalized absolute and project-relative variants of a source.
+ */
+export function projectSourceVariants(
+  src: string,
+  projectPath?: string,
+): Set<string> {
+  const normalized = normalizeDocumentPath(src).replace(/^\.\/+/, '');
+  const variants = new Set([normalized]);
+  const project = projectPath ? normalizeDocumentPath(projectPath) : undefined;
+  if (project) {
+    const relative = relativeDocumentPath(project, normalized);
+    if (relative && relative !== '..' && !relative.startsWith('../'))
+      variants.add(relative);
+  }
   return variants;
 }
 
@@ -159,9 +170,9 @@ function sameProjectSource(
   projectPath?: string,
 ): boolean {
   if (!first || !second) return false;
-  const secondVariants = sourceVariants(second, projectPath);
-  return sourceVariants(first, projectPath)
-    .some((source) => secondVariants.includes(source));
+  const secondVariants = projectSourceVariants(second, projectPath);
+  return [...projectSourceVariants(first, projectPath)]
+    .some((source) => secondVariants.has(source));
 }
 
 /**
@@ -181,15 +192,34 @@ export function isProjectDocumentOrDescendant(
     !sameProjectSource(projectPath, savedProjectPath)
   )
     return false;
-  const containsSource = (component: ProjectComponent): boolean =>
-    sameProjectSource(component.src, savedSrc, projectPath) ||
-    (component.children || []).some(containsSource);
-  const findDocument = (component: ProjectComponent): ProjectComponent | undefined =>
-    sameProjectSource(component.src, documentSrc, projectPath)
+  const findComponent = (
+    component: ProjectComponent,
+    source: string,
+  ): ProjectComponent | undefined =>
+    sameProjectSource(component.src, source, projectPath)
       ? component
-      : (component.children || []).map(findDocument).find(Boolean);
-  const document = findDocument(structure);
-  return document ? containsSource(document) : false;
+      : (component.children || [])
+        .map((child) => findComponent(child, source))
+        .find(Boolean);
+  const document = findComponent(structure, documentSrc);
+  const saved = findComponent(structure, savedSrc);
+  return document && saved
+    ? isProjectComponentOrDescendant(document, saved)
+    : false;
+}
+
+/**
+ * Returns whether a project component is the given component or contains it
+ * in its children.
+ */
+export function isProjectComponentOrDescendant(
+  component: ProjectComponent,
+  descendant: ProjectComponent,
+): boolean {
+  return component === descendant ||
+    (component.children || []).some((child) =>
+      isProjectComponentOrDescendant(child, descendant),
+    );
 }
 
 interface ProjectComponentLocation {
@@ -290,6 +320,7 @@ export async function computeProjectConfiguration(
   getConfiguration: (
     configurationName?: string,
   ) => Promise<PundokEditorConfig | undefined>,
+  warn: (message: string) => void = console.warn,
 ): Promise<PundokEditorProject> {
   let computedConfig: PundokEditorConfig = new PundokEditorConfig({
     name: project.name,
@@ -301,11 +332,18 @@ export async function computeProjectConfiguration(
   const inherited = project.configurations ? [...project.configurations] : [];
   try {
     while (inherited.length > 0) {
-      let configName = inherited.shift();
-      let inheritedConfig = await getConfiguration(configName);
-      if (!inheritedConfig)
-        return Promise.reject(`can't read configuration "${configName}"`);
-      computedConfig = computedConfig.addConfiguration(inheritedConfig);
+      const configName = inherited.shift();
+      try {
+        const inheritedConfig = await getConfiguration(configName);
+        if (!inheritedConfig)
+          throw new Error(`can't read configuration "${configName}"`);
+        computedConfig = computedConfig.addConfiguration(inheritedConfig);
+      } catch (err) {
+        const reason = err instanceof Error ? err.message : String(err);
+        warn(
+          `can't use inherited configuration "${configName}": ${reason}`,
+        );
+      }
     }
     const pruning = project.editorConfig.remove;
     if (pruning) computedConfig = getPrunedConfigInit(computedConfig, pruning);

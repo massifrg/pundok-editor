@@ -1,7 +1,13 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import type { PundokBookmark, PundokBookmarkType } from '../../common/src';
+import {
+  documentLocation,
+  documentPathFromFileUrl,
+  documentPathToFileUrl,
+  normalizeDocumentPath,
+} from '../../common/src';
 import type { BackendDirectories } from './resourceManager';
 
 export const BOOKMARKS_FILENAME = 'bookmarks.json';
@@ -14,9 +20,10 @@ export async function getBookmarks(
   type?: PundokBookmarkType,
 ): Promise<PundokBookmark[]> {
   const bookmarks = await readBookmarks(directories);
-  return type
+  const filteredBookmarks = type
     ? bookmarks.filter((bookmark) => bookmark.type === type)
     : bookmarks;
+  return sortBookmarksByTimestamp(filteredBookmarks);
 }
 
 export async function updateBookmarks(
@@ -93,6 +100,7 @@ function addBookmark(
   const normalizedBookmark = {
     ...bookmark,
     url: normalizeBookmarkUrl(bookmark.url),
+    timestamp: Date.now(),
   };
   let documents =
     MAX_RECENT_DOCS - (normalizedBookmark.type === 'document' ? 1 : 0);
@@ -123,6 +131,23 @@ function addBookmark(
   ];
 }
 
+function sortBookmarksByTimestamp(
+  bookmarks: PundokBookmark[],
+): PundokBookmark[] {
+  return bookmarks
+    .map((bookmark, index) => ({ bookmark, index }))
+    .sort((a, b) => {
+      const timestampA = a.bookmark.timestamp;
+      const timestampB = b.bookmark.timestamp;
+      if (typeof timestampA !== 'number' && typeof timestampB !== 'number')
+        return a.index - b.index;
+      if (typeof timestampA !== 'number') return 1;
+      if (typeof timestampB !== 'number') return -1;
+      return timestampB - timestampA || a.index - b.index;
+    })
+    .map(({ bookmark }) => bookmark);
+}
+
 function projectBookmarkPath(
   bookmark: Extract<PundokBookmark, { type: 'project' }>,
 ): string {
@@ -134,27 +159,11 @@ function projectBookmarkPath(
 }
 
 function normalizeBookmarkUrl(url: string): string {
-  if (isAbsolute(url)) return pathToFileURL(url).href;
-
-  if (url.startsWith('file://')) {
-    try {
-      return pathToFileURL(fileURLToPath(url)).href;
-    } catch {
-      try {
-        return pathToFileURL(decodeURIComponent(url.slice('file://'.length)))
-          .href;
-      } catch {
-        return url;
-      }
-    }
-  }
-
-  try {
-    const parsedUrl = new URL(url);
-    return parsedUrl.protocol === 'file:'
-      ? pathToFileURL(fileURLToPath(parsedUrl)).href
-      : url;
-  } catch {
-    return pathToFileURL(resolve(url)).href;
-  }
+  const location = documentLocation(url);
+  if (location.kind === 'url') return location.value;
+  const path = normalizeDocumentPath(
+    /^file:/i.test(url) ? documentPathFromFileUrl(url) : url,
+  );
+  if (isAbsolute(path)) return documentPathToFileUrl(path);
+  return documentPathToFileUrl(resolve(path));
 }

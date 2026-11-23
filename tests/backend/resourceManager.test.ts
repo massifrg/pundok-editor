@@ -82,6 +82,42 @@ describe('resource file lookup', () => {
     ).toBe(documentReader);
   });
 
+  it('includes the selected configuration when a project is present', async () => {
+    const configuration = join(
+      directories.localConfigurationsDir,
+      'otherConfig',
+      'readers',
+    );
+    const reader = join(configuration, 'reader.lua');
+    await mkdir(configuration, { recursive: true });
+    await writeFile(reader, 'Reader = function() end');
+
+    const projectWithConfiguration = {
+      path: project,
+      configurations: ['base'],
+    };
+    expect(
+      findResourceFile(directories, 'reader.lua', {
+        kind: 'reader',
+        configurationName: 'otherConfig',
+        project: projectWithConfiguration,
+      }),
+    ).toBe(reader);
+
+    expect(
+      pandocResourcePath(
+        directories,
+        root,
+        join(root, 'document.md'),
+        projectWithConfiguration,
+        'otherConfig',
+        [],
+        false,
+        ['reader'],
+      ).split(delimiter),
+    ).toContain(configuration);
+  });
+
   it('returns only Lua files that define a custom writer', async () => {
     const writers = join(userData, 'writers');
     const writer = join(writers, 'writer.lua');

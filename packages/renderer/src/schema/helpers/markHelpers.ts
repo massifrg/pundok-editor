@@ -68,7 +68,6 @@ export function markApplies(
 /**
  * From the current selection, "unselect" the ranges of non-leaf atoms (e.g. footnotes).
  * @param state the current editor state.
- * @param onlyAtomsContent "unselect" only the contents of non-leaf atoms nodes, not the nodes themselves.
  * @returns the ranges corresponding to the current selection without non-leaf atoms.
  */
 export function selectedRangesWithoutAtoms(

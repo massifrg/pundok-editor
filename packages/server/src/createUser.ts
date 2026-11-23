@@ -1,6 +1,6 @@
 import { readFile, rename, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { isDocRepositories } from './common';
+import { isDocRepositories, isRecord } from './common';
 import { hashPassword, type UserRecord } from './auth';
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]{1,64}$/;
@@ -59,10 +59,6 @@ async function main() {
   });
   await rename(temporaryFile, usersFile);
   console.log(`Saved credentials for ${username} in ${usersFile}`);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function readHiddenPassword(): Promise<string> {

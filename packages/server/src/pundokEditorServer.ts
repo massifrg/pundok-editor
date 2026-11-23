@@ -41,6 +41,11 @@ import {
   HARDCODED_CONFIG_NAME,
   PundokEditorConfig,
   documentFormatToOutputConverter,
+  documentPathFromFileUrl,
+  isDocumentPathAbsolute,
+  normalizeDocumentPath,
+  resolveDocumentContextPath,
+  resolveDocumentPath,
 } from './common';
 import {
   ensureBackendDirectories,
@@ -71,6 +76,7 @@ import {
   openDocument,
   saveDocument,
   getPdfPageCount as countPdfPages,
+  listSynctexFile as listSynctex,
   renderingProcessKey,
   stopRenderingProcess,
   transformationProcessKey,
@@ -322,7 +328,9 @@ export class PundokEditorServer {
     user: string,
     context: Partial<DocumentContext>,
   ): Promise<FolderContents> {
-    const path = context.path || context.project?.path || '.';
+    const path = context.path
+      ? resolveDocumentContextPath(context.path, context.project?.path)
+      : context.project?.path || '.';
     return getFolderContents(this.userPath(user, path));
   }
 
@@ -468,7 +476,7 @@ export class PundokEditorServer {
     options?: Partial<FindResourceOptions>,
   ): Promise<string> {
     const directories = this.directoriesForUser(user);
-    const path = filename.replace(/^file:\/\//, '');
+    const path = documentPathFromFileUrl(filename);
     return getFileContents(
       directories,
       isAbsolute(path) ? path : filename,
@@ -521,6 +529,10 @@ export class PundokEditorServer {
 
   async getPdfPageCount(user: string, path: string) {
     return countPdfPages(this.userPath(user, path));
+  }
+
+  async listSynctexFile(user: string, path: string) {
+    return listSynctex(this.userPath(user, path));
   }
 
   async queryDatabase(user: string, query: Query): Promise<QueryResult[]> {
@@ -588,10 +600,13 @@ export class PundokEditorServer {
     bookmarks: RenderingBookmark[],
     project?: PundokEditorProject,
   ): Promise<PdfLocation | undefined> {
-    const backendBookmarks = bookmarks.map((bookmark) => ({
+    const backendBookmarks: RenderingBookmark[] = bookmarks.map((bookmark) => ({
       ...bookmark,
       url: this.userPath(user, bookmark.url),
       documentPath: this.userPath(user, bookmark.documentPath),
+      projectPath: bookmark.projectPath
+        ? this.userPath(user, bookmark.projectPath)
+        : undefined,
     }));
     const location = await getPdfLocation(
       this.directoriesForUser(user),
@@ -715,19 +730,27 @@ export class PundokEditorServer {
     username: string,
     document: Partial<CxDocument>,
   ): Partial<CxDocument> {
-    this.validateOutputPath(username, document);
-    return {
+    const project = document.project
+      ? this.projectForUser(username, document.project)
+      : undefined;
+    const path = document.path
+      ? this.userPath(
+          username,
+          resolveDocumentContextPath(document.path, document.project?.path),
+        )
+      : undefined;
+    const localized = {
       ...document,
-      ...(document.path && { path: this.userPath(username, document.path) }),
+      ...(path && { path }),
       ...(document.resourcePath && {
         resourcePath: document.resourcePath.map((path) =>
           this.resourcePathForUser(username, path),
         ),
       }),
-      ...(document.project && {
-        project: this.projectForUser(username, document.project),
-      }),
+      ...(project && { project }),
     };
+    this.validateOutputPath(username, localized);
+    return localized;
   }
 
   private projectForUser(
@@ -735,13 +758,18 @@ export class PundokEditorServer {
     project: PundokEditorProject,
   ): PundokEditorProject {
     const path = this.userPath(username, project.path);
-    const rootDocument = project.rootDocument
-      ? this.userPath(username, resolve(path, project.rootDocument))
-      : undefined;
+    const rootDocument = normalizeDocumentPath(project.rootDocument);
+    if (rootDocument)
+      this.userPath(
+        username,
+        isDocumentPathAbsolute(rootDocument)
+          ? rootDocument
+          : resolveDocumentPath(path, rootDocument),
+      );
     return {
       ...project,
       path,
-      ...(rootDocument && { rootDocument }),
+      rootDocument,
     };
   }
 
@@ -766,7 +794,7 @@ export class PundokEditorServer {
   }
 
   private resourcePathForUser(username: string, resource: string): string {
-    const path = resource.replace(/^file:\/\//, '');
+    const path = documentPathFromFileUrl(resource);
     if (isAbsolute(path)) {
       const directories = this.directoriesForUser(username);
       const candidate = resolve(path);
@@ -846,7 +874,7 @@ export class PundokEditorServer {
 
   private userPath(username: string, path: string): string {
     const root = resolve(this.directoriesForUser(username).userDataDir);
-    const candidate = resolve(root, path.replace(/^file:\/\//, ''));
+    const candidate = resolve(root, normalizeDocumentPath(path));
     const relativePath = relative(root, candidate);
     if (
       relativePath === '..' ||

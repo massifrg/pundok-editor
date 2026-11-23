@@ -77,6 +77,10 @@ import {
   EditorKeyType,
   ProjectComponent,
   CxDocument,
+  isDocumentPathAbsolute,
+  normalizeDocumentPath,
+  relativeDocumentPath,
+  resolveDocumentPath,
 } from '../common';
 import { QTreeNode } from 'quasar';
 import { Component, defineAsyncComponent } from 'vue';
@@ -91,7 +95,6 @@ import { EditorState } from '@tiptap/pm/state';
 import { Editor } from '@tiptap/vue-3';
 import { isString } from 'lodash-es';
 import { PendingOperation } from './helpers/pending';
-import { isAbsolute, relative, resolve } from 'path-browserify';
 
 interface LoadedDocument {
   id?: string;
@@ -143,10 +146,7 @@ function docToTreeNode(
 }
 
 function normalizedSource(src: string): string {
-  return src
-    .replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
-    .replace(/^\.\/+/, '');
+  return normalizeDocumentPath(src).replace(/^\.\/+/, '');
 }
 
 type ShowMode = 'normal' | 'maximized' | 'minimized';
@@ -310,24 +310,24 @@ const ProjectStructureDialog: Component = {
       if (!docState?.workingFolder || !docState.documentName || !project?.path)
         return;
 
-      const absoluteSource = resolve(
+      const absoluteSource = resolveDocumentPath(
         docState.workingFolder,
         docState.documentName,
       );
       const candidates = [
         absoluteSource,
-        relative(project.path, absoluteSource),
+        relativeDocumentPath(project.path, absoluteSource),
         docState.documentName,
-        resolve(project.path, docState.documentName),
+        resolveDocumentPath(project.path, docState.documentName),
       ].map(normalizedSource);
       const path = this.findTreePath((node: QTreeNode) => {
         if (!node.src) return false;
         const source = normalizedSource(node.src);
         return (
           candidates.includes(source) ||
-          (!isAbsolute(node.src) &&
+          (!isDocumentPathAbsolute(node.src) &&
             candidates.includes(
-              normalizedSource(resolve(project.path, node.src)),
+              normalizedSource(resolveDocumentPath(project.path, node.src)),
             ))
         );
       });
@@ -343,7 +343,7 @@ const ProjectStructureDialog: Component = {
       const candidates = documentPath
         ? [
             documentPath,
-            project?.path && normalizedSource(relative(project.path, doc.path!)),
+            project?.path && normalizedSource(relativeDocumentPath(project.path, doc.path!)),
           ].filter((candidate): candidate is string => !!candidate)
         : [];
       const path = this.findTreePath((node: QTreeNode & LoadedDocument) => {
@@ -353,7 +353,7 @@ const ProjectStructureDialog: Component = {
             candidates.includes(source) ||
             (!!project?.path &&
               candidates.includes(
-                normalizedSource(resolve(project.path, node.src)),
+                normalizedSource(resolveDocumentPath(project.path, node.src)),
               ))
           )
             return true;

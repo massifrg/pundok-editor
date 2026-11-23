@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { format, isAbsolute, parse, resolve } from 'node:path';
+import { format, parse } from 'node:path';
 import {
   documentFormatToInputConverter,
   type CxDocument,
@@ -9,13 +9,21 @@ import {
   type PundokBookmark,
 } from '../../../common/src';
 import { updateBookmarks } from '../bookmarks';
-import { errorFeedback, type FeedbackSink } from '../feedback';
+import {
+  errorFeedback,
+  warningFeedback,
+  type FeedbackSink,
+} from '../feedback';
 import { importWithPandoc } from '../importExport';
 import { pandocFeatures } from '../pandocFeatures';
 import { computeProjectFromDocFile } from './project';
 import { isReadableFile, getConfigurationInit, type BackendDirectories } from '../resourceManager';
 import { runExternalProgram } from '../runExternal';
-import { localizePath } from '../filesystem';
+import { localizeDocumentPath } from '../filesystem';
+import {
+  documentPathToFileUrl,
+  resolveDocumentPath,
+} from '../../../common/src';
 
 export async function openDocument(
   directories: BackendDirectories,
@@ -33,10 +41,7 @@ export async function openDocument(
 }
 
 function documentPath(context: DocumentContext): string {
-  const path = localizePath(context.path!);
-  return !isAbsolute(path) && context.project?.path
-    ? resolve(localizePath(context.project.path), path)
-    : path;
+  return localizeDocumentPath(context.path!, context.project?.path);
 }
 
 async function openWithGuessedFormat(
@@ -141,7 +146,11 @@ async function openWithFormat(
     resourcePath,
   };
   try {
-    doc.project = await computeProjectFromDocFile(directories, path);
+    doc.project = await computeProjectFromDocFile(
+      directories,
+      path,
+      (message) => warningFeedback(feedback, message, editorKey),
+    );
   } catch {
     // A document need not belong to a project.
   }
@@ -150,26 +159,26 @@ async function openWithFormat(
 
 export function bookmarksForDocument(doc: CxDocument): PundokBookmark[] {
   const bookmarks: PundokBookmark[] = [];
+  const timestamp = Date.now();
   if (doc.path)
     bookmarks.push({
       type: 'document',
-      url: toUnixPath(doc.path),
+      url: documentPathToFileUrl(doc.path),
       configurationName: doc.project ? undefined : doc.configurationName,
       projectName: doc.project?.name,
+      timestamp,
     });
   if (doc.project && doc.path)
     bookmarks.push({
       type: 'project',
       name: doc.project.name,
-      url: `file://${toUnixPath(
+      url: documentPathToFileUrl(
         doc.project.rootDocument
-          ? resolve(doc.project.path, doc.project.rootDocument)
+          ? resolveDocumentPath(doc.project.path, doc.project.rootDocument)
           : doc.path,
-      )}`,
+      ),
+      timestamp,
     });
   return bookmarks;
 }
 
-function toUnixPath(path: string): string {
-  return path.replaceAll('\\', '/');
-}

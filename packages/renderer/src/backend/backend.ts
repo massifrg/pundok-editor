@@ -95,7 +95,7 @@ export interface Backend {
 
   /**
    * Get the contents of a folder (a collection of documents and/or sub-folders).
-   * @param path The folders path (an array of the names of the path's folders).
+   * @param context The environment of the folder.
    */
   getFolderContents(context: Partial<DocumentContext>): Promise<FolderContents>;
 
@@ -120,7 +120,7 @@ export interface Backend {
 
   /**
    * Retrieves the project of a document from the backend.
-   * @param context
+   * @param options Project retrieval options.
    */
   getProject(
     options: GetProjectOptions,
@@ -176,6 +176,8 @@ export interface Backend {
   ): Promise<string>;
 
   getPdfPageCount(filename: string): Promise<PdfPageCount>;
+
+  listSynctexFile(filename: string): Promise<string>;
 
   /**
    * Retrieves resource filenames matching a regular expression.

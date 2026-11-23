@@ -25,7 +25,7 @@ const REQUIRED_PROGRAMS: RequiredProgram[] = [
 const simulatedMissingPrograms = new Set(
   (import.meta.env.VITE_MISSING_PROGRAMS || '')
     .split(',')
-    .map((program) => program.trim())
+    .map((program: string) => program.trim())
     .filter(Boolean),
 );
 

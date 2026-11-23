@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { basename, isAbsolute, parse, resolve } from 'node:path';
+import { basename, isAbsolute, parse, relative, resolve } from 'node:path';
 import {
   DEFAULT_DOCUMENT_FORMAT,
   documentFormatToOutputConverter,
@@ -16,15 +16,20 @@ import { type RenderingJobStore } from '../documentHash';
 import {
   errorFeedback,
   progressFeedback,
+  warningFeedback,
   type FeedbackSink,
 } from '../feedback';
 import { expandCommandArgs } from '../expandCommandArgs';
-import { localizePath } from '../filesystem';
+import { localizeDocumentPath, localizePath } from '../filesystem';
 import { exportWithPandoc, exportWithScript } from '../importExport';
 import type { RendererHub } from '../rendererHub';
-import { validResourcePaths, type BackendDirectories } from '../resourceManager';
+import {
+  validResourcePaths,
+  type BackendDirectories,
+} from '../resourceManager';
 import { renderingProcessKey } from '../renderingProcess';
 import { computeProjectFromDocFile } from './project';
+import { documentPathToFileUrl } from '../../../common/src';
 
 export async function saveDocument(
   directories: BackendDirectories,
@@ -35,6 +40,12 @@ export async function saveDocument(
   storeOptions: StoreOptions = {},
 ): Promise<SaveResponse> {
   try {
+    if (doc.path) {
+      doc = {
+        ...doc,
+        path: localizeDocumentPath(doc.path, doc.project?.path),
+      };
+    }
     const converter = documentFormatToOutputConverter(doc.documentFormat);
     if (converter)
       return exportDocument(
@@ -53,7 +64,7 @@ export async function saveDocument(
       };
     const response = await savePandocJsonDocument(
       directories,
-      events,
+      feedback,
       doc,
       storeOptions,
     );
@@ -61,9 +72,10 @@ export async function saveDocument(
       {
         type: 'document',
         id: doc.id,
-        url: toFileUrl(doc.path!),
+        url: documentPathToFileUrl(doc.path!),
         configurationName: doc.project ? undefined : doc.configurationName,
         projectName: doc.project?.name,
+        timestamp: Date.now(),
       },
     ]);
     return response;
@@ -145,7 +157,12 @@ export async function exportDocument(
       const message = `document ${operationName} failed with exitCode ${result.exitCode}`;
       errorFeedback(
         feedback,
-        [message, errorMessage(result.error), 'command line:', result.commandLine].join('\n'),
+        [
+          message,
+          errorMessage(result.error),
+          'command line:',
+          result.commandLine,
+        ].join('\n'),
         doc.editorKey,
       );
       return {
@@ -167,7 +184,11 @@ export async function exportDocument(
     const savedPath = resultFile || doc.path;
     if (!storeOptions.isCopy && !storeOptions.isRendering) {
       try {
-        project = await computeProjectFromDocFile(directories, doc.path);
+        project = await computeProjectFromDocFile(
+          directories,
+          doc.path,
+          (message) => warningFeedback(feedback, message, doc.editorKey),
+        );
       } catch {
         // Saving a document outside a project is valid.
         project = undefined;
@@ -194,15 +215,20 @@ export async function exportDocument(
         converter?.longRendering === true && converter.extension === 'pdf'
           ? {
             type: 'rendering',
-            url: toFileUrl(savedPath),
+            url: documentPathToFileUrl(savedPath),
             documentPath: sourceFile,
+            projectPath: project?.path,
+            documentName: project?.path
+              ? relative(project.path, sourceFile).replaceAll('\\', '/')
+              : basename(sourceFile),
             converterName: converter.name,
             configurationName: doc.project ? undefined : doc.configurationName,
+            timestamp: Date.now(),
           }
           : {
             type: 'document',
             id: doc.id,
-            url: toFileUrl(savedPath),
+            url: documentPathToFileUrl(savedPath),
             configurationName: doc.project ? undefined : doc.configurationName,
             projectName: project?.name,
           };
@@ -241,16 +267,21 @@ export async function exportDocument(
 
 async function savePandocJsonDocument(
   directories: BackendDirectories,
-  events: RendererHub,
+  feedback: FeedbackSink,
   doc: CxDocument,
   storeOptions: StoreOptions,
 ): Promise<SaveResponse> {
-  if (!doc.path) throw new Error('You must provide a document (file) name to save!');
+  if (!doc.path)
+    throw new Error('You must provide a document (file) name to save!');
   await writeFile(doc.path, doc.content);
   let project = doc.project;
   if (!storeOptions.isCopy && !storeOptions.isRendering) {
     try {
-      project = await computeProjectFromDocFile(directories, doc.path);
+      project = await computeProjectFromDocFile(
+        directories,
+        doc.path,
+        (message) => warningFeedback(feedback, message, doc.editorKey),
+      );
     } catch {
       // Saving a standalone document is valid.
       project = undefined;
@@ -270,10 +301,6 @@ async function savePandocJsonDocument(
     resultFile: doc.path,
     cwd: parse(doc.path).dir,
   };
-}
-
-function toFileUrl(path: string): string {
-  return `file://${path.replaceAll('\\', '/')}`;
 }
 
 function errorMessage(error: unknown): string {

@@ -3,8 +3,13 @@ import type {
   PundokEditorProject,
   GetProjectOptions,
 } from '../../common';
+import { computeProjectConfiguration } from '../../common';
 import { isString } from 'lodash-es';
+import { nextTick } from 'vue';
 import { useProjectCache } from '../../stores';
+import { notifyTimeout } from '../helpers';
+
+const MESSAGE_DIALOG_CLOSE_DELAY = 300;
 
 export interface ProjectManagementHost {
   [key: string]: any;
@@ -73,7 +78,11 @@ const gitUpdateSnapshots = new Map<string, Map<string, number>>();
 
 export function openGitUpdates(host: ProjectManagementHost): void {
   host.message = null;
-  host.visibleGitUpdates = true;
+  void nextTick(() => {
+    setTimeout(() => {
+      host.visibleGitUpdates = true;
+    }, MESSAGE_DIALOG_CLOSE_DELAY);
+  });
 }
 
 export async function reloadProjectAfterGitMerge(
@@ -106,11 +115,18 @@ export async function reloadProject(
 ): Promise<void> {
   const project = await host.backend?.getProject({
     ...options,
-    computeConfig: true,
+    computeConfig: false,
   });
   if (project) {
-    await setProject(host, project);
-    await loadProjectStructure(host, project);
+    const configuredProject = await computeProjectConfiguration(
+      project,
+      (configurationName) => host.backend!.configuration(configurationName),
+      (message) => {
+        host.message = { type: 'warning', message };
+      },
+    );
+    await setProject(host, configuredProject);
+    await loadProjectStructure(host, configuredProject);
   }
 }
 
@@ -155,6 +171,7 @@ export async function saveProject(
     host.$q.notify({
       type: 'negative',
       message: 'Unable to save project configuration',
+      timeout: notifyTimeout('Unable to save project configuration'),
     });
   }
 }

@@ -1,6 +1,5 @@
 import type { BaseWindow, WebContentsView } from 'electron';
 import { spawnSync } from 'node:child_process';
-import { isAbsolute, resolve } from 'node:path';
 import { ipcMain, shell } from 'electron';
 import {
   CommandToRenderer,
@@ -33,6 +32,7 @@ import {
   createFolder,
   getFileContents,
   getPdfPageCount,
+  listSynctexFile,
   findResourceFilesWithProvenance,
   editorReady,
   getProject,
@@ -52,6 +52,7 @@ import {
   unregisterRenderingProcess,
   stopRenderingProcess,
   transformationProcessKey,
+  localizeDocumentPath,
   localizePath,
   errorFeedback,
   GitRepositoryManager,
@@ -165,11 +166,9 @@ export class IpcHub implements RendererHub {
         if (context.inNewEditor) {
           if (!context.path)
             throw new Error('You must provide a valid file path');
-          const path =
-            !isAbsolute(context.path) && context.project?.path
-              ? resolve(context.project.path, context.path)
-              : context.path;
-          openNewEditor(path);
+          openNewEditor(
+            localizeDocumentPath(context.path, context.project?.path),
+          );
           return undefined;
         }
         const document = await openDocument(
@@ -262,6 +261,9 @@ export class IpcHub implements RendererHub {
     );
     ipcMain.handle('pdf-page-count', (_event, filename) =>
       getPdfPageCount(filename),
+    );
+    ipcMain.handle('synctex-list', (_event, filename) =>
+      listSynctexFile(filename),
     );
     ipcMain.handle(
       'find-resource-files',

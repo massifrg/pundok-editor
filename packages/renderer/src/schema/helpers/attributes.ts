@@ -378,7 +378,7 @@ export function addClass(attrs: Attrs, className?: string): Attrs {
 /**
  * Creates a copy of the `attrs` of a `Node` or a `Mark`, with a class removed.
  * @param attrs The `attrs` of a `Node` or a `Mark`.
- * @param className The class to be removed.
+ * @param classNames The classes to be removed.
  * @returns a copy of the `attrs` with the class removed.
  */
 export function removeClasses(attrs: Attrs, classNames: string[]): Attrs {

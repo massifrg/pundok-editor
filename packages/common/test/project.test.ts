@@ -5,12 +5,20 @@ import {
   getNextProjectComponentAcrossContainers,
   getParentProjectComponent,
   getProjectComponentChildren,
+  isProjectComponentOrDescendant,
   isProjectDocumentOrDescendant,
+  projectSourceVariants,
   getPreviousProjectComponent,
   getPreviousProjectComponentAcrossContainers,
   type PundokEditorProject,
   type ProjectComponent,
 } from '../src/config/project';
+import {
+  pageRangesFromSynctex,
+  projectComponentForSource,
+  widestPageRangeFromRanges,
+  withPageRangesFromSynctex,
+} from '../src/config/pageRanges';
 import { PundokEditorConfig } from '../src/config/editorConfiguration';
 import type { ConfigurationPruning } from '../src/config/editorConfigInit';
 import { serializeProject } from '../src/config/jsonStringify';
@@ -60,9 +68,104 @@ describe('project document ancestry', () => {
       '/project',
     )).toBe(true);
   });
+
+  it('matches URL-encoded sources', () => {
+    const tree: ProjectComponent = {
+      src: '/project/My Book/book.md',
+      children: [{ src: '/project/My Book/chapters/one.md' }],
+    };
+    expect(isProjectDocumentOrDescendant(
+      tree,
+      'file:///project/My%20Book/book.md',
+      'file:///project/My%20Book/chapters/one.md',
+      'file:///project/My%20Book',
+      'file:///project/My%20Book',
+    )).toBe(true);
+  });
+
+  it('determines ancestry from component relationships', () => {
+    const article: ProjectComponent = { src: 'article.md' };
+    const tree: ProjectComponent = {
+      src: 'book.md',
+      children: [{ src: 'chapter.md', children: [article] }],
+    };
+    const container = tree.children?.[0];
+    const descendant = container?.children?.[0];
+    expect(container && descendant &&
+      isProjectComponentOrDescendant(container, descendant)).toBe(true);
+    expect(container && descendant &&
+      isProjectComponentOrDescendant(descendant, container)).toBe(false);
+  });
 });
 
 describe('project utilities', () => {
+  it('gets ordered and merged page ranges from SyncTeX output', () => {
+    const synctex = [
+      'begin page: 4',
+      '[0 0 0 0]: 12: chapters/one.md',
+      'begin page: 1',
+      '[0 0 0 0]: 4: chapters/one.md',
+      'begin page: 2',
+      '[0 0 0 0]: 5: chapters/one.md',
+      'begin page: 3',
+      '[0 0 0 0]: 8: chapters/two.md',
+    ].join('\n');
+
+    expect(pageRangesFromSynctex(synctex, 'chapters/one.md')).toEqual([
+      [1, 2],
+      [4, 4],
+    ]);
+  });
+
+  it('writes page ranges to project components', () => {
+    const synctex = [
+      'begin page: 1',
+      '[0 0 0 0]: 4: /project/book.md',
+      'begin page: 2',
+      '[0 0 0 0]: 5: /project/chapters/one.md',
+    ].join('\n');
+    const tree: ProjectComponent = {
+      src: '/project/book.md',
+      children: [{ src: 'chapters/one.md' }],
+    };
+
+    expect(withPageRangesFromSynctex(tree, synctex, '/project')).toEqual({
+      src: '/project/book.md',
+      pageRanges: [[1, 1]],
+      children: [{ src: 'chapters/one.md', pageRanges: [[2, 2]] }],
+    });
+  });
+
+  it('matches URL-encoded SyncTeX sources and keeps the first widest range', () => {
+    const synctex = [
+      'begin page: 10',
+      '[0 0 0 0]: 1: /project/My%20Book/book.md',
+      'begin page: 11',
+      '[0 0 0 0]: 2: /project/My%20Book/book.md',
+      'begin page: 20',
+      '[0 0 0 0]: 3: /project/My%20Book/book.md',
+      'begin page: 21',
+      '[0 0 0 0]: 4: /project/My%20Book/book.md',
+    ].join('\n');
+    const tree: ProjectComponent = {
+      src: '/project/My Book/book.md',
+    };
+
+    expect(withPageRangesFromSynctex(
+      tree,
+      synctex,
+      '/project/My%20Book',
+    ).pageRanges).toEqual([[10, 11], [20, 21]]);
+    expect(widestPageRangeFromRanges([[10, 11], [20, 20], [30, 31]])).toEqual([
+      10,
+      11,
+    ]);
+    expect([...projectSourceVariants(
+      'file:///project/My%20Book/book.md',
+      'file:///project/My%20Book',
+    )]).toEqual(['/project/My Book/book.md', 'book.md']);
+  });
+
   it('returns the previous and next sibling in a nested children array', () => {
     expect(getPreviousProjectComponent(structure, 'chapter-two.md')).toEqual({
       src: 'chapter-one.md',
@@ -291,6 +394,41 @@ describe('project utilities', () => {
         ]),
       );
       expect(computedProject.computedConfig?.noteStyles).toHaveLength(2);
+    });
+
+    it('warns and skips missing or invalid inherited configurations', async () => {
+      const validConfiguration = new PundokEditorConfig({
+        name: 'valid',
+        version: [1],
+        customClasses: [{ name: 'valid-class' }],
+      });
+      const warnings: string[] = [];
+      const project: PundokEditorProject = {
+        name: 'project',
+        path: '/projects/test',
+        rootDocument: 'index.md',
+        configurations: ['missing', 'invalid', 'valid'],
+        editorConfig: {},
+      };
+
+      const computedProject = await computeProjectConfiguration(
+        project,
+        async (configurationName) => {
+          if (configurationName === 'missing') return undefined;
+          if (configurationName === 'invalid')
+            throw new Error('invalid JSON');
+          return validConfiguration;
+        },
+        (message) => warnings.push(message),
+      );
+
+      expect(warnings).toEqual([
+        `can't use inherited configuration "missing": can't read configuration "missing"`,
+        `can't use inherited configuration "invalid": invalid JSON`,
+      ]);
+      expect(computedProject.computedConfig?.customClasses).toEqual([
+        { name: 'valid-class' },
+      ]);
     });
   });
 

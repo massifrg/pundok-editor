@@ -10,7 +10,7 @@ import {
   unregisterRenderingProcess,
 } from './renderingProcess';
 
-export type ExternalProgramEnvironment = NodeJS.ProcessEnv & {
+export type ExternalProgramEnvironment = Record<string, string | undefined> & {
   /**
    * Paths to append to PATH for this process. This is consumed before spawn
    * and is not passed through as a child-process environment variable.
@@ -61,7 +61,7 @@ export async function runPandocProgram(
     .find((arg) => arg.startsWith('--resource-path='))
     ?.slice('--resource-path='.length)
     .replaceAll('"', '');
-  const env =
+  const env: ExternalProgramEnvironment | undefined =
     resourcePath &&
     pandocVersion &&
     (pandocVersion[0] > 3 || (pandocVersion[0] === 3 && pandocVersion[1] >= 14))
@@ -106,11 +106,13 @@ export function runExternalProgram(
   const output: string[] = [];
   const error: string[] = [];
   const spawnOptions = extendEnvironment(options);
-  const childProcess = spawn(
-    path,
-    args,
-    registration?.key ? { ...spawnOptions, detached: true } : spawnOptions,
-  );
+  const { env, ...spawnOptionsWithoutEnv } = spawnOptions || {};
+  const childOptions: SpawnOptionsWithoutStdio = {
+    ...spawnOptionsWithoutEnv,
+    ...(env && { env: env as NodeJS.ProcessEnv }),
+    ...(registration?.key && { detached: true }),
+  };
+  const childProcess = spawn(path, args, childOptions);
   if (registration?.key)
     registerRenderingProcess(registration.key, childProcess);
   childProcess.stdout.on('data', (chunk) => {
@@ -160,11 +162,11 @@ export function runExternalProgram(
 
 function extendEnvironment(
   options?: ExternalProgramOptions,
-): SpawnOptionsWithoutStdio | undefined {
+): ExternalProgramOptions | undefined {
   const additionalPath = options?.env?.additionalPath;
   if (!options || additionalPath === undefined) return options;
 
-  const env = { ...options.env };
+  const env: ExternalProgramEnvironment = { ...options.env };
   delete env.additionalPath;
   if (!additionalPath) return { ...options, env };
 

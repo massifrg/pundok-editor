@@ -10,6 +10,7 @@ import {
   DocumentContext,
   FolderContents,
   Place,
+  resolveDocumentContextPath,
 } from '../common';
 import { pathToFileURLfixed } from '../filesystem';
 import { getFolderContents, localizePath } from '../backend';
@@ -46,7 +47,9 @@ export const getFolderContentsHandler =
   async (e: IpcMainInvokeEvent, ctx: string): Promise<FolderContents> => {
     const context = JSON.parse(ctx) as DocumentContext;
     const { project } = context;
-    let path = context.path || project?.path || process.cwd();
+    let path = context.path
+      ? resolveDocumentContextPath(context.path, project?.path)
+      : project?.path || process.cwd();
     if (!path)
       return Promise.reject(
         `openDocumentHandler: please provide a valid file path!`,

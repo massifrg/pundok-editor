@@ -3,11 +3,18 @@
     "module": "esnext",
     "target": "esnext",
     "sourceMap": false,
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0",
     "skipLibCheck": true,
     "strict": true,
     "isolatedModules": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["packages/renderer/src/*"]
+    }
   },
   "exclude": ["packages/**/*.spec.ts", "packages/**/*.test.ts"],
   "include": ["packages/**/*.ts"]

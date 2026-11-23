@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { getChromeVersion } from '../electron-versions/index.js';
 import { builtinModules } from 'module';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 import vue from '@vitejs/plugin-vue';
@@ -10,6 +10,19 @@ import vue from '@vitejs/plugin-vue';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 // import { visualizer } from 'rollup-plugin-visualizer';
 import { analyzer } from 'vite-bundle-analyzer';
+
+if (!Map.groupBy) {
+  Map.groupBy = function (items, keyFor) {
+    const result = new Map();
+    for (const item of items) {
+      const key = keyFor(item);
+      const group = result.get(key);
+      if (group) group.push(item);
+      else result.set(key, [item]);
+    }
+    return result;
+  };
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -35,6 +48,7 @@ export default defineConfig({
       template: { transformAssetUrls },
     }),
     quasar({
+      astAutoImport: false,
       sassVariables: resolve(
         dirname(fileURLToPath(import.meta.url)),
         './src/assets/css/quasar.variables.scss',
@@ -80,28 +94,44 @@ export default defineConfig({
     target: `chrome${getChromeVersion()}`,
     outDir: 'dist',
     assetsDir: '.',
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         editor: 'index.html',
       },
       external: [...builtinModules.flatMap((p) => [p, `node:${p}`])],
       output: {
-        manualChunks(id) {
-          if (id.includes('/node_modules/@codemirror/view/')) {
-            return 'codemirror-view';
-          }
-          if (id.includes('/node_modules/@codemirror/')) {
-            return 'codemirror';
-          }
-          if (id.includes('/node_modules/@lezer/')) {
-            return 'lezer';
-          }
-          if (
-            id.includes('/node_modules/highlight.js/') ||
-            id.includes('/node_modules/lowlight/')
-          ) {
-            return 'syntax-highlighting';
-          }
+        codeSplitting: {
+          groups: [
+            {
+              debugName: 'manual-vendor-groups',
+              name(id) {
+                const normalizedId = id.replaceAll('\\', '/');
+                if (normalizedId.includes('/node_modules/@codemirror/view/')) {
+                  return 'codemirror-view';
+                }
+                if (normalizedId.includes('/node_modules/@codemirror/')) {
+                  return 'codemirror';
+                }
+                if (normalizedId.includes('/node_modules/@lezer/')) {
+                  return 'lezer';
+                }
+                if (
+                  normalizedId.includes('/node_modules/highlight.js/') ||
+                  normalizedId.includes('/node_modules/lowlight/')
+                ) {
+                  return 'syntax-highlighting';
+                }
+                if (
+                  normalizedId.includes('/node_modules/@intlify/') ||
+                  normalizedId.includes('/node_modules/vue-i18n/')
+                ) {
+                  return 'i18n';
+                }
+                return null;
+              },
+              includeDependenciesRecursively: false,
+            },
+          ],
         },
       },
     },
@@ -116,9 +146,9 @@ export default defineConfig({
       'prosemirror-view',
     ],
   },
-  // test: {
-  //   // environment: 'happy-dom',
-  // },
+  test: {
+    environment: 'happy-dom',
+  },
   // The next css section is from https://stackoverflow.com/questions/68147471/how-to-set-sassoptions-in-vite/78997875#78997875
   // to solve "Deprecation Warning: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0."
   css: {

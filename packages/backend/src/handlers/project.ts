@@ -66,6 +66,7 @@ export async function loadProjectFromFile(
 export async function computeProjectFromFile(
   directories: BackendDirectories,
   filename: string,
+  warn: (message: string) => void = console.warn,
 ): Promise<PundokEditorProject> {
   const project = await loadProjectFromFile(filename);
   return computeProjectConfiguration(project, async (configurationName) => {
@@ -74,7 +75,7 @@ export async function computeProjectFromFile(
       configurationName,
     );
     return configuration && new PundokEditorConfig(configuration);
-  });
+  }, warn);
 }
 
 export function projectFileNameOfDocument(filename: string): string {
@@ -96,9 +97,11 @@ export function loadProjectInDirectory(
 export function computeProjectFromDocFile(
   directories: BackendDirectories,
   filename: string,
+  warn: (message: string) => void = console.warn,
 ): Promise<PundokEditorProject> {
   return computeProjectFromFile(
     directories,
     projectFileNameOfDocument(filename),
+    warn,
   );
 }

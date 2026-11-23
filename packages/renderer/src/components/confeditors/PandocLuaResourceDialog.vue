@@ -263,7 +263,12 @@ const loadingPreview = ref(false);
 const previewError = ref('');
 const parameters = ref<Parameter[]>([]);
 const previewExtensions = [
-  StreamLanguage.define(lua),
+  StreamLanguage.define({
+    ...lua,
+    token: (stream, state) =>
+      // legacy-modes still declares the obsolete streamparser StringStream type.
+      lua.token(stream as unknown as Parameters<typeof lua.token>[0], state),
+  }),
   EditorState.readOnly.of(true),
   EditorView.editable.of(false),
   EditorView.lineWrapping,

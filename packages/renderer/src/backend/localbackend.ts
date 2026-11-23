@@ -74,6 +74,7 @@ import {
 } from '../actions';
 import { useActions } from '../stores';
 import { handleEditorEvent } from './editorEventHandlers';
+import { plainIpcValue } from './ipcValue';
 
 type Listener = () => void;
 
@@ -136,6 +137,14 @@ export class LocalBackend implements Backend {
           project = await computeProjectConfiguration(
             project,
             getConfigurationFunction(window.ipc),
+            (warning) =>
+              actions.setAction({
+                ...ACTION_BACKEND_FEEDBACK,
+                editorKey: editorKey!,
+                props: {
+                  feedback: { type: 'warning', message: warning, level: 1 },
+                } as BackendFeedbackActionProps,
+              }),
           );
           console.log(project);
           const action: EditorAction = {
@@ -167,6 +176,18 @@ export class LocalBackend implements Backend {
             ? await computeProjectConfiguration(
                 project,
                 getConfigurationFunction(window.ipc),
+                (warning) =>
+                  actions.setAction({
+                    ...ACTION_BACKEND_FEEDBACK,
+                    editorKey: editorKey!,
+                    props: {
+                      feedback: {
+                        type: 'warning',
+                        message: warning,
+                        level: 1,
+                      },
+                    } as BackendFeedbackActionProps,
+                  }),
               )
             : undefined;
           const action: EditorAction = project_with_conf
@@ -291,7 +312,7 @@ export class LocalBackend implements Backend {
   }
 
   updateBookmarks(bookmarks: PundokBookmark[]): Promise<boolean> {
-    return window.ipc.updateBookmarks(bookmarks);
+    return window.ipc.updateBookmarks(plainIpcValue(bookmarks));
   }
 
   async open(context: DocumentContext): Promise<CxDocument> {
@@ -313,7 +334,10 @@ export class LocalBackend implements Backend {
       };
     const ipc = window.ipc;
     if (ipc) {
-      return ipc.saveDocument(JSON.stringify(doc), storeOptions);
+      return ipc.saveDocument(
+        JSON.stringify(doc),
+        plainIpcValue(storeOptions),
+      );
     } else {
       throw new Error('Method not implemented.');
     }
@@ -326,7 +350,7 @@ export class LocalBackend implements Backend {
   async getProject(
     options: GetProjectOptions,
   ): Promise<PundokEditorProject | undefined> {
-    return window.ipc.getProject(options);
+    return window.ipc.getProject(plainIpcValue(options));
   }
 
   async createProject(
@@ -348,7 +372,9 @@ export class LocalBackend implements Backend {
       },
     ];
     if (ipc) {
-      const maybeConfigs = await window.ipc.availableConfigurations(options);
+      const maybeConfigs = await window.ipc.availableConfigurations(
+        plainIpcValue(options),
+      );
       configs = configs.concat(maybeConfigs || []);
     }
     return configs;
@@ -376,11 +402,15 @@ export class LocalBackend implements Backend {
     if (filename === 'custom.css') {
       return getHardcodedCustomCss();
     }
-    return window.ipc.fileContents(filename, options);
+    return window.ipc.fileContents(filename, plainIpcValue(options));
   }
 
   getPdfPageCount(filename: string): Promise<PdfPageCount> {
     return window.ipc.pdfPageCount(filename);
+  }
+
+  listSynctexFile(filename: string): Promise<string> {
+    return window.ipc.synctexList(filename);
   }
 
   async findResourceFiles(
@@ -390,7 +420,7 @@ export class LocalBackend implements Backend {
     return window.ipc.findResourceFiles(
       filenameRegex.source,
       filenameRegex.flags,
-      options,
+      plainIpcValue(options),
     );
   }
 
@@ -406,7 +436,10 @@ export class LocalBackend implements Backend {
     featureName: PandocFeatureName,
     options?: PandocFeatureOptions,
   ): Promise<any[]> {
-    return window.ipc.pandocFeature(featureName, options);
+    return window.ipc.pandocFeature(
+      featureName,
+      plainIpcValue(options),
+    );
   }
 
   // async openViewer(
@@ -457,7 +490,7 @@ export class LocalBackend implements Backend {
   }
 
   async gotoSource(editorKey: EditorKeyType, info: SynctexInfo): Promise<void> {
-    window.ipc.getSourceFile(editorKey, info);
+    return window.ipc.getSourceFile(editorKey, plainIpcValue(info));
   }
 
   getPdfLocation(
@@ -471,8 +504,8 @@ export class LocalBackend implements Backend {
       editorKey,
       sourceFile,
       line,
-      bookmarks,
-      project,
+      plainIpcValue(bookmarks),
+      plainIpcValue(project),
     );
   }
 
@@ -481,7 +514,7 @@ export class LocalBackend implements Backend {
   }
 
   async renderAgain(bookmark: RenderingBookmark, editorKey: EditorKeyType): Promise<void> {
-    await window.ipc.renderAgain(bookmark, editorKey);
+    await window.ipc.renderAgain(plainIpcValue(bookmark), editorKey);
   }
 
   stopRendering(converterName: string, path: string): Promise<boolean> {
@@ -505,7 +538,7 @@ export class LocalBackend implements Backend {
     options: ConfigurationUpdateOptions,
   ): Promise<void> {
     console.log(`calling backend to update configuration`);
-    return window.ipc.updateConfig(options);
+    return window.ipc.updateConfig(plainIpcValue(options));
   }
 
   listGitRepositories() {
@@ -513,7 +546,7 @@ export class LocalBackend implements Backend {
   }
 
   cloneGitProject(options: CloneGitProjectOptions) {
-    return window.ipc.cloneGitProject(options);
+    return window.ipc.cloneGitProject(plainIpcValue(options));
   }
 
   gitDefaultBranchName() {
@@ -521,11 +554,11 @@ export class LocalBackend implements Backend {
   }
 
   publishGitProject(options: LocalGitProjectOptions) {
-    return window.ipc.publishGitProject(options);
+    return window.ipc.publishGitProject(plainIpcValue(options));
   }
 
   connectGitProject(options: LocalGitProjectOptions) {
-    return window.ipc.connectGitProject(options);
+    return window.ipc.connectGitProject(plainIpcValue(options));
   }
 
   gitProjectStatus(path: string) {
@@ -537,23 +570,23 @@ export class LocalBackend implements Backend {
   }
 
   stageGitProject(path: string, paths: string[]) {
-    return window.ipc.stageGitProject(path, paths);
+    return window.ipc.stageGitProject(path, plainIpcValue(paths));
   }
 
   unstageGitProject(path: string, paths: string[]) {
-    return window.ipc.unstageGitProject(path, paths);
+    return window.ipc.unstageGitProject(path, plainIpcValue(paths));
   }
 
   discardGitProject(path: string, paths: string[]) {
-    return window.ipc.discardGitProject(path, paths);
+    return window.ipc.discardGitProject(path, plainIpcValue(paths));
   }
 
   updateGitignore(path: string, paths: string[]) {
-    return window.ipc.updateGitignore(path, paths);
+    return window.ipc.updateGitignore(path, plainIpcValue(paths));
   }
 
   commitGitProject(options: GitCommitOptions) {
-    return window.ipc.commitGitProject(options);
+    return window.ipc.commitGitProject(plainIpcValue(options));
   }
 
   gitProjectUpdates(path: string) {

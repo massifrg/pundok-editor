@@ -57,12 +57,19 @@
           </q-item-section>
           <q-item-section>
             <q-item-label class="ellipsis" :title="filename">
-              <span class="text-weight-bold" :class="{ 'text-strike': isRemoved(filename) }">
+              <span
+                class="text-weight-bold"
+                :class="{ 'text-strike': isRemoved(filename) }"
+              >
                 {{ filename }}
               </span>
             </q-item-label>
             <q-item-label caption>
-              {{ $t('configEditor.inheritedFrom', { name: inheritedSource(filename) }) }}
+              {{
+                $t('configEditor.inheritedFrom', {
+                  name: inheritedSource(filename),
+                })
+              }}
             </q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -111,11 +118,12 @@ import { EditorView } from '@codemirror/view';
 import type { Editor } from '@tiptap/vue-3';
 import { computed, ref } from 'vue';
 import { mdiEyeOff } from '@mdi/js';
-import { relative } from 'path-browserify';
 import { Codemirror } from 'vue-codemirror';
 import type { PundokEditorProject } from '../../common';
+import { relativeDocumentPath } from '../../common';
 import { useBackend } from '../../stores';
 import { showOpenDocumentDialog } from '../helpers';
+import { createInheritedItemHelpers } from '../helpers/inheritedItems';
 
 const props = withDefaults(
   defineProps<{
@@ -134,6 +142,13 @@ const emit = defineEmits<{
   'update:modelValue': [value: string[]];
   'update:removed': [value: string[]];
 }>();
+
+const { isRemoved, inheritedSource, inheritedBackground, setRemoved } =
+  createInheritedItemHelpers({
+    removed: () => props.removed,
+    provenance: () => props.provenance,
+    updateRemoved: (value) => emit('update:removed', value),
+  });
 
 const backend = useBackend();
 const cssFiles = computed(() => props.modelValue || []);
@@ -177,7 +192,7 @@ function addCss(): void {
     callback: (document) => {
       if ('path' in document && document.path) {
         const path = props.project?.path
-          ? relative(props.project.path, document.path)
+          ? relativeDocumentPath(props.project.path, document.path)
           : document.path;
         if (!cssFiles.value.includes(path)) {
           emit('update:modelValue', [...cssFiles.value, path]);
@@ -193,29 +208,6 @@ function removeCss(index: number): void {
     'update:modelValue',
     cssFiles.value.filter((_, cssIndex) => cssIndex !== sourceIndex),
   );
-}
-
-function isRemoved(filename: string): boolean {
-  return (props.removed || []).includes(filename);
-}
-
-function setRemoved(filename: string, value: boolean | null): void {
-  const names = new Set(props.removed || []);
-  if (value) names.add(filename);
-  else names.delete(filename);
-  emit('update:removed', [...names]);
-}
-
-function inheritedSource(filename: string): string {
-  return props.provenance?.[filename] || '';
-}
-
-function inheritedBackground(filename: string): string | undefined {
-  const source = inheritedSource(filename);
-  if (!source) return undefined;
-  const sources = [...new Set(Object.values(props.provenance || {}))];
-  const colors = ['#e8f5e9', '#fff3e0', '#f3e5f5', '#e0f7fa', '#fce4ec', '#f1f8e9'];
-  return colors[Math.max(0, sources.indexOf(source) % colors.length)];
 }
 
 async function selectCss(filename: string): Promise<void> {

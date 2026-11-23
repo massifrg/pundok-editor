@@ -16,6 +16,7 @@ import type {
   ServerMessageForViewer,
   ServerMessageSetConfiguration,
   ServerMessageSetProject,
+  EditorKeyType,
 } from '../common';
 import {
   ACTION_BACKEND_FEEDBACK,
@@ -40,6 +41,19 @@ export type ConfigurationLoader = (
   name?: string,
 ) => Promise<PundokEditorConfig>;
 
+function configurationWarning(
+  editorKey: EditorKeyType | undefined,
+  message: string,
+): void {
+  useActions().setAction({
+    ...ACTION_BACKEND_FEEDBACK,
+    editorKey: editorKey!,
+    props: {
+      feedback: { type: 'warning', message, level: 1 },
+    } as BackendFeedbackActionProps,
+  });
+}
+
 export async function handleEditorEvent(
   channel: IpcMainToRendererChannel,
   message: ServerMessage,
@@ -63,6 +77,7 @@ export async function handleEditorEvent(
       const configuredProject = await computeProjectConfiguration(
         project,
         loadConfiguration,
+        (warning) => configurationWarning(editorKey, warning),
       );
       actions.setAction({
         ...ACTION_BACKEND_SET_PROJECT,
@@ -83,7 +98,11 @@ export async function handleEditorEvent(
     case 'content': {
       const { editorKey, content, project } = message as ServerMessageContent;
       const configuredProject: PundokEditorProject | undefined = project
-        ? await computeProjectConfiguration(project, loadConfiguration)
+        ? await computeProjectConfiguration(
+            project,
+            loadConfiguration,
+            (warning) => configurationWarning(editorKey, warning),
+          )
         : undefined;
       const action: EditorAction = configuredProject
         ? {

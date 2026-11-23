@@ -17,16 +17,17 @@ import {
   ProjectBookmark,
   PundokBookmark,
   type ProjectComponent,
+  documentPathBaseName,
+  isDocumentPathAbsolute,
+  normalizeDocumentPath,
+  relativeDocumentPath,
+  resolveDocumentPath,
 } from '../common';
 import { editorKeyFromState, getDocState, type DocState } from '../schema';
 import { useBackend } from '../stores';
-import { basename, isAbsolute, relative, resolve } from 'path-browserify';
 
 function normalizedProjectSource(src: string): string {
-  return src
-    .replace(/^file:\/\//, '')
-    .replaceAll('\\', '/')
-    .replace(/^\.\/+/, '');
+  return normalizeDocumentPath(src).replace(/^\.\/+/, '');
 }
 
 function findProjectSource(
@@ -38,9 +39,9 @@ function findProjectSource(
   const matchesCandidate = (src: string) => {
     const normalizedSource = normalizedProjectSource(src);
     if (normalizedCandidates.includes(normalizedSource)) return true;
-    if (!isAbsolute(src) && normalizedSource) {
+    if (!isDocumentPathAbsolute(src) && normalizedSource) {
       return normalizedCandidates.includes(
-        normalizedProjectSource(resolve(projectPath, src)),
+        normalizedProjectSource(resolveDocumentPath(projectPath, src)),
       );
     }
     return false;
@@ -91,7 +92,7 @@ export default {
     currentDocumentPath() {
       const { workingFolder, documentName } = this.activeDocState || {};
       return workingFolder && documentName
-        ? resolve(workingFolder, documentName)
+        ? resolveDocumentPath(workingFolder, documentName)
         : undefined;
     },
     currentProjectSource() {
@@ -100,11 +101,11 @@ export default {
       const project = this.project;
       if (!project?.path || !docState?.workingFolder || !docState.documentName)
         return undefined;
-      const absoluteSource = resolve(
+      const absoluteSource = resolveDocumentPath(
         docState.workingFolder,
         docState.documentName,
       );
-      const projectRelativeSource = relative(project.path, absoluteSource);
+      const projectRelativeSource = relativeDocumentPath(project.path, absoluteSource);
       return structure
         ? findProjectSource(
           structure,
@@ -112,7 +113,7 @@ export default {
             absoluteSource,
             projectRelativeSource,
             docState.documentName,
-            resolve(project.path, docState.documentName),
+            resolveDocumentPath(project.path, docState.documentName),
           ],
           project.path,
         )
@@ -201,13 +202,13 @@ export default {
       if (this.editorKey && this.project?.path && component.src)
         setActionCommand(this.editorKey, ACTION_DOCUMENT_OPEN, {
           context: {
-            path: resolve(this.project.path, component.src),
+            path: resolveDocumentPath(this.project.path, component.src),
             project: this.project,
           },
         } as DocumentOpenActionProps);
     },
     projectComponentFilename(component?: ProjectComponent) {
-      return component?.src ? basename(component.src) : '';
+      return component?.src ? documentPathBaseName(component.src) : '';
     },
     projectComponentTooltip(
       translationKey: string,
