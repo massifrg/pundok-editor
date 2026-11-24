@@ -463,8 +463,12 @@ function copyFilter(filter: string | PandocFilter): string | PandocFilter {
     ? filter
     : {
       ...filter,
-      ...(filter.metadata && { metadata: { ...filter.metadata } }),
-      ...(filter.variables && { variables: { ...filter.variables } }),
+      ...(filter.metadata && {
+        metadata: filter.metadata.map((parameter) => ({ ...parameter })),
+      }),
+      ...(filter.variables && {
+        variables: filter.variables.map((parameter) => ({ ...parameter })),
+      }),
     };
 }
 

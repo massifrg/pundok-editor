@@ -4,7 +4,7 @@ import { ActionNameWithProps } from '../actions';
 import { CustomSpan } from './customSpan';
 import { NamedAndDescribed } from '../types';
 import { PandocOption } from '../pandocOptions';
-import { PandocFilter } from '../pandoc';
+import { PandocFilter, PandocParameter } from '../pandoc';
 
 /**
  * Types of automations available:
@@ -132,18 +132,19 @@ export interface ElementsSelection extends Automation {
 /** What to do with the result of a document transformation. */
 export type WhatToDoWithResult =
   | 'replace' // replace the whole document (default)
-  | 'append'  // append to the document
+  | 'append' // append to the document
   | 'prepend' // prepend to the blocks of the document
-  | 'insert'  // insert the blocks of the document replacing a Div or Span with a certain id
-
-export type PandocVariables = Record<string, any>;
-export type PandocMetadata = Record<string, boolean | number | string>;
+  | 'insert'; // insert the blocks of the document replacing a Div or Span with a certain id
 
 /**
  * A trasformation of the whole document applying pandoc filters.
  */
 export interface PandocFilterTransform extends Automation {
   type: 'pandoc-filter';
+  /** Metadata to pass to the Pandoc filters. */
+  metadata?: PandocParameter[];
+  /** Variables to pass to the Pandoc filters. */
+  variables?: PandocParameter[];
   /** The pandoc filters to be applied (in the order of the array) */
   filters: (string | PandocFilter)[];
   /** Which source to use as input. The current document if not specified. */

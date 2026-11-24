@@ -8,7 +8,9 @@ import {
 import {
   pandocFilterName,
   pandocFilterToCliOptions,
+  pandocParametersToCliOptions,
   pandocOptionsToCliOptions,
+  migratePandocParameters,
 } from '../../../common/src';
 import {
   findResourceFile,
@@ -55,6 +57,14 @@ export async function transformWithPandoc(
 ): Promise<string> {
   const { configurationName, project, content } = document;
   const { sources } = transform;
+  const filters = (transform.filters || []).map((filter) =>
+    typeof filter === 'string'
+      ? filter
+      : {
+          ...filter,
+          ...migratePandocParameters(filter),
+        },
+  );
   if (!content && isEmpty(sources))
     throw new Error('transformWithPandoc: no content or sources provided');
 
@@ -70,7 +80,7 @@ export async function transformWithPandoc(
   );
   const args = ['-f', fromFormat, '-t', toFormat, ...otherArgs];
   console.log(args);
-  if (!transform.filters?.length && fromFormat === toFormat && !sources?.length)
+  if (!filters.length && fromFormat === toFormat && !sources?.length)
     throw new Error(
       'You must provide Pandoc filters to transform a document without changing its format',
     );
@@ -106,7 +116,7 @@ export async function transformWithPandoc(
       [],
       false,
       pandocResourceTypes(
-        [...otherArgs, ...(transform.filters?.length ? ['-L'] : [])],
+        [...otherArgs, ...(filters.length ? ['-L'] : [])],
         fromFormat,
         toFormat,
       ),
@@ -114,16 +124,11 @@ export async function transformWithPandoc(
   );
   if (project?.path) args.push(`--data-dir=${project.path}`);
 
-  for (const [name, value] of Object.entries(transform.variables || {})) {
-    args.push('-V');
-    const quote = Array.isArray(value) || typeof value === 'object' ? "'" : '';
-    args.push(`${name}=${quote}${JSON.stringify(value)}${quote}`);
-  }
-  for (const [name, value] of Object.entries(transform.metadata || {})) {
-    args.push('-M', `${name}=${JSON.stringify(value)}`);
-  }
+  args.push(
+    ...pandocParametersToCliOptions(migratePandocParameters(transform)),
+  );
 
-  for (const filter of transform.filters || []) {
+  for (const filter of filters) {
     const filterName = pandocFilterName(filter);
     const extension = extname(filterName).toLowerCase();
     const filename = extension ? filterName : `${filterName}.lua`;

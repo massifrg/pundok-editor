@@ -101,7 +101,10 @@ describe('migrateLegacyPandocOptions', () => {
 
   it('migrates legacy Pandoc output converter fields to Pandoc options', async () => {
     await writeFile(
-      join(directories.configurationsDir, 'legacy-output-converter.config.json'),
+      join(
+        directories.configurationsDir,
+        'legacy-output-converter.config.json',
+      ),
       JSON.stringify({
         name: 'legacy-output-converter',
         version: [1],
@@ -149,8 +152,8 @@ describe('migrateLegacyPandocOptions', () => {
             name: 'Legacy filter parameters',
             type: 'pandoc-filter',
             filters: ['filter.lua', 'other.lua'],
-            variables: { language: 'en' },
-            metadata: { title: 'Document' },
+            variables: [{ name: 'language', value: 'en' }],
+            metadata: [{ name: 'title', value: 'Document' }],
           },
         ],
       }),
@@ -168,8 +171,8 @@ describe('migrateLegacyPandocOptions', () => {
         filters: [
           {
             name: 'filter.lua',
-            variables: { language: 'en' },
-            metadata: { title: 'Document' },
+            variables: [{ name: 'language', value: 'en' }],
+            metadata: [{ name: 'title', value: 'Document' }],
           },
           'other.lua',
         ],

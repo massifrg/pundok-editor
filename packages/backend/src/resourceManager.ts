@@ -11,7 +11,6 @@ import {
   type Automation,
   type ConfigQueryOptions,
   type FindResourceOptions,
-  type PandocFilter,
   type PandocFilterTransform,
   type PandocOption,
   type PundokEditorConfigInit,
@@ -22,6 +21,8 @@ import {
   RESOURCE_SUBPATHS,
   isCustomInputFormat,
   isCustomOutputFormat,
+  mergePandocParameters,
+  migratePandocParameters,
 } from '../../common/src';
 import { migrateLegacyPandocOptions } from './legacyPandocOptions';
 
@@ -236,34 +237,48 @@ function migratePandocFilterParameters(
   automation: Automation,
 ): PandocFilterTransform {
   const transform = automation as PandocFilterTransform & {
-    variables?: PandocFilter['variables'];
-    metadata?: PandocFilter['metadata'];
+    variables?: unknown;
+    metadata?: unknown;
   };
-  const { variables, metadata, filters = [] } = transform;
-  if ((!variables && !metadata) || filters.length === 0) return transform;
+  const { filters = [] } = transform;
+  const legacyParameters = migratePandocParameters(transform);
+  const migratedFilters = filters.map((filter) => {
+    if (typeof filter === 'string') return filter;
+    const parameters = migratePandocParameters(filter);
+    return {
+      ...filter,
+      ...parameters,
+    };
+  });
+  if (migratedFilters.length === 0) return transform;
 
-  const [firstFilter, ...remainingFilters] = filters;
+  const [firstFilter, ...remainingFilters] = migratedFilters;
   const firstFilterWithParameters =
     typeof firstFilter === 'string'
-      ? {
-          name: firstFilter,
-          ...(variables && { variables }),
-          ...(metadata && { metadata }),
-        }
+      ? Object.keys(legacyParameters).length > 0
+        ? {
+            name: firstFilter,
+            ...legacyParameters,
+          }
+        : firstFilter
       : {
           ...firstFilter,
-          ...(variables && {
-            variables: { ...variables, ...firstFilter.variables },
+          ...(legacyParameters.metadata && {
+            metadata: mergePandocParameters(
+              legacyParameters.metadata,
+              firstFilter.metadata,
+            ),
           }),
-          ...(metadata && {
-            metadata: { ...metadata, ...firstFilter.metadata },
+          ...(legacyParameters.variables && {
+            variables: mergePandocParameters(
+              legacyParameters.variables,
+              firstFilter.variables,
+            ),
           }),
         };
-  const {
-    variables: _variables,
-    metadata: _metadata,
-    ...migratedTransform
-  } = transform;
+  const migratedTransform = { ...transform };
+  delete migratedTransform.variables;
+  delete migratedTransform.metadata;
   return {
     ...migratedTransform,
     filters: [firstFilterWithParameters, ...remainingFilters],

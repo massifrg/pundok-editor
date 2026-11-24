@@ -131,6 +131,15 @@ function findLegacySyntaxes(value, path = '') {
         `${childPath}: legacy output converter property; use ${replacements[key]}`,
       );
     } else if (
+      ['metadata', 'variables'].includes(key) &&
+      child &&
+      typeof child === 'object' &&
+      !Array.isArray(child)
+    ) {
+      warnings.push(
+        `${childPath}: legacy Pandoc parameter map; use an array of { name, description?, value? } objects`,
+      );
+    } else if (
       ['capitalize', 'addMarks', 'addStyles', 'addSpans'].includes(key)
     ) {
       warnings.push(

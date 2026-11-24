@@ -673,6 +673,7 @@
         "variable": "Variabile",
         "metadata": "Metadato",
         "parameterName": "Nome",
+        "parameterDescription": "Descrizione",
         "parameterValue": "Valore",
         "provenance": {
           "project": "Risorsa del progetto",
@@ -695,6 +696,7 @@
         "variable": "Variabile",
         "metadata": "Metadato",
         "parameterName": "Nome",
+        "parameterDescription": "Descrizione",
         "parameterValue": "Valore",
         "provenance": {
           "project": "Risorsa del progetto",

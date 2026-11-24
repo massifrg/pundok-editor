@@ -4,7 +4,10 @@ import {
   pandocOptionsToCliOptions,
 } from '../src/pandocOptions';
 import { PANDOC_EXTENSION_DESCRIPTIONS } from '../src/pandocExtensions';
-import { pandocFilterToCliOptions } from '../src/pandoc';
+import {
+  migratePandocParameters,
+  pandocFilterToCliOptions,
+} from '../src/pandoc';
 
 const optionByLongName = (name: string) =>
   PANDOC_OPTIONS_SPECS.find((option) => option.name.includes(name));
@@ -31,8 +34,38 @@ describe('PANDOC_OPTIONS_SPECS', () => {
   describe('pandocFilterToCliOptions', () => {
     it('can produce an argv-safe filter path without shell quotes', () => {
       expect(
-        pandocFilterToCliOptions('filter', '/tmp/filter with spaces.lua', false),
+        pandocFilterToCliOptions(
+          'filter',
+          '/tmp/filter with spaces.lua',
+          false,
+        ),
       ).toEqual(['--lua-filter=/tmp/filter with spaces.lua']);
+    });
+
+    it('serializes named parameter arrays, including parameters without values', () => {
+      expect(
+        pandocFilterToCliOptions({
+          name: 'filter',
+          metadata: [
+            { name: 'title', value: 'A title' },
+            { name: 'draft', value: false },
+            { name: 'published' },
+          ],
+          variables: [{ name: 'flag', value: true }],
+        }),
+      ).toEqual(['-M', 'title="A title"', '-V', 'flag', '--filter="filter"']);
+    });
+  });
+
+  it('migrates legacy parameter maps to named parameter arrays', () => {
+    expect(
+      migratePandocParameters({
+        metadata: { title: 'A title' },
+        variables: { draft: false },
+      }),
+    ).toEqual({
+      metadata: [{ name: 'title', value: 'A title' }],
+      variables: [{ name: 'draft', value: false }],
     });
   });
 

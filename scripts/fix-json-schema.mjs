@@ -23,10 +23,80 @@ function migratePandocOptions(options) {
   return migrated;
 }
 
+function migratePandocParameterList(parameters) {
+  if (parameters === undefined || Array.isArray(parameters)) return parameters;
+  if (!parameters || typeof parameters !== 'object') return parameters;
+  return Object.entries(parameters).map(([name, value]) => ({ name, value }));
+}
+
+function mergePandocParameters(base, override) {
+  const merged = [...(base || [])];
+  for (const parameter of override || []) {
+    const index = merged.findIndex(({ name }) => name === parameter.name);
+    if (index >= 0) merged[index] = parameter;
+    else merged.push(parameter);
+  }
+  return merged;
+}
+
+function migratePandocFilter(filter) {
+  if (!filter || typeof filter !== 'object' || typeof filter === 'string')
+    return filter;
+  return {
+    ...filter,
+    ...(filter.metadata !== undefined && {
+      metadata: migratePandocParameterList(filter.metadata),
+    }),
+    ...(filter.variables !== undefined && {
+      variables: migratePandocParameterList(filter.variables),
+    }),
+  };
+}
+
+function migratePandocFilterAutomation(automation) {
+  if (!automation || automation.type !== 'pandoc-filter') return automation;
+  const migrated = {
+    ...automation,
+    filters: (automation.filters || []).map(migratePandocFilter),
+  };
+  const legacyMetadata = migratePandocParameterList(automation.metadata);
+  const legacyVariables = migratePandocParameterList(automation.variables);
+  if (migrated.filters.length > 0) {
+    const [first, ...rest] = migrated.filters;
+    migrated.filters = [
+      typeof first === 'string'
+        ? {
+            name: first,
+            ...(legacyMetadata !== undefined && { metadata: legacyMetadata }),
+            ...(legacyVariables !== undefined && {
+              variables: legacyVariables,
+            }),
+          }
+        : {
+            ...first,
+            ...(legacyMetadata !== undefined && {
+              metadata: mergePandocParameters(legacyMetadata, first.metadata),
+            }),
+            ...(legacyVariables !== undefined && {
+              variables: mergePandocParameters(
+                legacyVariables,
+                first.variables,
+              ),
+            }),
+          },
+      ...rest,
+    ];
+  }
+  delete migrated.metadata;
+  delete migrated.variables;
+  return migrated;
+}
+
 function migrateOutputConverter(converter) {
   if (!converter || converter.type !== 'pandoc') return converter;
 
   const migrated = { ...converter };
+  migrated.filters = migrated.filters?.map(migratePandocFilter);
   migrated.pandocOptions = migratePandocOptions(migrated.pandocOptions) || [];
   const names = new Set(
     migrated.pandocOptions
@@ -62,25 +132,29 @@ function fixConfiguration(config) {
     fixed.inputConverters = fixed.inputConverters.map((converter) => ({
       ...converter,
       pandocOptions: migratePandocOptions(converter.pandocOptions),
+      filters: converter.filters?.map(migratePandocFilter),
     }));
   }
   if (Array.isArray(fixed.outputConverters))
     fixed.outputConverters = fixed.outputConverters.map(migrateOutputConverter);
   if (Array.isArray(fixed.automations)) {
-    fixed.automations = fixed.automations.map((automation) =>
-      automation?.type === 'pandoc-filter'
+    fixed.automations = fixed.automations.map((automation) => {
+      const migrated = migratePandocFilterAutomation(automation);
+      return migrated?.type === 'pandoc-filter'
         ? {
-            ...automation,
-            pandocOptions: migratePandocOptions(automation.pandocOptions),
+            ...migrated,
+            pandocOptions: migratePandocOptions(migrated.pandocOptions),
           }
-        : automation,
-    );
+        : migrated;
+    });
   }
   return fixed;
 }
 
 function fixProject(project) {
   const fixed = { ...project };
+  if (fixed.editorConfig)
+    fixed.editorConfig = fixConfiguration(fixed.editorConfig);
   delete fixed.path;
   delete fixed.computedConfig;
   return fixed;
