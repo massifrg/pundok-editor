@@ -106,9 +106,6 @@ export default defineConfig({
               debugName: 'manual-vendor-groups',
               name(id) {
                 const normalizedId = id.replaceAll('\\', '/');
-                if (normalizedId.includes('/node_modules/@codemirror/view/')) {
-                  return 'codemirror-view';
-                }
                 if (normalizedId.includes('/node_modules/@codemirror/')) {
                   return 'codemirror';
                 }
