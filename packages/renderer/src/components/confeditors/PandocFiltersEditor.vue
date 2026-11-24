@@ -148,11 +148,12 @@ function filterSelection(
 function filterFromSelection(
   selection: PandocLuaResourceSelection,
 ): string | PandocFilter {
+  const pathlessResource = selection.path.replace(/^.*[\\/]/, '');
   return Object.keys(selection.metadata).length === 0 &&
     Object.keys(selection.variables).length === 0
-    ? selection.path
+    ? pathlessResource
     : {
-        name: selection.path,
+        name: pathlessResource,
         ...(Object.keys(selection.metadata).length > 0 && {
           metadata: selection.metadata,
         }),
