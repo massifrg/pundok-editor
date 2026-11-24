@@ -75,6 +75,7 @@
 import { ref } from 'vue';
 import {
   pandocFilterName,
+  pandocParameterType,
   type FindResourceOptions,
   type PandocParameter,
   type PandocFilter,
@@ -139,7 +140,9 @@ function filterSelection(
 function stringParameter(parameter: PandocParameter): PandocParameter {
   return {
     ...parameter,
-    ...(parameter.value !== undefined && { value: String(parameter.value) }),
+    ...(parameter.value === undefined && {
+      type: pandocParameterType(parameter),
+    }),
   };
 }
 

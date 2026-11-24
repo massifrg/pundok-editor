@@ -24,9 +24,34 @@ function migratePandocOptions(options) {
 }
 
 function migratePandocParameterList(parameters) {
-  if (parameters === undefined || Array.isArray(parameters)) return parameters;
+  if (parameters === undefined) return parameters;
+  if (Array.isArray(parameters)) {
+    return parameters.map((parameter) => {
+      if (!parameter || typeof parameter !== 'object') return parameter;
+      const migrated =
+        parameter.value === undefined && parameter.type === undefined
+          ? { ...parameter, type: 'string' }
+          : { ...parameter };
+      if (migrated.type === 'json' && typeof migrated.value === 'string') {
+        const parsed = parseJsonObject(migrated.value);
+        if (parsed !== undefined) migrated.value = parsed;
+      }
+      return migrated;
+    });
+  }
   if (!parameters || typeof parameters !== 'object') return parameters;
   return Object.entries(parameters).map(([name, value]) => ({ name, value }));
+}
+
+function parseJsonObject(value) {
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function mergePandocParameters(base, override) {

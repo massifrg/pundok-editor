@@ -49,11 +49,20 @@ describe('PANDOC_OPTIONS_SPECS', () => {
           metadata: [
             { name: 'title', value: 'A title' },
             { name: 'draft', value: false },
-            { name: 'published' },
+            { name: 'published', type: 'string' },
+            { name: 'settings', type: 'json', value: { level: 2 } },
           ],
           variables: [{ name: 'flag', value: true }],
         }),
-      ).toEqual(['-M', 'title="A title"', '-V', 'flag', '--filter="filter"']);
+      ).toEqual([
+        '-M',
+        'title="A title"',
+        '-M',
+        'settings={"level":2}',
+        '-V',
+        'flag',
+        '--filter="filter"',
+      ]);
     });
   });
 
@@ -67,6 +76,24 @@ describe('PANDOC_OPTIONS_SPECS', () => {
       metadata: [{ name: 'title', value: 'A title' }],
       variables: [{ name: 'draft', value: false }],
     });
+  });
+
+  it('defaults the type of unset parameters to string', () => {
+    expect(
+      migratePandocParameters({
+        metadata: [{ name: 'title' }],
+      }),
+    ).toEqual({
+      metadata: [{ name: 'title', type: 'string' }],
+    });
+  });
+
+  it('rejects JSON arrays as object parameter values', () => {
+    expect(() =>
+      migratePandocParameters({
+        metadata: [{ name: 'settings', type: 'json', value: [] }],
+      }),
+    ).toThrow('incompatible with its type');
   });
 
   describe('PANDOC_EXTENSION_DESCRIPTIONS', () => {

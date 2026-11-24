@@ -8,11 +8,19 @@ export interface PandocFeatureOptions {
   format?: string;
 }
 
-export type ParameterType = string | boolean;
+export type ParameterType = string | boolean | object;
 
-export interface PandocParameter extends NamedAndDescribed {
-  value?: ParameterType;
-}
+export type PandocParameterType = 'boolean' | 'string' | 'json';
+
+export type PandocParameter =
+  | (NamedAndDescribed & {
+      type: PandocParameterType;
+      value?: undefined;
+    })
+  | (NamedAndDescribed & {
+      type?: PandocParameterType;
+      value: ParameterType;
+    });
 
 /** Parameters to be passed to filters and custom writers */
 export interface PandocParameters {
@@ -28,7 +36,24 @@ export interface PandocCustomWriter
   extends NamedAndDescribed, PandocParameters {}
 
 function isParameterType(value: unknown): value is ParameterType {
-  return isString(value) || typeof value === 'boolean';
+  return isString(value) || typeof value === 'boolean' || isJsonObject(value);
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function pandocParameterType(
+  parameter: Pick<PandocParameter, 'type' | 'value'>,
+): PandocParameterType {
+  return (
+    parameter.type ??
+    (typeof parameter.value === 'boolean'
+      ? 'boolean'
+      : typeof parameter.value === 'object' && parameter.value !== null
+        ? 'json'
+        : 'string')
+  );
 }
 
 /**
@@ -46,22 +71,48 @@ export function migratePandocParameterList(
         typeof (parameter as { name?: unknown }).name !== 'string'
       )
         throw new Error('Pandoc parameters must have a name');
-      const { name, description, value } = parameter as {
+      const { name, description, type, value } = parameter as {
         name: string;
         description?: unknown;
+        type?: unknown;
         value?: unknown;
       };
       if (description !== undefined && !isString(description))
         throw new Error(
           `Pandoc parameter "${name}" has an invalid description`,
         );
+      if (
+        type !== undefined &&
+        !['boolean', 'string', 'json'].includes(String(type))
+      )
+        throw new Error(`Pandoc parameter "${name}" has an invalid type`);
+      if (
+        type !== undefined &&
+        value !== undefined &&
+        ((type === 'boolean' && typeof value !== 'boolean') ||
+          (type === 'string' && !isString(value)) ||
+          (type === 'json' && !isJsonObject(value)))
+      )
+        throw new Error(
+          `Pandoc parameter "${name}" has a value incompatible with its type`,
+        );
       if (value !== undefined && !isParameterType(value))
         throw new Error(`Pandoc parameter "${name}" has an invalid value`);
+      const normalizedType =
+        type === undefined ? undefined : (type as PandocParameterType);
+      if (value === undefined) {
+        return {
+          name,
+          ...(description !== undefined && { description }),
+          type: normalizedType ?? 'string',
+        } as PandocParameter;
+      }
       return {
         name,
         ...(description !== undefined && { description }),
-        ...(value !== undefined && { value }),
-      };
+        ...(normalizedType !== undefined && { type: normalizedType }),
+        value,
+      } as PandocParameter;
     });
   }
   if (typeof parameters !== 'object' || parameters === null)
@@ -112,11 +163,12 @@ export const pandocCustomWriterName: (
 
 function paramsToOptions(option: 'M' | 'V', params?: PandocParameter[]) {
   let opts: string[] = [];
-  for (const { name, value } of params || []) {
+  for (const parameter of params || []) {
+    const { name, value } = parameter;
     if (value === undefined || (isBoolean(value) && !value)) continue;
     opts.push(`-${option}`);
-    if (isBoolean(value)) opts.push(name);
-    else if (isString(value)) opts.push(`${name}=${JSON.stringify(value)}`);
+    if (pandocParameterType(parameter) === 'boolean') opts.push(name);
+    else opts.push(`${name}=${JSON.stringify(value)}`);
   }
   return opts;
 }

@@ -332,6 +332,18 @@
     "failed": "Trasformazione fallita: {error}",
     "completed": "Trasformazione terminata."
   },
+  "transformationParameters": {
+    "title": "Parametri per {name}",
+    "edit": "Modifica parametri",
+    "availableMessage": "Questi sono i parametri che puoi impostare:",
+    "metadata": "metadato",
+    "variables": "variabile",
+    "requiredMessage": "La trasformazione richiede che questi parametri siano impostati:",
+    "required": "È necessario un valore.",
+    "invalidJson": "Inserisci un oggetto JSON valido.",
+    "cancel": "Annulla trasformazione",
+    "proceed": "Procedi"
+  },
   "compact": "compatta",
   "convert": "converti",
   "configEditor": {
@@ -674,7 +686,9 @@
         "metadata": "Metadato",
         "parameterName": "Nome",
         "parameterDescription": "Descrizione",
+        "parameterType": "Tipo",
         "parameterValue": "Valore",
+        "invalidJson": "Inserisci un oggetto JSON valido.",
         "provenance": {
           "project": "Risorsa del progetto",
           "configuration": "Configurazione ereditata",
@@ -697,7 +711,9 @@
         "metadata": "Metadato",
         "parameterName": "Nome",
         "parameterDescription": "Descrizione",
+        "parameterType": "Tipo",
         "parameterValue": "Valore",
+        "invalidJson": "Inserisci un oggetto JSON valido.",
         "provenance": {
           "project": "Risorsa del progetto",
           "configuration": "Configurazione ereditata",

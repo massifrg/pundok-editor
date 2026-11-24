@@ -80,6 +80,51 @@ function legacyPandocOptionSuggestion(options) {
   return JSON.stringify(migrated);
 }
 
+function findPandocParameterIssues(value, path = '') {
+  const issues = [];
+  if (!value || typeof value !== 'object') return issues;
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      issues.push(...findPandocParameterIssues(item, `${path}/${index}`));
+    });
+    return issues;
+  }
+
+  for (const [key, child] of Object.entries(value)) {
+    const childPath = `${path}/${key}`;
+    if (['metadata', 'variables'].includes(key) && Array.isArray(child)) {
+      child.forEach((parameter, index) => {
+        if (!parameter || typeof parameter !== 'object') return;
+        const parameterPath = `${childPath}/${index}`;
+        if (!Object.hasOwn(parameter, 'value')) return;
+        const parameterType = parameter.type;
+        const valid =
+          parameterType === 'boolean'
+            ? typeof parameter.value === 'boolean'
+            : parameterType === 'string'
+              ? typeof parameter.value === 'string'
+              : parameterType === 'json'
+                ? isJsonObject(parameter.value)
+                : true;
+        if (!valid) {
+          issues.push({
+            instancePath: parameterPath,
+            keyword: 'parameterType',
+            message: `type "${parameterType}" does not match the parameter value`,
+            params: {},
+          });
+        }
+      });
+    }
+    issues.push(...findPandocParameterIssues(child, childPath));
+  }
+  return issues;
+}
+
+function isJsonObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value);
+}
+
 function findLegacySyntaxes(value, path = '') {
   const warnings = [];
   if (!value || typeof value !== 'object') return warnings;
@@ -137,8 +182,24 @@ function findLegacySyntaxes(value, path = '') {
       !Array.isArray(child)
     ) {
       warnings.push(
-        `${childPath}: legacy Pandoc parameter map; use an array of { name, description?, value? } objects`,
+        `${childPath}: legacy Pandoc parameter map; use an array of { name, description?, type?, value? } objects`,
       );
+    } else if (
+      ['metadata', 'variables'].includes(key) &&
+      Array.isArray(child)
+    ) {
+      child.forEach((parameter, index) => {
+        if (
+          parameter &&
+          parameter.type === 'json' &&
+          typeof parameter.value === 'string' &&
+          isJsonObject(parseJsonObject(parameter.value))
+        ) {
+          warnings.push(
+            `${childPath}/${index}/value: stringified JSON parameter; use an object value`,
+          );
+        }
+      });
     } else if (
       ['capitalize', 'addMarks', 'addStyles', 'addSpans'].includes(key)
     ) {
@@ -149,6 +210,17 @@ function findLegacySyntaxes(value, path = '') {
     warnings.push(...findLegacySyntaxes(child, childPath));
   }
   return warnings;
+}
+
+function parseJsonObject(value) {
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function loadValidationSchema({
@@ -205,6 +277,7 @@ export async function checkJsonFile({
     validationSchema,
   );
   const errors = [...(validate.errors ?? [])];
+  errors.push(...findPandocParameterIssues(value));
   if (
     schemaDefinition === 'PundokEditorProject' &&
     value &&

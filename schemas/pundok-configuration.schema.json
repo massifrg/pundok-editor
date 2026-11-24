@@ -38,7 +38,10 @@
           "type": "array"
         }
       },
-      "required": ["SingleQuote", "DoubleQuote"],
+      "required": [
+        "SingleQuote",
+        "DoubleQuote"
+      ],
       "type": "object"
     },
     "Automation": {
@@ -56,12 +59,19 @@
           "$ref": "#/definitions/AutomationType"
         }
       },
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "type": "object"
     },
     "AutomationType": {
       "description": "Types of automations available:\n- `elements-selection`: selections of nodes or marks with CSS-like selectors\n- `pandoc-filter`: apply a pandoc filter to this document or to another document and     + replace the current document with the result     + or append/prepend the result to the current document\n- `search-replace`: define a search/replace operation",
-      "enum": ["elements-selection", "pandoc-filter", "search-replace"],
+      "enum": [
+        "elements-selection",
+        "pandoc-filter",
+        "search-replace"
+      ],
       "type": "string"
     },
     "BasePundokEditorProjectConfig": {
@@ -316,7 +326,11 @@
         },
         "operation": {
           "description": "When where is defined, what kind of operation to perform",
-          "enum": ["append", "update", "delete"],
+          "enum": [
+            "append",
+            "update",
+            "delete"
+          ],
           "type": "string"
         },
         "projectPath": {
@@ -328,7 +342,10 @@
           "type": "string"
         }
       },
-      "required": ["value", "operation"],
+      "required": [
+        "value",
+        "operation"
+      ],
       "type": "object"
     },
     "CustomAttribute": {
@@ -338,7 +355,9 @@
         "appliesTo": {
           "description": "the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`)",
           "items": {
-            "type": ["string"]
+            "type": [
+              "string"
+            ]
           },
           "type": "array"
         },
@@ -352,7 +371,12 @@
         },
         "editAs": {
           "description": "attributes are usually edited in a text field, but you can customize the editor for a different type (e.g. a date, an integer)",
-          "enum": ["string", "number", "date", "time"],
+          "enum": [
+            "string",
+            "number",
+            "date",
+            "time"
+          ],
           "type": "string"
         },
         "name": {
@@ -374,7 +398,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "type": "object"
     },
     "CustomClass": {
@@ -384,7 +410,9 @@
         "appliesTo": {
           "description": "the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`)",
           "items": {
-            "type": ["string"]
+            "type": [
+              "string"
+            ]
           },
           "type": "array"
         },
@@ -404,7 +432,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "type": "object"
     },
     "CustomMetadata": {
@@ -424,7 +454,10 @@
           "$ref": "#/definitions/MetaValueName"
         }
       },
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "type": "object"
     },
     "CustomStyleDef": {
@@ -494,12 +527,17 @@
           "type": "string"
         }
       },
-      "required": ["appliesTo", "name"],
+      "required": [
+        "appliesTo",
+        "name"
+      ],
       "type": "object"
     },
     "CustomizableElement": {
       "description": "The type names of `Node`s and `Mark`s (representing Pandoc `Block`s or `Inline`s) that can be customized through a custom style or a custom class. The custom style will be stored in the `custom-style` attribute of the element `Attr`, the custom class will be one of the `classes` of the element `Attr`.",
-      "type": ["string"]
+      "type": [
+        "string"
+      ]
     },
     "ExternalInputConverter": {
       "additionalProperties": false,
@@ -544,7 +582,13 @@
           "type": "string"
         }
       },
-      "required": ["command", "commandArgs", "extensions", "name", "type"],
+      "required": [
+        "command",
+        "commandArgs",
+        "extensions",
+        "name",
+        "type"
+      ],
       "type": "object"
     },
     "Index": {
@@ -588,11 +632,17 @@
           "type": "string"
         }
       },
-      "required": ["indexName", "refClass"],
+      "required": [
+        "indexName",
+        "refClass"
+      ],
       "type": "object"
     },
     "IndexRefPlacement": {
-      "enum": ["before", "after"],
+      "enum": [
+        "before",
+        "after"
+      ],
       "type": "string"
     },
     "InputConverter": {
@@ -640,7 +690,10 @@
           "type": "string"
         }
       },
-      "required": ["format", "content"],
+      "required": [
+        "format",
+        "content"
+      ],
       "type": "object"
     },
     "MarkerConversion": {
@@ -708,7 +761,9 @@
           "type": "string"
         }
       },
-      "required": ["noteType"],
+      "required": [
+        "noteType"
+      ],
       "type": "object"
     },
     "OutputConverter": {
@@ -746,7 +801,9 @@
           "type": "array"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "type": "object"
     },
     "PandocInputConverter": {
@@ -814,7 +871,12 @@
           "type": "string"
         }
       },
-      "required": ["extensions", "format", "name", "type"],
+      "required": [
+        "extensions",
+        "format",
+        "name",
+        "type"
+      ],
       "type": "object"
     },
     "PandocOption": {
@@ -837,7 +899,11 @@
       "type": "string"
     },
     "PandocOptionValue": {
-      "type": ["string", "number", "boolean"]
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
     },
     "PandocOutputConverter": {
       "additionalProperties": false,
@@ -916,29 +982,85 @@
           "type": "string"
         }
       },
-      "required": ["format", "name", "type"],
+      "required": [
+        "format",
+        "name",
+        "type"
+      ],
       "type": "object"
     },
     "PandocParameter": {
-      "additionalProperties": false,
-      "properties": {
-        "description": {
-          "description": "An optional description of this object.",
-          "type": "string"
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "description": "An optional description of this object.",
+              "type": "string"
+            },
+            "name": {
+              "description": "The name of this object.",
+              "type": "string"
+            },
+            "type": {
+              "$ref": "#/definitions/PandocParameterType"
+            },
+            "value": {
+              "not": {}
+            }
+          },
+          "required": [
+            "name",
+            "type"
+          ],
+          "type": "object"
         },
-        "name": {
-          "description": "The name of this object.",
-          "type": "string"
-        },
-        "value": {
-          "$ref": "#/definitions/ParameterType"
+        {
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "description": "An optional description of this object.",
+              "type": "string"
+            },
+            "name": {
+              "description": "The name of this object.",
+              "type": "string"
+            },
+            "type": {
+              "$ref": "#/definitions/PandocParameterType"
+            },
+            "value": {
+              "$ref": "#/definitions/ParameterType"
+            }
+          },
+          "required": [
+            "name",
+            "value"
+          ],
+          "type": "object"
         }
-      },
-      "required": ["name"],
-      "type": "object"
+      ]
+    },
+    "PandocParameterType": {
+      "enum": [
+        "boolean",
+        "string",
+        "json"
+      ],
+      "type": "string"
     },
     "ParameterType": {
-      "type": ["string", "boolean"]
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object"
+        }
+      ]
     },
     "PrunableConfigInitField": {
       "description": "All the fields that can be inherited from configurations, but also pruned in a project.",
@@ -1093,7 +1215,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "version"],
+      "required": [
+        "name",
+        "version"
+      ],
       "type": "object"
     },
     "PundokEditorConfigType": {
@@ -1112,7 +1237,9 @@
           "type": "array"
         }
       },
-      "required": ["version"],
+      "required": [
+        "version"
+      ],
       "type": "object"
     },
     "PundokEditorProjectConfig": {
@@ -1234,7 +1361,9 @@
           "type": "string"
         }
       },
-      "required": ["remove"],
+      "required": [
+        "remove"
+      ],
       "type": "object"
     },
     "ScriptOutputConverter": {
@@ -1293,12 +1422,20 @@
           "type": "string"
         }
       },
-      "required": ["command", "commandArgs", "name", "type"],
+      "required": [
+        "command",
+        "commandArgs",
+        "name",
+        "type"
+      ],
       "type": "object"
     },
     "ShowOutputConversion": {
       "description": "The result of a conversion can be opened in the internal viewer of the editor, or with the predefined OS app for that type of file.",
-      "enum": ["editor", "os"],
+      "enum": [
+        "editor",
+        "os"
+      ],
       "type": "string"
     }
   }
