@@ -88,6 +88,22 @@ describe('PANDOC_OPTIONS_SPECS', () => {
     });
   });
 
+  it('migrates parameter ask settings', () => {
+    expect(
+      migratePandocParameters({
+        metadata: [
+          { name: 'title', ask: 'always' },
+          { name: 'author', value: 'Ada', ask: 'once' },
+        ],
+      }),
+    ).toEqual({
+      metadata: [
+        { name: 'title', type: 'string', ask: 'always' },
+        { name: 'author', value: 'Ada', ask: 'once' },
+      ],
+    });
+  });
+
   it('rejects JSON arrays as object parameter values', () => {
     expect(() =>
       migratePandocParameters({

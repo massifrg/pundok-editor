@@ -688,6 +688,10 @@
         "parameterName": "Name",
         "parameterDescription": "Description",
         "parameterType": "Type",
+        "parameterAsk": "Ask",
+        "parameterAskUnset": "Default",
+        "parameterAskAlways": "Always",
+        "parameterAskOnce": "Once",
         "parameterValue": "Value",
         "invalidJson": "Enter a valid JSON object.",
         "provenance": {
@@ -713,6 +717,10 @@
         "parameterName": "Name",
         "parameterDescription": "Description",
         "parameterType": "Type",
+        "parameterAsk": "Ask",
+        "parameterAskUnset": "Default",
+        "parameterAskAlways": "Always",
+        "parameterAskOnce": "Once",
         "parameterValue": "Value",
         "invalidJson": "Enter a valid JSON object.",
         "provenance": {

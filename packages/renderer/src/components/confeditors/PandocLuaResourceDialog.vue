@@ -147,6 +147,22 @@
                 "
               />
             </div>
+            <div class="col-auto">
+              <q-select
+                v-model="parameter.ask"
+                class="pandoc-lua-resource-dialog__parameter-ask"
+                dense
+                outlined
+                emit-value
+                map-options
+                :options="parameterAskOptions"
+                :label="
+                  $t(
+                    'configEditor.outputConverters.pandocResources.parameterAsk',
+                  )
+                "
+              />
+            </div>
             <div class="col">
               <q-input
                 v-model="parameter.name"
@@ -288,6 +304,7 @@ export type PandocLuaResourceSelection = {
 type Parameter = {
   type: 'variable' | 'metadata';
   valueType: PandocParameterType;
+  ask?: 'always' | 'once';
   name: string;
   description: string;
   value?: string | boolean | object;
@@ -324,6 +341,26 @@ const parameterTypeOptions: PandocParameterType[] = [
   'boolean',
   'json',
 ];
+const parameterAskOptions = computed(() => [
+  {
+    label: String(
+      t('configEditor.outputConverters.pandocResources.parameterAskUnset'),
+    ),
+    value: undefined,
+  },
+  {
+    label: String(
+      t('configEditor.outputConverters.pandocResources.parameterAskAlways'),
+    ),
+    value: 'always' as const,
+  },
+  {
+    label: String(
+      t('configEditor.outputConverters.pandocResources.parameterAskOnce'),
+    ),
+    value: 'once' as const,
+  },
+]);
 const previewExtensions = [
   StreamLanguage.define({
     ...lua,
@@ -390,6 +427,7 @@ watch(
         return {
           type: 'metadata' as const,
           valueType,
+          ask: parameter.ask,
           name: parameter.name,
           description: parameter.description || '',
           value:
@@ -407,6 +445,7 @@ watch(
         return {
           type: 'variable' as const,
           valueType,
+          ask: parameter.ask,
           name: parameter.name,
           description: parameter.description || '',
           value:
@@ -520,6 +559,7 @@ function select(): void {
     target.push({
       name: parameter.name.trim(),
       type: parameter.valueType,
+      ...(parameter.ask !== undefined && { ask: parameter.ask }),
       ...(parameter.description.trim() && {
         description: parameter.description.trim(),
       }),
@@ -593,6 +633,10 @@ function parseJsonParameter(
 }
 
 .pandoc-lua-resource-dialog__parameter-type {
+  width: 8rem;
+}
+
+.pandoc-lua-resource-dialog__parameter-ask {
   width: 8rem;
 }
 

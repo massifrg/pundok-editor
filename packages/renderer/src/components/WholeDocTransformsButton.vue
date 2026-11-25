@@ -135,6 +135,7 @@ import { ACTION_DOCUMENT_TRANSFORM, setActionCommand } from '../actions';
 import { getPandocFilterTransforms } from '../common';
 import type {
   PandocParameter,
+  ParameterType,
   PandocParameterType,
   PandocFilterTransform,
   TransformDocumentActionProps,
@@ -142,6 +143,8 @@ import type {
 import { pandocParameterType } from '../common';
 import { editorKeyFromState, getEditorConfiguration } from '../schema';
 import TransformationDialog from './TransformationDialog.vue';
+
+const rememberedParameterValues = new Map<string, ParameterType>();
 
 export default {
   components: { TransformationDialog },
@@ -202,19 +205,21 @@ export default {
       }
     },
     transformWith(transform: PandocFilterTransform) {
-      const pendingParameters = this.undefinedParameters(transform);
+      const preparedTransform = this.withRememberedParameters(transform);
+      const pendingParameters = this.undefinedParameters(preparedTransform);
       if (pendingParameters.length > 0) {
-        this.pendingTransform = transform;
+        this.pendingTransform = preparedTransform;
         this.pendingParameters = pendingParameters;
         this.editingParameters = false;
         this.parameterDialogVisible = true;
         return;
       }
-      this.startTransform(transform);
+      this.startTransform(preparedTransform);
     },
     editParameters(transform: PandocFilterTransform) {
-      this.pendingTransform = transform;
-      this.pendingParameters = this.parameters(transform, true);
+      const preparedTransform = this.withRememberedParameters(transform);
+      this.pendingTransform = preparedTransform;
+      this.pendingParameters = this.parameters(preparedTransform, true);
       this.editingParameters = true;
       this.parameterDialogVisible = true;
     },
@@ -237,6 +242,7 @@ export default {
       const pending: PendingParameter[] = [];
       this.collectUndefinedParameters(
         pending,
+        transform.name,
         transform.metadata,
         'transform',
         'metadata',
@@ -245,6 +251,7 @@ export default {
       );
       this.collectUndefinedParameters(
         pending,
+        transform.name,
         transform.variables,
         'transform',
         'variables',
@@ -255,6 +262,7 @@ export default {
         if (typeof filter === 'string') return;
         this.collectUndefinedParameters(
           pending,
+          transform.name,
           filter.metadata,
           'filter',
           'metadata',
@@ -263,6 +271,7 @@ export default {
         );
         this.collectUndefinedParameters(
           pending,
+          transform.name,
           filter.variables,
           'filter',
           'variables',
@@ -274,6 +283,7 @@ export default {
     },
     collectUndefinedParameters(
       pending: PendingParameter[],
+      transformName: string,
       parameters: PandocParameter[] | undefined,
       scope: 'transform' | 'filter',
       kind: 'metadata' | 'variables',
@@ -281,10 +291,19 @@ export default {
       includeDefined = false,
     ) {
       parameters?.forEach((parameter, index) => {
-        if (includeDefined || parameter.value === undefined) {
+        const key = parameterKey(
+          transformName,
+          scope,
+          kind,
+          filterIndex,
+          index,
+          parameter.name,
+        );
+        if (includeDefined || this.shouldAsk(parameter, key)) {
           const type = pandocParameterType(parameter);
           pending.push({
             scope,
+            key,
             filterIndex,
             kind,
             index,
@@ -323,6 +342,7 @@ export default {
     proceedWithParameters() {
       const transform = this.pendingTransform;
       if (!transform || !this.canProceedWithParameters) return;
+      this.rememberPendingParameters();
       const updatedTransform: PandocFilterTransform = {
         ...transform,
         metadata: this.updatedParameters(
@@ -357,6 +377,78 @@ export default {
       };
       this.cancelParameterDialog();
       this.startTransform(updatedTransform);
+    },
+    shouldAsk(parameter: PandocParameter, key: string): boolean {
+      if (parameter.ask === 'always') return true;
+      if (parameter.ask === 'once') return !rememberedParameterValues.has(key);
+      return parameter.value === undefined;
+    },
+    withRememberedParameters(
+      transform: PandocFilterTransform,
+    ): PandocFilterTransform {
+      const update = (
+        parameters: PandocParameter[] | undefined,
+        scope: 'transform' | 'filter',
+        kind: 'metadata' | 'variables',
+        filterIndex?: number,
+      ) =>
+        parameters?.map((parameter, index) => {
+          const value = rememberedParameterValues.get(
+            parameterKey(
+              transform.name,
+              scope,
+              kind,
+              filterIndex,
+              index,
+              parameter.name,
+            ),
+          );
+          return (parameter.ask === 'always' || parameter.ask === 'once') &&
+            value !== undefined
+            ? { ...parameter, value }
+            : parameter;
+        });
+      return {
+        ...transform,
+        metadata: update(transform.metadata, 'transform', 'metadata'),
+        variables: update(transform.variables, 'transform', 'variables'),
+        filters: transform.filters.map((filter, filterIndex) =>
+          typeof filter === 'string'
+            ? filter
+            : {
+                ...filter,
+                metadata: update(
+                  filter.metadata,
+                  'filter',
+                  'metadata',
+                  filterIndex,
+                ),
+                variables: update(
+                  filter.variables,
+                  'filter',
+                  'variables',
+                  filterIndex,
+                ),
+              },
+        ),
+      };
+    },
+    rememberPendingParameters() {
+      for (const pending of this.pendingParameters) {
+        if (
+          pending.parameter.ask !== 'always' &&
+          pending.parameter.ask !== 'once'
+        )
+          continue;
+        const value =
+          pending.type === 'json'
+            ? typeof pending.value === 'string'
+              ? parseJsonParameter(pending.value)
+              : undefined
+            : pending.value;
+        if (value !== undefined)
+          rememberedParameterValues.set(pending.key, value);
+      }
     },
     updatedParameters(
       parameters: PandocParameter[] | undefined,
@@ -398,9 +490,21 @@ type PendingParameter = {
   kind: 'metadata' | 'variables';
   index: number;
   parameter: PandocParameter;
+  key: string;
   type: PandocParameterType;
   value: string | boolean;
 };
+
+function parameterKey(
+  transformName: string,
+  scope: 'transform' | 'filter',
+  kind: 'metadata' | 'variables',
+  filterIndex: number | undefined,
+  index: number,
+  name: string,
+): string {
+  return `${transformName}\u0000${scope}\u0000${filterIndex ?? ''}\u0000${kind}\u0000${index}\u0000${name}`;
+}
 
 function parseJsonParameter(
   value: string,

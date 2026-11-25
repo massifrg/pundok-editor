@@ -96,6 +96,17 @@ function findPandocParameterIssues(value, path = '') {
       child.forEach((parameter, index) => {
         if (!parameter || typeof parameter !== 'object') return;
         const parameterPath = `${childPath}/${index}`;
+        if (
+          parameter.ask !== undefined &&
+          !['always', 'once'].includes(parameter.ask)
+        ) {
+          issues.push({
+            instancePath: parameterPath,
+            keyword: 'parameterAsk',
+            message: `ask value "${parameter.ask}" must be "always" or "once"`,
+            params: {},
+          });
+        }
         if (!Object.hasOwn(parameter, 'value')) return;
         const parameterType = parameter.type;
         const valid =

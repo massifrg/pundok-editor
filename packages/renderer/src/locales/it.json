@@ -687,6 +687,10 @@
         "parameterName": "Nome",
         "parameterDescription": "Descrizione",
         "parameterType": "Tipo",
+        "parameterAsk": "Richiedi",
+        "parameterAskUnset": "Predefinito",
+        "parameterAskAlways": "Sempre",
+        "parameterAskOnce": "Una volta",
         "parameterValue": "Valore",
         "invalidJson": "Inserisci un oggetto JSON valido.",
         "provenance": {
@@ -712,6 +716,10 @@
         "parameterName": "Nome",
         "parameterDescription": "Descrizione",
         "parameterType": "Tipo",
+        "parameterAsk": "Richiedi",
+        "parameterAskUnset": "Predefinito",
+        "parameterAskAlways": "Sempre",
+        "parameterAskOnce": "Una volta",
         "parameterValue": "Valore",
         "invalidJson": "Inserisci un oggetto JSON valido.",
         "provenance": {

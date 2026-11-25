@@ -12,13 +12,17 @@ export type ParameterType = string | boolean | object;
 
 export type PandocParameterType = 'boolean' | 'string' | 'json';
 
+export type PandocParameterAsk = 'always' | 'once';
+
 export type PandocParameter =
   | (NamedAndDescribed & {
       type: PandocParameterType;
+      ask?: PandocParameterAsk;
       value?: undefined;
     })
   | (NamedAndDescribed & {
       type?: PandocParameterType;
+      ask?: PandocParameterAsk;
       value: ParameterType;
     });
 
@@ -71,10 +75,11 @@ export function migratePandocParameterList(
         typeof (parameter as { name?: unknown }).name !== 'string'
       )
         throw new Error('Pandoc parameters must have a name');
-      const { name, description, type, value } = parameter as {
+      const { name, description, type, ask, value } = parameter as {
         name: string;
         description?: unknown;
         type?: unknown;
+        ask?: unknown;
         value?: unknown;
       };
       if (description !== undefined && !isString(description))
@@ -86,6 +91,8 @@ export function migratePandocParameterList(
         !['boolean', 'string', 'json'].includes(String(type))
       )
         throw new Error(`Pandoc parameter "${name}" has an invalid type`);
+      if (ask !== undefined && !['always', 'once'].includes(String(ask)))
+        throw new Error(`Pandoc parameter "${name}" has an invalid ask value`);
       if (
         type !== undefined &&
         value !== undefined &&
@@ -104,12 +111,14 @@ export function migratePandocParameterList(
         return {
           name,
           ...(description !== undefined && { description }),
+          ...(ask !== undefined && { ask }),
           type: normalizedType ?? 'string',
         } as PandocParameter;
       }
       return {
         name,
         ...(description !== undefined && { description }),
+        ...(ask !== undefined && { ask }),
         ...(normalizedType !== undefined && { type: normalizedType }),
         value,
       } as PandocParameter;
