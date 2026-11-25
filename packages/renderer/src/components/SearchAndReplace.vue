@@ -216,6 +216,7 @@ import {
 } from '../schema/helpers';
 import { mapState } from 'pinia';
 import { useActions, useBackend } from '../stores';
+import { plainIpcValue } from '../backend/ipcValue';
 import {
   ACTION_GET_PROJECT,
   ACTION_LOWERCASE,
@@ -655,9 +656,9 @@ export default {
         optionWholeWord: this.optionWholeWord,
         optionMergeSameAdjacentMarks: this.optionMergeSameAdjacentMarks,
         searchFilterSwitch: this.searchFilterSwitch,
-        filterMarkPresence: structuredClone(toRaw(this.filterMarkPresence)),
-        filterMarkAbsence: structuredClone(toRaw(this.filterMarkAbsence)),
-        actionsOnReplace: structuredClone(toRaw(this.actionsOnReplace)),
+        filterMarkPresence: plainIpcValue(this.filterMarkPresence),
+        filterMarkAbsence: plainIpcValue(this.filterMarkAbsence),
+        actionsOnReplace: plainIpcValue(this.actionsOnReplace),
       }
       if (this.searchHistory.some(existing => isEqual(existing, entry)))
         return
