@@ -197,8 +197,8 @@
                 v-else-if="field.name === 'documentTemplate'"
                 v-model="values.documentTemplate"
                 :options="documentTemplateOptions"
-                option-value="path"
-                option-label="path"
+                :option-value="templateOptionValue"
+                :option-label="templateOptionLabel"
                 :label="$t(field.label)"
                 :hint="$t(field.description)"
                 outlined
@@ -345,7 +345,6 @@ import type {
 import {
   DEFAULT_MAIN_FORMATS,
   documentPathDirName,
-  isDocumentPathAbsolute,
   pandocFormatsDefs,
   relativeDocumentPath,
 } from '../common';
@@ -375,6 +374,7 @@ import {
   notifyTimeout,
 } from './helpers';
 import { useBackend } from '../stores';
+import { makeProjectConfigPathsRelative } from './projectConfigPaths';
 
 type EditorConfigField = {
   name: keyof PundokEditorConfigInit;
@@ -1210,10 +1210,18 @@ export default {
         },
         callback: ({ path }) => {
           if (path) {
-            this.values.documentTemplate = path;
+            this.values.documentTemplate = this.project?.path
+              ? relativeDocumentPath(this.project.path, path)
+              : path;
           }
         },
       });
+    },
+    templateOptionValue(resource: ResourceFile): string {
+      return this.resourceName(resource.path);
+    },
+    templateOptionLabel(resource: ResourceFile): string {
+      return this.resourceName(resource.path);
     },
     resourceName(path: string): string {
       return path.replace(/^.*[\\/]/, '');
@@ -1257,13 +1265,11 @@ export default {
         ...(this.configuration as Record<string, any>),
         ...editorConfigValues,
       };
-      if (this.project?.path && Array.isArray(editorConfig.customCss)) {
-        editorConfig.customCss = editorConfig.customCss.map((path: string) =>
-          isDocumentPathAbsolute(path)
-            ? relativeDocumentPath(this.project!.path, path)
-            : path,
+      if (this.project?.path)
+        Object.assign(
+          editorConfig,
+          makeProjectConfigPathsRelative(this.project.path, editorConfig),
         );
-      }
       const remove: Record<string, unknown> = {
         ...((editorConfig.remove as Record<string, unknown> | undefined) || {}),
       };

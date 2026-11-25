@@ -2,6 +2,49 @@
   "$ref": "#/definitions/PundokEditorProject",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "AutoDelimitersDef": {
+      "additionalProperties": {
+        "type": "array"
+      },
+      "description": "automatic delimiters for Marks like singleQuoted or doubleQuoted,  e.g. { doubleQuoted: [ \"“\", \"”\" ], singleQuoted: [ \"‘\", \"’\" ] }",
+      "properties": {
+        "DoubleQuote": {
+          "items": [
+            {
+              "title": "open",
+              "type": "string"
+            },
+            {
+              "title": "close",
+              "type": "string"
+            }
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "SingleQuote": {
+          "items": [
+            {
+              "title": "open",
+              "type": "string"
+            },
+            {
+              "title": "close",
+              "type": "string"
+            }
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "SingleQuote",
+        "DoubleQuote"
+      ],
+      "type": "object"
+    },
     "Automation": {
       "description": "Configuration of the interface of the editor to ease the transformation of the document, like:\n- selection of nodes or marks with CSS selectors;\n- transformation of the current document with Pandoc filters;\n- search and replace operations.",
       "properties": {
@@ -132,7 +175,9 @@
         "appliesTo": {
           "description": "the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`)",
           "items": {
-            "type": "string"
+            "type": [
+              "string"
+            ]
           },
           "type": "array"
         },
@@ -146,6 +191,12 @@
         },
         "editAs": {
           "description": "attributes are usually edited in a text field, but you can customize the editor for a different type (e.g. a date, an integer)",
+          "enum": [
+            "string",
+            "number",
+            "date",
+            "time"
+          ],
           "type": "string"
         },
         "name": {
@@ -179,7 +230,9 @@
         "appliesTo": {
           "description": "the `Node`s and/or `Mark`s it's relevant to (when it's not present, it's relevant for any `Node` or `Mark`)",
           "items": {
-            "type": "string"
+            "type": [
+              "string"
+            ]
           },
           "type": "array"
         },
@@ -204,53 +257,6 @@
       ],
       "type": "object"
     },
-    "CustomInputConverter": {
-      "additionalProperties": false,
-      "properties": {
-        "default": {
-          "description": "true for the default input converter (only one can be default, otherwise it's the first encountered)",
-          "type": "boolean"
-        },
-        "description": {
-          "description": "An optional description of this object.",
-          "type": "string"
-        },
-        "extensions": {
-          "description": "input file extensions",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "feedback": {
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
-          "type": "string"
-        },
-        "icon": {
-          "description": "optional icon",
-          "type": "string"
-        },
-        "name": {
-          "description": "The name of this object.",
-          "type": "string"
-        },
-        "options": {
-          "description": "options for internal \"custom\" converters",
-          "type": "object"
-        },
-        "type": {
-          "$ref": "#/definitions/InputConverterType",
-          "description": "kind of importer (used by derived types)"
-        }
-      },
-      "required": [
-        "extensions",
-        "name",
-        "options",
-        "type"
-      ],
-      "type": "object"
-    },
     "CustomMetadata": {
       "additionalProperties": false,
       "description": "A custom metadata field in the Metadata of a Pandoc document.",
@@ -269,66 +275,6 @@
         }
       },
       "required": [
-        "name",
-        "type"
-      ],
-      "type": "object"
-    },
-    "CustomOutputConverter": {
-      "additionalProperties": false,
-      "properties": {
-        "default": {
-          "description": "true for the default output converter (only one can be default, otherwise it's the first encountered)",
-          "type": "boolean"
-        },
-        "description": {
-          "description": "An optional description of this object.",
-          "type": "string"
-        },
-        "dontAskForResultFile": {
-          "description": "don't ask for the output file, because the script knows where to save its output",
-          "type": "boolean"
-        },
-        "extension": {
-          "description": "extension of the resulting file",
-          "type": "string"
-        },
-        "feedback": {
-          "$ref": "#/definitions/FeedbackMessageType",
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
-        },
-        "format": {
-          "description": "format of the resulting output (pandoc's `-t` option)",
-          "type": "string"
-        },
-        "icon": {
-          "description": "optional icon",
-          "type": "string"
-        },
-        "longRendering": {
-          "description": "the conversion takes a long time, like the build of a project-wise product (tipically PDF)",
-          "type": "boolean"
-        },
-        "name": {
-          "description": "The name of this object.",
-          "type": "string"
-        },
-        "openResult": {
-          "$ref": "#/definitions/ShowOutputConversion",
-          "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
-        },
-        "resultFile": {
-          "description": "the path of the output file",
-          "type": "string"
-        },
-        "type": {
-          "const": "custom",
-          "description": "converter's type: pandoc, lua script, generic program or internal function",
-          "type": "string"
-        }
-      },
-      "required": [
-        "format",
         "name",
         "type"
       ],
@@ -482,10 +428,6 @@
           },
           "type": "array"
         },
-        "feedback": {
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
-          "type": "string"
-        },
         "icon": {
           "description": "optional icon",
           "type": "string"
@@ -495,8 +437,9 @@
           "type": "string"
         },
         "type": {
-          "$ref": "#/definitions/InputConverterType",
-          "description": "kind of importer (used by derived types)"
+          "const": "script",
+          "description": "kind of importer (used by derived types)",
+          "type": "string"
         }
       },
       "required": [
@@ -507,16 +450,6 @@
         "type"
       ],
       "type": "object"
-    },
-    "FeedbackMessageType": {
-      "description": "Kinds of feedback messages, from the backend to the frontend.",
-      "enum": [
-        "command-line",
-        "error",
-        "progress",
-        "success"
-      ],
-      "type": "string"
     },
     "Index": {
       "additionalProperties": false,
@@ -578,20 +511,9 @@
           "$ref": "#/definitions/PandocInputConverter"
         },
         {
-          "$ref": "#/definitions/CustomInputConverter"
-        },
-        {
           "$ref": "#/definitions/ExternalInputConverter"
         }
       ]
-    },
-    "InputConverterType": {
-      "enum": [
-        "pandoc",
-        "script",
-        "custom"
-      ],
-      "type": "string"
     },
     "InsertableRaw": {
       "additionalProperties": false,
@@ -602,9 +524,18 @@
               "type": "string"
             },
             {
-              "items": {
-                "type": "string"
-              },
+              "items": [
+                {
+                  "title": "before",
+                  "type": "string"
+                },
+                {
+                  "title": "after",
+                  "type": "string"
+                }
+              ],
+              "maxItems": 2,
+              "minItems": 2,
               "type": "array"
             }
           ],
@@ -620,7 +551,8 @@
         }
       },
       "required": [
-        "format"
+        "format",
+        "content"
       ],
       "type": "object"
     },
@@ -700,12 +632,6 @@
           "$ref": "#/definitions/PandocOutputConverter"
         },
         {
-          "$ref": "#/definitions/PandocLuaOutputConverter"
-        },
-        {
-          "$ref": "#/definitions/CustomOutputConverter"
-        },
-        {
           "$ref": "#/definitions/ScriptOutputConverter"
         }
       ]
@@ -719,26 +645,20 @@
           "type": "string"
         },
         "metadata": {
-          "additionalProperties": {
-            "type": [
-              "string",
-              "boolean"
-            ]
+          "items": {
+            "$ref": "#/definitions/PandocParameter"
           },
-          "type": "object"
+          "type": "array"
         },
         "name": {
           "description": "The name of this object.",
           "type": "string"
         },
         "variables": {
-          "additionalProperties": {
-            "type": [
-              "string",
-              "boolean"
-            ]
+          "items": {
+            "$ref": "#/definitions/PandocParameter"
           },
-          "type": "object"
+          "type": "array"
         }
       },
       "required": [
@@ -765,13 +685,30 @@
           },
           "type": "array"
         },
-        "feedback": {
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)",
-          "type": "string"
+        "filters": {
+          "description": "optional filter (pandoc's `--filter` option)",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/definitions/PandocFilter"
+              }
+            ]
+          },
+          "type": "array"
         },
         "format": {
-          "description": "a pandoc's input format or a lua script",
+          "description": "a pandoc's input format or a custom reader",
           "type": "string"
+        },
+        "formatExtensions": {
+          "description": "The extensions of the format to be used",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "icon": {
           "description": "optional icon",
@@ -782,79 +719,20 @@
           "type": "string"
         },
         "pandocOptions": {
-          "description": "extra command-line options for pandoc",
+          "description": "Extra Pandoc options, each as [name, value?].",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/PandocOption"
           },
           "type": "array"
         },
         "type": {
-          "$ref": "#/definitions/InputConverterType",
-          "description": "kind of importer (used by derived types)"
+          "const": "pandoc",
+          "description": "kind of importer (used by derived types)",
+          "type": "string"
         }
       },
       "required": [
         "extensions",
-        "format",
-        "name",
-        "type"
-      ],
-      "type": "object"
-    },
-    "PandocLuaOutputConverter": {
-      "additionalProperties": false,
-      "properties": {
-        "default": {
-          "description": "true for the default output converter (only one can be default, otherwise it's the first encountered)",
-          "type": "boolean"
-        },
-        "description": {
-          "description": "An optional description of this object.",
-          "type": "string"
-        },
-        "dontAskForResultFile": {
-          "description": "don't ask for the output file, because the script knows where to save its output",
-          "type": "boolean"
-        },
-        "extension": {
-          "description": "extension of the resulting file",
-          "type": "string"
-        },
-        "feedback": {
-          "$ref": "#/definitions/FeedbackMessageType",
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
-        },
-        "format": {
-          "description": "format of the resulting output (pandoc's `-t` option)",
-          "type": "string"
-        },
-        "icon": {
-          "description": "optional icon",
-          "type": "string"
-        },
-        "longRendering": {
-          "description": "the conversion takes a long time, like the build of a project-wise product (tipically PDF)",
-          "type": "boolean"
-        },
-        "name": {
-          "description": "The name of this object.",
-          "type": "string"
-        },
-        "openResult": {
-          "$ref": "#/definitions/ShowOutputConversion",
-          "description": "open resulting file in editor or with the OS's predefined app for that format/extension (Windows: \"start\", Linux: \"xdg-open|exo-open|gnome-open\", Mac: \"open\")"
-        },
-        "resultFile": {
-          "description": "the path of the output file",
-          "type": "string"
-        },
-        "type": {
-          "const": "lua",
-          "description": "converter's type: pandoc, lua script, generic program or internal function",
-          "type": "string"
-        }
-      },
-      "required": [
         "format",
         "name",
         "type"
@@ -906,10 +784,6 @@
           "description": "extension of the resulting file",
           "type": "string"
         },
-        "feedback": {
-          "$ref": "#/definitions/FeedbackMessageType",
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
-        },
         "filters": {
           "description": "optional filter (pandoc's `--filter` option)",
           "items": {
@@ -958,25 +832,13 @@
           },
           "type": "array"
         },
-        "pandocTemplate": {
-          "description": "pandoc template for standalone output (pandoc's `--template` option)",
-          "type": "string"
-        },
-        "referenceFile": {
-          "description": "reference file for DOCX and ODT (pandoc's `--reference-doc` option)",
-          "type": "string"
-        },
         "resultFile": {
           "description": "the path of the output file",
           "type": "string"
         },
-        "standalone": {
-          "description": "standalone output file (pandoc's `-s` option)",
-          "type": "boolean"
-        },
         "type": {
           "const": "pandoc",
-          "description": "converter's type: pandoc, lua script, generic program or internal function",
+          "description": "converter's type: pandoc or external script",
           "type": "string"
         }
       },
@@ -987,18 +849,85 @@
       ],
       "type": "object"
     },
+    "PandocParameter": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "description": "An optional description of this object.",
+              "type": "string"
+            },
+            "name": {
+              "description": "The name of this object.",
+              "type": "string"
+            },
+            "type": {
+              "$ref": "#/definitions/PandocParameterType"
+            },
+            "value": {
+              "not": {}
+            }
+          },
+          "required": [
+            "name",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "description": "An optional description of this object.",
+              "type": "string"
+            },
+            "name": {
+              "description": "The name of this object.",
+              "type": "string"
+            },
+            "type": {
+              "$ref": "#/definitions/PandocParameterType"
+            },
+            "value": {
+              "$ref": "#/definitions/ParameterType"
+            }
+          },
+          "required": [
+            "name",
+            "value"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "PandocParameterType": {
+      "enum": [
+        "boolean",
+        "string",
+        "json"
+      ],
+      "type": "string"
+    },
+    "ParameterType": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
     "PundokEditorConfig": {
       "additionalProperties": false,
       "properties": {
         "autoDelimiters": {
-          "additionalProperties": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "description": "Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote) in the editor.",
-          "type": "object"
+          "$ref": "#/definitions/AutoDelimitersDef",
+          "description": "Auto delimiters that get added to Pandoc's `Quoted(SingleQuote)` and `Quoted(DoubleQuote) in the editor."
         },
         "automations": {
           "description": "Automations, e.g. pre-defined search-replace values, to speed up transformations of the documents.",
@@ -1164,14 +1093,8 @@
           "description": "A complement to the inherited configurations",
           "properties": {
             "autoDelimiters": {
-              "additionalProperties": {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              "description": "automatic delimiters for Marks like singleQuoted or doubleQuoted, e.g. { doubleQuoted: [ \"“\", \"”\" ], singleQuoted: [ \"‘\", \"’\" ] }",
-              "type": "object"
+              "$ref": "#/definitions/AutoDelimitersDef",
+              "description": "automatic delimiters for Marks like singleQuoted or doubleQuoted, e.g. { doubleQuoted: [ \"“\", \"”\" ], singleQuoted: [ \"‘\", \"’\" ] }"
             },
             "automations": {
               "description": "predefined search&replace, macro, whatever related to automation tools",
@@ -1223,10 +1146,6 @@
               "description": "Default format when creating RawInline and RawBlock elements.",
               "type": "string"
             },
-            "description": {
-              "description": "An optional description of this object.",
-              "type": "string"
-            },
             "documentTemplate": {
               "description": "a template for new documents",
               "type": "string"
@@ -1245,20 +1164,12 @@
               },
               "type": "array"
             },
-            "isLocal": {
-              "description": "the configuration is local (this is set by the editor, it's overridden if set by the user)",
-              "type": "boolean"
-            },
             "mainFormats": {
               "description": "the names of the formats that are more visible in the GUI with this configuration",
               "items": {
                 "type": "string"
               },
               "type": "array"
-            },
-            "name": {
-              "description": "The name of this object.",
-              "type": "string"
             },
             "noteStyles": {
               "description": "styling information for different kinds of notes (footnotes, endnotes, etc.)",
@@ -1290,13 +1201,6 @@
             },
             "remove": {
               "$ref": "#/definitions/ConfigurationPruning"
-            },
-            "version": {
-              "description": "the minimal suitable version of the editor",
-              "items": {
-                "type": "number"
-              },
-              "type": "array"
             },
             "workingFormat": {
               "description": "the name of a pandoc format or an InputConverter used as default to open documents.",
@@ -1355,14 +1259,6 @@
           "description": "extension of the resulting file",
           "type": "string"
         },
-        "feedback": {
-          "$ref": "#/definitions/FeedbackMessageType",
-          "description": "asks for feedback about the conversion (i.e. the `pandoc ...` command line used for the conversion)"
-        },
-        "format": {
-          "description": "format of the resulting output (pandoc's `-t` option)",
-          "type": "string"
-        },
         "icon": {
           "description": "optional icon",
           "type": "string"
@@ -1385,14 +1281,13 @@
         },
         "type": {
           "const": "script",
-          "description": "converter's type: pandoc, lua script, generic program or internal function",
+          "description": "converter's type: pandoc or external script",
           "type": "string"
         }
       },
       "required": [
         "command",
         "commandArgs",
-        "format",
         "name",
         "type"
       ],
@@ -1408,4 +1303,3 @@
     }
   }
 }
-

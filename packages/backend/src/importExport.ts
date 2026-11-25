@@ -1,5 +1,5 @@
 import { isAbsolute, parse as parsePath, resolve } from 'node:path';
-import { isArray, isObject, isString } from 'lodash-es';
+import { isArray, isString } from 'lodash-es';
 import {
   type CxDocument,
   DEFAULT_IMPORT_PANDOC_OPTIONS,
@@ -9,14 +9,14 @@ import {
   type ExternalProgramResult,
   type PandocInputConverter,
   type PandocOutputConverter,
-  type PandocMetadata,
-  type PandocVariables,
+  type PandocParameters,
   type PundokEditorProject,
   type ScriptOutputConverter,
   isCustomInputFormat,
   isCustomOutputFormat,
   pandocFilterName,
   pandocFilterToCliOptions,
+  pandocParametersToCliOptions,
   pandocOptionsToCliOptions,
 } from '../../common/src';
 import { expandCommandArgs } from './expandCommandArgs';
@@ -270,7 +270,7 @@ export function exportWithPandoc(
           ...findOptions,
           kind: 'template',
         }) || pandocTemplate;
-      pandocOptions = pandocOptions?.map(([name, value]) =>
+      pandocOptions = (pandocOptions || []).map(([name, value]) =>
         name === 'template' ? [name, template] : [name, value],
       );
     }
@@ -323,7 +323,7 @@ export async function runWriterOnMasterFile(
   directories: BackendDirectories,
   editorProject: string | PundokEditorProject,
   writerFilename: string,
-  options?: { metadata?: PandocMetadata; variables?: PandocVariables },
+  options?: PandocParameters,
 ): Promise<string | undefined> {
   const project = isString(editorProject)
     ? (JSON.parse(editorProject) as PundokEditorProject)
@@ -344,14 +344,7 @@ export async function runWriterOnMasterFile(
 
   const args = ['-f', 'json', '-t', writer, '-L', includeDocFilter];
   args.push(`--data-dir=${encloseInDblQuotes(path)}`);
-  for (const [name, value] of Object.entries(options?.variables || {})) {
-    args.push('-V');
-    const quote = isArray(value) || isObject(value) ? "'" : '';
-    args.push(`${name}=${quote}${JSON.stringify(value)}${quote}`);
-  }
-  for (const [name, value] of Object.entries(options?.metadata || {})) {
-    args.push('-M', `${name}=${JSON.stringify(value)}`);
-  }
+  args.push(...pandocParametersToCliOptions(options || {}));
   args.push(
     `--resource-path=${pandocResourcePath(
       directories,

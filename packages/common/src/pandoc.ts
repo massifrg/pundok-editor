@@ -1,57 +1,190 @@
-import { isBoolean, isString } from "lodash";
-import { NamedAndDescribed } from "./types";
+import { isBoolean, isString } from 'lodash';
+import type { NamedAndDescribed } from './types';
 
-export type PandocFeatureName = 'input-formats' | 'output-formats' | 'extensions'
+export type PandocFeatureName =
+  'input-formats' | 'output-formats' | 'extensions';
 
 export interface PandocFeatureOptions {
   format?: string;
 }
 
-type ParameterType = string | boolean
+export type ParameterType = string | boolean | object;
+
+export type PandocParameterType = 'boolean' | 'string' | 'json';
+
+export type PandocParameter =
+  | (NamedAndDescribed & {
+      type: PandocParameterType;
+      value?: undefined;
+    })
+  | (NamedAndDescribed & {
+      type?: PandocParameterType;
+      value: ParameterType;
+    });
 
 /** Parameters to be passed to filters and custom writers */
-interface PandocParameters {
-  metadata?: Record<string, ParameterType>;
-  variables?: Record<string, ParameterType>;
+export interface PandocParameters {
+  metadata?: PandocParameter[];
+  variables?: PandocParameter[];
 }
 
 /** A pandoc filter with its specific parameters */
-export interface PandocFilter extends NamedAndDescribed, PandocParameters { }
+export interface PandocFilter extends NamedAndDescribed, PandocParameters {}
 
 /** A pandoc custom writer with its specific parameters */
-export interface PandocCustomWriter extends NamedAndDescribed, PandocParameters { }
+export interface PandocCustomWriter
+  extends NamedAndDescribed, PandocParameters {}
 
-function filterOrWriterName(fow: string | PandocFilter | PandocCustomWriter): string {
-  return isString(fow) ? fow : fow.name
+function isParameterType(value: unknown): value is ParameterType {
+  return isString(value) || typeof value === 'boolean' || isJsonObject(value);
 }
 
-export const pandocFilterName: (filter: string | PandocFilter) => string = filterOrWriterName
-export const pandocCustomWriterName: (writer: string | PandocCustomWriter) => string = filterOrWriterName
-
-function paramsToOptions(option: 'M' | 'V', params?: Record<string, ParameterType>) {
-  let opts: string[] = []
-  Object.entries(params || {}).forEach(([k, v]) => {
-    opts.push(`-${option}`)
-    if (isString(v))
-      opts.push(`${k}=${JSON.stringify(v)}`)
-    else if (isBoolean(v) && v)
-      opts.push(k)
-    else
-      opts.push(`${k}=${v.toString()}`)
-  })
-  return opts
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export const pandocParametersToCliOptions: (params: PandocParameters) => string[] =
-  (params) => ([] as string[])
+export function pandocParameterType(
+  parameter: Pick<PandocParameter, 'type' | 'value'>,
+): PandocParameterType {
+  return (
+    parameter.type ??
+    (typeof parameter.value === 'boolean'
+      ? 'boolean'
+      : typeof parameter.value === 'object' && parameter.value !== null
+        ? 'json'
+        : 'string')
+  );
+}
+
+/**
+ * Convert a parameter list or the legacy parameter map to the current format.
+ */
+export function migratePandocParameterList(
+  parameters: unknown,
+): PandocParameter[] | undefined {
+  if (parameters === undefined) return undefined;
+  if (Array.isArray(parameters)) {
+    return parameters.map((parameter) => {
+      if (
+        !parameter ||
+        typeof parameter !== 'object' ||
+        typeof (parameter as { name?: unknown }).name !== 'string'
+      )
+        throw new Error('Pandoc parameters must have a name');
+      const { name, description, type, value } = parameter as {
+        name: string;
+        description?: unknown;
+        type?: unknown;
+        value?: unknown;
+      };
+      if (description !== undefined && !isString(description))
+        throw new Error(
+          `Pandoc parameter "${name}" has an invalid description`,
+        );
+      if (
+        type !== undefined &&
+        !['boolean', 'string', 'json'].includes(String(type))
+      )
+        throw new Error(`Pandoc parameter "${name}" has an invalid type`);
+      if (
+        type !== undefined &&
+        value !== undefined &&
+        ((type === 'boolean' && typeof value !== 'boolean') ||
+          (type === 'string' && !isString(value)) ||
+          (type === 'json' && !isJsonObject(value)))
+      )
+        throw new Error(
+          `Pandoc parameter "${name}" has a value incompatible with its type`,
+        );
+      if (value !== undefined && !isParameterType(value))
+        throw new Error(`Pandoc parameter "${name}" has an invalid value`);
+      const normalizedType =
+        type === undefined ? undefined : (type as PandocParameterType);
+      if (value === undefined) {
+        return {
+          name,
+          ...(description !== undefined && { description }),
+          type: normalizedType ?? 'string',
+        } as PandocParameter;
+      }
+      return {
+        name,
+        ...(description !== undefined && { description }),
+        ...(normalizedType !== undefined && { type: normalizedType }),
+        value,
+      } as PandocParameter;
+    });
+  }
+  if (typeof parameters !== 'object' || parameters === null)
+    throw new Error('Pandoc parameters must be an array or object');
+  return Object.entries(parameters).map(([name, value]) => {
+    if (!isParameterType(value))
+      throw new Error(`Pandoc parameter "${name}" has an invalid value`);
+    return { name, value };
+  });
+}
+
+export function migratePandocParameters(
+  parameters: Partial<Record<'metadata' | 'variables', unknown>>,
+): PandocParameters {
+  const metadata = migratePandocParameterList(parameters.metadata);
+  const variables = migratePandocParameterList(parameters.variables);
+  return {
+    ...(metadata !== undefined && { metadata }),
+    ...(variables !== undefined && { variables }),
+  };
+}
+
+export function mergePandocParameters(
+  base: PandocParameter[] | undefined,
+  override: PandocParameter[] | undefined,
+): PandocParameter[] | undefined {
+  if (!base && !override) return undefined;
+  const merged = [...(base || [])];
+  for (const parameter of override || []) {
+    const index = merged.findIndex(({ name }) => name === parameter.name);
+    if (index >= 0) merged[index] = parameter;
+    else merged.push(parameter);
+  }
+  return merged;
+}
+
+function filterOrWriterName(
+  fow: string | PandocFilter | PandocCustomWriter,
+): string {
+  return isString(fow) ? fow : fow.name;
+}
+
+export const pandocFilterName: (filter: string | PandocFilter) => string =
+  filterOrWriterName;
+export const pandocCustomWriterName: (
+  writer: string | PandocCustomWriter,
+) => string = filterOrWriterName;
+
+function paramsToOptions(option: 'M' | 'V', params?: PandocParameter[]) {
+  let opts: string[] = [];
+  for (const parameter of params || []) {
+    const { name, value } = parameter;
+    if (value === undefined || (isBoolean(value) && !value)) continue;
+    opts.push(`-${option}`);
+    if (pandocParameterType(parameter) === 'boolean') opts.push(name);
+    else opts.push(`${name}=${JSON.stringify(value)}`);
+  }
+  return opts;
+}
+
+export const pandocParametersToCliOptions: (
+  params: PandocParameters,
+) => string[] = (params) =>
+  ([] as string[])
     .concat(paramsToOptions('M', params?.metadata))
-    .concat(paramsToOptions('V', params?.variables))
+    .concat(paramsToOptions('V', params?.variables));
 
 /**
  * Compute the pandoc command line options for a filter.
  * @param filter The pandoc filter.
  * @param filterPath Optional complete filter path (path + filename).
- * @returns 
+ * @returns
  */
 export function pandocFilterToCliOptions(
   filter: string | PandocFilter,
@@ -60,27 +193,29 @@ export function pandocFilterToCliOptions(
 ): string[] {
   const opts: string[] = isString(filter)
     ? []
-    : pandocParametersToCliOptions(filter)
-  const filepath = filterPath || pandocFilterName(filter)
-  const cliPath = quotePath ? JSON.stringify(filepath) : filepath
-  opts.push(`${filepath.endsWith('.lua') ? '--lua-filter' : '--filter'}=${cliPath}`)
-  return opts
+    : pandocParametersToCliOptions(migratePandocParameters(filter));
+  const filepath = filterPath || pandocFilterName(filter);
+  const cliPath = quotePath ? JSON.stringify(filepath) : filepath;
+  opts.push(
+    `${filepath.endsWith('.lua') ? '--lua-filter' : '--filter'}=${cliPath}`,
+  );
+  return opts;
 }
 
 /**
  * Compute the pandoc command line options for a custom writer.
  * @param writer The pandoc custom writer.
  * @param writerPath Optional complete writer path (path + filename).
- * @returns 
+ * @returns
  */
 export function pandocCustomWriterToCliOptions(
-  writer: string | PandocFilter,
+  writer: string | PandocCustomWriter,
   writerPath?: string,
 ): string[] {
   const opts: string[] = isString(writer)
     ? []
-    : pandocParametersToCliOptions(writer)
-  opts.push('-t')
-  opts.push(JSON.stringify(writerPath || pandocCustomWriterName(writer)))
-  return opts
+    : pandocParametersToCliOptions(migratePandocParameters(writer));
+  opts.push('-t');
+  opts.push(JSON.stringify(writerPath || pandocCustomWriterName(writer)));
+  return opts;
 }

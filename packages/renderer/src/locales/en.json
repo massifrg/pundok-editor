@@ -333,6 +333,18 @@
     "failed": "Transformation failed: {error}",
     "completed": "Transformation finished."
   },
+  "transformationParameters": {
+    "title": "Parameters for {name}",
+    "edit": "Edit parameters",
+    "availableMessage": "These are the parameters that you can set:",
+    "metadata": "metadata",
+    "variables": "variable",
+    "requiredMessage": "The transformation requires these parameters to be set:",
+    "required": "A value is required.",
+    "invalidJson": "Enter a valid JSON object.",
+    "cancel": "Cancel transformation",
+    "proceed": "Proceed"
+  },
   "compact": "compact",
   "convert": "convert",
   "configEditor": {
@@ -674,7 +686,10 @@
         "variable": "Variable",
         "metadata": "Metadata",
         "parameterName": "Name",
+        "parameterDescription": "Description",
+        "parameterType": "Type",
         "parameterValue": "Value",
+        "invalidJson": "Enter a valid JSON object.",
         "provenance": {
           "project": "Project resource",
           "configuration": "Inherited configuration",
@@ -696,7 +711,10 @@
         "variable": "Variable",
         "metadata": "Metadata",
         "parameterName": "Name",
+        "parameterDescription": "Description",
+        "parameterType": "Type",
         "parameterValue": "Value",
+        "invalidJson": "Enter a valid JSON object.",
         "provenance": {
           "project": "Project resource",
           "configuration": "Inherited configuration",

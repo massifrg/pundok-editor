@@ -75,7 +75,9 @@
 import { ref } from 'vue';
 import {
   pandocFilterName,
+  pandocParameterType,
   type FindResourceOptions,
+  type PandocParameter,
   type PandocFilter,
 } from '../../common';
 import PandocLuaResourceDialog, {
@@ -126,37 +128,36 @@ function filterSelection(
   filter: string | PandocFilter,
 ): PandocLuaResourceSelection {
   if (typeof filter === 'string') {
-    return { path: filter, metadata: {}, variables: {} };
+    return { path: filter, metadata: [], variables: [] };
   }
   return {
     path: filter.name,
-    metadata: Object.fromEntries(
-      Object.entries(filter.metadata || {}).map(([name, value]) => [
-        name,
-        String(value),
-      ]),
-    ),
-    variables: Object.fromEntries(
-      Object.entries(filter.variables || {}).map(([name, value]) => [
-        name,
-        String(value),
-      ]),
-    ),
+    metadata: (filter.metadata || []).map(stringParameter),
+    variables: (filter.variables || []).map(stringParameter),
+  };
+}
+
+function stringParameter(parameter: PandocParameter): PandocParameter {
+  return {
+    ...parameter,
+    ...(parameter.value === undefined && {
+      type: pandocParameterType(parameter),
+    }),
   };
 }
 
 function filterFromSelection(
   selection: PandocLuaResourceSelection,
 ): string | PandocFilter {
-  return Object.keys(selection.metadata).length === 0 &&
-    Object.keys(selection.variables).length === 0
-    ? selection.path
+  const pathlessResource = selection.path.replace(/^.*[\\/]/, '');
+  return selection.metadata.length === 0 && selection.variables.length === 0
+    ? pathlessResource
     : {
-        name: selection.path,
-        ...(Object.keys(selection.metadata).length > 0 && {
+        name: pathlessResource,
+        ...(selection.metadata.length > 0 && {
           metadata: selection.metadata,
         }),
-        ...(Object.keys(selection.variables).length > 0 && {
+        ...(selection.variables.length > 0 && {
           variables: selection.variables,
         }),
       };
