@@ -319,6 +319,43 @@ export function updateAttributesTiptapCommand(
   return asTiptapCommand(updateAttributesCommand(typeOrNode, callback));
 }
 
+function updateAttributesCommandForNodeSelection(
+  typeOrNode: TypeOrNode,
+  callback: UpdateNodeOrMarkCallback,
+): Command {
+  const updateAttributes = updateAttributesCommand(typeOrNode, callback);
+
+  return (state, dispatch, view) => {
+    if (!(state.selection instanceof NodeSelection)) {
+      return updateAttributes(state, dispatch, view);
+    }
+
+    const selectedNode = state.selection.node;
+    const isNode = !!(typeOrNode as ProsemirrorNode).type;
+    const nodeType = isNode
+      ? (typeOrNode as ProsemirrorNode).type
+      : nodeTypeOf(typeOrNode, state.schema);
+    const matchesNode =
+      nodeType === selectedNode.type &&
+      (!isNode || selectedNode === typeOrNode);
+
+    if (dispatch && matchesNode) {
+      const transformed = callback(selectedNode, state.selection.from);
+      if (transformed) {
+        dispatch(
+          state.tr.setNodeMarkup(
+            state.selection.from,
+            transformed.nodeType,
+            transformed.attrs,
+          ),
+        );
+      }
+    }
+
+    return true;
+  };
+}
+
 function isWrappingNode(n: ProsemirrorNode | NodeType | string) {
   const name = isString(n)
     ? n
@@ -918,7 +955,7 @@ function canMoveInside(moving: ProsemirrorNode, acceptor: ProsemirrorNode) {
 
 export function addPandocAttrClassCommand(className: string, typeOrNode?: TypeOrNode): Command {
   if (typeOrNode && className && className.length > 0)
-    return updateAttributesCommand(typeOrNode, (n) => {
+    return updateAttributesCommandForNodeSelection(typeOrNode, (n) => {
       const attrs = n.attrs;
       let classes: string[] | null | undefined = attrs.classes;
       if (classes === undefined) return undefined;
@@ -932,7 +969,7 @@ export function addPandocAttrClassCommand(className: string, typeOrNode?: TypeOr
 
 export function removePandocAttrClassCommand(className: string, typeOrNode?: TypeOrNode): Command {
   if (typeOrNode && className && className.length > 0)
-    return updateAttributesCommand(typeOrNode, (n) => {
+    return updateAttributesCommandForNodeSelection(typeOrNode, (n) => {
       const attrs = n.attrs;
       let classes: string[] | null | undefined = attrs.classes;
       if (classes === undefined) return undefined;
@@ -950,7 +987,7 @@ export function renamePandocAttrClassCommand(
   typeOrNode?: TypeOrNode
 ): Command {
   if (typeOrNode && className && className.length > 0 && newName && newName.length > 0)
-    return updateAttributesCommand(typeOrNode, (n) => {
+    return updateAttributesCommandForNodeSelection(typeOrNode, (n) => {
       const attrs = n.attrs;
       let classes: string[] | null | undefined = attrs.classes;
       if (classes === undefined) return undefined;
@@ -1006,7 +1043,7 @@ export function renamePandocAttributeTiptapCommand(attrName: string, newName: st
 
 export function addPandocAttributeCommand(attrName: string, value?: string, typeOrNode?: TypeOrNode): Command {
   if (typeOrNode && attrName && attrName.length > 0)
-    return updateAttributesCommand(typeOrNode, (n) => {
+    return updateAttributesCommandForNodeSelection(typeOrNode, (n) => {
       const attrs = n.attrs;
       let kv: Record<string, string> | null | undefined = attrs.kv;
       if (kv === undefined) return undefined;
@@ -1019,7 +1056,7 @@ export function addPandocAttributeCommand(attrName: string, value?: string, type
 
 export function removePandocAttributeCommand(attrName: string, typeOrNode?: TypeOrNode): Command {
   if (typeOrNode && attrName && attrName.length > 0)
-    return updateAttributesCommand(typeOrNode, (n) => {
+    return updateAttributesCommandForNodeSelection(typeOrNode, (n) => {
       const attrs = n.attrs;
       let kv: Record<string, string> | null | undefined = attrs.kv;
       if (!isObject(kv)) return undefined;
@@ -1033,7 +1070,7 @@ export function removePandocAttributeCommand(attrName: string, typeOrNode?: Type
 
 export function renamePandocAttributeCommand(attrName: string, newName: string, typeOrNode?: TypeOrNode): Command {
   if (typeOrNode && attrName && attrName.length > 0)
-    return updateAttributesCommand(typeOrNode, (n) => {
+    return updateAttributesCommandForNodeSelection(typeOrNode, (n) => {
       const attrs = n.attrs;
       let kv: Record<string, string> | null | undefined = attrs.kv;
       if (!isObject(kv)) return undefined;
