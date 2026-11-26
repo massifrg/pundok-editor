@@ -8,7 +8,12 @@ export interface PandocFeatureOptions {
   format?: string;
 }
 
-export type ParameterTree = string | boolean | ParameterTreeObject;
+export type ParameterTree =
+  string | number | boolean | null | ParameterTreeArray | ParameterTreeObject;
+
+export interface ParameterTreeArray extends Array<ParameterTree> {
+  [index: number]: ParameterTree;
+}
 
 export interface ParameterTreeObject {
   [key: string]: ParameterTree;
@@ -45,9 +50,14 @@ export interface PandocFilter extends NamedAndDescribed, PandocParameters {}
 export interface PandocCustomWriter
   extends NamedAndDescribed, PandocParameters {}
 
-function isParameterType(value: unknown): value is ParameterType {
+export function isParameterType(value: unknown): value is ParameterType {
   return (
-    isString(value) || typeof value === 'boolean' || isParameterObject(value)
+    value === null ||
+    isString(value) ||
+    (typeof value === 'number' && Number.isFinite(value)) ||
+    typeof value === 'boolean' ||
+    (Array.isArray(value) && value.every(isParameterType)) ||
+    isParameterObject(value)
   );
 }
 
@@ -69,9 +79,9 @@ export function pandocParameterType(
     parameter.type ??
     (typeof parameter.value === 'boolean'
       ? 'boolean'
-      : typeof parameter.value === 'object' && parameter.value !== null
-        ? 'json'
-        : 'string')
+      : typeof parameter.value === 'string'
+        ? 'string'
+        : 'json')
   );
 }
 
@@ -113,7 +123,7 @@ export function migratePandocParameterList(
         value !== undefined &&
         ((type === 'boolean' && typeof value !== 'boolean') ||
           (type === 'string' && !isString(value)) ||
-          (type === 'json' && !isParameterObject(value)))
+          (type === 'json' && !isParameterType(value)))
       )
         throw new Error(
           `Pandoc parameter "${name}" has a value incompatible with its type`,

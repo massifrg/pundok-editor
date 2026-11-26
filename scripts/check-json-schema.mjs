@@ -115,7 +115,7 @@ export function findPandocParameterIssues(value, path = '') {
             : parameterType === 'string'
               ? typeof parameter.value === 'string'
               : parameterType === 'json'
-                ? isJsonObject(parameter.value)
+                ? isJsonValue(parameter.value)
                 : true;
         if (!valid) {
           issues.push({
@@ -132,17 +132,13 @@ export function findPandocParameterIssues(value, path = '') {
   return issues;
 }
 
-function isJsonObject(value) {
+function isJsonValue(value) {
   return (
-    value !== null &&
-    typeof value === 'object' &&
-    !Array.isArray(value) &&
-    Object.values(value).every(
-      (child) =>
-        typeof child === 'string' ||
-        typeof child === 'boolean' ||
-        isJsonObject(child),
-    )
+    value === null ||
+    ['string', 'boolean'].includes(typeof value) ||
+    (typeof value === 'number' && Number.isFinite(value)) ||
+    (Array.isArray(value) && value.every(isJsonValue)) ||
+    (typeof value === 'object' && Object.values(value).every(isJsonValue))
   );
 }
 
@@ -214,10 +210,10 @@ function findLegacySyntaxes(value, path = '') {
           parameter &&
           parameter.type === 'json' &&
           typeof parameter.value === 'string' &&
-          isJsonObject(parseJsonObject(parameter.value))
+          parseJsonValue(parameter.value) !== undefined
         ) {
           warnings.push(
-            `${childPath}/${index}/value: stringified JSON parameter; use an object value`,
+            `${childPath}/${index}/value: stringified JSON parameter; use its parsed JSON value`,
           );
         }
       });
@@ -233,12 +229,10 @@ function findLegacySyntaxes(value, path = '') {
   return warnings;
 }
 
-function parseJsonObject(value) {
+function parseJsonValue(value) {
   try {
     const parsed = JSON.parse(value);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? parsed
-      : undefined;
+    return isJsonValue(parsed) ? parsed : undefined;
   } catch {
     return undefined;
   }

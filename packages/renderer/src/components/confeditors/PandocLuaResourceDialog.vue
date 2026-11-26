@@ -300,7 +300,7 @@ import type {
   ResourceSearchMode,
   ResourceType,
 } from '../../common';
-import { isParameterObject, pandocParameterType } from '../../common';
+import { isParameterType, pandocParameterType } from '../../common';
 import { useBackend } from '../../stores';
 import ParameterTreeEditor from '../ParameterTreeEditor.vue';
 
@@ -446,7 +446,7 @@ watch(
               ? undefined
               : valueType === 'boolean'
                 ? parameter.value === true
-                : valueType === 'json' && isParameterObject(parameter.value)
+                : valueType === 'json' && isParameterType(parameter.value)
                   ? parameter.value
                   : String(parameter.value),
         };
@@ -464,7 +464,7 @@ watch(
               ? undefined
               : valueType === 'boolean'
                 ? parameter.value === true
-                : valueType === 'json' && isParameterObject(parameter.value)
+                : valueType === 'json' && isParameterType(parameter.value)
                   ? parameter.value
                   : String(parameter.value),
         };
@@ -561,10 +561,8 @@ function changeParameterValueType(
     valueType === 'boolean' ? false : valueType === 'json' ? undefined : '';
 }
 
-function parameterObject(
-  value: ParameterType | undefined,
-): Record<string, ParameterTree> {
-  return isParameterObject(value) ? value : {};
+function parameterObject(value: ParameterType | undefined): ParameterTree {
+  return isParameterType(value) ? value : {};
 }
 
 function select(): void {
@@ -595,7 +593,7 @@ function parameterValueIsValid(parameter: Parameter): boolean {
   return (
     parameter.valueType !== 'json' ||
     parameter.value === undefined ||
-    isParameterObject(parameter.value)
+    isParameterType(parameter.value)
   );
 }
 </script>

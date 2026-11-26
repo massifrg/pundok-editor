@@ -846,12 +846,27 @@
           "type": "string"
         },
         {
+          "type": "number"
+        },
+        {
           "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/definitions/ParameterTreeArray"
         },
         {
           "$ref": "#/definitions/ParameterTreeObject"
         }
       ]
+    },
+    "ParameterTreeArray": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ParameterTree"
+      }
     },
     "ParameterTreeObject": {
       "additionalProperties": {

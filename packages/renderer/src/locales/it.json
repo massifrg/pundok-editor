@@ -347,7 +347,7 @@
     "tree": "Albero",
     "text": "Testo",
     "json": "Oggetto JSON",
-    "invalidJson": "Inserisci un oggetto JSON contenente solo stringhe, booleani e oggetti annidati.",
+    "invalidJson": "Inserisci un valore JSON valido.",
     "key": "Chiave",
     "type": "Tipo",
     "value": "Valore",
@@ -361,11 +361,14 @@
     "expandAll": "Espandi tutto",
     "collapseAll": "Comprimi tutto",
     "search": "Cerca chiavi e valori",
-    "properties": "proprietà",
+    "items": "elementi",
     "noMatches": "Nessuna proprietà corrispondente.",
     "types": {
       "string": "Testo",
+      "number": "Numero",
       "boolean": "Booleano",
+      "null": "Null",
+      "array": "Array",
       "object": "Oggetto"
     }
   },

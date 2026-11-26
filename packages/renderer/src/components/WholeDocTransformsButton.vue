@@ -93,7 +93,7 @@
           <ParameterTreeEditor
             v-else-if="parameter.type === 'json'"
             :model-value="
-              isParameterObject(parameter.value) ? parameter.value : {}
+              isParameterType(parameter.value) ? parameter.value : {}
             "
             :label="`${$t(`transformationParameters.${parameter.kind}`)}: ${parameter.parameter.name}`"
             :hint="parameter.parameter.description"
@@ -149,7 +149,7 @@ import type {
   PandocFilterTransform,
   TransformDocumentActionProps,
 } from '../common';
-import { isParameterObject, pandocParameterType } from '../common';
+import { isParameterType, pandocParameterType } from '../common';
 import { editorKeyFromState, getEditorConfiguration } from '../schema';
 import ParameterTreeEditor from './ParameterTreeEditor.vue';
 import TransformationDialog from './TransformationDialog.vue';
@@ -323,7 +323,7 @@ export default {
               type === 'boolean'
                 ? parameter.value === true
                 : type === 'json'
-                  ? isParameterObject(parameter.value)
+                  ? isParameterType(parameter.value)
                     ? parameter.value
                     : {}
                   : parameter.value === undefined
@@ -500,7 +500,7 @@ function parameterKey(
 
 function isPendingParameterValid(parameter: PendingParameter): boolean {
   if (parameter.type === 'boolean') return true;
-  if (parameter.type === 'json') return isParameterObject(parameter.value);
+  if (parameter.type === 'json') return isParameterType(parameter.value);
   return typeof parameter.value === 'string' && !!parameter.value.trim();
 }
 </script>

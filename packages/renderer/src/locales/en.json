@@ -348,7 +348,7 @@
     "tree": "Tree",
     "text": "Text",
     "json": "JSON object",
-    "invalidJson": "Enter a JSON object containing only strings, booleans, and nested objects.",
+    "invalidJson": "Enter a valid JSON value.",
     "key": "Key",
     "type": "Type",
     "value": "Value",
@@ -362,11 +362,14 @@
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
     "search": "Search keys and values",
-    "properties": "properties",
+    "items": "items",
     "noMatches": "No matching properties.",
     "types": {
       "string": "String",
+      "number": "Number",
       "boolean": "Boolean",
+      "null": "Null",
+      "array": "Array",
       "object": "Object"
     }
   },

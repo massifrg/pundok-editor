@@ -36,7 +36,7 @@ function migratePandocParameterList(parameters) {
           ? { ...parameter, type: 'string' }
           : { ...parameter };
       if (migrated.type === 'json' && typeof migrated.value === 'string') {
-        const parsed = parseJsonObject(migrated.value);
+        const parsed = parseJsonValue(migrated.value);
         if (parsed !== undefined) migrated.value = parsed;
       }
       return migrated;
@@ -46,26 +46,22 @@ function migratePandocParameterList(parameters) {
   return Object.entries(parameters).map(([name, value]) => ({ name, value }));
 }
 
-function parseJsonObject(value) {
+function parseJsonValue(value) {
   try {
     const parsed = JSON.parse(value);
-    return isParameterObject(parsed) ? parsed : undefined;
+    return isJsonValue(parsed) ? parsed : undefined;
   } catch {
     return undefined;
   }
 }
 
-function isParameterObject(value) {
+function isJsonValue(value) {
   return (
-    value !== null &&
-    typeof value === 'object' &&
-    !Array.isArray(value) &&
-    Object.values(value).every(
-      (child) =>
-        typeof child === 'string' ||
-        typeof child === 'boolean' ||
-        isParameterObject(child),
-    )
+    value === null ||
+    ['string', 'boolean'].includes(typeof value) ||
+    (typeof value === 'number' && Number.isFinite(value)) ||
+    (Array.isArray(value) && value.every(isJsonValue)) ||
+    (typeof value === 'object' && Object.values(value).every(isJsonValue))
   );
 }
 

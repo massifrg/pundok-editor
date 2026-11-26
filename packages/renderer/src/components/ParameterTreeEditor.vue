@@ -66,7 +66,46 @@
       @update:model-value="updateText(String($event ?? ''))"
     />
     <div v-else class="parameter-tree-editor__tree">
-      <div class="parameter-tree-editor__brace">{</div>
+      <div v-if="isContainer(modelValue)" class="parameter-tree-editor__brace">
+        {{ openingBrace }}
+      </div>
+      <div v-else class="parameter-tree-editor__root-row">
+        <q-select
+          :model-value="valueType(modelValue)"
+          dense
+          borderless
+          emit-value
+          map-options
+          :options="typeOptions"
+          class="parameter-tree-editor__type"
+          :aria-label="$t('parameterTree.type')"
+          @update:model-value="changeRootType($event)"
+        />
+        <q-input
+          v-if="typeof modelValue === 'string'"
+          :model-value="modelValue"
+          dense
+          borderless
+          class="parameter-tree-editor__value parameter-tree-editor__value--string"
+          @update:model-value="emit('update:modelValue', String($event ?? ''))"
+        />
+        <q-input
+          v-else-if="typeof modelValue === 'number'"
+          :model-value="modelValue"
+          type="number"
+          dense
+          borderless
+          class="parameter-tree-editor__value parameter-tree-editor__value--number"
+          @update:model-value="emit('update:modelValue', Number($event))"
+        />
+        <q-checkbox
+          v-else-if="typeof modelValue === 'boolean'"
+          :model-value="modelValue"
+          dense
+          @update:model-value="emit('update:modelValue', $event === true)"
+        />
+        <span v-else class="parameter-tree-editor__null">null</span>
+      </div>
       <div
         v-for="([key, value], index) in visibleEntries"
         :key="index"
@@ -77,7 +116,7 @@
           :class="{ 'parameter-tree-editor__row--match': matches(key, value) }"
         >
           <q-btn
-            v-if="isObject(value)"
+            v-if="isContainer(value)"
             dense
             flat
             round
@@ -96,6 +135,7 @@
           <span v-else class="parameter-tree-editor__toggle-placeholder" />
 
           <q-input
+            v-if="isObject(modelValue)"
             :model-value="key"
             dense
             borderless
@@ -104,6 +144,7 @@
             :aria-label="$t('parameterTree.key')"
             @update:model-value="renameEntry(key, $event)"
           />
+          <span v-else class="parameter-tree-editor__index">[{{ key }}]</span>
           <span class="parameter-tree-editor__colon">:</span>
 
           <q-input
@@ -123,15 +164,28 @@
             :aria-label="$t('parameterTree.value')"
             @update:model-value="changeValue(key, $event === true)"
           />
+          <q-input
+            v-else-if="typeof value === 'number'"
+            :model-value="value"
+            type="number"
+            dense
+            borderless
+            class="parameter-tree-editor__value parameter-tree-editor__value--number"
+            :aria-label="$t('parameterTree.value')"
+            @update:model-value="changeValue(key, Number($event))"
+          />
+          <span v-else-if="value === null" class="parameter-tree-editor__null">
+            null
+          </span>
           <button
             v-else
             type="button"
             class="parameter-tree-editor__summary"
             @click="toggle(key)"
           >
-            {{
-              `{ ${Object.keys(value).length} ${$t('parameterTree.properties')} }`
-            }}
+            {{ Array.isArray(value) ? '[' : '{' }}
+            {{ Object.keys(value).length }} {{ $t('parameterTree.items') }}
+            {{ Array.isArray(value) ? ']' : '}' }}
           </button>
 
           <q-space />
@@ -148,7 +202,7 @@
               @update:model-value="changeType(key, $event)"
             />
             <q-btn
-              v-if="isObject(value)"
+              v-if="isContainer(value)"
               dense
               flat
               round
@@ -199,7 +253,7 @@
           </div>
         </div>
         <ParameterTreeEditor
-          v-if="isObject(value) && isExpanded(key)"
+          v-if="isContainer(value) && isExpanded(key)"
           nested
           :model-value="value"
           :search-term="search"
@@ -213,8 +267,11 @@
       >
         {{ $t('parameterTree.noMatches') }}
       </div>
-      <div class="parameter-tree-editor__footer row items-center">
-        <div>}</div>
+      <div
+        v-if="isContainer(modelValue)"
+        class="parameter-tree-editor__footer row items-center"
+      >
+        <div>{{ closingBrace }}</div>
         <q-btn
           dense
           flat
@@ -234,12 +291,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { isParameterObject } from '../common';
+import { isParameterObject, isParameterType } from '../common';
 import type { ParameterTree } from '../common';
+
+type ParameterContainer = ParameterTree[] | Record<string, ParameterTree>;
+type ParameterTreeType =
+  'string' | 'number' | 'boolean' | 'null' | 'array' | 'object';
 
 const props = withDefaults(
   defineProps<{
-    modelValue: Record<string, ParameterTree>;
+    modelValue: ParameterTree;
     label?: string;
     hint?: string;
     nested?: boolean;
@@ -256,7 +317,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  'update:modelValue': [value: Record<string, ParameterTree>];
+  'update:modelValue': [value: ParameterTree];
 }>();
 
 const { t } = useI18n();
@@ -268,7 +329,15 @@ const localExpansionCommand = ref<{ version: number; expanded: boolean }>();
 const activeExpansionCommand = computed(
   () => props.expansionCommand ?? localExpansionCommand.value,
 );
-const entries = computed(() => Object.entries(props.modelValue));
+const entries = computed(() =>
+  isContainer(props.modelValue) ? Object.entries(props.modelValue) : [],
+);
+const openingBrace = computed(() =>
+  Array.isArray(props.modelValue) ? '[' : '{',
+);
+const closingBrace = computed(() =>
+  Array.isArray(props.modelValue) ? ']' : '}',
+);
 const filter = computed(() => props.searchTerm || search.value);
 const visibleEntries = computed(() =>
   filter.value
@@ -276,10 +345,12 @@ const visibleEntries = computed(() =>
     : entries.value,
 );
 const typeOptions = computed(() =>
-  (['string', 'boolean', 'object'] as const).map((value) => ({
-    label: String(t(`parameterTree.types.${value}`)),
-    value,
-  })),
+  (['string', 'number', 'boolean', 'null', 'array', 'object'] as const).map(
+    (value) => ({
+      label: String(t(`parameterTree.types.${value}`)),
+      value,
+    }),
+  ),
 );
 const editModeOptions = computed(() => [
   {
@@ -292,7 +363,7 @@ const editModeOptions = computed(() => [
   },
 ]);
 const textError = computed(() => {
-  if (parseObject(textValue.value) !== undefined) return '';
+  if (parseValue(textValue.value) !== undefined) return '';
   return String(t('parameterTree.invalidJson'));
 });
 
@@ -305,7 +376,7 @@ watch(
 watch(
   () => props.modelValue,
   (value) => {
-    const parsed = parseObject(textValue.value);
+    const parsed = parseValue(textValue.value);
     if (
       parsed === undefined ||
       JSON.stringify(parsed) !== JSON.stringify(value)
@@ -315,10 +386,10 @@ watch(
   { deep: true, immediate: true },
 );
 
-function parseObject(value: string): Record<string, ParameterTree> | undefined {
+function parseValue(value: string): ParameterTree | undefined {
   try {
     const parsed: unknown = JSON.parse(value);
-    return isParameterObject(parsed) ? parsed : undefined;
+    return isParameterType(parsed) ? parsed : undefined;
   } catch {
     return undefined;
   }
@@ -326,7 +397,7 @@ function parseObject(value: string): Record<string, ParameterTree> | undefined {
 
 function updateText(value: string): void {
   textValue.value = value;
-  const parsed = parseObject(value);
+  const parsed = parseValue(value);
   if (parsed !== undefined) emit('update:modelValue', parsed);
 }
 
@@ -338,7 +409,7 @@ function applyExpansionCommand(
     ? new Set()
     : new Set(
         entries.value
-          .filter(([, value]) => isObject(value))
+          .filter(([, value]) => isContainer(value))
           .map(([key]) => key),
       );
 }
@@ -349,18 +420,36 @@ function isObject(
   return isParameterObject(value);
 }
 
-function valueType(value: ParameterTree): 'string' | 'boolean' | 'object' {
+function isContainer(value: ParameterTree): value is ParameterContainer {
+  return Array.isArray(value) || isObject(value);
+}
+
+function valueType(value: ParameterTree): ParameterTreeType {
+  if (Array.isArray(value)) return 'array';
   if (isObject(value)) return 'object';
+  if (value === null) return 'null';
+  if (typeof value === 'number') return 'number';
   return typeof value === 'boolean' ? 'boolean' : 'string';
 }
 
 function emitEntry(key: string, value: ParameterTree): void {
-  emit('update:modelValue', { ...props.modelValue, [key]: value });
+  if (Array.isArray(props.modelValue)) {
+    const next = [...props.modelValue];
+    next[Number(key)] = value;
+    emit('update:modelValue', next);
+  } else if (isObject(props.modelValue)) {
+    emit('update:modelValue', { ...props.modelValue, [key]: value });
+  }
 }
 
 function renameEntry(key: string, nextValue: unknown): void {
   const nextKey = String(nextValue ?? '');
-  if (nextKey === key || Object.hasOwn(props.modelValue, nextKey)) return;
+  if (
+    !isObject(props.modelValue) ||
+    nextKey === key ||
+    Object.hasOwn(props.modelValue, nextKey)
+  )
+    return;
   const renamed = Object.fromEntries(
     entries.value.map(([entryKey, value]) => [
       entryKey === key ? nextKey : entryKey,
@@ -374,40 +463,91 @@ function changeValue(key: string, value: ParameterTree): void {
   emitEntry(key, value);
 }
 
-function changeType(key: string, type: 'string' | 'boolean' | 'object'): void {
-  if (valueType(props.modelValue[key]) === type) return;
-  emitEntry(key, type === 'string' ? '' : type === 'boolean' ? false : {});
-  if (type === 'object') collapsed.value.delete(key);
+function changeType(key: string, type: ParameterTreeType): void {
+  if (valueType(entryValue(key)) === type) return;
+  emitEntry(key, defaultValue(type));
+  if (type === 'object' || type === 'array') collapsed.value.delete(key);
+}
+
+function changeRootType(type: ParameterTreeType): void {
+  if (valueType(props.modelValue) !== type)
+    emit('update:modelValue', defaultValue(type));
+}
+
+function defaultValue(type: ParameterTreeType): ParameterTree {
+  switch (type) {
+    case 'string':
+      return '';
+    case 'number':
+      return 0;
+    case 'boolean':
+      return false;
+    case 'null':
+      return null;
+    case 'array':
+      return [];
+    case 'object':
+      return {};
+  }
 }
 
 function addEntry(): void {
-  emitEntry(uniqueKey(), '');
+  emit(
+    'update:modelValue',
+    Array.isArray(props.modelValue)
+      ? [...props.modelValue, '']
+      : isObject(props.modelValue)
+        ? { ...props.modelValue, [uniqueKey(props.modelValue)]: '' }
+        : props.modelValue,
+  );
 }
 
 function addChild(key: string): void {
-  const object = props.modelValue[key];
-  if (!isObject(object)) return;
-  emitEntry(key, { ...object, [uniqueKey(object)]: '' });
+  const object = entryValue(key);
+  if (!isContainer(object)) return;
+  emitEntry(
+    key,
+    Array.isArray(object)
+      ? [...object, '']
+      : { ...object, [uniqueKey(object)]: '' },
+  );
   collapsed.value.delete(key);
 }
 
+function entryValue(key: string): ParameterTree {
+  if (Array.isArray(props.modelValue)) return props.modelValue[Number(key)];
+  if (isObject(props.modelValue)) return props.modelValue[key];
+  return props.modelValue;
+}
+
 function duplicateEntry(key: string): void {
-  const value = props.modelValue[key];
-  emit('update:modelValue', {
-    ...Object.fromEntries(
-      entries.value.flatMap(([entryKey, entryValue]) =>
-        entryKey === key
-          ? [
-              [entryKey, entryValue],
-              [uniqueKey(), cloneValue(value)],
-            ]
-          : [[entryKey, entryValue]],
+  const container = props.modelValue;
+  if (!isContainer(container)) return;
+  const index = originalIndex(key);
+  const value = cloneValue(entries.value[index][1]);
+  if (Array.isArray(container)) {
+    const next = [...container];
+    next.splice(index + 1, 0, value);
+    emit('update:modelValue', next);
+  } else {
+    emit(
+      'update:modelValue',
+      Object.fromEntries(
+        entries.value.flatMap(([entryKey, entryValue]) =>
+          entryKey === key
+            ? [
+                [entryKey, entryValue],
+                [uniqueKey(container), value],
+              ]
+            : [[entryKey, entryValue]],
+        ),
       ),
-    ),
-  });
+    );
+  }
 }
 
 function cloneValue(value: ParameterTree): ParameterTree {
+  if (Array.isArray(value)) return value.map(cloneValue);
   return isObject(value)
     ? Object.fromEntries(
         Object.entries(value).map(([key, child]) => [key, cloneValue(child)]),
@@ -421,18 +561,27 @@ function moveEntry(key: string, offset: -1 | 1): void {
   const target = index + offset;
   if (index < 0 || target < 0 || target >= moved.length) return;
   [moved[index], moved[target]] = [moved[target], moved[index]];
-  emit('update:modelValue', Object.fromEntries(moved));
+  emit(
+    'update:modelValue',
+    Array.isArray(props.modelValue)
+      ? moved.map(([, value]) => value)
+      : Object.fromEntries(moved),
+  );
 }
 
 function removeEntry(key: string): void {
-  const next = { ...props.modelValue };
-  delete next[key];
-  emit('update:modelValue', next);
+  if (Array.isArray(props.modelValue)) {
+    const next = [...props.modelValue];
+    next.splice(Number(key), 1);
+    emit('update:modelValue', next);
+  } else if (isObject(props.modelValue)) {
+    const next = { ...props.modelValue };
+    delete next[key];
+    emit('update:modelValue', next);
+  }
 }
 
-function uniqueKey(
-  object: Record<string, ParameterTree> = props.modelValue,
-): string {
+function uniqueKey(object: Record<string, ParameterTree>): string {
   let key = 'key';
   let suffix = 2;
   while (Object.hasOwn(object, key)) key = `key${suffix++}`;
@@ -461,7 +610,7 @@ function expandAll(): void {
 
 function collapseAll(): void {
   collapsed.value = new Set(
-    entries.value.filter(([, value]) => isObject(value)).map(([key]) => key),
+    entries.value.filter(([, value]) => isContainer(value)).map(([key]) => key),
   );
   publishExpansion(false);
 }
@@ -478,14 +627,14 @@ function matches(key: string, value: ParameterTree): boolean {
   return (
     !!term &&
     (key.toLocaleLowerCase().includes(term) ||
-      (!isObject(value) && String(value).toLocaleLowerCase().includes(term)))
+      (!isContainer(value) && String(value).toLocaleLowerCase().includes(term)))
   );
 }
 
 function containsMatch(key: string, value: ParameterTree): boolean {
   return (
     matches(key, value) ||
-    (isObject(value) &&
+    (isContainer(value) &&
       Object.entries(value).some(([childKey, child]) =>
         containsMatch(childKey, child),
       ))
@@ -576,6 +725,11 @@ function containsMatch(key: string, value: ParameterTree): boolean {
   font-weight: 600;
 }
 
+.parameter-tree-editor__index {
+  min-width: 3rem;
+  color: #808080;
+}
+
 .parameter-tree-editor__colon {
   color: #d4d4d4;
 }
@@ -592,6 +746,22 @@ function containsMatch(key: string, value: ParameterTree): boolean {
 
 .parameter-tree-editor__value--boolean {
   color: #b5cea8;
+}
+
+.parameter-tree-editor__value--number {
+  flex: 1 1 5rem;
+  color: #b5cea8;
+}
+
+.parameter-tree-editor__null {
+  color: #569cd6;
+  font-style: italic;
+}
+
+.parameter-tree-editor__root-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .parameter-tree-editor__summary {
@@ -657,5 +827,10 @@ function containsMatch(key: string, value: ParameterTree): boolean {
 .parameter-tree-editor__value--string :deep(.q-field__native),
 .parameter-tree-editor__value--string :deep(.q-field__input) {
   color: #ce9178;
+}
+
+.parameter-tree-editor__value--number :deep(.q-field__native),
+.parameter-tree-editor__value--number :deep(.q-field__input) {
+  color: #b5cea8;
 }
 </style>

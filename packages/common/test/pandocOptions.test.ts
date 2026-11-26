@@ -50,7 +50,11 @@ describe('PANDOC_OPTIONS_SPECS', () => {
             { name: 'title', value: 'A title' },
             { name: 'draft', value: false },
             { name: 'published', type: 'string' },
-            { name: 'settings', type: 'json', value: { level: '2' } },
+            {
+              name: 'settings',
+              type: 'json',
+              value: { level: 2, flags: [true, null] },
+            },
           ],
           variables: [{ name: 'flag', value: true }],
         }),
@@ -58,7 +62,7 @@ describe('PANDOC_OPTIONS_SPECS', () => {
         '-M',
         'title="A title"',
         '-M',
-        'settings={"level":"2"}',
+        'settings={"level":2,"flags":[true,null]}',
         '-V',
         'flag',
         '--filter="filter"',
@@ -104,26 +108,44 @@ describe('PANDOC_OPTIONS_SPECS', () => {
     });
   });
 
-  it('rejects JSON arrays as object parameter values', () => {
-    expect(() =>
-      migratePandocParameters({
-        metadata: [{ name: 'settings', type: 'json', value: [] }],
-      }),
-    ).toThrow('incompatible with its type');
-  });
-
-  it('rejects unsupported values nested in JSON object parameters', () => {
+  it('rejects unsupported values nested in JSON parameters', () => {
     expect(() =>
       migratePandocParameters({
         metadata: [
           {
             name: 'settings',
             type: 'json',
-            value: { nested: [1, 2, 3] },
+            value: { unsupported: undefined },
           },
         ],
       }),
     ).toThrow('incompatible with its type');
+  });
+
+  it('migrates complete JSON parameter structures', () => {
+    expect(
+      migratePandocParameters({
+        metadata: [
+          {
+            name: 'settings',
+            type: 'json',
+            value: { nested: [1, 2, true, null, { name: 'value' }] },
+          },
+          { name: 'list', type: 'json', value: [1, 2, null] },
+          { name: 'count', type: 'json', value: 3 },
+        ],
+      }),
+    ).toEqual({
+      metadata: [
+        {
+          name: 'settings',
+          type: 'json',
+          value: { nested: [1, 2, true, null, { name: 'value' }] },
+        },
+        { name: 'list', type: 'json', value: [1, 2, null] },
+        { name: 'count', type: 'json', value: 3 },
+      ],
+    });
   });
 
   describe('PANDOC_EXTENSION_DESCRIPTIONS', () => {
