@@ -1,6 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import Ajv from 'ajv';
-import { loadValidationSchema } from './check-json-schema.mjs';
+import {
+  findPandocParameterIssues,
+  loadValidationSchema,
+} from './check-json-schema.mjs';
 
 function migratePandocOptions(options) {
   if (
@@ -46,12 +49,24 @@ function migratePandocParameterList(parameters) {
 function parseJsonObject(value) {
   try {
     const parsed = JSON.parse(value);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? parsed
-      : undefined;
+    return isParameterObject(parsed) ? parsed : undefined;
   } catch {
     return undefined;
   }
+}
+
+function isParameterObject(value) {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.values(value).every(
+      (child) =>
+        typeof child === 'string' ||
+        typeof child === 'boolean' ||
+        isParameterObject(child),
+    )
+  );
 }
 
 function mergePandocParameters(base, override) {
@@ -230,9 +245,14 @@ export async function fixJsonFile({
     removeAdditional: 'failing',
     strict: false,
   }).compile(schema);
-  if (!validate(fixed)) {
+  validate(fixed);
+  const validationErrors = [
+    ...(validate.errors ?? []),
+    ...findPandocParameterIssues(fixed),
+  ];
+  if (validationErrors.length > 0) {
     console.error(`ERROR: Could not fix ${description}:`);
-    console.error(formatErrors(validate.errors ?? []));
+    console.error(formatErrors(validationErrors));
     return 1;
   }
 

@@ -8,7 +8,13 @@ export interface PandocFeatureOptions {
   format?: string;
 }
 
-export type ParameterType = string | boolean | object;
+export type ParameterTree = string | boolean | ParameterTreeObject;
+
+export interface ParameterTreeObject {
+  [key: string]: ParameterTree;
+}
+
+export type ParameterType = ParameterTree;
 
 export type PandocParameterType = 'boolean' | 'string' | 'json';
 
@@ -40,11 +46,20 @@ export interface PandocCustomWriter
   extends NamedAndDescribed, PandocParameters {}
 
 function isParameterType(value: unknown): value is ParameterType {
-  return isString(value) || typeof value === 'boolean' || isJsonObject(value);
+  return (
+    isString(value) || typeof value === 'boolean' || isParameterObject(value)
+  );
 }
 
-function isJsonObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+export function isParameterObject(
+  value: unknown,
+): value is Record<string, ParameterTree> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.values(value).every(isParameterType)
+  );
 }
 
 export function pandocParameterType(
@@ -98,7 +113,7 @@ export function migratePandocParameterList(
         value !== undefined &&
         ((type === 'boolean' && typeof value !== 'boolean') ||
           (type === 'string' && !isString(value)) ||
-          (type === 'json' && !isJsonObject(value)))
+          (type === 'json' && !isParameterObject(value)))
       )
         throw new Error(
           `Pandoc parameter "${name}" has a value incompatible with its type`,

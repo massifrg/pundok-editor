@@ -840,7 +840,7 @@
       "enum": ["boolean", "string", "json"],
       "type": "string"
     },
-    "ParameterType": {
+    "ParameterTree": {
       "anyOf": [
         {
           "type": "string"
@@ -849,9 +849,18 @@
           "type": "boolean"
         },
         {
-          "type": "object"
+          "$ref": "#/definitions/ParameterTreeObject"
         }
       ]
+    },
+    "ParameterTreeObject": {
+      "additionalProperties": {
+        "$ref": "#/definitions/ParameterTree"
+      },
+      "type": "object"
+    },
+    "ParameterType": {
+      "$ref": "#/definitions/ParameterTree"
     },
     "PundokEditorConfig": {
       "additionalProperties": false,

@@ -421,6 +421,8 @@ export const icons: Record<string, string> = {
   emph: mdiFormatItalic,
   expand: mdiExpandAll,
   expand_vertical: mdiArrowExpandVertical,
+  unfold_less: mdiArrowCollapseVertical,
+  unfold_more: mdiArrowExpandVertical,
   export: mdiFileExport,
   figure_wrap: mdiApplicationImport,
   figure_unwrap: mdiApplicationExport,

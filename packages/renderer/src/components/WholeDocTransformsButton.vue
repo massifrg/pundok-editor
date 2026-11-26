@@ -62,7 +62,7 @@
     @stop="stopTransformation"
   />
   <q-dialog v-model="parameterDialogVisible" persistent>
-    <q-card style="width: 36rem; max-width: 90vw">
+    <q-card style="width: 52rem; max-width: 95vw">
       <q-card-section class="text-h6">
         {{
           $t('transformationParameters.title', { name: pendingTransform?.name })
@@ -86,24 +86,33 @@
           <q-checkbox
             v-if="parameter.type === 'boolean'"
             :model-value="parameter.value === true"
-            @update:model-value="parameter.value = $event"
             :label="`${$t(`transformationParameters.${parameter.kind}`)}: ${parameter.parameter.name}`"
             :title="parameter.parameter.description"
+            @update:model-value="parameter.value = $event"
+          />
+          <ParameterTreeEditor
+            v-else-if="parameter.type === 'json'"
+            :model-value="
+              isParameterObject(parameter.value) ? parameter.value : {}
+            "
+            :label="`${$t(`transformationParameters.${parameter.kind}`)}: ${parameter.parameter.name}`"
+            :hint="parameter.parameter.description"
+            @update:model-value="parameter.value = $event"
           />
           <q-input
             v-else
             :model-value="
               typeof parameter.value === 'string' ? parameter.value : ''
             "
+            :label="`${$t(`transformationParameters.${parameter.kind}`)}: ${parameter.parameter.name}`"
+            :hint="parameter.parameter.description"
+            :persistent-hint="!!parameter.parameter.description"
+            :rules="[(value) => parameterValueRule(value)]"
+            autofocus
             @update:model-value="
               parameter.value =
                 typeof $event === 'string' ? $event : String($event ?? '')
             "
-            :label="`${$t(`transformationParameters.${parameter.kind}`)}: ${parameter.parameter.name}`"
-            :hint="parameter.parameter.description"
-            :persistent-hint="!!parameter.parameter.description"
-            :rules="[(value) => parameterValueRule(value, parameter.type)]"
-            autofocus
           />
         </div>
       </q-card-section>
@@ -140,14 +149,15 @@ import type {
   PandocFilterTransform,
   TransformDocumentActionProps,
 } from '../common';
-import { pandocParameterType } from '../common';
+import { isParameterObject, pandocParameterType } from '../common';
 import { editorKeyFromState, getEditorConfiguration } from '../schema';
+import ParameterTreeEditor from './ParameterTreeEditor.vue';
 import TransformationDialog from './TransformationDialog.vue';
 
 const rememberedParameterValues = new Map<string, ParameterType>();
 
 export default {
-  components: { TransformationDialog },
+  components: { ParameterTreeEditor, TransformationDialog },
   props: ['editor', 'transformationLog', 'transformationFailed'],
   computed: {
     ...mapState(useActions, ['remoteWorkInProgress']),
@@ -313,9 +323,9 @@ export default {
               type === 'boolean'
                 ? parameter.value === true
                 : type === 'json'
-                  ? parameter.value === undefined
-                    ? ''
-                    : JSON.stringify(parameter.value)
+                  ? isParameterObject(parameter.value)
+                    ? parameter.value
+                    : {}
                   : parameter.value === undefined
                     ? ''
                     : String(parameter.value),
@@ -323,14 +333,9 @@ export default {
         }
       });
     },
-    parameterValueRule(
-      value: string,
-      type: PandocParameterType,
-    ): boolean | string {
+    parameterValueRule(value: string): boolean | string {
       if (!value.trim())
         return String(this.$t('transformationParameters.required'));
-      if (type === 'json' && parseJsonParameter(value) === undefined)
-        return String(this.$t('transformationParameters.invalidJson'));
       return true;
     },
     cancelParameterDialog() {
@@ -440,12 +445,7 @@ export default {
           pending.parameter.ask !== 'once'
         )
           continue;
-        const value =
-          pending.type === 'json'
-            ? typeof pending.value === 'string'
-              ? parseJsonParameter(pending.value)
-              : undefined
-            : pending.value;
+        const value = pending.value;
         if (value !== undefined)
           rememberedParameterValues.set(pending.key, value);
       }
@@ -465,15 +465,7 @@ export default {
             item.index === index,
         );
         if (!pending) return parameter;
-        const value =
-          pending.type === 'json'
-            ? typeof pending.value === 'string'
-              ? parseJsonParameter(pending.value)
-              : undefined
-            : pending.value;
-        return value === undefined
-          ? parameter
-          : { ...parameter, type: pending.type, value };
+        return { ...parameter, type: pending.type, value: pending.value };
       });
     },
     async stopTransformation() {
@@ -492,7 +484,7 @@ type PendingParameter = {
   parameter: PandocParameter;
   key: string;
   type: PandocParameterType;
-  value: string | boolean;
+  value: ParameterType;
 };
 
 function parameterKey(
@@ -506,28 +498,9 @@ function parameterKey(
   return `${transformName}\u0000${scope}\u0000${filterIndex ?? ''}\u0000${kind}\u0000${index}\u0000${name}`;
 }
 
-function parseJsonParameter(
-  value: string,
-): Record<string, unknown> | undefined {
-  try {
-    const parsed: unknown = JSON.parse(value);
-    return typeof parsed === 'object' &&
-      parsed !== null &&
-      !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 function isPendingParameterValid(parameter: PendingParameter): boolean {
   if (parameter.type === 'boolean') return true;
-  if (typeof parameter.value !== 'string' || !parameter.value.trim())
-    return false;
-  return (
-    parameter.type !== 'json' ||
-    parseJsonParameter(parameter.value) !== undefined
-  );
+  if (parameter.type === 'json') return isParameterObject(parameter.value);
+  return typeof parameter.value === 'string' && !!parameter.value.trim();
 }
 </script>

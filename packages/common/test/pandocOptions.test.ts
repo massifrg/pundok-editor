@@ -50,7 +50,7 @@ describe('PANDOC_OPTIONS_SPECS', () => {
             { name: 'title', value: 'A title' },
             { name: 'draft', value: false },
             { name: 'published', type: 'string' },
-            { name: 'settings', type: 'json', value: { level: 2 } },
+            { name: 'settings', type: 'json', value: { level: '2' } },
           ],
           variables: [{ name: 'flag', value: true }],
         }),
@@ -58,7 +58,7 @@ describe('PANDOC_OPTIONS_SPECS', () => {
         '-M',
         'title="A title"',
         '-M',
-        'settings={"level":2}',
+        'settings={"level":"2"}',
         '-V',
         'flag',
         '--filter="filter"',
@@ -108,6 +108,20 @@ describe('PANDOC_OPTIONS_SPECS', () => {
     expect(() =>
       migratePandocParameters({
         metadata: [{ name: 'settings', type: 'json', value: [] }],
+      }),
+    ).toThrow('incompatible with its type');
+  });
+
+  it('rejects unsupported values nested in JSON object parameters', () => {
+    expect(() =>
+      migratePandocParameters({
+        metadata: [
+          {
+            name: 'settings',
+            type: 'json',
+            value: { nested: [1, 2, 3] },
+          },
+        ],
       }),
     ).toThrow('incompatible with its type');
   });

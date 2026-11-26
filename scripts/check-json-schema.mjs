@@ -80,7 +80,7 @@ function legacyPandocOptionSuggestion(options) {
   return JSON.stringify(migrated);
 }
 
-function findPandocParameterIssues(value, path = '') {
+export function findPandocParameterIssues(value, path = '') {
   const issues = [];
   if (!value || typeof value !== 'object') return issues;
   if (Array.isArray(value)) {
@@ -133,7 +133,17 @@ function findPandocParameterIssues(value, path = '') {
 }
 
 function isJsonObject(value) {
-  return value && typeof value === 'object' && !Array.isArray(value);
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.values(value).every(
+      (child) =>
+        typeof child === 'string' ||
+        typeof child === 'boolean' ||
+        isJsonObject(child),
+    )
+  );
 }
 
 function findLegacySyntaxes(value, path = '') {

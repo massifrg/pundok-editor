@@ -340,9 +340,34 @@
     "variables": "variabile",
     "requiredMessage": "La trasformazione richiede che questi parametri siano impostati:",
     "required": "È necessario un valore.",
-    "invalidJson": "Inserisci un oggetto JSON valido.",
     "cancel": "Annulla trasformazione",
     "proceed": "Procedi"
+  },
+  "parameterTree": {
+    "tree": "Albero",
+    "text": "Testo",
+    "json": "Oggetto JSON",
+    "invalidJson": "Inserisci un oggetto JSON contenente solo stringhe, booleani e oggetti annidati.",
+    "key": "Chiave",
+    "type": "Tipo",
+    "value": "Valore",
+    "add": "Aggiungi proprietà",
+    "remove": "Rimuovi proprietà",
+    "duplicate": "Duplica proprietà",
+    "moveUp": "Sposta su",
+    "moveDown": "Sposta giù",
+    "expand": "Espandi oggetto",
+    "collapse": "Comprimi oggetto",
+    "expandAll": "Espandi tutto",
+    "collapseAll": "Comprimi tutto",
+    "search": "Cerca chiavi e valori",
+    "properties": "proprietà",
+    "noMatches": "Nessuna proprietà corrispondente.",
+    "types": {
+      "string": "Testo",
+      "boolean": "Booleano",
+      "object": "Oggetto"
+    }
   },
   "compact": "compatta",
   "convert": "converti",
@@ -692,7 +717,6 @@
         "parameterAskAlways": "Sempre",
         "parameterAskOnce": "Una volta",
         "parameterValue": "Valore",
-        "invalidJson": "Inserisci un oggetto JSON valido.",
         "provenance": {
           "project": "Risorsa del progetto",
           "configuration": "Configurazione ereditata",
@@ -721,7 +745,6 @@
         "parameterAskAlways": "Sempre",
         "parameterAskOnce": "Una volta",
         "parameterValue": "Valore",
-        "invalidJson": "Inserisci un oggetto JSON valido.",
         "provenance": {
           "project": "Risorsa del progetto",
           "configuration": "Configurazione ereditata",
