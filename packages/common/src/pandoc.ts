@@ -8,17 +8,32 @@ export interface PandocFeatureOptions {
   format?: string;
 }
 
-export type ParameterType = string | boolean | object;
+export type ParameterTree =
+  string | number | boolean | null | ParameterTreeArray | ParameterTreeObject;
+
+export interface ParameterTreeArray extends Array<ParameterTree> {
+  [index: number]: ParameterTree;
+}
+
+export interface ParameterTreeObject {
+  [key: string]: ParameterTree;
+}
+
+export type ParameterType = ParameterTree;
 
 export type PandocParameterType = 'boolean' | 'string' | 'json';
+
+export type PandocParameterAsk = 'always' | 'once';
 
 export type PandocParameter =
   | (NamedAndDescribed & {
       type: PandocParameterType;
+      ask?: PandocParameterAsk;
       value?: undefined;
     })
   | (NamedAndDescribed & {
       type?: PandocParameterType;
+      ask?: PandocParameterAsk;
       value: ParameterType;
     });
 
@@ -35,12 +50,26 @@ export interface PandocFilter extends NamedAndDescribed, PandocParameters {}
 export interface PandocCustomWriter
   extends NamedAndDescribed, PandocParameters {}
 
-function isParameterType(value: unknown): value is ParameterType {
-  return isString(value) || typeof value === 'boolean' || isJsonObject(value);
+export function isParameterType(value: unknown): value is ParameterType {
+  return (
+    value === null ||
+    isString(value) ||
+    (typeof value === 'number' && Number.isFinite(value)) ||
+    typeof value === 'boolean' ||
+    (Array.isArray(value) && value.every(isParameterType)) ||
+    isParameterObject(value)
+  );
 }
 
-function isJsonObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+export function isParameterObject(
+  value: unknown,
+): value is Record<string, ParameterTree> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.values(value).every(isParameterType)
+  );
 }
 
 export function pandocParameterType(
@@ -50,9 +79,9 @@ export function pandocParameterType(
     parameter.type ??
     (typeof parameter.value === 'boolean'
       ? 'boolean'
-      : typeof parameter.value === 'object' && parameter.value !== null
-        ? 'json'
-        : 'string')
+      : typeof parameter.value === 'string'
+        ? 'string'
+        : 'json')
   );
 }
 
@@ -71,10 +100,11 @@ export function migratePandocParameterList(
         typeof (parameter as { name?: unknown }).name !== 'string'
       )
         throw new Error('Pandoc parameters must have a name');
-      const { name, description, type, value } = parameter as {
+      const { name, description, type, ask, value } = parameter as {
         name: string;
         description?: unknown;
         type?: unknown;
+        ask?: unknown;
         value?: unknown;
       };
       if (description !== undefined && !isString(description))
@@ -86,12 +116,14 @@ export function migratePandocParameterList(
         !['boolean', 'string', 'json'].includes(String(type))
       )
         throw new Error(`Pandoc parameter "${name}" has an invalid type`);
+      if (ask !== undefined && !['always', 'once'].includes(String(ask)))
+        throw new Error(`Pandoc parameter "${name}" has an invalid ask value`);
       if (
         type !== undefined &&
         value !== undefined &&
         ((type === 'boolean' && typeof value !== 'boolean') ||
           (type === 'string' && !isString(value)) ||
-          (type === 'json' && !isJsonObject(value)))
+          (type === 'json' && !isParameterType(value)))
       )
         throw new Error(
           `Pandoc parameter "${name}" has a value incompatible with its type`,
@@ -104,12 +136,14 @@ export function migratePandocParameterList(
         return {
           name,
           ...(description !== undefined && { description }),
+          ...(ask !== undefined && { ask }),
           type: normalizedType ?? 'string',
         } as PandocParameter;
       }
       return {
         name,
         ...(description !== undefined && { description }),
+        ...(ask !== undefined && { ask }),
         ...(normalizedType !== undefined && { type: normalizedType }),
         value,
       } as PandocParameter;

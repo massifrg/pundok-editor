@@ -1,14 +1,28 @@
 import { execSync } from 'node:child_process';
 
 function getElectronEnv() {
-  return JSON.parse(
-    execSync(`npx electron -p "JSON.stringify(process.versions)"`, {
+  const output = execSync(
+    `npx electron -p "JSON.stringify(process.versions)"`,
+    {
       encoding: 'utf-8',
       env: {
         ...process.env,
         ELECTRON_RUN_AS_NODE: 1,
       },
-    }),
+    },
+  );
+
+  const lines = output.trim().split(/\r?\n/).reverse();
+  for (const line of lines) {
+    try {
+      return JSON.parse(line);
+    } catch {
+      // Electron can print download progress before the requested JSON.
+    }
+  }
+
+  throw new Error(
+    `Electron did not return its version information. Output:\n${output}`,
   );
 }
 

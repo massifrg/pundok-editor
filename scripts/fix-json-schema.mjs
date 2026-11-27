@@ -1,6 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import Ajv from 'ajv';
-import { loadValidationSchema } from './check-json-schema.mjs';
+import {
+  findPandocParameterIssues,
+  loadValidationSchema,
+} from './check-json-schema.mjs';
 
 function migratePandocOptions(options) {
   if (
@@ -33,7 +36,7 @@ function migratePandocParameterList(parameters) {
           ? { ...parameter, type: 'string' }
           : { ...parameter };
       if (migrated.type === 'json' && typeof migrated.value === 'string') {
-        const parsed = parseJsonObject(migrated.value);
+        const parsed = parseJsonValue(migrated.value);
         if (parsed !== undefined) migrated.value = parsed;
       }
       return migrated;
@@ -43,15 +46,23 @@ function migratePandocParameterList(parameters) {
   return Object.entries(parameters).map(([name, value]) => ({ name, value }));
 }
 
-function parseJsonObject(value) {
+function parseJsonValue(value) {
   try {
     const parsed = JSON.parse(value);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? parsed
-      : undefined;
+    return isJsonValue(parsed) ? parsed : undefined;
   } catch {
     return undefined;
   }
+}
+
+function isJsonValue(value) {
+  return (
+    value === null ||
+    ['string', 'boolean'].includes(typeof value) ||
+    (typeof value === 'number' && Number.isFinite(value)) ||
+    (Array.isArray(value) && value.every(isJsonValue)) ||
+    (typeof value === 'object' && Object.values(value).every(isJsonValue))
+  );
 }
 
 function mergePandocParameters(base, override) {
@@ -230,9 +241,14 @@ export async function fixJsonFile({
     removeAdditional: 'failing',
     strict: false,
   }).compile(schema);
-  if (!validate(fixed)) {
+  validate(fixed);
+  const validationErrors = [
+    ...(validate.errors ?? []),
+    ...findPandocParameterIssues(fixed),
+  ];
+  if (validationErrors.length > 0) {
     console.error(`ERROR: Could not fix ${description}:`);
-    console.error(formatErrors(validate.errors ?? []));
+    console.error(formatErrors(validationErrors));
     return 1;
   }
 

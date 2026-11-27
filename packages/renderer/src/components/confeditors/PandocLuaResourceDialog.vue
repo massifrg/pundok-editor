@@ -134,7 +134,7 @@
             </div>
             <div class="col-auto">
               <q-select
-                v-model="parameter.valueType"
+                :model-value="parameter.valueType"
                 class="pandoc-lua-resource-dialog__parameter-type"
                 dense
                 outlined
@@ -143,6 +143,25 @@
                 :label="
                   $t(
                     'configEditor.outputConverters.pandocResources.parameterType',
+                  )
+                "
+                @update:model-value="
+                  changeParameterValueType(parameter, $event)
+                "
+              />
+            </div>
+            <div class="col-auto">
+              <q-select
+                v-model="parameter.ask"
+                class="pandoc-lua-resource-dialog__parameter-ask"
+                dense
+                outlined
+                emit-value
+                map-options
+                :options="parameterAskOptions"
+                :label="
+                  $t(
+                    'configEditor.outputConverters.pandocResources.parameterAsk',
                   )
                 "
               />
@@ -171,19 +190,11 @@
                 "
               />
             </div>
-            <div class="col">
+            <div :class="parameter.valueType === 'json' ? 'col-12' : 'col'">
               <q-input
-                v-if="parameter.valueType !== 'boolean'"
+                v-if="parameter.valueType === 'string'"
                 :model-value="
-                  typeof parameter.value === 'string'
-                    ? parameter.value
-                    : parameter.value === undefined
-                      ? ''
-                      : JSON.stringify(parameter.value)
-                "
-                @update:model-value="
-                  parameter.value =
-                    typeof $event === 'string' ? $event : String($event ?? '')
+                  typeof parameter.value === 'string' ? parameter.value : ''
                 "
                 dense
                 outlined
@@ -193,19 +204,32 @@
                     'configEditor.outputConverters.pandocResources.parameterValue',
                   )
                 "
-                :rules="[
-                  (value) => parameterValueRule(value, parameter.valueType),
-                ]"
+                @update:model-value="
+                  parameter.value =
+                    typeof $event === 'string' ? $event : String($event ?? '')
+                "
               />
               <q-checkbox
-                v-else
+                v-else-if="parameter.valueType === 'boolean'"
                 :model-value="parameter.value === true"
-                @update:model-value="parameter.value = $event"
                 :label="
                   $t(
                     'configEditor.outputConverters.pandocResources.parameterValue',
                   )
                 "
+                @update:model-value="parameter.value = $event"
+              />
+              <ParameterTreeEditor
+                v-else
+                :model-value="parameterObject(parameter.value)"
+                :label="
+                  String(
+                    $t(
+                      'configEditor.outputConverters.pandocResources.parameterValue',
+                    ),
+                  )
+                "
+                @update:model-value="parameter.value = $event"
               />
             </div>
             <div class="col-auto">
@@ -268,14 +292,17 @@ import { Codemirror } from 'vue-codemirror';
 import { useI18n } from 'vue-i18n';
 import type {
   FindResourceOptions,
+  ParameterType,
+  ParameterTree,
   PandocParameter,
   PandocParameterType,
   ResourceFile,
   ResourceSearchMode,
   ResourceType,
 } from '../../common';
-import { pandocParameterType } from '../../common';
+import { isParameterType, pandocParameterType } from '../../common';
 import { useBackend } from '../../stores';
+import ParameterTreeEditor from '../ParameterTreeEditor.vue';
 
 type LuaResourceType = Extract<ResourceType, 'filter' | 'reader' | 'writer'>;
 
@@ -288,9 +315,10 @@ export type PandocLuaResourceSelection = {
 type Parameter = {
   type: 'variable' | 'metadata';
   valueType: PandocParameterType;
+  ask?: 'always' | 'once';
   name: string;
   description: string;
-  value?: string | boolean | object;
+  value?: ParameterType;
 };
 
 const props = withDefaults(
@@ -324,6 +352,26 @@ const parameterTypeOptions: PandocParameterType[] = [
   'boolean',
   'json',
 ];
+const parameterAskOptions = computed(() => [
+  {
+    label: String(
+      t('configEditor.outputConverters.pandocResources.parameterAskUnset'),
+    ),
+    value: undefined,
+  },
+  {
+    label: String(
+      t('configEditor.outputConverters.pandocResources.parameterAskAlways'),
+    ),
+    value: 'always' as const,
+  },
+  {
+    label: String(
+      t('configEditor.outputConverters.pandocResources.parameterAskOnce'),
+    ),
+    value: 'once' as const,
+  },
+]);
 const previewExtensions = [
   StreamLanguage.define({
     ...lua,
@@ -390,15 +438,16 @@ watch(
         return {
           type: 'metadata' as const,
           valueType,
+          ask: parameter.ask,
           name: parameter.name,
           description: parameter.description || '',
           value:
             parameter.value === undefined
               ? undefined
-              : valueType === 'json'
-                ? JSON.stringify(parameter.value)
-                : valueType === 'boolean'
-                  ? parameter.value === true || parameter.value === 'true'
+              : valueType === 'boolean'
+                ? parameter.value === true
+                : valueType === 'json' && isParameterType(parameter.value)
+                  ? parameter.value
                   : String(parameter.value),
         };
       }),
@@ -407,15 +456,16 @@ watch(
         return {
           type: 'variable' as const,
           valueType,
+          ask: parameter.ask,
           name: parameter.name,
           description: parameter.description || '',
           value:
             parameter.value === undefined
               ? undefined
-              : valueType === 'json'
-                ? JSON.stringify(parameter.value)
-                : valueType === 'boolean'
-                  ? parameter.value === true || parameter.value === 'true'
+              : valueType === 'boolean'
+                ? parameter.value === true
+                : valueType === 'json' && isParameterType(parameter.value)
+                  ? parameter.value
                   : String(parameter.value),
         };
       }),
@@ -502,24 +552,30 @@ function removeParameter(index: number): void {
   parameters.value.splice(index, 1);
 }
 
+function changeParameterValueType(
+  parameter: Parameter,
+  valueType: PandocParameterType,
+): void {
+  parameter.valueType = valueType;
+  parameter.value =
+    valueType === 'boolean' ? false : valueType === 'json' ? undefined : '';
+}
+
+function parameterObject(value: ParameterType | undefined): ParameterTree {
+  return isParameterType(value) ? value : {};
+}
+
 function select(): void {
   if (!selectedResource.value) return;
   const metadata: PandocParameter[] = [];
   const variables: PandocParameter[] = [];
   for (const parameter of parameters.value) {
     const target = parameter.type === 'metadata' ? metadata : variables;
-    let value = parameter.value;
-    if (parameter.valueType === 'json' && typeof value === 'string') {
-      if (!value.trim()) value = undefined;
-      else {
-        const parsed = parseJsonParameter(value);
-        if (parsed === undefined) return;
-        value = parsed;
-      }
-    }
+    const value = parameter.value;
     target.push({
       name: parameter.name.trim(),
       type: parameter.valueType,
+      ...(parameter.ask !== undefined && { ask: parameter.ask }),
       ...(parameter.description.trim() && {
         description: parameter.description.trim(),
       }),
@@ -533,41 +589,12 @@ function select(): void {
   emit('update:modelValue', false);
 }
 
-function parameterValueRule(
-  value: string,
-  type: PandocParameterType,
-): boolean | string {
-  if (!value.trim()) return true;
-  return type !== 'json' || parseJsonParameter(value) !== undefined
-    ? true
-    : String(t('configEditor.outputConverters.pandocResources.invalidJson'));
-}
-
 function parameterValueIsValid(parameter: Parameter): boolean {
-  if (parameter.valueType !== 'json' || parameter.value === undefined)
-    return true;
   return (
-    (typeof parameter.value === 'object' &&
-      parameter.value !== null &&
-      !Array.isArray(parameter.value)) ||
-    (typeof parameter.value === 'string' &&
-      parseJsonParameter(parameter.value) !== undefined)
+    parameter.valueType !== 'json' ||
+    parameter.value === undefined ||
+    isParameterType(parameter.value)
   );
-}
-
-function parseJsonParameter(
-  value: string,
-): Record<string, unknown> | undefined {
-  try {
-    const parsed: unknown = JSON.parse(value);
-    return typeof parsed === 'object' &&
-      parsed !== null &&
-      !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : undefined;
-  } catch {
-    return undefined;
-  }
 }
 </script>
 
@@ -593,6 +620,10 @@ function parseJsonParameter(
 }
 
 .pandoc-lua-resource-dialog__parameter-type {
+  width: 8rem;
+}
+
+.pandoc-lua-resource-dialog__parameter-ask {
   width: 8rem;
 }
 

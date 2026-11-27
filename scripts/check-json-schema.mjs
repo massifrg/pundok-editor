@@ -80,7 +80,7 @@ function legacyPandocOptionSuggestion(options) {
   return JSON.stringify(migrated);
 }
 
-function findPandocParameterIssues(value, path = '') {
+export function findPandocParameterIssues(value, path = '') {
   const issues = [];
   if (!value || typeof value !== 'object') return issues;
   if (Array.isArray(value)) {
@@ -96,6 +96,17 @@ function findPandocParameterIssues(value, path = '') {
       child.forEach((parameter, index) => {
         if (!parameter || typeof parameter !== 'object') return;
         const parameterPath = `${childPath}/${index}`;
+        if (
+          parameter.ask !== undefined &&
+          !['always', 'once'].includes(parameter.ask)
+        ) {
+          issues.push({
+            instancePath: parameterPath,
+            keyword: 'parameterAsk',
+            message: `ask value "${parameter.ask}" must be "always" or "once"`,
+            params: {},
+          });
+        }
         if (!Object.hasOwn(parameter, 'value')) return;
         const parameterType = parameter.type;
         const valid =
@@ -104,7 +115,7 @@ function findPandocParameterIssues(value, path = '') {
             : parameterType === 'string'
               ? typeof parameter.value === 'string'
               : parameterType === 'json'
-                ? isJsonObject(parameter.value)
+                ? isJsonValue(parameter.value)
                 : true;
         if (!valid) {
           issues.push({
@@ -121,8 +132,14 @@ function findPandocParameterIssues(value, path = '') {
   return issues;
 }
 
-function isJsonObject(value) {
-  return value && typeof value === 'object' && !Array.isArray(value);
+function isJsonValue(value) {
+  return (
+    value === null ||
+    ['string', 'boolean'].includes(typeof value) ||
+    (typeof value === 'number' && Number.isFinite(value)) ||
+    (Array.isArray(value) && value.every(isJsonValue)) ||
+    (typeof value === 'object' && Object.values(value).every(isJsonValue))
+  );
 }
 
 function findLegacySyntaxes(value, path = '') {
@@ -193,10 +210,10 @@ function findLegacySyntaxes(value, path = '') {
           parameter &&
           parameter.type === 'json' &&
           typeof parameter.value === 'string' &&
-          isJsonObject(parseJsonObject(parameter.value))
+          parseJsonValue(parameter.value) !== undefined
         ) {
           warnings.push(
-            `${childPath}/${index}/value: stringified JSON parameter; use an object value`,
+            `${childPath}/${index}/value: stringified JSON parameter; use its parsed JSON value`,
           );
         }
       });
@@ -212,12 +229,10 @@ function findLegacySyntaxes(value, path = '') {
   return warnings;
 }
 
-function parseJsonObject(value) {
+function parseJsonValue(value) {
   try {
     const parsed = JSON.parse(value);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? parsed
-      : undefined;
+    return isJsonValue(parsed) ? parsed : undefined;
   } catch {
     return undefined;
   }

@@ -35,10 +35,20 @@
         <ConfigurationsDialog :editor="editor" :visible="visibleConfigurationDialog"
           @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
         </ConfigurationsDialog>
-        <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
-          @close-show-message-dialog="message = null" :show-check-updates="message?.source === 'git-no-updates'" :icon="message?.source === 'git-no-updates' ? 'message_info' : undefined
-            " :color="message?.source === 'git-no-updates' ? 'secondary' : undefined
-            " @check-updates="openGitUpdates" />
+        <ShowMessageDialog
+          :editor="editor"
+          :visible="!!message"
+          :message="message"
+          @close-show-message-dialog="message = null"
+          :show-check-updates="message?.source === 'git-updates'"
+          :icon="
+            message?.source === 'git-no-updates' ? 'message_info' : undefined
+          "
+          :color="
+            message?.source === 'git-no-updates' ? 'secondary' : undefined
+          "
+          @check-updates="openGitUpdates"
+        />
         <KeyboardShortcutsDialog
           :visible="visibleKeyboardShortcutsDialog"
           @close="visibleKeyboardShortcutsDialog = false"
