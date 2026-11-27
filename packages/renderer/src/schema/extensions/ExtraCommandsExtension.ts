@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { asTiptapCommand, SelectedNodeOrMark } from '../helpers';
-import { Attrs, MarkType, Node as ProsemirrorNode } from '@tiptap/pm/model';
+import { Attrs, MarkType as ProseMirrorMarkType, Node as ProsemirrorNode } from '@tiptap/pm/model';
 import { NodeSelection, TextSelection, type Command } from '@tiptap/pm/state';
 import { isString } from 'lodash-es';
 import { ChangeMarkOptions } from '../helpers';
@@ -80,7 +80,7 @@ declare module '@tiptap/core' {
        * Add a Mark without entering atoms with inlineContent (e.g. footnotes).
        */
       setMarkNoAtoms: (
-        markType: MarkType | string,
+        markType: ProseMirrorMarkType | string,
         attrs?: Attrs | null,
         options?: ChangeMarkOptions
       ) => ReturnType;
@@ -88,14 +88,14 @@ declare module '@tiptap/core' {
        * Remove a Mark without entering atoms with inlineContent (e.g. footnotes).
        */
       unsetMarkNoAtoms: (
-        markType: MarkType | string,
+        markType: ProseMirrorMarkType | string,
         options?: ChangeMarkOptions
       ) => ReturnType;
       /**
        * Toggle a Mark without entering atoms with inlineContent (e.g. footnotes).
        */
       toggleMarkNoAtoms: (
-        markType: MarkType | string,
+        markType: ProseMirrorMarkType | string,
         attrs?: Attrs | null,
         options?: ChangeMarkOptions
       ) => ReturnType;
@@ -127,7 +127,7 @@ export const ExtraCommandsExtension = Extension.create({
         asTiptapCommand(unsetMarkNoAtomsCommand(mark, options)),
       toggleMarkNoAtoms:
         (
-          mark: MarkType | string,
+          mark: ProseMirrorMarkType | string,
           attrs: Attrs | null = null,
           options?: ChangeMarkOptions
         ) =>
@@ -147,30 +147,30 @@ export const ExtraCommandsExtension = Extension.create({
 });
 
 const setMarkNoAtomsCommand = (
-  mark: MarkType | string,
+  mark: ProseMirrorMarkType | string,
   attrs: Attrs | null = null,
   options?: ChangeMarkOptions,
 ): Command => (state, dispatch) => {
-  const markType: MarkType = isString(mark) ? state.schema.marks[mark] : mark;
+  const markType: ProseMirrorMarkType = isString(mark) ? state.schema.marks[mark] : mark;
   if (!markType) return false;
   return setMarkNoAtoms(markType, attrs, options || { excludeNonLeafAtoms: 'only-content' })(state, dispatch);
 };
 
 const unsetMarkNoAtomsCommand = (
-  mark: MarkType | string,
+  mark: ProseMirrorMarkType | string,
   options?: ChangeMarkOptions,
 ): Command => (state, dispatch) => {
-  const markType: MarkType = isString(mark) ? state.schema.marks[mark] : mark;
+  const markType: ProseMirrorMarkType = isString(mark) ? state.schema.marks[mark] : mark;
   if (!markType) return false;
   return unsetMarkNoAtoms(markType, options || { excludeNonLeafAtoms: 'only-content' })(state, dispatch);
 };
 
 const toggleMarkNoAtomsCommand = (
-  mark: MarkType | string,
+  mark: ProseMirrorMarkType | string,
   attrs: Attrs | null = null,
   options?: ChangeMarkOptions,
 ): Command => (state, dispatch) => {
-  const markType: MarkType = isString(mark) ? state.schema.marks[mark] : mark;
+  const markType: ProseMirrorMarkType = isString(mark) ? state.schema.marks[mark] : mark;
   if (!markType) return false;
   return toggleMarkNoAtoms(markType, attrs, options || {
     removeWhenPresent: false,

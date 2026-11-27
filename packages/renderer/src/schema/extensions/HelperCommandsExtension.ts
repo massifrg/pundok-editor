@@ -6,10 +6,10 @@ import {
 } from '@tiptap/core';
 import { isObject, isString } from 'lodash-es';
 import {
-  Mark,
-  MarkType,
+  Mark as ProseMirrorMark,
+  MarkType as ProseMirrorMarkType,
   Node as ProsemirrorNode,
-  NodeType,
+  NodeType as ProseMirrorNodeType,
   ResolvedPos,
   Schema,
   Attrs,
@@ -50,27 +50,27 @@ import {
   typeNameOfElement,
 } from '../../common';
 
-export type TypeOrNode = string | NodeType | ProsemirrorNode | MarkType;
+export type TypeOrNode = string | ProseMirrorNodeType | ProsemirrorNode | ProseMirrorMarkType;
 export const typeOrNodeName: (ton: TypeOrNode) => string = typeNameOfElement;
 
 export interface NodeOrMarkMutation {
-  nodeType?: NodeType;
-  markType?: MarkType;
+  nodeType?: ProseMirrorNodeType;
+  markType?: ProseMirrorMarkType;
   attrs: Record<string, any>;
 }
 
 export type UpdateNodeOrMarkCallback = (
-  nodeOrMark: ProsemirrorNode | Mark,
+  nodeOrMark: ProsemirrorNode | ProseMirrorMark,
   pos?: number,
 ) => NodeOrMarkMutation | undefined;
 
 export function nodeTypeOf(
   ton: TypeOrNode,
   schema: Schema,
-): NodeType | undefined {
-  if (ton instanceof NodeType) return ton;
+): ProseMirrorNodeType | undefined {
+  if (ton instanceof ProseMirrorNodeType) return ton;
   else if (ton instanceof ProsemirrorNode) return ton.type;
-  else if (ton instanceof MarkType) return undefined;
+  else if (ton instanceof ProseMirrorMarkType) return undefined;
   else return schema.nodes[ton];
 }
 
@@ -95,7 +95,7 @@ declare module '@tiptap/core' {
       removeMark: (
         from: number,
         to: number,
-        mark: Mark | MarkType,
+        mark: ProseMirrorMark | ProseMirrorMarkType,
       ) => ReturnType;
       /**
        * Add a (Pandoc Attrs's) class to the nodes or marks of typeOrNode in current selection
@@ -139,14 +139,14 @@ declare module '@tiptap/core' {
        */
       deleteNodeAtPos: (
         pos: number,
-        node?: ProsemirrorNode | NodeType | string,
+        node?: ProsemirrorNode | ProseMirrorNodeType | string,
       ) => ReturnType;
 
       /**
        * Convert node at pos into a compatible node
        */
       convertNode: (
-        toNodeType: NodeType | string,
+        toNodeType: ProseMirrorNodeType | string,
         pos?: number,
         attrs?: Attrs,
       ) => ReturnType;
@@ -205,13 +205,13 @@ declare module '@tiptap/core' {
        * Select the previous node of the same kind.
        * @param n the node or node type to find
        */
-      selectPrev: (n?: ProsemirrorNode | NodeType) => ReturnType;
+      selectPrev: (n?: ProsemirrorNode | ProseMirrorNodeType) => ReturnType;
 
       /**
        * Select the next node of the same kind.
        * @param n the node or node type to find
        */
-      selectNext: (n?: ProsemirrorNode | NodeType) => ReturnType;
+      selectNext: (n?: ProsemirrorNode | ProseMirrorNodeType) => ReturnType;
 
       /**
        * A better implementation of scrollIntoView().
@@ -248,13 +248,13 @@ export function updateAttributesCommand(
 ): Command {
   return (state, dispatch, view) => {
     const tr = state.tr
-    let nodeType: NodeType | null = null;
-    let markType: MarkType | null = null;
+    let nodeType: ProseMirrorNodeType | null = null;
+    let markType: ProseMirrorMarkType | null = null;
 
     const isNode = !!(typeOrNode as ProsemirrorNode).type;
-    const typeOrName: string | NodeType | MarkType = isNode
+    const typeOrName: string | ProseMirrorNodeType | ProseMirrorMarkType = isNode
       ? (typeOrNode as ProsemirrorNode).type
-      : (typeOrNode as string | NodeType | MarkType);
+      : (typeOrNode as string | ProseMirrorNodeType | ProseMirrorMarkType);
     const schemaType = getSchemaTypeNameByName(
       typeof typeOrName === 'string' ? typeOrName : typeOrName.name,
       state.schema,
@@ -265,11 +265,11 @@ export function updateAttributesCommand(
     }
 
     if (schemaType === 'node') {
-      nodeType = getNodeType(typeOrName as NodeType, state.schema);
+      nodeType = getNodeType(typeOrName as ProseMirrorNodeType, state.schema);
     }
 
     if (schemaType === 'mark') {
-      markType = getMarkType(typeOrName as MarkType, state.schema);
+      markType = getMarkType(typeOrName as ProseMirrorMarkType, state.schema);
     }
 
     if (dispatch) {
@@ -356,10 +356,10 @@ function updateAttributesCommandForNodeSelection(
   };
 }
 
-function isWrappingNode(n: ProsemirrorNode | NodeType | string) {
+function isWrappingNode(n: ProsemirrorNode | ProseMirrorNodeType | string) {
   const name = isString(n)
     ? n
-    : n instanceof NodeType
+    : n instanceof ProseMirrorNodeType
       ? n.name
       : (n as ProsemirrorNode).type.name
   return name === NODE_NAME_DIV ||
@@ -424,7 +424,7 @@ export const HelperCommandsExtension = Extension.create({
           },
 
       removeMark:
-        (from: number, to: number, mark: Mark | MarkType) =>
+        (from: number, to: number, mark: ProseMirrorMark | ProseMirrorMarkType) =>
           ({ tr, dispatch }) => {
             if (dispatch) {
               dispatch(tr.removeMark(from, to, mark));
@@ -461,7 +461,7 @@ export const HelperCommandsExtension = Extension.create({
                 if (isString(node)) {
                   const nodeType = state.schema.nodes[node as string];
                   matchingNodeTypeName = nodeType && nodeType.name;
-                } else if (node instanceof NodeType) {
+                } else if (node instanceof ProseMirrorNodeType) {
                   matchingNodeTypeName = node.name;
                 } else if (node instanceof ProsemirrorNode) {
                   matchingNodeTypeName = node.type.name;
@@ -486,7 +486,7 @@ export const HelperCommandsExtension = Extension.create({
           },
 
       convertNode:
-        (toNodeType: NodeType | string, nodePos?: number, attrs?: Attrs) =>
+        (toNodeType: ProseMirrorNodeType | string, nodePos?: number, attrs?: Attrs) =>
           ({ dispatch, state }) => {
             return convertNodeCommand(toNodeType, { nodePos, attrs })(state, dispatch)
           },
@@ -579,13 +579,13 @@ export const HelperCommandsExtension = Extension.create({
         return true
       },
 
-      selectPrev: (n?: ProsemirrorNode | NodeType) => ({ dispatch, state, tr, view }) => {
+      selectPrev: (n?: ProsemirrorNode | ProseMirrorNodeType) => ({ dispatch, state, tr, view }) => {
         const { doc, selection } = state
         const { from, $head } = selection
-        let searchedType: NodeType
+        let searchedType: ProseMirrorNodeType
         let last = from
         if (n) {
-          if (n instanceof NodeType)
+          if (n instanceof ProseMirrorNodeType)
             searchedType = n
           else if (n instanceof Node)
             searchedType = n.type
@@ -616,13 +616,13 @@ export const HelperCommandsExtension = Extension.create({
         return !!prevNodePos
       },
 
-      selectNext: (n?: ProsemirrorNode | NodeType) => ({ dispatch, state, tr, view }) => {
+      selectNext: (n?: ProsemirrorNode | ProseMirrorNodeType) => ({ dispatch, state, tr, view }) => {
         const { doc, selection } = state
         const { to, $head } = selection
-        let searchedType: NodeType
+        let searchedType: ProseMirrorNodeType
         let first = to
         if (n) {
-          if (n instanceof NodeType)
+          if (n instanceof ProseMirrorNodeType)
             searchedType = n
           else if (n instanceof Node)
             searchedType = n.type
@@ -1084,7 +1084,7 @@ export function renamePandocAttributeCommand(attrName: string, newName: string, 
   return () => false;
 }
 
-export function convertNodeCommand(nodeType: string | NodeType, opts: {
+export function convertNodeCommand(nodeType: string | ProseMirrorNodeType, opts: {
   attrs?: Attrs,
   nodePos?: number,
 }): Command {
