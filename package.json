@@ -1,6 +1,6 @@
 {
   "name": "pundok-editor",
-  "version": "0.18.1-dev",
+  "version": "0.18.2-dev",
   "author": "mf",
   "homepage": "https://github.com/massifrg/pundok-editor",
   "description": "A visual editor for Pandoc AST documents",
