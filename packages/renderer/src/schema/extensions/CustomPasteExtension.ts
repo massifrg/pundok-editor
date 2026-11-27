@@ -1,5 +1,5 @@
 import { Extension } from '@tiptap/core';
-import { Fragment, Node, ResolvedPos, Slice } from '@tiptap/pm/model';
+import { Fragment, Node as ProseMirrorNode, ResolvedPos, Slice } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { EditorView } from '@tiptap/pm/view';
 import { JsonPastePlugin, META_COPY_AS_JSON } from '../helpers/JsonPastePlugin';
@@ -9,7 +9,7 @@ import { textNode } from '../helpers';
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     customPaste: {
-      copyAsJson(node?: Node): ReturnType;
+      copyAsJson(node?: ProseMirrorNode): ReturnType;
     };
   }
 }
@@ -80,7 +80,7 @@ export const CustomPasteExtension = Extension.create({
   addCommands() {
     return {
       copyAsJson:
-        (node?: Node) =>
+        (node?: ProseMirrorNode) =>
           ({ dispatch, state, tr }) => {
             if (!node && state.selection.empty) return false;
             if (dispatch) dispatch(tr.setMeta(META_COPY_AS_JSON, node || true));
