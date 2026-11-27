@@ -27,38 +27,24 @@
           @pending-canceled="cancelPending" @pending-confirmed="confirmPending" @pending-save="savePending"
           @update-value="pendingValueUpdate" />
         <SearchAndReplace :editor="editor" :visible="visibleSearchAndReplaceDialog"
-          :search-only="searchAndReplaceSearchOnly"
-          @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
+          :search-only="searchAndReplaceSearchOnly" @hideSearchAndReplaceDialog="hideSearchAndReplaceDialog()" />
         <AttributesEditor :editor="editor" :selected-node-or-mark="nodeOrMarkToEdit" :start-tab="startAttributesTab"
           :on-attributes-editor-show="onAttributesEditorShow" @closeAttributesEditor="closeAttributesEditor()">
         </AttributesEditor>
         <ConfigurationsDialog :editor="editor" :visible="visibleConfigurationDialog"
           @set-configuration="setConfiguration" @close-configurations-dialog="visibleConfigurationDialog = false">
         </ConfigurationsDialog>
-        <ShowMessageDialog
-          :editor="editor"
-          :visible="!!message"
-          :message="message"
-          @close-show-message-dialog="message = null"
-          :show-check-updates="message?.source === 'git-updates'"
-          :icon="
-            message?.source === 'git-no-updates' ? 'message_info' : undefined
-          "
-          :color="
-            message?.source === 'git-no-updates' ? 'secondary' : undefined
-          "
-          @check-updates="openGitUpdates"
-        />
-        <KeyboardShortcutsDialog
-          :visible="visibleKeyboardShortcutsDialog"
-          @close="visibleKeyboardShortcutsDialog = false"
-        />
+        <ShowMessageDialog :editor="editor" :visible="!!message" :message="message"
+          @close-show-message-dialog="message = null" :show-check-updates="message?.source === 'git-updates'" :icon="message?.source === 'git-no-updates' ? 'message_info' : undefined
+            " :color="message?.source === 'git-no-updates' ? 'secondary' : undefined
+              " @check-updates="openGitUpdates" />
+        <KeyboardShortcutsDialog :visible="visibleKeyboardShortcutsDialog"
+          @close="visibleKeyboardShortcutsDialog = false" />
         <InputTextDialog :editor="editor" :visible="visibleInputTextDialog" :label="inputTextDialogLabel"
           :start-value="inputTextDialogStartValue" @close-dialog="closeInputTextDialog" />
         <ProjectStructureDialog :main-editor="editor" :visible="visibleProjectStructureDialog"
           :project="docState()?.project" @close-project-structure-dialog="closeProjectStructureDialog"
-          @new-editor="newSubEditor"
-          @editor-minimized="projectStructureEditorMinimized = $event" />
+          @new-editor="newSubEditor" @editor-minimized="projectStructureEditorMinimized = $event" />
         <ProjectConfigEditorDialog :visible="visibleConfigurationEditor" :editor="editor"
           :configuration="docState()?.project?.editorConfig || {}" :project="docState()?.project"
           :project-configurations="docState()?.project?.configurations || []" @save="saveProject"
