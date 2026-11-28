@@ -1,8 +1,8 @@
 <template>
   <q-btn v-if="wrapperCustomStyles.length === 0" :disabled="isDisabled" @click="wrap()" :title="title"
-    :icon="wrapIcon || 'wrap'" :label="wrapperTypeName" color="grey-5" split dense size="sm"></q-btn>
+    :icon="wrapIcon || 'wrap'" :label="wrapperTypeName" color="grey-5" split dense no-wrap size="sm"></q-btn>
   <q-btn-dropdown v-if="wrapperCustomStyles.length > 0" :title="title" :icon="wrapIcon || 'wrap'"
-    :label="wrapperTypeName" color="grey-5" split dense size="sm" dropdown-icon="menu_down"
+    :label="wrapperTypeName" color="grey-5" split dense no-wrap size="sm" dropdown-icon="menu_down"
     :disable-dropdown="isDisabled" :disable-main-btn="isDisabled" @click="wrap()">
     <CustomClassList :editor="editor" :type="wrapperTypeName" :custom-class-description="customStyleInstanceDescription"
       no-avatar="true" @chosen-class="wrapWithClass" />
