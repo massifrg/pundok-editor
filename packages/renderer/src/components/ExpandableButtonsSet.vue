@@ -14,16 +14,26 @@
     </template>
 
     <ToolbarButton
-      v-if="!additionalButtonsExpanded"
+      v-if="additionalButtonsExpanded && additionalButtonsPersistent"
+      class="expand-button"
+      color="primary"
+      icon="close"
+      :title="$t('expandableButtonsSet.collapse')"
+      @click="hideAdditionalButtons"
+    />
+    <ToolbarButton
+      v-else-if="!additionalButtonsExpanded"
+      class="expand-button"
+      color="primary"
       text="..."
-      title="show more formatting buttons"
+      :title="$t('expandableButtonsSet.expand')"
       @click="showAdditionalButtons"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
 import ToolbarButton from './ToolbarButton.vue';
 
 export type ButtonDefinition = {
@@ -33,16 +43,18 @@ export type ButtonDefinition = {
 };
 
 const props = defineProps<{ defaultButtons: ButtonDefinition[] }>();
+const emit = defineEmits<{ 'expanded-change': [] }>();
 const defaultButtons = props.defaultButtons;
 const additionalButtonsExpanded = ref(false);
-const visibleAdditionalButton = ref<string | null>(null);
+const additionalButtonsPersistent = ref(false);
+const visibleAdditionalButtons = ref(new Set<string>());
 let additionalButtonsTimer: ReturnType<typeof setTimeout> | undefined;
 
 function isVisible(button: ButtonDefinition) {
   return (
     button.visible ||
     additionalButtonsExpanded.value ||
-    visibleAdditionalButton.value === button.name
+    visibleAdditionalButtons.value.has(button.name)
   );
 }
 
@@ -53,21 +65,35 @@ function clearAdditionalButtonsTimer() {
   }
 }
 
-function showAdditionalButtons() {
+function showAdditionalButtons(event: MouseEvent) {
   clearAdditionalButtonsTimer();
+  additionalButtonsPersistent.value = event.ctrlKey;
   additionalButtonsExpanded.value = true;
-  visibleAdditionalButton.value = null;
-  additionalButtonsTimer = setTimeout(() => {
-    additionalButtonsExpanded.value = false;
-    additionalButtonsTimer = undefined;
-  }, 5000);
+  if (!event.ctrlKey) {
+    additionalButtonsTimer = setTimeout(() => {
+      additionalButtonsExpanded.value = false;
+      additionalButtonsPersistent.value = false;
+      additionalButtonsTimer = undefined;
+    }, 5000);
+  }
+}
+
+function hideAdditionalButtons() {
+  clearAdditionalButtonsTimer();
+  additionalButtonsExpanded.value = false;
+  additionalButtonsPersistent.value = false;
 }
 
 function collapse(buttonName: string) {
   clearAdditionalButtonsTimer();
   additionalButtonsExpanded.value = false;
-  visibleAdditionalButton.value = buttonName;
+  additionalButtonsPersistent.value = false;
+  visibleAdditionalButtons.value.add(buttonName);
 }
+
+watch(additionalButtonsExpanded, () => emit('expanded-change'), {
+  flush: 'post',
+});
 
 onBeforeUnmount(clearAdditionalButtonsTimer);
 </script>
@@ -78,5 +104,12 @@ onBeforeUnmount(clearAdditionalButtonsTimer);
   flex: 0 0 auto;
   align-items: center;
   gap: 0.2rem;
+}
+
+.expand-button {
+  min-width: 1rem;
+  width: 1rem;
+  padding-right: 0;
+  padding-left: 0;
 }
 </style>

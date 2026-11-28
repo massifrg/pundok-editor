@@ -27,6 +27,7 @@ import { ACTION_SET_ALTERNATIVE, EditorAction } from '../actions';
 
 export default {
   props: ['editor', 'size', 'padding', 'buttonStyle', 'enableAlternativeButtons'],
+  emits: ['index-added'],
   components: { ToolbarButton },
   computed: {
     ...mapState(useActions, ['lastAction']),
@@ -71,6 +72,7 @@ export default {
         ],
         `add reference to index "${index.indexName}"`
       )
+      this.$emit('index-added')
       // editor.chain().focus().addIndexRef(index).run()
     }
   }

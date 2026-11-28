@@ -1,5 +1,6 @@
 <template>
-  <ToolbarButton icon="insert_unicode_char" title="insert Unicode character" @click="tableVisible = !tableVisible">
+  <ToolbarButton icon="insert_unicode_char" :title="$t('toolbarButtons.unicodeCharacter')"
+    @click="tableVisible = !tableVisible">
     <q-dialog v-model="tableVisible">
       <q-card>
         <q-card-actions>

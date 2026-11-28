@@ -1,5 +1,5 @@
 <template>
-  <ToolbarButton icon="markdown" title="edit this document as Markdown" @click="editorVisible = true">
+  <ToolbarButton icon="markdown" :title="$t('toolbarButtons.markdown')" @click="editorVisible = true">
     <q-dialog v-model="editorVisible" full-width full-height no-esc-dismiss>
       <q-card>
         <q-card-section>

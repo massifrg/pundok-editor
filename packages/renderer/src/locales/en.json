@@ -842,6 +842,10 @@
   },
   "enabled": "enabled",
   "expand": "expand",
+  "expandableButtonsSet": {
+    "expand": "Expand (+CTRL: keep expanded)",
+    "collapse": "Collapse"
+  },
   "fileDialog": {
     "buttons": {
       "cancel": "Cancel",
@@ -1170,6 +1174,10 @@
   "success": "Action was successful",
   "table": {
     "maximizeTableWidth": "maximise table width"
+  },
+  "toolbarButtons": {
+    "markdown": "Edit this document as Markdown",
+    "unicodeCharacter": "Insert Unicode character"
   },
   "tables": {
     "addBodyAfter": "add table body after",
